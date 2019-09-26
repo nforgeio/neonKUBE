@@ -538,17 +538,22 @@ namespace Neon.Cadence
                 options.TaskStartToCloseTimeout = Settings.WorkflowTaskStartToCloseTimeout;
             }
 
-            var reply = (WorkflowExecuteChildReply)await CallProxyAsync(
-                new WorkflowExecuteChildRequest()
+            var reply = await parentWorkflow.ExecuteNonParallel(
+                async () =>
                 {
-                    ContextId              = parentWorkflow.ContextId,
-                    Workflow               = workflowTypeName,
-                    Args                   = args,
-                    Options                = options.ToInternal(),
-                    ScheduleToStartTimeout = options.ScheduleToStartTimeout ?? Settings.WorkflowScheduleToStartTimeout
+                    return (WorkflowExecuteChildReply)await CallProxyAsync(
+                        new WorkflowExecuteChildRequest()
+                        {
+                            ContextId              = parentWorkflow.ContextId,
+                            Workflow               = workflowTypeName,
+                            Args                   = args,
+                            Options                = options.ToInternal(),
+                            ScheduleToStartTimeout = options.ScheduleToStartTimeout ?? Settings.WorkflowScheduleToStartTimeout
+                        });
                 });
 
             reply.ThrowOnError();
+            parentWorkflow.UpdateReplay(reply);
 
             return new ChildExecution(reply.Execution.ToPublic(), reply.ChildId);
         }
@@ -569,14 +574,19 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(execution != null);
             EnsureNotDisposed();
 
-            var reply = (WorkflowWaitForChildReply)await CallProxyAsync(
-                new WorkflowWaitForChildRequest()
+            var reply = await parentWorkflow.ExecuteNonParallel(
+                async () =>
                 {
-                    ContextId = parentWorkflow.ContextId,
-                    ChildId   = execution.ChildId
+                    return (WorkflowWaitForChildReply)await CallProxyAsync(
+                        new WorkflowWaitForChildRequest()
+                        {
+                            ContextId = parentWorkflow.ContextId,
+                            ChildId   = execution.ChildId
+                        });
                 });
 
             reply.ThrowOnError();
+            parentWorkflow.UpdateReplay(reply);
 
             return reply.Result;
         }
@@ -657,7 +667,7 @@ namespace Neon.Cadence
                     Domain     = ResolveDomain(domain),
                     Reason     = reason,
                     Details    = details
-                });;
+                });
 
             reply.ThrowOnError();
         }
@@ -786,16 +796,21 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(execution != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
 
-            var reply = (WorkflowSignalChildReply)await CallProxyAsync(
-                new WorkflowSignalChildRequest()
+            var reply = await parentWorkflow.ExecuteNonParallel(
+                async () =>
                 {
-                    ContextId   = parentWorkflow.ContextId,
-                    ChildId     = execution.ChildId,
-                    SignalName  = signalName,
-                    SignalArgs  = signalArgs
-                }); ;
+                    return (WorkflowSignalChildReply)await CallProxyAsync(
+                        new WorkflowSignalChildRequest()
+                        {
+                            ContextId   = parentWorkflow.ContextId,
+                            ChildId     = execution.ChildId,
+                            SignalName  = signalName,
+                            SignalArgs  = signalArgs
+                        });
+                });
 
             reply.ThrowOnError();
+            parentWorkflow.UpdateReplay(reply);
         }
     }
 }
