@@ -1418,7 +1418,11 @@ namespace Neon.Cadence
         /// with other workflow operations such as child workflows or activities.
         /// </summary>
         /// <typeparam name="TWorkflowInterface">The target workflow interface.</typeparam>
-        /// <param name="methodName">Optionally identifies the target method.</param>
+        /// <param name="methodName">
+        /// Optionally identifies the target workflow method.  This is the name specified in
+        /// <c>[WorkflowMethod]</c> attribute for the workflow method or <c>null</c>/empty for
+        /// the default workflow method.
+        /// </param>
         /// <param name="options">Optionally specifies custom <see cref="ChildWorkflowOptions"/>.</param>
         /// <returns>A <see cref="StartChildWorkflowStub{TWorkflowInterface}"/> instance.</returns>
         /// <remarks>
@@ -1533,7 +1537,11 @@ namespace Neon.Cadence
         /// with other workflow operations such as child workflows or activities.
         /// </summary>
         /// <typeparam name="TActivityInterface">The activity interface.</typeparam>
-        /// <param name="methodName">Optionally identifies the target method.</param>
+        /// <param name="methodName">
+        /// Optionally identifies the target activity method.  This is the name specified in
+        /// <c>[ActivityMethod]</c> attribute for the activity method or <c>null</c>/empty for 
+        /// the default activity method.
+        /// </param>
         /// <param name="options">Optionally specifies the activity options.</param>
         /// <returns>The new <see cref="StartActivityStub{TActivityInterface}"/>.</returns>
         /// <remarks>
@@ -1667,7 +1675,11 @@ namespace Neon.Cadence
         /// </summary>
         /// <typeparam name="TActivityInterface">Specifies the activity interface.</typeparam>
         /// <typeparam name="TActivityImplementation">Specifies the local activity implementation class.</typeparam> 
-        /// <param name="methodName">Optionally identifies the target method.</param>
+        /// <param name="methodName">
+        /// Optionally identifies the target activity method.  This is the name specified in
+        /// <c>[ActivityMethod]</c> attribute for the activity method or <c>null</c>/empty for
+        /// the default activity method.
+        /// </param>
         /// <param name="options">Optionally specifies the local activity options.</param>
         /// <returns>The new <see cref="NewStartLocalActivityStub{TActivityInterface, TActivityImplementation}(string, LocalActivityOptions)"/>.</returns>
         /// <remarks>
@@ -1785,7 +1797,7 @@ namespace Neon.Cadence
         /// </para>
         /// </note>
         /// </remarks>
-        public StartLocalActivityStub<TActivityInterface, TActivityImplementation> NewStartLocalActivityStub<TActivityInterface, TActivityImplementation>(string methodName, LocalActivityOptions options = null)
+        public StartLocalActivityStub<TActivityInterface, TActivityImplementation> NewStartLocalActivityStub<TActivityInterface, TActivityImplementation>(string methodName = null, LocalActivityOptions options = null)
             where TActivityInterface : class
             where TActivityImplementation : TActivityInterface
         {

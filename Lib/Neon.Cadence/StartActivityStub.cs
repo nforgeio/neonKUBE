@@ -312,6 +312,7 @@ namespace Neon.Cadence
                         new ActivityStartRequest()
                         {
                             ContextId              = parentWorkflow.ContextId,
+                            ActivityId             = activityId,
                             Activity               = activityTypeName,
                             Args                   = dataConverter.ToData(args),
                             Options                = options.ToInternal(),
@@ -396,6 +397,7 @@ namespace Neon.Cadence
                         new ActivityStartRequest()
                         {
                             ContextId              = parentWorkflow.ContextId,
+                            ActivityId             = activityId,
                             Activity               = activityTypeName,
                             Args                   = dataConverter.ToData(args),
                             Options                = options.ToInternal(),

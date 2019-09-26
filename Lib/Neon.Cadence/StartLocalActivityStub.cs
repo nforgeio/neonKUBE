@@ -295,10 +295,11 @@ namespace Neon.Cadence
                     return (ActivityStartLocalReply)await client.CallProxyAsync(
                         new ActivityStartLocalRequest()
                         {
-                            ContextId = parentWorkflow.ContextId,
-                            Activity  = activityTypeName,
-                            Args      = dataConverter.ToData(args),
-                            Options   = options.ToInternal()
+                            ContextId  = parentWorkflow.ContextId,
+                            ActivityId = activityId,
+                            Activity   = activityTypeName,
+                            Args       = dataConverter.ToData(args),
+                            Options    = options.ToInternal()
                         });
                 });
 
@@ -378,10 +379,11 @@ namespace Neon.Cadence
                     return (ActivityStartLocalReply)await client.CallProxyAsync(
                         new ActivityStartLocalRequest()
                         {
-                            ContextId = parentWorkflow.ContextId,
-                            Activity  = activityTypeName,
-                            Args      = dataConverter.ToData(args),
-                            Options   = options.ToInternal()
+                            ContextId  = parentWorkflow.ContextId,
+                            ActivityId = activityId,
+                            Activity   = activityTypeName,
+                            Args       = dataConverter.ToData(args),
+                            Options    = options.ToInternal()
                         });
                 });
 
