@@ -943,7 +943,7 @@ func handleWorkflowGetResultRequest(requestCtx context.Context, request *message
 
 	// get the result of WorkflowRun
 	var result []byte
-	err = workflowRun.Get(ctx, &result)
+	err = workflowRun.Get(requestCtx, &result)
 	if err != nil {
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
