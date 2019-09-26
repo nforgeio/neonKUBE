@@ -51,24 +51,6 @@ func NewActivityStartLocalRequest() *ActivityStartLocalRequest {
 	return request
 }
 
-// GetActivity gets a ActivityStartLocalRequest's Activity field
-// from its properties map.  Specifies the activity to
-// be executed.
-//
-// returns *string -> activity to execute.
-func (request *ActivityStartLocalRequest) GetActivity() *string {
-	return request.GetStringProperty("Activity")
-}
-
-// SetActivity sets an ActivityStartLocalRequest's Activity field
-// from its properties map.  Specifies the activity to
-// be executed.
-//
-// param value *string -> activity to execute.
-func (request *ActivityStartLocalRequest) SetActivity(value *string) {
-	request.SetStringProperty("Activity", value)
-}
-
 // GetArgs gets a ActivityStartLocalRequest's Args field
 // from its properties map.  Optionally specifies the arguments to be passed to the activity encoded
 // as a byte array.
@@ -109,6 +91,24 @@ func (request *ActivityStartLocalRequest) SetOptions(value *workflow.LocalActivi
 	request.SetJSONProperty("Options", value)
 }
 
+// GetActivityTypeID gets a ActivityStartLocalRequest's ActivityTypeID.
+// Identifies the .NET type that implements the local activity.
+//
+// returns int64 -> int64 representing the ActivityTypeID of the
+// activity to be executed.
+func (request *ActivityStartLocalRequest) GetActivityTypeID() int64 {
+	return request.GetLongProperty("ActivityTypeId")
+}
+
+// SetActivityTypeID sets an ActivityStartLocalRequest's ActivityTypeID.
+// Identifies the .NET type that implements the local activity.
+//
+// param value int64 -> int64 representing the ActivityTypeID of the
+// activity to be executed.
+func (request *ActivityStartLocalRequest) SetActivityTypeID(value int64) {
+	request.SetLongProperty("ActivityTypeId", value)
+}
+
 // GetActivityID gets the unique Id used to identify the activity.
 //
 // returns int64 -> the long ActivityID
@@ -138,7 +138,7 @@ func (request *ActivityStartLocalRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*ActivityStartLocalRequest); ok {
 		v.SetArgs(request.GetArgs())
 		v.SetOptions(request.GetOptions())
-		v.SetActivity(request.GetActivity())
 		v.SetActivityID(request.GetActivityID())
+		v.SetActivityTypeID(request.GetActivityTypeID())
 	}
 }
