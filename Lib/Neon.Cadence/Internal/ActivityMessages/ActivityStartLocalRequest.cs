@@ -42,21 +42,21 @@ namespace Neon.Cadence.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityStartLocalReply;
 
         /// <summary>
-        /// Specifies the activity to execute.
-        /// </summary>
-        public string Activity
-        {
-            get => GetStringProperty(PropertyNames.Activity);
-            set => SetStringProperty(PropertyNames.Activity, value);
-        }
-
-        /// <summary>
         /// Used to identify the activity.
         /// </summary>
         public long ActivityId
         {
             get => GetLongProperty(PropertyNames.ActivityId);
             set => SetLongProperty(PropertyNames.ActivityId, value);
+        }
+
+        /// <summary>
+        /// Identifies the .NET type that implements the local activity. 
+        /// </summary>
+        public long ActivityTypeId
+        {
+            get => GetLongProperty(PropertyNames.ActivityTypeId);
+            set => SetLongProperty(PropertyNames.ActivityTypeId, value);
         }
 
         /// <summary>
@@ -95,10 +95,10 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (ActivityStartLocalRequest)target;
 
-            typedTarget.Activity   = this.Activity;
-            typedTarget.ActivityId = this.ActivityId;
-            typedTarget.Args       = this.Args;
-            typedTarget.Options    = this.Options;
+            typedTarget.ActivityId     = this.ActivityId;
+            typedTarget.ActivityTypeId = this.ActivityTypeId;
+            typedTarget.Args           = this.Args;
+            typedTarget.Options        = this.Options;
         }
     }
 }

@@ -79,16 +79,6 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Specifies the maximum time the activity will wait after being scheduled
-        /// until it is executed to a worker.
-        /// </summary>
-        public TimeSpan ScheduleToStartTimeout
-        {
-            get => GetTimeSpanProperty(PropertyNames.ScheduleToStartTimeout);
-            set => SetTimeSpanProperty(PropertyNames.ScheduleToStartTimeout, value);
-        }
-
-        /// <summary>
         /// Used to identify the activity.
         /// </summary>
         public long ActivityId
@@ -114,12 +104,11 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (ActivityStartRequest)target;
 
-            typedTarget.Activity               = this.Activity;
-            typedTarget.ActivityId             = this.ActivityId;
-            typedTarget.Args                   = this.Args;
-            typedTarget.Options                = this.Options;
-            typedTarget.Domain                 = this.Domain;
-            typedTarget.ScheduleToStartTimeout = this.ScheduleToStartTimeout;
+            typedTarget.Activity   = this.Activity;
+            typedTarget.ActivityId = this.ActivityId;
+            typedTarget.Args       = this.Args;
+            typedTarget.Options    = this.Options;
+            typedTarget.Domain     = this.Domain;
         }
     }
 }

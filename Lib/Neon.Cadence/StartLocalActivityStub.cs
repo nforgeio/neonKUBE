@@ -285,9 +285,11 @@ namespace Neon.Cadence
 
             // Start the activity.
 
-            var client        = parentWorkflow.Client;
-            var dataConverter = client.DataConverter;
-            var activityId    = parentWorkflow.GetNextActivityId();
+            var client              = parentWorkflow.Client;
+            var dataConverter       = client.DataConverter;
+            var activityConstructor = typeof(TActivityImplementation).GetConstructor(Type.EmptyTypes);
+            var activityActionId    = parentWorkflow.GetNewActivityActionId(typeof(TActivityImplementation), activityConstructor, targetMethod);
+            var activityId          = parentWorkflow.GetNextActivityId();
 
             var reply = await parentWorkflow.ExecuteNonParallel(
                 async () =>
@@ -295,11 +297,10 @@ namespace Neon.Cadence
                     return (ActivityStartLocalReply)await client.CallProxyAsync(
                         new ActivityStartLocalRequest()
                         {
-                            ContextId  = parentWorkflow.ContextId,
-                            ActivityId = activityId,
-                            Activity   = activityTypeName,
-                            Args       = dataConverter.ToData(args),
-                            Options    = options.ToInternal()
+                            ContextId      = parentWorkflow.ContextId,
+                            ActivityTypeId = activityActionId,
+                            Args           = dataConverter.ToData(args),
+                            Options        = options.ToInternal()
                         });
                 });
 
@@ -369,9 +370,11 @@ namespace Neon.Cadence
 
             // Start the activity.
 
-            var client        = parentWorkflow.Client;
-            var dataConverter = client.DataConverter;
-            var activityId    = parentWorkflow.GetNextActivityId();
+            var client              = parentWorkflow.Client;
+            var dataConverter       = client.DataConverter;
+            var activityConstructor = typeof(TActivityImplementation).GetConstructor(Type.EmptyTypes);
+            var activityId          = parentWorkflow.GetNextActivityId();
+            var activityActionId    = parentWorkflow.GetNewActivityActionId(typeof(TActivityImplementation), activityConstructor, targetMethod);
 
             var reply = await parentWorkflow.ExecuteNonParallel(
                 async () =>
@@ -379,11 +382,11 @@ namespace Neon.Cadence
                     return (ActivityStartLocalReply)await client.CallProxyAsync(
                         new ActivityStartLocalRequest()
                         {
-                            ContextId  = parentWorkflow.ContextId,
-                            ActivityId = activityId,
-                            Activity   = activityTypeName,
-                            Args       = dataConverter.ToData(args),
-                            Options    = options.ToInternal()
+                            ContextId      = parentWorkflow.ContextId,
+                            ActivityId     = activityId,
+                            ActivityTypeId = activityActionId,
+                            Args           = dataConverter.ToData(args),
+                            Options        = options.ToInternal()
                         });
                 });
 

@@ -1859,18 +1859,43 @@ namespace Neon.Cadence
                 async () => (ActivityExecuteReply)await Client.CallProxyAsync(
                     new ActivityExecuteRequest()
                     {
-                        ContextId              = ContextId,
-                        Activity               = activityTypeName,
-                        Args                   = args,
-                        Options                = options.ToInternal(),
-                        Domain                 = options.Domain,
-                        ScheduleToStartTimeout = options.ScheduleToStartTimeout
+                        ContextId = ContextId,
+                        Activity  = activityTypeName,
+                        Args      = args,
+                        Options   = options.ToInternal(),
+                        Domain    = options.Domain,
                     }));
 
             reply.ThrowOnError();
             UpdateReplay(reply);
 
             return reply.Result;
+        }
+
+        /// <summary>
+        /// Registers a local activity type and method with the workflow and obtain 
+        /// it's local activity action ID.
+        /// </summary>
+        /// <param name="activityType">The activity type.</param>
+        /// <param name="activityConstructor">The activity constructor.</param>
+        /// <param name="activityMethod">The target local activity method.</param>
+        /// <returns>The new local activity action ID.</returns>
+        internal long GetNewActivityActionId(Type activityType, ConstructorInfo activityConstructor, MethodInfo activityMethod)
+        {
+            Covenant.Requires<ArgumentNullException>(activityType != null);
+            Covenant.Requires<ArgumentNullException>(activityConstructor != null);
+            Covenant.Requires<ArgumentException>(activityType.BaseType == typeof(ActivityBase));
+            Covenant.Requires<ArgumentNullException>(activityMethod != null);
+            Client.EnsureNotDisposed();
+
+            var activityActionId    = Interlocked.Increment(ref nextLocalActivityActionId);
+
+            lock (syncLock)
+            {
+                IdToLocalActivityAction.Add(activityActionId, new LocalActivityAction(activityType, activityConstructor, activityMethod));
+            }
+
+            return activityActionId;
         }
 
         /// <summary>
@@ -1914,47 +1939,25 @@ namespace Neon.Cadence
                 options.ScheduleToCloseTimeout = Client.Settings.WorkflowScheduleToCloseTimeout;
             }
 
-            // We need to register the local activity type with a workflow local ID
-            // that we can send to [cadence-proxy] in the [ActivityExecuteLocalRequest]
-            // such that the proxy can send it back to us in the [ActivityInvokeLocalRequest]
-            // so we'll know which activity type to instantate and run.
-
-            var activityActionId = Interlocked.Increment(ref nextLocalActivityActionId);
-
-            lock (syncLock)
-            {
-                IdToLocalActivityAction.Add(activityActionId, new LocalActivityAction(activityType, activityConstructor, activityMethod));
-            }
-
-            try
-            {
-                var reply = await ExecuteNonParallel(
-                    async () =>
-                    {
-                        return (ActivityExecuteLocalReply)await Client.CallProxyAsync(
-                            new ActivityExecuteLocalRequest()
-                            {
-                                ContextId      = ContextId,
-                                ActivityTypeId = activityActionId,
-                                Args           = args,
-                                Options        = options.ToInternal(),
-                            });
-                    });
-
-                reply.ThrowOnError();
-                UpdateReplay(reply);
-
-                return reply.Result;
-            }
-            finally
-            {
-                // Remove the activity type mapping to avoid memory leaks.
-
-                lock (syncLock)
+            var activityActionId = GetNewActivityActionId(activityType, activityConstructor, activityMethod);
+            
+            var reply = await ExecuteNonParallel(
+                async () =>
                 {
-                    IdToLocalActivityAction.Remove(activityActionId);
-                }
-            }
+                    return (ActivityExecuteLocalReply)await Client.CallProxyAsync(
+                        new ActivityExecuteLocalRequest()
+                        {
+                            ContextId      = ContextId,
+                            ActivityTypeId = activityActionId,
+                            Args           = args,
+                            Options        = options.ToInternal(),
+                        });
+                });
+
+            reply.ThrowOnError();
+            UpdateReplay(reply);
+
+            return reply.Result;
         }
 
         /// <summary>

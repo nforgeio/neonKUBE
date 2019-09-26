@@ -311,12 +311,11 @@ namespace Neon.Cadence
                     return (ActivityStartReply)await client.CallProxyAsync(
                         new ActivityStartRequest()
                         {
-                            ContextId              = parentWorkflow.ContextId,
-                            ActivityId             = activityId,
-                            Activity               = activityTypeName,
-                            Args                   = dataConverter.ToData(args),
-                            Options                = options.ToInternal(),
-                            ScheduleToStartTimeout = options.ScheduleToStartTimeout,
+                            ContextId  = parentWorkflow.ContextId,
+                            ActivityId = activityId,
+                            Activity   = activityTypeName,
+                            Args       = dataConverter.ToData(args),
+                            Options    = options.ToInternal(),
                         });
                 });
 
@@ -396,12 +395,12 @@ namespace Neon.Cadence
                     return (ActivityStartReply)await client.CallProxyAsync(
                         new ActivityStartRequest()
                         {
-                            ContextId              = parentWorkflow.ContextId,
-                            ActivityId             = activityId,
-                            Activity               = activityTypeName,
-                            Args                   = dataConverter.ToData(args),
-                            Options                = options.ToInternal(),
-                            ScheduleToStartTimeout = options.ScheduleToStartTimeout,
+                            ContextId  = parentWorkflow.ContextId,
+                            ActivityId = activityId,
+                            Activity   = activityTypeName,
+                            Args       = dataConverter.ToData(args),
+                            Options    = options.ToInternal(),
+                            Domain     = options.Domain,
                         });
                 });
 
