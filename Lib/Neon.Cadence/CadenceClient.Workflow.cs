@@ -514,7 +514,14 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
             EnsureNotDisposed();
 
-            options = options.Clone();
+            if (options == null)
+            {
+                options = new ChildWorkflowOptions();
+            }
+            else
+            {
+                options = options.Clone();
+            }
 
             if (!options.ScheduleToCloseTimeout.HasValue)
             {
@@ -551,22 +558,22 @@ namespace Neon.Cadence
         /// completes if it is still running.
         /// </summary>
         /// <param name="parentWorkflow">The parent workflow.</param>
-        /// <param name="child">Identifies the child workflow execution.</param>
+        /// <param name="execution">Identifies the child workflow execution.</param>
         /// <returns>The workflow result encoded as bytes or <c>null</c>.</returns>
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        internal async Task<byte[]> GetChildWorkflowResultAsync(Workflow parentWorkflow, ChildExecution child)
+        internal async Task<byte[]> GetChildWorkflowResultAsync(Workflow parentWorkflow, ChildExecution execution)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
-            Covenant.Requires<ArgumentNullException>(child != null);
+            Covenant.Requires<ArgumentNullException>(execution != null);
             EnsureNotDisposed();
 
             var reply = (WorkflowWaitForChildReply)await CallProxyAsync(
                 new WorkflowWaitForChildRequest()
                 {
                     ContextId = parentWorkflow.ContextId,
-                    ChildId   = child.ChildId
+                    ChildId   = execution.ChildId
                 });
 
             reply.ThrowOnError();
@@ -765,7 +772,7 @@ namespace Neon.Cadence
         /// </note>
         /// </summary>
         /// <param name="parentWorkflow">The parent workflow.</param>
-        /// <param name="child">The child workflow execution.</param>
+        /// <param name="execution">The child workflow execution.</param>
         /// <param name="signalName">Specifies the signal name.</param>
         /// <param name="signalArgs">Specifies the signal arguments as an encoded byte array.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -773,17 +780,17 @@ namespace Neon.Cadence
         /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
-        internal async Task SignalChildWorkflowAsync(Workflow parentWorkflow, ChildExecution child, string signalName, byte[] signalArgs)
+        internal async Task SignalChildWorkflowAsync(Workflow parentWorkflow, ChildExecution execution, string signalName, byte[] signalArgs)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
-            Covenant.Requires<ArgumentNullException>(child != null);
+            Covenant.Requires<ArgumentNullException>(execution != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
 
             var reply = (WorkflowSignalChildReply)await CallProxyAsync(
                 new WorkflowSignalChildRequest()
                 {
                     ContextId   = parentWorkflow.ContextId,
-                    ChildId     = child.ChildId,
+                    ChildId     = execution.ChildId,
                     SignalName  = signalName,
                     SignalArgs  = signalArgs
                 }); ;

@@ -49,7 +49,7 @@ require (
 	github.com/uber-go/atomic v1.4.0 // indirect
 	github.com/uber-go/kafka-client v0.2.2 // indirect
 	github.com/uber-go/mapdecode v1.0.0 // indirect
-	github.com/uber-go/tally v3.3.11+incompatible
+	github.com/uber-go/tally v3.3.12+incompatible
 	github.com/uber/cadence v0.8.6 // indirect
 	github.com/uber/jaeger-client-go v2.18.1+incompatible // indirect
 	github.com/uber/jaeger-lib v2.1.1+incompatible // indirect
@@ -65,7 +65,7 @@ require (
 	go.uber.org/net/metrics v1.1.0 // indirect
 	go.uber.org/thriftrw v1.20.0 // indirect
 	go.uber.org/tools v0.0.0-20190618225709-2cfd321de3ee // indirect
-	go.uber.org/yarpc v1.39.0
+	go.uber.org/yarpc v1.40.0
 	go.uber.org/zap v1.10.0
 	golang.org/x/crypto v0.0.0-20190510104115-cbcb75029529 // indirect
 	golang.org/x/lint v0.0.0-20190409202823-959b441ac422 // indirect

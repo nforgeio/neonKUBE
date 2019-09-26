@@ -121,8 +121,7 @@ namespace Neon.Cadence
         /// The Cadence GOLANG client does not appear to support starting a worker with a given
         /// set of parameters, stopping that workflow, and then restarting another worker
         /// with the same parameters on the same client.  This method detects this situation
-        /// and throws an <see cref="InvalidOperationException"/> when these restart attempts
-        /// are made.
+        /// and throws an <see cref="InvalidOperationException"/> when a restart is attempted.
         /// </note>
         /// </remarks>
         public async Task<Worker> StartWorkerAsync(string taskList = null, WorkerOptions options = null, string domain = null)
@@ -152,7 +151,7 @@ namespace Neon.Cadence
 
                     // $note(jeff.lill):
                     //
-                    // If the worker exists but its refcount==0, then we're going to
+                    // If the worker exists but its RefCount==0, then we're going to
                     // throw an exception because Cadence doesn't support recreating
                     // a worker with the same parameters on the same client.
 

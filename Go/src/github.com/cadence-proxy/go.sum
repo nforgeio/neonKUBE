@@ -178,6 +178,8 @@ github.com/uber-go/mapdecode v1.0.0 h1:euUEFM9KnuCa1OBixz1xM+FIXmpixyay5DLymceOV
 github.com/uber-go/mapdecode v1.0.0/go.mod h1:b5nP15FwXTgpjTjeA9A2uTHXV5UJCl4arwKpP0FP1Hw=
 github.com/uber-go/tally v3.3.11+incompatible h1:b6xn/zbXCPFID3p2P9nUlHWyrNZ3e3U35Ra1/gDR63I=
 github.com/uber-go/tally v3.3.11+incompatible/go.mod h1:YDTIBxdXyOU/sCWilKB4bgyufu1cEi0jdVnRdxvjnmU=
+github.com/uber-go/tally v3.3.12+incompatible h1:Qa0XrHsKXclmhEpHmBHTTEZotwvQHAbm3lvtJ6RNn+0=
+github.com/uber-go/tally v3.3.12+incompatible/go.mod h1:YDTIBxdXyOU/sCWilKB4bgyufu1cEi0jdVnRdxvjnmU=
 github.com/uber/cadence v0.8.6 h1:Lz23e/2IjchrDbmgfTUSOfE1xd+geUvynmqS9Z8LnPs=
 github.com/uber/cadence v0.8.6/go.mod h1:VdYfX5ocB0U09yDSaHlndK5UTZggmlxLUEB+Rh0a04I=
 github.com/uber/jaeger-client-go v2.18.1+incompatible/go.mod h1:WVhlPFC8FDjOFMMWRy2pZqQJSXxYSwNYOkTr/Z6d3Kk=
@@ -208,6 +210,8 @@ go.uber.org/tools v0.0.0-20190618225709-2cfd321de3ee h1:0mgffUl7nfd+FpvXMVz4IDEa
 go.uber.org/tools v0.0.0-20190618225709-2cfd321de3ee/go.mod h1:vJERXedbb3MVM5f9Ejo0C68/HhF8uaILCdgjnY+goOA=
 go.uber.org/yarpc v1.39.0 h1:/5DIEbA3A98hNgHYBtjIbc+af2EYp0jN+mZELFqrNYQ=
 go.uber.org/yarpc v1.39.0/go.mod h1:5wt+WtAfoQh3yGyup7479I35hUobLqCfb0oewxC58jE=
+go.uber.org/yarpc v1.40.0 h1:Gu+mpdQzP2h4bLj3O7jc6KqbgDvJ4f0EH+R7DTe0B80=
+go.uber.org/yarpc v1.40.0/go.mod h1:5wt+WtAfoQh3yGyup7479I35hUobLqCfb0oewxC58jE=
 go.uber.org/zap v1.10.0 h1:ORx85nbTijNz8ljznvCMR1ZBIPKFn3jQrag10X2AsuM=
 go.uber.org/zap v1.10.0/go.mod h1:vwi/ZaCAaUcBkycHslxD9B2zi4UTXhF60s6SWpuDF0Q=
 golang.org/x/crypto v0.0.0-20180904163835-0709b304e793/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=

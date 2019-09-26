@@ -131,7 +131,7 @@ namespace Neon.Cadence
         //      1::my-activity                  -- clientId = 1, activity type name = my-activity
         //      1::my-activity::my-entrypoint   -- clientId = 1, activity type name = my-activity, entrypoint = my-entrypoint
 
-        private static Dictionary<string, ActivityRegistration>   nameToRegistration = new Dictionary<string, ActivityRegistration>();
+        private static Dictionary<string, ActivityRegistration> nameToRegistration = new Dictionary<string, ActivityRegistration>();
 
         /// <summary>
         /// Restores the class to its initial state.
@@ -247,8 +247,7 @@ namespace Neon.Cadence
                     continue;
                 }
 
-                var activityTypeKey   = GetActivityTypeKey(client, activityTypeName, activityMethodAttribute);
-                var alreadyRegistered = false;
+                var activityTypeKey = GetActivityTypeKey(client, activityTypeName, activityMethodAttribute);
 
                 lock (syncLock)
                 {
@@ -258,8 +257,6 @@ namespace Neon.Cadence
                         {
                             throw new InvalidOperationException($"Conflicting activity type registration: Activity type [{activityType.FullName}] is already registered for activity type name [{activityTypeKey}].");
                         }
-
-                        alreadyRegistered = true;
                     }
                     else
                     {
@@ -274,17 +271,20 @@ namespace Neon.Cadence
                     }
                 }
 
-                if (!alreadyRegistered)
-                {
-                    var reply = (ActivityRegisterReply)await client.CallProxyAsync(
-                        new ActivityRegisterRequest()
-                        {
-                            Name   = GetActivityTypeNameFromKey(activityTypeKey),
-                            Domain = client.ResolveDomain(domain)
-                        });
+                var reply = (ActivityRegisterReply)await client.CallProxyAsync(
+                    new ActivityRegisterRequest()
+                    {
+                        Name   = GetActivityTypeNameFromKey(activityTypeKey),
+                        Domain = client.ResolveDomain(domain)
+                    });
 
-                    reply.ThrowOnError();
-                }
+                // $hack(jeff.lill): 
+                //
+                // We're going to ignore any errors here to handle:
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/668
+
+                // reply.ThrowOnError();
             }
         }
 
