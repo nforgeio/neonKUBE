@@ -366,7 +366,7 @@ alertmanager:
 ## Using default values from https://github.com/helm/charts/blob/master/stable/grafana/values.yaml
 ##
 grafana:
-  enabled: false
+  enabled: true
 
   ## Deploy default dashboards.
   ##
@@ -952,8 +952,7 @@ prometheusOperator:
       ## Provide a priority class name to the webhook patching job
       ##
       priorityClassName: ""
-      podAnnotations:
-        sidecar.istio.io/inject: "false"
+      podAnnotations: {}
       nodeSelector: {}
 
 
@@ -1007,11 +1006,11 @@ prometheusOperator:
   crdApiGroup: monitoring.coreos.com
 
   # Remove CRDs before instaling, created for use on CI environment.
-  cleanupCustomResourceBeforeInstall: false
+  cleanupCustomResourceBeforeInstall: true
 
   ## Attempt to clean up CRDs created by Prometheus Operator.
   ##
-  cleanupCustomResource: false
+  cleanupCustomResource: true
 
   ## Labels to add to the operator pod
   ##
@@ -1460,14 +1459,13 @@ prometheus:
 
     ## The remote_read spec configuration for Prometheus.
     ## ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#remotereadspec
-    remoteRead:
-      - url: "http://m3coordinator-m3db-prometheus.monitoring:7201/api/v1/prom/remote/read"
-        readRecent: true
+    remoteRead: []
+    # - url: http://remote1/read
 
     ## The remote_write spec configuration for Prometheus.
     ## ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#remotewritespec
-    remoteWrite:
-      - url: "http://m3coordinator-m3db-prometheus.monitoring:7201/api/v1/prom/remote/write"
+    remoteWrite: []
+    # - url: http://remote1/push
 
     ## Resource limits & requests
     ##
