@@ -28,7 +28,7 @@ namespace Neon.Cadence.Internal
     /// <b>client --> proxy:</b> Starts a local activity but doesn't wait for it to complete.
     /// </summary>
     [InternalProxyMessage(InternalMessageTypes.ActivityStartLocalRequest)]
-    internal class ActivityStartLocalRequest : ActivityRequest
+    internal class ActivityStartLocalRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.

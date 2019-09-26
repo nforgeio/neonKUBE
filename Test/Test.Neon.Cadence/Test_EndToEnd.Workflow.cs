@@ -1470,6 +1470,29 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        public interface IParallelActivity : IActivity
+        {
+            [ActivityMethod]
+            Task RunAsync();
+
+            [ActivityMethod(Name = "hello")]
+            Task<string> HelloAsync(string name);
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ParallelActivity : ActivityBase, IParallelActivity
+        {
+            public async Task RunAsync()
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1));
+            }
+
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
+        }
+
         public interface IWorkflowChild : IWorkflow
         {
             [WorkflowMethod]
@@ -1624,6 +1647,12 @@ namespace TestCadence
 
             [WorkflowMethod(Name = "query-child")]
             Task<bool> QueryChildAsync();
+
+            [WorkflowMethod(Name = "parallel-activity")]
+            Task<bool> ParallelActivity();
+
+            [WorkflowMethod(Name = "parallel-local-activity")]
+            Task<bool> ParallelLocalActivity();
         }
 
         [Workflow(AutoRegister = true)]
@@ -1734,6 +1763,34 @@ namespace TestCadence
                 await task;
 
                 return pass;
+            }
+
+            public async Task<bool> ParallelActivity()
+            {
+                // Execute two activities in parallel.  This exercises activities with
+                // and without parameters and results.
+
+                var runActivityStub     = Workflow.NewStartActivityStub<IParallelActivity>();
+                var helloActivityStub   = Workflow.NewStartActivityStub<IParallelActivity>("hello");
+                var runActivityFuture   = await runActivityStub.StartAsync();
+                var helloActivityFuture = await helloActivityStub.StartAsync<string>("Jeff");
+
+                var greeting = await helloActivityFuture.GetAsync();
+
+                if (greeting != "Hello Jeff!")
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
+            public async Task<bool> ParallelLocalActivity()
+            {
+                // Execute two local activities in parallel.  This exercises activities with
+                // and without parameters and results.
+
+                return true;
             }
         }
 
