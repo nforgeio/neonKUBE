@@ -1873,14 +1873,14 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Registers a local activity type and method with the workflow and obtain 
-        /// it's local activity action ID.
+        /// Registers a local activity type and method with the workflow and returns 
+        /// its local activity action ID.
         /// </summary>
         /// <param name="activityType">The activity type.</param>
         /// <param name="activityConstructor">The activity constructor.</param>
         /// <param name="activityMethod">The target local activity method.</param>
         /// <returns>The new local activity action ID.</returns>
-        internal long GetNewActivityActionId(Type activityType, ConstructorInfo activityConstructor, MethodInfo activityMethod)
+        internal long RegisterActivityAction(Type activityType, ConstructorInfo activityConstructor, MethodInfo activityMethod)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null);
             Covenant.Requires<ArgumentNullException>(activityConstructor != null);
@@ -1939,7 +1939,7 @@ namespace Neon.Cadence
                 options.ScheduleToCloseTimeout = Client.Settings.WorkflowScheduleToCloseTimeout;
             }
 
-            var activityActionId = GetNewActivityActionId(activityType, activityConstructor, activityMethod);
+            var activityActionId = RegisterActivityAction(activityType, activityConstructor, activityMethod);
             
             var reply = await ExecuteNonParallel(
                 async () =>

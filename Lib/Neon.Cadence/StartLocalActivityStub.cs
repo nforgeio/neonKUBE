@@ -142,7 +142,6 @@ namespace Neon.Cadence
         private Workflow                parentWorkflow;
         private MethodInfo              targetMethod;
         private LocalActivityOptions    options;
-        private string                  activityTypeName;
         private bool                    hasStarted;
 
         /// <summary>
@@ -207,19 +206,6 @@ namespace Neon.Cadence
                 throw new ArgumentException($"Activity interface [{activityInterface.FullName}] does not have a method tagged by [ActivityMethod(Name = {methodName})].");
             }
 
-            activityTypeName = CadenceHelper.GetActivityTypeName(activityInterface, activityAttribute);
-
-            // $hack(jeff.lill):
-            //
-            // It would be nicer if [CadenceHelper.GetActivityTypeName()] accepted an optional
-            // [ActivityMethodAttribute] that would be used to append the method name so that
-            // we won't need to hardcode that behavior here.
-
-            if (!string.IsNullOrEmpty(methodAttribute.Name))
-            {
-                activityTypeName += $"::{methodAttribute.Name}";
-            }
-
             this.options = LocalActivityOptions.Normalize(parentWorkflow.Client, options);
         }
 
@@ -267,12 +253,28 @@ namespace Neon.Cadence
                 args[i] = TypeDescriptor.GetConverter(parameters[i].ParameterType).ConvertTo(args[i], parameters[i].ParameterType);
             }
 
+            // Validate the return type.
+
+            var resultType = targetMethod.ReturnType;
+
+            if (resultType == typeof(Task))
+            {
+                throw new ArgumentException($"Activity method [{nameof(TActivityInterface)}.{targetMethod.Name}()] does not return [Task<{resultType.FullName}>].");
+            }
+
+            resultType = resultType.GenericTypeArguments.First();
+
+            if (!resultType.IsAssignableFrom(typeof(TResult)))
+            {
+                throw new ArgumentException($"Activity method [{nameof(TActivityInterface)}.{targetMethod.Name}()] returns [{resultType.FullName}] which is not compatible with [{nameof(TResult)}].");
+            }
+
             // Start the activity.
 
             var client              = parentWorkflow.Client;
             var dataConverter       = client.DataConverter;
             var activityConstructor = typeof(TActivityImplementation).GetConstructor(Type.EmptyTypes);
-            var activityActionId    = parentWorkflow.GetNewActivityActionId(typeof(TActivityImplementation), activityConstructor, targetMethod);
+            var activityActionId    = parentWorkflow.RegisterActivityAction(typeof(TActivityImplementation), activityConstructor, targetMethod);
             var activityId          = parentWorkflow.GetNextActivityId();
 
             var reply = await parentWorkflow.ExecuteNonParallel(
@@ -292,20 +294,6 @@ namespace Neon.Cadence
             parentWorkflow.UpdateReplay(reply);
 
             // Create and return the future.
-
-            var resultType = targetMethod.ReturnType;
-
-            if (resultType == typeof(Task))
-            {
-                throw new ArgumentException($"Activity method [{nameof(TActivityInterface)}.{targetMethod.Name}()] does not return [void].");
-            }
-
-            resultType = resultType.GenericTypeArguments.First();
-
-            if (!resultType.IsAssignableFrom(typeof(TResult)))
-            {
-                throw new ArgumentException($"Activity method [{nameof(TActivityInterface)}.{targetMethod.Name}()] returns [{resultType.FullName}] which is not compatible with [{nameof(TResult)}].");
-            }
 
             return new AsyncFuture<TResult>(parentWorkflow, activityId);
         }
@@ -358,7 +346,7 @@ namespace Neon.Cadence
             var dataConverter       = client.DataConverter;
             var activityConstructor = typeof(TActivityImplementation).GetConstructor(Type.EmptyTypes);
             var activityId          = parentWorkflow.GetNextActivityId();
-            var activityActionId    = parentWorkflow.GetNewActivityActionId(typeof(TActivityImplementation), activityConstructor, targetMethod);
+            var activityActionId    = parentWorkflow.RegisterActivityAction(typeof(TActivityImplementation), activityConstructor, targetMethod);
 
             var reply = await parentWorkflow.ExecuteNonParallel(
                 async () =>
@@ -378,17 +366,6 @@ namespace Neon.Cadence
             parentWorkflow.UpdateReplay(reply);
 
             // Create and return the future.
-
-            var resultType = targetMethod.ReturnType;
-
-            if (resultType == typeof(Task))
-            {
-                resultType = null;
-            }
-            else
-            {
-                resultType = resultType.GenericTypeArguments.First();
-            }
 
             return new AsyncFuture(parentWorkflow, activityId);
         }

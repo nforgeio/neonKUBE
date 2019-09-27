@@ -297,6 +297,22 @@ namespace Neon.Cadence
                 args[i] = TypeDescriptor.GetConverter(parameters[i].ParameterType).ConvertTo(args[i], parameters[i].ParameterType);
             }
 
+            // Validate the return type.
+
+            var resultType = targetMethod.ReturnType;
+
+            if (resultType == typeof(Task))
+            {
+                throw new ArgumentException($"Activity method [{nameof(TActivityInterface)}.{targetMethod.Name}()] does not return [void].");
+            }
+
+            resultType = resultType.GenericTypeArguments.First();
+
+            if (!resultType.IsAssignableFrom(typeof(TResult)))
+            {
+                throw new ArgumentException($"Activity method [{nameof(TActivityInterface)}.{targetMethod.Name}()] returns [{resultType.FullName}] which is not compatible with [{nameof(TResult)}].");
+            }
+
             // Start the activity.
 
             var client        = parentWorkflow.Client;
@@ -322,20 +338,6 @@ namespace Neon.Cadence
             parentWorkflow.UpdateReplay(reply);
 
             // Create and return the future.
-
-            var resultType = targetMethod.ReturnType;
-
-            if (resultType == typeof(Task))
-            {
-                throw new ArgumentException($"Activity method [{nameof(TActivityInterface)}.{targetMethod.Name}()] does not return [void].");
-            }
-
-            resultType = resultType.GenericTypeArguments.First();
-
-            if (!resultType.IsAssignableFrom(typeof(TResult)))
-            {
-                throw new ArgumentException($"Activity method [{nameof(TActivityInterface)}.{targetMethod.Name}()] returns [{resultType.FullName}] which is not compatible with [{nameof(TResult)}].");
-            }
 
             return new AsyncFuture<TResult>(parentWorkflow, activityId);
         }
