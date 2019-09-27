@@ -283,7 +283,7 @@ namespace TestModelGen
         {
             try
             {
-                var method = instanceType.GetMethod("__Save", new Type[] { });
+                var method = instanceType.GetMethod("__Save", Array.Empty<Type>());
 
                 method.Invoke(instance, null);
             }
@@ -311,13 +311,13 @@ namespace TestModelGen
             {
                 if (indented)
                 {
-                    var method = instanceType.GetMethod("ToString", new Type[] { typeof(bool) });
+                    var method = instanceType.GetMethod("ToString", Array.Empty<Type>());
 
                     return (string)method.Invoke(instance, new object[] { indented });
                 }
                 else
                 {
-                    var method = instanceType.GetMethod("ToString", new Type[] { });
+                    var method = instanceType.GetMethod("ToString", Array.Empty<Type>());
 
                     return (string)method.Invoke(instance, null);
                 }
@@ -343,7 +343,7 @@ namespace TestModelGen
         {
             try
             {
-                var method = instanceType.GetMethod("ToBytes", new Type[] { });
+                var method = instanceType.GetMethod("ToBytes", Array.Empty<Type>());
 
                 return (byte[])method.Invoke(instance, null);
             }
@@ -369,7 +369,7 @@ namespace TestModelGen
         {
             try
             {
-                var method = instanceType.GetMethod("ToJObject", new Type[] { typeof(bool) });
+                var method = instanceType.GetMethod("ToJObject", Array.Empty<Type>());
 
                 return (JObject)method.Invoke(instance, new object[] { noClone });
             }
@@ -394,8 +394,8 @@ namespace TestModelGen
         {
             try
             {
-                var toJObjectMethod = instanceType.GetMethod("ToJObject", new Type[] { typeof(bool) });
-                var jObject         = (JObject)toJObjectMethod.Invoke(instance, new object[] { false });
+                var toJObjectMethod = instanceType.GetMethod("ToJObject", Array.Empty<Type>());
+                var jObject         = (JObject)toJObjectMethod.Invoke(instance, Array.Empty<object>());
 
                 return new DataWrapper(instanceType, jObject);
             }
@@ -498,7 +498,7 @@ namespace TestModelGen
         /// <returns>The hash code.</returns>
         public override int GetHashCode()
         {
-            var method = instanceType.GetMethod("GetHashCode", new Type[] { });
+            var method = instanceType.GetMethod("GetHashCode", Array.Empty<Type>());
 
             try
             {
@@ -518,16 +518,17 @@ namespace TestModelGen
         }
 
         /// <summary>
-        /// Returns the value of the wrapped entity's <b>Persisted</b> constant.
+        /// Returns the value of the wrapped entity's <b>Persisted</b> constant or
+        /// <c>null</c> if the wrapped type is not persistent.
         /// </summary>
         public string PersistedType
         {
             get
             {
                 var fields   = instanceType.GetFields(BindingFlags.Static | BindingFlags.Public);
-                var constant = fields.Single(f => f.IsLiteral && f.Name == "PersistedType");
+                var constant = fields.SingleOrDefault(f => f.IsLiteral && f.Name == "PersistedType");
 
-                return (string)constant.GetValue(null);
+                return (string)constant?.GetValue(null);
             }
         }
     }

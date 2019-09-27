@@ -284,6 +284,7 @@ namespace Neon.Cadence
                         new ActivityStartLocalRequest()
                         {
                             ContextId      = parentWorkflow.ContextId,
+                            ActivityId     = activityId,
                             ActivityTypeId = activityActionId,
                             Args           = dataConverter.ToData(args),
                             Options        = options.ToInternal()
