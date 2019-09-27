@@ -1598,7 +1598,7 @@ namespace Neon.ModelGen
                         writer.WriteLine($"        private string cachedT;");
                     }
 
-                    // Generate the backing __JObject property.
+                    // Generate the backing __O property.
 
                     if (dataModel.BaseTypeName == null)
                     {
@@ -1608,7 +1608,7 @@ namespace Neon.ModelGen
                         writer.WriteLine($"        /// This was made public for advanced unit testing but its use should generally");
                         writer.WriteLine($"        /// be avoided for other purposes.  Use <see cref=\"ToJObject(bool)\"/> instead.");
                         writer.WriteLine($"        /// </summary>");
-                        writer.WriteLine($"        public JObject __JObject {{ get; set; }}");
+                        writer.WriteLine($"        public JObject __O {{ get; set; }}");
                     }
                 }
 
@@ -1628,7 +1628,7 @@ namespace Neon.ModelGen
 
                     writer.WriteLine($"        public {className}()");
                     writer.WriteLine($"        {{");
-                    writer.WriteLine($"            __JObject = new JObject();");
+                    writer.WriteLine($"            __O = new JObject();");
                     writer.WriteLine($"        }}");
 
                     writer.WriteLine();
@@ -1644,7 +1644,7 @@ namespace Neon.ModelGen
 
                     writer.WriteLine($"        protected {className}(JObject jObject)");
                     writer.WriteLine($"        {{");
-                    writer.WriteLine($"            __JObject = jObject;");
+                    writer.WriteLine($"            __O = jObject;");
                     writer.WriteLine($"        }}");
                 }
                 else
@@ -1803,7 +1803,7 @@ namespace Neon.ModelGen
                         writer.WriteLine();
                         writer.WriteLine($"            if (source != null)");
                         writer.WriteLine($"            {{");
-                        writer.WriteLine($"                this.__JObject = source;");
+                        writer.WriteLine($"                this.__O = source;");
                         writer.WriteLine($"            }}");
 
                         if (dataModel.IsDerived)
@@ -1818,7 +1818,7 @@ namespace Neon.ModelGen
 
                             var resolvedPropertyType = ResolveTypeReference(property.Type);
 
-                            writer.WriteLine($"            property = this.__JObject.Property(\"{property.SerializedName}\");");
+                            writer.WriteLine($"            property = this.__O.Property(\"{property.SerializedName}\");");
                             writer.WriteLine($"            if (property != null)");
                             writer.WriteLine($"            {{");
 
@@ -1869,7 +1869,7 @@ namespace Neon.ModelGen
                         writer.WriteLine();
                         writer.WriteLine($"            if (!isDerived)");
                         writer.WriteLine($"            {{");
-                        writer.WriteLine($"                property = this.__JObject.Property(\"__T\");");
+                        writer.WriteLine($"                property = this.__O.Property(\"__T\");");
                         writer.WriteLine($"                if (property == null)");
                         writer.WriteLine($"                {{");
                         writer.WriteLine($"                    throw new ArgumentNullException(\"[{className}.__T] property is required when deserializing.\");");
@@ -1933,11 +1933,11 @@ namespace Neon.ModelGen
 
                                     if (property.RequiresObjectification)
                                     {
-                                        writer.WriteLine($"            this.__JObject[\"{property.SerializedName}\"] = RoundtripDataHelper.FromObject(this.{property.Name}, typeof({className}), nameof({property.Name}));");
+                                        writer.WriteLine($"            this.__O[\"{property.SerializedName}\"] = RoundtripDataHelper.FromObject(this.{property.Name}, typeof({className}), nameof({property.Name}));");
                                     }
                                     else
                                     {
-                                        writer.WriteLine($"            this.__JObject[\"{property.SerializedName}\"] = this.{property.Name};");
+                                        writer.WriteLine($"            this.__O[\"{property.SerializedName}\"] = this.{property.Name};");
                                     }
                                     break;
 
@@ -1953,9 +1953,9 @@ namespace Neon.ModelGen
 
                                     writer.WriteLine($"            if (this.{property.Name} == {defaultValueExpression})");
                                     writer.WriteLine($"            {{");
-                                    writer.WriteLine($"                if (this.__JObject.Property(\"{property.SerializedName}\") != null)");
+                                    writer.WriteLine($"                if (this.__O.Property(\"{property.SerializedName}\") != null)");
                                     writer.WriteLine($"                 {{");
-                                    writer.WriteLine($"                    this.__JObject.Remove(\"{property.SerializedName}\");");
+                                    writer.WriteLine($"                    this.__O.Remove(\"{property.SerializedName}\");");
                                     writer.WriteLine($"                }}");
                                     writer.WriteLine($"            }}");
                                     writer.WriteLine($"            else");
@@ -1963,11 +1963,11 @@ namespace Neon.ModelGen
 
                                     if (property.RequiresObjectification)
                                     {
-                                        writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = RoundtripDataHelper.FromObject(this.{property.Name}, typeof({className}), nameof({property.Name}));");
+                                        writer.WriteLine($"                this.__O[\"{property.SerializedName}\"] = RoundtripDataHelper.FromObject(this.{property.Name}, typeof({className}), nameof({property.Name}));");
                                     }
                                     else
                                     {
-                                        writer.WriteLine($"                this.__JObject[\"{property.SerializedName}\"] = this.{property.Name};");
+                                        writer.WriteLine($"                this.__O[\"{property.SerializedName}\"] = this.{property.Name};");
                                     }
 
                                     writer.WriteLine($"            }}");
@@ -1980,11 +1980,11 @@ namespace Neon.ModelGen
                     {
                         // Serialize the [__T] property
 
-                        writer.WriteLine($"            this.__JObject[\"__T\"] = PersistedType;");
+                        writer.WriteLine($"            this.__O[\"__T\"] = PersistedType;");
                     }
 
                     writer.WriteLine();
-                    writer.WriteLine($"            return this.__JObject;");
+                    writer.WriteLine($"            return this.__O;");
                     writer.WriteLine($"        }}");
 
                     //---------------------------------------------------------
@@ -2004,7 +2004,7 @@ namespace Neon.ModelGen
                     writer.WriteLine($"        public override string ToString()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return RoundtripDataHelper.Serialize(__JObject, Formatting.None);");
+                    writer.WriteLine($"            return RoundtripDataHelper.Serialize(__O, Formatting.None);");
                     writer.WriteLine($"        }}");
 
                     writer.WriteLine();
@@ -2022,7 +2022,7 @@ namespace Neon.ModelGen
                     writer.WriteLine($"        public string ToString(bool indented)");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return RoundtripDataHelper.Serialize(__JObject, indented ? Formatting.Indented : Formatting.None);");
+                    writer.WriteLine($"            return RoundtripDataHelper.Serialize(__O, indented ? Formatting.Indented : Formatting.None);");
                     writer.WriteLine($"        }}");
 
                     //-------------------------------------
@@ -2045,7 +2045,7 @@ namespace Neon.ModelGen
                         writer.WriteLine($"        public JObject ToJObject(bool noClone = false)");
                         writer.WriteLine($"        {{");
                         writer.WriteLine($"            __Save();");
-                        writer.WriteLine($"            return noClone ? __JObject : RoundtripDataHelper.DeepClone(__JObject);");
+                        writer.WriteLine($"            return noClone ? __O : RoundtripDataHelper.DeepClone(__O);");
                         writer.WriteLine($"        }}");
                     }
 
@@ -2066,7 +2066,7 @@ namespace Neon.ModelGen
                     writer.WriteLine($"        public {virtualModifier} byte[] ToBytes()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return Encoding.UTF8.GetBytes(RoundtripDataHelper.Serialize(__JObject, Formatting.None));");
+                    writer.WriteLine($"            return Encoding.UTF8.GetBytes(RoundtripDataHelper.Serialize(__O, Formatting.None));");
                     writer.WriteLine($"        }}");
 
                     //---------------------------------------------------------
@@ -2086,7 +2086,7 @@ namespace Neon.ModelGen
                     writer.WriteLine($"        public {className} DeepClone()");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return CreateFrom(RoundtripDataHelper.DeepClone(__JObject));");
+                    writer.WriteLine($"            return CreateFrom(RoundtripDataHelper.DeepClone(__O));");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
@@ -2111,7 +2111,7 @@ namespace Neon.ModelGen
                     writer.WriteLine($"           where T : {className}, IRoundtripData");
                     writer.WriteLine($"        {{");
                     writer.WriteLine($"            __Save();");
-                    writer.WriteLine($"            return RoundtripDataFactory.CreateFrom<T>(noClone ? __JObject : RoundtripDataHelper.DeepClone(__JObject));");
+                    writer.WriteLine($"            return RoundtripDataFactory.CreateFrom<T>(noClone ? __O : RoundtripDataHelper.DeepClone(__O));");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
@@ -2141,7 +2141,7 @@ namespace Neon.ModelGen
                     writer.WriteLine();
                     writer.WriteLine($"            this.__Save();");
                     writer.WriteLine($"            other.__Save();");
-                    writer.WriteLine($"            return JObject.DeepEquals(this.__JObject, other.__JObject);");
+                    writer.WriteLine($"            return JObject.DeepEquals(this.__O, other.__O);");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
                     writer.WriteLine($"        /// <summary>");
@@ -2218,7 +2218,7 @@ namespace Neon.ModelGen
                         writer.WriteLine($"                     return cachedT;");
                         writer.WriteLine($"                 }}");
                         writer.WriteLine();
-                        writer.WriteLine($"                 cachedT = (string)__JObject[\"__T\"];");
+                        writer.WriteLine($"                 cachedT = (string)__O[\"__T\"];");
                         writer.WriteLine();
                         writer.WriteLine($"                 if (cachedT != null)");
                         writer.WriteLine($"                 {{");
@@ -2299,7 +2299,7 @@ namespace Neon.ModelGen
                     writer.WriteLine();
                     writer.WriteLine($"            using (var writer = new JsonTextWriter(new StreamWriter(stream)))");
                     writer.WriteLine($"            {{");
-                    writer.WriteLine($"                __JObject.WriteTo(writer);");
+                    writer.WriteLine($"                __O.WriteTo(writer);");
                     writer.WriteLine($"            }}");
                     writer.WriteLine($"        }}");
                     writer.WriteLine();
@@ -2325,10 +2325,10 @@ namespace Neon.ModelGen
 
                     //writer.WriteLine($"            using (var writer = new JsonTextWriter(new StreamWriter(stream)))");
                     //writer.WriteLine($"            {{");
-                    //writer.WriteLine($"                await __JObject.WriteToAsync(writer);");
+                    //writer.WriteLine($"                await __O.WriteToAsync(writer);");
                     //writer.WriteLine($"            }}");
 
-                    writer.WriteLine($"            await stream.WriteAsync(Encoding.UTF8.GetBytes(__JObject.ToString()));");
+                    writer.WriteLine($"            await stream.WriteAsync(Encoding.UTF8.GetBytes(__O.ToString()));");
 
                     writer.WriteLine($"        }}");
 

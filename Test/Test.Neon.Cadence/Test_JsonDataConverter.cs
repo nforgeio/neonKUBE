@@ -156,14 +156,14 @@ namespace TestCadence
 
             // Serialize a roundtrip item WITH extra data.
 
-            bob.__JObject.Add("foo", "bar");
+            bob.__O.Add("foo", "bar");
 
             contents = converter.ToData(bob);
 
             var deserializedBob = converter.FromData<Person>(contents);
 
             Assert.Equal(bob, deserializedBob);
-            Assert.Equal("bar", (string)deserializedBob.__JObject["foo"]);
+            Assert.Equal("bar", (string)deserializedBob.__O["foo"]);
         }
 
         [Fact]
@@ -196,14 +196,14 @@ namespace TestCadence
 
             // Serialize a roundtrip item WITH extra data.
 
-            bob.__JObject.Add("foo", "bar");
+            bob.__O.Add("foo", "bar");
 
             contents = converter.ToData(bob);
 
             var deserializedBob = (Person)converter.FromData(typeof(Person), contents);
 
             Assert.Equal(bob, deserializedBob);
-            Assert.Equal("bar", (string)deserializedBob.__JObject["foo"]);
+            Assert.Equal("bar", (string)deserializedBob.__O["foo"]);
         }
 
         [Fact]
@@ -262,7 +262,7 @@ namespace TestCadence
                 Gender = Gender.Male
             };
 
-            bob.__JObject.Add("extra", "data");
+            bob.__O.Add("extra", "data");
 
             jArray = new JArray();
             jArray.Add("foo");
@@ -277,7 +277,7 @@ namespace TestCadence
             Assert.Equal("foo", items[0]);
             Assert.Equal(1234, items[1]);
             Assert.Equal(bob, (Person)items[2]);
-            Assert.Equal("data", ((Person)items[2]).__JObject["extra"].ToString());
+            Assert.Equal("data", ((Person)items[2]).__O["extra"].ToString());
             Assert.Null(items[3]);
 
             // Arrays of other types.

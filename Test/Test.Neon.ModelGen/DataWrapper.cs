@@ -185,7 +185,7 @@ namespace TestModelGen
         /// <summary>
         /// Returns the <see cref="JObject"/> backing the wrapped class.
         /// </summary>
-        public JObject JObject => (JObject)instanceType.GetProperty("__JObject", BindingFlags.Instance | BindingFlags.Public).GetValue(instance);
+        public JObject JObject => (JObject)instanceType.GetProperty("__O", BindingFlags.Instance | BindingFlags.Public).GetValue(instance);
 
         /// <summary>
         /// Accesses the wrapped data model's properties.
