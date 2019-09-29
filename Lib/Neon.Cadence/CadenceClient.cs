@@ -621,11 +621,6 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(endpoint != null);
             Covenant.Requires<ArgumentNullException>(settings != null);
 
-            if (!NeonHelper.Is64Bit)
-            {
-                throw new Exception("[Neon.Cadence] supports 64-bit applications only.");
-            }
-
             var binaryFolder = settings.BinaryFolder;
 
             if (binaryFolder == null)
