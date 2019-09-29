@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: {{ template "fluent-bit.fullname" . }}
@@ -7,13 +7,27 @@ metadata:
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
+{{- if .Values.podLabels }}
+{{ toYaml .Values.podLabels | indent 4 }}
+{{- end }}
 spec:
   updateStrategy:
     type: RollingUpdate
+  selector:
+    matchLabels:
+      app: {{ template "fluent-bit.name" . }}
+      release: {{ .Release.Name }}
+      heritage: {{ .Release.Service }}
+      release: {{ .Release.Name }}
+{{- if .Values.podLabels }}
+{{ toYaml .Values.podLabels | indent 6 }}
+{{- end }}
   template:
     metadata:
       labels:
         app: {{ template "fluent-bit.name" . }}
+        release: {{ .Release.Name }}
+        heritage: {{ .Release.Service }}
         release: {{ .Release.Name }}
 {{- if .Values.podLabels }}
 {{ toYaml .Values.podLabels | indent 8 }}

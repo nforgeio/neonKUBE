@@ -19,13 +19,13 @@
 
 5. Verify that the new release installer works.
 
-6. Run all unit tests: **RELEASE** and in **x64 mode**
+6. Build and publish all of the Docker images: `powershell -file %NF_ROOT%/Images/publish.ps1 -all`
 
-7. Publish the nuget packages: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1`
+7. Run all unit tests: **RELEASE** mode
 
-8. Build and publish all of the Docker images: `powershell -file %NF_ROOT%/Images/publish.ps1 -all`
+8. Publish the nuget packages: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1`
 
-9. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: 0.5.8-alpha**
+9. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: 0.6.4-alpha**
 
 10. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
 
@@ -33,7 +33,7 @@
   b. Set **Tag** to the version
   c. Set **Target** to the `release-VERSION` branch
   e: Check **This is a pre-release** as required
-  f. Add the release setup binary named like: **neonKUBE-setup-0.1.0-alpha.exe**
+  f. Add the release setup binary named like: **neonKUBE-setup-0.6.4-alpha.exe**
   g. Edit the release notes including adding the SHA512 for the setup from:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`$NF_BUILD%\neonKUBE-setup.sha512.txt`

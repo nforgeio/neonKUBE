@@ -380,7 +380,7 @@ namespace Neon.Cadence
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        internal bool DebugPrelaunched { get; set; } = false;
+        public bool DebugPrelaunched { get; set; } = false;
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally indicates that the <b>cadence-client</b>
