@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Nats</RootNamespace>
-    <Version>0.6.3-alpha</Version>
+    <Version>0.6.4-alpha</Version>
     <Company>neonFORGE, LLC</Company>
     <Authors>Jeff Lill</Authors>
     <Description>neonKUBE NATS messaging extensions.</Description>
