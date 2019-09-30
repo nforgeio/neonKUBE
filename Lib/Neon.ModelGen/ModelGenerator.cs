@@ -1805,6 +1805,11 @@ namespace Neon.ModelGen
                         writer.WriteLine($"            {{");
                         writer.WriteLine($"                this.__O = source;");
                         writer.WriteLine($"            }}");
+                        writer.WriteLine();
+                        writer.WriteLine($"            if (this.__JObject == null)");
+                        writer.WriteLine($"            {{");
+                        writer.WriteLine($"                this.__JObject = new JObject();");
+                        writer.WriteLine($"            }}");
 
                         if (dataModel.IsDerived)
                         {
@@ -1903,6 +1908,11 @@ namespace Neon.ModelGen
                     if (serializedProperties.Count() > 0 || dataModel.IsDerived)
                     {
                         writer.WriteLine($"            JProperty property;");
+                        writer.WriteLine();
+                        writer.WriteLine($"            if (__JObject == null)");
+                        writer.WriteLine($"            {{");
+                        writer.WriteLine($"                __JObject = new JObject();");
+                        writer.WriteLine($"            }}");
                         writer.WriteLine();
 
                         if (dataModel.IsDerived)
