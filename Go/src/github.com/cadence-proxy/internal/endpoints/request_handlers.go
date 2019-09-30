@@ -1846,7 +1846,6 @@ func handleActivityExecuteRequest(requestCtx context.Context, request *messages.
 	// and set the activity options on the context
 	ctx := workflow.WithActivityOptions(wectx.GetContext(), opts)
 	ctx = workflow.WithWorkflowDomain(ctx, *request.GetDomain())
-	ctx = workflow.WithScheduleToStartTimeout(ctx, request.GetScheduleToStartTimeout())
 	future := workflow.ExecuteActivity(ctx, activityName, request.GetArgs())
 
 	// Send ACK: Commented out because its no longer needed.
@@ -1899,7 +1898,6 @@ func handleActivityStartRequest(requestCtx context.Context, request *messages.Ac
 	// and set the activity options on the context
 	ctx := workflow.WithActivityOptions(wectx.GetContext(), opts)
 	ctx = workflow.WithWorkflowDomain(ctx, *request.GetDomain())
-	ctx = workflow.WithScheduleToStartTimeout(ctx, request.GetScheduleToStartTimeout())
 	future := workflow.ExecuteActivity(ctx, activity, request.GetArgs())
 
 	// Send ACK: Commented out because its no longer needed.
@@ -2273,9 +2271,9 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 	clientID := request.GetClientID()
 	requestID := request.GetRequestID()
 	activityID := request.GetActivityID()
-	activity := *request.GetActivity()
+	activityTypeID := request.GetActivityTypeID()
 	Logger.Debug("ActivityStartLocalRequest Received",
-		zap.String("Activity", activity),
+		zap.Int64("ActivityTypeId", activityTypeID),
 		zap.Int64("ActivityId", activityID),
 		zap.Int64("ClientId", clientID),
 		zap.Int64("ContextId", contextID),
@@ -2293,6 +2291,81 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 		return reply
 	}
 
+	// the local activity function
+	localActivityFunc := func(ctx context.Context, input []byte) ([]byte, error) {
+		actx := proxyactivity.NewActivityContext(ctx)
+		activityContextID := ActivityContexts.Add(NextActivityContextID(), actx)
+
+		// Send a ActivityInvokeLocalRequest to the Neon.Cadence Lib
+		// cadence-client
+		requestID := NextRequestID()
+		activityInvokeLocalRequest := messages.NewActivityInvokeLocalRequest()
+		activityInvokeLocalRequest.SetRequestID(requestID)
+		activityInvokeLocalRequest.SetContextID(contextID)
+		activityInvokeLocalRequest.SetArgs(input)
+		activityInvokeLocalRequest.SetActivityTypeID(activityTypeID)
+		activityInvokeLocalRequest.SetActivityContextID(activityContextID)
+		activityInvokeLocalRequest.SetClientID(clientID)
+
+		// create the Operation for this request and add it to the operations map
+		op := messages.NewOperation(requestID, activityInvokeLocalRequest)
+		op.SetChannel(make(chan interface{}))
+		op.SetContextID(activityContextID)
+		Operations.Add(requestID, op)
+
+		// send the request
+		go sendMessage(activityInvokeLocalRequest)
+
+		Logger.Debug("ActivityInvokeLocalRequest sent",
+			zap.Int64("ActivityTypeId", activityTypeID),
+			zap.Int64("ClientId", clientID),
+			zap.Int64("ContextId", contextID),
+			zap.Int64("ActivityContextId", activityContextID),
+			zap.Int64("RequestId", requestID),
+			zap.Int("ProcessId", os.Getpid()),
+		)
+
+		// wait for ActivityInvokeReply
+		result := <-op.GetChannel()
+		switch s := result.(type) {
+		case error:
+			Logger.Error("Activity Failed With Error",
+				zap.Int64("ActivityTypeId", activityTypeID),
+				zap.Int64("ClientId", clientID),
+				zap.Int64("ContextId", contextID),
+				zap.Int64("ActivityContextId", activityContextID),
+				zap.Int64("RequestId", requestID),
+				zap.Error(s),
+				zap.Int("ProcessId", os.Getpid()),
+			)
+			return nil, s
+
+		case []byte:
+			Logger.Info("Activity Successful",
+				zap.Int64("ActivityTypeId", activityTypeID),
+				zap.Int64("ClientId", clientID),
+				zap.Int64("ContextId", contextID),
+				zap.Int64("ActivityContextId", activityContextID),
+				zap.Int64("RequestId", requestID),
+				zap.Any("Result", s),
+				zap.Int("ProcessId", os.Getpid()),
+			)
+			return s, nil
+
+		default:
+			Logger.Error("Activity Result Unexpected",
+				zap.Int64("ActivityTypeId", activityTypeID),
+				zap.Int64("ClientId", clientID),
+				zap.Int64("ContextId", contextID),
+				zap.Int64("ActivityContextId", activityContextID),
+				zap.Int64("RequestId", requestID),
+				zap.Any("Result", s),
+				zap.Int("ProcessId", os.Getpid()),
+			)
+			return nil, fmt.Errorf("Unexpected result type %v.  result must be an error or []byte.", reflect.TypeOf(s))
+		}
+	}
+
 	/// get the activity options
 	var opts workflow.LocalActivityOptions
 	if v := request.GetOptions(); v != nil {
@@ -2302,7 +2375,7 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 	// set the activity options on the context
 	// execute local activity
 	ctx := workflow.WithLocalActivityOptions(wectx.GetContext(), opts)
-	future := workflow.ExecuteLocalActivity(ctx, activity, request.GetArgs())
+	future := workflow.ExecuteLocalActivity(ctx, localActivityFunc, request.GetArgs())
 
 	// Send ACK: Commented out because its no longer needed.
 	// op := sendFutureACK(contextID, requestID, clientID)

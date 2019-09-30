@@ -23,11 +23,11 @@ import (
 
 type (
 
-	// ActivityStartReply is a ActivityReply of MessageType
-	// ActivityStartReply.  It holds a reference to a ActivityReply in memory
+	// ActivityStartReply is a WorkflowReply of MessageType
+	// ActivityStartReply.  It holds a reference to a WorkflowReply in memory
 	// and is the reply type to a ActivityExecuteRequest
 	ActivityStartReply struct {
-		*ActivityReply
+		*WorkflowReply
 	}
 )
 
@@ -38,7 +38,7 @@ type (
 // ActivityStartReply in memory
 func NewActivityStartReply() *ActivityStartReply {
 	reply := new(ActivityStartReply)
-	reply.ActivityReply = NewActivityReply()
+	reply.WorkflowReply = NewWorkflowReply()
 	reply.SetType(messagetypes.ActivityStartReply)
 
 	return reply
@@ -58,5 +58,5 @@ func (reply *ActivityStartReply) Clone() IProxyMessage {
 
 // CopyTo inherits docs from ProxyMessage.CopyTo()
 func (reply *ActivityStartReply) CopyTo(target IProxyMessage) {
-	reply.ActivityReply.CopyTo(target)
+	reply.WorkflowReply.CopyTo(target)
 }

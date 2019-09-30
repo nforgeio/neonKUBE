@@ -25,16 +25,16 @@ import (
 
 type (
 
-	// ActivityStartLocalRequest is an ActivityRequest of MessageType
+	// ActivityStartLocalRequest is an WorkflowRequest of MessageType
 	// ActivityStartLocalRequest.
 	//
 	// A ActivityStartLocalRequest contains a reference to a
-	// ActivityRequest struct in memory and ReplyType, which is
-	// the corresponding MessageType for replying to this ActivityRequest
+	// WorkflowRequest struct in memory and ReplyType, which is
+	// the corresponding MessageType for replying to this WorkflowRequest
 	//
 	// Starts a workflow activity.
 	ActivityStartLocalRequest struct {
-		*ActivityRequest
+		*WorkflowRequest
 	}
 )
 
@@ -44,29 +44,11 @@ type (
 // in memory
 func NewActivityStartLocalRequest() *ActivityStartLocalRequest {
 	request := new(ActivityStartLocalRequest)
-	request.ActivityRequest = NewActivityRequest()
+	request.WorkflowRequest = NewWorkflowRequest()
 	request.SetType(messagetypes.ActivityStartLocalRequest)
 	request.SetReplyType(messagetypes.ActivityStartLocalReply)
 
 	return request
-}
-
-// GetActivity gets a ActivityStartLocalRequest's Activity field
-// from its properties map.  Specifies the activity to
-// be executed.
-//
-// returns *string -> activity to execute.
-func (request *ActivityStartLocalRequest) GetActivity() *string {
-	return request.GetStringProperty("Activity")
-}
-
-// SetActivity sets an ActivityStartLocalRequest's Activity field
-// from its properties map.  Specifies the activity to
-// be executed.
-//
-// param value *string -> activity to execute.
-func (request *ActivityStartLocalRequest) SetActivity(value *string) {
-	request.SetStringProperty("Activity", value)
 }
 
 // GetArgs gets a ActivityStartLocalRequest's Args field
@@ -109,6 +91,24 @@ func (request *ActivityStartLocalRequest) SetOptions(value *workflow.LocalActivi
 	request.SetJSONProperty("Options", value)
 }
 
+// GetActivityTypeID gets a ActivityStartLocalRequest's ActivityTypeID.
+// Identifies the .NET type that implements the local activity.
+//
+// returns int64 -> int64 representing the ActivityTypeID of the
+// activity to be executed.
+func (request *ActivityStartLocalRequest) GetActivityTypeID() int64 {
+	return request.GetLongProperty("ActivityTypeId")
+}
+
+// SetActivityTypeID sets an ActivityStartLocalRequest's ActivityTypeID.
+// Identifies the .NET type that implements the local activity.
+//
+// param value int64 -> int64 representing the ActivityTypeID of the
+// activity to be executed.
+func (request *ActivityStartLocalRequest) SetActivityTypeID(value int64) {
+	request.SetLongProperty("ActivityTypeId", value)
+}
+
 // GetActivityID gets the unique Id used to identify the activity.
 //
 // returns int64 -> the long ActivityID
@@ -123,7 +123,7 @@ func (request *ActivityStartLocalRequest) SetActivityID(value int64) {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from ActivityRequest.Clone()
+// Clone inherits docs from WorkflowRequest.Clone()
 func (request *ActivityStartLocalRequest) Clone() IProxyMessage {
 	activityStartLocalRequest := NewActivityStartLocalRequest()
 	var messageClone IProxyMessage = activityStartLocalRequest
@@ -132,13 +132,13 @@ func (request *ActivityStartLocalRequest) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from ActivityRequest.CopyTo()
+// CopyTo inherits docs from WorkflowRequest.CopyTo()
 func (request *ActivityStartLocalRequest) CopyTo(target IProxyMessage) {
-	request.ActivityRequest.CopyTo(target)
+	request.WorkflowRequest.CopyTo(target)
 	if v, ok := target.(*ActivityStartLocalRequest); ok {
 		v.SetArgs(request.GetArgs())
 		v.SetOptions(request.GetOptions())
-		v.SetActivity(request.GetActivity())
 		v.SetActivityID(request.GetActivityID())
+		v.SetActivityTypeID(request.GetActivityTypeID())
 	}
 }

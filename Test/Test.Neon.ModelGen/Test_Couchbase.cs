@@ -328,29 +328,25 @@ namespace TestModelGen.Couchbase
 
             var jack = new Person()
             {
-                Id   = 0,
-                Name = "Jack",
-                Age  = 10,
+                Id     = 0,
+                Name   = "Jack",
+                Age    = 10,
                 Gender = Gender.Male,
-                Data = new byte[] { 0, 1, 2, 3, 4 }
+                Data   = new byte[] { 0, 1, 2, 3, 4 }
             };
 
-            var jObject = jack.ToJObject(noClone: true);
-
-            jObject["Height"] = 182;
+            jack.__O["Height"] = 182;
 
             await bucket.UpsertSafeAsync(jack, persistTo: PersistTo.One);
 
             var jackRead = await bucket.GetSafeAsync<Person>(Person.CreateKey(0));
-
-            jObject = jackRead.ToJObject(noClone: true);
 
             Assert.Equal(jack.Id, jackRead.Id);
             Assert.Equal(jack.Name, jackRead.Name);
             Assert.Equal(jack.Age, jackRead.Age);
             Assert.Equal(jack.Gender, jackRead.Gender);
             Assert.Equal(jack.Data, jackRead.Data);
-            Assert.Equal(182, (int)jObject["Height"]);
+            Assert.Equal(182, (int)jackRead.__O["Height"]);
             Assert.Equal(jack, jackRead);
         }
 
@@ -589,6 +585,65 @@ namespace TestModelGen.Couchbase
             Assert.False(gotJack);
             Assert.True(gotJill);
             Assert.True(gotJohn);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
+        public async Task Dont_Persist_O()
+        {
+            // Ensure that the database starts out empty.
+
+            Assert.Empty(from doc in context.Query<object>() select doc);
+
+            // Verify that objects written to the database don't include any
+            // backing "__O" properties.
+
+            var jack = new Person()
+            {
+                Id     = 0,
+                Name   = "Jack",
+                Age    = 10,
+                Gender = Gender.Male,
+                Data   = new byte[] { 0, 1, 2, 3, 4 }
+            };
+
+            var jill = new Person()
+            {
+                Id     = 1,
+                Name   = "Jill",
+                Age    = 11,
+                Gender = Gender.Female,
+                Data   = new byte[] { 5, 6, 7, 8, 9 }
+            };
+
+            var family = new Family
+            {
+                Id     = 0,
+                Mother = jill,
+                Father = jack,
+                Baby   = null
+            };
+
+            // Round-trip the family to JObject so that the __O properties will be
+            // initialized and then persist them to the database, expecting that
+            // these properties will be stripped before the documents are saved.
+
+            var familyJObj = family.ToJObject();
+            var familyJson = familyJObj.ToString(Formatting.Indented);
+
+            family = Family.CreateFrom(family.ToJObject());
+
+            Assert.NotEmpty(family.__O);
+            Assert.NotEmpty(family.Mother.__O);
+            Assert.NotEmpty(family.Father.__O);
+
+            await bucket.UpsertSafeAsync(family);
+
+            // Verify that we can read the family and that it and that none of the members include the "__O" properties.
+
+            familyJson = (await bucket.GetSafeAsync<JObject>(Person.CreateKey(0))).ToString(Formatting.Indented);
+
+            Assert.DoesNotContain("\"__O\"", familyJson);
         }
     }
 }

@@ -23,16 +23,16 @@ import (
 
 type (
 
-	// ActivityGetLocalResultRequest is an ActivityRequest of MessageType
+	// ActivityGetLocalResultRequest is an WorkflowRequest of MessageType
 	// ActivityGetLocalResultRequest.
 	//
 	// A ActivityGetLocalResultRequest contains a reference to a
-	// ActivityRequest struct in memory and ReplyType, which is
-	// the corresponding MessageType for replying to this ActivityRequest
+	// WorkflowRequest struct in memory and ReplyType, which is
+	// the corresponding MessageType for replying to this WorkflowRequest
 	//
 	// Starts a workflow activity.
 	ActivityGetLocalResultRequest struct {
-		*ActivityRequest
+		*WorkflowRequest
 	}
 )
 
@@ -42,7 +42,7 @@ type (
 // in memory
 func NewActivityGetLocalResultRequest() *ActivityGetLocalResultRequest {
 	request := new(ActivityGetLocalResultRequest)
-	request.ActivityRequest = NewActivityRequest()
+	request.WorkflowRequest = NewWorkflowRequest()
 	request.SetType(messagetypes.ActivityGetLocalResultRequest)
 	request.SetReplyType(messagetypes.ActivityGetLocalResultReply)
 
@@ -63,7 +63,7 @@ func (request *ActivityGetLocalResultRequest) SetActivityID(value int64) {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from ActivityRequest.Clone()
+// Clone inherits docs from WorkflowRequest.Clone()
 func (request *ActivityGetLocalResultRequest) Clone() IProxyMessage {
 	activityGetLocalResultRequest := NewActivityGetLocalResultRequest()
 	var messageClone IProxyMessage = activityGetLocalResultRequest
@@ -72,9 +72,9 @@ func (request *ActivityGetLocalResultRequest) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from ActivityRequest.CopyTo()
+// CopyTo inherits docs from WorkflowRequest.CopyTo()
 func (request *ActivityGetLocalResultRequest) CopyTo(target IProxyMessage) {
-	request.ActivityRequest.CopyTo(target)
+	request.WorkflowRequest.CopyTo(target)
 	if v, ok := target.(*ActivityGetLocalResultRequest); ok {
 		v.SetActivityID(request.GetActivityID())
 	}

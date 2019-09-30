@@ -130,6 +130,24 @@ namespace Test.Neon.Models.Definitions
         Three
     }
 
+    [Persistable]
+    [DataModel(Name = "Family")]
+    public interface Family
+    {
+        [PersistableKey]
+        [JsonProperty(PropertyName = "id")]
+        public int Id { get; set; }
+
+        [JsonProperty(PropertyName = "mother")]
+        public Person Mother { get; set; }
+
+        [JsonProperty(PropertyName = "father")]
+        public Person Father { get; set; }
+
+        [JsonProperty(PropertyName = "baby")]
+        public Person Baby { get; set; }
+    }
+
     [ServiceModel]
     [Route("/TestAspNetFixture")]
     public interface TestAspNetFixtureController

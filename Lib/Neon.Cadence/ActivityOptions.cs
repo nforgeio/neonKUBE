@@ -63,12 +63,17 @@ namespace Neon.Cadence
 
             if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
             {
-                options.ScheduleToCloseTimeout = client.Settings.WorkflowScheduleToCloseTimeout;
+                options.ScheduleToCloseTimeout = client.Settings.ActivityScheduleToCloseTimeout;
             }
 
             if (options.ScheduleToStartTimeout <= TimeSpan.Zero)
             {
-                options.ScheduleToStartTimeout = client.Settings.WorkflowScheduleToStartTimeout;
+                options.ScheduleToStartTimeout = client.Settings.ActivityScheduleToStartTimeout;
+            }
+
+            if (options.StartToCloseTimeout <= TimeSpan.Zero)
+            {
+                options.StartToCloseTimeout = client.Settings.ActivityStartToCloseTimeout;
             }
 
             if (string.IsNullOrEmpty(options.TaskList))
@@ -103,7 +108,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Specifies the maximum time the activity be queued, waiting to be scheduled
-        /// on a worker.  This defaults to <see cref="CadenceSettings.WorkflowScheduleToStartTimeoutSeconds"/>.
+        /// on a worker.  This defaults to <see cref="CadenceSettings.ActivityScheduleToStartTimeoutSeconds"/>.
         /// </summary>
         public TimeSpan ScheduleToStartTimeout { get; set; } = TimeSpan.Zero;
 

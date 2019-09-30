@@ -18,8 +18,6 @@
 package messages
 
 import (
-	"time"
-
 	"go.uber.org/cadence/workflow"
 
 	messagetypes "github.com/cadence-proxy/internal/messages/types"
@@ -27,16 +25,16 @@ import (
 
 type (
 
-	// ActivityStartRequest is an ActivityRequest of MessageType
+	// ActivityStartRequest is an WorkflowRequest of MessageType
 	// ActivityStartRequest.
 	//
 	// A ActivityStartRequest contains a reference to a
-	// ActivityRequest struct in memory and ReplyType, which is
-	// the corresponding MessageType for replying to this ActivityRequest
+	// WorkflowRequest struct in memory and ReplyType, which is
+	// the corresponding MessageType for replying to this WorkflowRequest
 	//
 	// Starts a workflow activity.
 	ActivityStartRequest struct {
-		*ActivityRequest
+		*WorkflowRequest
 	}
 )
 
@@ -46,7 +44,7 @@ type (
 // in memory
 func NewActivityStartRequest() *ActivityStartRequest {
 	request := new(ActivityStartRequest)
-	request.ActivityRequest = NewActivityRequest()
+	request.WorkflowRequest = NewWorkflowRequest()
 	request.SetType(messagetypes.ActivityStartRequest)
 	request.SetReplyType(messagetypes.ActivityStartReply)
 
@@ -129,28 +127,6 @@ func (request *ActivityStartRequest) SetDomain(value *string) {
 	request.SetStringProperty("Domain", value)
 }
 
-// GetScheduleToStartTimeout gets the ScheduleToStartTimeout property
-// from the ActivityStartRequest's properties map.
-// Specifies the maximum time the activity will wait after being scheduled
-// until it is executed to a worker.
-//
-// returns time.Duration -> the value of the ScheduleToStartTimeout property from
-// the ActivityStartRequest's properties map.
-func (request *ActivityStartRequest) GetScheduleToStartTimeout() time.Duration {
-	return request.GetTimeSpanProperty("ScheduleToStartTimeout")
-}
-
-// SetScheduleToStartTimeout sets the ScheduleToStartTimeout
-// property in the ActivityStartRequest's properties map.
-// Specifies the maximum time the activity will wait after being scheduled
-// until it is executed to a worker.
-//
-// param value time.Duration -> the time.Duration to be set in the
-// ActivityStartRequest's properties map.
-func (request *ActivityStartRequest) SetScheduleToStartTimeout(value time.Duration) {
-	request.SetTimeSpanProperty("ScheduleToStartTimeout", value)
-}
-
 // GetActivityID gets the unique Id used to identify the activity.
 //
 // returns int64 -> the long ActivityID
@@ -165,7 +141,7 @@ func (request *ActivityStartRequest) SetActivityID(value int64) {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from ActivityRequest.Clone()
+// Clone inherits docs from WorkflowRequest.Clone()
 func (request *ActivityStartRequest) Clone() IProxyMessage {
 	activityStartRequest := NewActivityStartRequest()
 	var messageClone IProxyMessage = activityStartRequest
@@ -174,15 +150,14 @@ func (request *ActivityStartRequest) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from ActivityRequest.CopyTo()
+// CopyTo inherits docs from WorkflowRequest.CopyTo()
 func (request *ActivityStartRequest) CopyTo(target IProxyMessage) {
-	request.ActivityRequest.CopyTo(target)
+	request.WorkflowRequest.CopyTo(target)
 	if v, ok := target.(*ActivityStartRequest); ok {
 		v.SetArgs(request.GetArgs())
 		v.SetOptions(request.GetOptions())
 		v.SetActivity(request.GetActivity())
 		v.SetDomain(request.GetDomain())
-		v.SetScheduleToStartTimeout(request.GetScheduleToStartTimeout())
 		v.SetActivityID(request.GetActivityID())
 	}
 }
