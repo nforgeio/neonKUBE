@@ -1,0 +1,1 @@
+﻿(ls -r c:).fullname.Replace("$pwd\","") | Select-String "\\" | Select-String -notMatch "bin|obj" | ForEach-Object {$_ -Replace "\\", "/"} > tree.txt

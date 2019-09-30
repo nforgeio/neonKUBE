@@ -409,6 +409,24 @@ namespace Neon.Kube
         public string PhysicalPower { get; set; } = string.Empty;       // $todo(jeff.lill): Define the format of this string for APC PDUs.
 
         //---------------------------------------------------------------------
+        // Define the K8s related labels.
+
+        /// <summary>
+        /// Reserved label name for <see cref="Istio"/>.
+        /// </summary>
+        public const string LabelIstio = ClusterDefinition.ReservedLabelPrefix + "istio";
+
+        /// <summary>
+        /// <b>io.neonkube.mon.istio.enabled</b> [<c>bool</c>]: Indicates that Istio 
+        /// will be deployed to this node.  
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Istio", Required = Required.Default)]
+        [YamlMember(Alias = "istio", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool Istio { get; set; } = false;
+
+        //---------------------------------------------------------------------
         // Define the logging related labels.
 
         /// <summary>
@@ -714,6 +732,8 @@ namespace Neon.Kube
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalMachine,         PhysicalMachine));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalFaultDomain,     PhysicalFaultDomain));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalPower,           PhysicalPower));
+
+                list.Add(new KeyValuePair<string, object>(LabelIstio,                   NeonHelper.ToBoolString(Istio)));
 
                 list.Add(new KeyValuePair<string, object>(LabelElasticsearch,           NeonHelper.ToBoolString(Elasticsearch)));
 

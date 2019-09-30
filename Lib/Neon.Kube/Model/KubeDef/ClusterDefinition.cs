@@ -537,7 +537,7 @@ namespace Neon.Kube
             Docker      = Docker ?? new DockerOptions();
             Ceph        = Ceph ?? new CephOptions() { Enabled = false };
             Mon         = Mon ?? new MonOptions() { Enabled = false };
-            Prometheus  = Prometheus ?? new PrometheusOptions() { Enabled = false };
+            Prometheus = Prometheus ?? new PrometheusOptions() { Enabled = false };
             DrivePrefix = DrivePrefix ?? defaultDrivePrefix;
             Setup       = Setup ?? new SetupOptions();
             Hosting     = Hosting ?? new HostingOptions();

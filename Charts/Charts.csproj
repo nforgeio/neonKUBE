@@ -6,6 +6,17 @@
 
   <ItemGroup>
     <Folder Include="kubernetes\templates\tests\" />
+    <Folder Include="prometheus-operator\" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Update="tree.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="powershell -f .\build.ps1" />
+  </Target>
 
 </Project>

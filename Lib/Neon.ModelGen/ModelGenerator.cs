@@ -1805,6 +1805,11 @@ namespace Neon.ModelGen
                         writer.WriteLine($"            {{");
                         writer.WriteLine($"                this.__O = source;");
                         writer.WriteLine($"            }}");
+                        writer.WriteLine();
+                        writer.WriteLine($"            if (this.__O == null)");
+                        writer.WriteLine($"            {{");
+                        writer.WriteLine($"                this.__O = new JObject();");
+                        writer.WriteLine($"            }}");
 
                         if (dataModel.IsDerived)
                         {
@@ -1903,6 +1908,11 @@ namespace Neon.ModelGen
                     if (serializedProperties.Count() > 0 || dataModel.IsDerived)
                     {
                         writer.WriteLine($"            JProperty property;");
+                        writer.WriteLine();
+                        writer.WriteLine($"            if (__O == null)");
+                        writer.WriteLine($"            {{");
+                        writer.WriteLine($"                __O = new JObject();");
+                        writer.WriteLine($"            }}");
                         writer.WriteLine();
 
                         if (dataModel.IsDerived)
@@ -2032,20 +2042,24 @@ namespace Neon.ModelGen
                     {
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
-                        writer.WriteLine($"        /// Renders the instances as a <see cref=\"JObject\"/>.");
+                        writer.WriteLine($"        /// Renders the instance as a new <see cref=\"JObject\"/>.");
                         writer.WriteLine($"        /// </summary>");
-                        writer.WriteLine($"        /// <param name=\"noClone\">Optionally return the underlying <see cref=\"JObject\"/> without cloning it for better performance.</param>");
-                        writer.WriteLine($"        /// <returns>The underlying <see cref=\"JObject\"/> (cloned by default).</returns>");
+                        writer.WriteLine($"        /// <returns>The rendered <see cref=\"JObject\"/>.</returns>");
 
                         if (!Settings.AllowDebuggerStepInto)
                         {
                             writer.WriteLine($"        [DebuggerStepThrough]");
                         }
 
-                        writer.WriteLine($"        public JObject ToJObject(bool noClone = false)");
+                        writer.WriteLine($"        public JObject ToJObject()");
                         writer.WriteLine($"        {{");
                         writer.WriteLine($"            __Save();");
-                        writer.WriteLine($"            return noClone ? __O : RoundtripDataHelper.DeepClone(__O);");
+                        writer.WriteLine();
+                        writer.WriteLine($"            var clone = RoundtripDataHelper.DeepClone(__O);");
+                        writer.WriteLine();
+                        writer.WriteLine($"            clone[\"__O\"] = __O;");
+                        writer.WriteLine();
+                        writer.WriteLine($"            return clone;");
                         writer.WriteLine($"        }}");
                     }
 
