@@ -139,7 +139,7 @@ subjects:
 # ------------------- Dashboard Deployment ------------------- #
 
 kind: Deployment
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 metadata:
   labels:
     app: kubernetes-dashboard
