@@ -1806,9 +1806,9 @@ namespace Neon.ModelGen
                         writer.WriteLine($"                this.__O = source;");
                         writer.WriteLine($"            }}");
                         writer.WriteLine();
-                        writer.WriteLine($"            if (this.__JObject == null)");
+                        writer.WriteLine($"            if (this.__O == null)");
                         writer.WriteLine($"            {{");
-                        writer.WriteLine($"                this.__JObject = new JObject();");
+                        writer.WriteLine($"                this.__O = new JObject();");
                         writer.WriteLine($"            }}");
 
                         if (dataModel.IsDerived)
@@ -1909,9 +1909,9 @@ namespace Neon.ModelGen
                     {
                         writer.WriteLine($"            JProperty property;");
                         writer.WriteLine();
-                        writer.WriteLine($"            if (__JObject == null)");
+                        writer.WriteLine($"            if (__O == null)");
                         writer.WriteLine($"            {{");
-                        writer.WriteLine($"                __JObject = new JObject();");
+                        writer.WriteLine($"                __O = new JObject();");
                         writer.WriteLine($"            }}");
                         writer.WriteLine();
 
