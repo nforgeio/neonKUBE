@@ -25,12 +25,12 @@
 
 8. Publish the nuget packages: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1`
 
-9. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: 0.6.4-alpha**
+9. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: v0.6.4-alpha**
 
 10. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
 
   a. Create the release if it doesn't already exist
-  b. Set **Tag** to the version
+  b. Set **Tag** to the version with a leading "v" (like **v0.6.4-alpha**)
   c. Set **Target** to the `release-VERSION` branch
   e: Check **This is a pre-release** as required
   f. Add the release setup binary named like: **neonKUBE-setup-0.6.4-alpha.exe**
