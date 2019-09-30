@@ -110,15 +110,17 @@ Follow the steps below to configure a development or test workstation:
 
 14. **Close** any running instances of **Visual Studio**
 
-15. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from [here](http://www.7-zip.org/download.html)
+15. Install the latest release of **neonKUBE** from [here](https://github.com/nforgeio/neonKUBE/releases)
 
-16. Install **MinGW (Minimalist GNU for Windows):**
+16. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from [here](http://www.7-zip.org/download.html)
+
+17. Install **MinGW (Minimalist GNU for Windows):**
 
     * Install MinGW from [here](https://sourceforge.net/projects/mingw-w64/) and follow these [instructions](https://code.visualstudio.com/docs/cpp/config-mingw)
     * You only need to follow instruction through the "Prerequisites" section.
     * Make sure that when you install, you install for your specific architecture (i.e. x86_64).  
 
-17. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
+18. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
 
     * Install **WinSCP** from [here](http://winscp.net/eng/download.php) (I typically use the "Explorer" interface)
     * Install **PuTTY** from [here](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
@@ -127,26 +129,26 @@ Follow the steps below to configure a development or test workstation:
     
       ![WinSCP Hidden Files](Images/DEVELOPER/WinSCPHiddenFiles.png?raw=true)
 
-18. Configure the build **environment variables**:
+19. Configure the build **environment variables**:
 
     * Open **File Explorer**
     * Navigate to the directory holding the cloned repository
     * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
     * Close the CMD window when the script is finished
   
-19. Install the latest build of neonKUBE from [here](https://github.com/nforgeio/neonKUBE/releases)
+20. Install the latest build of neonKUBE from [here](https://github.com/nforgeio/neonKUBE/releases)
 
-20. Restart Visual Studio (to pick up the environment changes).
+21. Restart Visual Studio (to pick up the environment changes).
 
-21. Confirm that the solution builds:
+22. Confirm that the solution builds:
 
     * Run **Visual Studio** as **administrator**
     * Open **$/neonKUBE.sln** (where **$** is the repo root directory)
     * Select **Build/Rebuild** Solution
 
-22. Install **InnoSetup** from the **$/External** directory using default settings.  This is required to build the Windows neonKUBE installer.
+23. Install **InnoSetup** from the **$/External** directory using default settings.  This is required to build the Windows neonKUBE installer.
 
-23. *Optional*: Install **OpenVPN**
+24. *Optional*: Install **OpenVPN**
 
     * Download the Windows Installer from [here](https://openvpn.net/index.php/open-source/downloads.html)
     * Run this command as administrator in a CMD window to install a second TAP interface:
@@ -155,11 +157,11 @@ Follow the steps below to configure a development or test workstation:
       ```
     * Obtain your WowRacks VPN credentials from another developer who has ADMIN access.
 
-24. *Optional*: Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
+25. *Optional*: Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
 
-25. *Optional*: Install **Postman** REST API tool from [here](https://www.getpostman.com/postman)
+26. *Optional*: Install **Postman** REST API tool from [here](https://www.getpostman.com/postman)
 
-26. *Optional*: Install **Cmdr/Mini** command shell:
+27. *Optional*: Install **Cmdr/Mini** command shell:
 
   * **IMPORTANT: Don't install the Full version** to avoid installing Linux command line tools that might conflict with the Cygwin tools installed earlier.
   * Download the ZIP archive from: [here](http://cmder.net/)
@@ -168,9 +170,9 @@ Follow the steps below to configure a development or test workstation:
   * Run Cmdr and configure settings as desired.
   * Consider removing the alias definitions in `$\config\user-aliases.cmd` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
 
-27. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
+28. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
-28. *Optional*: Developers who will be publishing **nuget packages** will need to:
+29. *Optional*: Developers who will be publishing **nuget packages** will need to:
 
     * Download the latest recommended **nuget.exe** from [here](https://www.nuget.org/downloads) and put this somewhere in your `PATH`
     * Obtain a nuget API key from a senior developer and install the key on their workstation via:
@@ -178,7 +180,7 @@ Follow the steps below to configure a development or test workstation:
       nuget SetApiKey APIKEY
       ```
 
-29. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
+30. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
 
 ## Git Branches
 

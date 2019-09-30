@@ -311,7 +311,7 @@ namespace TestModelGen
             {
                 if (indented)
                 {
-                    var method = instanceType.GetMethod("ToString", Array.Empty<Type>());
+                    var method = instanceType.GetMethod("ToString", new Type[] { typeof(bool) });
 
                     return (string)method.Invoke(instance, new object[] { indented });
                 }
@@ -363,15 +363,14 @@ namespace TestModelGen
         /// <summary>
         /// Serializes the data model as a <see cref="JObject"/>.
         /// </summary>
-        /// <param name="noClone">Optionally disable deep cloning of the backing <see cref="JObject"/>.</param>
         /// <returns>The JSON text.</returns>
-        public JObject ToJObject(bool noClone = false)
+        public JObject ToJObject()
         {
             try
             {
                 var method = instanceType.GetMethod("ToJObject", Array.Empty<Type>());
 
-                return (JObject)method.Invoke(instance, new object[] { noClone });
+                return (JObject)method.Invoke(instance, Array.Empty<Type>());
             }
             catch (TargetInvocationException e)
             {
