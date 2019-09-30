@@ -28,7 +28,7 @@ namespace Neon.Cadence.Internal
     /// <b>proxy --> client:</b> Answers a <see cref="ActivityStartLocalRequest"/>
     /// </summary>
     [InternalProxyMessage(InternalMessageTypes.ActivityStartLocalReply)]
-    internal class ActivityStartLocalReply : ActivityReply
+    internal class ActivityStartLocalReply : WorkflowReply
     {
         /// <summary>
         /// Default constructor.

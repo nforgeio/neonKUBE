@@ -56,7 +56,7 @@ namespace Neon.Cadence
 
             if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
             {
-                options.ScheduleToCloseTimeout = client.Settings.WorkflowScheduleToCloseTimeout;
+                options.ScheduleToCloseTimeout = client.Settings.ActivityScheduleToCloseTimeout;
             }
 
             return options;

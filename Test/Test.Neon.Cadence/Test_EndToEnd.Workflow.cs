@@ -1470,6 +1470,29 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        public interface IParallelActivity : IActivity
+        {
+            [ActivityMethod]
+            Task RunAsync();
+
+            [ActivityMethod(Name = "hello")]
+            Task<string> HelloAsync(string name);
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ParallelActivity : ActivityBase, IParallelActivity
+        {
+            public async Task RunAsync()
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1));
+            }
+
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
+        }
+
         public interface IWorkflowChild : IWorkflow
         {
             [WorkflowMethod]
@@ -1624,6 +1647,24 @@ namespace TestCadence
 
             [WorkflowMethod(Name = "query-child")]
             Task<bool> QueryChildAsync();
+
+            [WorkflowMethod(Name = "future-activity-noargsresult")]
+            Task<bool> FutureActivity_NoArgsResult();
+
+            [WorkflowMethod(Name = "future-local-activity-noargsresult")]
+            Task<bool> FutureLocalActivity_NoArgsResult();
+
+            [WorkflowMethod(Name = "future-activity-argsresult")]
+            Task<bool> FutureActivity_ArgsResult();
+
+            [WorkflowMethod(Name = "future-local-activity-argsresult")]
+            Task<bool> FutureLocalActivity_ArgsResult();
+
+            [WorkflowMethod(Name = "parallel-activity")]
+            Task<bool> ParallelActivity();
+
+            [WorkflowMethod(Name = "parallel-local-activity")]
+            Task<bool> ParallelLocalActivity();
         }
 
         [Workflow(AutoRegister = true)]
@@ -1734,6 +1775,96 @@ namespace TestCadence
                 await task;
 
                 return pass;
+            }
+
+            public async Task<bool> FutureActivity_NoArgsResult()
+            {
+                // Execute an activity with no parameters or a result using a future.
+
+                var runActivityStub   = Workflow.NewStartActivityStub<IParallelActivity>();
+                var runActivityFuture = await runActivityStub.StartAsync();
+
+                await runActivityFuture.GetAsync();
+
+                return true;
+            }
+
+            public async Task<bool> FutureLocalActivity_NoArgsResult()
+            {
+                // Execute a local activity with no parameters or a result using a future.
+
+                var runActivityStub   = Workflow.NewStartLocalActivityStub<IParallelActivity, ParallelActivity>();
+                var runActivityFuture = await runActivityStub.StartAsync();
+
+                await runActivityFuture.GetAsync();
+
+                return true;
+            }
+
+            public async Task<bool> FutureActivity_ArgsResult()
+            {
+                // Execute an activity with parameters and a result using a future.
+
+                var helloActivityStub   = Workflow.NewStartActivityStub<IParallelActivity>("hello");
+                var helloActivityFuture = await helloActivityStub.StartAsync<string>("Jeff");
+                var greeting            = await helloActivityFuture.GetAsync();
+
+                return greeting == "Hello Jeff!";
+            }
+
+            public async Task<bool> FutureLocalActivity_ArgsResult()
+            {
+                // Execute a local activity with parameters and a result using a future.
+
+                var helloActivityStub   = Workflow.NewStartLocalActivityStub<IParallelActivity, ParallelActivity>("hello");
+                var helloActivityFuture = await helloActivityStub.StartAsync<string>("Jeff");
+                var greeting            = await helloActivityFuture.GetAsync();
+
+                return greeting == "Hello Jeff!";
+            }
+
+            public async Task<bool> ParallelActivity()
+            {
+                // Execute two activities in parallel.  This exercises activities with
+                // and without parameters or results.
+
+                var runActivityStub     = Workflow.NewStartActivityStub<IParallelActivity>();
+                var helloActivityStub   = Workflow.NewStartActivityStub<IParallelActivity>("hello");
+                var runActivityFuture   = await runActivityStub.StartAsync();
+                var helloActivityFuture = await helloActivityStub.StartAsync<string>("Jeff");
+
+                var greeting = await helloActivityFuture.GetAsync();
+
+                if (greeting != "Hello Jeff!")
+                {
+                    return false;
+                }
+
+                await runActivityFuture.GetAsync();
+
+                return true;
+            }
+
+            public async Task<bool> ParallelLocalActivity()
+            {
+                // Execute two local activities in parallel.  This exercises activities with
+                // and without parameters or results.
+
+                var runActivityStub     = Workflow.NewStartLocalActivityStub<IParallelActivity, ParallelActivity>();
+                var helloActivityStub   = Workflow.NewStartLocalActivityStub<IParallelActivity, ParallelActivity>("hello");
+                var runActivityFuture   = await runActivityStub.StartAsync();
+                var helloActivityFuture = await helloActivityStub.StartAsync<string>("Jeff");
+
+                var greeting = await helloActivityFuture.GetAsync();
+
+                if (greeting != "Hello Jeff!")
+                {
+                    return false;
+                }
+
+                await runActivityFuture.GetAsync();
+
+                return true;
             }
         }
 
@@ -1854,6 +1985,76 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IWorkflowParent>();
 
             Assert.Equal("Hello Jeff!", await stub.NestedHelloChildAsync("Jeff"));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_FutureActivity_NoArgsResult()
+        {
+            // Test calling a workflow that uses a future to call an
+            // activity with no parameters or result.
+
+            var stub = client.NewWorkflowStub<IWorkflowParent>();
+
+            Assert.True(await stub.FutureActivity_NoArgsResult());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_FutureLocalActivity_NoArgsResult()
+        {
+            // Test calling a workflow that uses a future to call a
+            // local activity with no parameters or result.
+
+            var stub = client.NewWorkflowStub<IWorkflowParent>();
+
+            Assert.True(await stub.FutureLocalActivity_NoArgsResult());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_FutureActivity_ArgsResult()
+        {
+            // Test calling a workflow that uses a future to call an
+            // activity with parameters and a result.
+
+            var stub = client.NewWorkflowStub<IWorkflowParent>();
+
+            Assert.True(await stub.FutureActivity_ArgsResult());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_FutureLocalActivity_ArgsResult()
+        {
+            // Test calling a workflow that uses a future to call a
+            // local activity with parameters and a result.
+
+            var stub = client.NewWorkflowStub<IWorkflowParent>();
+
+            Assert.True(await stub.FutureLocalActivity_ArgsResult());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ParallelActivity()
+        {
+            // Test calling a workflow that runs two activities in parallel.
+
+            var stub = client.NewWorkflowStub<IWorkflowParent>();
+
+            Assert.True(await stub.ParallelActivity());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ParallelLocalActivity()
+        {
+            // Test calling a workflow that runs two activities in parallel.
+
+            var stub = client.NewWorkflowStub<IWorkflowParent>();
+
+            Assert.True(await stub.ParallelLocalActivity());
         }
 
         //---------------------------------------------------------------------

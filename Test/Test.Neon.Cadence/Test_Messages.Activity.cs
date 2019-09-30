@@ -196,7 +196,6 @@ namespace TestCadence
                 Assert.Null(message.Args);
                 Assert.Null(message.Options);
                 Assert.Null(message.Domain);
-                Assert.Equal(TimeSpan.Zero, message.ScheduleToStartTimeout);
 
                 // Round-trip
 
@@ -215,7 +214,6 @@ namespace TestCadence
                     RetryPolicy            = new InternalRetryPolicy() { MaximumInterval = 5 }
                 };
                 message.Domain = "my-domain";
-                message.ScheduleToStartTimeout = TimeSpan.FromSeconds(120);
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -231,7 +229,6 @@ namespace TestCadence
                 Assert.NotNull(message.Options.RetryPolicy);
                 Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
                 Assert.Equal("my-domain", message.Domain);
-                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -253,7 +250,6 @@ namespace TestCadence
                 Assert.NotNull(message.Options.RetryPolicy);
                 Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
                 Assert.Equal("my-domain", message.Domain);
-                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
 
                 // Verify Clone()
 
@@ -273,7 +269,6 @@ namespace TestCadence
                 Assert.NotNull(message.Options.RetryPolicy);
                 Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
                 Assert.Equal("my-domain", message.Domain);
-                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -293,7 +288,6 @@ namespace TestCadence
                 Assert.NotNull(message.Options.RetryPolicy);
                 Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
                 Assert.Equal("my-domain", message.Domain);
-                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
             }
         }
 
@@ -1600,7 +1594,6 @@ namespace TestCadence
                 Assert.Null(message.Args);
                 Assert.Null(message.Options);
                 Assert.Null(message.Domain);
-                Assert.Equal(TimeSpan.Zero, message.ScheduleToStartTimeout);
 
                 // Round-trip
 
@@ -1620,7 +1613,6 @@ namespace TestCadence
                     RetryPolicy            = new InternalRetryPolicy() { MaximumInterval = 5 }
                 };
                 message.Domain = "my-domain";
-                message.ScheduleToStartTimeout = TimeSpan.FromSeconds(120);
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -1637,7 +1629,6 @@ namespace TestCadence
                 Assert.NotNull(message.Options.RetryPolicy);
                 Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
                 Assert.Equal("my-domain", message.Domain);
-                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -1660,7 +1651,6 @@ namespace TestCadence
                 Assert.NotNull(message.Options.RetryPolicy);
                 Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
                 Assert.Equal("my-domain", message.Domain);
-                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
 
                 // Verify Clone()
 
@@ -1681,7 +1671,6 @@ namespace TestCadence
                 Assert.NotNull(message.Options.RetryPolicy);
                 Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
                 Assert.Equal("my-domain", message.Domain);
-                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -1702,7 +1691,6 @@ namespace TestCadence
                 Assert.NotNull(message.Options.RetryPolicy);
                 Assert.Equal(5, message.Options.RetryPolicy.MaximumInterval);
                 Assert.Equal("my-domain", message.Domain);
-                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
             }
         }
 
@@ -1727,16 +1715,19 @@ namespace TestCadence
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
+                Assert.Equal(InternalReplayStatus.Unspecified, message.ReplayStatus);
 
                 // Round-trip
 
                 message.ClientId = 444;
                 message.RequestId = 555;
                 message.Error = new CadenceError("MyError");
+                message.ReplayStatus = InternalReplayStatus.Replaying;
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -1747,6 +1738,7 @@ namespace TestCadence
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
 
                 // Verify Clone()
 
@@ -1755,6 +1747,7 @@ namespace TestCadence
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -1763,6 +1756,7 @@ namespace TestCadence
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
             }
         }
 
@@ -1850,6 +1844,7 @@ namespace TestCadence
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Result);
                 Assert.Null(message.Error);
+                Assert.Equal(InternalReplayStatus.Unspecified, message.ReplayStatus);
 
                 // Round-trip
 
@@ -1857,11 +1852,13 @@ namespace TestCadence
                 message.RequestId = 555;
                 message.Result = new byte[] { 0, 1, 2, 3, 4 };
                 message.Error = new CadenceError("MyError");
+                message.ReplayStatus = InternalReplayStatus.Replaying;
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -1873,6 +1870,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
 
                 // Verify Clone()
 
@@ -1882,6 +1880,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -1891,6 +1890,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
             }
         }
 
@@ -1917,7 +1917,7 @@ namespace TestCadence
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Equal(0, message.ActivityId);
-                Assert.Null(message.Activity);
+                Assert.Equal(0, message.ActivityTypeId);
                 Assert.Null(message.Args);
                 Assert.Null(message.Options);
 
@@ -1926,7 +1926,7 @@ namespace TestCadence
                 message.ClientId = 444;
                 message.RequestId = 555;
                 message.ActivityId = 666;
-                message.Activity = "my-activity";
+                message.ActivityTypeId = 777;
                 message.Args = new byte[] { 0, 1, 2, 3, 4 };
                 message.Options = new InternalLocalActivityOptions()
                 {
@@ -1937,7 +1937,7 @@ namespace TestCadence
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ActivityId);
-                Assert.Equal("my-activity", message.Activity);
+                Assert.Equal(777, message.ActivityTypeId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
                 Assert.Equal(1000, message.Options.ScheduleToCloseTimeout);
@@ -1953,7 +1953,7 @@ namespace TestCadence
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ActivityId);
-                Assert.Equal("my-activity", message.Activity);
+                Assert.Equal(777, message.ActivityTypeId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
                 Assert.Equal(1000, message.Options.ScheduleToCloseTimeout);
@@ -1967,7 +1967,7 @@ namespace TestCadence
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ActivityId);
-                Assert.Equal("my-activity", message.Activity);
+                Assert.Equal(777, message.ActivityTypeId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
                 Assert.Equal(1000, message.Options.ScheduleToCloseTimeout);
@@ -1981,7 +1981,7 @@ namespace TestCadence
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ActivityId);
-                Assert.Equal("my-activity", message.Activity);
+                Assert.Equal(777, message.ActivityTypeId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
                 Assert.Equal(1000, message.Options.ScheduleToCloseTimeout);
@@ -2012,6 +2012,7 @@ namespace TestCadence
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Result);
                 Assert.Null(message.Error);
+                Assert.Equal(InternalReplayStatus.Unspecified, message.ReplayStatus);
 
                 // Round-trip
 
@@ -2019,11 +2020,13 @@ namespace TestCadence
                 message.RequestId = 555;
                 message.Result = new byte[] { 0, 1, 2, 3, 4 };
                 message.Error = new CadenceError("MyError");
+                message.ReplayStatus = InternalReplayStatus.Replaying;
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -2035,6 +2038,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
 
                 // Verify Clone()
 
@@ -2044,6 +2048,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -2053,6 +2058,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Result);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
             }
         }
 
@@ -2139,16 +2145,19 @@ namespace TestCadence
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
+                Assert.Equal(InternalReplayStatus.Unspecified, message.ReplayStatus);
 
                 // Round-trip
 
                 message.ClientId = 444;
                 message.RequestId = 555;
                 message.Error = new CadenceError("MyError");
+                message.ReplayStatus = InternalReplayStatus.Replaying;
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -2159,6 +2168,7 @@ namespace TestCadence
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
 
                 // Verify Clone()
 
@@ -2167,6 +2177,7 @@ namespace TestCadence
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -2175,6 +2186,7 @@ namespace TestCadence
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
             }
         }
     }

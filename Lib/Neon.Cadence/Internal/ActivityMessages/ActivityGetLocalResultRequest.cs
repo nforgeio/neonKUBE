@@ -28,7 +28,7 @@ namespace Neon.Cadence.Internal
     /// <b>client --> proxy:</b> Requests the results from a <see cref="ActivityStartLocalRequest"/>.
     /// </summary>
     [InternalProxyMessage(InternalMessageTypes.ActivityGetLocalResultRequest)]
-    internal class ActivityGetLocalResultRequest : ActivityRequest
+    internal class ActivityGetLocalResultRequest : WorkflowRequest
     {
         /// <summary>
         /// Default constructor.

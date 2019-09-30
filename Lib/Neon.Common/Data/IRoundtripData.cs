@@ -52,8 +52,8 @@ namespace Neon.Data
         /// <summary>
         /// Renders the instance as a <see cref="JObject"/>.
         /// </summary>
-        /// <returns>The cloned <see cref="JObject"/>.</returns>
-        JObject ToJObject(bool noClone = false);
+        /// <returns>The new <see cref="JObject"/>.</returns>
+        JObject ToJObject();
 
         /// <summary>
         /// Renders the instance as UTF-8 encoded JSON.
