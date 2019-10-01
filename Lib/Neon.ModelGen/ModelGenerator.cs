@@ -1606,7 +1606,7 @@ namespace Neon.ModelGen
                         writer.WriteLine($"        /// <summary>");
                         writer.WriteLine($"        /// The backing <see cref=\"JObject\"/> used to hold the serialized data.");
                         writer.WriteLine($"        /// This was made public for advanced unit testing but its use should generally");
-                        writer.WriteLine($"        /// be avoided for other purposes.  Use <see cref=\"ToJObject(bool)\"/> instead.");
+                        writer.WriteLine($"        /// be avoided for other purposes.  Use <see cref=\"ToJObject()\"/> instead.");
                         writer.WriteLine($"        /// </summary>");
                         writer.WriteLine($"        public JObject __O {{ get; set; }}");
                     }
