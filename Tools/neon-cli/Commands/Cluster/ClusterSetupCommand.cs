@@ -1744,6 +1744,15 @@ done
                 {
                     InstallMetricbeat(firstMaster).Wait();
                 });
+
+
+            // Setup cluster-manager.
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-cluster-manager",
+                () =>
+                {
+                    InstallClusterManager(firstMaster).Wait();
+                });
         }
 
         /// <summary>
@@ -2307,6 +2316,17 @@ rm -rf {chartName}*
             }
 
             await InstallHelmChartAsync(master, "metricbeat", @namespace: "monitoring", timeout: 300, values: values);
+        }
+
+        /// <summary>
+        /// Installs metricbeat
+        /// </summary>
+        /// <param name="master">The master node.</param>
+        private async Task InstallClusterManager(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: cluster-manager";
+
+            await InstallHelmChartAsync(master, "cluster-manager", @namespace: "monitoring", timeout: 300);
         }
 
         /// <summary>
