@@ -65,8 +65,14 @@ namespace Couchbase
             this.defaultSerializer = new DefaultSerializer(NeonHelper.JsonRelaxedSerializerSettings.Value, NeonHelper.JsonRelaxedSerializerSettings.Value);
         }
 
+        /// <summary>
+        /// Not required.
+        /// </summary>
         public SupportedDeserializationOptions SupportedDeserializationOptions => throw new NotImplementedException();
 
+        /// <summary>
+        /// Not required.
+        /// </summary>
         public DeserializationOptions DeserializationOptions { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         /// <inheritdoc/>

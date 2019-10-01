@@ -248,7 +248,7 @@ namespace TestModelGen.UxDataModel
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
         public void EmptyPersistable ()
         {
-            // Verify that we can generate code for an empty data model.
+            // Verify that we can generate code for an empty persistable data model.
 
             var settings = new ModelGeneratorSettings()
             {
@@ -971,91 +971,6 @@ namespace TestModelGen.UxDataModel
                 defaultValues["Name"] = "JoeBob";
                 defaultValues["Age"]  = 67;
                 Assert.Equal(67.GetHashCode() ^ "JoeBob".GetHashCode(), defaultValues.GetHashCode());
-            }
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
-        public void DeepClone()
-        {
-            // Verify that DeepClone() works.
-
-            var settings = new ModelGeneratorSettings()
-            {
-                SourceNamespace = typeof(Test_UxDataModel).Namespace,
-                UxFramework = UxFrameworks.Xaml
-            };
-
-            var generator = new ModelGenerator(settings);
-            var output    = generator.Generate(Assembly.GetExecutingAssembly());
-
-            Assert.False(output.HasErrors);
-
-            var assemblyStream = ModelGenerator.Compile(output.SourceCode, "test-assembly", references => ModelGenTestHelper.ReferenceHandler(references));
-
-            using (var context = new AssemblyContext("Neon.ModelGen.Output", assemblyStream))
-            {
-                // Verify for an empty class.
-
-                var emptyData       = context.CreateDataWrapper<EmptyData>();
-                var clonedEmptyData = emptyData.DeepClone();
-
-                Assert.NotNull(clonedEmptyData);
-                Assert.NotSame(emptyData, clonedEmptyData);
-                Assert.Equal(emptyData, clonedEmptyData);
-
-                // Verify for simple data.
-
-                var simpleData = context.CreateDataWrapper<SimpleData>();
-
-                simpleData["Name"] = "Joe Bloe";
-                simpleData["Age"]  = 67;
-                simpleData["Enum"] = MyEnum1.Two;
-
-                var clonedSimpleData = simpleData.DeepClone();
-
-                Assert.NotNull(clonedSimpleData);
-                Assert.NotSame(simpleData, clonedSimpleData);
-                Assert.Equal(simpleData, clonedSimpleData);
-
-                // Verify for inherited data.
-
-                var derivedData = context.CreateDataWrapper<DerivedModel>();
-
-                derivedData["ParentProperty"] = "parent";
-                derivedData["ChildProperty"]  = "child";
-
-                var clonedDerivedData = derivedData.DeepClone();
-
-                Assert.NotNull(derivedData);
-                Assert.NotSame(derivedData, clonedDerivedData);
-                Assert.Equal(derivedData, clonedDerivedData);
-
-                // Verify for complex data and also ensure that we actually
-                // made copies of reference properties.
-
-                var complexData = context.CreateDataWrapper<ComplexData>();
-
-                complexData["List"]        = new ObservableCollection<string>() { "zero", "one", "two" };
-                complexData["Dictionary"]  = new Dictionary<string, int>() { { "zero", 1 }, { "one", 1 } };
-                complexData["Enum1"]       = MyEnum1.One;
-                complexData["Enum2"]       = MyEnum2.Three;
-                complexData["Simple"]      = simpleData.__Instance;
-                complexData["SingleArray"] = new int[] { 0, 1, 2, 3, 4 };
-                complexData["DoubleArray"] = new int[][] { new int[] { 0, 1, 2 }, new int[] { 3, 4, 5 } };
-
-                var clonedComplexData = complexData.DeepClone();
-
-                Assert.NotNull(clonedComplexData);
-                Assert.NotSame(complexData, clonedComplexData);
-                Assert.Equal(complexData, clonedComplexData);
-                Assert.NotSame(complexData["List"], clonedComplexData["List"]);
-                Assert.NotSame(complexData["Dictionary"], clonedComplexData["Dictionary"]);
-                Assert.NotSame(complexData["Simple"], clonedComplexData["Simple"]);
-                Assert.NotSame(complexData["SingleArray"], clonedComplexData["SingleArray"]);
-                Assert.NotSame(complexData["DoubleArray"], clonedComplexData["DoubleArray"]);
-                Assert.NotSame(((int[][])complexData["DoubleArray"])[0], ((int[][])clonedComplexData["DoubleArray"])[0]);
-                Assert.NotSame(((int[][])complexData["DoubleArray"])[1], ((int[][])clonedComplexData["DoubleArray"])[1]);
             }
         }
 
