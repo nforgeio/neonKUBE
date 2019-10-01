@@ -81,5 +81,6 @@ if ($allVersions)
     Build 3.0.0-preview6-bionic
     Build 3.0.0-preview8-bionic
     Build 3.0.0-preview9-bionic
+    Build 3.0.0-bionic
 }
-Build 3.0.0-preview9-bionic -latest
+Build 3.0.0-bionic -latest
