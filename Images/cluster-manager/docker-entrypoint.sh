@@ -13,4 +13,4 @@ PATH=${PATH}:/
 
 # Launch the service.
 
-exec operator-cluster-manager
+exec cluster-manager
