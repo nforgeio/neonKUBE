@@ -77,7 +77,7 @@ SetVersion Neon.Xunit.Kube
 
 # Build and publish the projects.
 
-# Publish Neon.Cadence
+Publish Neon.Cadence
 Publish Neon.Common
 Publish Neon.Couchbase
 Publish Neon.Cryptography
