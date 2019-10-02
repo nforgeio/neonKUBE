@@ -1709,16 +1709,6 @@ done
                     InstallElasticSearch(firstMaster);
                 });
 
-
-            // Setup Fluent-Bit.
-
-            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-fluent-bit",
-                () =>
-                {
-                    InstallFluentBit(firstMaster).Wait();
-                });
-
-
             // Setup Fluentd.
 
             firstMaster.InvokeIdempotentAction("setup/cluster-deploy-fluentd",
@@ -1727,6 +1717,13 @@ done
                     InstallFluentd(firstMaster).Wait();
                 });
 
+            // Setup Fluent-Bit.
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-fluent-bit",
+                () =>
+                {
+                    InstallFluentBit(firstMaster).Wait();
+                });            
 
             // Setup Kibana.
 
