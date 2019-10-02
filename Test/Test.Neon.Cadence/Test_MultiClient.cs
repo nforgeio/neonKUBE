@@ -335,7 +335,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task ClientAndWorkers()
+        public async Task ClientsAndWorkers()
         {
             // Test the scenario where there multiple clients without
             // workers that will be used to simulate apps that make calls
@@ -410,19 +410,19 @@ namespace TestCadence
                     Assert.True(await stub.RunAsync(testActivity: true));
                 }
 
-                //foreach (var client in clients)
-                //{
-                //    var stub = client.NewWorkflowStub<IWorkflowWorker2>();
+                foreach (var client in clients)
+                {
+                    var stub = client.NewWorkflowStub<IWorkflowWorker2>();
 
-                //    Assert.True(await stub.RunAsync(testActivity: true));
-                //}
+                    Assert.True(await stub.RunAsync(testActivity: true));
+                }
 
-                //foreach (var client in clients)
-                //{
-                //    var stub = client.NewWorkflowStub<IWorkflowWorker3>();
+                foreach (var client in clients)
+                {
+                    var stub = client.NewWorkflowStub<IWorkflowWorker3>();
 
-                //    Assert.True(await stub.RunAsync(testActivity: true));
-                //}
+                    Assert.True(await stub.RunAsync(testActivity: true));
+                }
             }
             finally
             {
