@@ -819,9 +819,6 @@ namespace Neon.Cadence
                         // to read more than about 64KiB bytes of data which is the default size
                         // of the Kestrel receive buffer.  This suggests that there's some kind
                         // of problem reading the next buffer from the request socket.
-                        //
-                        // This isn't a huge issue since we're going to convert cadence-proxy into
-                        // a shared library where we'll be passing message buffers directly.
 
                         var bodyStream = MemoryStreamPool.Alloc();
 

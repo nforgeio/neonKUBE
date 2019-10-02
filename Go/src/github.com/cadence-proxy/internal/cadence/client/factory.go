@@ -20,6 +20,7 @@ package proxyclient
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 
@@ -133,8 +134,10 @@ func (b *WorkflowClientBuilder) build() error {
 		return errors.New("HostPort is empty")
 	}
 
+	uuid := uuid.New().String()
+	uuid = "mychannel-" + strings.ReplaceAll(uuid, "-", "")
 	ch, err := tchannel.NewChannelTransport(
-		tchannel.ServiceName(_cadenceClientName),
+		tchannel.ServiceName(uuid),
 		tchannel.Logger(b.Logger),
 	)
 
@@ -142,13 +145,14 @@ func (b *WorkflowClientBuilder) build() error {
 		b.Logger.Error("Failed to create transport channel", zap.Error(err))
 		return err
 	}
+
 	b.Logger.Info("Creating RPC dispatcher outbound",
 		zap.String("ServiceName", _cadenceFrontendService),
 		zap.String("HostPort", b.hostPort),
 	)
 
 	b.dispatcher = yarpc.NewDispatcher(yarpc.Config{
-		Name: _cadenceClientName,
+		Name: uuid,
 		Outbounds: yarpc.Outbounds{
 			_cadenceFrontendService: {Unary: ch.NewSingleOutbound(b.hostPort)},
 		},
