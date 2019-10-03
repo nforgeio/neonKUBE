@@ -15,15 +15,15 @@
 
 4. Rebuild the RELEASE version via:
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neonkube-build -release -installer`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neon-builder -release -installer`
 
 5. Verify that the new release installer works.
 
-6. Build and publish all of the Docker images: `powershell -file %NF_ROOT%/Images/publish.ps1 -all`
+6. Build and publish all of the Docker images: `neon-publish-images -all`
 
 7. Run all unit tests: **RELEASE** mode
 
-8. Publish the nuget packages: `powershell -f %NF_ROOT%/Toolbin/nuget-neonforge-public.ps1`
+8. Publish the nuget packages: `nuget-neonforge-public`
 
 9. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: v0.6.4-alpha**
 
