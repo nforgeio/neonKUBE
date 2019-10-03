@@ -1,6 +1,6 @@
 @echo off
 REM ---------------------------------------------------------------------------
-REM FILE:         nuget-neonforge-public.cmd
+REM FILE:         neon-nuget-public.cmd
 REM CONTRIBUTOR:  Jeff Lill
 REM COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 REM
@@ -19,4 +19,4 @@ REM limitations under the License.
 REM Publishes RELEASE builds of the NeonForge Nuget packages to the
 REM local file system and public Nuget.org repositories.
 
-powershell -file "%NF_ROOT%\ToolBin\nuget-neonforge-public.ps1" %*
+powershell -file "%NF_ROOT%\ToolBin\neon-nuget-public.ps1" %*
