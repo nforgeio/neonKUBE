@@ -23,7 +23,7 @@
 
 7. Run all unit tests: **RELEASE** mode
 
-8. Publish the nuget packages: `nuget-neonforge-public`
+8. Publish the nuget packages: `neon-nuget-public`
 
 9. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: v0.6.4-alpha**
 
