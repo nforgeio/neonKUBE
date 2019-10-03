@@ -48,7 +48,6 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(execution != null);
-            Covenant.Requires<ArgumentException>(execution.IsFullyInitialized);
 
             this.client    = client;
             this.domain    = client.ResolveDomain(domain);

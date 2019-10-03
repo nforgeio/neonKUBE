@@ -2477,13 +2477,17 @@ namespace TestCadence
                 // Start a child workflow using a typed stub and a specific workflow ID
                 // and then create an external stub with the same ID and then verify
                 // that we can wait for the workflow using the stub Task as well as
-                // the external stub (without retriveing the result).
+                // the external stub (without retrieving the result).
 
                 const string TestWorkflowId = "WorkflowExternalStub-HelloTestByIdNoResultAsync";
 
                 var stub         = Workflow.NewChildWorkflowStub<IWorkflowExternalStub>(new ChildWorkflowOptions() { WorkflowId = TestWorkflowId });
                 var task         = stub.HelloAsync("Jeff");
                 var externalStub = Workflow.NewExternalWorkflowStub(TestWorkflowId);
+
+                // $debug(jeff.lill): DELETE THIS!
+                await Task.Delay(1000);
+                //--------------------------------
 
                 await externalStub.GetResultAsync();
 

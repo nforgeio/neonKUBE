@@ -1223,7 +1223,6 @@ namespace Neon.Cadence
         public ExternalWorkflowStub NewExternalWorkflowStub(WorkflowExecution execution)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
-            Covenant.Requires<ArgumentException>(execution.IsFullyInitialized);
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -1242,7 +1241,7 @@ namespace Neon.Cadence
             Client.EnsureNotDisposed();
             SetStackTrace();
 
-            return new ExternalWorkflowStub(Client, workflowId, domain);
+            return new ExternalWorkflowStub(Client, new WorkflowExecution(workflowId), domain);
         }
 
         /// <summary>
@@ -1371,7 +1370,6 @@ namespace Neon.Cadence
         public ExternalWorkflowStub NewUntypedExternalWorkflowStub(WorkflowExecution execution, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
-            Covenant.Requires<ArgumentException>(execution.IsFullyInitialized);
             Client.EnsureNotDisposed();
             SetStackTrace();
 

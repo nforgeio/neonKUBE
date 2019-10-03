@@ -1190,7 +1190,6 @@ namespace Neon.Cadence.Internal
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
             Covenant.Requires<ArgumentNullException>(execution != null);
-            Covenant.Requires<ArgumentException>(execution.IsFullyInitialized);
 
             var workflowInterface = typeof(TWorkflowInterface);
             var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
