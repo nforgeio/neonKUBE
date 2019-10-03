@@ -92,6 +92,7 @@ namespace Neon.Cadence
             this.MethodMap                 = methodMap;
             this.Client                    = client;
             this.IsReplaying               = isReplaying;
+            this.Execution                 = new WorkflowExecution(workflowId, runId);
             this.Logger                    = LogManager.Default.GetLogger(sourceModule: Client.Settings?.ClientIdentity, contextId: runId, () => !IsReplaying || Client.Settings.LogDuringReplay);
 
             // Initialize the random number generator with a fairly unique
