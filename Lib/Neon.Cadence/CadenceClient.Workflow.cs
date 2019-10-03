@@ -277,6 +277,7 @@ namespace Neon.Cadence
         public WorkflowStub NewUntypedWorkflowStub(WorkflowExecution execution, string workflowTypeName)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentException>(execution.IsFullyInitialized);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
             EnsureNotDisposed();
 
@@ -603,6 +604,7 @@ namespace Neon.Cadence
         internal async Task<WorkflowDescription> GetWorkflowDescriptionAsync(WorkflowExecution execution, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentException>(execution.IsFullyInitialized);
             EnsureNotDisposed();
 
             var reply = (WorkflowDescribeExecutionReply)await CallProxyAsync(
@@ -657,6 +659,7 @@ namespace Neon.Cadence
         internal async Task TerminateWorkflowAsync(WorkflowExecution execution, string reason = null, byte[] details = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentException>(execution.IsFullyInitialized);
             EnsureNotDisposed();
 
             var reply = (WorkflowTerminateReply)await CallProxyAsync(
@@ -686,6 +689,7 @@ namespace Neon.Cadence
         internal async Task SignalWorkflowAsync(WorkflowExecution execution, string signalName, byte[] signalArgs = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentException>(execution.IsFullyInitialized);
             EnsureNotDisposed();
 
             var reply = (WorkflowSignalReply)await CallProxyAsync(
@@ -753,6 +757,7 @@ namespace Neon.Cadence
         internal async Task<byte[]> QueryWorkflowAsync(WorkflowExecution execution, string queryType, byte[] queryArgs = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentException>(execution.IsFullyInitialized);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryType));
             EnsureNotDisposed();
 

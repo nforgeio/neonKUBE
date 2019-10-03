@@ -20,7 +20,6 @@ package proxyclient
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/google/uuid"
 
@@ -134,10 +133,8 @@ func (b *WorkflowClientBuilder) build() error {
 		return errors.New("HostPort is empty")
 	}
 
-	uuid := uuid.New().String()
-	uuid = "mychannel-" + strings.ReplaceAll(uuid, "-", "")
 	ch, err := tchannel.NewChannelTransport(
-		tchannel.ServiceName(uuid),
+		tchannel.ServiceName(_cadenceClientName),
 		tchannel.Logger(b.Logger),
 	)
 
@@ -152,7 +149,7 @@ func (b *WorkflowClientBuilder) build() error {
 	)
 
 	b.dispatcher = yarpc.NewDispatcher(yarpc.Config{
-		Name: uuid,
+		Name: _cadenceClientName,
 		Outbounds: yarpc.Outbounds{
 			_cadenceFrontendService: {Unary: ch.NewSingleOutbound(b.hostPort)},
 		},

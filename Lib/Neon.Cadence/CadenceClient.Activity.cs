@@ -156,6 +156,7 @@ namespace Neon.Cadence
         public async Task ActivityHeartbeatByIdAsync(WorkflowExecution execution, string activityId, object details = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentException>(execution.IsFullyInitialized);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId));
             EnsureNotDisposed();
 
@@ -208,6 +209,7 @@ namespace Neon.Cadence
         public async Task ActivityCompleteByIdAsync(WorkflowExecution execution, string activityId, object result = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentException>(execution.IsFullyInitialized);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId));
             EnsureNotDisposed();
 
@@ -258,6 +260,7 @@ namespace Neon.Cadence
         public async Task ActivityCancelByIdAsync(WorkflowExecution execution, string activityId, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentException>(execution.IsFullyInitialized);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId));
             EnsureNotDisposed();
 
@@ -311,6 +314,7 @@ namespace Neon.Cadence
         public async Task ActivityErrorByIdAsync(WorkflowExecution execution, string activityId, Exception error, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentException>(execution.IsFullyInitialized);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId));
             Covenant.Requires<ArgumentNullException>(error != null);
             EnsureNotDisposed();
