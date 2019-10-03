@@ -347,11 +347,12 @@ namespace Neon.Kube
                                 {
                                     continue;
                                 }
-                                var fileBytes = zip.CreateEntry(line);
+                                var fileBytes = zip.CreateEntry(line.Replace($"{chartName}/", ""));
 
                                 using (var entryStream = fileBytes.Open())
                                 {
-                                    await entryStream.WriteAsync(await gitHubClient.HttpClient.GetByteArrayAsync(line.Trim()));
+                                    var f = line.Trim();
+                                    await entryStream.WriteAsync(await gitHubClient.HttpClient.GetByteArrayAsync($"nforgeio/neonKUBE/{branch}/Charts/{f}"));
                                 }
                             }
                         }

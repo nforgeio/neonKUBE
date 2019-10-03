@@ -386,32 +386,6 @@ namespace TestModelGen
         }
 
         /// <summary>
-        /// Returns a deep clone of the data model.
-        /// </summary>
-        /// <returns>The new data <see cref="DataWrapper"/> with the cloned instance.</returns>
-        public DataWrapper DeepClone()
-        {
-            try
-            {
-                var toJObjectMethod = instanceType.GetMethod("ToJObject", Array.Empty<Type>());
-                var jObject         = (JObject)toJObjectMethod.Invoke(instance, Array.Empty<object>());
-
-                return new DataWrapper(instanceType, jObject);
-            }
-            catch (TargetInvocationException e)
-            {
-                if (e.InnerException != null)
-                {
-                    throw e.InnerException;
-                }
-                else
-                {
-                    throw;
-                }
-            }
-        }
-
-        /// <summary>
         /// Compares one wrapped data model with another for equality.
         /// </summary>
         /// <param name="obj">The other instance (or <c>null</c>).</param>
