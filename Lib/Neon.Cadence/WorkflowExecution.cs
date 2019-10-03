@@ -66,5 +66,10 @@ namespace Neon.Cadence
         [YamlMember(Alias = "runId", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string RunId { get; private set; }
+
+        /// <summary>
+        /// Determines whether the execution is fully initialized.
+        /// </summary>
+        internal bool IsFullyInitialized => !string.IsNullOrEmpty(WorkflowId) && !string.IsNullOrEmpty(RunId);
     }
 }

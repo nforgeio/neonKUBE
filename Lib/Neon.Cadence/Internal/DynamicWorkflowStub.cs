@@ -151,6 +151,7 @@ namespace Neon.Cadence.Internal
             Covenant.Requires<ArgumentNullException>(dataConverter != null);
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
             Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentException>(execution.IsFullyInitialized);
 
             return childExternalConstructor.Invoke(new object[] { client, dataConverter, parentWorkflow, execution });
         }
