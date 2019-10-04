@@ -95,7 +95,7 @@ namespace Neon.Common
         /// <returns><c>true</c> if the pattern was parsed successfully.</returns>
         public static bool TryParse(string pattern, out GlobPattern globPattern)
         {
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // Catching the exceptions here is a bit of a hack.  I should reverse
             // the Create() and TryParse() implementations so that Create()

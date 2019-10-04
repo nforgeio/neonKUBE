@@ -54,7 +54,7 @@ namespace Neon.Net
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri));
             Covenant.Requires<ArgumentNullException>(httpRespose != null);
 
-            // $note(jeff.lill):
+            // $note(jefflill):
             //
             // I've seen services where JSON REST APIs return [Content-Type] as [text/plain] and [text/json]
             // so we'll accept those too.

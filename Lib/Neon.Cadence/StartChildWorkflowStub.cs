@@ -190,7 +190,7 @@ namespace Neon.Cadence
 
             workflowTypeName = CadenceHelper.GetWorkflowTypeName(workflowInterface, workflowAttribute);
 
-            // $hack(jeff.lill):
+            // $hack(jefflill):
             //
             // It would be nicer if [CadenceHelper.GetWorkflowTypeName()] accepted an optional
             // [WorkflowMethodAttribute] that would be used to append the method name so that

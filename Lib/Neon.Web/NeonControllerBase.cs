@@ -156,7 +156,7 @@ namespace Neon.Web
                 return log;
             }
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // I should be getting either an [ILogProvider] or [ILogManager] dynamically 
             // via dependency injection rather than hardcoding a call to [LogManager.Default]

@@ -37,7 +37,7 @@ using Newtonsoft.Json;
 using Neon.Common;
 using Neon.Data;
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // At somepoint in the future it would be nice to read any
 // XML code documentation and include this in the generated
@@ -204,7 +204,7 @@ namespace Neon.ModelGen
             // this to be able pass "complex" types like [TimeSpan] to web services via route or the
             // query string.
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // This limits us to support only JSON converters hosted by [Neon.Common].  At some point,
             // it might be nice if we could handle user provided converters as well.
@@ -2405,7 +2405,7 @@ namespace Neon.ModelGen
             var nonRootClientGroups    = clientGroups.Where(cg => !string.IsNullOrEmpty(cg.Key));
             var hasNonRootClientGroups = nonRootClientGroups.Any();
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // Generate the class and method comments below by parsing any code documentation.
 

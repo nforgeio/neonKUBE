@@ -409,7 +409,7 @@ CertUtil: -dump command completed successfully.
         {
             // Verify a [CertUtil] dump of a non-SAN certificate.
 
-            // $todo(jeff.lill): 
+            // $todo(jefflill): 
             //
             // I just manually edited a SAN certificate to remove the [Subject Alternative Name]
             // part.  I should redo this at somepoint to use a legitimate non-SAN cert dump.
@@ -809,7 +809,7 @@ ILBSnE7GA4ectcVZSL48xzheonKFGw==
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
         public void X509_SelfSigned()
         {
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // TlsCertificate.ToX509Certificate() is having trouble parsing the
             // private keys generated for self-signed certificates.  It's seeing
@@ -882,7 +882,7 @@ NOrsafukaeMnu7sKsM5jeCimps8GlBJUM6bVrlbAgUuPl5B0oWg=
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCryptography)]
         public void X509_WithPrivateKey()
         {
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // Enable this when we upgrade to .NET Standard 2.1
             //

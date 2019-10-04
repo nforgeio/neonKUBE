@@ -155,7 +155,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(text));
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // We should probably honor any Kubernetes restrictions on 
             // the name parts.

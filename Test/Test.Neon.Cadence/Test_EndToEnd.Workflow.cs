@@ -167,7 +167,7 @@ namespace TestCadence
         {
             // Verify that logging within a workflow doesn't barf.
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // It would be nice to add additional tests that actually
             // verify that something reasonable was logged, including
@@ -2302,7 +2302,7 @@ namespace TestCadence
             Assert.Equal(options.WorkflowId, info.WorkflowId);
             Assert.Equal("my-workflow-info-type", info.WorkflowType);
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // These properties are not supported yet:
             //
@@ -2427,7 +2427,7 @@ namespace TestCadence
             // Verify that we can continue a workflow as new without using a stub
             // and with new options.
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // This test could be improved.  We're not actually verifying that
             // the new options actually had an effect.  For now, we're just
@@ -2457,7 +2457,7 @@ namespace TestCadence
             // Verify that we can continue a workflow as new using a stub
             // and with new options.
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // This test could be improved.  We're not actually verifying that
             // the new options actually had an effect.  For now, we're just
@@ -2515,7 +2515,7 @@ namespace TestCadence
                 var task         = stub.HelloAsync("Jeff");
                 var externalStub = Workflow.NewExternalWorkflowStub(TestWorkflowId);
 
-                // $debug(jeff.lill): DELETE THIS!
+                // $debug(jefflill): DELETE THIS!
                 await Task.Delay(1000);
                 //--------------------------------
 
@@ -2585,7 +2585,7 @@ namespace TestCadence
         }
 
 #if TODO
-        // $todo(jeff.lill):
+        // $todo(jefflill):
         //
         // I'm not actually sure what the point of external child workflow stubs
         // are and there are some implementation gaps.  We're going to leave these

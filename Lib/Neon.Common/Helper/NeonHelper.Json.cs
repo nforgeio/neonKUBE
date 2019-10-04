@@ -112,7 +112,7 @@ namespace Neon.Common
                     return settings;
                 });
 
-        // $todo(jeff.lill):
+        // $todo(jefflill):
         //
         // It would be nice to have a way to detect when the [JsonConverters] is modified
         // after it's too late.  Perhaps using an [ObservableCollection].

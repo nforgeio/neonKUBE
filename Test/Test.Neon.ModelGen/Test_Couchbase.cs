@@ -167,7 +167,7 @@ namespace TestModelGen.Couchbase
             var countryQuery = from doc in context.Query<Country>() select doc;
 
             Assert.Empty(rawResults.ToList());
-            Assert.Empty(countryQuery.ToList());  // $todo(jeff.lill): https://github.com/nforgeio/neonKUBE/issues/475
+            Assert.Empty(countryQuery.ToList());  // $todo(jefflill): https://github.com/nforgeio/neonKUBE/issues/475
 
             //-----------------------------------------------------------------
             // Verify that plain old object serialization still works.

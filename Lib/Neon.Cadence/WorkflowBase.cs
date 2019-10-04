@@ -281,7 +281,7 @@ namespace Neon.Cadence
                         Domain = client.ResolveDomain(domain)
                     });
 
-                // $hack(jeff.lill): 
+                // $hack(jefflill): 
                 //
                 // We're going to ignore any errors here to handle:
                 //
@@ -371,7 +371,7 @@ namespace Neon.Cadence
 
                 case InternalMessageTypes.WorkflowFutureReadyRequest:
 
-                    // $todo(jeff.lill): We need to actually implement this.
+                    // $todo(jefflill): We need to actually implement this.
 
                     reply = new WorkflowFutureReadyReply();
                     break;

@@ -28,7 +28,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Collections;
 
-// $todo(jeff.lill): Support IPv6.
+// $todo(jefflill): Support IPv6.
 
 namespace Neon.Net
 {

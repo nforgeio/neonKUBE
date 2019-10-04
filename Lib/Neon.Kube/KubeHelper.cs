@@ -355,7 +355,7 @@ namespace Neon.Kube
             }
             else
             {
-                // $todo(jeff.lill): Implement this for OS/X
+                // $todo(jefflill): Implement this for OS/X
 
                 throw new NotImplementedException();
             }
@@ -1186,7 +1186,7 @@ namespace Neon.Kube
                         // to the cached copy if the cluster installed a more recent version
                         // of Kubernetes.
 
-                        // $hack(jeff.lill): Simple client version extraction
+                        // $hack(jefflill): Simple client version extraction
 
                         var pattern  = "GitVersion:\"v";
                         var response = NeonHelper.ExecuteCapture(targetPath, "version");
@@ -1276,7 +1276,7 @@ namespace Neon.Kube
                         // to the cached copy if the cluster installed a more recent version
                         // of Kubernetes.
 
-                        // $hack(jeff.lill): Simple client version extraction
+                        // $hack(jefflill): Simple client version extraction
 
                         var pattern  = "SemVer:\"v";
                         var response = NeonHelper.ExecuteCapture(targetPath, "version");

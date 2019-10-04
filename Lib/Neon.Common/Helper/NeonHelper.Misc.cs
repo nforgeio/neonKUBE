@@ -603,7 +603,7 @@ namespace Neon.Common
                     return;
                 }
 
-                // $todo(jeff.lill):
+                // $todo(jefflill):
                 //
                 // We should probably signal the sub-tasks to cancel here too
                 // if that's possible.
@@ -1484,7 +1484,7 @@ namespace Neon.Common
         /// <returns>The adjusted text.</returns>
         public static string StripAnsibleWarnings(string text)
         {
-            // $hack(jeff.lill):
+            // $hack(jefflill):
             //
             // Ansible has recently made change where they write this warning out to STDOUT:
             // 
@@ -1773,7 +1773,7 @@ namespace Neon.Common
             // this to be able pass "complex" types like [TimeSpan] to web services via route or the
             // query string.
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // This limits us to support only JSON converters hosted by [Neon.Common].  At some point,
             // it might be nice if we could handle user provided converters as well.

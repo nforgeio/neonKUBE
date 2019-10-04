@@ -708,7 +708,7 @@ namespace Neon.Kube.Service
                     new ThreadStart(
                         () =>
                         {
-                            // $hack(jeff.lill):
+                            // $hack(jefflill):
                             //
                             // Give the Exit() method a bit of time to throw the 
                             // ProgramExitException to make termination handling

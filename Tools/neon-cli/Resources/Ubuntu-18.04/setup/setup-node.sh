@@ -104,7 +104,7 @@ sed -i '/^ENABLED="false"/c\ENABLED="true"' /etc/default/sysstat
 # is still important because the kernel uses those settings when starting
 # [systemd] as the init process 1.
 
-# $todo(jeff.lill):
+# $todo(jefflill):
 #
 # I need to think about whether this makes sense from a security perspective
 # because this means that any malicious that manages to run (even as non-root) 
@@ -499,7 +499,7 @@ EOF
 # Install a simple service script that periodically cleans accumulated files
 # on the host node.
 
-# $todo(jeff.lill):
+# $todo(jefflill):
 #
 # The [SshProxy] cleaner assumes that nobody is going to have SshProxy commands
 # that run for more than one day (which is pretty likely).  A better approach

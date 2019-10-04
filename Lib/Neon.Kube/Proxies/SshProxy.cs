@@ -38,7 +38,7 @@ using ICSharpCode.SharpZipLib.Zip;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // The download methods don't seem to be working for paths like [/proc/meminfo].
 // They return an empty stream.
@@ -98,7 +98,7 @@ namespace Neon.Kube
         /// <returns>The lock object.</returns>
         private static object GetConnectLock(string host)
         {
-            // $hack(jeff.lill):
+            // $hack(jefflill):
             //
             // SSH.NET appears to have an issue when attempting to establish multiple
             // connections to the same server at the same time.  We never saw this in
@@ -145,7 +145,7 @@ namespace Neon.Kube
             // to receive this message. Once it receives the message, the exception above is thrown.
             //-----------------------------------------------------------------
 
-            // $hack(jeff.lill):
+            // $hack(jefflill):
             //
             // It appears that SSH.NET may assume that only a single connection attempt
             // to any given server will be in flight at any given time.  We're going to
@@ -259,7 +259,7 @@ namespace Neon.Kube
 
                         if (logWriter != null)
                         {
-                            // $hack(jeff.lill):
+                            // $hack(jefflill):
                             //
                             // Sometimes we'll see an [ObjectDisposedException] here.  I'm
                             // not entirely sure why.  We'll mitigate this for now by catching
@@ -338,7 +338,7 @@ namespace Neon.Kube
         /// <param name="timeout">The timeout.</param>
         private void DeadlockBreaker(string actionName, Action action, TimeSpan timeout)
         {
-            // $todo(jeff.lill): 
+            // $todo(jefflill): 
             //
             // This is part of the mitigation for:
             //
@@ -377,7 +377,7 @@ namespace Neon.Kube
         /// </remarks>
         public void Disconnect()
         {
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // We sometimes see a deadlock when disposing SSH.NET clients.
             //
@@ -1427,7 +1427,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
                 throw new IOException(result.Error);
             }
 
-            result = sshClient.RunCommand($"sudo chmod 777 {KubeHostFolders.Exec(Username)}");  // $todo(jeff.lill): Is this a potential security problem?
+            result = sshClient.RunCommand($"sudo chmod 777 {KubeHostFolders.Exec(Username)}");  // $todo(jefflill): Is this a potential security problem?
                                                                                                 //                   SCP uploads fail for 770
             if (result.ExitStatus != 0)
             {
@@ -1467,7 +1467,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
             SudoCommand($"mkdir -p {KubeHostFolders.Upload(Username)}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 750 {KubeHostFolders.Upload(Username)}", RunOptions.LogOnErrorOnly);
 
-            // $hack(jeff.lill):
+            // $hack(jefflill):
             //
             // All of a sudden, I find that I need these folders too.
 
@@ -1478,13 +1478,13 @@ rm {KubeHostFolders.Home(Username)}/askpass
             SudoCommand($"chmod 750 {KubeHostFolders.Archive("root")}", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {KubeHostFolders.Download("root")}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 777 {KubeHostFolders.Download("root")}", RunOptions.LogOnErrorOnly);    // $todo(jeff.lill): Another potential security problem?
+            SudoCommand($"chmod 777 {KubeHostFolders.Download("root")}", RunOptions.LogOnErrorOnly);    // $todo(jefflill): Another potential security problem?
 
             SudoCommand($"mkdir -p {KubeHostFolders.Exec("root")}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 777 {KubeHostFolders.Exec("root")}", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {KubeHostFolders.Upload("root")}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 777 {KubeHostFolders.Upload("root")}", RunOptions.LogOnErrorOnly);      // $todo(jeff.lill): Another potential security problem?
+            SudoCommand($"chmod 777 {KubeHostFolders.Upload("root")}", RunOptions.LogOnErrorOnly);      // $todo(jefflill): Another potential security problem?
         }
 
         /// <summary>
@@ -1930,7 +1930,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
 
                             if (string.IsNullOrWhiteSpace(valueString))
                             {
-                                valueString = "-"; // $todo(jeff.lill): Not sure if this makes sense any more.
+                                valueString = "-"; // $todo(jefflill): Not sure if this makes sense any more.
                             }
                             else if (valueString.Contains(' '))
                             {
@@ -3197,7 +3197,7 @@ echo $? > {cmdFolder}/exit
                 throw new Exception($"Cannot determine primary network interface via [ip -o address]: [exitcode={result.ExitCode}] {result.AllText}");
             }
 
-            // $note(jeff.lill): We support only IPv4 addresses.
+            // $note(jefflill): We support only IPv4 addresses.
 
             // The [ip -o address] returns network interfaces on single lines that
             // will look something like:

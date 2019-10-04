@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// $todo(jeff.lill): Remove this after we actually implement htis hosting manager.
+// $todo(jefflill): Remove this after we actually implement htis hosting manager.
 
 #pragma warning disable CS0169
 
@@ -114,7 +114,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override bool Provision(bool force)
         {
-            throw new NotImplementedException("$todo(jeff.lill): Implement this.");
+            throw new NotImplementedException("$todo(jefflill): Implement this.");
         }
 
         /// <inheritdoc/>

@@ -126,7 +126,7 @@ namespace Neon.Net
 
             // Initialize the dictionary mapping types to enhanced data converters.
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // We're currently suppoting only converters implemented in the Neon.Common assembly.
             // Eventually, we'll probably wish to support custom user converters.

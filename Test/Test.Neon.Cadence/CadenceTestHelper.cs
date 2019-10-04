@@ -58,7 +58,7 @@ namespace TestCadence
         /// This should be disabled for normal CI/CD environments.
         /// </note>
         /// </summary>
-        public const bool KeepCadenceServerOpen = true;     // $debug(jeff.lill): Set this back to FALSE.
+        public const bool KeepCadenceServerOpen = true;     // $debug(jefflill): Set this back to FALSE.
 
         /// <summary>
         /// Specifies the log level to use for Cadence related unit tests.

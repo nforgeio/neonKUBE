@@ -86,7 +86,7 @@ OPTIONS:
             var newLogin        = NeonHelper.YamlDeserialize<KubeLogin>(File.ReadAllText(commandLine.Arguments.First()));
             var existingContext = KubeHelper.Config.GetContext(newLogin.Context.Name);
 
-            // $todo(jeff.lill():
+            // $todo(jefflill():
             //
             // This is a bit odd.  Why didn't we serialize this here originally?
 

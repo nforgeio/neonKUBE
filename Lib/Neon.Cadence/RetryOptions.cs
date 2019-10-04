@@ -113,7 +113,7 @@ namespace Neon.Cadence
         /// </summary>
         public int MaximumAttempts { get; set; }
 
-        // $todo(jeff.lill):
+        // $todo(jefflill):
         //
         // We'd align better with the Java client if this was a list of [CadenceException] derived
         // exceptions rather than GOLANG error strings.  We'll revist this when the port is further

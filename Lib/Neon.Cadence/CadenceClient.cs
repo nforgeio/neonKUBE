@@ -811,7 +811,7 @@ namespace Neon.Cadence
                 {
                     case "/":
 
-                        // $hack(jeff.lill):
+                        // $hack(jefflill):
                         //
                         // We need to receive the entire request body before deserializing the
                         // the message because BinaryReader doesn't seem to play nice with reading
@@ -895,7 +895,7 @@ namespace Neon.Cadence
                 {
                     case "/":
 
-                        // $hack(jeff.lill):
+                        // $hack(jefflill):
                         //
                         // We need to receive the entire request body before deserializing the
                         // the message because BinaryReader doesn't seem to play nice with reading
@@ -1161,7 +1161,7 @@ namespace Neon.Cadence
                 // So it's conceivable that this additional delay could push a
                 // workflow to timeout.
 
-                // $todo(jeff.lill):
+                // $todo(jefflill):
                 //
                 // A potentially better approach would be to have the registrationd
                 // methods prebuild (and cache) all of the stubs and/or implement

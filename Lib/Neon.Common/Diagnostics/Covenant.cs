@@ -10,7 +10,7 @@ using System.Text;
 
 using Neon.Diagnostics;
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // This code is currently supporting only the documentation of Contract requirements
 // but doesn't actually enforce anything.
@@ -59,7 +59,7 @@ namespace System.Diagnostics.Contracts
         public static void Requires<TException>(bool condition, string message = null)
             where TException : Exception, new()
         {
-            // $todo(jeff.lill): 
+            // $todo(jefflill): 
             //
             // I'm currently ignoring the [message].  For some environments, it
             // could be possible to dynamically construct the exception, passing

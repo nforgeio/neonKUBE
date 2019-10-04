@@ -135,7 +135,7 @@ namespace Neon.Xunit
             // Add "gather_facts: no" to the playbook if this argument
             // isn't already present.
 
-            // $hack(jeff.lill): 
+            // $hack(jefflill): 
             //
             // I'm just doing string operations here for simplicitly.  I suppose
             // I could parse the YAML to be somewhat more robust.

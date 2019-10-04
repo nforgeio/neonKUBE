@@ -35,7 +35,7 @@ using Neon.Common;
 using Neon.Kube;
 using Neon.Net;
 
-// $todo(jeff.lill): Verify that there are no unexpected nodes in the cluster.
+// $todo(jefflill): Verify that there are no unexpected nodes in the cluster.
 
 namespace NeonCli
 {
@@ -231,7 +231,7 @@ namespace NeonCli
             {
                 if (firstTry)
                 {
-                    // $hack(jeff.lill):
+                    // $hack(jefflill):
                     //
                     // I've seen the NTP check fail on worker nodes, complaining
                     // that the connection attempt was rejected.  I manually restarted

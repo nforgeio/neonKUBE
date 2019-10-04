@@ -120,7 +120,7 @@ namespace Neon.Cryptography
     /// </remarks>
     public class NeonVault
     {
-        // $todo(jeff.lill):
+        // $todo(jefflill):
         //
         // I'm not super happy with this implementation because it first encrypts
         // the data to a MemoryStream and then it writes the header line followed

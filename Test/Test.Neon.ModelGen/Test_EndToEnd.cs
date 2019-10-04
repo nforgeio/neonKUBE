@@ -324,7 +324,7 @@ namespace TestModelGen.AspNet
             Assert.Equal("Goodbye World!", await client.GetStringAsync("Goodbye World!"));
             Assert.Null(await client.GetStringAsync(null));
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // This one is a bit strange.  I expected an empty string to be persented to
             // the service endpoint as an empty string but it's showing up as NULL.  I

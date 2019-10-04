@@ -306,7 +306,7 @@ namespace TestCadence
         {
             // Verify that logging within an activity doesn't barf.
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // It would be nice to add additional tests that actually
             // verify that something reasonable was logged, including
@@ -855,7 +855,7 @@ namespace TestCadence
             }
             catch (Exception e)
             {
-                // $todo(jeff.lill): Verify the exception
+                // $todo(jefflill): Verify the exception
             }
         }
 
@@ -880,7 +880,7 @@ namespace TestCadence
             }
             catch (Exception e)
             {
-                // $todo(jeff.lill): Verify the exception
+                // $todo(jefflill): Verify the exception
             }
         }
 
@@ -899,7 +899,7 @@ namespace TestCadence
 
             await client.ActivityCancelByTokenAsync(activity.Task.TaskToken);
 
-            // $todo(jeff.lill): Need to work on exception mapping for this to work.
+            // $todo(jefflill): Need to work on exception mapping for this to work.
 
             // await Assert.ThrowsAsync<CadenceCancelledException>(async () => await task);
         }
@@ -919,7 +919,7 @@ namespace TestCadence
 
             await client.ActivityCancelByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId);
 
-            // $todo(jeff.lill): Need to work on exception mapping for this to work.
+            // $todo(jefflill): Need to work on exception mapping for this to work.
 
             // await Assert.ThrowsAsync<CadenceCancelledException>(async () => await task);
         }

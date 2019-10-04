@@ -39,7 +39,7 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.IO;
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // Look into using [SecureString] for the [KeyPem] property.
 
@@ -1068,7 +1068,7 @@ subjectAltName         = @alt_names
             var notBefore = ExtractField("Not Before:", info).Replace(" GMT", string.Empty);
             var notAfter  = ExtractField("Not After :", info).Replace(" GMT", string.Empty);
 
-            // $hack(jeff.lill):
+            // $hack(jefflill):
             //
             // OpenSSH on Linux includes an extra space for single digit day fields
             // like: "Feb  4 01:45:25 2117".  This causes ParseExact() to fail.  We're
@@ -1171,7 +1171,7 @@ subjectAltName         = @alt_names
                     File.Delete(tempPath);
                 }
 
-                // $todo(jeff.lill):
+                // $todo(jefflill):
                 //
                 // Hacking this using the [CertUtil] and [OpenSSL] tools until we completely port
                 // to using X509Certificate.  The main thing we need to do to accomplish this is
@@ -1266,7 +1266,7 @@ subjectAltName         = @alt_names
 
                 if (hasPrivateKey && !publicOnly)
                 {
-                    // $todo(jeff.lill):
+                    // $todo(jefflill):
                     //
                     // Enable this when we upgrade to .NET Standard 2.1
                     //
@@ -1346,7 +1346,7 @@ subjectAltName         = @alt_names
 
             var bytes = ExtractPemBytes(KeyPem);
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // Hopefully we we'll be able to use the standard library once
             // .NET Standard 2.1 is released.

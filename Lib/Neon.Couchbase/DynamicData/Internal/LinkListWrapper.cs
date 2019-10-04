@@ -329,7 +329,7 @@ namespace Neon.Couchbase.DynamicData.Internal
                     return null;
                 }
 
-                // $note(jeff.lill):
+                // $note(jefflill):
                 //
                 // We need to disable notification here because logically, we're not
                 // modifying the list.  Rather, we're just loading and caching the

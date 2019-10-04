@@ -252,7 +252,7 @@ namespace Neon.HyperV
 
             // Resize the VHDX.
 
-            // $hack(jeff.lill):
+            // $hack(jefflill):
             //
             // For some reason, the PowerShell [Resize-VHD] command does not like 
             // hard disk file names formatted as we're doing (e.g. with embedded
@@ -599,7 +599,7 @@ namespace Neon.HyperV
             // We're going to look for an active (non-loopback) interface that is configured
             // to use the correct upstream gateway and also has at least one nameserver.
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // This may be a problem for machines with multiple active network interfaces
             // because I may choose the wrong one (e.g. the slower card).  It might be

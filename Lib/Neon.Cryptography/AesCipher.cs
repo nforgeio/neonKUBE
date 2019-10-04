@@ -25,7 +25,7 @@ using System.Text;
 using Neon.Common;
 using Neon.IO;
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // This needs a review to ensure that we're not leaving decrypted
 // data laying about in RAM unnecessarily.  One thing I should really

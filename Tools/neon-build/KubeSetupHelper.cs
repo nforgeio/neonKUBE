@@ -301,7 +301,7 @@ namespace NeonBuild
         {
             get
             {
-                // $hack(jeff.lill): Hardcoded
+                // $hack(jefflill): Hardcoded
 
                 var path = @"C:\Program Files (x86)\Inno Setup 5\Compil32.exe";
 

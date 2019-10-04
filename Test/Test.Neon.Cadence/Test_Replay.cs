@@ -461,7 +461,7 @@ namespace TestCadence
 
                     case ReplayTest.GetLastCompletionResult:
 
-                        // $todo(jeff.lill):
+                        // $todo(jefflill):
                         //
                         // This case is a bit tricker to test.  We'd need to schedule the
                         // workflow with a CRON schedule, let it run once and then perform

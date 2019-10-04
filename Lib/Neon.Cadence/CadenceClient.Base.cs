@@ -153,7 +153,7 @@ namespace Neon.Cadence
                     // registrations will happen infrequently (typically just once
                     // per service, when it starts).
 
-                    // $note(jeff.lill):
+                    // $note(jefflill):
                     //
                     // If the worker exists but its RefCount==0, then we're going to
                     // throw an exception because Cadence doesn't support recreating
@@ -245,7 +245,7 @@ namespace Neon.Cadence
                     return;
                 }
 
-                // $note(jeff.lill):
+                // $note(jefflill):
                 //
                 // If Cadence was able to restart a given worker, we'd uncomment
                 // this line.

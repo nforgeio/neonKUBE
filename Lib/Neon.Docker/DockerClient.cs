@@ -91,7 +91,7 @@ namespace Neon.Docker
                     {
                         var sock = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
 
-                        // $todo(jeff.lill):
+                        // $todo(jefflill):
                         //
                         // It looks like .NET Core 3.0 (and presumably .NET Standard 2.1 in the near future
                         // implements this as [System.Net.Sockets.UnixDomainSocketEndPoint].  Look into
@@ -267,7 +267,7 @@ namespace Neon.Docker
 
             await JsonClient.GetAsync(retryPolicy, GetUri("info"), cancellationToken: cancellationToken);
 
-            // $hack(jeff.lill):
+            // $hack(jefflill):
             //
             // At this point, the server should be ready but I'm still seeing 500 errors
             // when listing Docker volumes.  I'm going to add an additional request to

@@ -278,7 +278,7 @@ namespace Neon.Cadence
                         Domain = client.ResolveDomain(domain)
                     });
 
-                // $hack(jeff.lill): 
+                // $hack(jefflill): 
                 //
                 // We're going to ignore any errors here to handle:
                 //
@@ -563,7 +563,7 @@ namespace Neon.Cadence
 
             var activityTask = new ActivityTask()
             {
-                 // $todo(jeff.lill): Need to initialize these properties.
+                 // $todo(jefflill): Need to initialize these properties.
             };
 
             this.Client                  = client;

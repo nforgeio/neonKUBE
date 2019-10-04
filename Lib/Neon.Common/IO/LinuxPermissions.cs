@@ -95,7 +95,7 @@ namespace Neon.IO
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(mode));
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // We're going to hack this by running [chmod MODE PATH].  Eventually,
             // we could convert this to using a low-level package but I didn't

@@ -28,7 +28,7 @@ using Neon.Common;
 
 namespace Neon.Cadence
 {
-    // $todo(jeff.lill): https://github.com/nforgeio/neonKUBE/issues/615
+    // $todo(jefflill): https://github.com/nforgeio/neonKUBE/issues/615
 
     /// <summary>
     /// Used to execute an activity whose .NET type information is not known

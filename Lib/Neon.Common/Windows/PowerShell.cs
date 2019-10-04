@@ -138,7 +138,7 @@ namespace Neon.Windows
 
                 foreach (DictionaryEntry item in Environment.GetEnvironmentVariables())
                 {
-                    // $hack(jeff.lill):
+                    // $hack(jefflill):
                     //
                     // Some common Windows environment variables names include characters
                     // like parens that are not compatible with [PreprocessReader].  We're
@@ -183,7 +183,7 @@ catch [Exception] {{
 ");
                 var result = NeonHelper.ExecuteCapture(GetPwshPath(), $"-file \"{file.Path}\"", outputAction: outputAction, errorAction: errorAction);
 
-                // $hack(jeff.lill):
+                // $hack(jefflill):
                 //
                 // Powershell is returning [exitcode=0] even if there was an error and
                 // we called the [exit 1] statement.  I'm going to work around this for
@@ -218,7 +218,7 @@ catch [Exception] {{
             {
                 command = ExpandEnvironmentVars(command);
 
-                // $hack(jeff.lill):
+                // $hack(jefflill):
                 //
                 // ExpandEnvironmentVars() appends a CRLF to the end of the 
                 // string, so we'll remove that here.
@@ -244,7 +244,7 @@ catch [Exception] {{
 ");
                 var result = NeonHelper.ExecuteCapture(GetPwshPath(), $"-file \"{file.Path}\"", outputAction: outputAction, errorAction: errorAction);
 
-                // $hack(jeff.lill):
+                // $hack(jefflill):
                 //
                 // Powershell is returning [exitcode=0] even if there was an error and
                 // we called the [exit 1] statement.  I'm going to work around this for

@@ -191,7 +191,7 @@ namespace Neon.Cadence.Internal
         /// <returns>One of the exceptions derived from <see cref="CadenceException"/>.</returns>
         public CadenceException ToException()
         {
-            // $note(jeff.lill):
+            // $note(jefflill):
             //
             // We're depending on cadence error strings looking like this:
             //

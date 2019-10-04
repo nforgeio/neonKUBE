@@ -131,7 +131,7 @@ or:
 
                 // Ensure that the runtime identifier is present in the project file.
 
-                // $hack(jeff.lill): 
+                // $hack(jefflill): 
                 //
                 // I'm hacking this test right now using string matching.  Ultimately,
                 // this should be accomplished by actually parsing the project XML.

@@ -206,7 +206,7 @@ namespace Neon.Cadence
 
             activityTypeName = CadenceHelper.GetActivityTypeName(activityInterface, activityAttribute);
 
-            // $hack(jeff.lill):
+            // $hack(jefflill):
             //
             // It would be nicer if [CadenceHelper.GetActivityTypeName()] accepted an optional
             // [ActivityMethodAttribute] that would be used to append the method name so that

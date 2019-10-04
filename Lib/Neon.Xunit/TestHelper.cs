@@ -105,7 +105,7 @@ namespace Neon.Xunit
             Covenant.Requires<ArgumentNullException>(expected != null);
             Covenant.Requires<ArgumentNullException>(collection != null);
 
-            // $todo(jeff.lill): 
+            // $todo(jefflill): 
             //
             // This is a simple but stupid order n^2 algorithm which will blow
             // up for larger lists.
@@ -171,7 +171,7 @@ namespace Neon.Xunit
             Covenant.Requires<ArgumentNullException>(collection != null);
             Covenant.Requires<ArgumentNullException>(comparer != null);
 
-            // $todo(jeff.lill): 
+            // $todo(jefflill): 
             //
             // This is a simple but stupid order n^2 algorithm which will blow
             // up for larger lists.

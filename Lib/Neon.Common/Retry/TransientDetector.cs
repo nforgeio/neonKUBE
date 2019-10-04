@@ -190,7 +190,7 @@ namespace Neon.Retry
 
             if (httpRequestException != null)
             {
-                // $hack(jeff.lill): 
+                // $hack(jefflill): 
                 //
                 // Extract the formatted status code from the message which
                 // will look like this:

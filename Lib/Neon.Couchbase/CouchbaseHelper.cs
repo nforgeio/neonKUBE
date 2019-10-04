@@ -137,7 +137,7 @@ namespace Couchbase
 
             sb.Append('`');
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // I'm not entirely sure that escapes are allowed in
             // Couchbase names but I'm going to support them just

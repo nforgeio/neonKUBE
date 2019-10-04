@@ -473,7 +473,7 @@ namespace WinDesktop
                 {
                     if (notifyStack.Count > 0 && notifyStack.Peek().IsTransient)
                     {
-                        // $hack(jeff.lill):
+                        // $hack(jefflill):
                         //
                         // This is a bit of a hack.  If the top trasient item indicates 
                         // an error, we're going to simply replace the text.  If it's
@@ -886,7 +886,7 @@ namespace WinDesktop
                         else
                         {
                             remoteOperation = operation;
-                            //StartOperation(workingAnimation);     // $todo(jeff.lill): Notification status is a bit of a mess.
+                            //StartOperation(workingAnimation);     // $todo(jefflill): Notification status is a bit of a mess.
                         }
 
                         SetBalloonText(operation.Summary);
@@ -1154,7 +1154,7 @@ namespace WinDesktop
         /// <param name="args">The arguments.</param>
         private void OnSettingsCommand(object sender, EventArgs args)
         {
-            MessageBox.Show("$todo(jeff.lill): Not implemented yet.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show("$todo(jefflill): Not implemented yet.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
 
         /// <summary>
@@ -1176,7 +1176,7 @@ namespace WinDesktop
                 }
                 else
                 {
-                    MessageBox.Show("$todo(jeff.lill): Not implemented yet.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("$todo(jefflill): Not implemented yet.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
             catch
@@ -1291,7 +1291,7 @@ namespace WinDesktop
         /// <param name="args">The arguments.</param>
         private void OnCephDashboardCommand(object sender, EventArgs args)
         {
-            MessageBox.Show("$todo(jeff.lill): Not implemented yet.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show("$todo(jefflill): Not implemented yet.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
 
         /// <summary>

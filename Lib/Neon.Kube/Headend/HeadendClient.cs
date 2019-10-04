@@ -40,7 +40,7 @@ using System.Text.RegularExpressions;
 
 namespace Neon.Kube
 {
-    // $todo(jeff.lill):
+    // $todo(jefflill):
     //
     // I'm just hardcoding this for now so that I can complete client 
     // side coding.  I'll flesh this out when I actually implement the
@@ -100,7 +100,7 @@ namespace Neon.Kube
             gitHubClient.BaseAddress = new Uri("https://raw.githubusercontent.com");
             gitHubClient.DefaultRequestHeaders.UserAgent.ParseAdd("HttpClient");
             
-            // $hack(jeff.lill):
+            // $hack(jefflill):
             //
             // We need to manually maintain the Kubernetes version to the
             // corresponding [kubectl], [kubeadm], and [kubelet] package
@@ -193,8 +193,8 @@ namespace Neon.Kube
             Covenant.Assert(ubuntuKubeCtlPackages.ContainsKey(kubeVersion.ToString()));
             Covenant.Assert(ubuntuKubeletPackages.ContainsKey(kubeVersion.ToString()));
 
-            // $todo(jeff.lill): Hardcoded
-            // $todo(jeff.lill): Verify Docker/Kubernetes version compatibility.
+            // $todo(jefflill): Hardcoded
+            // $todo(jefflill): Verify Docker/Kubernetes version compatibility.
 
             var dockerVersion = clusterDefinition.Docker.Version;
 
@@ -220,7 +220,7 @@ namespace Neon.Kube
                 throw new KubeException($"[{helmVersion}] is not a supported Helm version.");
             }
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // The code below supports only the Calico CNI for now.  This will probably be
             // replaced by the integrated Istio CNI soon.
@@ -273,7 +273,7 @@ namespace Neon.Kube
                 HelmOsxUri                  = $"https://storage.googleapis.com/kubernetes-helm/helm-v{helmVersion}-darwin-amd64.tar.gz",
                 HelmWindowsUri              = $"https://storage.googleapis.com/kubernetes-helm/helm-v{helmVersion}-windows-amd64.zip",
 
-                // $todo(jeff.lill):
+                // $todo(jefflill):
                 //
                 // I'm a little worried about where the "1.7" in the [CalicoSetupUri] came from.  I suspect that
                 // this will vary too.  Once the Istio CNI is stable, we'll probably delete this anyway but if 

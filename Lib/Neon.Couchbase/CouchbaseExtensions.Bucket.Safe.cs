@@ -802,7 +802,7 @@ namespace Couchbase
         {
             Covenant.Requires<ArgumentNullException>(queryRequest != null);
 
-            // $todo(jeff.lill): This is a horrible hack!
+            // $todo(jefflill): This is a horrible hack!
             //
             // My [Test_AnsibleCouchbaseImport] unit tests were failing due to what
             // looks like a transient query exception that doesn't happen for the 
@@ -883,7 +883,7 @@ namespace Couchbase
             Covenant.Requires<ArgumentNullException>(queryRequest != null);
             Covenant.Requires<ArgumentNullException>(mutationState != null);
 
-            // $todo(jeff.lill): This is a horrible hack!
+            // $todo(jefflill): This is a horrible hack!
             //
             // My [Test_AnsibleCouchbaseImport] unit tests were failing due to what
             // looks like a transient query exception that doesn't happen for the 
@@ -1108,7 +1108,7 @@ namespace Couchbase
             }
             else if (expiration.HasValue)
             {
-                // $todo(jeff.lill):
+                // $todo(jefflill):
                 //
                 // There doesn't appear to be a way to do this in one API call because
                 // there isn't an override that doesn't include a CAS parameter.  Research
@@ -1184,7 +1184,7 @@ namespace Couchbase
             }
             else if (expiration.HasValue)
             {
-                // $todo(jeff.lill):
+                // $todo(jefflill):
                 //
                 // There doesn't appear to be a way to do this in one API call because
                 // there isn't an override that doesn't include a CAS parameter.  Research
@@ -1359,7 +1359,7 @@ namespace Couchbase
         public static async Task<IOperationResult<T>> UpsertSafeAsync<T>(this IBucket bucket, T persistable, ulong cas, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
             where T : class, IPersistableType
         {
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // Not so sure about setting [uint.MaxValue] as the expiration here.
 
@@ -1382,7 +1382,7 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult<T>> UpsertSafeAsync<T>(this IBucket bucket, string key, T value, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // Not so sure about setting [uint.MaxValue] as the expiration here.
 
@@ -1407,7 +1407,7 @@ namespace Couchbase
         {
             Covenant.Requires<ArgumentNullException>(persistable != null);
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // Not so sure about setting [uint.MaxValue] as the expiration here.
 

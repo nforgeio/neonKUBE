@@ -112,7 +112,7 @@ namespace Neon.Data
             Covenant.Requires(resultType != null);
             Covenant.Requires(bytes != null);
 
-            var json    = Encoding.UTF8.GetString(bytes);  // $debug(jeff.lill): DELETE THIS!
+            var json    = Encoding.UTF8.GetString(bytes);  // $debug(jefflill): DELETE THIS!
             var jToken  = JToken.Parse(json);
 
             switch (jToken.Type)

@@ -29,7 +29,7 @@
 
 function safeinvoke()
 {
-    # $hack(jeff.lill):
+    # $hack(jefflill):
     #
     # I need to disable the [set -e] flag within the method.  For
     # now, I'm just going to disable it at the beginning and then
@@ -76,7 +76,7 @@ function safeinvoke()
 
 function unsafeinvoke()
 {
-    # $hack(jeff.lill):
+    # $hack(jefflill):
     #
     # I need to disable the [set -e] flag within the method.  For
     # now, I'm just going to disable it at the beginning and then

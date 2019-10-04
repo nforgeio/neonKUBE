@@ -966,7 +966,7 @@ namespace Neon.Cadence.Internal
             // Compile the new workflow stub class into an assembly.
 
             //--------------------------------
-            // $debug(jeff.lill): DELETE THIS!
+            // $debug(jefflill): DELETE THIS!
             var interfaceTypeName = workflowInterface.Name;
             //--------------------------------
 

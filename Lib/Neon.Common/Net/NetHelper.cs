@@ -466,14 +466,14 @@ namespace Neon.Net
             }
             else if (NeonHelper.IsOSX)
             {
-                // $todo(jeff.lill):
+                // $todo(jefflill):
                 //
                 // We may need to clear the OSX DNS cache here.  Here's some information on 
                 // how to do this:
                 //
                 //      https://help.dreamhost.com/hc/en-us/articles/214981288-Flushing-your-DNS-cache-in-Mac-OS-X-and-Linux
 
-                throw new NotImplementedException("$todo(jeff.lill): Purge the OSX DNS cache.");
+                throw new NotImplementedException("$todo(jefflill): Purge the OSX DNS cache.");
             }
 
             if (NeonHelper.IsWindows || NeonHelper.IsOSX)

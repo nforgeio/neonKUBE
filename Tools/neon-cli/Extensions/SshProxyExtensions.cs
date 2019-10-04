@@ -310,7 +310,7 @@ namespace NeonCli
             {
                 case HostingEnvironments.Aws:
 
-                    throw new NotImplementedException("$todo(jeff.lill)");
+                    throw new NotImplementedException("$todo(jefflill)");
 
                 case HostingEnvironments.Azure:
 
@@ -328,7 +328,7 @@ namespace NeonCli
 
                 case HostingEnvironments.Google:
 
-                    throw new NotImplementedException("$todo(jeff.lill)");
+                    throw new NotImplementedException("$todo(jefflill)");
 
                 case HostingEnvironments.HyperV:
                 case HostingEnvironments.HyperVLocal:

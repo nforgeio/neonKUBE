@@ -28,7 +28,7 @@ using Neon.Xunit;
 
 using Xunit;
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // PB and PiB units aren't working due to flowting point precision issues.
 // I'm going to disable this for now.  Perhaps we can address this by using

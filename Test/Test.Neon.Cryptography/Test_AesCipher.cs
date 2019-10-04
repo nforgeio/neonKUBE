@@ -404,7 +404,7 @@ namespace TestCryptography
             // Then we'll verify that we're seeing at least 256 bytes of 
             // variation in the encrypted lengthss.
 
-            // $note(jeff.lill):
+            // $note(jefflill):
             //
             // There's a very slight chance that this will fail if we're
             // incredibly unlucky and [AesCipher] happens to randomly 

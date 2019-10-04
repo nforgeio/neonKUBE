@@ -32,7 +32,7 @@ using Neon.Xunit.Kube;
 
 using Xunit;
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // Not sure how relevant these test are anymore.
 
@@ -638,7 +638,7 @@ namespace TestKube
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
         public void Rollback()
         {
-            // $note(jeff.lill):
+            // $note(jefflill):
             //
             // [docker service inspect SERVICE] doesn't appear to return
             // the service update status so we're going to comment our
@@ -701,14 +701,14 @@ namespace TestKube
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
         public void SELinux()
         {
-            // $todo(jeff.lill): Not supporting SELinux yet.
+            // $todo(jefflill): Not supporting SELinux yet.
         }
 
         [Fact(Skip = "Not supporting Windows services yet.")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
         public void Windows()
         {
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // There are some Windows specific features to check:
             //

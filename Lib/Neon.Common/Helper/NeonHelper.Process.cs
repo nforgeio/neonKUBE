@@ -315,7 +315,7 @@ namespace Neon.Common
                 // Relay STDOUT and STDERR output from the child process
                 // to this process's STDOUT and STDERR streams.
 
-                // $todo(jeff.lill):
+                // $todo(jefflill):
                 //
                 // This won't work properly for binary data streaming
                 // back from the process because we're not going to be
@@ -774,13 +774,13 @@ namespace Neon.Common
             }
             else if (IsOSX)
             {
-                // $todo(jeff.lill): Test this.
+                // $todo(jefflill): Test this.
 
                 Process.Start("open", uri);
             }
             else if (IsLinux)
             {
-                // $todo(jeff.lill): test this.
+                // $todo(jefflill): test this.
 
                 Process.Start("xdg-open", uri);
             }
@@ -808,13 +808,13 @@ namespace Neon.Common
             }
             else if (IsOSX)
             {
-                // $todo(jeff.lill): Test this.
+                // $todo(jefflill): Test this.
 
                 process = Process.Start("bash", $"-c '{command}'");
             }
             else if (IsLinux)
             {
-                // $todo(jeff.lill): test this.
+                // $todo(jefflill): test this.
 
                 process = Process.Start("bash", $"-c '{command}'");
             }

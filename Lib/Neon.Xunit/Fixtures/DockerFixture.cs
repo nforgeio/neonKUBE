@@ -650,7 +650,7 @@ namespace Neon.Xunit
             //
             // We're also going to list and remove all networks.
             
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // Consider using [docker system prune --force] as an option to
             // purge cached images, etc.  I'm not sure that this is a great
@@ -689,7 +689,7 @@ namespace Neon.Xunit
                     throw new InvalidOperationException("Cannot reset the swarm because it has more than one node.  Testing on multi-node clusters is not allowed as a safety measure to avoid accidentially wiping out a production cluster.");
                 }
 
-                // $hack(jeff.lill):
+                // $hack(jefflill):
                 //
                 // I've seen situations where leaving the swarm below when one or more stacks with networks
                 // are still running, effectively orphans these networks.  The networks can be listed but

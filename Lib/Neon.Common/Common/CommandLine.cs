@@ -23,7 +23,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // Modify this to work more like the Linux standard, where:
 //

@@ -157,7 +157,7 @@ namespace WinDesktop
         {
             lock (SyncLock)
             {
-                // $todo(jeff.lill): Implement this
+                // $todo(jefflill): Implement this
             }
         }
 
@@ -169,7 +169,7 @@ namespace WinDesktop
         {
             lock (SyncLock)
             {
-                // $todo(jeff.lill): Implement this
+                // $todo(jefflill): Implement this
             }
         }
 
@@ -181,7 +181,7 @@ namespace WinDesktop
         {
             lock (SyncLock)
             {
-                // $todo(jeff.lill): Implement this
+                // $todo(jefflill): Implement this
             }
         }
 
@@ -193,7 +193,7 @@ namespace WinDesktop
         {
             lock (SyncLock)
             {
-                // $todo(jeff.lill): Implement this
+                // $todo(jefflill): Implement this
             }
         }
     }

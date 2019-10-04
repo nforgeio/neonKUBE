@@ -47,7 +47,7 @@ namespace Neon.Docker
         {
             Covenant.Requires<ArgumentNullException>(network != null);
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // Ipam.Config settings aren't working.  Looks like I need to wrap them into
             // a JSON array before sending.  It's a bit weird.

@@ -72,7 +72,7 @@ namespace Neon.Kube
                     return;     // Already initialized
                 }
 
-                // $todo(jeff.lill):
+                // $todo(jefflill):
                 //
                 // This is hardcoded to load all of the built-in hosting manager assemblies.  
                 // In the future, it would be nice if this could be less hardcoded and also 

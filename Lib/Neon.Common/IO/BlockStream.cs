@@ -22,7 +22,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 
-// $todo(jeff.lill): Implement all [*Async()] method overrides.
+// $todo(jefflill): Implement all [*Async()] method overrides.
 
 namespace Neon.IO
 {

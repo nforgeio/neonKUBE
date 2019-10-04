@@ -303,7 +303,7 @@ namespace Neon.DnsTools
                         }
                         catch (ResponseException)
                         {
-                            // $todo(jeff.lill): 
+                            // $todo(jefflill): 
                             //
                             // I wish the underlying [DnsClient] didn't throw exceptions.  Perhaps
                             // I could extend the implementation to implement [TryResolve()].

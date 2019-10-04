@@ -122,7 +122,7 @@ namespace Neon.Kube
 
                         if (string.IsNullOrWhiteSpace(valueString))
                         {
-                            valueString = "-"; // $todo(jeff.lill): Not sure if this makes sense any more.
+                            valueString = "-"; // $todo(jefflill): Not sure if this makes sense any more.
                         }
                         else if (valueString.Contains(' '))
                         {

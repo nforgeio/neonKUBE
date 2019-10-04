@@ -190,7 +190,7 @@ namespace TestModelGen
             }
             catch (InvalidCastException)
             {
-                // $hack(jeff.lill):
+                // $hack(jefflill):
                 //
                 // We're going to see this for situations where the service client 
                 // returns one of the data model types that reside in the compiled
@@ -308,7 +308,7 @@ namespace TestModelGen
             }
             catch (InvalidCastException)
             {
-                // $hack(jeff.lill):
+                // $hack(jefflill):
                 //
                 // We're going to see this for situations where the service client 
                 // returns one of the data model types that reside in the compiled

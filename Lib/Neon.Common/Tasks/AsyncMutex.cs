@@ -25,7 +25,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // The current implementation is based on [AsyncReaderWriterLock] for simplicitly 
 // and because that is well tested.  There could be minor efficency gains to
