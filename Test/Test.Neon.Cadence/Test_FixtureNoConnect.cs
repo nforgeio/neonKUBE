@@ -55,7 +55,6 @@ namespace TestCadence
             var settings = new CadenceSettings()
             {
                 DefaultDomain    = CadenceFixture.DefaultDomain,
-                DefaultTaskList  = CadenceFixture.DefaultTaskList,
                 LogLevel         = CadenceTestHelper.LogLevel,
                 CreateDomain     = true,
                 Debug            = true,
@@ -73,7 +72,7 @@ namespace TestCadence
 
                 // Start the worker.
 
-                client.StartWorkerAsync().Wait();
+                client.StartWorkerAsync(CadenceTestHelper.TaskList).Wait();
             }
             else
             {
@@ -88,6 +87,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowWithResult : IWorkflow
         {
             [WorkflowMethod]

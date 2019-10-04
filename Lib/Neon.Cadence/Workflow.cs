@@ -534,7 +534,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Returns the <see cref="WorkflowExecution"/> for a child workflow created via
         /// <see cref="NewChildWorkflowStub{TWorkflowInterface}(ChildWorkflowOptions, string)"/>
-        /// or <see cref="NewExternalWorkflowStub{TWorkflowInterface}(string, string)"/>.
+        /// or <see cref="NewExternalWorkflowStub(string, string)"/>.
         /// </summary>
         /// <param name="stub">The child workflow stub.</param>
         /// <returns>The <see cref="WorkflowExecution"/>.</returns>
@@ -1508,6 +1508,8 @@ namespace Neon.Cadence
             Client.EnsureNotDisposed();
             SetStackTrace();
 
+            options = ChildWorkflowOptions.Normalize(Client, options, typeof(TWorkflowInterface));
+
             return new StartChildWorkflowStub<TWorkflowInterface>(this, methodName, options);
         }
 
@@ -1644,6 +1646,8 @@ namespace Neon.Cadence
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
             Client.EnsureNotDisposed();
             SetStackTrace();
+
+            options = ActivityOptions.Normalize(Client, options, typeof(TActivityInterface));
 
             return new StartActivityStub<TActivityInterface>(this, methodName, options);
         }

@@ -44,6 +44,7 @@ namespace TestCadence
     {
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowWithNoResult : IWorkflow
         {
             [WorkflowMethod]
@@ -92,6 +93,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowWithResult : IWorkflow
         {
             [WorkflowMethod]
@@ -142,6 +144,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowLogger : IWorkflow
         {
             [WorkflowMethod]
@@ -179,6 +182,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowUtcNow : IWorkflow
         {
             [WorkflowMethod]
@@ -210,6 +214,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowSleep : IWorkflow
         {
             [WorkflowMethod]
@@ -249,6 +254,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowSleepUntil : IWorkflow
         {
             [WorkflowMethod]
@@ -295,6 +301,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowStubExecTwice : IWorkflow
         {
             [WorkflowMethod]
@@ -325,6 +332,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowMultiEntrypoints : IWorkflow
         {
             [WorkflowMethod(Name = "hello")]
@@ -365,6 +373,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowMultipleStubCalls : IWorkflow
         {
             [WorkflowMethod]
@@ -394,6 +403,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface ICronActivity : IActivity
         {
             [ActivityMethod]
@@ -413,6 +423,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface ICronWorkflow : IWorkflow
         {
             [WorkflowMethod]
@@ -495,6 +506,7 @@ namespace TestCadence
         private const int RandomSampleCount         = 1000;
         private const int MaxDuplicateRandomSamples = RandomSampleCount / 10;
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IRandomWorkflow : IWorkflow
         {
             [WorkflowMethod(Name = "GetRandomDoubles")]
@@ -906,6 +918,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowEcho : IWorkflow
         {
             [WorkflowMethod]
@@ -943,6 +956,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowSideEffect : IWorkflow
         {
             [WorkflowMethod(Name = "SideEffect")]
@@ -982,6 +996,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowMutableSideEffect : IWorkflow
         {
             [WorkflowMethod(Name = "MutableSideEffect")]
@@ -1021,6 +1036,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowSignal : IWorkflow
         {
             [WorkflowMethod]
@@ -1134,6 +1150,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowQuery : IWorkflow
         {
             [WorkflowMethod]
@@ -1279,6 +1296,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowGetVersion : IWorkflow
         {
             [WorkflowMethod]
@@ -1309,6 +1327,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IChildActivity : IActivity
         {
             [ActivityMethod]
@@ -1324,6 +1343,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowComplex : IWorkflow
         {
             [WorkflowMethod]
@@ -1470,6 +1490,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IParallelActivity : IActivity
         {
             [ActivityMethod]
@@ -1493,6 +1514,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowChild : IWorkflow
         {
             [WorkflowMethod]
@@ -1622,6 +1644,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowParent : IWorkflow
         {
             [WorkflowMethod]
@@ -2059,6 +2082,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowDifferentNamesInterface : IWorkflow
         {
             [WorkflowMethod]
@@ -2091,6 +2115,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowFail : IWorkflow
         {
             [WorkflowMethod]
@@ -2134,6 +2159,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowUnregistered : IWorkflow
         {
             [WorkflowMethod]
@@ -2166,6 +2192,7 @@ namespace TestCadence
             public int Age { get; set; }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowComplexData : IWorkflow
         {
             [WorkflowMethod]
@@ -2237,6 +2264,7 @@ namespace TestCadence
             public string TaskList { get; set; }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowInfo : IWorkflow
         {
             [WorkflowMethod]
@@ -2262,7 +2290,6 @@ namespace TestCadence
             var options = new WorkflowOptions()
             {
                 Domain     = client.Settings.DefaultDomain,
-                TaskList   = client.Settings.DefaultTaskList,
                 WorkflowId = "my-workflow-id"
             };
 
@@ -2271,7 +2298,7 @@ namespace TestCadence
 
             Assert.Equal(options.Domain, info.Domain);
             Assert.NotEmpty(info.RunId);
-            Assert.Equal(options.TaskList, info.TaskList);
+            Assert.Equal(CadenceTestHelper.TaskList, info.TaskList);
             Assert.Equal(options.WorkflowId, info.WorkflowId);
             Assert.Equal("my-workflow-info-type", info.WorkflowType);
 
@@ -2285,6 +2312,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowContinueAsNew0 : IWorkflow
         {
             [WorkflowMethod(Name = "Hello")]
@@ -2364,6 +2392,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowContinueAsNew1 : IWorkflow
         {
             [WorkflowMethod]
@@ -2441,6 +2470,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowExternalStub : IWorkflow
         {
             [WorkflowMethod(Name = "hello-test")]

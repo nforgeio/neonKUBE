@@ -48,7 +48,6 @@ namespace TestCadence
             var settings = new CadenceSettings()
             {
                 DefaultDomain    = CadenceFixture.DefaultDomain,
-                DefaultTaskList  = CadenceFixture.DefaultTaskList,
                 LogLevel         = CadenceTestHelper.LogLevel,
                 CreateDomain     = true,
                 Debug            = true,
@@ -66,6 +65,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = "tasklist-1")]
         public interface IWorkflowWithResult1: IWorkflow
         {
             [WorkflowMethod]
@@ -80,6 +80,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = "tasklist-2")]
         public interface IWorkflowWithResult2 : IWorkflow
         {
             [WorkflowMethod]
@@ -94,6 +95,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = "tasklist-3")]
         public interface IWorkflowWithResult3 : IWorkflow
         {
             [WorkflowMethod]
@@ -108,6 +110,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = "tasklist-4")]
         public interface IWorkflowWithResult4 : IWorkflow
         {
             [WorkflowMethod]
@@ -132,12 +135,12 @@ namespace TestCadence
             using (var client1 = await CadenceClient.ConnectAsync(fixture.Settings))
             {
                 await client1.RegisterWorkflowAsync<WorkflowWithResult1>();
-                await client1.StartWorkerAsync();
+                await client1.StartWorkerAsync("tasklist-1");
 
                 using (var client2 = await CadenceClient.ConnectAsync(fixture.Settings))
                 {
                     await client2.RegisterWorkflowAsync<WorkflowWithResult2>();
-                    await client2.StartWorkerAsync();
+                    await client2.StartWorkerAsync("tasklist-2");
 
                     var stub1 = client1.NewWorkflowStub<IWorkflowWithResult1>();
                     var stub2 = client2.NewWorkflowStub<IWorkflowWithResult2>();
@@ -159,7 +162,7 @@ namespace TestCadence
             {
                 await client.RegisterWorkflowAsync<WorkflowWithResult3>();
                 
-                using (await client.StartWorkerAsync())
+                using (await client.StartWorkerAsync("tasklist-3"))
                 {
                     var stub1 = client.NewWorkflowStub<IWorkflowWithResult3>();
 
@@ -171,7 +174,7 @@ namespace TestCadence
             {
                 await client.RegisterWorkflowAsync<WorkflowWithResult4>();
 
-                using (await client.StartWorkerAsync())
+                using (await client.StartWorkerAsync("tasklist-4"))
                 {
                     var stub1 = client.NewWorkflowStub<IWorkflowWithResult4>();
 
@@ -188,6 +191,7 @@ namespace TestCadence
 
         //---------------------------------------
 
+        [ActivityInterface(TaskList = "tasklist-1")]
         public interface IActivityWorker1 : IActivity
         {
             [ActivityMethod]
@@ -204,6 +208,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = "tasklist-1")]
         public interface IWorkflowWorker1 : IWorkflow
         {
             [WorkflowMethod]
@@ -237,6 +242,7 @@ namespace TestCadence
 
         //---------------------------------------
 
+        [ActivityInterface(TaskList = "tasklist-2")]
         public interface IActivityWorker2 : IActivity
         {
             [ActivityMethod]
@@ -253,6 +259,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = "tasklist-2")]
         public interface IWorkflowWorker2 : IWorkflow
         {
             [WorkflowMethod]
@@ -286,6 +293,7 @@ namespace TestCadence
 
         //---------------------------------------
 
+        [ActivityInterface(TaskList = "tasklist-3")]
         public interface IActivityWorker3 : IActivity
         {
             [ActivityMethod]
@@ -302,6 +310,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = "tasklist-3")]
         public interface IWorkflowWorker3 : IWorkflow
         {
             [WorkflowMethod]
@@ -335,7 +344,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task ClientsAndWorkers()
+        public async Task Multiple_TaskLists()
         {
             // Test the scenario where there multiple clients without
             // workers that will be used to simulate apps that make calls
@@ -365,20 +374,22 @@ namespace TestCadence
                 clients.Add(workerClient2 = await CadenceClient.ConnectAsync(fixture.Settings));
                 clients.Add(workerClient3 = await CadenceClient.ConnectAsync(fixture.Settings));
 
+                // Start the workers.
+
                 await workerClient1.RegisterActivityAsync<ActivityWorker1>();
                 await workerClient1.RegisterWorkflowAsync<WorkflowWorker1>();
-                await workerClient1.StartWorkerAsync();
+                await workerClient1.StartWorkerAsync("tasklist-1");
 
                 await workerClient2.RegisterActivityAsync<ActivityWorker2>();
                 await workerClient2.RegisterWorkflowAsync<WorkflowWorker2>();
-                await workerClient2.StartWorkerAsync();
+                await workerClient2.StartWorkerAsync("tasklist-2");
 
                 await workerClient3.RegisterActivityAsync<ActivityWorker3>();
                 await workerClient3.RegisterWorkflowAsync<WorkflowWorker3>();
-                await workerClient3.StartWorkerAsync();
+                await workerClient3.StartWorkerAsync("tasklist-3");
 
                 // Execute each of the worker workflows WITHOUT the associated activities 
-                // from each client (both the working and non-working clients).
+                // from each client (both the worker and non-worker clients).
 
                 foreach (var client in clients)
                 {

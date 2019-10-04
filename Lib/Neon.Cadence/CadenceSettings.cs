@@ -98,25 +98,6 @@ namespace Neon.Cadence
         public bool CreateDomain { get; set; } = false;
 
         /// <summary>
-        /// Specifies the default Cadence task list for this client.  This defaults to <b>null</b>.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Specifying a default task list can be convienent for many scenarios, especially for those where
-        /// the application workflows and activities are restricted to a single task list (which is pretty common).
-        /// </para>
-        /// <para>
-        /// The default task list can be overridden for individual method calls by passing a value as the optional <b>taskList</b>
-        /// paramater.  You can also leave this setting as <c>null</c> which will require that values be passed to
-        /// the <b>tasklist</b> parameters.
-        /// </para>
-        /// </remarks>
-        [JsonProperty(PropertyName = "DefaultTaskList", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "defaultTaskList", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string DefaultTaskList { get; set; }
-
-        /// <summary>
         /// Optionally specifies the maximum time the client should wait for synchronous 
         /// operations to complete.  This defaults to <b>60 seconds</b>.
         /// </summary>

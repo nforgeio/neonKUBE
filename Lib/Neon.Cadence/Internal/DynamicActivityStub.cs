@@ -62,10 +62,10 @@ namespace Neon.Cadence.Internal
             this.assembly          = assembly;
             this.className         = className;
 
-            // Fetch the stub type and reflect the required constructors and methods.
+            // Fetch the stub type and reflect the required constructors.
 
             this.stubType          = assembly.GetType(className);
-            this.normalConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(string), typeof(ActivityOptions));
+            this.normalConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(string), typeof(ActivityOptions), typeof(System.Type));
             this.localConstructor  = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(Type), typeof(LocalActivityOptions));
         }
 
@@ -73,18 +73,20 @@ namespace Neon.Cadence.Internal
         /// Creates a normal (non-local) activity stub instance suitable for executing a non-local activity.
         /// </summary>
         /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
-        /// <param name="workflow">The parent workflow.</param>
+        /// <param name="workflow">The parent workflow.</param>x
         /// <param name="activityTypeName">Specifies the activity type name.</param>
         /// <param name="options">Specifies the <see cref="ActivityOptions"/>.</param>
+        /// <param name="activityInterface">Specifies the activity interface definition.</param>
         /// <returns>The activity stub as an <see cref="object"/>.</returns>
-        public object Create(CadenceClient client, Workflow workflow, string activityTypeName, ActivityOptions options)
+        public object Create(CadenceClient client, Workflow workflow, string activityTypeName, ActivityOptions options, System.Type activityInterface)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
             Covenant.Requires<ArgumentNullException>(workflow != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
             Covenant.Requires<ArgumentNullException>(options != null);
+            Covenant.Requires<ArgumentNullException>(activityInterface != null);
 
-            return normalConstructor.Invoke(new object[] { client, client.DataConverter, workflow, activityTypeName, options });
+            return normalConstructor.Invoke(new object[] { client, client.DataConverter, workflow, activityTypeName, options, activityInterface });
         }
 
         /// <summary>

@@ -165,7 +165,7 @@ namespace Neon.Cadence
         /// Creates an untyped stub that can be used to start a single workflow execution.
         /// </summary>
         /// <param name="workflowTypeName">Specifies the workflow type name.</param>
-        /// <param name="options">Optionally specifies the workflow options.</param>
+        /// <param name="options">Specifies the workflow options (including the <see cref="WorkflowOptions.TaskList"/>).</param>
         /// <returns>The <see cref="WorkflowStub"/>.</returns>
         /// <remarks>
         /// <para>
@@ -190,15 +190,16 @@ namespace Neon.Cadence
         /// </code>
         /// </note>
         /// </remarks>
-        public WorkflowStub NewUntypedWorkflowStub(string workflowTypeName, WorkflowOptions options = null)
+        public WorkflowStub NewUntypedWorkflowStub(string workflowTypeName, WorkflowOptions options)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
+            Covenant.Requires<ArgumentNullException>(options != null);
             EnsureNotDisposed();
 
             return new WorkflowStub(this)
             {
                 WorkflowTypeName = workflowTypeName,
-                Options          = options ?? new WorkflowOptions()
+                Options          = options
             };
         }
 

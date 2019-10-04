@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.Reflection;
 
 using Newtonsoft.Json;
 
@@ -42,8 +43,10 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="client">The associated Cadence client.</param>
         /// <param name="options">The input options or <c>null</c>.</param>
+        /// <param name="workflowInterface">Optionally specifies the workflow interface definition.</param>
         /// <returns>The normalized options.</returns>
-        internal static WorkflowOptions Normalize(CadenceClient client, WorkflowOptions options)
+        /// <exception cref="ArgumentNullException">Thrown if a valid task list is not specified.</exception>
+        internal static WorkflowOptions Normalize(CadenceClient client, WorkflowOptions options, Type workflowInterface = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
 
@@ -76,14 +79,29 @@ namespace Neon.Cadence
                 options.TaskStartToCloseTimeout = client.Settings.WorkflowTaskStartToCloseTimeout;
             }
 
-            if (string.IsNullOrEmpty(options.TaskList))
-            {
-                options.TaskList = client.Settings.DefaultTaskList;
-            }
-
             if (!options.WorkflowIdReusePolicy.HasValue)
             {
                 options.WorkflowIdReusePolicy = Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
+            }
+
+            if (string.IsNullOrEmpty(options.TaskList))
+            {
+                if (workflowInterface != null)
+                {
+                    CadenceHelper.ValidateWorkflowInterface(workflowInterface);
+
+                    var interfaceAttribute = workflowInterface.GetCustomAttribute<WorkflowInterfaceAttribute>();
+
+                    if (interfaceAttribute != null && !string.IsNullOrEmpty(interfaceAttribute.TaskList))
+                    {
+                        options.TaskList = interfaceAttribute.TaskList;
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(options.TaskList))
+            {
+                throw new ArgumentNullException("You must specify a valid task list explicitly or via an [WorkflowInterface(TaskList = \"my-tasklist\")] attribute on the target workflow interface.");
             }
 
             return options;
