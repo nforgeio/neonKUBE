@@ -24,13 +24,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Newtonsoft;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
 using Neon.Common;
-using Neon.Net;
-using Neon.Retry;
 using Neon.Xunit;
 
 using Xunit;
@@ -39,29 +33,140 @@ namespace TestCommon
 {
     public class Test_Assert
     {
-        private const string baseUri = "http://127.0.0.1:888/";
-
-        public class RequestDoc
+        public class NoArgsException : Exception
         {
-            public string Operation { get; set; }
-            public string Arg0 { get; set; }
-            public string Arg1 { get; set; }
+            public NoArgsException()
+            {
+            }
         }
 
-        public class ReplyDoc
+        public class OneArgException : Exception
         {
-            public string Value1 { get; set; }
-            public string Value2 { get; set; }
+            public OneArgException()
+            {
+            }
+
+            public OneArgException(string arg)
+            {
+                this.Arg = arg;
+            }
+
+            public string Arg { get; private set; }
+        }
+
+        public class TwoArgsException : Exception
+        {
+            public TwoArgsException()
+            {
+            }
+
+            public TwoArgsException(string arg1, string arg2)
+            {
+                this.Arg1 = arg1;
+                this.Arg2 = arg2;
+            }
+
+            public string Arg1 { get; private set; }
+            public string Arg2 { get; private set; }
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public void Defaults()
+        public void Requires()
         {
-            using (var jsonClient = new JsonClient())
+            // Verify that the Assert.Requires<T>() optional string
+            // parameters work correctly.
+
+            //---------------------------------------------
+            // No parameters:
+
+            try
             {
-                Assert.IsType<ExponentialRetryPolicy>(jsonClient.SafeRetryPolicy);
-                Assert.IsType<NoRetryPolicy>(jsonClient.UnsafeRetryPolicy);
+                Covenant.Requires<NoArgsException>(false);
+                Assert.True(false);
+            }
+            catch (NoArgsException)
+            {
+                // Expecting this.
+            }
+
+            //---------------------------------------------
+            // One parameter:
+
+            try
+            {
+                Covenant.Requires<OneArgException>(false);
+                Assert.True(false);
+            }
+            catch (OneArgException e)
+            {
+                // Expecting this.
+
+                Assert.Null(e.Arg);
+            }
+
+            try
+            {
+                Covenant.Requires<OneArgException>(false, "value1");
+                Assert.True(false);
+            }
+            catch (OneArgException e)
+            {
+                // Expecting this.
+
+                Assert.Equal("value1", e.Arg);
+            }
+
+            try
+            {
+                Covenant.Requires<OneArgException>(false, "value1", "value2");
+                Assert.True(false);
+            }
+            catch (OneArgException e)
+            {
+                // Expecting this.
+
+                Assert.Equal("value1", e.Arg);
+            }
+
+            //---------------------------------------------
+            // Two parameters:
+
+            try
+            {
+                Covenant.Requires<TwoArgsException>(false);
+                Assert.True(false);
+            }
+            catch (TwoArgsException e)
+            {
+                // Expecting this.
+
+                Assert.Null(e.Arg1);
+            }
+
+            try
+            {
+                Covenant.Requires<TwoArgsException>(false, "value1");
+                Assert.True(false);
+            }
+            catch (TwoArgsException e)
+            {
+                // Expecting this.
+
+                Assert.Equal("value1", e.Arg1);
+            }
+
+            try
+            {
+                Covenant.Requires<TwoArgsException>(false, "value1", "value2");
+                Assert.True(false);
+            }
+            catch (TwoArgsException e)
+            {
+                // Expecting this.
+
+                Assert.Equal("value1", e.Arg1);
+                Assert.Equal("value2", e.Arg2);
             }
         }
     }

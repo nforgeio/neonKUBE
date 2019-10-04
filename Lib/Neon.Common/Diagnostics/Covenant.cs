@@ -36,8 +36,8 @@ namespace System.Diagnostics.Contracts
     /// </remarks>
     public static class Covenant
     {
-        private static Type[]   oneString  = new Type[] { typeof(string) };
-        private static Type[]   twoStrings = new Type[] { typeof(string) };
+        private static Type[]   oneStringArg  = new Type[] { typeof(string) };
+        private static Type[]   twoStringArgs = new Type[] { typeof(string), typeof(string) };
 
         /// <summary>
         /// Verifies a method pre-condition.
@@ -76,19 +76,26 @@ namespace System.Diagnostics.Contracts
             }
 
             var exceptionType = typeof(TException);
-            var constructor   = exceptionType.GetConstructor(twoStrings);
+
+            // Look for a constructor with two string parameters.
+
+            var constructor = exceptionType.GetConstructor(twoStringArgs);
 
             if (constructor != null)
             {
                 throw (Exception)constructor.Invoke(new object[] { arg1, arg2 });
             }
 
-            constructor = exceptionType.GetConstructor(oneString);
+            // Look for a constructor with one string parameter.
+
+            constructor = exceptionType.GetConstructor(oneStringArg);
 
             if (constructor != null)
             {
                 throw (Exception)constructor.Invoke(new object[] { arg1 });
             }
+
+            // Fall back to the default constructor.
 
             throw new TException();
         }
