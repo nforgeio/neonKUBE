@@ -2262,6 +2262,8 @@ namespace TestCadence
             public string RunId { get; set; }
             public string WorkflowType { get; set; }
             public string TaskList { get; set; }
+            public string ExecutionWorkflowId { get; set; }
+            public string ExecutionRunId { get; set; }
         }
 
         [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
@@ -2276,7 +2278,12 @@ namespace TestCadence
         {
             public async Task<WorkflowInfoTest> GetWorkflowInfoAsync()
             {
-                return await Task.FromResult(new WorkflowInfoTest(Workflow.WorkflowInfo));
+                var info = new WorkflowInfoTest(Workflow.WorkflowInfo);
+
+                info.ExecutionWorkflowId = Workflow.Execution.WorkflowId;
+                info.ExecutionRunId      = Workflow.Execution.RunId;
+
+                return await Task.FromResult(info);
             }
         }
 
@@ -2301,6 +2308,8 @@ namespace TestCadence
             Assert.Equal(CadenceTestHelper.TaskList, info.TaskList);
             Assert.Equal(options.WorkflowId, info.WorkflowId);
             Assert.Equal("my-workflow-info-type", info.WorkflowType);
+            Assert.Equal(options.WorkflowId, info.ExecutionWorkflowId);
+            Assert.NotEmpty(info.ExecutionRunId);
 
             // $todo(jefflill):
             //
