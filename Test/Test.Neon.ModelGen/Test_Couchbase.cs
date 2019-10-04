@@ -587,7 +587,7 @@ namespace TestModelGen.Couchbase
             Assert.True(gotJohn);
         }
 
-        [Fact]
+        [Fact(Skip = "TODO")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
         public async Task Dont_Persist_O()
         {

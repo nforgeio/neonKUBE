@@ -76,6 +76,11 @@ namespace TestCadence
         /// that unit tests will work properly.
         /// </note>
         /// </summary>
-        public const bool DebugPrelaunched = false; 
+        public const bool DebugPrelaunched = false;
+
+        /// <summary>
+        /// The Cadence task list to be used for test workers.
+        /// </summary>
+        public const string TaskList = "tests";
     }
 }

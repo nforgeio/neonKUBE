@@ -63,6 +63,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityNotRegistered : IActivity
         {
             [ActivityMethod]
@@ -81,6 +82,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowCallsUnregisteredActivity : IWorkflow
         {
             [WorkflowMethod]

@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.Reflection;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
@@ -40,8 +41,10 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="client">The associated Cadence client.</param>
         /// <param name="options">The input options or <c>null</c>.</param>
+        /// <param name="workflowInterface">Optionally specifies the workflow interface definition.</param>
         /// <returns>The normalized options.</returns>
-        public static ChildWorkflowOptions Normalize(CadenceClient client, ChildWorkflowOptions options)
+        /// <exception cref="ArgumentNullException">Thrown if a valid task list is not specified.</exception>
+        public static ChildWorkflowOptions Normalize(CadenceClient client, ChildWorkflowOptions options, Type workflowInterface = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null);
 
@@ -69,14 +72,29 @@ namespace Neon.Cadence
                 options.TaskStartToCloseTimeout = client.Settings.WorkflowTaskStartToCloseTimeout;
             }
 
-            if (string.IsNullOrEmpty(options.TaskList))
-            {
-                options.TaskList = client.Settings.DefaultTaskList;
-            }
-
             if (!options.WorkflowIdReusePolicy.HasValue)
             {
                 options.WorkflowIdReusePolicy = Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
+            }
+
+            if (string.IsNullOrEmpty(options.TaskList))
+            {
+                if (workflowInterface != null)
+                {
+                    CadenceHelper.ValidateWorkflowInterface(workflowInterface);
+
+                    var interfaceAttribute = workflowInterface.GetCustomAttribute<WorkflowInterfaceAttribute>();
+
+                    if (interfaceAttribute != null && !string.IsNullOrEmpty(interfaceAttribute.TaskList))
+                    {
+                        options.TaskList = interfaceAttribute.TaskList;
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(options.TaskList))
+            {
+                throw new ArgumentNullException("You must specify a valid task list explicitly or via an [WorkflowInterface(TaskList = \"my-tasklist\")] attribute on the target workflow interface.");
             }
 
             return options;
@@ -93,9 +111,21 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Optionally specifies the domain where the child workflow will run. 
-        /// This defaults to the parent workflow's domain.
+        /// Specifies the task list where the child workflow will be scheduled.
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// A task list must be specified when executing a workflow.  For workflows
+        /// started via a typed stub, this will default to the type list specified
+        /// by the <c>[WorkflowInterface(TaskList = "my-tasklist"]</c> tagging the
+        /// interface (if any).
+        /// </para>
+        /// <para>
+        /// For workflow stubs created from an interface without a specified task list
+        /// or workflows created via untyped or external stubs, this will need to
+        /// be explicitly set to a non-empty value.
+        /// </para>
+        /// </remarks>
         public string Domain { get; set; } = null;
 
         /// <summary>

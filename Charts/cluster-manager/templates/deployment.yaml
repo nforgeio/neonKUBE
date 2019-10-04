@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "operator-cluster-manager.fullname" . }}
+  name: {{ include "cluster-manager.fullname" . }}
   labels:
-    app: {{ include "operator-cluster-manager.name" . }}
-    helm.sh/chart: {{ include "operator-cluster-manager.chart" . }}
+    app: {{ include "cluster-manager.name" . }}
+    helm.sh/chart: {{ include "cluster-manager.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ include "operator-cluster-manager.name" . }}
+      app: {{ include "cluster-manager.name" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: {{ include "operator-cluster-manager.name" . }}
+        app: {{ include "cluster-manager.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
       annotations:
         readiness.status.sidecar.istio.io/applicationPorts: ""

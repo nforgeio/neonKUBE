@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Marcus Bowyer
 # COPYRIGHT:    Copyright (c) 2017-2018 by Loopie, LLC.  All rights reserved.
 #
-# Builds the Loopie [operator-cluster-manager] image.
+# Builds the Loopie [cluster-manager] image.
 #
 # Usage: powershell -file build.ps1 REGISTRY VERSION TAG
 
@@ -15,10 +15,10 @@ param
 
 "   "
 "======================================="
-"* operator-cluster-manager:" + $tag
+"* cluster-manager:" + $tag
 "======================================="
 
-$appname = "operator-cluster-manager"
+$appname = "cluster-manager"
 
 # Copy the common scripts.
 

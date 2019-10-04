@@ -145,5 +145,5 @@ if ($other)
 
 if ($services)
 {
-	Publish "$image_root\\operator-cluster-manager"
+	Publish "$image_root\\cluster-manager"
 }
