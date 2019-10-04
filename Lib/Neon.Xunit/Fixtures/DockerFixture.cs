@@ -428,7 +428,7 @@ namespace Neon.Xunit
             /// <returns>The service name.</returns>
             public string GetServiceName(StackService service)
             {
-                Covenant.Requires<ArgumentException>(Services.Contains(service));
+                Covenant.Requires<ArgumentException>(Services.Contains(service), nameof(service));
 
                 return $"{Name}_{service.Name}";
             }
@@ -825,8 +825,8 @@ namespace Neon.Xunit
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void CreateService(string name, string image, string[] dockerArgs = null, string[] serviceArgs = null, string[] env = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image), nameof(image));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             base.CheckDisposed();
 
@@ -948,7 +948,7 @@ namespace Neon.Xunit
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void RemoveService(string name)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             base.CheckDisposed();
 
@@ -970,7 +970,7 @@ namespace Neon.Xunit
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void RestartService(string name)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             base.CheckDisposed();
 
@@ -992,7 +992,7 @@ namespace Neon.Xunit
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void RollbackService(string name)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             base.CheckDisposed();
 
@@ -1022,8 +1022,8 @@ namespace Neon.Xunit
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void UpdateService(string name, string[] dockerArgs = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-            Covenant.Requires<ArgumentNullException>(dockerArgs != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(dockerArgs != null, nameof(dockerArgs));
 
             base.CheckDisposed();
 
@@ -1082,8 +1082,8 @@ namespace Neon.Xunit
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void RunContainer(string name, string image, string[] dockerArgs = null, string[] containerArgs = null, string[] env = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image), nameof(image));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             base.CheckDisposed();
 
@@ -1176,7 +1176,7 @@ namespace Neon.Xunit
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void RemoveContainer(string name)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             base.CheckDisposed();
 
@@ -1242,8 +1242,8 @@ namespace Neon.Xunit
         /// <exception cref="TimeoutException">Thrown if the stack tasks were not deployed after waiting <paramref name="timeout"/>.</exception>
         public void DeployStack(string name, string composeYaml, string[] dockerArgs = null, TimeSpan timeout = default, TimeSpan convergeTime = default)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(composeYaml));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(composeYaml), nameof(composeYaml));
 
             if (timeout == default(TimeSpan))
             {
@@ -1370,7 +1370,7 @@ namespace Neon.Xunit
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void RemoveStack(string name)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             base.CheckDisposed();
 
@@ -1425,8 +1425,8 @@ namespace Neon.Xunit
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void CreateSecret(string name, string secretText, string[] dockerArgs = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-            Covenant.Requires<ArgumentNullException>(secretText != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(secretText != null, nameof(secretText));
 
             base.CheckDisposed();
 
@@ -1455,8 +1455,8 @@ namespace Neon.Xunit
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void CreateSecret(string name, byte[] secretBytes, string[] dockerArgs = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-            Covenant.Requires<ArgumentNullException>(secretBytes != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(secretBytes != null, nameof(secretBytes));
 
             base.CheckDisposed();
 
@@ -1525,7 +1525,7 @@ namespace Neon.Xunit
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void RemoveSecret(string name)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             base.CheckDisposed();
 
@@ -1576,8 +1576,8 @@ namespace Neon.Xunit
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void CreateConfig(string name, string configText, string[] dockerArgs = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-            Covenant.Requires<ArgumentNullException>(configText != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(configText != null, nameof(configText));
 
             base.CheckDisposed();
 
@@ -1606,8 +1606,8 @@ namespace Neon.Xunit
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void CreateConfig(string name, byte[] configBytes, string[] dockerArgs = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-            Covenant.Requires<ArgumentNullException>(configBytes != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(configBytes != null, nameof(configBytes));
 
             base.CheckDisposed();
 
@@ -1676,7 +1676,7 @@ namespace Neon.Xunit
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void RemoveConfig(string name)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             base.CheckDisposed();
 
@@ -1727,7 +1727,7 @@ namespace Neon.Xunit
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void CreateNetwork(string name, string[] dockerArgs = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             base.CheckDisposed();
 
@@ -1809,7 +1809,7 @@ namespace Neon.Xunit
         /// </remarks>
         public void RemoveNetwork(string name)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             if (DockerNetworks.Contains(name))
             {

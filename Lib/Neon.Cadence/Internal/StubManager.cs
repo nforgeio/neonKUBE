@@ -159,7 +159,7 @@ namespace Neon.Cadence.Internal
         /// <returns>The fully qualified type name.</returns>
         private static string NormalizeTypeName(Type type)
         {
-            Covenant.Requires<ArgumentNullException>(type != null);
+            Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
 
             // .NET returns fully qualified type names that include a "+" for
             // nested types.  We're going to convert these to "." to make the 
@@ -1052,7 +1052,7 @@ namespace Neon.Cadence.Internal
         public static TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(CadenceClient client, WorkflowOptions options = null, string workflowTypeName = null)
             where TWorkflowInterface : class
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
             var workflowInterface = typeof(TWorkflowInterface);
             var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
@@ -1084,8 +1084,8 @@ namespace Neon.Cadence.Internal
         public static TWorkflowInterface NewChildWorkflowStub<TWorkflowInterface>(CadenceClient client, Workflow parentWorkflow, ChildWorkflowOptions options = null, string workflowTypeName = null)
             where TWorkflowInterface : class
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
 
             var workflowInterface = typeof(TWorkflowInterface);
             var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
@@ -1117,9 +1117,9 @@ namespace Neon.Cadence.Internal
         public static TWorkflowInterface NewChildWorkflowStub<TWorkflowInterface>(CadenceClient client, Workflow parentWorkflow, string workflowTypeName, ChildExecution execution)
             where TWorkflowInterface : class
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
-            Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
 
             var workflowInterface = typeof(TWorkflowInterface);
             var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
@@ -1150,9 +1150,9 @@ namespace Neon.Cadence.Internal
         public static TWorkflowInterface NewChildWorkflowStubById<TWorkflowInterface>(CadenceClient client, Workflow parentWorkflow, string workflowId, string domain = null)
             where TWorkflowInterface : class
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
 
             domain = domain ?? parentWorkflow.WorkflowInfo.Domain;
 
@@ -1179,9 +1179,9 @@ namespace Neon.Cadence.Internal
         public static TWorkflowInterface NewChildWorkflowStubById<TWorkflowInterface>(CadenceClient client, Workflow parentWorkflow, WorkflowExecution execution)
             where TWorkflowInterface : class
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
-            Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
 
             var workflowInterface = typeof(TWorkflowInterface);
             var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
@@ -1204,7 +1204,7 @@ namespace Neon.Cadence.Internal
         public static TWorkflowInterface NewContinueAsNewStub<TWorkflowInterface>(CadenceClient client, ContinueAsNewOptions options = null)
             where TWorkflowInterface : class
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
             var workflowInterface = typeof(TWorkflowInterface);
             var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
@@ -1577,8 +1577,8 @@ namespace Neon.Cadence.Internal
         /// <exception cref="ActivityTypeException">Thrown when there are problems with the <typeparamref name="TActivityInterface"/>.</exception>
         public static TActivityInterface NewActivityStub<TActivityInterface>(CadenceClient client, Workflow workflow, ActivityOptions options = null)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(workflow != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(workflow != null, nameof(workflow));
 
             var activityInterface = typeof(TActivityInterface);
             var activityAttribute = activityInterface.GetCustomAttribute<ActivityAttribute>();
@@ -1607,8 +1607,8 @@ namespace Neon.Cadence.Internal
         public static TActivityInterface NewLocalActivityStub<TActivityInterface, TActivityImplementation>(CadenceClient client, Workflow workflow, LocalActivityOptions options = null)
             where TActivityImplementation : TActivityInterface
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(workflow != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(workflow != null, nameof(workflow));
 
             var activityType = typeof(TActivityImplementation);
 

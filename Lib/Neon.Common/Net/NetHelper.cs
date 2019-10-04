@@ -630,8 +630,8 @@ namespace Neon.Net
         /// </exception>
         public static ReachableHost GetReachableHost(IEnumerable<string> hosts, ReachableHostMode failureMode = ReachableHostMode.ReturnFirst)
         {
-            Covenant.Requires<ArgumentNullException>(hosts != null);
-            Covenant.Requires<ArgumentNullException>(hosts.Count() > 0);
+            Covenant.Requires<ArgumentNullException>(hosts != null, nameof(hosts));
+            Covenant.Requires<ArgumentNullException>(hosts.Count() > 0, nameof(hosts));
 
             var reachableHosts = GetReachableHosts(hosts);
 
@@ -686,7 +686,7 @@ namespace Neon.Net
         /// <returns>The <see cref="ReachableHost"/> instances describing the reachable hosts (if any).</returns>
         public static IEnumerable<ReachableHost> GetReachableHosts(IEnumerable<string> hosts)
         {
-            Covenant.Requires<ArgumentNullException>(hosts != null);
+            Covenant.Requires<ArgumentNullException>(hosts != null, nameof(hosts));
 
             if (hosts.IsEmpty())
             {
@@ -821,7 +821,7 @@ namespace Neon.Net
         /// <exception cref="NetworkException">Thrown when there are no available ports.</exception>
         public static int GetUnusedTcpPort(IPAddress address)
         {
-            Covenant.Requires<ArgumentNullException>(address != null);
+            Covenant.Requires<ArgumentNullException>(address != null, nameof(address));
 
             try
             {

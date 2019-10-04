@@ -78,7 +78,7 @@ namespace Neon.Docker
         /// <param name="settings">The settings</param>
         public DockerClient(DockerSettings settings)
         {
-            Covenant.Requires<ArgumentNullException>(settings != null);
+            Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
 
             // Select a custom managed handler when Docker is listening on a Unix
             // domain socket, otherwise use the standard handler.
@@ -224,7 +224,7 @@ namespace Neon.Docker
         /// </remarks>
         public async Task WaitUntilReadyAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
         {
-            Covenant.Requires<ArgumentException>(timeout == null || timeout >= TimeSpan.Zero);
+            Covenant.Requires<ArgumentException>(timeout == null || timeout >= TimeSpan.Zero, nameof(timeout));
 
             // Create a transient detector that extends [TransientDetector.Network] to
             // consider HTTP 404 (not found) as transient too.

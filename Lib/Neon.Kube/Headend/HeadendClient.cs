@@ -171,7 +171,7 @@ namespace Neon.Kube
         /// <returns>A <see cref="KubeSetupInfo"/> with the information.</returns>
         public async Task<KubeSetupInfo> GetSetupInfoAsync(ClusterDefinition clusterDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             var kubeVersion = Version.Parse(defaultKubeVersion);
 

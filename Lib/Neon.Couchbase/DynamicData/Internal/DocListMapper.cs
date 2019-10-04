@@ -68,9 +68,9 @@ namespace Neon.Couchbase.DynamicData.Internal
         /// <param name="context">The <see cref="IDynamicEntityContext"/> or <c>null</c>.</param>
         public DocListMapper(IDynamicEntity parentEntity, string jsonName, string propertyName, IDynamicEntityContext context)
         {
-            Covenant.Requires<ArgumentNullException>(parentEntity != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonName));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(propertyName));
+            Covenant.Requires<ArgumentNullException>(parentEntity != null, nameof(parentEntity));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonName), nameof(jsonName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(propertyName), nameof(propertyName));
 
             this.parentEntity = parentEntity;
             this.context      = context;
@@ -121,7 +121,7 @@ namespace Neon.Couchbase.DynamicData.Internal
         /// <inheritdoc/>
         public bool Load(JProperty newProperty, bool reload = false)
         {
-            Covenant.Requires<ArgumentNullException>(newProperty != null);
+            Covenant.Requires<ArgumentNullException>(newProperty != null, nameof(newProperty));
 
             var changed = !NeonHelper.JTokenEquals(property, newProperty);
 

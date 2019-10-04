@@ -132,7 +132,7 @@ namespace Neon.Kube
         [Pure]
         public void Validate(ClusterDefinition clusterDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             HostXvaUri           = HostXvaUri ?? defaultHostXvaUri;
             TemplateName         = TemplateName ?? defaultTemplate;

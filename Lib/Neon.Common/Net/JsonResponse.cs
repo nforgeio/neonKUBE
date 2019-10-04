@@ -51,8 +51,8 @@ namespace Neon.Net
         /// <param name="responseText">The response text.</param>
         public JsonResponse(string requestUri, HttpResponseMessage httpRespose, string responseText)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri));
-            Covenant.Requires<ArgumentNullException>(httpRespose != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri), nameof(requestUri));
+            Covenant.Requires<ArgumentNullException>(httpRespose != null, nameof(httpRespose));
 
             // $note(jefflill):
             //

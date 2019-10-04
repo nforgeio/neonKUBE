@@ -52,7 +52,7 @@ namespace NATS.Client
         /// <param name="subscription">The subscription.</param>
         internal StanMsg(MsgProto proto, object subscription)
         {
-            Covenant.Requires<ArgumentNullException>(proto != null);
+            Covenant.Requires<ArgumentNullException>(proto != null, nameof(proto));
 
             this.proto = proto;
             this.sub   = subscription;

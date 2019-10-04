@@ -103,7 +103,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task RegisterAssemblyWorkflowsAsync(Assembly assembly, string domain = null)
         {
-            Covenant.Requires<ArgumentNullException>(assembly != null);
+            Covenant.Requires<ArgumentNullException>(assembly != null, nameof(assembly));
             EnsureNotDisposed();
 
             foreach (var type in assembly.GetTypes().Where(t => t.IsClass))
@@ -135,7 +135,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task SetCacheMaximumSizeAsync(int cacheMaximumSize)
         {
-            Covenant.Requires<ArgumentNullException>(cacheMaximumSize >= 0);
+            Covenant.Requires<ArgumentNullException>(cacheMaximumSize >= 0, nameof(cacheMaximumSize));
             EnsureNotDisposed();
 
             var reply = (WorkflowSetCacheSizeReply)await CallProxyAsync(
@@ -192,8 +192,8 @@ namespace Neon.Cadence
         /// </remarks>
         public WorkflowStub NewUntypedWorkflowStub(string workflowTypeName, WorkflowOptions options)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
-            Covenant.Requires<ArgumentNullException>(options != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
+            Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
             EnsureNotDisposed();
 
             return new WorkflowStub(this)
@@ -235,9 +235,9 @@ namespace Neon.Cadence
         /// </remarks>
         public WorkflowStub NewUntypedWorkflowStub(string workflowId, string runId, string workflowTypeName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId), nameof(runId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             EnsureNotDisposed();
 
             return new WorkflowStub(this)
@@ -277,8 +277,8 @@ namespace Neon.Cadence
         /// </remarks>
         public WorkflowStub NewUntypedWorkflowStub(WorkflowExecution execution, string workflowTypeName)
         {
-            Covenant.Requires<ArgumentNullException>(execution != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             EnsureNotDisposed();
 
             return new WorkflowStub(this)
@@ -323,7 +323,7 @@ namespace Neon.Cadence
         public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(string workflowId, string runId = null, string domain = null)
             where TWorkflowInterface : class
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             EnsureNotDisposed();
 
@@ -361,7 +361,7 @@ namespace Neon.Cadence
         /// </remarks>
         public WorkflowStub NewWorkflowStub(string workflowTypeName, WorkflowOptions options = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             EnsureNotDisposed();
 
             return new WorkflowStub(this)
@@ -440,7 +440,7 @@ namespace Neon.Cadence
         /// </remarks>
         internal async Task<WorkflowExecution> StartWorkflowAsync(string workflowTypeName, byte[] args, WorkflowOptions options)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             EnsureNotDisposed();
 
             options = WorkflowOptions.Normalize(this, options);
@@ -473,7 +473,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task<byte[]> GetWorkflowResultAsync(WorkflowExecution execution, string domain = null)
         {
-            Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
 
             var reply = (WorkflowGetResultReply)await CallProxyAsync(
@@ -511,8 +511,8 @@ namespace Neon.Cadence
         /// </remarks>
         internal async Task<ChildExecution> StartChildWorkflowAsync(Workflow parentWorkflow, string workflowTypeName, byte[] args, ChildWorkflowOptions options)
         {
-            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             EnsureNotDisposed();
 
             if (options == null)
@@ -571,8 +571,8 @@ namespace Neon.Cadence
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task<byte[]> GetChildWorkflowResultAsync(Workflow parentWorkflow, ChildExecution execution)
         {
-            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
-            Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
 
             var reply = await parentWorkflow.ExecuteNonParallel(
@@ -603,7 +603,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task<WorkflowDescription> GetWorkflowDescriptionAsync(WorkflowExecution execution, string domain = null)
         {
-            Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
 
             var reply = (WorkflowDescribeExecutionReply)await CallProxyAsync(
@@ -630,7 +630,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task CancelWorkflowAsync(WorkflowExecution execution, string domain = null)
         {
-            Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
 
             var reply = (WorkflowCancelReply)await CallProxyAsync(
@@ -657,7 +657,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task TerminateWorkflowAsync(WorkflowExecution execution, string reason = null, byte[] details = null, string domain = null)
         {
-            Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
 
             var reply = (WorkflowTerminateReply)await CallProxyAsync(
@@ -686,7 +686,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task SignalWorkflowAsync(WorkflowExecution execution, string signalName, byte[] signalArgs = null, string domain = null)
         {
-            Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
 
             var reply = (WorkflowSignalReply)await CallProxyAsync(
@@ -717,8 +717,8 @@ namespace Neon.Cadence
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task<WorkflowExecution> SignalWorkflowWithStartAsync(string workflowTypeName, string signalName, byte[] signalArgs, byte[] startArgs, WorkflowOptions options)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
             EnsureNotDisposed();
 
             options = WorkflowOptions.Normalize(this, options);
@@ -753,8 +753,8 @@ namespace Neon.Cadence
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task<byte[]> QueryWorkflowAsync(WorkflowExecution execution, string queryType, byte[] queryArgs = null, string domain = null)
         {
-            Covenant.Requires<ArgumentNullException>(execution != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryType));
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryType), nameof(queryType));
             EnsureNotDisposed();
 
             var reply = (WorkflowQueryReply)await CallProxyAsync(
@@ -793,9 +793,9 @@ namespace Neon.Cadence
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         internal async Task SignalChildWorkflowAsync(Workflow parentWorkflow, ChildExecution execution, string signalName, byte[] signalArgs)
         {
-            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
-            Covenant.Requires<ArgumentNullException>(execution != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
 
             var reply = await parentWorkflow.ExecuteNonParallel(
                 async () =>

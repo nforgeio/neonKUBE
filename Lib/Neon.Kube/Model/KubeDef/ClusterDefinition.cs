@@ -80,7 +80,7 @@ namespace Neon.Kube
         /// </remarks>
         public static ClusterDefinition FromYaml(string yaml, bool strict = false)
         {
-            Covenant.Requires<ArgumentNullException>(yaml != null);
+            Covenant.Requires<ArgumentNullException>(yaml != null, nameof(yaml));
 
             using (var stringReader = new StringReader(yaml))
             {
@@ -121,7 +121,7 @@ namespace Neon.Kube
         /// </remarks>
         public static ClusterDefinition FromFile(string path, bool strict = false)
         {
-            Covenant.Requires<ArgumentNullException>(path != null);
+            Covenant.Requires<ArgumentNullException>(path != null, nameof(path));
 
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
             {
@@ -682,8 +682,8 @@ namespace Neon.Kube
         /// <param name="node">The new node.</param>
         public void AddNode(NodeDefinition node)
         {
-            Covenant.Requires<ArgumentNullException>(node != null);
-            Covenant.Requires<ArgumentException>(NeonHelper.DoesNotThrow(() => node.Validate(this)));
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+            Covenant.Requires<ArgumentException>(NeonHelper.DoesNotThrow(() => node.Validate(this)), nameof(node));
 
             NodeDefinitions.Add(node.Name, node);
         }

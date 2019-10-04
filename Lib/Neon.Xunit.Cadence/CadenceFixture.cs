@@ -144,7 +144,7 @@ namespace Neon.Xunit.Cadence
             bool                noReset         = false,
             bool                emulateProxy    = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image), nameof(image));
 
             return base.Start(
                 () =>
@@ -221,7 +221,7 @@ namespace Neon.Xunit.Cadence
             bool                noReset         = false,
             bool                emulateProxy    = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image), nameof(image));
 
             base.CheckWithinAction();
 
@@ -233,7 +233,7 @@ namespace Neon.Xunit.Cadence
                 }
                 else
                 {
-                    Covenant.Requires<ArgumentException>(IPAddress.TryParse(hostInterface, out var address) && address.AddressFamily == AddressFamily.InterNetwork, $"[{hostInterface}] is not a valid IPv4 address.");
+                    Covenant.Requires<ArgumentException>(IPAddress.TryParse(hostInterface, out var address) && address.AddressFamily == AddressFamily.InterNetwork, nameof(hostInterface), $"[{hostInterface}] is not a valid IPv4 address.");
                 }
 
                 // Reset CadenceClient to its initial state.

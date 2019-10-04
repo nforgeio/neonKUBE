@@ -51,7 +51,7 @@ namespace Neon.Common
         /// </remarks>
         private static string GetProgramPath(string program)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(program));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(program), nameof(program));
 
             var programExtensions = new string[] { ".exe", ".cmd" };
 
@@ -761,7 +761,7 @@ namespace Neon.Common
         /// <param name="uri">The target URI.</param>
         public static void OpenBrowser(string uri)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
 
             if (IsWindows)
             {
@@ -798,7 +798,7 @@ namespace Neon.Common
         /// <returns>The process exit code.</returns>
         public static int ExecuteShell(string command)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
 
             Process process;
 

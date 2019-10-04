@@ -118,7 +118,7 @@ namespace Neon.DnsTools
         /// <param name="nameservers">The name server IP addresses (at least one must be passed).</param>
         private NeonDnsClient(params IPAddress[] nameservers)
         {
-            Covenant.Requires<ArgumentException>(nameservers != null && nameservers.Length != 0, "At least one nameserver is required.");
+            Covenant.Requires<ArgumentException>(nameservers != null && nameservers.Length != 0, nameof(nameservers), "At least one nameserver is required.");
 
             clients = new DnsClient[nameservers.Length];
 
@@ -134,7 +134,7 @@ namespace Neon.DnsTools
         /// <param name="nameservers">The name server IP addresses (at least one must be passed).</param>
         private NeonDnsClient(params string[] nameservers)
         {
-            Covenant.Requires<ArgumentException>(nameservers != null && nameservers.Length != 0, "At least one nameserver is required.");
+            Covenant.Requires<ArgumentException>(nameservers != null && nameservers.Length != 0, nameof(nameservers), "At least one nameserver is required.");
 
             clients = new DnsClient[nameservers.Length];
 

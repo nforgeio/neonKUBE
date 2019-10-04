@@ -61,8 +61,8 @@ namespace Neon.Net
         /// <param name="text">The text payload.</param>
         public JsonClientPayload(string contentType, string text)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(contentType));
-            Covenant.Requires<ArgumentNullException>(text != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(contentType), nameof(contentType));
+            Covenant.Requires<ArgumentNullException>(text != null, nameof(text));
 
             this.ContentType  = contentType;
             this.ContentBytes = Encoding.UTF8.GetBytes(text);
@@ -76,8 +76,8 @@ namespace Neon.Net
         /// <param name="bytes">The bytes to be uploaded.</param>
         public JsonClientPayload(string contentType, byte[] bytes)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(contentType));
-            Covenant.Requires<ArgumentNullException>(bytes != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(contentType), nameof(contentType));
+            Covenant.Requires<ArgumentNullException>(bytes != null, nameof(bytes));
 
             this.ContentType  = contentType;
             this.ContentBytes = bytes;

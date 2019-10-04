@@ -37,7 +37,7 @@ namespace Neon.ModelGen
         /// </param>
         public ModelGeneratorSettings(params string[] targetGroups)
         {
-            Covenant.Requires<ArgumentNullException>(targetGroups != null);
+            Covenant.Requires<ArgumentNullException>(targetGroups != null, nameof(targetGroups));
 
             foreach (var group in targetGroups)
             {

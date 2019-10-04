@@ -131,7 +131,7 @@ namespace Couchbase
         /// </remarks>
         public static string LiteralName(string value)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(value));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(value), nameof(value));
 
             var sb = new StringBuilder();
 

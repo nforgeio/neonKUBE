@@ -80,11 +80,11 @@ namespace Neon.Cadence.Internal
         /// <returns>The activity stub as an <see cref="object"/>.</returns>
         public object Create(CadenceClient client, Workflow workflow, string activityTypeName, ActivityOptions options, System.Type activityInterface)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(workflow != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
-            Covenant.Requires<ArgumentNullException>(options != null);
-            Covenant.Requires<ArgumentNullException>(activityInterface != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(workflow != null, nameof(workflow));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName), nameof(activityTypeName));
+            Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
+            Covenant.Requires<ArgumentNullException>(activityInterface != null, nameof(activityInterface));
 
             return normalConstructor.Invoke(new object[] { client, client.DataConverter, workflow, activityTypeName, options, activityInterface });
         }

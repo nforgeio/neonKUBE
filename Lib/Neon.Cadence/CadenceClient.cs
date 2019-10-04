@@ -282,7 +282,7 @@ namespace Neon.Cadence
             /// </param>
             public Operation(long requestId, ProxyRequest request, TimeSpan timeout = default)
             {
-                Covenant.Requires<ArgumentNullException>(request != null);
+                Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
                 request.RequestId = requestId;
 
@@ -336,7 +336,7 @@ namespace Neon.Cadence
             /// </remarks>
             public void SetReply(ProxyReply reply)
             {
-                Covenant.Requires<ArgumentNullException>(reply != null);
+                Covenant.Requires<ArgumentNullException>(reply != null, nameof(reply));
 
                 CompletionSource.TrySetResult(reply);
             }
@@ -371,7 +371,7 @@ namespace Neon.Cadence
             /// </remarks>
             public void SetException(Exception e)
             {
-                Covenant.Requires<ArgumentNullException>(e != null);
+                Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
 
                 CompletionSource.TrySetException(e);
             }
@@ -618,8 +618,8 @@ namespace Neon.Cadence
         /// </remarks>
         private static Process StartProxy(IPEndPoint endpoint, CadenceSettings settings, long clientId)
         {
-            Covenant.Requires<ArgumentNullException>(endpoint != null);
-            Covenant.Requires<ArgumentNullException>(settings != null);
+            Covenant.Requires<ArgumentNullException>(endpoint != null, nameof(endpoint));
+            Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
 
             var binaryFolder = settings.BinaryFolder;
 
@@ -761,8 +761,8 @@ namespace Neon.Cadence
         /// </remarks>
         public static async Task<CadenceClient> ConnectAsync(CadenceSettings settings)
         {
-            Covenant.Requires<ArgumentNullException>(settings != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), "You must specifiy a non-empty default Cadence domain.");
+            Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), nameof(settings), "You must specifiy a non-empty default Cadence domain.");
 
             InitializeCompiler();
 
@@ -957,7 +957,7 @@ namespace Neon.Cadence
         /// <returns>The HTTP reply information.</returns>
         private static async Task<HttpReply> OnRootRequestAsync(ProxyMessage proxyMessage)
         {
-            Covenant.Requires<ArgumentNullException>(proxyMessage != null);
+            Covenant.Requires<ArgumentNullException>(proxyMessage != null, nameof(proxyMessage));
 
             var httpReply = new HttpReply() { StatusCode = StatusCodes.Status200OK };
             var request   = proxyMessage as ProxyRequest;
@@ -1274,8 +1274,8 @@ namespace Neon.Cadence.WorkflowStub
         /// <param name="settings">The <see cref="CadenceSettings"/>.</param>
         private CadenceClient(CadenceSettings settings)
         {
-            Covenant.Requires<ArgumentNullException>(settings != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain));
+            Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), nameof(settings));
 
             this.ClientId = Interlocked.Increment(ref nextClientId);
             this.Settings = settings;
@@ -1608,7 +1608,7 @@ namespace Neon.Cadence.WorkflowStub
         /// <returns>The workflow .NET type or <c>null</c> if the type was not found.</returns>
         internal Type GetActivityType(string activityTypeName)
         {
-            Covenant.Requires<ArgumentNullException>(activityTypeName != null);
+            Covenant.Requires<ArgumentNullException>(activityTypeName != null, nameof(activityTypeName));
 
             lock (syncLock)
             {
@@ -1731,8 +1731,8 @@ namespace Neon.Cadence.WorkflowStub
         /// <returns>The tracking <see cref="Task"/>.</returns>
         internal async Task ProxyReplyAsync(ProxyRequest request, ProxyReply reply)
         {
-            Covenant.Requires<ArgumentNullException>(request != null);
-            Covenant.Requires<ArgumentNullException>(reply != null);
+            Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
+            Covenant.Requires<ArgumentNullException>(reply != null, nameof(reply));
 
             reply.ClientId = ClientId;
 

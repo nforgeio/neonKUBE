@@ -124,7 +124,7 @@ namespace Neon.Cryptography
         /// <returns>The hash HEX string.</returns>
         public static byte[] ComputeMD5Bytes(Stream input)
         {
-            Covenant.Requires(input != null);
+            Covenant.Requires<ArgumentNullException>(input != null, nameof(input));
 
             var startPos = input.Position;
 

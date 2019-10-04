@@ -51,9 +51,9 @@ namespace NeonCli
         /// <param name="clusterDefinition">The cluster definition.</param>
         public static void CheckMaster(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(node != null);
-            Covenant.Requires<ArgumentException>(node.Metadata.IsMaster);
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+            Covenant.Requires<ArgumentException>(node.Metadata.IsMaster, nameof(node));
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             if (!node.IsFaulted)
             {
@@ -70,9 +70,9 @@ namespace NeonCli
         /// <param name="clusterDefinition">The cluster definition.</param>
         public static void CheckWorker(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(node != null);
-            Covenant.Requires<ArgumentException>(node.Metadata.IsWorker);
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+            Covenant.Requires<ArgumentException>(node.Metadata.IsWorker, nameof(node));
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             if (!node.IsFaulted)
             {

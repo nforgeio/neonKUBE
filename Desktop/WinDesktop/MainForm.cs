@@ -214,7 +214,7 @@ namespace WinDesktop
         /// <param name="function">The function.</param>
         private TResult InvokeOnUIThread<TResult>(Func<TResult> function)
         {
-            Covenant.Requires(function != null);
+            Covenant.Requires<ArgumentNullException>(function != null, nameof(function));
 
             var result = default(TResult);
 
@@ -282,7 +282,7 @@ namespace WinDesktop
         /// </remarks>
         private void StartNotifyAnimation(AnimatedIcon animatedIcon, string balloonText = null, bool isTransient = false, bool isError = false)
         {
-            Covenant.Requires<ArgumentNullException>(animatedIcon != null);
+            Covenant.Requires<ArgumentNullException>(animatedIcon != null, nameof(animatedIcon));
 
             InvokeOnUIThread(
                 () =>

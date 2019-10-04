@@ -128,7 +128,7 @@ namespace Neon.Cadence.Internal
         /// </remarks>
         public static string GetWorkflowTypeName(Type workflowType, WorkflowAttribute workflowAttribute)
         {
-            Covenant.Requires<ArgumentNullException>(workflowType != null);
+            Covenant.Requires<ArgumentNullException>(workflowType != null, nameof(workflowType));
 
             if (workflowAttribute != null && !string.IsNullOrEmpty(workflowAttribute.Name))
             {
@@ -183,7 +183,7 @@ namespace Neon.Cadence.Internal
         /// </remarks>
         public static string GetActivityTypeName(Type activityType, ActivityAttribute activityAttribute)
         {
-            Covenant.Requires<ArgumentNullException>(activityType != null);
+            Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
 
             if (activityAttribute != null && !string.IsNullOrEmpty(activityAttribute.Name))
             {
@@ -226,7 +226,7 @@ namespace Neon.Cadence.Internal
         /// <exception cref="ActivityTypeException">Thrown when the interface is not valid.</exception>
         public static void ValidateWorkflowInterface(Type workflowInterface)
         {
-            Covenant.Requires<ArgumentNullException>(workflowInterface != null);
+            Covenant.Requires<ArgumentNullException>(workflowInterface != null, nameof(workflowInterface));
 
             if (!workflowInterface.IsInterface)
             {
@@ -355,7 +355,7 @@ namespace Neon.Cadence.Internal
         /// <exception cref="WorkflowTypeException">Thrown when the interface is not valid.</exception>
         public static void ValidateWorkflowImplementation(Type workflowType)
         {
-            Covenant.Requires<ArgumentNullException>(workflowType != null);
+            Covenant.Requires<ArgumentNullException>(workflowType != null, nameof(workflowType));
 
             if (workflowType.IsInterface)
             {
@@ -427,8 +427,8 @@ namespace Neon.Cadence.Internal
         /// <returns>The workflow interface type.</returns>
         public static Type GetWorkflowInterface(Type workflowType)
         {
-            Covenant.Requires<ArgumentNullException>(workflowType != null);
-            Covenant.Requires<ArgumentException>(workflowType.IsClass);
+            Covenant.Requires<ArgumentNullException>(workflowType != null, nameof(workflowType));
+            Covenant.Requires<ArgumentException>(workflowType.IsClass, nameof(workflowType));
 
             foreach (var @interface in workflowType.GetInterfaces())
             {
@@ -461,7 +461,7 @@ namespace Neon.Cadence.Internal
         /// <exception cref="ActivityTypeException">Thrown when the interface is not valid.</exception>
         public static void ValidateActivityInterface(Type activityInterface)
         {
-            Covenant.Requires<ArgumentNullException>(activityInterface != null);
+            Covenant.Requires<ArgumentNullException>(activityInterface != null, nameof(activityInterface));
 
             if (!activityInterface.IsInterface)
             {
@@ -534,7 +534,7 @@ namespace Neon.Cadence.Internal
         /// <exception cref="ActivityTypeException">Thrown when the interface is not valid.</exception>
         public static void ValidateActivityImplementation(Type activityType)
         {
-            Covenant.Requires<ArgumentNullException>(activityType != null);
+            Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
 
             if (activityType.IsInterface)
             {
@@ -633,8 +633,8 @@ namespace Neon.Cadence.Internal
         /// <returns>The activity interface type.</returns>
         public static Type GetActivityInterface(Type activityType)
         {
-            Covenant.Requires<ArgumentNullException>(activityType != null);
-            Covenant.Requires<ArgumentException>(activityType.IsClass);
+            Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
+            Covenant.Requires<ArgumentException>(activityType.IsClass, nameof(activityType));
 
             foreach (var @interface in activityType.GetInterfaces())
             {
@@ -689,7 +689,7 @@ namespace Neon.Cadence.Internal
         /// <returns>The parsed <see cref="DateTime"/>.</returns>
         public static DateTime ParseCadenceTimestamp(string timestamp)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(timestamp));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(timestamp), nameof(timestamp));
 
             var dateTimeOffset = DateTimeOffset.Parse(timestamp, CultureInfo.InvariantCulture);
 
@@ -818,7 +818,7 @@ namespace Neon.Cadence.Internal
         /// <returns>The loaded <see cref="Assembly"/>.</returns>
         public static Assembly LoadAssembly(Stream stream)
         {
-            Covenant.Requires<ArgumentNullException>(stream != null);
+            Covenant.Requires<ArgumentNullException>(stream != null, nameof(stream));
 
             switch (NeonHelper.Framework)
             {

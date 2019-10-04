@@ -128,7 +128,7 @@ namespace Neon.Windows
         /// <returns>The expanded output string.</returns>
         private string ExpandEnvironmentVars(string input)
         {
-            Covenant.Requires<ArgumentNullException>(input != null);
+            Covenant.Requires<ArgumentNullException>(input != null, nameof(input));
 
             using (var reader = new PreprocessReader(input))
             {
@@ -212,7 +212,7 @@ catch [Exception] {{
         /// <exception cref="PowerShellException">Thrown if the command failed.</exception>
         public List<dynamic> ExecuteJson(string command, bool noEnvironmentVars = false)
         {
-            Covenant.Requires<ArgumentNullException>(command != null);
+            Covenant.Requires<ArgumentNullException>(command != null, nameof(command));
 
             if (!noEnvironmentVars)
             {

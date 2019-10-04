@@ -74,7 +74,7 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Requires()
         {
-            // Verify that the Assert.Requires<T>() optional string
+            // Verify that the Covenant.Requires<T>() optional string
             // parameters work correctly.
 
             //---------------------------------------------

@@ -63,7 +63,7 @@ namespace NATS.Client
         /// </remarks>
         public static void Publish(this IConnection connection, string subject, IRoundtripData data)
         {
-            Covenant.Requires<ArgumentNullException>(data != null);
+            Covenant.Requires<ArgumentNullException>(data != null, nameof(data));
 
             connection.Publish(subject, data.ToBytes());
         }
@@ -79,7 +79,7 @@ namespace NATS.Client
         /// <seealso cref="IConnection.Publish(string, byte[])"/>
         public static void Publish(this IConnection connection, string subject, string reply, IRoundtripData data)
         {
-            Covenant.Requires<ArgumentNullException>(data != null);
+            Covenant.Requires<ArgumentNullException>(data != null, nameof(data));
 
             connection.Publish(subject, reply, data.ToBytes());
         }
@@ -107,7 +107,7 @@ namespace NATS.Client
             where TRequest : class, IRoundtripData, new()
             where TResponse : class, IRoundtripData, new()
         {
-            Covenant.Requires<ArgumentNullException>(data != null);
+            Covenant.Requires<ArgumentNullException>(data != null, nameof(data));
 
             var response = connection.Request(subject, data.ToBytes(), timeout);
             var payload  = RoundtripDataFactory.CreateFrom<TResponse>(response.Data);
@@ -145,7 +145,7 @@ namespace NATS.Client
             where TRequest : class, IRoundtripData, new()
             where TResponse : class, IRoundtripData, new()
         {
-            Covenant.Requires<ArgumentNullException>(data != null);
+            Covenant.Requires<ArgumentNullException>(data != null, nameof(data));
 
             var response = connection.Request(subject, data.ToBytes());
             var payload  = RoundtripDataFactory.CreateFrom<TResponse>(response.Data);
@@ -191,7 +191,7 @@ namespace NATS.Client
             where TRequest : class, IRoundtripData, new()
             where TResponse : class, IRoundtripData, new()
         {
-            Covenant.Requires<ArgumentNullException>(data != null);
+            Covenant.Requires<ArgumentNullException>(data != null, nameof(data));
 
             Msg response;
 

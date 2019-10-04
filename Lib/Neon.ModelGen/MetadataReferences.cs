@@ -46,7 +46,7 @@ namespace Neon.ModelGen
         /// <param name="type">The type.</param>
         public void Add(Type type)
         {
-            Covenant.Requires<ArgumentNullException>(type != null);
+            Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
 
             Add(MetadataReference.CreateFromFile(type.Assembly.Location));
         }

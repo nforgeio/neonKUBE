@@ -131,7 +131,7 @@ namespace Neon.Cadence
         /// <param name="options">The child workflow options or <c>null</c>.</param>
         internal StartChildWorkflowStub(Workflow parentWorkflow, string methodName, ChildWorkflowOptions options)
         {
-            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
 
             var workflowInterface = typeof(TWorkflowInterface);
 
@@ -220,7 +220,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<IAsyncFuture<TResult>> StartAsync<TResult>(params object[] args)
         {
-            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             parentWorkflow.SetStackTrace();
 
             if (hasStarted)
@@ -291,7 +291,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<IAsyncFuture> StartAsync(params object[] args)
         {
-            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             parentWorkflow.SetStackTrace();
 
             if (hasStarted)

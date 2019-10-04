@@ -94,9 +94,9 @@ namespace Neon.Kube
         /// </remarks>
         private CommandStep(string nodeName, string command, params object[] args)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command));
-            Covenant.Requires<ArgumentNullException>(args != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
             this.nodeName      = nodeName;
             this.commandBundle = new CommandBundle(command, args);
@@ -119,7 +119,7 @@ namespace Neon.Kube
         /// </param>
         public void AddFile(string path, string text, bool isExecutable = false, bool linuxCompatible = true)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
 
             commandBundle.AddFile(path, text, isExecutable, linuxCompatible);
         }
@@ -132,7 +132,7 @@ namespace Neon.Kube
         /// <param name="isExecutable">Optionally specifies that the file is to be marked as executable.</param>
         public void AddFile(string path, byte[] data, bool isExecutable = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
 
             commandBundle.AddFile(path, data, isExecutable);
         }
@@ -140,7 +140,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Run(ClusterProxy cluster)
         {
-            Covenant.Requires<ArgumentNullException>(cluster != null);
+            Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
 
             var node = cluster.GetNode(nodeName);
 

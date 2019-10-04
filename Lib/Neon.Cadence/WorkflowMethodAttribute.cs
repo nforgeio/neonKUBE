@@ -125,7 +125,7 @@ namespace Neon.Cadence
 
             set
             {
-                Covenant.Requires<ArgumentException>(value <= 60, $"[TaskStartToCloseTimeoutSeconds={value}] cannot exceed 60 seconds.");
+                Covenant.Requires<ArgumentException>(value <= 60, nameof(value), $"[TaskStartToCloseTimeoutSeconds={value}] cannot exceed 60 seconds.");
 
                 taskStartToCloseTimeoutSeconds = Math.Max(value, 0);
             }

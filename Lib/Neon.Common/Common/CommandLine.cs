@@ -140,7 +140,7 @@ namespace Neon.Common
             /// <param name="names">The associated option names.</param>
             public OptionDefinition(IEnumerable<string> names)
             {
-                Covenant.Requires<ArgumentNullException>(names != null);
+                Covenant.Requires<ArgumentNullException>(names != null, nameof(names));
 
                 Names = names.ToArray();
 
@@ -166,7 +166,7 @@ namespace Neon.Common
 
                 set
                 {
-                    Covenant.Requires<ArgumentNullException>(value != null);
+                    Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
 
                     def = value;
                 }
@@ -183,7 +183,7 @@ namespace Neon.Common
         /// <param name="input">The argument string.</param>
         public static CommandLine Parse(string input)
         {
-            Covenant.Requires<ArgumentNullException>(input != null);
+            Covenant.Requires<ArgumentNullException>(input != null, nameof(input));
 
             List<string>    items   = new List<string>();
             char[]          wsChars = new char[] { ' ', '\t' };
@@ -282,7 +282,7 @@ namespace Neon.Common
         /// <exception cref="FormatException">Thrown if there's an error parsing an "@" input file.</exception>
         public static string[] ExpandFiles(string[] args)
         {
-            Covenant.Requires<ArgumentNullException>(args != null);
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
             var list = new List<string>();
 
@@ -360,7 +360,7 @@ namespace Neon.Common
         /// <returns>The set of matching file names.</returns>
         public static string[] ExpandWildcards(string path)
         {
-            Covenant.Requires<ArgumentNullException>(path != null);
+            Covenant.Requires<ArgumentNullException>(path != null, nameof(path));
 
             int         pos;
             string      dir;
@@ -393,7 +393,7 @@ namespace Neon.Common
         /// <exception cref="FormatException">Thrown if any of the arguments contain double quote or any other invalid characters.</exception>
         public static string Format(params object[] args)
         {
-            Covenant.Requires<ArgumentNullException>(args != null);
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
             var sb = new StringBuilder();
 
@@ -439,7 +439,7 @@ namespace Neon.Common
         /// </summary>
         private static string[] ToStrings(object[] args)
         {
-            Covenant.Requires<ArgumentNullException>(args != null);
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
             string[] output = new string[args.Length];
 
@@ -547,8 +547,8 @@ namespace Neon.Common
         /// </remarks>
         public OptionDefinition DefineOption(params string[] names)
         {
-            Covenant.Requires<ArgumentNullException>(names != null);
-            Covenant.Requires<ArgumentException>(names.Length > 0);
+            Covenant.Requires<ArgumentNullException>(names != null, nameof(names));
+            Covenant.Requires<ArgumentException>(names.Length > 0, nameof(names));
 
             var definition = new OptionDefinition(names);
 
@@ -585,7 +585,7 @@ namespace Neon.Common
         /// <returns>The enumerated arguments.</returns>
         public IEnumerable<string> GetArguments(int startIndex = 0)
         {
-            Covenant.Requires<ArgumentException>(startIndex >= 0);
+            Covenant.Requires<ArgumentException>(startIndex >= 0, nameof(startIndex));
 
             for (int i = startIndex; i < Arguments.Length; i++)
             {
@@ -621,7 +621,7 @@ namespace Neon.Common
         /// </remarks>
         public string GetOption(string optionName, string def = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(optionName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(optionName), nameof(optionName));
 
             OptionDefinition    definition;
             string              value;
@@ -663,7 +663,7 @@ namespace Neon.Common
         /// <returns>The option value if present, the specified default value otherwise.</returns>
         public bool GetFlag(string optionName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(optionName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(optionName), nameof(optionName));
 
             OptionDefinition    definition;
             string              value;
@@ -708,7 +708,7 @@ namespace Neon.Common
         /// </remarks>
         public bool HasOption(string optionName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(optionName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(optionName), nameof(optionName));
 
             OptionDefinition    definition;
 
@@ -748,7 +748,7 @@ namespace Neon.Common
         /// </remarks>
         public string[] GetOptionValues(string optionName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(optionName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(optionName), nameof(optionName));
 
             var values = new List<string>();
 
@@ -820,7 +820,7 @@ namespace Neon.Common
         /// <returns>The new <see cref="CommandLine" />.</returns>
         public CommandLine Shift(int position, string splitter = "--")
         {
-            Covenant.Requires<ArgumentException>(position >= 0);
+            Covenant.Requires<ArgumentException>(position >= 0, nameof(position));
 
             if (string.IsNullOrEmpty(splitter))
             {

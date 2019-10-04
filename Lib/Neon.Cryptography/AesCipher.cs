@@ -157,7 +157,7 @@ namespace Neon.Cryptography
         /// </remarks>
         public static string GenerateKey(int keySize = 256)
         {
-            Covenant.Requires<ArgumentException>(keySize == 128 || keySize == 192 || keySize == 256);
+            Covenant.Requires<ArgumentException>(keySize == 128 || keySize == 192 || keySize == 256, nameof(keySize));
 
             using (var aes = new AesManaged())
             {
@@ -186,8 +186,8 @@ namespace Neon.Cryptography
         /// </param>
         public AesCipher(string key, int maxPaddingBytes = 64)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key));
-            Covenant.Requires<ArgumentException>(0 <= maxPaddingBytes && maxPaddingBytes <= short.MaxValue);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key), nameof(key));
+            Covenant.Requires<ArgumentException>(0 <= maxPaddingBytes && maxPaddingBytes <= short.MaxValue, nameof(maxPaddingBytes));
 
             var keyBytes = Convert.FromBase64String(key);
 
@@ -227,8 +227,8 @@ namespace Neon.Cryptography
         /// </remarks>
         public AesCipher(int keySize = 256, int maxPaddingBytes = 64)
         {
-            Covenant.Requires<ArgumentException>(keySize == 128 || keySize == 192 || keySize == 256);
-            Covenant.Requires<ArgumentException>(0 <= maxPaddingBytes && maxPaddingBytes <= short.MaxValue);
+            Covenant.Requires<ArgumentException>(keySize == 128 || keySize == 192 || keySize == 256, nameof(keySize));
+            Covenant.Requires<ArgumentException>(0 <= maxPaddingBytes && maxPaddingBytes <= short.MaxValue, nameof(maxPaddingBytes));
 
             aes = new AesManaged()
             {
@@ -299,7 +299,7 @@ namespace Neon.Cryptography
         /// <returns>The encrypted result as bytes.</returns>
         public byte[] EncryptToBytes(byte[] decryptedBytes)
         {
-            Covenant.Requires<ArgumentNullException>(decryptedBytes != null);
+            Covenant.Requires<ArgumentNullException>(decryptedBytes != null, nameof(decryptedBytes));
 
             using (var decrypted = new MemoryStream(decryptedBytes))
             {
@@ -320,7 +320,7 @@ namespace Neon.Cryptography
         /// <returns>The encrypted result as bytes.</returns>
         public byte[] EncryptToBytes(string decryptedText)
         {
-            Covenant.Requires<ArgumentNullException>(decryptedText != null);
+            Covenant.Requires<ArgumentNullException>(decryptedText != null, nameof(decryptedText));
 
             return EncryptToBytes(Encoding.UTF8.GetBytes(decryptedText));
         }
@@ -332,7 +332,7 @@ namespace Neon.Cryptography
         /// <returns>The encrypted result as base-64.</returns>
         public string EncryptToBase64(string decryptedText)
         {
-            Covenant.Requires<ArgumentNullException>(decryptedText != null);
+            Covenant.Requires<ArgumentNullException>(decryptedText != null, nameof(decryptedText));
 
             var encryptedBytes = EncryptToBytes(Encoding.UTF8.GetBytes(decryptedText));
 
@@ -346,7 +346,7 @@ namespace Neon.Cryptography
         /// <returns>The encrypted result as base-64.</returns>
         public string EncryptToBase64(byte[] decryptedBytes)
         {
-            Covenant.Requires<ArgumentNullException>(decryptedBytes != null);
+            Covenant.Requires<ArgumentNullException>(decryptedBytes != null, nameof(decryptedBytes));
 
             var encryptedBytes = EncryptToBytes(decryptedBytes);
 
@@ -360,8 +360,8 @@ namespace Neon.Cryptography
         /// <param name="encrypted">The encrypted output stream.</param>
         public void EncryptStream(Stream decrypted, Stream encrypted)
         {
-            Covenant.Requires<ArgumentNullException>(decrypted != null);
-            Covenant.Requires<ArgumentNullException>(encrypted != null);
+            Covenant.Requires<ArgumentNullException>(decrypted != null, nameof(decrypted));
+            Covenant.Requires<ArgumentNullException>(encrypted != null, nameof(encrypted));
 
             aes.GenerateIV();   // Always generate a new IV before encrypting.
 
@@ -451,7 +451,7 @@ namespace Neon.Cryptography
         /// <returns>The encrypted result as a string.</returns>
         public byte[] DecryptBytesFrom(byte[] encryptedBytes)
         {
-            Covenant.Requires<ArgumentNullException>(encryptedBytes != null);
+            Covenant.Requires<ArgumentNullException>(encryptedBytes != null, nameof(encryptedBytes));
 
             using (var encrypted = new MemoryStream(encryptedBytes))
             {
@@ -472,7 +472,7 @@ namespace Neon.Cryptography
         /// <returns>The encrypted result as a string.</returns>
         public byte[] DecryptBytesFrom(string encryptedBase64)
         {
-            Covenant.Requires<ArgumentNullException>(encryptedBase64 != null);
+            Covenant.Requires<ArgumentNullException>(encryptedBase64 != null, nameof(encryptedBase64));
 
             var encryptedBytes = Convert.FromBase64String(encryptedBase64);
 
@@ -486,7 +486,7 @@ namespace Neon.Cryptography
         /// <returns>The encrypted result as a base-64 string.</returns>
         public string DecryptStringFrom(byte[] encryptedBytes)
         {
-            Covenant.Requires<ArgumentNullException>(encryptedBytes != null);
+            Covenant.Requires<ArgumentNullException>(encryptedBytes != null, nameof(encryptedBytes));
 
             var decryptedBytes = DecryptBytesFrom(encryptedBytes);
 
@@ -500,7 +500,7 @@ namespace Neon.Cryptography
         /// <returns>The encrypted result as a base-64 string.</returns>
         public string DecryptStringFrom(string encryptedBase64)
         {
-            Covenant.Requires<ArgumentNullException>(encryptedBase64 != null);
+            Covenant.Requires<ArgumentNullException>(encryptedBase64 != null, nameof(encryptedBase64));
 
             var encryptedBytes = Convert.FromBase64String(encryptedBase64);
             var decryptedBytes = DecryptBytesFrom(encryptedBytes);
@@ -515,8 +515,8 @@ namespace Neon.Cryptography
         /// <param name="decrypted">The decrypted output stream.</param>
         public void DecryptStream(Stream encrypted, Stream decrypted)
         {
-            Covenant.Requires<ArgumentNullException>(encrypted != null);
-            Covenant.Requires<ArgumentNullException>(decrypted != null);
+            Covenant.Requires<ArgumentNullException>(encrypted != null, nameof(encrypted));
+            Covenant.Requires<ArgumentNullException>(decrypted != null, nameof(decrypted));
 
             // Wrap the input and output streams with [RelayStream] instances
             // so that we can prevent the [CryptoStream] instances from disposing 

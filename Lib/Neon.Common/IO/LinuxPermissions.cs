@@ -92,8 +92,8 @@ namespace Neon.IO
         /// <param name="recursive">Optionally apply the permissions recursively.</param>
         public static void Set(string path, string mode, bool recursive = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(mode));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(mode), nameof(mode));
 
             // $todo(jefflill):
             //

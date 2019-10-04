@@ -83,8 +83,8 @@ namespace Neon.Xunit
 
             set
             {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(value));
-                Covenant.Requires<ArgumentException>(IPAddress.TryParse(value, out var address) && address.AddressFamily == AddressFamily.InterNetwork, $"[{value}] is not a valid IPv4 address.");
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(value), nameof(value));
+                Covenant.Requires<ArgumentException>(IPAddress.TryParse(value, out var address) && address.AddressFamily == AddressFamily.InterNetwork, nameof(value), $"[{value}] is not a valid IPv4 address.");
                 
                 defaultHostInterface = value;
             }
@@ -112,7 +112,7 @@ namespace Neon.Xunit
                 hostInterface = DefaultHostInterface;
             }
 
-            Covenant.Requires<ArgumentException>(IPAddress.TryParse(hostInterface, out var address) && address.AddressFamily == AddressFamily.InterNetwork, $"[{hostInterface}] is not a valid IPv4 address.");
+            Covenant.Requires<ArgumentException>(IPAddress.TryParse(hostInterface, out var address) && address.AddressFamily == AddressFamily.InterNetwork, nameof(hostInterface), $"[{hostInterface}] is not a valid IPv4 address.");
 
             if (forConnection && hostInterface == "0.0.0.0")
             {
@@ -234,8 +234,8 @@ namespace Neon.Xunit
         /// </remarks>
         public void StartAsComposed(string name, string image, string[] dockerArgs = null, IEnumerable<string> containerArgs = null, IEnumerable<string> env = null, bool noRemove = false, bool keepOpen = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image), nameof(image));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             base.CheckWithinAction();
 

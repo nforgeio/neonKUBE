@@ -84,7 +84,7 @@ namespace Neon.Xen
         /// </param>
         public XenClient(string addressOrFQDN, string username, string password, string name = null, string logFolder = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username), nameof(username));
 
             if (!IPAddress.TryParse(addressOrFQDN, out var address))
             {

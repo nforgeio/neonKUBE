@@ -46,8 +46,8 @@ namespace Neon.Cadence
         /// <param name="domain">Optionally specifies the target domain (defaults to the client's default domain).</param>
         internal ExternalWorkflowStub(CadenceClient client, WorkflowExecution execution, string domain = null)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
 
             this.client    = client;
             this.domain    = client.ResolveDomain(domain);
@@ -75,8 +75,8 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task Signal(string signalName, params object[] args)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
-            Covenant.Requires<ArgumentNullException>(args != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
             await client.SignalWorkflowAsync(Execution, signalName, client.DataConverter.ToData(args));
         }

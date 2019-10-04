@@ -48,7 +48,7 @@ namespace Neon.Cadence
         /// <exception cref="ArgumentNullException">Thrown if a valid task list is not specified.</exception>
         internal static ActivityOptions Normalize(CadenceClient client, ActivityOptions options, Type activityInterface = null)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
             if (options == null)
             {

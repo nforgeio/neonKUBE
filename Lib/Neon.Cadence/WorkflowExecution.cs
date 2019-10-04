@@ -43,7 +43,7 @@ namespace Neon.Cadence
         /// <param name="runId">Optionally specifies the current run ID for the workflow.</param>
         public WorkflowExecution(string workflowId, string runId = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
 
             this.WorkflowId = workflowId;
             this.RunId      = runId;

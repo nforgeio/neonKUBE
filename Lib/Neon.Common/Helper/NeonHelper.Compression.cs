@@ -144,7 +144,7 @@ namespace Neon.Common
         /// <returns><c>true</c> if the file is compressed via GZIP.</returns>
         public static bool IsGzipped(string path)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
 
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
             {
@@ -161,7 +161,7 @@ namespace Neon.Common
         /// <returns><c>true</c> if the file is compressed via GZIP.</returns>
         public static bool IsGzipped(Stream stream)
         {
-            Covenant.Requires<ArgumentNullException>(stream != null);
+            Covenant.Requires<ArgumentNullException>(stream != null, nameof(stream));
 
             // GZIP files begin with the two byte magic number:
             //

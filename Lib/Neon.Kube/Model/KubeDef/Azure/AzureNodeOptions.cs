@@ -154,7 +154,7 @@ namespace Neon.Kube
         [Pure]
         public void Validate(ClusterDefinition clusterDefinition, string nodeName)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             var caps = AzureVmCapabilities.Get(VmSize);
 

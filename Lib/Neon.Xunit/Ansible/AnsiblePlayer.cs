@@ -52,7 +52,7 @@ namespace Neon.Xunit
         /// </remarks>
         public static AnsiblePlayResults PlayInFolder(string workDir, string playbook, params string[] args)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(playbook));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(playbook), nameof(playbook));
 
             if (!string.IsNullOrEmpty(workDir))
             {
@@ -130,7 +130,7 @@ namespace Neon.Xunit
         /// </remarks>
         public static AnsiblePlayResults PlayInFolderNoGather(string workDir, string playbook, params string[] args)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(playbook));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(playbook), nameof(playbook));
 
             // Add "gather_facts: no" to the playbook if this argument
             // isn't already present.

@@ -167,7 +167,7 @@ namespace Neon.Data
         /// </remarks>
         public static string GetEntityKey(string entityRef, string entityType)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(entityRef));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(entityRef), nameof(entityRef));
 
             if (string.IsNullOrEmpty(entityType))
             {

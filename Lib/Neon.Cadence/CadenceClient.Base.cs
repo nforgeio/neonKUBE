@@ -130,7 +130,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<Worker> StartWorkerAsync(string taskList, WorkerOptions options = null, string domain = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList), "Workers must be started with a non-empty workflow.");
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList), nameof(taskList), "Workers must be started with a non-empty workflow.");
             EnsureNotDisposed();
 
             options  = options ?? new WorkerOptions();
@@ -228,7 +228,7 @@ namespace Neon.Cadence
         /// </remarks>
         internal async Task StopWorkerAsync(Worker worker)
         {
-            Covenant.Requires<ArgumentNullException>(worker != null);
+            Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             EnsureNotDisposed();
 
             using (await workerRegistrationMutex.AcquireAsync())

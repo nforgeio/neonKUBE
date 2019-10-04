@@ -124,7 +124,7 @@ namespace Neon.Cryptography
         /// <returns>The hash HEX string.</returns>
         public static byte[] ComputeSHA256Bytes(Stream input)
         {
-            Covenant.Requires(input != null);
+            Covenant.Requires<ArgumentNullException>(input != null, nameof(input));
 
             var startPos = input.Position;
 

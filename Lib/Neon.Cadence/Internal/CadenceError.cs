@@ -110,7 +110,7 @@ namespace Neon.Cadence.Internal
         /// <param name="type">Optionally specifies the error type.</param>
         public CadenceError(string error, CadenceErrorTypes type = CadenceErrorTypes.Custom)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(error));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(error), nameof(error));
 
             this.String = error;
             this.SetErrorType(type);
@@ -122,7 +122,7 @@ namespace Neon.Cadence.Internal
         /// <param name="e">The exception.</param>
         public CadenceError(Exception e)
         {
-            Covenant.Requires<ArgumentNullException>(e != null);
+            Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
 
             this.String = $"{e.GetType().Name}{{{e.Message}}}";
             this.Type   = "custom";

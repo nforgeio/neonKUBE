@@ -117,8 +117,8 @@ namespace Neon.Kube
             int         remotePort,
             string      @namespace = "default")
         {
-            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort));
-            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort));
+            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort), nameof(localPort));
+            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort), nameof(remotePort));
 
             if (!NeonHelper.IsWindows)
             {

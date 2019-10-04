@@ -60,7 +60,7 @@ namespace Neon.Net
             CancellationToken   cancellationToken = default,
             LogActivity         logActivity = default)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
 
             return await safeRetryPolicy.InvokeAsync(
                 async () =>
@@ -109,7 +109,7 @@ namespace Neon.Net
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity = default)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
 
             var result = await safeRetryPolicy.InvokeAsync(
                 async () =>
@@ -162,7 +162,7 @@ namespace Neon.Net
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity = default)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
 
             retryPolicy = retryPolicy ?? NoRetryPolicy.Instance;
 
@@ -211,7 +211,7 @@ namespace Neon.Net
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity = default)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
 
             return await unsafeRetryPolicy.InvokeAsync(
                 async () =>
@@ -258,7 +258,7 @@ namespace Neon.Net
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity = default)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
 
             retryPolicy = retryPolicy ?? NoRetryPolicy.Instance;
 

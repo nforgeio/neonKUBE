@@ -80,9 +80,9 @@ namespace Neon.Common
         /// <exception cref="FormatException">Thrown if the pattern is invalid.</exception>
         public static GlobPattern Parse(string pattern)
         {
-            Covenant.Requires<ArgumentNullException>(pattern != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(pattern.Trim()));
-            Covenant.Requires<FormatException>(!pattern.Contains("//"));
+            Covenant.Requires<ArgumentNullException>(pattern != null, nameof(pattern));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(pattern.Trim()), nameof(pattern));
+            Covenant.Requires<FormatException>(!pattern.Contains("//"), nameof(pattern));
 
             return new GlobPattern(pattern);
         }
@@ -291,7 +291,7 @@ namespace Neon.Common
         /// <returns><c>true</c> if the parameter matches the glob.</returns>
         public bool IsMatch(string input)
         {
-            Covenant.Requires<ArgumentNullException>(input != null);
+            Covenant.Requires<ArgumentNullException>(input != null, nameof(input));
 
             return Regex.IsMatch(input);
         }

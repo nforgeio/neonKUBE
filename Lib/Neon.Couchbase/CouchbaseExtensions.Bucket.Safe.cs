@@ -800,7 +800,7 @@ namespace Couchbase
         /// <returns>The list of results.</returns>
         public static async Task<List<T>> QuerySafeAsync<T>(this IBucket bucket, IQueryRequest queryRequest, CancellationToken cancellationToken = default)
         {
-            Covenant.Requires<ArgumentNullException>(queryRequest != null);
+            Covenant.Requires<ArgumentNullException>(queryRequest != null, nameof(queryRequest));
 
             // $todo(jefflill): This is a horrible hack!
             //
@@ -859,7 +859,7 @@ namespace Couchbase
         /// <returns>The list of results.</returns>
         public static async Task<List<T>> QuerySafeAsync<T>(this IBucket bucket, string query, CancellationToken cancellationToken = default)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(query));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(query), nameof(query));
 
             return await QuerySafeAsync<T>(bucket, new QueryRequest(query), cancellationToken);
         }
@@ -880,8 +880,8 @@ namespace Couchbase
         /// <returns>The list of results.</returns>
         public static async Task<List<T>> QuerySafeAsync<T>(this IBucket bucket, IQueryRequest queryRequest, MutationState mutationState, CancellationToken cancellationToken = default)
         {
-            Covenant.Requires<ArgumentNullException>(queryRequest != null);
-            Covenant.Requires<ArgumentNullException>(mutationState != null);
+            Covenant.Requires<ArgumentNullException>(queryRequest != null, nameof(queryRequest));
+            Covenant.Requires<ArgumentNullException>(mutationState != null, nameof(mutationState));
 
             // $todo(jefflill): This is a horrible hack!
             //
@@ -948,7 +948,7 @@ namespace Couchbase
         /// <returns>The list of results.</returns>
         public static async Task<List<T>> QuerySafeAsync<T>(this IBucket bucket, string query, MutationState mutationState, CancellationToken cancellationToken = default)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(query));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(query), nameof(query));
 
             return await QuerySafeAsync<T>(bucket, new QueryRequest(query), mutationState, cancellationToken);
         }
@@ -1015,7 +1015,7 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult> RemoveSafeAsync(this IBucket bucket, IPersistableType persistable, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
-            Covenant.Requires<ArgumentNullException>(persistable != null);
+            Covenant.Requires<ArgumentNullException>(persistable != null, nameof(persistable));
 
             var result = await bucket.RemoveAsync(persistable.GetKey(), replicateTo, persistTo);
 
@@ -1144,7 +1144,7 @@ namespace Couchbase
         public static async Task<IOperationResult<T>> ReplaceSafeAsync<T>(this IBucket bucket, T persistable, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(persistable != null);
+            Covenant.Requires<ArgumentNullException>(persistable != null, nameof(persistable));
 
             var result = await bucket.ReplaceAsync<T>(persistable.GetKey(), persistable, replicateTo, persistTo);
 
@@ -1167,7 +1167,7 @@ namespace Couchbase
         public static async Task ReplaceSafeAsync<T>(this IBucket bucket, T persistable, ulong? cas = null, TimeSpan? expiration = null, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(persistable != null);
+            Covenant.Requires<ArgumentNullException>(persistable != null, nameof(persistable));
 
             IOperationResult<T> result;
 
@@ -1232,7 +1232,7 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult> TouchSafeAsync(this IBucket bucket, IPersistableType persistable, TimeSpan expiration)
         {
-            Covenant.Requires<ArgumentNullException>(persistable != null);
+            Covenant.Requires<ArgumentNullException>(persistable != null, nameof(persistable));
 
             var result = await bucket.TouchAsync(persistable.GetKey(), expiration);
 
@@ -1264,7 +1264,7 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult> UnlockSafeAsync(this IBucket bucket, IPersistableType persistable, ulong cas)
         {
-            Covenant.Requires<ArgumentNullException>(persistable != null);
+            Covenant.Requires<ArgumentNullException>(persistable != null, nameof(persistable));
 
             var result = await bucket.UnlockAsync(persistable.GetKey(), cas);
 
@@ -1319,7 +1319,7 @@ namespace Couchbase
         public static async Task<IOperationResult<T>> UpsertSafeAsync<T>(this IBucket bucket, T persistable, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
             where T: class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(persistable != null);
+            Covenant.Requires<ArgumentNullException>(persistable != null, nameof(persistable));
 
             var result = await bucket.UpsertAsync<T>(persistable.GetKey(), persistable, replicateTo, persistTo);
 
@@ -1405,7 +1405,7 @@ namespace Couchbase
         public static async Task<IOperationResult<T>> UpsertSafeAsync<T>(this IBucket bucket, T persistable, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(persistable != null);
+            Covenant.Requires<ArgumentNullException>(persistable != null, nameof(persistable));
 
             // $todo(jefflill):
             //

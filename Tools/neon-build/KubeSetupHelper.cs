@@ -86,7 +86,7 @@ namespace NeonBuild
         /// </remarks>
         public KubeSetupHelper(KubeClientPlatform platform, CommandLine commandLine, Action<string> outputAction = null, Action<string> errorAction = null)
         {
-            Covenant.Requires<ArgumentException>(commandLine != null);
+            Covenant.Requires<ArgumentException>(commandLine != null, nameof(commandLine));
 
             this.Platform     = platform;
             this.outputAction = outputAction;

@@ -39,7 +39,7 @@ namespace Neon.ModelGen
         /// <param name="output">The code generator output.</param>
         public DataProperty(ModelGeneratorOutput output)
         {
-            Covenant.Requires<ArgumentNullException>(output != null);
+            Covenant.Requires<ArgumentNullException>(output != null, nameof(output));
 
             this.Output = output;
         }

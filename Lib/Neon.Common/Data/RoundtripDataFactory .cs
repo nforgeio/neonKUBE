@@ -68,10 +68,10 @@ namespace Neon.Data
         /// <returns>The new instance as an <see cref="object"/>.</returns>
         public static object CreateFrom(Type resultType, JObject jObject)
         {
-            Covenant.Requires(resultType != null);
-            Covenant.Requires(jObject != null);
+            Covenant.Requires<ArgumentNullException>(resultType != null, nameof(resultType));
+            Covenant.Requires<ArgumentNullException>(jObject != null, nameof(JObject));
 #if DEBUG
-            Covenant.Requires<ArgumentException>(resultType.Implements<IRoundtripData>());
+            Covenant.Requires<ArgumentException>(resultType.Implements<IRoundtripData>(), nameof(resultType));
 #endif
             MethodInfo createMethod;
 
@@ -109,8 +109,8 @@ namespace Neon.Data
         /// <returns>The new instance as an <see cref="object"/>.</returns>
         public static object CreateFrom(Type resultType, byte[] bytes)
         {
-            Covenant.Requires(resultType != null);
-            Covenant.Requires(bytes != null);
+            Covenant.Requires<ArgumentNullException>(resultType != null, nameof(resultType));
+            Covenant.Requires<ArgumentNullException>(bytes != null, nameof(bytes));
 
             var json    = Encoding.UTF8.GetString(bytes);  // $debug(jefflill): DELETE THIS!
             var jToken  = JToken.Parse(json);
@@ -140,8 +140,8 @@ namespace Neon.Data
         /// <returns>The new instance as an <see cref="object"/>.</returns>
         public static async Task<object> CreateFromAsync(Type resultType, Stream stream, Encoding encoding = null)
         {
-            Covenant.Requires(resultType != null);
-            Covenant.Requires(stream != null);
+            Covenant.Requires<ArgumentNullException>(resultType != null, nameof(resultType));
+            Covenant.Requires<ArgumentNullException>(stream != null, nameof(stream));
 
             if (encoding == null)
             {
@@ -182,8 +182,8 @@ namespace Neon.Data
         /// </returns>
         public static async Task<Tuple<bool, object>> TryCreateFromAsync(Type resultType, Stream stream, Encoding encoding )
         {
-            Covenant.Requires(resultType != null);
-            Covenant.Requires(stream != null);
+            Covenant.Requires<ArgumentNullException>(resultType != null, nameof(resultType));
+            Covenant.Requires<ArgumentNullException>(stream != null, nameof(stream));
 
             if (encoding == null)
             {

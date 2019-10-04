@@ -120,7 +120,7 @@ namespace Neon.Kube
         /// <param name="log"></param>
         public static void SetLogger(INeonLogger log)
         {
-            Covenant.Requires<ArgumentNullException>(log != null);
+            Covenant.Requires<ArgumentNullException>(log != null, nameof(log));
 
             KubeHelper.log = log;
         }
@@ -133,7 +133,7 @@ namespace Neon.Kube
         /// </summary>
         public static void SetTestMode(string folder)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
 
             if (IsTestMode)
             {
@@ -279,7 +279,7 @@ namespace Neon.Kube
 
             set
             {
-                Covenant.Requires<ArgumentNullException>(value != null);
+                Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
 
                 value.Validate();
                 cachedClientConfig = value;
@@ -736,7 +736,7 @@ namespace Neon.Kube
         /// <returns>The component file path.</returns>
         public static string GetCachedComponentPath(KubeHostPlatform platform, string component, string version)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(component));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(component), nameof(component));
 
             string path;
 
@@ -760,7 +760,7 @@ namespace Neon.Kube
         /// <returns>The file path.</returns>
         public static string GetContextExtensionPath(KubeContextName contextName)
         {
-            Covenant.Requires<ArgumentNullException>(contextName != null);
+            Covenant.Requires<ArgumentNullException>(contextName != null, nameof(contextName));
 
             // Kubecontext names may include a forward slash to specify a Kubernetes
             // namespace.  This won't work for a file name, so we're going to replace
@@ -778,7 +778,7 @@ namespace Neon.Kube
         /// <returns>The <see cref="KubeContextExtension"/> or <c>null</c>.</returns>
         public static KubeContextExtension GetContextExtension(KubeContextName name)
         {
-            Covenant.Requires<ArgumentNullException>(name != null);
+            Covenant.Requires<ArgumentNullException>(name != null, nameof(name));
 
             var path = GetContextExtensionPath(name);
 
@@ -938,7 +938,7 @@ namespace Neon.Kube
         /// <param name="config">The new configuration.</param>
         public static void SetConfig(KubeConfig config)
         {
-            Covenant.Requires<ArgumentNullException>(config != null);
+            Covenant.Requires<ArgumentNullException>(config != null, nameof(config));
 
             cachedConfig = config;
 
@@ -1088,8 +1088,8 @@ namespace Neon.Kube
         /// <returns>The certificate or <c>null</c> if one doesn't exist by the name.</returns>
         private static X509Certificate2 FindCertificateByFriendlyName(X509Store store, string friendlyName)
         {
-            Covenant.Requires<ArgumentNullException>(store != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(friendlyName));
+            Covenant.Requires<ArgumentNullException>(store != null, nameof(store));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(friendlyName), nameof(friendlyName));
 
             foreach (var certificate in store.Certificates)
             {
@@ -1120,7 +1120,7 @@ namespace Neon.Kube
         /// <param name="setupInfo">The KUbernetes setup information.</param>
         public static void InstallKubeCtl(KubeSetupInfo setupInfo)
         {
-            Covenant.Requires<ArgumentNullException>(setupInfo != null);
+            Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
 
             var hostPlatform      = KubeHelper.HostPlatform;
             var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", setupInfo.Versions.Kubernetes);
@@ -1254,7 +1254,7 @@ namespace Neon.Kube
         /// <param name="setupInfo">The KUbernetes setup information.</param>
         public static void InstallHelm(KubeSetupInfo setupInfo)
         {
-            Covenant.Requires<ArgumentNullException>(setupInfo != null);
+            Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
 
             var hostPlatform    = KubeHelper.HostPlatform;
             var cachedHelmPath  = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", setupInfo.Versions.Helm);
@@ -1376,7 +1376,7 @@ namespace Neon.Kube
         /// <exception cref="KeyNotFoundException">Thrown if the password doesn't exist.</exception>
         public static string LookupPassword(string passwordName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(passwordName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(passwordName), nameof(passwordName));
 
             var path = Path.Combine(PasswordsFolder, passwordName);
 

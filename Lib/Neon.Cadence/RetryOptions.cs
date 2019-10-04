@@ -46,7 +46,7 @@ namespace Neon.Cadence
         /// <param name="policy">The policy.</param>
         public RetryOptions(LinearRetryPolicy policy)
         {
-            Covenant.Requires<ArgumentNullException>(policy != null);
+            Covenant.Requires<ArgumentNullException>(policy != null, nameof(policy));
 
             this.InitialInterval    = CadenceHelper.Normalize(policy.RetryInterval);
             this.BackoffCoefficient = 1.0;
@@ -65,7 +65,7 @@ namespace Neon.Cadence
         /// <param name="policy">The policy.</param>
         public RetryOptions(ExponentialRetryPolicy policy)
         {
-            Covenant.Requires<ArgumentNullException>(policy != null);
+            Covenant.Requires<ArgumentNullException>(policy != null, nameof(policy));
 
             this.InitialInterval    = CadenceHelper.Normalize(policy.InitialRetryInterval);
             this.BackoffCoefficient = 2.0;

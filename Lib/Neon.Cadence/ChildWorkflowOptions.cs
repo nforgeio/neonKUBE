@@ -46,7 +46,7 @@ namespace Neon.Cadence
         /// <exception cref="ArgumentNullException">Thrown if a valid task list is not specified.</exception>
         public static ChildWorkflowOptions Normalize(CadenceClient client, ChildWorkflowOptions options, Type workflowInterface = null)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
             if (options == null)
             {

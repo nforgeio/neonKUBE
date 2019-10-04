@@ -142,7 +142,7 @@ namespace WinDesktop
         public static SshProxy<TMetadata> CreateNodeProxy<TMetadata>(string name, string publicAddress, IPAddress privateAddress, bool appendToLog)
             where TMetadata : class
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             var sshCredentials = KubeHelper.CurrentContext.Extension.SshCredentials; ;
 

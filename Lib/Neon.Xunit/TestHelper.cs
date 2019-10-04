@@ -82,7 +82,7 @@ namespace Neon.Xunit
         /// </remarks>
         public static TempFolder TempFolder(string filename, string data)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(filename));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(filename), nameof(filename));
 
             var folder = new TempFolder();
 
@@ -102,8 +102,8 @@ namespace Neon.Xunit
         /// <exception cref="Exception">Various exceptions are thrown if the collections are not equivalent.</exception>
         public static void AssertEquivalent<T>(IEnumerable<T> expected, IEnumerable<T> collection)
         {
-            Covenant.Requires<ArgumentNullException>(expected != null);
-            Covenant.Requires<ArgumentNullException>(collection != null);
+            Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
+            Covenant.Requires<ArgumentNullException>(collection != null, nameof(collection));
 
             // $todo(jefflill): 
             //
@@ -140,8 +140,8 @@ namespace Neon.Xunit
         /// <exception cref="Exception">Various exceptions are thrown if the collections are not equivalent.</exception>
         public static void AssertNotEquivalent<T>(IEnumerable<T> expected, IEnumerable<T> collection)
         {
-            Covenant.Requires<ArgumentNullException>(expected != null);
-            Covenant.Requires<ArgumentNullException>(collection != null);
+            Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
+            Covenant.Requires<ArgumentNullException>(collection != null, nameof(collection));
 
             try
             {
@@ -167,9 +167,9 @@ namespace Neon.Xunit
         /// <exception cref="Exception">Various exceptions are thrown if the collections are not equivalent.</exception>
         public static void AssertEquivalent<T>(IEnumerable<T> expected, IEnumerable<T> collection, IEqualityComparer<T> comparer)
         {
-            Covenant.Requires<ArgumentNullException>(expected != null);
-            Covenant.Requires<ArgumentNullException>(collection != null);
-            Covenant.Requires<ArgumentNullException>(comparer != null);
+            Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
+            Covenant.Requires<ArgumentNullException>(collection != null, nameof(collection));
+            Covenant.Requires<ArgumentNullException>(comparer != null, nameof(comparer));
 
             // $todo(jefflill): 
             //
@@ -207,9 +207,9 @@ namespace Neon.Xunit
         /// <exception cref="Exception">Various exceptions are thrown if the collections are not equivalent.</exception>
         public static void AssertNotEquivalent<T>(IEnumerable<T> expected, IEnumerable<T> collection, IEqualityComparer<T> comparer)
         {
-            Covenant.Requires<ArgumentNullException>(expected != null);
-            Covenant.Requires<ArgumentNullException>(collection != null);
-            Covenant.Requires<ArgumentNullException>(comparer != null);
+            Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
+            Covenant.Requires<ArgumentNullException>(collection != null, nameof(collection));
+            Covenant.Requires<ArgumentNullException>(comparer != null, nameof(comparer));
 
             try
             {
@@ -233,8 +233,8 @@ namespace Neon.Xunit
         /// <exception cref="Exception">Various exceptions are thrown if the dictionaries are not equivalent.</exception>
         public static void AssertEquivalent<TKey, TValue>(IDictionary<TKey, TValue> expected, IDictionary<TKey, TValue> dictionary)
         {
-            Covenant.Requires<ArgumentNullException>(expected != null);
-            Covenant.Requires<ArgumentNullException>(dictionary != null);
+            Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
+            Covenant.Requires<ArgumentNullException>(dictionary != null, nameof(dictionary));
 
             var expectedCount = expected.Count();
             var dictionaryCount = dictionary.Count();
@@ -272,8 +272,8 @@ namespace Neon.Xunit
         /// <exception cref="Exception">Various exceptions are thrown if the dictionaries are not equivalent.</exception>
         public static void AssertNotEquivalent<TKey, TValue>(IDictionary<TKey, TValue> expected, IDictionary<TKey, TValue> dictionary)
         {
-            Covenant.Requires<ArgumentNullException>(expected != null);
-            Covenant.Requires<ArgumentNullException>(dictionary != null);
+            Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
+            Covenant.Requires<ArgumentNullException>(dictionary != null, nameof(dictionary));
 
             try
             {
@@ -297,9 +297,9 @@ namespace Neon.Xunit
         /// <exception cref="Exception">Various exceptions are thrown if the dictionaries are not equivalent.</exception>
         public static void AssertEquivalent<TKey, TValue>(IDictionary<TKey, TValue> expected, IDictionary<TKey, TValue> dictionary, IEqualityComparer<TValue> comparer)
         {
-            Covenant.Requires<ArgumentNullException>(expected != null);
-            Covenant.Requires<ArgumentNullException>(dictionary != null);
-            Covenant.Requires<ArgumentNullException>(comparer != null);
+            Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
+            Covenant.Requires<ArgumentNullException>(dictionary != null, nameof(dictionary));
+            Covenant.Requires<ArgumentNullException>(comparer != null, nameof(comparer));
 
             var expectedCount = expected.Count();
             var dictionaryCount = dictionary.Count();
@@ -337,9 +337,9 @@ namespace Neon.Xunit
         /// <exception cref="Exception">Various exceptions are thrown if the dictionaries are not equivalent.</exception>
         public static void AssertNotEquivalent<TKey, TValue>(IDictionary<TKey, TValue> expected, IDictionary<TKey, TValue> dictionary, IEqualityComparer<TValue> comparer)
         {
-            Covenant.Requires<ArgumentNullException>(expected != null);
-            Covenant.Requires<ArgumentNullException>(dictionary != null);
-            Covenant.Requires<ArgumentNullException>(comparer != null);
+            Covenant.Requires<ArgumentNullException>(expected != null, nameof(expected));
+            Covenant.Requires<ArgumentNullException>(dictionary != null, nameof(dictionary));
+            Covenant.Requires<ArgumentNullException>(comparer != null, nameof(comparer));
 
             try
             {
@@ -384,7 +384,7 @@ namespace Neon.Xunit
         public static void AssertThrows<TException>(Action action)
             where TException : Exception
         {
-            Covenant.Requires<ArgumentNullException>(action != null);
+            Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
             try
             {
@@ -412,7 +412,7 @@ namespace Neon.Xunit
         public async static Task AssertThrowsAsync<TException>(Func<Task> action)
             where TException : Exception
         {
-            Covenant.Requires<ArgumentNullException>(action != null);
+            Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
             try
             {

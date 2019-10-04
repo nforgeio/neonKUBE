@@ -826,8 +826,8 @@ namespace TestCadence
         {
             public BytesHolder(byte[] bytes)
             {
-                Covenant.Requires<ArgumentNullException>(bytes != null);
-                Covenant.Requires<ArgumentException>(bytes.Length > 4);
+                Covenant.Requires<ArgumentNullException>(bytes != null, nameof(bytes));
+                Covenant.Requires<ArgumentException>(bytes.Length > 4, nameof(bytes));
 
                 this.Bytes = bytes;
             }

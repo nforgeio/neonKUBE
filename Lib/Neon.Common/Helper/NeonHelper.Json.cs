@@ -198,7 +198,7 @@ namespace Neon.Common
         /// </remarks>
         public static T JsonDeserialize<T>(string json, bool strict = false)
         {
-            Covenant.Requires<ArgumentNullException>(json != null);
+            Covenant.Requires<ArgumentNullException>(json != null, nameof(json));
 
             return JsonConvert.DeserializeObject<T>(json, strict ? JsonStrictSerializerSettings.Value : JsonRelaxedSerializerSettings.Value);
         }
@@ -217,7 +217,7 @@ namespace Neon.Common
         /// </remarks>
         public static T JsonDeserialize<T>(byte[] jsonBytes, bool strict = false)
         {
-            Covenant.Requires<ArgumentNullException>(jsonBytes != null);
+            Covenant.Requires<ArgumentNullException>(jsonBytes != null, nameof(jsonBytes));
 
             return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(jsonBytes), strict ? JsonStrictSerializerSettings.Value : JsonRelaxedSerializerSettings.Value);
         }
@@ -236,8 +236,8 @@ namespace Neon.Common
         /// </remarks>
         public static object JsonDeserialize(Type type, string json, bool strict = false)
         {
-            Covenant.Requires<ArgumentNullException>(type != null);
-            Covenant.Requires<ArgumentNullException>(json != null);
+            Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
+            Covenant.Requires<ArgumentNullException>(json != null, nameof(json));
 
             return JsonConvert.DeserializeObject(json, type, strict ? JsonStrictSerializerSettings.Value : JsonRelaxedSerializerSettings.Value);
         }
@@ -256,8 +256,8 @@ namespace Neon.Common
         /// </remarks>
         public static object JsonDeserialize(Type type, byte[] jsonBytes, bool strict = false)
         {
-            Covenant.Requires<ArgumentNullException>(type != null);
-            Covenant.Requires<ArgumentNullException>(jsonBytes != null);
+            Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
+            Covenant.Requires<ArgumentNullException>(jsonBytes != null, nameof(jsonBytes));
 
             return JsonConvert.DeserializeObject(Encoding.UTF8.GetString(jsonBytes), type, strict ? JsonStrictSerializerSettings.Value : JsonRelaxedSerializerSettings.Value);
         }

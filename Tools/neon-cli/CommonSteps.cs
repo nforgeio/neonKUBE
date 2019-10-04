@@ -277,9 +277,9 @@ TCPKeepAlive yes
         /// <param name="shutdown">Optionally shuts down the node.</param>
         public static void PrepareNode(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo, bool shutdown = false)
         {
-            Covenant.Requires<ArgumentNullException>(node != null);
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
-            Covenant.Requires<ArgumentNullException>(kubeSetupInfo != null);
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<ArgumentNullException>(kubeSetupInfo != null, nameof(kubeSetupInfo));
 
             if (node.FileExists($"{KubeHostFolders.State}/setup/prepared"))
             {

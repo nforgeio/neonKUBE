@@ -86,7 +86,7 @@ namespace Neon.Kube
         /// </summary>
         public NodeLabels(NodeDefinition node)
         {
-            Covenant.Requires<ArgumentNullException>(node != null);
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
             this.Node = node;
         }
@@ -877,7 +877,7 @@ namespace Neon.Kube
         [Pure]
         public void Validate(ClusterDefinition clusterDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             // Verify that custom node label names and values satisfy the 
             // following criteria:

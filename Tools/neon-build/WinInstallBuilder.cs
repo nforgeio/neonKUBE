@@ -41,7 +41,7 @@ namespace NeonBuild
         /// <param name="setupHelper">The Kubernetes settup helper.</param>
         public WinInstallBuilder(KubeSetupHelper setupHelper)
         {
-            Covenant.Requires<ArgumentNullException>(setupHelper != null);
+            Covenant.Requires<ArgumentNullException>(setupHelper != null, nameof(setupHelper));
 
             this.Helper = setupHelper;
         }

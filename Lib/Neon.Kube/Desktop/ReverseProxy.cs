@@ -160,8 +160,8 @@ namespace Neon.Kube
             Action<RequestContext>  requestHandler    = null, 
             Action<RequestContext>  responseHandler   = null)
         {
-            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort));
-            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort));
+            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort), nameof(localPort));
+            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort), nameof(remotePort));
 
             if (validCertificate != null || clientCertificate != null)
             {
@@ -352,7 +352,7 @@ namespace Neon.Kube
         /// <param name="buffer">The buffer.</param>
         private void ReleaseBuffer(byte[] buffer)
         {
-            Covenant.Requires<ArgumentNullException>(buffer != null);
+            Covenant.Requires<ArgumentNullException>(buffer != null, nameof(buffer));
 
             lock (syncLock)
             {

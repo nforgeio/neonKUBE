@@ -41,8 +41,8 @@ namespace System.IO
         /// <param name="bytes">The byte array.</param>
         public static void Write(this Stream stream, byte[] bytes)
         {
-            Covenant.Requires<ArgumentNullException>(stream != null);
-            Covenant.Requires<ArgumentNullException>(bytes != null);
+            Covenant.Requires<ArgumentNullException>(stream != null, nameof(stream));
+            Covenant.Requires<ArgumentNullException>(bytes != null, nameof(bytes));
 
             stream.Write(bytes, 0, bytes.Length);
         }
@@ -54,8 +54,8 @@ namespace System.IO
         /// <param name="bytes">The byte array.</param>
         public static async Task WriteAsync(this Stream stream, byte[] bytes)
         {
-            Covenant.Requires<ArgumentNullException>(stream != null);
-            Covenant.Requires<ArgumentNullException>(bytes != null);
+            Covenant.Requires<ArgumentNullException>(stream != null, nameof(stream));
+            Covenant.Requires<ArgumentNullException>(bytes != null, nameof(bytes));
 
             await stream.WriteAsync(bytes, 0, bytes.Length);
         }
@@ -96,7 +96,7 @@ namespace System.IO
         /// <returns>The byte array.</returns>
         public static byte[] ReadToEnd(this Stream stream)
         {
-            Covenant.Requires<ArgumentNullException>(stream != null);
+            Covenant.Requires<ArgumentNullException>(stream != null, nameof(stream));
 
             var buffer = new byte[64 * 1024];
 
@@ -122,7 +122,7 @@ namespace System.IO
         /// <returns>The byte array.</returns>
         public static async Task<byte[]> ReadToEndAsync(this Stream stream)
         {
-            Covenant.Requires<ArgumentNullException>(stream != null);
+            Covenant.Requires<ArgumentNullException>(stream != null, nameof(stream));
 
             var buffer = new byte[16 * 1024];
 
@@ -149,8 +149,8 @@ namespace System.IO
         /// <param name="target">The target stream.</param>
         public static void DeflateTo(this Stream source, Stream target)
         {
-            Covenant.Requires<ArgumentNullException>(source != null);
-            Covenant.Requires<ArgumentNullException>(target != null);
+            Covenant.Requires<ArgumentNullException>(source != null, nameof(source));
+            Covenant.Requires<ArgumentNullException>(target != null, nameof(target));
 
             using (var compressor = new DeflateStream(target, CompressionMode.Compress))
             {
@@ -165,8 +165,8 @@ namespace System.IO
         /// <param name="target">The target stream.</param>
         public static void InflateTo(this Stream source, Stream target)
         {
-            Covenant.Requires<ArgumentNullException>(source != null);
-            Covenant.Requires<ArgumentNullException>(target != null);
+            Covenant.Requires<ArgumentNullException>(source != null, nameof(source));
+            Covenant.Requires<ArgumentNullException>(target != null, nameof(target));
 
             using (var decompressor = new DeflateStream(source, CompressionMode.Decompress))
             {
@@ -181,8 +181,8 @@ namespace System.IO
         /// <param name="target">The target stream.</param>
         public static void GzipTo(this Stream source, Stream target)
         {
-            Covenant.Requires<ArgumentNullException>(source != null);
-            Covenant.Requires<ArgumentNullException>(target != null);
+            Covenant.Requires<ArgumentNullException>(source != null, nameof(source));
+            Covenant.Requires<ArgumentNullException>(target != null, nameof(target));
 
             using (var compressor = new GZipStream(target, CompressionLevel.Optimal))
             {
@@ -197,8 +197,8 @@ namespace System.IO
         /// <param name="target">The target stream.</param>
         public static void GunzipTo(this Stream source, Stream target)
         {
-            Covenant.Requires<ArgumentNullException>(source != null);
-            Covenant.Requires<ArgumentNullException>(target != null);
+            Covenant.Requires<ArgumentNullException>(source != null, nameof(source));
+            Covenant.Requires<ArgumentNullException>(target != null, nameof(target));
 
             using (var decompressor = new GZipStream(source, CompressionMode.Decompress))
             {
@@ -217,7 +217,7 @@ namespace System.IO
         /// <returns>The <see cref="IEnumerable{String}"/>.</returns>
         public static IEnumerable<string> Lines(this TextReader reader, bool ignoreBlank = false)
         {
-            Covenant.Requires<ArgumentNullException>(reader != null);
+            Covenant.Requires<ArgumentNullException>(reader != null, nameof(reader));
 
             for (var line = reader.ReadLine(); line != null; line = reader.ReadLine())
             {

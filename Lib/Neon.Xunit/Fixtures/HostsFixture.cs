@@ -291,8 +291,8 @@ namespace Neon.Xunit
         /// </remarks>
         public void AddHostAddress(string hostname, string address, bool deferCommit = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(address));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname), nameof(hostname));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(address), nameof(address));
 
             foreach (var record in records)
             {

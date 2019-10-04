@@ -122,7 +122,7 @@ namespace Neon.Common
         /// <returns>The error string.</returns>
         public static string ExceptionError(Exception e, bool stackTrace = false, bool excludeInner = false)
         {
-            Covenant.Requires<ArgumentNullException>(e != null);
+            Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
 
             var aggregate = e as AggregateException;
 
@@ -169,7 +169,7 @@ namespace Neon.Common
         /// <returns>The <see cref="Thread"/>.</returns>
         public static Thread ThreadRun(Action action)
         {
-            Covenant.Requires<ArgumentNullException>(action != null);
+            Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
             var thread = new Thread(new ThreadStart(action));
 
@@ -186,7 +186,7 @@ namespace Neon.Common
         [Pure]
         public static bool DoesNotThrow(Action action)
         {
-            Covenant.Requires<ArgumentNullException>(action != null);
+            Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
             try
             {
@@ -208,7 +208,7 @@ namespace Neon.Common
         public static bool DoesNotThrow<TException>(Action action)
             where TException : Exception
         {
-            Covenant.Requires<ArgumentNullException>(action != null);
+            Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
             try
             {
@@ -260,7 +260,7 @@ namespace Neon.Common
         /// </remarks>
         public static string ExpandTabs(string input, int tabStop = 4)
         {
-            Covenant.Requires<ArgumentNullException>(input != null);
+            Covenant.Requires<ArgumentNullException>(input != null, nameof(input));
 
             if (tabStop == 0)
             {
@@ -629,7 +629,7 @@ namespace Neon.Common
         /// <exception cref="TimeoutException">Thrown if the <paramref name="timeout"/> was exceeded.</exception>
         public static void WaitForParallel(IEnumerable<Action> actions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
         {
-            Covenant.Requires<ArgumentNullException>(actions != null);
+            Covenant.Requires<ArgumentNullException>(actions != null, nameof(actions));
 
             var tasks = new List<Task>();
 
@@ -947,8 +947,8 @@ namespace Neon.Common
         /// <param name="type">The enumeration type.</param>
         private static EnumMemberSerializationInfo GetEnumMembers(Type type)
         {
-            Covenant.Requires<ArgumentNullException>(type != null);
-            Covenant.Requires<ArgumentException>(type.IsEnum);
+            Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
+            Covenant.Requires<ArgumentException>(type.IsEnum, nameof(type));
 
             lock (typeToEnumMemberInfo)
             {
@@ -1134,9 +1134,9 @@ namespace Neon.Common
         /// <returns>The deserialized value.</returns>
         public static string EnumToString(Type type, object input)
         {
-            Covenant.Requires<ArgumentNullException>(type != null);
-            Covenant.Requires<ArgumentNullException>(input != null);
-            Covenant.Requires<ArgumentException>(type.IsEnum);
+            Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
+            Covenant.Requires<ArgumentNullException>(input != null, nameof(input));
+            Covenant.Requires<ArgumentException>(type.IsEnum, nameof(type));
 
             var info = GetEnumMembers(type);
 
@@ -1344,7 +1344,7 @@ namespace Neon.Common
         /// </remarks>
         public static T JsonOrYamlDeserialize<T>(string input, bool strict = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(input));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(input), nameof(input));
 
             var trimmed = input.TrimStart();
 
@@ -1464,7 +1464,7 @@ namespace Neon.Common
         /// </remarks>
         public static bool ParseBool(string input)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input), nameof(input));
 
             if (TryParseBool(input, out var value))
             {
@@ -1688,9 +1688,9 @@ namespace Neon.Common
         /// <exception cref="MissingMethodException">Thrown if the method does not exist.</exception>
         public static MethodInfo GetMethod(Type type, string name, params Type[] parameterTypes)
         {
-            Covenant.Requires<ArgumentNullException>(type != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-            Covenant.Requires<ArgumentNullException>(parameterTypes != null);
+            Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(parameterTypes != null, nameof(parameterTypes));
 
             var method = type.GetMethod(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static, null, parameterTypes, null);
 
@@ -1718,8 +1718,8 @@ namespace Neon.Common
         /// <exception cref="MissingMethodException">Thrown if the method does not exist.</exception>
         public static ConstructorInfo GetConstructor(Type type, params Type[] parameterTypes)
         {
-            Covenant.Requires<ArgumentNullException>(type != null);
-            Covenant.Requires<ArgumentNullException>(parameterTypes != null);
+            Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
+            Covenant.Requires<ArgumentNullException>(parameterTypes != null, nameof(parameterTypes));
 
             var constructor = type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, parameterTypes, null);
 
@@ -1747,7 +1747,7 @@ namespace Neon.Common
         /// <returns>The task result.</returns>
         public async static Task<object> GetTaskResultAsObjectAsync(Task task)
         {
-            Covenant.Requires<ArgumentNullException>(task != null);
+            Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
 
             await task;
 

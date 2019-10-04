@@ -144,7 +144,7 @@ namespace Neon.Net
         /// <param name="httpClient">The special <see cref="HttpClient"/> instance to be wrapped.</param>
         public JsonClient(HttpClient httpClient)
         {
-            Covenant.Requires<ArgumentNullException>(httpClient != null);
+            Covenant.Requires<ArgumentNullException>(httpClient != null, nameof(httpClient));
 
             HttpClient    = httpClient;
             disposeClient = false;

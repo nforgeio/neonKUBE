@@ -131,7 +131,7 @@ namespace Neon.Common
         /// </remarks>
         public static TimeSpan PseudoRandomTimespan(TimeSpan maxInterval)
         {
-            Covenant.Requires<ArgumentException>(maxInterval >= TimeSpan.Zero);
+            Covenant.Requires<ArgumentException>(maxInterval >= TimeSpan.Zero, nameof(maxInterval));
 
             return TimeSpan.FromSeconds(maxInterval.TotalSeconds * PseudoRandomDouble());
         }
@@ -161,8 +161,8 @@ namespace Neon.Common
         /// </remarks>
         public static TimeSpan PseudoRandomTimespan(TimeSpan baseInterval, double fraction)
         {
-            Covenant.Requires<ArgumentException>(baseInterval >= TimeSpan.Zero);
-            Covenant.Requires<ArgumentException>(fraction >= 0.0);
+            Covenant.Requires<ArgumentException>(baseInterval >= TimeSpan.Zero, nameof(baseInterval));
+            Covenant.Requires<ArgumentException>(fraction >= 0.0, nameof(fraction));
 
             if (fraction == 0.0)
             {
@@ -181,9 +181,9 @@ namespace Neon.Common
         /// <returns>The randomized time span.</returns>
         public static TimeSpan PseudoRandomTimespan(TimeSpan minInterval, TimeSpan maxInterval)
         {
-            Covenant.Requires<ArgumentException>(minInterval >= TimeSpan.Zero);
-            Covenant.Requires<ArgumentException>(maxInterval >= TimeSpan.Zero);
-            Covenant.Requires<ArgumentException>(minInterval <= maxInterval);
+            Covenant.Requires<ArgumentException>(minInterval >= TimeSpan.Zero, nameof(minInterval));
+            Covenant.Requires<ArgumentException>(maxInterval >= TimeSpan.Zero, nameof(maxInterval));
+            Covenant.Requires<ArgumentException>(minInterval <= maxInterval, nameof(minInterval));
 
             if (maxInterval < minInterval)
             {
@@ -205,7 +205,7 @@ namespace Neon.Common
         /// <returns>The random byte array.</returns>
         public static byte[] GetCryptoRandomBytes(int count)
         {
-            Covenant.Requires<ArgumentException>(count > 0);
+            Covenant.Requires<ArgumentException>(count > 0, nameof(count));
 
             var bytes = new byte[count];
 
@@ -229,7 +229,7 @@ namespace Neon.Common
         /// <returns>The generated password.</returns>
         public static string GetCryptoRandomPassword(int length)
         {
-            Covenant.Requires<ArgumentException>(length > 0);
+            Covenant.Requires<ArgumentException>(length > 0, nameof(length));
 
             var sb    = new StringBuilder(length);
             var chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

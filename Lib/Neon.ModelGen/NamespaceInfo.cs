@@ -34,7 +34,7 @@ namespace Neon.ModelGen
         /// <param name="outputNamespace">The output namespace name.</param>
         public NamespaceInfo(string outputNamespace)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(outputNamespace));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(outputNamespace), nameof(outputNamespace));
 
             this.OutputNamespace = outputNamespace;
         }

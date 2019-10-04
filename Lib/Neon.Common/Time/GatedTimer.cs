@@ -54,8 +54,8 @@ namespace Neon.Time
         public GatedTimer(TimerCallback callback, object state, TimeSpan period)
             : this(callback, state, period, period)
         {
-            Covenant.Requires<ArgumentNullException>(callback != null);
-            Covenant.Requires<ArgumentException>(period >= TimeSpan.Zero);
+            Covenant.Requires<ArgumentNullException>(callback != null, nameof(callback));
+            Covenant.Requires<ArgumentException>(period >= TimeSpan.Zero, nameof(period));
         }
 
         /// <summary>
@@ -67,9 +67,9 @@ namespace Neon.Time
         /// <param name="period">Time to wait between firing events.</param>
         public GatedTimer(TimerCallback callback, object state, TimeSpan dueTime, TimeSpan period)
         {
-            Covenant.Requires<ArgumentNullException>(callback != null);
-            Covenant.Requires<ArgumentException>(dueTime >= TimeSpan.Zero);
-            Covenant.Requires<ArgumentException>(period >= TimeSpan.Zero);
+            Covenant.Requires<ArgumentNullException>(callback != null, nameof(callback));
+            Covenant.Requires<ArgumentException>(dueTime >= TimeSpan.Zero, nameof(dueTime));
+            Covenant.Requires<ArgumentException>(period >= TimeSpan.Zero, nameof(period));
 
             // The .NET framework doesn't like really long timespans so use
             // 1 day instead.
@@ -141,8 +141,8 @@ namespace Neon.Time
         /// <param name="period">Time to wait between firing events.</param>
         public void Change(TimeSpan dueTime, TimeSpan period)
         {
-            Covenant.Requires<ArgumentException>(dueTime >= TimeSpan.Zero);
-            Covenant.Requires<ArgumentException>(period >= TimeSpan.Zero);
+            Covenant.Requires<ArgumentException>(dueTime >= TimeSpan.Zero, nameof(dueTime));
+            Covenant.Requires<ArgumentException>(period >= TimeSpan.Zero, nameof(period));
 
             lock (syncLock)
             {

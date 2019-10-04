@@ -43,7 +43,7 @@ namespace Neon.Common
         /// </remarks>
         public static string EscapeCsv(string value)
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
 
             bool needsQuotes = value.IndexOfAny(csvEscapes) != -1;
 
@@ -70,7 +70,7 @@ namespace Neon.Common
         /// <exception cref="FormatException">Thrown if the CSV file format is not valid.</exception>
         public static string[] ParseCsv(string value)
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
 
             List <string>    fields = new List<string>(20);
             int             pStart, pos;

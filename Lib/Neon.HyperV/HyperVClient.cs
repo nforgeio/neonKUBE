@@ -224,7 +224,7 @@ namespace Neon.HyperV
             string                      switchName        = null,
             IEnumerable<VirtualDrive>   extraDrives       = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
 
             var driveFolder = DefaultDriveFolder;
@@ -373,7 +373,7 @@ namespace Neon.HyperV
         /// <param name="machineName">The machine name.</param>
         public void RemoveVM(string machineName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
 
             var machine = GetVM(machineName);
@@ -430,7 +430,7 @@ namespace Neon.HyperV
         /// <returns>The <see cref="VirtualMachine"/>.</returns>
         public VirtualMachine GetVM(string machineName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
 
             try
@@ -455,7 +455,7 @@ namespace Neon.HyperV
         /// <returns><c>true</c> if the machine exists.</returns>
         public bool VMExists(string machineName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
 
             return ListVMs().Count(vm => vm.Name.Equals(machineName, StringComparison.InvariantCultureIgnoreCase)) > 0;
@@ -467,7 +467,7 @@ namespace Neon.HyperV
         /// <param name="machineName">The machine name.</param>
         public void StartVM(string machineName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
 
             try
@@ -486,7 +486,7 @@ namespace Neon.HyperV
         /// <param name="machineName">The machine name.</param>
         public void StopVM(string machineName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
 
             try
@@ -588,8 +588,8 @@ namespace Neon.HyperV
         /// <param name="gateway">Address of the cluster network gateway, used to identify a connected network interface.</param>
         public void NewVMExternalSwitch(string switchName, IPAddress gateway)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(switchName));
-            Covenant.Requires<ArgumentNullException>(gateway != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(switchName), nameof(switchName));
+            Covenant.Requires<ArgumentNullException>(gateway != null, nameof(gateway));
 
             if (!NetworkInterface.GetIsNetworkAvailable())
             {
