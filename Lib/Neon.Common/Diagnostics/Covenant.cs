@@ -36,6 +36,9 @@ namespace System.Diagnostics.Contracts
     /// </remarks>
     public static class Covenant
     {
+        private static Type[]   oneString  = new Type[] { typeof(string) };
+        private static Type[]   twoStrings = new Type[] { typeof(string) };
+
         /// <summary>
         /// Verifies a method pre-condition.
         /// </summary>
@@ -55,20 +58,39 @@ namespace System.Diagnostics.Contracts
         /// </summary>
         /// <typeparam name="TException">The exception to be thrown if the condition is <c>false</c>.</typeparam>
         /// <param name="condition">The condition to be tested.</param>
-        /// <param name="message">An optional message to be included in the exception thrown.</param>
-        public static void Requires<TException>(bool condition, string message = null)
+        /// <param name="arg1">The first optional string argument to the exception constructor.</param>
+        /// <param name="arg2">The second optional string argument to the exception constructor.</param>
+        /// <remarks>
+        /// <para>
+        /// This method throws a <typeparamref name="TException"/> instance when <paramref name="condition"/>
+        /// is <c>false</c>.  Up to two string arguments may be passed to the exception constructor when an
+        /// appropriate constructor exists, otherwise these arguments will be ignored.
+        /// </para>
+        /// </remarks>
+        public static void Requires<TException>(bool condition, string arg1 = null, string arg2 = null)
             where TException : Exception, new()
         {
-            // $todo(jefflill): 
-            //
-            // I'm currently ignoring the [message].  For some environments, it
-            // could be possible to dynamically construct the exception, passing
-            // the message.
-
-            if (!condition)
+            if (condition)
             {
-                throw new TException();
+                return;
             }
+
+            var exceptionType = typeof(TException);
+            var constructor   = exceptionType.GetConstructor(twoStrings);
+
+            if (constructor != null)
+            {
+                throw (Exception)constructor.Invoke(new object[] { arg1, arg2 });
+            }
+
+            constructor = exceptionType.GetConstructor(oneString);
+
+            if (constructor != null)
+            {
+                throw (Exception)constructor.Invoke(new object[] { arg1 });
+            }
+
+            throw new TException();
         }
 
         /// <summary>
