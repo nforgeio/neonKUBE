@@ -1462,7 +1462,7 @@ namespace Neon.Cadence.WorkflowStub
 
                     CallProxyAsync(new DisconnectRequest()).Wait();
 
-                    // Terminate the proxy if there are no remaining connections.
+                    // Terminate the associated proxy.
 
                     lock (syncLock)
                     {
@@ -1482,7 +1482,30 @@ namespace Neon.Cadence.WorkflowStub
 
                         WorkflowBase.UnregisterClient(this);
                         ActivityBase.UnregisterClient(this);
-                        proxyProcess.Kill();
+
+                        if (proxyProcess != null)
+                        {
+                            // Signal the proxy that it should exit gracefully and then
+                            // allow it [Settings.TerminateTimeout] to actually exit
+                            // before killing it.
+
+                            try
+                            {
+                                CallProxyAsync(new TerminateRequest(), timeout: Settings.DebugHttpTimeout).Wait();
+                            }
+                            catch
+                            {
+                                // Ignoring these.
+                            }
+
+                            if (!proxyProcess.WaitForExit((int)Settings.TerminateTimeout.TotalMilliseconds))
+                            {
+                                log.LogWarn(() => $"[cadence-proxy] did not terminate gracefully within [{Settings.TerminateTimeout}].  Killing it now.");
+                                proxyProcess.Kill();
+                            }
+
+                            proxyProcess = null;
+                        }
 
                         if (httpServer != null)
                         {
@@ -1784,8 +1807,8 @@ namespace Neon.Cadence.WorkflowStub
 
                     // Look for any operations that have been running longer than
                     // the specified timeout and then individually cancel and
-                    // remove them, and then notify the application that they were
-                    // cancelled.
+                    // remove them, and then notify the application that they 
+                    // were cancelled.
 
                     if (!Settings.DebugIgnoreTimeouts)
                     {
