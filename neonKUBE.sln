@@ -229,6 +229,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Web", "Test\Test.Neon.Web\Test.Neon.Web.csproj", "{DF45D6DD-02D7-479E-8856-A06A0C679B58}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Cadence", "Lib\Neon.Cadence\Neon.Cadence.csproj", "{B3F86535-F343-43A8-B92C-560E8BC35A25}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C2071335-AFDF-4643-93A2-EAC482E90E73} = {C2071335-AFDF-4643-93A2-EAC482E90E73}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.Cadence", "Lib\Neon.Xunit.Cadence\Neon.Xunit.Cadence.csproj", "{B95E2A73-4711-4601-B792-17D8CA8EDF61}"
 EndProject
