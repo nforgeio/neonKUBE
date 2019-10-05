@@ -151,20 +151,33 @@ namespace Neon.Cadence
         internal TimeSpan ProxyTimeout => TimeSpan.FromSeconds(ProxyTimeoutSeconds);
 
         /// <summary>
-        /// Optionally specifies the maximum time to allow the <b>cadence-proxy</b>
-        /// to gracefully close its Cadence cluster connection and terminate.  The proxy
-        /// will be forceably killed when this time is exceeded.  This defaults to
-        /// <b>10 seconds</b>.
+        /// Optionally specifies the interval at which heartbeats are transmitted to
+        /// <b>cadence-proxy</b> as a health check.  This defaults to <b>5 seconds</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "TerminateTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "terminateTimeout", ApplyNamingConventions = false)]
-        [DefaultValue(0.0)]
-        public double TerminateTimeoutSeconds { get; set; } = 10.0;
+        [JsonProperty(PropertyName = "HeartbeatIntervalSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "heartbeatIntervalSeconds", ApplyNamingConventions = false)]
+        [DefaultValue(5.0)]
+        public double HeartbeatIntervalSeconds { get; set; } = 5.0;
 
         /// <summary>
-        /// Returns <see cref="TerminateTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// Returns <see cref="HeartbeatIntervalSeconds"/> as a <see cref="TimeSpan"/>.
         /// </summary>
-        internal TimeSpan TerminateTimeout => TimeSpan.FromSeconds(Math.Max(TerminateTimeoutSeconds, 0));
+        internal TimeSpan HeartbeatInterval => TimeSpan.FromSeconds(HeartbeatIntervalSeconds);
+
+        /// <summary>
+        /// Optionally specifies the maximum time to allow the <b>cadence-proxy</b>
+        /// to respond to a heartbeat message.  The proxy will be considered to be 
+        /// unhealthy when this happens.  This defaults to <b>5 seconds</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "HeartbeatTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "heartbeatTimeoutSeconds", ApplyNamingConventions = false)]
+        [DefaultValue(5.0)]
+        public double HeartbeatTimeoutSeconds { get; set; } = 5.0;
+
+        /// <summary>
+        /// Returns <see cref="HeartbeatTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// </summary>
+        internal TimeSpan HeartbeatTimeout => TimeSpan.FromSeconds(HeartbeatTimeoutSeconds);
 
         /// <summary>
         /// Specifies the number of times to retry connecting to the Cadence cluster.  This defaults
@@ -363,6 +376,14 @@ namespace Neon.Cadence
         [YamlIgnore]
         public bool DebugPrelaunched { get; set; } = false;
 
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Optionally disable health heartbeats.  This can be
+        /// useful while debugging the client but should never be set for production.
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        public bool DebugDisableHeartbeats { get; set; } = false;
+
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally indicates that the <b>cadence-client</b>
         /// will not perform the <see cref="InitializeRequest"/>/<see cref="InitializeReply"/>
@@ -372,7 +393,7 @@ namespace Neon.Cadence
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        internal bool DebugDisableHandshakes { get; set; } = false;
+        public bool DebugDisableHandshakes { get; set; } = false;
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally ignore operation timeouts.  This can be
@@ -381,7 +402,7 @@ namespace Neon.Cadence
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        internal bool DebugIgnoreTimeouts { get; set; } = false;
+        public bool DebugIgnoreTimeouts { get; set; } = false;
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally disables heartbeat handling by the
@@ -389,7 +410,7 @@ namespace Neon.Cadence
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        internal bool DebugIgnoreHeartbeats { get; set; } = false;
+        public bool DebugIgnoreHeartbeats { get; set; } = false;
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally specifies the timeout to use for 
@@ -398,6 +419,6 @@ namespace Neon.Cadence
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        internal TimeSpan DebugHttpTimeout { get; set; } = TimeSpan.FromSeconds(30);
+        public TimeSpan DebugHttpTimeout { get; set; } = TimeSpan.FromSeconds(30);
     }
 }

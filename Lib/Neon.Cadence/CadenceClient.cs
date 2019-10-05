@@ -1412,6 +1412,9 @@ namespace Neon.Cadence.WorkflowStub
             // Crank up the background threads which will handle [cadence-proxy]
             // request timeouts.
 
+            heartbeatThread = new Thread(new ThreadStart(HeartbeatThread));
+            heartbeatThread.Start();
+
             timeoutThread = new Thread(new ThreadStart(TimeoutThread));
             timeoutThread.Start();
         }
@@ -1485,25 +1488,11 @@ namespace Neon.Cadence.WorkflowStub
 
                         if (proxyProcess != null)
                         {
-                            // Signal the proxy that it should exit gracefully and then
-                            // allow it [Settings.TerminateTimeout] to actually exit
-                            // before killing it.
+                            // The [DisconnectRequest] sent above should have gracefully disconnected
+                            // from the Cadence cluster so we can just kill the cadence-proxy process.
+                            // There's no reason to send a [TerminateRequest] anymore.
 
-                            try
-                            {
-                                CallProxyAsync(new TerminateRequest(), timeout: Settings.DebugHttpTimeout).Wait();
-                            }
-                            catch
-                            {
-                                // Ignoring these.
-                            }
-
-                            if (!proxyProcess.WaitForExit((int)Settings.TerminateTimeout.TotalMilliseconds))
-                            {
-                                log.LogWarn(() => $"[cadence-proxy] did not terminate gracefully within [{Settings.TerminateTimeout}].  Killing it now.");
-                                proxyProcess.Kill();
-                            }
-
+                            proxyProcess.Kill();
                             proxyProcess = null;
                         }
 
@@ -1788,6 +1777,76 @@ namespace Neon.Cadence.WorkflowStub
                 log.LogCritical(e);
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Implements the connection's background thread which is responsible
+        /// for checking <b>cadence-proxy</b> health via heartbeat requests.
+        /// </summary>
+        private void HeartbeatThread()
+        {
+            Task.Run(
+                async () =>
+                {
+                    var sleepTime = Settings.HeartbeatInterval;
+                    var exception = (Exception)null;
+
+                    try
+                    {
+                        while (!closingConnection)
+                        {
+                            Thread.Sleep(sleepTime);
+
+                            if (!Settings.DebugDisableHeartbeats)
+                            {
+                                // Verify [cadence-proxy] health via by sending a heartbeat
+                                // and waiting a bit for a reply.
+
+                                try
+                                {
+                                    var heartbeatReply = await CallProxyAsync(new HeartbeatRequest(), timeout: Settings.HeartbeatTimeout);
+
+                                    if (heartbeatReply.Error != null)
+                                    {
+                                        throw new Exception($"[cadence-proxy]: Heartbeat returns [{heartbeatReply.Error}].");
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    log.LogError("Heartbeat check failed.  Closing Cadence connection.", e);
+                                    exception = new CadenceTimeoutException("Heartbeat check failed.", e);
+
+                                    // Break out of the while loop so we'll signal the application that
+                                    // the connection has closed and then exit the thread below.
+
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        // We shouldn't see any exceptions here except perhaps
+                        // [TaskCanceledException] when the connection is in
+                        // the process of being closed.
+
+                        if (!closingConnection || !e.Contains<TaskCanceledException>())
+                        {
+                            exception = e;
+                            log.LogError(e);
+                        }
+                    }
+
+                    if (exception == null && pendingException != null)
+                    {
+                        exception = pendingException;
+                    }
+
+                    // This is a good place to signal the client application that the
+                    // connection has been closed.
+
+                    RaiseConnectionClosed(exception);
+                });
         }
 
         /// <summary>
