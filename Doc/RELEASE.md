@@ -21,7 +21,7 @@
 
 6. Build and publish all of the Docker images: `neon-publish-images -all`
 
-7. Run all unit tests: **RELEASE** mode
+7. Run all unit tests in **RELEASE** mode
 
 8. Publish the nuget packages: `neon-nuget-public`
 

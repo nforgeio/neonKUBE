@@ -438,8 +438,8 @@ namespace NeonBuild
                                     }
                                 }
                             }
-                        }
 #endif
+                        }
                     }
 
                     // Extract the PowerShell 6x installation files from the [External] folder.
