@@ -2593,6 +2593,73 @@ namespace TestCadence
             Assert.True(await stub.HelloTestByIdNoResultAsync());
         }
 
+        //---------------------------------------------------------------------
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IWorkflowChildGetExecution : IWorkflow
+        {
+            [WorkflowMethod(Name = "run")]
+            Task<bool> RunAsync();
+
+            [WorkflowMethod(Name = "child")]
+            Task<WorkflowExecution> ChildAsync();
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowChildGetExecution : WorkflowBase, IWorkflowChildGetExecution
+        {
+            public async Task<bool> RunAsync()
+            {
+                // Create a child stub and then verify that we see an [InvalidOperationException]
+                // when we call [Workflow.GetExecutionAsync()] because it hasn't been started yet.
+
+                var stub = Workflow.NewChildWorkflowStub<IWorkflowChildGetExecution>();
+
+                try
+                {
+                    await Workflow.GetWorkflowExecutionAsync(stub);
+                    return false;   // We should never go here.
+                }
+                catch (InvalidOperationException)
+                {
+                    // Expecting this.
+                }
+                catch
+                {
+                    return false;
+                }
+
+                // Call the child workflow and then compare the [WorkflowExecution] 
+                // returned by the child with that returned by [Workflow.GetExecutionAsync()].
+                // These should match.
+
+                var childExecution = await stub.ChildAsync();
+                var stubExecution  = await Workflow.GetWorkflowExecutionAsync(stub);
+
+                return childExecution.WorkflowId == stubExecution.WorkflowId &&
+                       childExecution.RunId == stubExecution.RunId;
+            }
+
+            public async Task<WorkflowExecution> ChildAsync()
+            {
+                return await Task.FromResult(Workflow.Execution);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ChildGetExecution()
+        {
+            // Call a workflow that confirms that [Workflow.GetExecutionAsync()]
+            // works correctly against a child workflow.
+
+            WorkflowExternalStub.Reset();
+
+            var stub = client.NewWorkflowStub<IWorkflowExternalStub>();
+
+            Assert.True(await stub.HelloTestByIdNoResultAsync());
+        }
+
 #if TODO
         // $todo(jefflill):
         //

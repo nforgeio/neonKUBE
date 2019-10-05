@@ -647,12 +647,25 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.domain         = domain;");
             sbSource.AppendLine($"        }}");
 
-            // Generate the method that converts the instance into a new untyped [WorkflowStub].
+            // Generate the method that converts the instance into a new untyped [WorkflowStub] (from ITypedWorkflowStub).
 
             sbSource.AppendLine();
             sbSource.AppendLine($"        public WorkflowStub ToUntyped()");
             sbSource.AppendLine($"        {{");
             sbSource.AppendLine($"            return ___StubHelper.NewWorkflowStub(client, workflowTypeName, options);");
+            sbSource.AppendLine($"        }}");
+
+            // Generate the method that returns the workflow stub's execution.
+
+            sbSource.AppendLine();
+            sbSource.AppendLine($"        public WorkflowExecution GetExecution()");
+            sbSource.AppendLine($"        {{");
+            sbSource.AppendLine($"            if (!hasStarted || execution == null)");
+            sbSource.AppendLine($"            {{");
+            sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has not been been started.\");");
+            sbSource.AppendLine($"            }}");
+            sbSource.AppendLine();
+            sbSource.AppendLine($"            return execution;");
             sbSource.AppendLine($"        }}");
 
             // Generate the workflow entry point methods.
@@ -1307,7 +1320,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"namespace Neon.Cadence.Stubs");
             sbSource.AppendLine($"{{");
-            sbSource.AppendLine($"    public class {stubClassName} : {interfaceFullName}");
+            sbSource.AppendLine($"    public class {stubClassName} : ITypedWorkflowStub, {interfaceFullName}");
             sbSource.AppendLine($"    {{");
             sbSource.AppendLine($"        //-----------------------------------------------------------------");
             sbSource.AppendLine($"        // Private types");

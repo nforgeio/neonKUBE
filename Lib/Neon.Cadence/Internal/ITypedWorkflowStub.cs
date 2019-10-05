@@ -29,13 +29,21 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Internal interface implemented by generated typed workflow stubs.
+    /// <b>INTERNAL USE ONLY:</b> Interface implemented by generated typed workflow stubs.
     /// </summary>
-    internal interface ITypedWorkflowStub
+    public interface ITypedWorkflowStub
     {
         /// <summary>
         /// Creates an untyped <see cref="WorkflowStub"/> from a typed stub.
         /// </summary>
         WorkflowStub ToUntyped();
+
+        /// <summary>
+        /// Obtains the workflow execution for stubs that have been started.  This
+        /// fails for unstarted workflows.
+        /// </summary>
+        /// <returns>The workflow <see cref="WorkflowExecution"/>.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the stub has not been started.</exception>
+        WorkflowExecution GetExecution();
     }
 }

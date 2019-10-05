@@ -538,20 +538,15 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="stub">The child workflow stub.</param>
         /// <returns>The <see cref="WorkflowExecution"/>.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the stub has not been started.</exception>
         public async Task<WorkflowExecution> GetWorkflowExecutionAsync(object stub)
         {
+            Covenant.Requires<ArgumentNullException>(stub != null, nameof(stub));
+            Covenant.Requires<ArgumentException>(stub is ITypedWorkflowStub, nameof(stub), "The parameter is not a workflow stub.");
             Client.EnsureNotDisposed();
             SetStackTrace();
 
-            // $todo(jefflill):
-            //
-            // Come back to this one after we've implemented the stubs.  This information
-            // comes back to the .NET side in [WorkflowExecuteChildReply].
-
-            Covenant.Requires<ArgumentNullException>(stub != null, nameof(stub));
-
-            await Task.CompletedTask;
-            throw new NotImplementedException();
+            return await Task.FromResult(((ITypedWorkflowStub)stub).GetExecution());
         }
 
         /// <summary>
