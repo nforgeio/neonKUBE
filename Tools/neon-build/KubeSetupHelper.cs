@@ -415,6 +415,11 @@ namespace NeonBuild
                                 }
                             }
 
+#if TODO
+                            // We're not actually using this right now and it takes a long time to
+                            // download, so we'll comment this out until we actually need it
+                            // (if ever).
+
                             // Download VirtualBox installer
 
                             var virtualBoxPath = Path.Combine(CacheWindows, "virtualbox-setup.exe");
@@ -434,6 +439,7 @@ namespace NeonBuild
                                 }
                             }
                         }
+#endif
                     }
 
                     // Extract the PowerShell 6x installation files from the [External] folder.
