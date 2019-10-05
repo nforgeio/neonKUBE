@@ -29,7 +29,7 @@ namespace System.Diagnostics.Contracts
     /// Code Contracts are also somewhat of a pain to configure as project propoerties.
     /// </para>
     /// <para>
-    /// This class includes the <see cref="Requires(bool, string)"/>, <see cref="Requires{TException}(bool, string)"/>
+    /// This class includes the <see cref="Requires(bool, string)"/>, <see cref="Requires{TException}(bool, string, string)"/>
     /// and <see cref="Assert(bool, string)"/> methods that can be used to capture validation
     /// requirements in code, but these methods don't currently generate any code. 
     /// </para>
