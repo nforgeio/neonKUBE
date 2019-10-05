@@ -48,7 +48,7 @@ namespace Neon.Tasks
         /// <param name="task">The task being wrapped.</param>
         public NonDisposableTask(Task task)
         {
-            Covenant.Requires<ArgumentNullException>(task != null);
+            Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
 
             this.task = task;
         }
@@ -79,7 +79,7 @@ namespace Neon.Tasks
         /// <param name="task">The task being wrapped.</param>
         public NonDisposableTask(Task<T> task)
         {
-            Covenant.Requires<ArgumentNullException>(task != null);
+            Covenant.Requires<ArgumentNullException>(task != null, nameof(task));
 
             this.task = task;
         }

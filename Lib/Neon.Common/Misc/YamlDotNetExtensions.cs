@@ -36,7 +36,7 @@ namespace YamlDotNet.RepresentationModel
         /// <param name="text">The text to be loaded.</param>
         public static void Load(this YamlStream stream, string text)
         {
-            Covenant.Requires<ArgumentNullException>(text != null);
+            Covenant.Requires<ArgumentNullException>(text != null, nameof(text));
 
             using (var reader = new StringReader(text))
             {

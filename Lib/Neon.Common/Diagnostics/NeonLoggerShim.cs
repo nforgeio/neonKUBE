@@ -73,7 +73,7 @@ namespace Neon.Diagnostics
         /// <param name="logger">The <see cref="ILogger"/> being wrapped.</param>
         public NeonLoggerShim(ILogger logger)
         {
-            Covenant.Requires<ArgumentNullException>(logger == null);
+            Covenant.Requires<ArgumentNullException>(logger == null, nameof(logger));
 
             this.logger     = logger;
             this.neonLogger = logger as INeonLogger;

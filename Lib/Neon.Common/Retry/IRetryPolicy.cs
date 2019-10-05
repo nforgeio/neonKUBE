@@ -76,14 +76,14 @@ namespace Neon.Retry
 
         public Task InvokeAsync(Func<Task> action)
         {
-            Covenant.Requires<ArgumentNullException>(action != null);
+            Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
             return null;
         }
 
         public Task<TResult> InvokeAsync<TResult>(Func<Task<TResult>> action)
         {
-            Covenant.Requires<ArgumentNullException>(action != null);
+            Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
             return null;
         }

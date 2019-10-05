@@ -47,6 +47,7 @@ namespace TestCadence
         private static bool activityTests_ActivityWithNoResultCalled;
         private static bool activityTests_WorkflowWithNoResultCalled;
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityWithNoResult : IActivity
         {
             [ActivityMethod]
@@ -64,6 +65,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityWorkflowWithNoResult : IWorkflow
         {
             [WorkflowMethod]
@@ -104,6 +106,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityWithResult : IActivity
         {
             [ActivityMethod]
@@ -119,6 +122,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityWorkflowWithResult : IWorkflow
         {
             [WorkflowMethod]
@@ -151,6 +155,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface ILocalActivityWithResult : IActivity
         {
             [ActivityMethod]
@@ -166,6 +171,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface ILocalActivityWorkflowWithResult : IWorkflow
         {
             [WorkflowMethod]
@@ -198,6 +204,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface ILocalActivityWithoutResult : IActivity
         {
             [ActivityMethod]
@@ -222,6 +229,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface ILocalActivityWorkflowWithoutResult : IWorkflow
         {
             [WorkflowMethod]
@@ -257,6 +265,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityLogger : IActivity
         {
             [ActivityMethod]
@@ -273,6 +282,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityWorkflowLogger : IWorkflow
         {
             [WorkflowMethod]
@@ -296,7 +306,7 @@ namespace TestCadence
         {
             // Verify that logging within an activity doesn't barf.
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // It would be nice to add additional tests that actually
             // verify that something reasonable was logged, including
@@ -311,6 +321,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityMultipleStubCalls : IActivity
         {
             [ActivityMethod]
@@ -327,6 +338,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityWorkflowMultipleStubCalls : IWorkflow
         {
             [WorkflowMethod]
@@ -362,6 +374,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityDifferentNamesInterface : IActivity
         {
             [ActivityMethod]
@@ -378,6 +391,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowActivityDifferentNames : IWorkflow
         {
             [WorkflowMethod]
@@ -433,6 +447,7 @@ namespace TestCadence
             Error8,
         }
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityHeartbeat : IActivity
         {
             [ActivityMethod]
@@ -531,6 +546,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowActivityHeartbeat : IWorkflow
         {
             [WorkflowMethod]
@@ -594,6 +610,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityFail : IActivity
         {
             [ActivityMethod]
@@ -610,6 +627,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowActivityFail : IWorkflow
         {
             [WorkflowMethod]
@@ -668,6 +686,7 @@ namespace TestCadence
             public int Age { get; set; }
         }
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityData : IActivity
         {
             [ActivityMethod]
@@ -683,6 +702,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowActivityComplexData : IWorkflow
         {
             [WorkflowMethod]
@@ -722,6 +742,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityExternalCompletion : IActivity
         {
             [ActivityMethod]
@@ -755,6 +776,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowActivityExternalCompletion : IWorkflow
         {
             [WorkflowMethod]
@@ -833,7 +855,7 @@ namespace TestCadence
             }
             catch (Exception e)
             {
-                // $todo(jeff.lill): Verify the exception
+                // $todo(jefflill): Verify the exception
             }
         }
 
@@ -858,7 +880,7 @@ namespace TestCadence
             }
             catch (Exception e)
             {
-                // $todo(jeff.lill): Verify the exception
+                // $todo(jefflill): Verify the exception
             }
         }
 
@@ -877,7 +899,7 @@ namespace TestCadence
 
             await client.ActivityCancelByTokenAsync(activity.Task.TaskToken);
 
-            // $todo(jeff.lill): Need to work on exception mapping for this to work.
+            // $todo(jefflill): Need to work on exception mapping for this to work.
 
             // await Assert.ThrowsAsync<CadenceCancelledException>(async () => await task);
         }
@@ -897,7 +919,7 @@ namespace TestCadence
 
             await client.ActivityCancelByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId);
 
-            // $todo(jeff.lill): Need to work on exception mapping for this to work.
+            // $todo(jefflill): Need to work on exception mapping for this to work.
 
             // await Assert.ThrowsAsync<CadenceCancelledException>(async () => await task);
         }

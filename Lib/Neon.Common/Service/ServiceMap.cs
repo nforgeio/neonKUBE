@@ -55,8 +55,8 @@ namespace Neon.Service
         /// <param name="description">The service description.</param>
         public new void Add(string name, ServiceDescription description)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-            Covenant.Requires<ArgumentNullException>(description != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(description != null, nameof(description));
 
             description.Name = name;
 
@@ -92,7 +92,7 @@ namespace Neon.Service
 
             set
             {
-                Covenant.Requires<ArgumentNullException>(value != null);
+                Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
 
                 base[name] = value;
 
@@ -115,8 +115,8 @@ namespace Neon.Service
         /// <exception cref="KeyNotFoundException">Thrown if the requested service or endpoint does not exist.</exception>
         public ServiceEndpoint GetServiceEndpoint(string serviceName, string endpointName = "")
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(serviceName));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(endpointName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(serviceName), nameof(serviceName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(endpointName), nameof(endpointName));
 
             if (!TryGetValue(serviceName, out var service))
             {

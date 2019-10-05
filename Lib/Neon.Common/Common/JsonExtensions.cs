@@ -43,8 +43,8 @@ namespace Newtonsoft.Json.Linq
         /// <returns><c>true</c> if the property was present and returned.</returns>
         public static bool TryGetValue<T>(this JObject jObject, string propertyName, out T value)
         {
-            Covenant.Requires<ArgumentNullException>(jObject != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(propertyName));
+            Covenant.Requires<ArgumentNullException>(jObject != null, nameof(jObject));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(propertyName), nameof(propertyName));
 
             if (!jObject.TryGetValue(propertyName, out var jToken))
             {

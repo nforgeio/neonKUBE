@@ -48,7 +48,7 @@ namespace NATS.Client
         /// <param name="subscription">The underlying non-generic subscription returned by NATS.</param>
         internal SyncSubscription(ISyncSubscription subscription)
         {
-            Covenant.Requires<ArgumentNullException>(subscription != null);
+            Covenant.Requires<ArgumentNullException>(subscription != null, nameof(subscription));
 
             this.subscription = subscription;
         }

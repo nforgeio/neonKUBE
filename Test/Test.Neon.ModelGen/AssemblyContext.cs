@@ -63,8 +63,8 @@ namespace TestModelGen
         public AssemblyContext(string defaultNamespace, Stream assemblyStream)
             : base(isCollectible: true)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(defaultNamespace));
-            Covenant.Requires<ArgumentNullException>(assemblyStream != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(defaultNamespace), nameof(defaultNamespace));
+            Covenant.Requires<ArgumentNullException>(assemblyStream != null, nameof(assemblyStream));
             Covenant.Assert(Current == null);
 
             AssemblyContext.Current = this;
@@ -206,7 +206,7 @@ namespace TestModelGen
         /// <returns>The new <see cref="ServiceWrapper"/>.</returns>
         public ServiceWrapper CreateServiceWrapper<T>(string baseAddress)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(baseAddress));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(baseAddress), nameof(baseAddress));
 
             const string controllerSuffix = "Controller";
 

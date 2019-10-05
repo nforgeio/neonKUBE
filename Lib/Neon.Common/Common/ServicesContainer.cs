@@ -81,7 +81,7 @@ namespace Neon.Common
         // after any changes to the services.  This should is clean and should
         // be relatively efficient for most commobn use cases.
 
-        // $todo(jeff.lill)
+        // $todo(jefflill)
         //
         // Using [syncRoot] to implement threadsafety via a [Monitor] may introduce
         // some performance overhead for ASP.NET sites with lots of traffic.  It

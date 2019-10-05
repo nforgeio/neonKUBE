@@ -59,7 +59,7 @@ namespace Neon.Kube
         public KubeConfigContext(KubeContextName contextName)
             : this()
         {
-            Covenant.Requires<ArgumentNullException>(contextName != null);
+            Covenant.Requires<ArgumentNullException>(contextName != null, nameof(contextName));
 
             this.Name = contextName.ToString();
         }

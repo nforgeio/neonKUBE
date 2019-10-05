@@ -36,10 +36,11 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.Time;
 using System.IO.Compression;
+using System.Text.RegularExpressions;
 
 namespace Neon.Kube
 {
-    // $todo(jeff.lill):
+    // $todo(jefflill):
     //
     // I'm just hardcoding this for now so that I can complete client 
     // side coding.  I'll flesh this out when I actually implement the
@@ -50,12 +51,12 @@ namespace Neon.Kube
     /// </summary>
     public sealed class HeadendClient : IDisposable
     {
-        private const string defaultKubeVersion          = "1.15.0";
+        private const string defaultKubeVersion          = "1.16.0";
         private const string defaultKubeDashboardVersion = "1.10.1";
         private const string defaultDockerVersion        = "docker.ce-18.06.1";
         private const string defaultHelmVersion          = "2.12.3";
-        private const string defaultCalicoVersion        = "3.7";
-        private const string defaultIstioVersion         = "1.2.4";
+        private const string defaultCalicoVersion        = "3.8";
+        private const string defaultIstioVersion         = "1.3.1";
 
         private string[] supportedDockerVersions
             = new string[]
@@ -96,10 +97,10 @@ namespace Neon.Kube
             jsonClient.HttpClient.Timeout = TimeSpan.FromSeconds(10);
 
             gitHubClient = new JsonClient();
-            gitHubClient.BaseAddress = new Uri("https://api.github.com");
+            gitHubClient.BaseAddress = new Uri("https://raw.githubusercontent.com");
             gitHubClient.DefaultRequestHeaders.UserAgent.ParseAdd("HttpClient");
             
-            // $hack(jeff.lill):
+            // $hack(jefflill):
             //
             // We need to manually maintain the Kubernetes version to the
             // corresponding [kubectl], [kubeadm], and [kubelet] package
@@ -131,7 +132,9 @@ namespace Neon.Kube
                 { "1.13.2", "1.13.2-00" },
                 { "1.13.3", "1.13.3-00" },
                 { "1.14.1", "1.14.1-00" },
-                { "1.15.0", "1.15.0-00" }
+                { "1.15.0", "1.15.0-00" },
+                { "1.15.4", "1.15.4-00" },
+                { "1.16.0", "1.16.0-00" }
             };
 
             ubuntuKubeCtlPackages = new Dictionary<string, string>()
@@ -141,7 +144,9 @@ namespace Neon.Kube
                 { "1.13.2", "1.13.2-00" },
                 { "1.13.3", "1.13.3-00" },
                 { "1.14.1", "1.14.1-00" },
-                { "1.15.0", "1.15.0-00" }
+                { "1.15.0", "1.15.0-00" },
+                { "1.15.4", "1.15.4-00" },
+                { "1.16.0", "1.16.0-00" }
             };
 
             ubuntuKubeletPackages = new Dictionary<string, string>
@@ -151,7 +156,9 @@ namespace Neon.Kube
                 { "1.13.2", "1.13.2-00" },
                 { "1.13.3", "1.13.3-00" },
                 { "1.14.1", "1.14.1-00" },
-                { "1.15.0", "1.15.0-00" }
+                { "1.15.0", "1.15.0-00" },
+                { "1.15.4", "1.15.4-00" },
+                { "1.16.0", "1.16.0-00" }
             };
         }
 
@@ -164,7 +171,7 @@ namespace Neon.Kube
         /// <returns>A <see cref="KubeSetupInfo"/> with the information.</returns>
         public async Task<KubeSetupInfo> GetSetupInfoAsync(ClusterDefinition clusterDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             var kubeVersion = Version.Parse(defaultKubeVersion);
 
@@ -186,8 +193,8 @@ namespace Neon.Kube
             Covenant.Assert(ubuntuKubeCtlPackages.ContainsKey(kubeVersion.ToString()));
             Covenant.Assert(ubuntuKubeletPackages.ContainsKey(kubeVersion.ToString()));
 
-            // $todo(jeff.lill): Hardcoded
-            // $todo(jeff.lill): Verify Docker/Kubernetes version compatibility.
+            // $todo(jefflill): Hardcoded
+            // $todo(jefflill): Verify Docker/Kubernetes version compatibility.
 
             var dockerVersion = clusterDefinition.Docker.Version;
 
@@ -213,7 +220,7 @@ namespace Neon.Kube
                 throw new KubeException($"[{helmVersion}] is not a supported Helm version.");
             }
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // The code below supports only the Calico CNI for now.  This will probably be
             // replaced by the integrated Istio CNI soon.
@@ -266,7 +273,7 @@ namespace Neon.Kube
                 HelmOsxUri                  = $"https://storage.googleapis.com/kubernetes-helm/helm-v{helmVersion}-darwin-amd64.tar.gz",
                 HelmWindowsUri              = $"https://storage.googleapis.com/kubernetes-helm/helm-v{helmVersion}-windows-amd64.zip",
 
-                // $todo(jeff.lill):
+                // $todo(jefflill):
                 //
                 // I'm a little worried about where the "1.7" in the [CalicoSetupUri] came from.  I suspect that
                 // this will vary too.  Once the Istio CNI is stable, we'll probably delete this anyway but if 
@@ -328,7 +335,28 @@ namespace Neon.Kube
             {
                 using (var zip = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
                 {
-                    await AddGitFilesToZipAsync(zip, $"repos/nforgeio/neonKUBE/contents/Charts/{chartName}?ref={branch}", $"Charts/{chartName}");
+                    using (StreamReader reader = new StreamReader(
+                        await (await gitHubClient.HttpClient.GetAsync($"nforgeio/neonKUBE/{branch}/Charts/tree.txt")).Content.ReadAsStreamAsync()))
+                    {
+                        var tree = reader.ReadToEnd();
+                        foreach (var line in tree.Split('\n'))
+                        {
+                            if (line.Split('/')[0] == chartName)
+                            {
+                                if (Regex.Matches(tree, Regex.Escape(line.Trim())).Count > 1)
+                                {
+                                    continue;
+                                }
+                                var fileBytes = zip.CreateEntry(line.Replace($"{chartName}/", ""));
+
+                                using (var entryStream = fileBytes.Open())
+                                {
+                                    var f = line.Trim();
+                                    await entryStream.WriteAsync(await gitHubClient.HttpClient.GetByteArrayAsync($"nforgeio/neonKUBE/{branch}/Charts/{f}"));
+                                }
+                            }
+                        }
+                    }
                 }
                 return memoryStream.ToArray();
             }

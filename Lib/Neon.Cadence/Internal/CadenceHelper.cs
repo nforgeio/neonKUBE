@@ -128,7 +128,7 @@ namespace Neon.Cadence.Internal
         /// </remarks>
         public static string GetWorkflowTypeName(Type workflowType, WorkflowAttribute workflowAttribute)
         {
-            Covenant.Requires<ArgumentNullException>(workflowType != null);
+            Covenant.Requires<ArgumentNullException>(workflowType != null, nameof(workflowType));
 
             if (workflowAttribute != null && !string.IsNullOrEmpty(workflowAttribute.Name))
             {
@@ -183,7 +183,7 @@ namespace Neon.Cadence.Internal
         /// </remarks>
         public static string GetActivityTypeName(Type activityType, ActivityAttribute activityAttribute)
         {
-            Covenant.Requires<ArgumentNullException>(activityType != null);
+            Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
 
             if (activityAttribute != null && !string.IsNullOrEmpty(activityAttribute.Name))
             {
@@ -226,7 +226,7 @@ namespace Neon.Cadence.Internal
         /// <exception cref="ActivityTypeException">Thrown when the interface is not valid.</exception>
         public static void ValidateWorkflowInterface(Type workflowInterface)
         {
-            Covenant.Requires<ArgumentNullException>(workflowInterface != null);
+            Covenant.Requires<ArgumentNullException>(workflowInterface != null, nameof(workflowInterface));
 
             if (!workflowInterface.IsInterface)
             {
@@ -246,6 +246,16 @@ namespace Neon.Cadence.Internal
             if (!workflowInterface.IsPublic && !workflowInterface.IsNestedPublic)
             {
                 throw new WorkflowTypeException($"Workflow interface [{workflowInterface.FullName}] is not public.");
+            }
+
+            if (workflowInterface.GetCustomAttribute<ActivityInterfaceAttribute>() != null)
+            {
+                throw new WorkflowTypeException($"Workflow interface [{workflowInterface.FullName}] cannot be tagged with [ActivityInterface] because it doesn't define an activity.");
+            }
+
+            if (workflowInterface.GetCustomAttribute<WorkflowAttribute>() != null)
+            {
+                throw new WorkflowTypeException($"Workflow interface [{workflowInterface.FullName}] cannot not be tagged with [Workflow] because that is valid only for activity implementation classes.");
             }
 
             // Validate the entrypoint method names and result types.
@@ -345,7 +355,7 @@ namespace Neon.Cadence.Internal
         /// <exception cref="WorkflowTypeException">Thrown when the interface is not valid.</exception>
         public static void ValidateWorkflowImplementation(Type workflowType)
         {
-            Covenant.Requires<ArgumentNullException>(workflowType != null);
+            Covenant.Requires<ArgumentNullException>(workflowType != null, nameof(workflowType));
 
             if (workflowType.IsInterface)
             {
@@ -392,11 +402,21 @@ namespace Neon.Cadence.Internal
 
             if (workflowInterfaces.Count == 0)
             {
-                throw new WorkflowTypeException($"Workflow type [{workflowType.FullName}] does not implement an interface that derives from [{typeof(IWorkflow).FullName}].");
+                throw new WorkflowTypeException($"Workflow class [{workflowType.FullName}] does not implement an interface that derives from [{typeof(IWorkflow).FullName}].");
             }
             else if (workflowInterfaces.Count > 1)
             {
-                throw new WorkflowTypeException($"Workflow type [{workflowType.FullName}] implements multiple workflow interfaces that derive from [{typeof(IWorkflow).FullName}].  This is not supported.");
+                throw new WorkflowTypeException($"Workflow class [{workflowType.FullName}] implements multiple workflow interfaces that derive from [{typeof(IWorkflow).FullName}].  This is not supported.");
+            }
+
+            if (workflowType.GetCustomAttribute<ActivityAttribute>() != null)
+            {
+                throw new WorkflowTypeException($"Workflow class [{workflowType.FullName}] cannot be tagged with [Activity] because it doesn't implement a workflow.");
+            }
+
+            if (workflowType.GetCustomAttribute<WorkflowInterfaceAttribute>() != null)
+            {
+                throw new WorkflowTypeException($"Workflow class [{workflowType.FullName}] cannot not be tagged with [WorkflowInterface] because that is valid only for workflow definition interfaces.");
             }
         }
 
@@ -407,8 +427,8 @@ namespace Neon.Cadence.Internal
         /// <returns>The workflow interface type.</returns>
         public static Type GetWorkflowInterface(Type workflowType)
         {
-            Covenant.Requires<ArgumentNullException>(workflowType != null);
-            Covenant.Requires<ArgumentException>(workflowType.IsClass);
+            Covenant.Requires<ArgumentNullException>(workflowType != null, nameof(workflowType));
+            Covenant.Requires<ArgumentException>(workflowType.IsClass, nameof(workflowType));
 
             foreach (var @interface in workflowType.GetInterfaces())
             {
@@ -418,7 +438,7 @@ namespace Neon.Cadence.Internal
                 }
             }
 
-            throw new ArgumentException($"Workflow implementation class [{workflowType.FullName}] does not implement a workfloe interface.");
+            throw new ArgumentException($"Workflow implementation class [{workflowType.FullName}] does not implement a workflow interface.");
         }
 
         /// <summary>
@@ -441,7 +461,7 @@ namespace Neon.Cadence.Internal
         /// <exception cref="ActivityTypeException">Thrown when the interface is not valid.</exception>
         public static void ValidateActivityInterface(Type activityInterface)
         {
-            Covenant.Requires<ArgumentNullException>(activityInterface != null);
+            Covenant.Requires<ArgumentNullException>(activityInterface != null, nameof(activityInterface));
 
             if (!activityInterface.IsInterface)
             {
@@ -462,6 +482,18 @@ namespace Neon.Cadence.Internal
             {
                 throw new ActivityTypeException($"Activity interface [{activityInterface.FullName}] is not public.");
             }
+
+            if (activityInterface.GetCustomAttribute<WorkflowInterfaceAttribute>() != null)
+            {
+                throw new WorkflowTypeException($"Workflow interface [{activityInterface.FullName}] cannot be tagged with [WorkflowInterface] because it doesn't define a workflow.");
+            }
+
+            if (activityInterface.GetCustomAttribute<ActivityAttribute>() != null)
+            {
+                throw new WorkflowTypeException($"Activity interface [{activityInterface.FullName}] cannot not be tagged with [Activity] because that is valid only for activity implementation classes.");
+            }
+
+            // Validate the activity methods.
 
             var activityNames = new HashSet<string>();
 
@@ -502,7 +534,7 @@ namespace Neon.Cadence.Internal
         /// <exception cref="ActivityTypeException">Thrown when the interface is not valid.</exception>
         public static void ValidateActivityImplementation(Type activityType)
         {
-            Covenant.Requires<ArgumentNullException>(activityType != null);
+            Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
 
             if (activityType.IsInterface)
             {
@@ -552,12 +584,24 @@ namespace Neon.Cadence.Internal
 
             if (activityInterfaces.Count == 0)
             {
-                throw new ActivityTypeException($"Workflow type [{activityType.FullName}] does not implement an interface that derives from [{typeof(IActivity).FullName}].");
+                throw new ActivityTypeException($"Activity class [{activityType.FullName}] does not implement an interface that derives from [{typeof(IActivity).FullName}].");
             }
             else if (activityInterfaces.Count > 1)
             {
-                throw new ActivityTypeException($"Workflow type [{activityType.FullName}] implements multiple workflow interfaces that derive from [{typeof(IActivity).FullName}].  This is not supported.");
+                throw new ActivityTypeException($"Activity class [{activityType.FullName}] implements multiple workflow interfaces that derive from [{typeof(IActivity).FullName}].  This is not supported.");
             }
+
+            if (activityType.GetCustomAttribute<WorkflowAttribute>() != null)
+            {
+                throw new WorkflowTypeException($"Activity class [{activityType.FullName}] cannot be tagged with [Workflow] because it doesn't implement a workflow.");
+            }
+
+            if (activityType.GetCustomAttribute<ActivityInterfaceAttribute>() != null)
+            {
+                throw new WorkflowTypeException($"Activity class [{activityType.FullName}] cannot not be tagged with [ActivityInterface] because that is valid only for activity definition interfaces.");
+            }
+
+            // Validate the methods.
 
             var activityNames = new HashSet<string>();
 
@@ -589,8 +633,8 @@ namespace Neon.Cadence.Internal
         /// <returns>The activity interface type.</returns>
         public static Type GetActivityInterface(Type activityType)
         {
-            Covenant.Requires<ArgumentNullException>(activityType != null);
-            Covenant.Requires<ArgumentException>(activityType.IsClass);
+            Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
+            Covenant.Requires<ArgumentException>(activityType.IsClass, nameof(activityType));
 
             foreach (var @interface in activityType.GetInterfaces())
             {
@@ -600,7 +644,7 @@ namespace Neon.Cadence.Internal
                 }
             }
 
-            throw new ArgumentException($"Workflow implementation class [{activityType.FullName}] does not implement a workfloe interface.");
+            throw new ArgumentException($"Workflow implementation class [{activityType.FullName}] does not implement a workflow interface.");
         }
         /// <summary>
         /// Ensures that the timespan passed doesn't exceed the minimum or maximum
@@ -645,7 +689,7 @@ namespace Neon.Cadence.Internal
         /// <returns>The parsed <see cref="DateTime"/>.</returns>
         public static DateTime ParseCadenceTimestamp(string timestamp)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(timestamp));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(timestamp), nameof(timestamp));
 
             var dateTimeOffset = DateTimeOffset.Parse(timestamp, CultureInfo.InvariantCulture);
 
@@ -774,7 +818,7 @@ namespace Neon.Cadence.Internal
         /// <returns>The loaded <see cref="Assembly"/>.</returns>
         public static Assembly LoadAssembly(Stream stream)
         {
-            Covenant.Requires<ArgumentNullException>(stream != null);
+            Covenant.Requires<ArgumentNullException>(stream != null, nameof(stream));
 
             switch (NeonHelper.Framework)
             {

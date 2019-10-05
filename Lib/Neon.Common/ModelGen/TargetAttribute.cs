@@ -35,7 +35,7 @@ namespace Neon.ModelGen
         /// <param name="name">The target name.</param>
         public TargetAttribute(string name)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             this.Name = name;
         }

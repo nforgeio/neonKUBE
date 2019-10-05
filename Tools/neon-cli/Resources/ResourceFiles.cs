@@ -57,7 +57,7 @@ namespace NeonCli
             /// </param>
             public File(string name, bool hasVariables = false)
             {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
                 this.Name         = name;
                 this.HasVariables = hasVariables;
@@ -113,7 +113,7 @@ namespace NeonCli
             /// <param name="folders">Optional folders to be added.</param>
             public Folder(string name, IEnumerable<File> files = null, IEnumerable<Folder> folders = null)
             {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
                 this.Name    = name;
                 this.files   = new Dictionary<string, File>();
@@ -153,8 +153,8 @@ namespace NeonCli
             /// <param name="file">The file.</param>
             public void AddFile(string name, File file)
             {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-                Covenant.Requires<ArgumentNullException>(file != null);
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+                Covenant.Requires<ArgumentNullException>(file != null, nameof(file));
 
                 file.Path = System.IO.Path.Combine(this.Path, file.Name);
 
@@ -207,7 +207,7 @@ namespace NeonCli
             /// <exception cref="FileNotFoundException">Thrown if the file is not present.</exception>
             public File GetFile(string name)
             {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
                 File file;
 
@@ -227,7 +227,7 @@ namespace NeonCli
             /// <exception cref="FileNotFoundException">Thrown if the folder is not present.</exception>
             public Folder GetFolder(string name)
             {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
                 Folder folder;
 

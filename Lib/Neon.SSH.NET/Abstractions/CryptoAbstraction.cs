@@ -141,7 +141,7 @@ namespace Renci.SshNet.Abstractions
 #endif
         }
 #else
-        // $note(jeff.lill): This seems to be deprecated so I'm commenting it out.
+        // $note(jefflill): This seems to be deprecated so I'm commenting it out.
 
         //public static global::SshNet.Security.Cryptography.RIPEMD160 CreateRIPEMD160()
         //{
@@ -265,7 +265,7 @@ namespace Renci.SshNet.Abstractions
             return new System.Security.Cryptography.HMACRIPEMD160(key);
         }
 #else
-        // $note(jeff.lill): This seems to be deprecated so I'm commenting it out.
+        // $note(jefflill): This seems to be deprecated so I'm commenting it out.
 
         //public static global::SshNet.Security.Cryptography.HMACRIPEMD160 CreateHMACRIPEMD160(byte[] key)
         //{

@@ -86,7 +86,7 @@ namespace Neon.Kube
         /// </summary>
         public NodeLabels(NodeDefinition node)
         {
-            Covenant.Requires<ArgumentNullException>(node != null);
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
             this.Node = node;
         }
@@ -406,7 +406,25 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "PhysicalPower", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [YamlMember(Alias = "physicalPower", ApplyNamingConventions = false)]
         [DefaultValue("")]
-        public string PhysicalPower { get; set; } = string.Empty;       // $todo(jeff.lill): Define the format of this string for APC PDUs.
+        public string PhysicalPower { get; set; } = string.Empty;       // $todo(jefflill): Define the format of this string for APC PDUs.
+
+        //---------------------------------------------------------------------
+        // Define the K8s related labels.
+
+        /// <summary>
+        /// Reserved label name for <see cref="Istio"/>.
+        /// </summary>
+        public const string LabelIstio = ClusterDefinition.ReservedLabelPrefix + "istio";
+
+        /// <summary>
+        /// <b>io.neonkube.mon.istio.enabled</b> [<c>bool</c>]: Indicates that Istio 
+        /// will be deployed to this node.  
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Istio", Required = Required.Default)]
+        [YamlMember(Alias = "istio", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool Istio { get; set; } = false;
 
         //---------------------------------------------------------------------
         // Define the logging related labels.
@@ -715,6 +733,8 @@ namespace Neon.Kube
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalFaultDomain,     PhysicalFaultDomain));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalPower,           PhysicalPower));
 
+                list.Add(new KeyValuePair<string, object>(LabelIstio,                   NeonHelper.ToBoolString(Istio)));
+
                 list.Add(new KeyValuePair<string, object>(LabelElasticsearch,           NeonHelper.ToBoolString(Elasticsearch)));
 
                 list.Add(new KeyValuePair<string, object>(LabelM3DB,                    NeonHelper.ToBoolString(M3DB)));
@@ -857,7 +877,7 @@ namespace Neon.Kube
         [Pure]
         public void Validate(ClusterDefinition clusterDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             // Verify that custom node label names and values satisfy the 
             // following criteria:

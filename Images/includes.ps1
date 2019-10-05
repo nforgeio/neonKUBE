@@ -117,7 +117,7 @@ function PushImage
 			"*** PUSH: RETRYING"
 		}
 
-		# $hack(jeff.lill):
+		# $hack(jefflill):
 		#
 		# I'm seeing [docker push ...] write "blob upload unknown" messages to the
 		# output and then it appears that the image manifest gets uploaded with no

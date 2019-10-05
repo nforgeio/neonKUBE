@@ -28,7 +28,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // Investigate implementing a property (perhaps called [MaxParallel]) that caps the 
 // number of ping requests that can be in flight.

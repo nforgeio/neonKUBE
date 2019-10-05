@@ -58,7 +58,7 @@ namespace Neon.Kube
         [Pure]
         public void Validate(ClusterDefinition clusterDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             clusterDefinition.ValidatePrivateNodeAddresses();   // Private node IP addresses must be assigned and valid.
         }

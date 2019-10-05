@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.6.3-alpha</Version>
+    <Version>0.6.6-alpha</Version>
     <Company>neonFORGE, LLC</Company>
     <Product>neonKUBE</Product>
     <Description>neonKUBE Google Hosting.</Description>

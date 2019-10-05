@@ -116,7 +116,7 @@ namespace STAN.Client
         public static void Publish<TMessage>(this IStanConnection connection, string subject, TMessage data)
             where TMessage : class, IRoundtripData, new()
         {
-            Covenant.Requires<ArgumentNullException>(data != null);
+            Covenant.Requires<ArgumentNullException>(data != null, nameof(data));
 
             connection.Publish(subject, data.ToBytes());
         }
@@ -138,7 +138,7 @@ namespace STAN.Client
         public static string Publish<TMessage>(this IStanConnection connection, string subject, TMessage data, EventHandler<StanAckHandlerArgs> handler)
             where TMessage : class, IRoundtripData, new()
         {
-            Covenant.Requires<ArgumentNullException>(data != null);
+            Covenant.Requires<ArgumentNullException>(data != null, nameof(data));
 
             return connection.Publish(subject, data.ToBytes(), handler);
         }
@@ -158,7 +158,7 @@ namespace STAN.Client
         public static async Task<string> PublishAsync<TMessage>(this IStanConnection connection, string subject, TMessage data)
             where TMessage : class, IRoundtripData, new()
         {
-            Covenant.Requires<ArgumentNullException>(data != null);
+            Covenant.Requires<ArgumentNullException>(data != null, nameof(data));
 
             return await connection.PublishAsync(subject, data.ToBytes());
         }

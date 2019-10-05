@@ -99,7 +99,7 @@ namespace Neon.Cadence.Internal
         /// <param name="name">The property name string.</param>
         public PropertyNameUtf8(string name)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             this.Name     = name;
             this.NameUtf8 = Encoding.UTF8.GetBytes(name);

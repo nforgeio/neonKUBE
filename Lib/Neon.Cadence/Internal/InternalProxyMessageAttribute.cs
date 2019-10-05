@@ -22,7 +22,7 @@ using System.ComponentModel;
 using Neon.Cadence;
 using Neon.Common;
 
-// $todo(jeff.lill)
+// $todo(jefflill)
 //
 // Performance could be improved by maintaining output stream and buffer pools
 // rather than allocating these every time.

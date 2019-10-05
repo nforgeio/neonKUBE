@@ -308,7 +308,8 @@ OPTIONS:
 
                     controller.AddStep("setup kubernetes", SetupKubernetes);
                     controller.AddGlobalStep("setup cluster", SetupCluster);
-                    controller.AddGlobalStep("label nodes", LabelNodes);
+                    //controller.AddGlobalStep("label nodes", LabelNodes);
+
                     controller.AddGlobalStep("taint nodes", TaintNodes);
                     if (cluster.Definition.Mon.Enabled)
                     {
@@ -337,7 +338,7 @@ OPTIONS:
                     // Update the node security to use a strong password and also 
                     // configure the SSH client certificate.
 
-                    // $todo(jeff.lill):
+                    // $todo(jefflill):
                     //
                     // Note that this step isn't entirely idempotent.  The problem happens
                     // when the password change fails on one or more of the nodes and succeeds
@@ -668,7 +669,7 @@ OPTIONS:
 
                     // Create the container user and group.
 
-                    // $todo(jeff.lill):
+                    // $todo(jefflill):
                     //
                     // This is a bit of a hack to enable local Persistent Volumes for
                     // pet-type pods.  We're going to precreate 100 folders and give
@@ -1090,7 +1091,7 @@ networking:
 
                                                 for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
                                                 {
-                                                    var response = master.SudoCommand(kubeContextExtension.SetupDetails.ClusterJoinCommand + " --experimental-control-plane", RunOptions.Defaults & ~RunOptions.FaultOnError);
+                                                    var response = master.SudoCommand(kubeContextExtension.SetupDetails.ClusterJoinCommand + " --control-plane", RunOptions.Defaults & ~RunOptions.FaultOnError);
 
                                                     if (response.Success)
                                                     {
@@ -1157,44 +1158,50 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     //---------------------------------------------------------
                     // Join the remaining workers to the cluster:
 
-                    foreach (var worker in cluster.Workers)
+                    var parallelOptions = new ParallelOptions()
                     {
-                        try
+                        MaxDegreeOfParallelism = Program.MaxParallel
+                    };
+
+                    Parallel.ForEach(cluster.Workers, parallelOptions,
+                        worker =>
                         {
-                            worker.InvokeIdempotentAction("setup/cluster-join",
-                                () =>
-                                {
-                                    var joined = false;
-
-                                    worker.Status = "join: as worker";
-
-                                    for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
+                            try
+                            {
+                                worker.InvokeIdempotentAction("setup/cluster-join",
+                                    () =>
                                     {
-                                        var response = worker.SudoCommand(kubeContextExtension.SetupDetails.ClusterJoinCommand, RunOptions.Defaults & ~RunOptions.FaultOnError);
+                                        var joined = false;
 
-                                        if (response.Success)
+                                        worker.Status = "join: as worker";
+
+                                        for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
                                         {
-                                            joined = true;
-                                            break;
+                                            var response = worker.SudoCommand(kubeContextExtension.SetupDetails.ClusterJoinCommand, RunOptions.Defaults & ~RunOptions.FaultOnError);
+
+                                            if (response.Success)
+                                            {
+                                                joined = true;
+                                                break;
+                                            }
+
+                                            Thread.Sleep(joinRetryDelay);
                                         }
 
-                                        Thread.Sleep(joinRetryDelay);
-                                    }
+                                        if (!joined)
+                                        {
+                                            throw new Exception($"Unable to join node [{worker.Name}] to the cluster after [{maxJoinAttempts}] attempts.");
+                                        }
+                                    });
+                            }
+                            catch (Exception e)
+                            {
+                                worker.Fault(NeonHelper.ExceptionError(e));
+                                worker.LogException(e);
+                            }
 
-                                    if (!joined)
-                                    {
-                                        throw new Exception($"Unable to join node [{worker.Name}] to the cluster after [{maxJoinAttempts}] attempts.");
-                                    }
-                                });
-                        }
-                        catch (Exception e)
-                        {
-                            worker.Fault(NeonHelper.ExceptionError(e));
-                            worker.LogException(e);
-                        }
-
-                        worker.Status = "joined";
-                    }
+                            worker.Status = "joined";
+                        });
                 });
 
 
@@ -1311,6 +1318,14 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     // Install Istio.
 
+                    firstMaster.InvokeIdempotentAction("setup/cluster-label-nodes",
+                        () =>
+                        {
+                            LabelNodes(firstMaster);
+                        });
+
+                    // Install Istio.
+
                     firstMaster.InvokeIdempotentAction("setup/cluster-deploy-istio",
                         () =>
                         {
@@ -1345,7 +1360,15 @@ subjects:
   name: tiller
   namespace: kube-system
 ");
-                            firstMaster.SudoCommand("helm init --service-account tiller");
+
+                            // $hack(marcus.bowyer)
+                            // helm init doesn't work on k8s 1.16.0 yet.
+                            var script =
+$@"#!/bin/bash
+
+helm init --service-account tiller --output yaml | sed 's@apiVersion: extensions/v1beta1@apiVersion: apps/v1@' | sed 's@  replicas: 1@  replicas: 1\n  selector: {{""matchLabels"": {{""app"": ""helm"", ""name"": ""tiller""}}}}@' | kubectl apply -f -
+";
+                            firstMaster.SudoCommand(CommandBundle.FromScript(script));
                         });
 
                     // Create the cluster's [root-user]:
@@ -1470,7 +1493,7 @@ rm /tmp/calico.yaml
 
                     // Wait for Calico and CoreDNS pods to report that they're running.
 
-                    // $todo(jeff.lill):
+                    // $todo(jefflill):
                     //
                     // This is a horrible hack.  I'm going to examine the [kubectl get pods]
                     // response by skipping the column headers and then ensuring that each
@@ -1513,6 +1536,22 @@ rm /tmp/calico.yaml
         /// <param name="master">The master node.</param>
         private void InstallIstio(SshProxy<NodeDefinition> master)
         {
+            if (!cluster.Definition.Nodes.Any(n => n.Labels.Istio))
+            {
+                var sbScript = new StringBuilder();
+
+                sbScript.AppendLineLinux("#!/bin/bash");
+
+                foreach (var node in cluster.Definition.Nodes.Where(n => n.Name.ToLower().Contains("worker")))
+                {
+                    sbScript.AppendLine();
+                    sbScript.AppendLineLinux($"kubectl label nodes --overwrite {node.Name} {ClusterDefinition.ReservedLabelPrefix}istio=true");
+                }
+
+                master.SudoCommand(CommandBundle.FromScript(sbScript));
+
+            }
+
             master.Status = "deploy: istio";
 
             var istioScript1 =
@@ -1543,7 +1582,7 @@ cp bin/* /usr/local/bin
 
 helm template install/kubernetes/helm/istio-init --name istio-init --set certmanager.enabled=true --namespace istio-system | kubectl apply -f -
 
-# Verify that all 58 Istio CRDs were committed to the Kubernetes api-server
+# Verify that all 28 Istio CRDs were committed to the Kubernetes api-server
 
 until [ `kubectl get crds | grep 'istio.io\|certmanager.k8s.io' | wc -l` == ""28"" ]; do
     sleep 1
@@ -1554,6 +1593,7 @@ done
 helm template install/kubernetes/helm/istio \
     --name istio \
     --namespace istio-system \
+    --set global.defaultNodeSelector.""neonkube\.io/istio""=true \
     --set istio_cni.enabled=true \
     --set global.proxy.accessLogFile=/dev/stdout \
     --set kiali.enabled=false \
@@ -1609,13 +1649,13 @@ done
                     KubeSetup(firstMaster).Wait();
                 });
 
-            // Setup Kubernetes.
+            //// Setup Kubernetes.
 
-            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kubernetes-state-metrics",
-                () =>
-                {
-                    InstallKubeStateMetrics(firstMaster).Wait();
-                });
+            //firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kubernetes-state-metrics",
+            //    () =>
+            //    {
+            //        InstallKubeStateMetrics(firstMaster).Wait();
+            //    });
 
             // Install an Kiali to the monitoring namespace
 
@@ -1669,16 +1709,6 @@ done
                     InstallElasticSearch(firstMaster);
                 });
 
-
-            // Setup Fluent-Bit.
-
-            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-fluent-bit",
-                () =>
-                {
-                    InstallFluentBit(firstMaster).Wait();
-                });
-
-
             // Setup Fluentd.
 
             firstMaster.InvokeIdempotentAction("setup/cluster-deploy-fluentd",
@@ -1687,6 +1717,13 @@ done
                     InstallFluentd(firstMaster).Wait();
                 });
 
+            // Setup Fluent-Bit.
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-fluent-bit",
+                () =>
+                {
+                    InstallFluentBit(firstMaster).Wait();
+                });            
 
             // Setup Kibana.
 
@@ -1703,6 +1740,15 @@ done
                 () =>
                 {
                     InstallMetricbeat(firstMaster).Wait();
+                });
+
+
+            // Setup cluster-manager.
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-cluster-manager",
+                () =>
+                {
+                    InstallClusterManager(firstMaster).Wait();
                 });
         }
 
@@ -2209,9 +2255,20 @@ rm -rf {chartName}*
         /// <param name="master">The master node.</param>
         private async Task InstallFluentBit(SshProxy<NodeDefinition> master)
         {
-            master.Status = "deploy: fluent-bit";
+            master.Status = "deploy: fluent-bit";            
 
-            await InstallHelmChartAsync(master, "fluent-bit", @namespace: "monitoring", timeout: 300);
+            var values = new List<KeyValuePair<string, object>>();
+            var i = 0;
+
+            foreach (var taint in (await k8sClient.ListNodeAsync()).Items.Where(i => i.Spec.Taints != null).SelectMany(i => i.Spec.Taints))
+            {
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", taint.Key));
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", taint.Effect));
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                i++;
+            }
+
+            await InstallHelmChartAsync(master, "fluent-bit", @namespace: "monitoring", timeout: 300, values: values);
         }
 
         /// <summary>
@@ -2244,7 +2301,29 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: metricbeat";
 
-            await InstallHelmChartAsync(master, "metricbeat", @namespace: "monitoring", timeout: 300);
+            var values = new List<KeyValuePair<string, object>>();
+            var i = 0;
+
+            foreach (var taint in (await k8sClient.ListNodeAsync()).Items.Where(i => i.Spec.Taints != null).SelectMany(i => i.Spec.Taints))
+            {
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", taint.Key));
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", taint.Effect));
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                i++;
+            }
+
+            await InstallHelmChartAsync(master, "metricbeat", @namespace: "monitoring", timeout: 300, values: values);
+        }
+
+        /// <summary>
+        /// Installs metricbeat
+        /// </summary>
+        /// <param name="master">The master node.</param>
+        private async Task InstallClusterManager(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: cluster-manager";
+
+            await InstallHelmChartAsync(master, "cluster-manager", @namespace: "monitoring", timeout: 300);
         }
 
         /// <summary>
@@ -2263,10 +2342,8 @@ rm -rf {chartName}*
         /// <summary>
         /// Adds the node labels.
         /// </summary>
-        private void LabelNodes()
+        private void LabelNodes(SshProxy<NodeDefinition> master)
         {
-            var master = cluster.FirstMaster;
-
             master.InvokeIdempotentAction("setup/cluster-label-nodes",
                 () =>
                 {
@@ -2527,7 +2604,7 @@ rm -rf {chartName}*
 
             kubeContextExtension.SshClientKey = new SshClientKey();
 
-            // $hack(jeff.lill): 
+            // $hack(jefflill): 
             //
             // We're going to generate a 2048 bit key pair on one of the
             // master nodes and then download and then delete it.  This

@@ -45,6 +45,7 @@ namespace TestCadence
     {
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityEntryVoidNoArgs : IActivity
         {
             [ActivityMethod]
@@ -69,6 +70,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityEntryVoidWithArgs : IActivity
         {
             [ActivityMethod]
@@ -101,6 +103,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityEntryResultWithArgs : IActivity
         {
             [ActivityMethod]
@@ -125,6 +128,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityMultiMethods : IActivity
         {
             [ActivityMethod]

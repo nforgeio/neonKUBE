@@ -10,7 +10,7 @@ using System.Text;
 
 using Neon.Diagnostics;
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // This code is currently supporting only the documentation of Contract requirements
 // but doesn't actually enforce anything.
@@ -36,6 +36,9 @@ namespace System.Diagnostics.Contracts
     /// </remarks>
     public static class Covenant
     {
+        private static Type[]   oneStringArg  = new Type[] { typeof(string) };
+        private static Type[]   twoStringArgs = new Type[] { typeof(string), typeof(string) };
+
         /// <summary>
         /// Verifies a method pre-condition.
         /// </summary>
@@ -55,20 +58,46 @@ namespace System.Diagnostics.Contracts
         /// </summary>
         /// <typeparam name="TException">The exception to be thrown if the condition is <c>false</c>.</typeparam>
         /// <param name="condition">The condition to be tested.</param>
-        /// <param name="message">An optional message to be included in the exception thrown.</param>
-        public static void Requires<TException>(bool condition, string message = null)
+        /// <param name="arg1">The first optional string argument to the exception constructor.</param>
+        /// <param name="arg2">The second optional string argument to the exception constructor.</param>
+        /// <remarks>
+        /// <para>
+        /// This method throws a <typeparamref name="TException"/> instance when <paramref name="condition"/>
+        /// is <c>false</c>.  Up to two string arguments may be passed to the exception constructor when an
+        /// appropriate constructor exists, otherwise these arguments will be ignored.
+        /// </para>
+        /// </remarks>
+        public static void Requires<TException>(bool condition, string arg1 = null, string arg2 = null)
             where TException : Exception, new()
         {
-            // $todo(jeff.lill): 
-            //
-            // I'm currently ignoring the [message].  For some environments, it
-            // could be possible to dynamically construct the exception, passing
-            // the message.
-
-            if (!condition)
+            if (condition)
             {
-                throw new TException();
+                return;
             }
+
+            var exceptionType = typeof(TException);
+
+            // Look for a constructor with two string parameters.
+
+            var constructor = exceptionType.GetConstructor(twoStringArgs);
+
+            if (constructor != null)
+            {
+                throw (Exception)constructor.Invoke(new object[] { arg1, arg2 });
+            }
+
+            // Look for a constructor with one string parameter.
+
+            constructor = exceptionType.GetConstructor(oneStringArg);
+
+            if (constructor != null)
+            {
+                throw (Exception)constructor.Invoke(new object[] { arg1 });
+            }
+
+            // Fall back to the default constructor.
+
+            throw new TException();
         }
 
         /// <summary>

@@ -291,8 +291,8 @@ namespace Neon.Xunit
         /// </remarks>
         public void AddHostAddress(string hostname, string address, bool deferCommit = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(address));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname), nameof(hostname));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(address), nameof(address));
 
             foreach (var record in records)
             {
@@ -363,7 +363,7 @@ namespace Neon.Xunit
                 }
                 else if (NeonHelper.IsOSX)
                 {
-                    // $todo(jeff.lill):
+                    // $todo(jefflill):
                     //
                     // We may need to clear the OSX DNS cache here.
                     //
@@ -371,7 +371,7 @@ namespace Neon.Xunit
                     //
                     //      https://help.dreamhost.com/hc/en-us/articles/214981288-Flushing-your-DNS-cache-in-Mac-OS-X-and-Linux
 
-                    throw new NotImplementedException("$todo(jeff.lill): Purge the OSX DNS cache.");
+                    throw new NotImplementedException("$todo(jefflill): Purge the OSX DNS cache.");
                 }
 
                 // Wait for the local DNS resolver to indicate that it's picked

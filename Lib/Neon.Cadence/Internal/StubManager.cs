@@ -159,7 +159,7 @@ namespace Neon.Cadence.Internal
         /// <returns>The fully qualified type name.</returns>
         private static string NormalizeTypeName(Type type)
         {
-            Covenant.Requires<ArgumentNullException>(type != null);
+            Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
 
             // .NET returns fully qualified type names that include a "+" for
             // nested types.  We're going to convert these to "." to make the 
@@ -192,7 +192,6 @@ namespace Neon.Cadence.Internal
             private static MethodInfo       signalWorkflowWithStartAsync;   // from: CadenceClient
             private static MethodInfo       signalChildWorkflowAsync;       // from: CadenceClient
             private static MethodInfo       queryWorkflowAsync;             // from: CadenceClient
-            private static MethodInfo       resolveTaskList;                // from: CadenceClient
             private static MethodInfo       resolveDomain;                  // from: CadenceClient
             private static MethodInfo       newWorkflowStub;                // from: CadenceClient
             private static MethodInfo       executeActivityAsync;           // from: Workflow
@@ -218,15 +217,14 @@ namespace Neon.Cadence.Internal
                 signalWorkflowWithStartAsync  = NeonHelper.GetMethod(clientType, ""SignalWorkflowWithStartAsync"", typeof(string), typeof(string), typeof(byte[]), typeof(byte[]), typeof(WorkflowOptions));
                 signalChildWorkflowAsync      = NeonHelper.GetMethod(clientType, ""SignalChildWorkflowAsync"", typeof(Workflow), typeof(ChildExecution), typeof(string), typeof(byte[]));
                 queryWorkflowAsync            = NeonHelper.GetMethod(clientType, ""QueryWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
-                resolveTaskList               = NeonHelper.GetMethod(clientType, ""ResolveTaskList"", typeof(string));
                 resolveDomain                 = NeonHelper.GetMethod(clientType, ""ResolveDomain"", typeof(string));
                 newWorkflowStub               = NeonHelper.GetMethod(clientType, ""NewWorkflowStub"", typeof(string), typeof(WorkflowOptions));
                 executeActivityAsync          = NeonHelper.GetMethod(workflowType, ""ExecuteActivityAsync"", typeof(string), typeof(byte[]), typeof(ActivityOptions));
                 executeLocalActivityAsync     = NeonHelper.GetMethod(workflowType, ""ExecuteLocalActivityAsync"", typeof(Type), typeof(ConstructorInfo), typeof(MethodInfo), typeof(byte[]), typeof(LocalActivityOptions));
-                activityOptionsNormalize      = NeonHelper.GetMethod(typeof(ActivityOptions), ""Normalize"", typeof(CadenceClient), typeof(ActivityOptions));
+                activityOptionsNormalize      = NeonHelper.GetMethod(typeof(ActivityOptions), ""Normalize"", typeof(CadenceClient), typeof(ActivityOptions), typeof(System.Type));
                 localActivityOptionsNormalize = NeonHelper.GetMethod(typeof(LocalActivityOptions), ""Normalize"", typeof(CadenceClient), typeof(LocalActivityOptions));
-                childWorkflowOptionsNormalize = NeonHelper.GetMethod(typeof(ChildWorkflowOptions), ""Normalize"", typeof(CadenceClient), typeof(ChildWorkflowOptions));
-                workflowOptionsNormalize      = NeonHelper.GetMethod(typeof(WorkflowOptions), ""Normalize"", typeof(CadenceClient), typeof(WorkflowOptions));
+                childWorkflowOptionsNormalize = NeonHelper.GetMethod(typeof(ChildWorkflowOptions), ""Normalize"", typeof(CadenceClient), typeof(ChildWorkflowOptions), typeof(System.Type));
+                workflowOptionsNormalize      = NeonHelper.GetMethod(typeof(WorkflowOptions), ""Normalize"", typeof(CadenceClient), typeof(WorkflowOptions), typeof(System.Type));
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
@@ -290,12 +288,6 @@ namespace Neon.Cadence.Internal
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static string ResolveTaskList(CadenceClient client, string taskList)
-            {
-                return (string)resolveTaskList.Invoke(client, new object[] { taskList });
-            }
-
-            [MethodImpl(MethodImplOptions.NoInlining)]
             public static string ResolveDomain(CadenceClient client, string domain)
             {
                 return (string)resolveDomain.Invoke(client, new object[] { domain });
@@ -326,9 +318,9 @@ namespace Neon.Cadence.Internal
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static ActivityOptions NormalizeOptions(CadenceClient client, ActivityOptions options)
+            public static ActivityOptions NormalizeOptions(CadenceClient client, ActivityOptions options, System.Type interfaceType)
             {
-                return (ActivityOptions)activityOptionsNormalize.Invoke(null, new object[] { client, options });
+                return (ActivityOptions)activityOptionsNormalize.Invoke(null, new object[] { client, options, interfaceType });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
@@ -338,15 +330,15 @@ namespace Neon.Cadence.Internal
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static ChildWorkflowOptions NormalizeOptions(CadenceClient client, ChildWorkflowOptions options)
+            public static ChildWorkflowOptions NormalizeOptions(CadenceClient client, ChildWorkflowOptions options, System.Type interfaceType)
             {
-                return (ChildWorkflowOptions)childWorkflowOptionsNormalize.Invoke(null, new object[] { client, options });
+                return (ChildWorkflowOptions)childWorkflowOptionsNormalize.Invoke(null, new object[] { client, options, interfaceType });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static WorkflowOptions NormalizeOptions(CadenceClient client, WorkflowOptions options)
+            public static WorkflowOptions NormalizeOptions(CadenceClient client, WorkflowOptions options, System.Type interfaceType)
             {
-                return (WorkflowOptions)workflowOptionsNormalize.Invoke(null, new object[] { client, options });
+                return (WorkflowOptions)workflowOptionsNormalize.Invoke(null, new object[] { client, options, interfaceType });
             }
         }
 ");
@@ -570,25 +562,25 @@ namespace Neon.Cadence.Internal
             // Generate the constructor used for normal external workflow stubs.
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, string workflowTypeName, WorkflowOptions options)");
+            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, string workflowTypeName, WorkflowOptions options, System.Type interfaceType = null)");
             sbSource.AppendLine($"        {{");
             sbSource.AppendLine($"            this.client           = client;");
             sbSource.AppendLine($"            this.dataConverter    = dataConverter;");
             sbSource.AppendLine($"            this.workflowTypeName = workflowTypeName;");
-            sbSource.AppendLine($"            this.options          = ___StubHelper.NormalizeOptions(client, options);");
+            sbSource.AppendLine($"            this.options          = ___StubHelper.NormalizeOptions(client, options, interfaceType);");
             sbSource.AppendLine($"            this.domain           = ___StubHelper.ResolveDomain(client, options.Domain);");
             sbSource.AppendLine($"        }}");
 
             // Generate the constructor used for child workflow stubs.
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, Workflow parentWorkflow, string workflowTypeName, ChildWorkflowOptions options)");
+            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, Workflow parentWorkflow, string workflowTypeName, ChildWorkflowOptions options, System.Type interfaceType = null)");
             sbSource.AppendLine($"        {{");
             sbSource.AppendLine($"            this.client           = client;");
             sbSource.AppendLine($"            this.dataConverter    = dataConverter;");
             sbSource.AppendLine($"            this.parentWorkflow   = parentWorkflow;");
             sbSource.AppendLine($"            this.workflowTypeName = workflowTypeName;");
-            sbSource.AppendLine($"            this.childOptions     = options ?? new ChildWorkflowOptions();");
+            sbSource.AppendLine($"            this.childOptions     = ___StubHelper.NormalizeOptions(client, options, interfaceType);");
             sbSource.AppendLine($"            this.domain           = this.childOptions.Domain;");
             sbSource.AppendLine($"        }}");
 
@@ -974,7 +966,7 @@ namespace Neon.Cadence.Internal
             // Compile the new workflow stub class into an assembly.
 
             //--------------------------------
-            // $debug(jeff.lill): DELETE THIS!
+            // $debug(jefflill): DELETE THIS!
             var interfaceTypeName = workflowInterface.Name;
             //--------------------------------
 
@@ -1060,14 +1052,14 @@ namespace Neon.Cadence.Internal
         public static TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(CadenceClient client, WorkflowOptions options = null, string workflowTypeName = null)
             where TWorkflowInterface : class
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
             var workflowInterface = typeof(TWorkflowInterface);
             var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
 
             CadenceHelper.ValidateWorkflowInterface(workflowInterface);
 
-            options = WorkflowOptions.Normalize(client, options);
+            options = WorkflowOptions.Normalize(client, options, typeof(TWorkflowInterface));
 
             if (string.IsNullOrEmpty(workflowTypeName))
             {
@@ -1076,7 +1068,7 @@ namespace Neon.Cadence.Internal
 
             var stub = GetWorkflowStub<TWorkflowInterface>(isChild: false);
 
-            return (TWorkflowInterface)stub.Create(client, client.DataConverter, workflowTypeName, options);
+            return (TWorkflowInterface)stub.Create(client, client.DataConverter, workflowTypeName, options, typeof(TWorkflowInterface));
         }
 
         /// <summary>
@@ -1092,15 +1084,15 @@ namespace Neon.Cadence.Internal
         public static TWorkflowInterface NewChildWorkflowStub<TWorkflowInterface>(CadenceClient client, Workflow parentWorkflow, ChildWorkflowOptions options = null, string workflowTypeName = null)
             where TWorkflowInterface : class
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
 
             var workflowInterface = typeof(TWorkflowInterface);
             var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
 
             CadenceHelper.ValidateWorkflowInterface(workflowInterface);
 
-            options = ChildWorkflowOptions.Normalize(client, options);
+            options = ChildWorkflowOptions.Normalize(client, options, typeof(TWorkflowInterface));
 
             if (string.IsNullOrEmpty(workflowTypeName))
             {
@@ -1109,7 +1101,7 @@ namespace Neon.Cadence.Internal
 
             var stub = GetWorkflowStub<TWorkflowInterface>(isChild: true);
 
-            return (TWorkflowInterface)stub.Create(client, client.DataConverter, parentWorkflow, workflowTypeName, options);
+            return (TWorkflowInterface)stub.Create(client, client.DataConverter, parentWorkflow, workflowTypeName, options, typeof(TWorkflowInterface));
         }
 
         /// <summary>
@@ -1125,9 +1117,9 @@ namespace Neon.Cadence.Internal
         public static TWorkflowInterface NewChildWorkflowStub<TWorkflowInterface>(CadenceClient client, Workflow parentWorkflow, string workflowTypeName, ChildExecution execution)
             where TWorkflowInterface : class
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
-            Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
 
             var workflowInterface = typeof(TWorkflowInterface);
             var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
@@ -1158,9 +1150,9 @@ namespace Neon.Cadence.Internal
         public static TWorkflowInterface NewChildWorkflowStubById<TWorkflowInterface>(CadenceClient client, Workflow parentWorkflow, string workflowId, string domain = null)
             where TWorkflowInterface : class
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
 
             domain = domain ?? parentWorkflow.WorkflowInfo.Domain;
 
@@ -1187,9 +1179,9 @@ namespace Neon.Cadence.Internal
         public static TWorkflowInterface NewChildWorkflowStubById<TWorkflowInterface>(CadenceClient client, Workflow parentWorkflow, WorkflowExecution execution)
             where TWorkflowInterface : class
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
-            Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
 
             var workflowInterface = typeof(TWorkflowInterface);
             var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
@@ -1212,7 +1204,7 @@ namespace Neon.Cadence.Internal
         public static TWorkflowInterface NewContinueAsNewStub<TWorkflowInterface>(CadenceClient client, ContinueAsNewOptions options = null)
             where TWorkflowInterface : class
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
             var workflowInterface = typeof(TWorkflowInterface);
             var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
@@ -1341,14 +1333,14 @@ namespace Neon.Cadence.Internal
             // Generate the constructor for regular (non-local) activity stubs.
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, Workflow workflow, string activityTypeName, ActivityOptions options)");
+            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, Workflow workflow, string activityTypeName, ActivityOptions options, System.Type interfaceType = null)");
             sbSource.AppendLine($"        {{");
             sbSource.AppendLine($"            this.client           = client;");
             sbSource.AppendLine($"            this.dataConverter    = dataConverter;");
             sbSource.AppendLine($"            this.workflow         = workflow;");
             sbSource.AppendLine($"            this.isLocal          = false;");
             sbSource.AppendLine($"            this.activityTypeName = activityTypeName;");
-            sbSource.AppendLine($"            this.options          = ___StubHelper.NormalizeOptions(client, options);");
+            sbSource.AppendLine($"            this.options          = ___StubHelper.NormalizeOptions(client, options, interfaceType);");
             sbSource.AppendLine($"            this.domain           = options.Domain;");
             sbSource.AppendLine($"        }}");
 
@@ -1585,8 +1577,8 @@ namespace Neon.Cadence.Internal
         /// <exception cref="ActivityTypeException">Thrown when there are problems with the <typeparamref name="TActivityInterface"/>.</exception>
         public static TActivityInterface NewActivityStub<TActivityInterface>(CadenceClient client, Workflow workflow, ActivityOptions options = null)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(workflow != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(workflow != null, nameof(workflow));
 
             var activityInterface = typeof(TActivityInterface);
             var activityAttribute = activityInterface.GetCustomAttribute<ActivityAttribute>();
@@ -1595,11 +1587,11 @@ namespace Neon.Cadence.Internal
 
             var activityTypeName = CadenceHelper.GetActivityTypeName(activityInterface, activityAttribute);
 
-            options = ActivityOptions.Normalize(client, options);
+            options = ActivityOptions.Normalize(client, options, typeof(TActivityInterface));
 
             var stub = GetActivityStub<TActivityInterface>();
 
-            return (TActivityInterface)stub.Create(client, workflow, activityTypeName, options);
+            return (TActivityInterface)stub.Create(client, workflow, activityTypeName, options, typeof(TActivityInterface));
         }
 
         /// <summary>
@@ -1615,8 +1607,8 @@ namespace Neon.Cadence.Internal
         public static TActivityInterface NewLocalActivityStub<TActivityInterface, TActivityImplementation>(CadenceClient client, Workflow workflow, LocalActivityOptions options = null)
             where TActivityImplementation : TActivityInterface
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(workflow != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(workflow != null, nameof(workflow));
 
             var activityType = typeof(TActivityImplementation);
 

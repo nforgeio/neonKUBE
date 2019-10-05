@@ -37,7 +37,7 @@ namespace Neon.ModelGen
         /// </param>
         public ModelGeneratorSettings(params string[] targetGroups)
         {
-            Covenant.Requires<ArgumentNullException>(targetGroups != null);
+            Covenant.Requires<ArgumentNullException>(targetGroups != null, nameof(targetGroups));
 
             foreach (var group in targetGroups)
             {
@@ -119,8 +119,8 @@ namespace Neon.ModelGen
 
         /// <summary>
         /// Enables source code debuggers to step into methods and properties 
-        /// generated for both data and service models.  This defaults to
-        /// <c>false</c>.
+        /// generated for both data and service models.  This is normally used
+        /// only when debugging model generation and defaults to <c>false</c>.
         /// </summary>
         public bool AllowDebuggerStepInto { get; set; } = false;
     }

@@ -86,7 +86,7 @@ namespace NeonBuild
         /// </remarks>
         public KubeSetupHelper(KubeClientPlatform platform, CommandLine commandLine, Action<string> outputAction = null, Action<string> errorAction = null)
         {
-            Covenant.Requires<ArgumentException>(commandLine != null);
+            Covenant.Requires<ArgumentException>(commandLine != null, nameof(commandLine));
 
             this.Platform     = platform;
             this.outputAction = outputAction;
@@ -301,7 +301,7 @@ namespace NeonBuild
         {
             get
             {
-                // $hack(jeff.lill): Hardcoded
+                // $hack(jefflill): Hardcoded
 
                 var path = @"C:\Program Files (x86)\Inno Setup 5\Compil32.exe";
 
@@ -415,6 +415,11 @@ namespace NeonBuild
                                 }
                             }
 
+#if TODO
+                            // We're not actually using this right now and it takes a long time to
+                            // download, so we'll comment this out until we actually need it
+                            // (if ever).
+
                             // Download VirtualBox installer
 
                             var virtualBoxPath = Path.Combine(CacheWindows, "virtualbox-setup.exe");
@@ -433,6 +438,7 @@ namespace NeonBuild
                                     }
                                 }
                             }
+#endif
                         }
                     }
 

@@ -58,9 +58,9 @@ namespace System
         /// <exception cref="ArgumentException">Thrown if <paramref name="interfaceType"/> is not an <c>interface</c>.</exception>
         public static bool Implements(Type type, Type interfaceType)
         {
-            Covenant.Requires<ArgumentNullException>(type != null);
-            Covenant.Requires<ArgumentNullException>(interfaceType != null);
-            Covenant.Requires<ArgumentException>(interfaceType.IsInterface, $"Type [{interfaceType.FullName}] is not an interface.");
+            Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
+            Covenant.Requires<ArgumentNullException>(interfaceType != null, nameof(interfaceType));
+            Covenant.Requires<ArgumentException>(interfaceType.IsInterface, nameof(interfaceType), $"Type [{interfaceType.FullName}] is not an interface.");
 
             foreach (var @interface in type.GetInterfaces())
             {

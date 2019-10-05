@@ -113,13 +113,13 @@ namespace NeonCli
 
         public bool NeedsSshCredentials(CommandLine commandLine)
         {
-            Covenant.Requires<ArgumentNullException>(commandLine != null);
+            Covenant.Requires<ArgumentNullException>(commandLine != null, nameof(commandLine));
             return false;
         }
 
         public void Run(CommandLine commandLine)
         {
-            Covenant.Requires<ArgumentNullException>(commandLine != null);
+            Covenant.Requires<ArgumentNullException>(commandLine != null, nameof(commandLine));
         }
     }
 }

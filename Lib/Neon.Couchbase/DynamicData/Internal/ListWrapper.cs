@@ -63,8 +63,8 @@ namespace Neon.Couchbase.DynamicData.Internal
         /// <param name="items">The initial items or <c>null</c> to initialize from <paramref name="jArray"/>.</param>
         public ListWrapper(IDynamicEntity parentEntity, JArray jArray, IEnumerable<TEntity> items)
         {
-            Covenant.Requires<ArgumentNullException>(parentEntity != null);
-            Covenant.Requires<ArgumentNullException>(jArray != null);
+            Covenant.Requires<ArgumentNullException>(parentEntity != null, nameof(parentEntity));
+            Covenant.Requires<ArgumentNullException>(jArray != null, nameof(jArray));
 
             this.parentEntity = parentEntity;
             this.jArray       = jArray;
@@ -288,7 +288,7 @@ namespace Neon.Couchbase.DynamicData.Internal
         /// <exception cref="InvalidOperationException">Thrown if the array has been detached.</exception>
         public void CopyTo(TEntity[] array, int arrayIndex)
         {
-            Covenant.Requires<ArgumentNullException>(array != null);
+            Covenant.Requires<ArgumentNullException>(array != null, nameof(array));
             Covenant.Requires<InvalidOperationException>(jArray != null, DetachedError);
 
             list.CopyTo(array, arrayIndex);

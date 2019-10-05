@@ -61,7 +61,7 @@ namespace System
         /// </remarks>
         public static TimeSpan RandomTimespan(this Random random, TimeSpan maxInterval)
         {
-            Covenant.Requires<ArgumentException>(maxInterval >= TimeSpan.Zero);
+            Covenant.Requires<ArgumentException>(maxInterval >= TimeSpan.Zero, nameof(maxInterval));
 
             return TimeSpan.FromSeconds(maxInterval.TotalSeconds * random.NextDouble());
         }
@@ -92,8 +92,8 @@ namespace System
         /// </remarks>
         public static TimeSpan RandomTimespan(this Random random, TimeSpan baseInterval, double fraction)
         {
-            Covenant.Requires<ArgumentException>(baseInterval >= TimeSpan.Zero);
-            Covenant.Requires<ArgumentException>(fraction >= 0.0);
+            Covenant.Requires<ArgumentException>(baseInterval >= TimeSpan.Zero, nameof(baseInterval));
+            Covenant.Requires<ArgumentException>(fraction >= 0.0, nameof(fraction));
 
             if (fraction == 0.0)
             {

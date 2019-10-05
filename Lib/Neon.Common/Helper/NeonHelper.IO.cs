@@ -197,8 +197,8 @@ namespace Neon.Common
         /// </remarks>
         public static void CopyFolder(string sourceFolder, string targetFolder)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sourceFolder));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetFolder));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sourceFolder), nameof(sourceFolder));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetFolder), nameof(targetFolder));
 
             sourceFolder = Path.GetFullPath(sourceFolder);
             targetFolder = Path.GetFullPath(targetFolder);

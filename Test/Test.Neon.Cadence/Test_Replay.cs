@@ -73,7 +73,6 @@ namespace TestCadence
             var settings = new CadenceSettings()
             {
                 DefaultDomain    = CadenceFixture.DefaultDomain,
-                DefaultTaskList  = CadenceFixture.DefaultTaskList,
                 LogLevel         = CadenceTestHelper.LogLevel,
                 CreateDomain     = true,
                 Debug            = true,
@@ -91,7 +90,7 @@ namespace TestCadence
 
                 // Start the worker.
 
-                client.StartWorkerAsync().Wait();
+                client.StartWorkerAsync(CadenceTestHelper.TaskList).Wait();
             }
             else
             {
@@ -128,6 +127,7 @@ namespace TestCadence
             LocalActivity
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowReplayHello : IWorkflow
         {
             [WorkflowMethod]
@@ -143,6 +143,7 @@ namespace TestCadence
             }
         }
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IReplayActivity : IActivity
         {
             [ActivityMethod]
@@ -159,6 +160,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowReplay : IWorkflow
         {
             [WorkflowMethod]
@@ -459,7 +461,7 @@ namespace TestCadence
 
                     case ReplayTest.GetLastCompletionResult:
 
-                        // $todo(jeff.lill):
+                        // $todo(jefflill):
                         //
                         // This case is a bit tricker to test.  We'd need to schedule the
                         // workflow with a CRON schedule, let it run once and then perform

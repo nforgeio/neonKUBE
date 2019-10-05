@@ -69,9 +69,9 @@ namespace Neon.Retry
         public ExponentialRetryPolicy(Func<Exception, bool> transientDetector = null, int maxAttempts = 5, TimeSpan? initialRetryInterval = null, TimeSpan? maxRetryInterval = null, TimeSpan? timeout = null, string sourceModule = null)
             : base(sourceModule, timeout)
         {
-            Covenant.Requires<ArgumentException>(maxAttempts > 0);
-            Covenant.Requires<ArgumentException>(initialRetryInterval == null || initialRetryInterval > TimeSpan.Zero);
-            Covenant.Requires<ArgumentNullException>(maxRetryInterval >= initialRetryInterval || initialRetryInterval > TimeSpan.Zero || maxRetryInterval == null);
+            Covenant.Requires<ArgumentException>(maxAttempts > 0, nameof(maxAttempts));
+            Covenant.Requires<ArgumentException>(initialRetryInterval == null || initialRetryInterval > TimeSpan.Zero, nameof(initialRetryInterval));
+            Covenant.Requires<ArgumentNullException>(maxRetryInterval >= initialRetryInterval || initialRetryInterval > TimeSpan.Zero || maxRetryInterval == null, nameof(maxRetryInterval));
 
             this.transientDetector    = transientDetector ?? (e => true);
             this.MaxAttempts          = maxAttempts;
@@ -104,7 +104,7 @@ namespace Neon.Retry
                 sourceModule
             )
         {
-            Covenant.Requires<ArgumentNullException>(exceptionType != null);
+            Covenant.Requires<ArgumentNullException>(exceptionType != null, nameof(exceptionType));
         }
 
         /// <summary>

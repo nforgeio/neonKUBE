@@ -188,7 +188,7 @@ serviceAccount:
 
 # Enable autoscaling using HorizontalPodAutoscaler
 autoscaling:
-  enabled: false
+  enabled: true
   minReplicas: 2
   maxReplicas: 5
   metrics:

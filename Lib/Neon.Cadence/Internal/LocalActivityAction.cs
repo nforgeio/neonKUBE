@@ -45,9 +45,9 @@ namespace Neon.Cadence.Internal
         /// <param name="activityMethod">The target activity method.</param>
         public LocalActivityAction(Type activityType, ConstructorInfo activityConstructor, MethodInfo activityMethod)
         {
-            Covenant.Requires<ArgumentNullException>(activityType != null);
-            Covenant.Requires<ArgumentNullException>(activityConstructor != null);
-            Covenant.Requires<ArgumentNullException>(activityMethod != null);
+            Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
+            Covenant.Requires<ArgumentNullException>(activityConstructor != null, nameof(activityConstructor));
+            Covenant.Requires<ArgumentNullException>(activityMethod != null, nameof(activityMethod));
 
             this.ActivityType        = activityType;
             this.ActivityConstructor = activityConstructor;

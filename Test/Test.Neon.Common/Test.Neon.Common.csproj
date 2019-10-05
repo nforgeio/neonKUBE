@@ -5,6 +5,8 @@
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <IsPackable>false</IsPackable>
     <LangVersion>latest</LangVersion>
+    <RootNamespace>TestCommon</RootNamespace>
+    <AssemblyName>Test.Neon.Common</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

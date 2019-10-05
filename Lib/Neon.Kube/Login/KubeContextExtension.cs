@@ -175,7 +175,7 @@ namespace Neon.Kube
         /// <param name="path">The target path.</param>
         internal void SetPath(string path)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
 
             this.path = path;
         }

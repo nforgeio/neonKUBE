@@ -37,7 +37,7 @@ namespace Neon.ModelGen
         /// <param name="parameterInfo">The .NET parameter information.</param>
         public MethodParameter(ParameterInfo parameterInfo)
         {
-            Covenant.Requires<ArgumentNullException>(parameterInfo != null);
+            Covenant.Requires<ArgumentNullException>(parameterInfo != null, nameof(parameterInfo));
 
             this.ParameterInfo = parameterInfo;
         }

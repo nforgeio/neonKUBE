@@ -325,7 +325,7 @@ namespace Neon.Kube
         [Pure]
         public void Validate(ClusterDefinition clusterDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             switch (Environment)
             {
@@ -413,7 +413,7 @@ namespace Neon.Kube
         [Pure]
         internal void ValidateHypervisor(ClusterDefinition clusterDefinition, bool remoteHypervisors)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             if (VmProcessors <= 0)
             {

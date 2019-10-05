@@ -52,7 +52,7 @@ namespace Neon.Diagnostics
         /// <param name="log">The inderlying <see cref="INeonLogger"/> implementation.</param>
         public LogRecorder(INeonLogger log)
         {
-            Covenant.Requires<ArgumentNullException>(log != null);
+            Covenant.Requires<ArgumentNullException>(log != null, nameof(log));
 
             this.log     = log;
             this.capture = new StringBuilder();

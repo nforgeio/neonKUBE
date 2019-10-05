@@ -536,7 +536,7 @@ namespace Neon.Collections
                 throw new ArgumentOutOfRangeException("count");
             }
 
-            // $todo(jeff.lill): 
+            // $todo(jefflill): 
             //
             // For now, I'm just going to clear all of the
             // bits using the indexer.  This should be optimized to
@@ -581,7 +581,7 @@ namespace Neon.Collections
                 throw new ArgumentOutOfRangeException("count");
             }
 
-            // $todo(jeff.lill): 
+            // $todo(jefflill): 
             //
             // For now, I'm just going to set all of the
             // bits using the indexer.  This should be optimized to
@@ -809,7 +809,7 @@ namespace Neon.Collections
         {
             get
             {
-                //$todo(jeff.lill): Should do int operations when possible to improve performance.
+                //$todo(jefflill): Should do int operations when possible to improve performance.
 
                 for (int i = 0; i < this.length; i++)
                 {
@@ -830,7 +830,7 @@ namespace Neon.Collections
         {
             get
             {
-                //$todo(jeff.lill): Should do int operations when possible to improve performance.
+                //$todo(jefflill): Should do int operations when possible to improve performance.
 
                 for (int i = 0; i < this.length; i++)
                 {
@@ -858,7 +858,7 @@ namespace Neon.Collections
                 return false;
             }
 
-            // $todo(jeff.lill): Should do int operations when possible to improve performance.
+            // $todo(jefflill): Should do int operations when possible to improve performance.
 
             if (this.length != bits.length)
             {

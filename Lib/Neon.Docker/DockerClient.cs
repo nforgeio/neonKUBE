@@ -78,7 +78,7 @@ namespace Neon.Docker
         /// <param name="settings">The settings</param>
         public DockerClient(DockerSettings settings)
         {
-            Covenant.Requires<ArgumentNullException>(settings != null);
+            Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
 
             // Select a custom managed handler when Docker is listening on a Unix
             // domain socket, otherwise use the standard handler.
@@ -91,7 +91,7 @@ namespace Neon.Docker
                     {
                         var sock = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
 
-                        // $todo(jeff.lill):
+                        // $todo(jefflill):
                         //
                         // It looks like .NET Core 3.0 (and presumably .NET Standard 2.1 in the near future
                         // implements this as [System.Net.Sockets.UnixDomainSocketEndPoint].  Look into
@@ -224,7 +224,7 @@ namespace Neon.Docker
         /// </remarks>
         public async Task WaitUntilReadyAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
         {
-            Covenant.Requires<ArgumentException>(timeout == null || timeout >= TimeSpan.Zero);
+            Covenant.Requires<ArgumentException>(timeout == null || timeout >= TimeSpan.Zero, nameof(timeout));
 
             // Create a transient detector that extends [TransientDetector.Network] to
             // consider HTTP 404 (not found) as transient too.
@@ -267,7 +267,7 @@ namespace Neon.Docker
 
             await JsonClient.GetAsync(retryPolicy, GetUri("info"), cancellationToken: cancellationToken);
 
-            // $hack(jeff.lill):
+            // $hack(jefflill):
             //
             // At this point, the server should be ready but I'm still seeing 500 errors
             // when listing Docker volumes.  I'm going to add an additional request to

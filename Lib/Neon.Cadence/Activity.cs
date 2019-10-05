@@ -45,7 +45,7 @@ namespace Neon.Cadence
         /// <param name="parent">The parent activity implementation.</param>
         internal Activity(ActivityBase parent)
         {
-            Covenant.Requires<ArgumentNullException>(parent != null);
+            Covenant.Requires<ArgumentNullException>(parent != null, nameof(parent));
 
             this.parent = parent;
             this.Logger = LogManager.Default.GetLogger(sourceModule: Client.Settings.ClientIdentity, contextId: parent.ActivityTask?.WorkflowExecution?.RunId);

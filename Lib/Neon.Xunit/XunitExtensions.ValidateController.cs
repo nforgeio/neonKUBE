@@ -60,7 +60,7 @@ namespace Neon.Xunit
             {
                 var errors = sb.ToString();
 
-                // $hack(jeff.lill):
+                // $hack(jefflill):
                 //
                 // Remove some common namespace prefixes to make these errors easier to read.
 

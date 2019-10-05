@@ -243,7 +243,7 @@ namespace Neon.Xunit
         private void StartServer<TStartup>(int port)
             where TStartup : class
         {
-            Covenant.Requires<ArgumentException>(port == 0 || NetHelper.IsValidPort(port));
+            Covenant.Requires<ArgumentException>(port == 0 || NetHelper.IsValidPort(port), nameof(port));
 
             var app = new WebHostBuilder()
                 .UseStartup<TStartup>()

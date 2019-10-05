@@ -45,9 +45,9 @@ namespace Couchbase
         /// <returns>The connected <see cref="Cluster"/>.</returns>
         public static Cluster OpenCluster(this CouchbaseSettings settings, string username, string password)
         {
-            Covenant.Requires<ArgumentNullException>(settings.Servers != null && settings.Servers.Count > 0);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
-            Covenant.Requires<ArgumentNullException>(password != null);
+            Covenant.Requires<ArgumentNullException>(settings.Servers != null && settings.Servers.Count > 0, nameof(settings));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username), nameof(username));
+            Covenant.Requires<ArgumentNullException>(password != null, nameof(password));
 
             var config  = settings.ToClientConfig();
             var cluster = new Cluster(config);
@@ -68,10 +68,10 @@ namespace Couchbase
         /// <returns>The connected <see cref="Cluster"/>.</returns>
         public static Cluster OpenCluster(this CouchbaseSettings settings, Credentials credentials)
         {
-            Covenant.Requires<ArgumentNullException>(settings.Servers != null && settings.Servers.Count > 0);
-            Covenant.Requires<ArgumentNullException>(credentials != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(credentials.Username));
-            Covenant.Requires<ArgumentNullException>(credentials.Password != null);
+            Covenant.Requires<ArgumentNullException>(settings.Servers != null && settings.Servers.Count > 0, nameof(settings));
+            Covenant.Requires<ArgumentNullException>(credentials != null, nameof(credentials));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(credentials.Username), nameof(credentials));
+            Covenant.Requires<ArgumentNullException>(credentials.Password != null, nameof(credentials));
 
             var config  = settings.ToClientConfig();
             var cluster = new Cluster(config);
@@ -242,7 +242,7 @@ namespace Couchbase
             TimeSpan        timeout = default,
             bool?           ignoreDurability = null)
         {
-            Covenant.Requires<ArgumentNullException>(credentials != null);
+            Covenant.Requires<ArgumentNullException>(credentials != null, nameof(credentials));
 
             return settings.OpenBucket(credentials.Username, credentials.Password, timeout: timeout, ignoreDurability: ignoreDurability);
         }

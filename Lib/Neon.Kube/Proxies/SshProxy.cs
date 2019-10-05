@@ -38,7 +38,7 @@ using ICSharpCode.SharpZipLib.Zip;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // The download methods don't seem to be working for paths like [/proc/meminfo].
 // They return an empty stream.
@@ -98,7 +98,7 @@ namespace Neon.Kube
         /// <returns>The lock object.</returns>
         private static object GetConnectLock(string host)
         {
-            // $hack(jeff.lill):
+            // $hack(jefflill):
             //
             // SSH.NET appears to have an issue when attempting to establish multiple
             // connections to the same server at the same time.  We never saw this in
@@ -145,7 +145,7 @@ namespace Neon.Kube
             // to receive this message. Once it receives the message, the exception above is thrown.
             //-----------------------------------------------------------------
 
-            // $hack(jeff.lill):
+            // $hack(jefflill):
             //
             // It appears that SSH.NET may assume that only a single connection attempt
             // to any given server will be in flight at any given time.  We're going to
@@ -208,8 +208,8 @@ namespace Neon.Kube
         /// </exception>
         public SshProxy(string name, string publicAddress, IPAddress privateAddress, SshCredentials credentials, TextWriter logWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-            Covenant.Requires<ArgumentNullException>(credentials != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(credentials != null, nameof(credentials));
 
             this.Name           = name;
             this.PublicAddress  = publicAddress;
@@ -259,7 +259,7 @@ namespace Neon.Kube
 
                         if (logWriter != null)
                         {
-                            // $hack(jeff.lill):
+                            // $hack(jefflill):
                             //
                             // Sometimes we'll see an [ObjectDisposedException] here.  I'm
                             // not entirely sure why.  We'll mitigate this for now by catching
@@ -338,7 +338,7 @@ namespace Neon.Kube
         /// <param name="timeout">The timeout.</param>
         private void DeadlockBreaker(string actionName, Action action, TimeSpan timeout)
         {
-            // $todo(jeff.lill): 
+            // $todo(jefflill): 
             //
             // This is part of the mitigation for:
             //
@@ -377,7 +377,7 @@ namespace Neon.Kube
         /// </remarks>
         public void Disconnect()
         {
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // We sometimes see a deadlock when disposing SSH.NET clients.
             //
@@ -542,7 +542,7 @@ namespace Neon.Kube
         /// <param name="newCredentials">The new credentials.</param>
         public void UpdateCredentials(SshCredentials newCredentials)
         {
-            Covenant.Requires<ArgumentNullException>(newCredentials != null);
+            Covenant.Requires<ArgumentNullException>(newCredentials != null, nameof(newCredentials));
 
             this.credentials = newCredentials;
         }
@@ -651,7 +651,7 @@ namespace Neon.Kube
         /// <param name="password">The current user's password.</param>
         public void DisableSudoPrompt(string password)
         {
-            Covenant.Requires<ArgumentNullException>(password != null);
+            Covenant.Requires<ArgumentNullException>(password != null, nameof(password));
 
             var connectionInfo = GetConnectionInfo();
 
@@ -979,7 +979,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// </remarks>
         public void WaitForBoot(TimeSpan? timeout = null, bool createHomeFolders = false)
         {
-            Covenant.Requires<ArgumentException>(timeout != null ? timeout >= TimeSpan.Zero : true);
+            Covenant.Requires<ArgumentException>(timeout != null ? timeout >= TimeSpan.Zero : true, nameof(timeout));
 
             var operationTimer = new PolledTimer(timeout ?? TimeSpan.FromMinutes(10));
 
@@ -1427,7 +1427,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
                 throw new IOException(result.Error);
             }
 
-            result = sshClient.RunCommand($"sudo chmod 777 {KubeHostFolders.Exec(Username)}");  // $todo(jeff.lill): Is this a potential security problem?
+            result = sshClient.RunCommand($"sudo chmod 777 {KubeHostFolders.Exec(Username)}");  // $todo(jefflill): Is this a potential security problem?
                                                                                                 //                   SCP uploads fail for 770
             if (result.ExitStatus != 0)
             {
@@ -1467,7 +1467,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
             SudoCommand($"mkdir -p {KubeHostFolders.Upload(Username)}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 750 {KubeHostFolders.Upload(Username)}", RunOptions.LogOnErrorOnly);
 
-            // $hack(jeff.lill):
+            // $hack(jefflill):
             //
             // All of a sudden, I find that I need these folders too.
 
@@ -1478,13 +1478,13 @@ rm {KubeHostFolders.Home(Username)}/askpass
             SudoCommand($"chmod 750 {KubeHostFolders.Archive("root")}", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {KubeHostFolders.Download("root")}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 777 {KubeHostFolders.Download("root")}", RunOptions.LogOnErrorOnly);    // $todo(jeff.lill): Another potential security problem?
+            SudoCommand($"chmod 777 {KubeHostFolders.Download("root")}", RunOptions.LogOnErrorOnly);    // $todo(jefflill): Another potential security problem?
 
             SudoCommand($"mkdir -p {KubeHostFolders.Exec("root")}", RunOptions.LogOnErrorOnly);
             SudoCommand($"chmod 777 {KubeHostFolders.Exec("root")}", RunOptions.LogOnErrorOnly);
 
             SudoCommand($"mkdir -p {KubeHostFolders.Upload("root")}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 777 {KubeHostFolders.Upload("root")}", RunOptions.LogOnErrorOnly);      // $todo(jeff.lill): Another potential security problem?
+            SudoCommand($"chmod 777 {KubeHostFolders.Upload("root")}", RunOptions.LogOnErrorOnly);      // $todo(jefflill): Another potential security problem?
         }
 
         /// <summary>
@@ -1508,8 +1508,8 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// <param name="output">The output stream.</param>
         public void Download(string source, Stream output)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(source));
-            Covenant.Requires<ArgumentNullException>(output != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(source), nameof(source));
+            Covenant.Requires<ArgumentNullException>(output != null, nameof(output));
 
             if (IsFaulted)
             {
@@ -1563,7 +1563,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// <returns>The file contents as UTF8 text.</returns>
         public byte[] DownloadBytes(string source)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(source));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(source), nameof(source));
 
             using (var ms = new MemoryStream())
             {
@@ -1580,7 +1580,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// <returns>The file contents as UTF8 text.</returns>
         public string DownloadText(string source)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(source));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(source), nameof(source));
 
             using (var ms = new MemoryStream())
             {
@@ -1640,8 +1640,8 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// </remarks>
         public void Upload(string target, Stream input, string permissions = null, string owner = null, bool userPermissions = false)
         {
-            Covenant.Requires<ArgumentNullException>(input != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target));
+            Covenant.Requires<ArgumentNullException>(input != null, nameof(input));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target), nameof(target));
 
             if (IsFaulted)
             {
@@ -1699,7 +1699,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// <param name="bytes">The bytes to be uploaded.</param>
         public void UploadBytes(string target, byte[] bytes)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target), nameof(target));
 
             if (bytes == null)
             {
@@ -1746,8 +1746,8 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// </remarks>
         public void UploadText(string target, Stream textStream, int tabStop = 0, Encoding inputEncoding = null, Encoding outputEncoding = null, string permissions = null, string owner = null)
         {
-            Covenant.Requires<ArgumentNullException>(textStream != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target));
+            Covenant.Requires<ArgumentNullException>(textStream != null, nameof(textStream));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target), nameof(target));
 
             inputEncoding  = inputEncoding ?? Encoding.UTF8;
             outputEncoding = outputEncoding ?? Encoding.UTF8;
@@ -1805,8 +1805,8 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// </remarks>
         public void UploadText(string target, string text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null, string owner = null)
         {
-            Covenant.Requires<ArgumentNullException>(text != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target));
+            Covenant.Requires<ArgumentNullException>(text != null, nameof(text));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target), nameof(target));
 
             using (var textStream = new MemoryStream(Encoding.UTF8.GetBytes(text)))
             {
@@ -1844,8 +1844,8 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// </remarks>
         public void UploadText(string target, StringBuilder text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null, string owner = null)
         {
-            Covenant.Requires<ArgumentNullException>(text != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target));
+            Covenant.Requires<ArgumentNullException>(text != null, nameof(text));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target), nameof(target));
 
             UploadText(target, text.ToString(), tabStop: tabStop, outputEncoding: outputEncoding, permissions: permissions, owner: owner);
         }
@@ -1858,8 +1858,8 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// <param name="target">The target path on the local computer.</param>
         public void Download(string source, string target)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(source));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(source), nameof(source));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target), nameof(target));
 
             if (IsFaulted)
             {
@@ -1930,7 +1930,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
 
                             if (string.IsNullOrWhiteSpace(valueString))
                             {
-                                valueString = "-"; // $todo(jeff.lill): Not sure if this makes sense any more.
+                                valueString = "-"; // $todo(jefflill): Not sure if this makes sense any more.
                             }
                             else if (valueString.Contains(' '))
                             {
@@ -1980,7 +1980,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// <returns>The path to the folder where the bundle was unpacked.</returns>
         private string UploadBundle(CommandBundle bundle, RunOptions runOptions, bool userPermissions)
         {
-            Covenant.Requires<ArgumentNullException>(bundle != null);
+            Covenant.Requires<ArgumentNullException>(bundle != null, nameof(bundle));
 
             bundle.Validate();
 
@@ -2120,7 +2120,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// </remarks>
         public CommandResponse RunCommand(string command, params object[] args)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
 
             return RunCommand(command, DefaultRunOptions, args);
         }
@@ -2462,7 +2462,7 @@ echo $? > {cmdFolder}/exit
         /// </remarks>
         public CommandResponse RunCommand(string command, RunOptions runOptions, params object[] args)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
 
             if (command.Contains('<') || command.Contains('>'))
             {
@@ -2716,7 +2716,7 @@ echo $? > {cmdFolder}/exit
         /// </remarks>
         public CommandResponse RunCommand(CommandBundle bundle, RunOptions runOptions = RunOptions.Defaults)
         {
-            Covenant.Requires<ArgumentNullException>(bundle != null);
+            Covenant.Requires<ArgumentNullException>(bundle != null, nameof(bundle));
 
             // Write the START log line here so we can log the actual command being
             // executed and then disable this at the lower level, which would have 
@@ -2781,7 +2781,7 @@ echo $? > {cmdFolder}/exit
         /// </remarks>
         public CommandResponse SudoCommand(string command, params object[] args)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
 
             return SudoCommand(command, DefaultRunOptions, args);
         }
@@ -2818,7 +2818,7 @@ echo $? > {cmdFolder}/exit
         /// </remarks>
         public CommandResponse SudoCommand(string command, RunOptions runOptions, params object[] args)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
 
             command = FormatCommand(command, args);
 
@@ -2860,8 +2860,8 @@ echo $? > {cmdFolder}/exit
         /// </remarks>
         public CommandResponse SudoCommandAsUser(string user, string command, params object[] args)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(user));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(user), nameof(user));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
 
             return SudoCommandAsUser(user, command, DefaultRunOptions, args);
         }
@@ -2900,8 +2900,8 @@ echo $? > {cmdFolder}/exit
         /// </remarks>
         public CommandResponse SudoCommandAsUser(string user, string command, RunOptions runOptions, params object[] args)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(user));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(user), nameof(user));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
 
             command = $"sudo -u {user} bash -c '{command}'";
 
@@ -2957,7 +2957,7 @@ echo $? > {cmdFolder}/exit
         /// </remarks>
         public CommandResponse SudoCommand(CommandBundle bundle, RunOptions runOptions = RunOptions.Defaults)
         {
-            Covenant.Requires<ArgumentNullException>(bundle != null);
+            Covenant.Requires<ArgumentNullException>(bundle != null, nameof(bundle));
 
             // Write the START log line here so we can log the actual command being
             // executed and then disable this at the lower level, which would have 
@@ -3021,9 +3021,9 @@ echo $? > {cmdFolder}/exit
         /// </remarks>
         public bool InvokeIdempotentAction(string actionId, Action action)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId));
-            Covenant.Requires<ArgumentException>(idempotentRegex.IsMatch(actionId));
-            Covenant.Requires<ArgumentNullException>(action != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId), nameof(actionId));
+            Covenant.Requires<ArgumentException>(idempotentRegex.IsMatch(actionId), nameof(actionId));
+            Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
             var stateFolder = KubeHostFolders.State;
             var slashPos    = actionId.LastIndexOf('/');
@@ -3071,7 +3071,7 @@ echo $? > {cmdFolder}/exit
         /// </remarks>
         public CommandResponse VerifyCertificate(string name, TlsCertificate certificate, string hostname)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             if (certificate == null)
             {
@@ -3187,8 +3187,8 @@ echo $? > {cmdFolder}/exit
         /// </remarks>
         public string GetNetworkInterface(IPAddress address)
         {
-            Covenant.Requires<ArgumentNullException>(address != null);
-            Covenant.Requires<ArgumentException>(address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork, "Only IPv4 addresses are currently supported.");
+            Covenant.Requires<ArgumentNullException>(address != null, nameof(address));
+            Covenant.Requires<ArgumentException>(address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork, nameof(address), "Only IPv4 addresses are currently supported.");
 
             var result = SudoCommand("ip -o address");
 
@@ -3197,7 +3197,7 @@ echo $? > {cmdFolder}/exit
                 throw new Exception($"Cannot determine primary network interface via [ip -o address]: [exitcode={result.ExitCode}] {result.AllText}");
             }
 
-            // $note(jeff.lill): We support only IPv4 addresses.
+            // $note(jefflill): We support only IPv4 addresses.
 
             // The [ip -o address] returns network interfaces on single lines that
             // will look something like:
@@ -3404,7 +3404,7 @@ network:
         /// <returns>The <see cref="CommandResponse"/>.</returns>
         public CommandResponse KubectlApply(string yaml, RunOptions runOptions = RunOptions.Defaults)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(yaml));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(yaml), nameof(yaml));
 
             var bundle = new CommandBundle("kubectl apply -f file.yaml");
 
@@ -3421,7 +3421,7 @@ network:
         /// <returns>The <see cref="CommandResponse"/>.</returns>
         public CommandResponse KubeCtlApply(StringBuilder sbYaml, RunOptions runOptions = RunOptions.Defaults)
         {
-            Covenant.Requires<ArgumentNullException>(sbYaml != null);
+            Covenant.Requires<ArgumentNullException>(sbYaml != null, nameof(sbYaml));
 
             return KubectlApply(sbYaml.ToString());
         }

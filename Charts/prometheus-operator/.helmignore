@@ -19,4 +19,8 @@
 .project
 .idea/
 *.tmproj
-.vscode/
+# helm/charts
+OWNERS
+hack/
+ci/
+prometheus-operator-*.tgz

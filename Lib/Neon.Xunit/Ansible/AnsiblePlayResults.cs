@@ -38,7 +38,7 @@ namespace Neon.Xunit
         /// <param name="rawResults">The execution results.</param>
         internal AnsiblePlayResults(ExecuteResponse rawResults)
         {
-            Covenant.Requires<ArgumentNullException>(rawResults != null);
+            Covenant.Requires<ArgumentNullException>(rawResults != null, nameof(rawResults));
 
             RawResults = rawResults;
 

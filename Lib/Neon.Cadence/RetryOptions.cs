@@ -46,7 +46,7 @@ namespace Neon.Cadence
         /// <param name="policy">The policy.</param>
         public RetryOptions(LinearRetryPolicy policy)
         {
-            Covenant.Requires<ArgumentNullException>(policy != null);
+            Covenant.Requires<ArgumentNullException>(policy != null, nameof(policy));
 
             this.InitialInterval    = CadenceHelper.Normalize(policy.RetryInterval);
             this.BackoffCoefficient = 1.0;
@@ -65,7 +65,7 @@ namespace Neon.Cadence
         /// <param name="policy">The policy.</param>
         public RetryOptions(ExponentialRetryPolicy policy)
         {
-            Covenant.Requires<ArgumentNullException>(policy != null);
+            Covenant.Requires<ArgumentNullException>(policy != null, nameof(policy));
 
             this.InitialInterval    = CadenceHelper.Normalize(policy.InitialRetryInterval);
             this.BackoffCoefficient = 2.0;
@@ -113,7 +113,7 @@ namespace Neon.Cadence
         /// </summary>
         public int MaximumAttempts { get; set; }
 
-        // $todo(jeff.lill):
+        // $todo(jefflill):
         //
         // We'd align better with the Java client if this was a list of [CadenceException] derived
         // exceptions rather than GOLANG error strings.  We'll revist this when the port is further

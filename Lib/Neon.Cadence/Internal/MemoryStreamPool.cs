@@ -72,7 +72,7 @@ namespace Neon.Cadence.Internal
         /// <param name="stream">The stream being freed.</param>
         public static void Free(MemoryStream stream)
         {
-            Covenant.Requires<ArgumentNullException>(stream != null);
+            Covenant.Requires<ArgumentNullException>(stream != null, nameof(stream));
 
             // We're going to limit the capacity of cached streams to 1MiB to
             // prevent the accumulation of cached streams with very large buffers.

@@ -61,7 +61,7 @@ namespace TestModelGen
         /// <param name="instanceType">The target type.</param>
         public DataWrapper(Type instanceType)
         {
-            Covenant.Requires<ArgumentNullException>(instanceType != null);
+            Covenant.Requires<ArgumentNullException>(instanceType != null, nameof(instanceType));
 
             this.instance     = Activator.CreateInstance(instanceType);
             this.instanceType = instanceType;
@@ -79,8 +79,8 @@ namespace TestModelGen
         /// <param name="bytes">The JSON text.</param>
         public DataWrapper(Type instanceType, string bytes)
         {
-            Covenant.Requires<ArgumentNullException>(instanceType != null);
-            Covenant.Requires<ArgumentNullException>(bytes != null);
+            Covenant.Requires<ArgumentNullException>(instanceType != null, nameof(instanceType));
+            Covenant.Requires<ArgumentNullException>(bytes != null, nameof(bytes));
 
             try
             {
@@ -114,8 +114,8 @@ namespace TestModelGen
         /// <param name="bytes">The JSON bytes.</param>
         public DataWrapper(Type instanceType, byte[] bytes)
         {
-            Covenant.Requires<ArgumentNullException>(instanceType != null);
-            Covenant.Requires<ArgumentNullException>(bytes != null);
+            Covenant.Requires<ArgumentNullException>(instanceType != null, nameof(instanceType));
+            Covenant.Requires<ArgumentNullException>(bytes != null, nameof(bytes));
 
             try
             {
@@ -149,8 +149,8 @@ namespace TestModelGen
         /// <param name="jObject">The <see cref="JObject"/>.</param>
         public DataWrapper(Type instanceType, JObject jObject)
         {
-            Covenant.Requires<ArgumentNullException>(instanceType != null);
-            Covenant.Requires<ArgumentNullException>(jObject != null);
+            Covenant.Requires<ArgumentNullException>(instanceType != null, nameof(instanceType));
+            Covenant.Requires<ArgumentNullException>(jObject != null, nameof(jObject));
 
             try
             {
@@ -185,7 +185,7 @@ namespace TestModelGen
         /// <summary>
         /// Returns the <see cref="JObject"/> backing the wrapped class.
         /// </summary>
-        public JObject JObject => (JObject)instanceType.GetProperty("__JObject", BindingFlags.Instance | BindingFlags.Public).GetValue(instance);
+        public JObject JObject => (JObject)instanceType.GetProperty("__O", BindingFlags.Instance | BindingFlags.Public).GetValue(instance);
 
         /// <summary>
         /// Accesses the wrapped data model's properties.
@@ -195,7 +195,7 @@ namespace TestModelGen
         {
             get
             {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(propertyName));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(propertyName), nameof(propertyName));
 
                 try
                 {
@@ -223,7 +223,7 @@ namespace TestModelGen
 
             set
             {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(propertyName));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(propertyName), nameof(propertyName));
 
                 try
                 {
@@ -283,7 +283,7 @@ namespace TestModelGen
         {
             try
             {
-                var method = instanceType.GetMethod("__Save", new Type[] { });
+                var method = instanceType.GetMethod("__Save", Array.Empty<Type>());
 
                 method.Invoke(instance, null);
             }
@@ -317,7 +317,7 @@ namespace TestModelGen
                 }
                 else
                 {
-                    var method = instanceType.GetMethod("ToString", new Type[] { });
+                    var method = instanceType.GetMethod("ToString", Array.Empty<Type>());
 
                     return (string)method.Invoke(instance, null);
                 }
@@ -343,7 +343,7 @@ namespace TestModelGen
         {
             try
             {
-                var method = instanceType.GetMethod("ToBytes", new Type[] { });
+                var method = instanceType.GetMethod("ToBytes", Array.Empty<Type>());
 
                 return (byte[])method.Invoke(instance, null);
             }
@@ -363,41 +363,14 @@ namespace TestModelGen
         /// <summary>
         /// Serializes the data model as a <see cref="JObject"/>.
         /// </summary>
-        /// <param name="noClone">Optionally disable deep cloning of the backing <see cref="JObject"/>.</param>
         /// <returns>The JSON text.</returns>
-        public JObject ToJObject(bool noClone = false)
+        public JObject ToJObject()
         {
             try
             {
-                var method = instanceType.GetMethod("ToJObject", new Type[] { typeof(bool) });
+                var method = instanceType.GetMethod("ToJObject", Array.Empty<Type>());
 
-                return (JObject)method.Invoke(instance, new object[] { noClone });
-            }
-            catch (TargetInvocationException e)
-            {
-                if (e.InnerException != null)
-                {
-                    throw e.InnerException;
-                }
-                else
-                {
-                    throw;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Returns a deep clone of the data model.
-        /// </summary>
-        /// <returns>The new data <see cref="DataWrapper"/> with the cloned instance.</returns>
-        public DataWrapper DeepClone()
-        {
-            try
-            {
-                var toJObjectMethod = instanceType.GetMethod("ToJObject", new Type[] { typeof(bool) });
-                var jObject         = (JObject)toJObjectMethod.Invoke(instance, new object[] { false });
-
-                return new DataWrapper(instanceType, jObject);
+                return (JObject)method.Invoke(instance, Array.Empty<Type>());
             }
             catch (TargetInvocationException e)
             {
@@ -498,7 +471,7 @@ namespace TestModelGen
         /// <returns>The hash code.</returns>
         public override int GetHashCode()
         {
-            var method = instanceType.GetMethod("GetHashCode", new Type[] { });
+            var method = instanceType.GetMethod("GetHashCode", Array.Empty<Type>());
 
             try
             {
@@ -518,16 +491,17 @@ namespace TestModelGen
         }
 
         /// <summary>
-        /// Returns the value of the wrapped entity's <b>Persisted</b> constant.
+        /// Returns the value of the wrapped entity's <b>Persisted</b> constant or
+        /// <c>null</c> if the wrapped type is not persistent.
         /// </summary>
         public string PersistedType
         {
             get
             {
                 var fields   = instanceType.GetFields(BindingFlags.Static | BindingFlags.Public);
-                var constant = fields.Single(f => f.IsLiteral && f.Name == "PersistedType");
+                var constant = fields.SingleOrDefault(f => f.IsLiteral && f.Name == "PersistedType");
 
-                return (string)constant.GetValue(null);
+                return (string)constant?.GetValue(null);
             }
         }
     }

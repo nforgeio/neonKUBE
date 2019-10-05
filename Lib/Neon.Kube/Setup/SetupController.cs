@@ -549,7 +549,7 @@ namespace Neon.Kube
                         }
                         catch (Exception e)
                         {
-                            // $todo(jeff.lill):
+                            // $todo(jefflill):
                             //
                             // We're going to report global step exceptions as if they
                             // happened on the first master node because there's no
@@ -777,7 +777,7 @@ namespace Neon.Kube
 
             if (hasNodeSteps && ShowNodeStatus)
             {
-                // $hack(jeff.lill):
+                // $hack(jefflill):
                 //
                 // I'm hardcoding the status display here for two scenarios:
                 //

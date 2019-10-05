@@ -38,7 +38,7 @@ ENV PATH $PATH:/usr/local/go/bin
 # directory so the tools will install there first.  Then 
 # we'll copy the binaries to the GO binaries folder.
 
-# $todo(jeff.lill):
+# $todo(jefflill):
 #
 # Note also that we're installing the latest [dep] development
 # build rather than a specific release version.  We'll probably

@@ -42,7 +42,7 @@ namespace Neon.Service
         /// <param name="endpoint">The endpoint.</param>
         public void Add(ServiceEndpoint endpoint)
         {
-            Covenant.Requires<ArgumentNullException>(endpoint != null);
+            Covenant.Requires<ArgumentNullException>(endpoint != null, nameof(endpoint));
 
             Add(endpoint.Name, endpoint);
         }

@@ -43,6 +43,7 @@ namespace TestCadence
     {
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityDuplicateBlankEntrypoint : IActivity
         {
             [ActivityMethod]
@@ -79,6 +80,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityDuplicateEntrypoint : IActivity
         {
             [ActivityMethod(Name = "same")]
@@ -114,6 +116,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityNoEntrypoint : IActivity
         {
         }
@@ -135,12 +138,14 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityMultiInterface1 : IActivity
         {
             [ActivityMethod]
             Task Run1Async();
         }
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IActivityMultiInterface2 : IActivity
         {
             [ActivityMethod]

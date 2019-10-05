@@ -48,9 +48,9 @@ namespace WinDesktop
         /// <exception cref="FileNotFoundException">Thrown if no matching icon files were found.</exception>
         public static AnimatedIcon Load(string folder, string prefix, double frameRate)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(prefix));
-            Covenant.Requires<ArgumentException>(frameRate > 0);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(prefix), nameof(prefix));
+            Covenant.Requires<ArgumentException>(frameRate > 0, nameof(frameRate));
 
             var animatedIcon = new AnimatedIcon() { FrameRate = frameRate };
 
