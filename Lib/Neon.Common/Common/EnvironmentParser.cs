@@ -84,7 +84,7 @@ namespace Neon.Common
         /// <returns>Returns <c>true</c> if the input value is valid.</returns>
         private static bool IntParser(string input, out int value, out string error)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input), nameof(input));
 
             value = 0;
             error = null;
@@ -108,7 +108,7 @@ namespace Neon.Common
         /// <returns>Returns <c>true</c> if the input value is valid.</returns>
         private static bool DoubleParser(string input, out double value, out string error)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input), nameof(input));
 
             value = 0.0;
             error = null;
@@ -132,7 +132,7 @@ namespace Neon.Common
         /// <returns>Returns <c>true</c> if the input value is valid.</returns>
         private static bool BoolParser(string input, out bool value, out string error)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input), nameof(input));
 
             input = input.ToLowerInvariant();
             value = false;
@@ -174,7 +174,7 @@ namespace Neon.Common
         /// <returns>Returns <c>true</c> if the input value is valid.</returns>
         private static bool TimeSpanParser(string input, out TimeSpan value, out string error)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input), nameof(input));
 
             input = input.ToLowerInvariant();
             value = TimeSpan.Zero;
@@ -383,8 +383,8 @@ namespace Neon.Common
         /// <exception cref="FormatException">Thrown if the variable could not be parsed or the <paramref name="validator"/> returned an error.</exception>
         public T Parse<T>(string variable, string defaultInput, Parser<T> parser, bool required = false, Validator<T> validator = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(variable));
-            Covenant.Requires<ArgumentNullException>(parser != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(variable), nameof(variable));
+            Covenant.Requires<ArgumentNullException>(parser != null, nameof(parser));
 
             string error;
 

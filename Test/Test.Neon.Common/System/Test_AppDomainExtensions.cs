@@ -43,7 +43,7 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void GetUserAssemblies()
         {
-            // $note(jeff.lill):
+            // $note(jefflill):
             //
             // This test works only for .NET Core.  We're going to ignore the other 
             // framework platforms.

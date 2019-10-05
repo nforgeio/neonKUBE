@@ -133,12 +133,12 @@ namespace Neon.Xen
                 string                          primaryStorageRepository = "Local storage",
                 string                          extraStorageRespository  = "Local storage")
             {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(templateName));
-                Covenant.Requires<ArgumentException>(processors > 0);
-                Covenant.Requires<ArgumentException>(memoryBytes >= 0);
-                Covenant.Requires<ArgumentException>(diskBytes >= 0);
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(primaryStorageRepository));
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(extraStorageRespository));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(templateName), nameof(templateName));
+                Covenant.Requires<ArgumentException>(processors > 0, nameof(processors));
+                Covenant.Requires<ArgumentException>(memoryBytes >= 0, nameof(memoryBytes));
+                Covenant.Requires<ArgumentException>(diskBytes >= 0, nameof(diskBytes));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(primaryStorageRepository), nameof(primaryStorageRepository));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(extraStorageRespository), nameof(extraStorageRespository));
 
                 if (client.Template.Find(templateName) == null)
                 {
@@ -251,7 +251,7 @@ namespace Neon.Xen
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
             public void Start(XenVirtualMachine virtualMachine)
             {
-                Covenant.Requires<ArgumentNullException>(virtualMachine != null);
+                Covenant.Requires<ArgumentNullException>(virtualMachine != null, nameof(virtualMachine));
 
                 client.SafeInvoke("vm-start", $"uuid={virtualMachine.Uuid}");
             }
@@ -264,7 +264,7 @@ namespace Neon.Xen
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
             public void Shutdown(XenVirtualMachine virtualMachine, bool force = false)
             {
-                Covenant.Requires<ArgumentNullException>(virtualMachine != null);
+                Covenant.Requires<ArgumentNullException>(virtualMachine != null, nameof(virtualMachine));
 
                 if (force)
                 {
@@ -284,7 +284,7 @@ namespace Neon.Xen
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
             public void Reboot(XenVirtualMachine virtualMachine, bool force = false)
             {
-                Covenant.Requires<ArgumentNullException>(virtualMachine != null);
+                Covenant.Requires<ArgumentNullException>(virtualMachine != null, nameof(virtualMachine));
 
                 if (force)
                 {

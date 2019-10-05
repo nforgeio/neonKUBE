@@ -107,7 +107,7 @@ namespace System
         /// <returns>The underlying exception or <c>null</c>.</returns>
         public static Exception Find(this Exception e, Type exceptionType)
         {
-            Covenant.Requires<ArgumentNullException>(exceptionType != null);
+            Covenant.Requires<ArgumentNullException>(exceptionType != null, nameof(exceptionType));
 
             if (e == null)
             {

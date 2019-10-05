@@ -163,9 +163,9 @@ namespace Neon.Cadence
         /// <returns>The workflow registration key.</returns>
         private static string GetWorkflowTypeKey(CadenceClient client, string workflowTypeName, WorkflowMethodAttribute workflowMethodAttribute)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
-            Covenant.Requires<ArgumentNullException>(workflowMethodAttribute != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
+            Covenant.Requires<ArgumentNullException>(workflowMethodAttribute != null, nameof(workflowMethodAttribute));
 
             if (string.IsNullOrEmpty(workflowMethodAttribute.Name))
             {
@@ -185,7 +185,7 @@ namespace Neon.Cadence
         /// <returns>The Cadence workflow type name.</returns>
         private static string GetWorkflowTypeNameFromKey(string workflowTypeKey)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeKey));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeKey), nameof(workflowTypeKey));
 
             var separatorPos = workflowTypeKey.IndexOf(CadenceHelper.WorkflowTypeMethodSeparator);
 
@@ -204,8 +204,8 @@ namespace Neon.Cadence
         /// <exception cref="InvalidOperationException">Thrown if a different workflow class has already been registered for <paramref name="workflowTypeName"/>.</exception>
         internal static async Task RegisterAsync(CadenceClient client, Type workflowType, string workflowTypeName, string domain)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain), nameof(domain));
             CadenceHelper.ValidateWorkflowImplementation(workflowType);
 
             var methodMap = WorkflowMethodMap.Create(workflowType);
@@ -281,7 +281,7 @@ namespace Neon.Cadence
                         Domain = client.ResolveDomain(domain)
                     });
 
-                // $hack(jeff.lill): 
+                // $hack(jefflill): 
                 //
                 // We're going to ignore any errors here to handle:
                 //
@@ -297,7 +297,7 @@ namespace Neon.Cadence
         /// <param name="client">The client being disposed.</param>
         internal static void UnregisterClient(CadenceClient client)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
             var prefix = $"{client.ClientId}::";
 
@@ -318,8 +318,8 @@ namespace Neon.Cadence
         /// <returns>The <see cref="WorkflowRegistration"/> or <c>null</c> if the type was not found.</returns>
         private static WorkflowRegistration GetWorkflowRegistration(CadenceClient client, string workflowTypeName)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(workflowTypeName != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
 
             lock (syncLock)
             {
@@ -342,8 +342,8 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         internal static async Task OnProxyRequestAsync(CadenceClient client, ProxyRequest request)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(request != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
             ProxyReply reply;
 
@@ -371,7 +371,7 @@ namespace Neon.Cadence
 
                 case InternalMessageTypes.WorkflowFutureReadyRequest:
 
-                    // $todo(jeff.lill): We need to actually implement this.
+                    // $todo(jefflill): We need to actually implement this.
 
                     reply = new WorkflowFutureReadyReply();
                     break;
@@ -392,7 +392,7 @@ namespace Neon.Cadence
         /// <returns>The <see cref="WorkflowBase"/> instance or <c>null</c> if the workflow was not found.</returns>
         private static WorkflowBase GetWorkflow(CadenceClient client, long contextId)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
             lock (syncLock)
             {
@@ -415,9 +415,9 @@ namespace Neon.Cadence
         /// <returns>The reply message.</returns>
         internal static async Task<WorkflowInvokeReply> OnInvokeAsync(CadenceClient client, WorkflowInvokeRequest request)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(request != null);
-            Covenant.Requires<ArgumentException>(request.ReplayStatus != InternalReplayStatus.Unspecified);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
+            Covenant.Requires<ArgumentException>(request.ReplayStatus != InternalReplayStatus.Unspecified, nameof(request));
 
             WorkflowBase            workflow;
             WorkflowRegistration    registration;
@@ -577,8 +577,8 @@ namespace Neon.Cadence
         /// <returns>The reply message.</returns>
         internal static async Task<WorkflowSignalInvokeReply> OnSignalAsync(CadenceClient client, WorkflowSignalInvokeRequest request)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(request != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
             try
             {
@@ -631,8 +631,8 @@ namespace Neon.Cadence
         /// <returns>The reply message.</returns>
         internal static async Task<WorkflowQueryInvokeReply> OnQueryAsync(CadenceClient client, WorkflowQueryInvokeRequest request)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(request != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
             try
             {
@@ -723,7 +723,7 @@ namespace Neon.Cadence
         /// <returns>The reply message.</returns>
         internal static async Task<ActivityInvokeLocalReply> OnInvokeLocalActivity(CadenceClient client, ActivityInvokeLocalRequest request)
         {
-            Covenant.Requires<ArgumentNullException>(request != null);
+            Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
             try
             {

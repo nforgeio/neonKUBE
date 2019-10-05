@@ -551,7 +551,7 @@ namespace Neon.Time
         /// <returns><c>true</c> if the value could be parsed, <b></b> if the value is not valid for the type.</returns>
         private bool TryParse(string input)
         {
-            Covenant.Requires<ArgumentNullException>(input != null);
+            Covenant.Requires<ArgumentNullException>(input != null, nameof(input));
 
             string[]    fields;
             double      hours   = 0;

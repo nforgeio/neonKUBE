@@ -45,6 +45,7 @@ namespace TestCadence
     {
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowEntryVoidNoArgs : IWorkflow
         {
             [WorkflowMethod]
@@ -62,6 +63,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowEntryVoidWithArgs : IWorkflow
         {
             [WorkflowMethod]
@@ -79,6 +81,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowEntryResultWithArgs : IWorkflow
         {
             [WorkflowMethod]
@@ -105,6 +108,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowSignalNoArgs : IWorkflow
         {
             [WorkflowMethod]
@@ -125,6 +129,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowSignalWithArgs : IWorkflow
         {
             [WorkflowMethod]
@@ -145,6 +150,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowQueryVoidNoArgs : IWorkflow
         {
             [WorkflowMethod]
@@ -165,6 +171,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowQueryVoidWithArgs : IWorkflow
         {
             [WorkflowMethod]
@@ -185,6 +192,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowQueryResultWithArgs : IWorkflow
         {
             [WorkflowMethod]
@@ -205,6 +213,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowMultiMethods : IWorkflow
         {
             [WorkflowMethod]

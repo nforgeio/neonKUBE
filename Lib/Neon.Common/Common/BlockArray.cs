@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 
-// $todo(jeff.lill): 
+// $todo(jefflill): 
 //
 // The Block class needs to be redefined as a struct.  This will require
 // some significant changes to the BlockArray implementation.

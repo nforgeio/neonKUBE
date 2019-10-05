@@ -338,7 +338,7 @@ OPTIONS:
                     // Update the node security to use a strong password and also 
                     // configure the SSH client certificate.
 
-                    // $todo(jeff.lill):
+                    // $todo(jefflill):
                     //
                     // Note that this step isn't entirely idempotent.  The problem happens
                     // when the password change fails on one or more of the nodes and succeeds
@@ -669,7 +669,7 @@ OPTIONS:
 
                     // Create the container user and group.
 
-                    // $todo(jeff.lill):
+                    // $todo(jefflill):
                     //
                     // This is a bit of a hack to enable local Persistent Volumes for
                     // pet-type pods.  We're going to precreate 100 folders and give
@@ -1493,7 +1493,7 @@ rm /tmp/calico.yaml
 
                     // Wait for Calico and CoreDNS pods to report that they're running.
 
-                    // $todo(jeff.lill):
+                    // $todo(jefflill):
                     //
                     // This is a horrible hack.  I'm going to examine the [kubectl get pods]
                     // response by skipping the column headers and then ensuring that each
@@ -2604,7 +2604,7 @@ rm -rf {chartName}*
 
             kubeContextExtension.SshClientKey = new SshClientKey();
 
-            // $hack(jeff.lill): 
+            // $hack(jefflill): 
             //
             // We're going to generate a 2048 bit key pair on one of the
             // master nodes and then download and then delete it.  This

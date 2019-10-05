@@ -1308,7 +1308,7 @@ namespace TestModelGen.ServiceModel
                         Assert.Null(requestContentType);
                         Assert.Null(requestBody);
 
-                        // $todo(jeff.lill):
+                        // $todo(jefflill):
                         //
                         // This test doesn't work because I can't instantiate the generated enumeration
                         // value.  I don't believe this is a big deal though, because we can test the

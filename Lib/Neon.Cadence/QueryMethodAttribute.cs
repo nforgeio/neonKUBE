@@ -38,7 +38,7 @@ namespace Neon.Cadence
         /// <param name="name">Specifies the Cadence query type.</param>
         public QueryMethodAttribute(string name)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             this.Name = name;
         }

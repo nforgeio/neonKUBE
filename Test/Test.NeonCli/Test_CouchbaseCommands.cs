@@ -178,7 +178,7 @@ namespace Test.NeonCli
         {
             ExecuteResponse result;
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // I'm not testing the document key generation features yet.
 

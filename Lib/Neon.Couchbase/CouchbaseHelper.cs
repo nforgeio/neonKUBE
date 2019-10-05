@@ -131,13 +131,13 @@ namespace Couchbase
         /// </remarks>
         public static string LiteralName(string value)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(value));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(value), nameof(value));
 
             var sb = new StringBuilder();
 
             sb.Append('`');
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // I'm not entirely sure that escapes are allowed in
             // Couchbase names but I'm going to support them just

@@ -37,7 +37,7 @@ namespace Neon.ModelGen
         /// <param name="modelGenerator">The model code generator instance.</param>
         public DataModel(Type sourceType, ModelGenerator modelGenerator)
         {
-            Covenant.Requires<ArgumentNullException>(sourceType != null);
+            Covenant.Requires<ArgumentNullException>(sourceType != null, nameof(sourceType));
 
             this.SourceType = sourceType;
         }
@@ -128,7 +128,7 @@ namespace Neon.ModelGen
         /// <returns>The list of selected properties.</returns>
         public IEnumerable<DataProperty> SelectProperties(Func<DataProperty, bool> selector, bool includeInherited = false)
         {
-            Covenant.Requires<ArgumentNullException>(selector != null);
+            Covenant.Requires<ArgumentNullException>(selector != null, nameof(selector));
 
             if (!includeInherited)
             {

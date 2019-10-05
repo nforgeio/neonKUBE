@@ -79,8 +79,8 @@ namespace NeonCli
         /// <param name="value">The variable value.</param>
         private static void SetBashVariable(PreprocessReader preprocessReader, string name, object value)
         {
-            Covenant.Requires<ArgumentNullException>(preprocessReader != null);
-            Covenant.Requires<ArgumentNullException>(name != null);
+            Covenant.Requires<ArgumentNullException>(preprocessReader != null, nameof(preprocessReader));
+            Covenant.Requires<ArgumentNullException>(name != null, nameof(name));
 
             if (value == null)
             {
@@ -144,9 +144,9 @@ namespace NeonCli
         /// <param name="nodeDefinition">The target node definition.</param>
         private static void SetClusterVariables(PreprocessReader preprocessReader, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo, NodeDefinition nodeDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(preprocessReader != null);
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
-            Covenant.Requires<ArgumentNullException>(kubeSetupInfo != null);
+            Covenant.Requires<ArgumentNullException>(preprocessReader != null, nameof(preprocessReader));
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<ArgumentNullException>(kubeSetupInfo != null, nameof(kubeSetupInfo));
 
             // Generate the master node variables in sorted order.  The variable 
             // names will be formatted as:
@@ -310,7 +310,7 @@ namespace NeonCli
             {
                 case HostingEnvironments.Aws:
 
-                    throw new NotImplementedException("$todo(jeff.lill)");
+                    throw new NotImplementedException("$todo(jefflill)");
 
                 case HostingEnvironments.Azure:
 
@@ -328,7 +328,7 @@ namespace NeonCli
 
                 case HostingEnvironments.Google:
 
-                    throw new NotImplementedException("$todo(jeff.lill)");
+                    throw new NotImplementedException("$todo(jefflill)");
 
                 case HostingEnvironments.HyperV:
                 case HostingEnvironments.HyperVLocal:
@@ -423,9 +423,9 @@ namespace NeonCli
         public static void UploadConfigFiles<Metadata>(this SshProxy<Metadata> node, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo)
             where Metadata : class
         {
-            Covenant.Requires<ArgumentNullException>(node != null);
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
-            Covenant.Requires<ArgumentNullException>(kubeSetupInfo != null);
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<ArgumentNullException>(kubeSetupInfo != null, nameof(kubeSetupInfo));
 
             // Clear the contents of the configuration folder.
 
@@ -459,9 +459,9 @@ namespace NeonCli
         public static void UploadResources<TMetadata>(this SshProxy<TMetadata> server, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo)
             where TMetadata : class
         {
-            Covenant.Requires<ArgumentNullException>(server != null);
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
-            Covenant.Requires<ArgumentNullException>(kubeSetupInfo != null);
+            Covenant.Requires<ArgumentNullException>(server != null, nameof(server));
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<ArgumentNullException>(kubeSetupInfo != null, nameof(kubeSetupInfo));
 
             //-----------------------------------------------------------------
             // Upload resource files to the setup folder.

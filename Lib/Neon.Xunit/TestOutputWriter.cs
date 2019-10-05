@@ -83,7 +83,7 @@ namespace Neon.Xunit
         /// <param name="outputHelper">The test output helper.</param>
         public TestOutputWriter(ITestOutputHelper outputHelper)
         {
-            Covenant.Requires<ArgumentNullException>(outputHelper != null);
+            Covenant.Requires<ArgumentNullException>(outputHelper != null, nameof(outputHelper));
 
             this.outputHelper = outputHelper;
         }

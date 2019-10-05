@@ -76,12 +76,12 @@ namespace Neon.Cadence
             bool                isReplaying, 
             WorkflowMethodMap   methodMap)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId));
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain), nameof(domain));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList), nameof(taskList));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId), nameof(runId));
 
             this.Parent                    = parent;
             this.ContextId                 = contextId;
@@ -92,6 +92,7 @@ namespace Neon.Cadence
             this.MethodMap                 = methodMap;
             this.Client                    = client;
             this.IsReplaying               = isReplaying;
+            this.Execution                 = new WorkflowExecution(workflowId, runId);
             this.Logger                    = LogManager.Default.GetLogger(sourceModule: Client.Settings?.ClientIdentity, contextId: runId, () => !IsReplaying || Client.Settings.LogDuringReplay);
 
             // Initialize the random number generator with a fairly unique
@@ -114,7 +115,7 @@ namespace Neon.Cadence
                 WorkflowId   = workflowId,
                 RunId        = runId,
 
-                // $todo(jeff.lill): We need to initialize these from somewhere.
+                // $todo(jefflill): We need to initialize these from somewhere.
                 //
                 // ExecutionStartToCloseTimeout
                 // ChildPolicy 
@@ -506,8 +507,8 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<int> GetVersionAsync(string changeId, int minSupported, int maxSupported)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(changeId));
-            Covenant.Requires<ArgumentException>(minSupported <= maxSupported);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(changeId), nameof(changeId));
+            Covenant.Requires<ArgumentException>(minSupported <= maxSupported, nameof(minSupported));
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -530,17 +531,10 @@ namespace Neon.Cadence
             return reply.Version;
         }
 
-#if TODO
-        // $todo(jeff.lill):
-        //
-        // We're going to leave this unimplemented for now and revisit later.
-        //
-        //      https://github.com/nforgeio/neonKUBE/issues/615
-
         /// <summary>
         /// Returns the <see cref="WorkflowExecution"/> for a child workflow created via
         /// <see cref="NewChildWorkflowStub{TWorkflowInterface}(ChildWorkflowOptions, string)"/>
-        /// or <see cref="NewExternalWorkflowStub{TWorkflowInterface}(string, string)"/>.
+        /// or <see cref="NewExternalWorkflowStub(string, string)"/>.
         /// </summary>
         /// <param name="stub">The child workflow stub.</param>
         /// <returns>The <see cref="WorkflowExecution"/>.</returns>
@@ -549,17 +543,16 @@ namespace Neon.Cadence
             Client.EnsureNotDisposed();
             SetStackTrace();
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // Come back to this one after we've implemented the stubs.  This information
             // comes back to the .NET side in [WorkflowExecuteChildReply].
 
-            Covenant.Requires<ArgumentNullException>(stub != null);
+            Covenant.Requires<ArgumentNullException>(stub != null, nameof(stub));
 
             await Task.CompletedTask;
             throw new NotImplementedException();
         }
-#endif
 
         /// <summary>
         /// Calls the specified function and then searches the workflow history
@@ -606,7 +599,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<T> MutableSideEffectAsync<T>(string id, Func<T> function)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id), nameof(id));
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -689,9 +682,9 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<object> MutableSideEffectAsync(Type resultType, string id, Func<dynamic> function)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id));
-            Covenant.Requires<ArgumentNullException>(resultType != null);
-            Covenant.Requires<ArgumentNullException>(function != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id), nameof(id));
+            Covenant.Requires<ArgumentNullException>(resultType != null, nameof(resultType));
+            Covenant.Requires<ArgumentNullException>(function != null, nameof(function));
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -810,7 +803,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<int> NextRandomAsync(int maxValue)
         {
-            Covenant.Requires<ArgumentNullException>(maxValue > 0);
+            Covenant.Requires<ArgumentNullException>(maxValue > 0, nameof(maxValue));
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -838,7 +831,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<int> NextRandomAsync(int minValue, int maxValue)
         {
-            Covenant.Requires<ArgumentNullException>(minValue < maxValue);
+            Covenant.Requires<ArgumentNullException>(minValue < maxValue, nameof(minValue));
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -864,7 +857,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<byte[]> NextRandomBytesAsync(int size)
         {
-            Covenant.Requires<ArgumentNullException>(size > 0);
+            Covenant.Requires<ArgumentNullException>(size > 0, nameof(size));
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -917,7 +910,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<T> SideEffectAsync<T>(Func<T> function)
         {
-            Covenant.Requires<ArgumentNullException>(function != null);
+            Covenant.Requires<ArgumentNullException>(function != null, nameof(function));
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -988,8 +981,8 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<object> SideEffectAsync(Type resultType, Func<object> function)
         {
-            Covenant.Requires<ArgumentNullException>(resultType != null);
-            Covenant.Requires<ArgumentNullException>(function != null);
+            Covenant.Requires<ArgumentNullException>(resultType != null, nameof(resultType));
+            Covenant.Requires<ArgumentNullException>(function != null, nameof(function));
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -1222,50 +1215,35 @@ namespace Neon.Cadence
             return StubManager.NewContinueAsNewStub<TWorkflowInterface>(Client, options);
         }
 
-#if TODO
-        // $todo(jeff.lill):
-        //
-        // I'm not actually sure what the point of external child workflow stubs
-        // are and there are some implementation gaps.  We're going to leave these
-        // unimplemented for now and revisit later.
-        //
-        //      https://github.com/nforgeio/neonKUBE/issues/615
-
         /// <summary>
         /// Creates a workflow client stub that can be used communicate with an
         /// existing workflow identified by a <see cref="WorkflowExecution"/>.
         /// </summary>
-        /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
         /// <param name="execution">Identifies the workflow.</param>
         /// <returns>The workflow stub.</returns>
-        public TWorkflowInterface NewExternalWorkflowStub<TWorkflowInterface>(WorkflowExecution execution)
-            where TWorkflowInterface : class
+        public ExternalWorkflowStub NewExternalWorkflowStub(WorkflowExecution execution)
         {
-            CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             Client.EnsureNotDisposed();
             SetStackTrace();
 
-            return StubManager.NewChildWorkflowStubById<TWorkflowInterface>(Client, this, execution);
+            return new ExternalWorkflowStub(Client, execution);
         }
 
         /// <summary>
         /// Creates a workflow client stub that can be used communicate with an
-        /// existing workflow identified by a workflow ID and an optional domain.
+        /// existing workflow identified by a workflow ID and optional domain.
         /// </summary>
-        /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
         /// <param name="workflowId">Identifies the workflow.</param>
         /// <param name="domain">Optionally overrides the parent workflow domain.</param>
         /// <returns>The workflow stub.</returns>
-        public TWorkflowInterface NewExternalWorkflowStub<TWorkflowInterface>(string workflowId, string domain = null)
-            where TWorkflowInterface : class
+        public ExternalWorkflowStub NewExternalWorkflowStub(string workflowId, string domain = null)
         {
-            CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             Client.EnsureNotDisposed();
             SetStackTrace();
 
-            return StubManager.NewChildWorkflowStubById<TWorkflowInterface>(Client, this, workflowId, domain);
+            return new ExternalWorkflowStub(Client, new WorkflowExecution(workflowId), domain);
         }
-#endif
 
         /// <summary>
         /// Creates a client stub that can be used to launch one or more local activity 
@@ -1315,7 +1293,7 @@ namespace Neon.Cadence
         }
 
 #if TODO
-        // $todo(jeff.lill): https://github.com/nforgeio/neonKUBE/issues/615
+        // $todo(jefflill): https://github.com/nforgeio/neonKUBE/issues/615
 
         /// <summary>
         /// Creates a new untyped activity client stub that can be used to launch activities.
@@ -1392,6 +1370,7 @@ namespace Neon.Cadence
         /// <returns>The <see cref="ExternalWorkflowStub"/>.</returns>
         public ExternalWorkflowStub NewUntypedExternalWorkflowStub(WorkflowExecution execution, string domain = null)
         {
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -1529,6 +1508,8 @@ namespace Neon.Cadence
             Client.EnsureNotDisposed();
             SetStackTrace();
 
+            options = ChildWorkflowOptions.Normalize(Client, options, typeof(TWorkflowInterface));
+
             return new StartChildWorkflowStub<TWorkflowInterface>(this, methodName, options);
         }
 
@@ -1665,6 +1646,8 @@ namespace Neon.Cadence
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
             Client.EnsureNotDisposed();
             SetStackTrace();
+
+            options = ActivityOptions.Normalize(Client, options, typeof(TActivityInterface));
 
             return new StartActivityStub<TActivityInterface>(this, methodName, options);
         }
@@ -1828,7 +1811,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         internal async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args = null, ActivityOptions options = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName), nameof(activityTypeName));
             Client.EnsureNotDisposed();
             SetStackTrace(skipFrames: 3);
 
@@ -1882,10 +1865,10 @@ namespace Neon.Cadence
         /// <returns>The new local activity action ID.</returns>
         internal long RegisterActivityAction(Type activityType, ConstructorInfo activityConstructor, MethodInfo activityMethod)
         {
-            Covenant.Requires<ArgumentNullException>(activityType != null);
-            Covenant.Requires<ArgumentNullException>(activityConstructor != null);
-            Covenant.Requires<ArgumentException>(activityType.BaseType == typeof(ActivityBase));
-            Covenant.Requires<ArgumentNullException>(activityMethod != null);
+            Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
+            Covenant.Requires<ArgumentNullException>(activityConstructor != null, nameof(activityConstructor));
+            Covenant.Requires<ArgumentException>(activityType.BaseType == typeof(ActivityBase), nameof(activityType));
+            Covenant.Requires<ArgumentNullException>(activityMethod != null, nameof(activityMethod));
             Client.EnsureNotDisposed();
 
             var activityActionId    = Interlocked.Increment(ref nextLocalActivityActionId);
@@ -1924,10 +1907,10 @@ namespace Neon.Cadence
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         internal async Task<byte[]> ExecuteLocalActivityAsync(Type activityType, ConstructorInfo activityConstructor, MethodInfo activityMethod, byte[] args = null, LocalActivityOptions options = null)
         {
-            Covenant.Requires<ArgumentNullException>(activityType != null);
-            Covenant.Requires<ArgumentException>(activityType.BaseType == typeof(ActivityBase));
-            Covenant.Requires<ArgumentNullException>(activityConstructor != null);
-            Covenant.Requires<ArgumentNullException>(activityMethod != null);
+            Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
+            Covenant.Requires<ArgumentException>(activityType.BaseType == typeof(ActivityBase), nameof(activityType));
+            Covenant.Requires<ArgumentNullException>(activityConstructor != null, nameof(activityConstructor));
+            Covenant.Requires<ArgumentNullException>(activityMethod != null, nameof(activityMethod));
             Client.EnsureNotDisposed();
             SetStackTrace(skipFrames: 3);
 

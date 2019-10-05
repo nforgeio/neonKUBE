@@ -40,7 +40,7 @@ namespace Neon.Docker
         internal DockerNodeManagerStatus(dynamic source)
         {
             this.Inner        = source;
-            this.Leader       = (source.Leader is bool) ? source.Leader : false; // $todo(jeff.lill): Need a general way of handling this?
+            this.Leader       = (source.Leader is bool) ? source.Leader : false; // $todo(jefflill): Need a general way of handling this?
             this.Reachability = source.Reachability;
             this.Addr         = source.Addr;
         }

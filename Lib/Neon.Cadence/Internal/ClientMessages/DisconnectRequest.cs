@@ -22,7 +22,7 @@ using System.ComponentModel;
 using Neon.Cadence;
 using Neon.Common;
 
-// $todo(jeff.lill): Investigate adding metrics details.
+// $todo(jefflill): Investigate adding metrics details.
 
 namespace Neon.Cadence.Internal
 {

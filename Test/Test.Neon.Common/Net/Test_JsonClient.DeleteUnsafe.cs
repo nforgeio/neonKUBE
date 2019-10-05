@@ -346,7 +346,7 @@ namespace TestCommon
         {
             // Ensure that DELETE will retry after soft errors.
 
-            // $todo(jeff.lill): Simulate socket errors via HttpClient mocking.
+            // $todo(jefflill): Simulate socket errors via HttpClient mocking.
 
             await Task.CompletedTask;
         }
@@ -357,7 +357,7 @@ namespace TestCommon
         {
             // Ensure that DELETE won't retry if [retryPolicy=NULL]
 
-            // $todo(jeff.lill): Simulate socket errors via HttpClient mocking.
+            // $todo(jefflill): Simulate socket errors via HttpClient mocking.
 
             await Task.CompletedTask;
         }
@@ -368,7 +368,7 @@ namespace TestCommon
         {
             // Ensure that DELETE won't retry if [retryPolicy=NoRetryPolicy]
 
-            // $todo(jeff.lill): Simulate socket errors via HttpClient mocking.
+            // $todo(jefflill): Simulate socket errors via HttpClient mocking.
 
             await Task.CompletedTask;
         }

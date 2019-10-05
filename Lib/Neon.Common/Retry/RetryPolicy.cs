@@ -109,7 +109,7 @@ namespace Neon.Retry
         /// </remarks>
         protected TimeSpan AdjustDelay(TimeSpan delay)
         {
-            Covenant.Requires<ArgumentException>(delay >= TimeSpan.Zero);
+            Covenant.Requires<ArgumentException>(delay >= TimeSpan.Zero, nameof(delay));
 
             var maxDelay = sysDeadline - DateTime.UtcNow;
 

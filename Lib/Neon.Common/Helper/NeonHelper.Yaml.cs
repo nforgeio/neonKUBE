@@ -227,7 +227,7 @@ namespace Neon.Common
         /// </remarks>
         public static string JsonToYaml(string jsonText)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonText));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonText), nameof(jsonText));
 
             // Note that we can't use [YamlSerialize()] because YamlDotNet doesn't
             // appear to honor the input types for dynamic/dictionary based types.

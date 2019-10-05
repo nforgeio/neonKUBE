@@ -160,7 +160,7 @@ namespace Neon.Common
         /// <returns>The <see cref="ExecuteResponse"/> returned by the simulated program run.</returns>
         public ExecuteResponse Execute(ProgramEntrypoint main, params string[] args)
         {
-            Covenant.Requires(main != null);
+            Covenant.Requires<ArgumentNullException>(main != null, nameof(main));
 
             if (programThread != null)
             {
@@ -240,8 +240,8 @@ namespace Neon.Common
         /// <returns>The <see cref="ExecuteResponse"/> returned by the simulated program run.</returns>
         public ExecuteResponse ExecuteWithInput(ProgramEntrypoint main, byte[] inputBytes, params string[] args)
         {
-            Covenant.Requires(main != null);
-            Covenant.Requires<ArgumentNullException>(inputBytes != null);
+            Covenant.Requires<ArgumentNullException>(main != null, nameof(main));
+            Covenant.Requires<ArgumentNullException>(inputBytes != null, nameof(inputBytes));
 
             this.inputBytes = inputBytes;
 
@@ -305,7 +305,7 @@ namespace Neon.Common
         /// <returns>The <see cref="ExecuteResponse"/> returned by the simulated program run.</returns>
         public ExecuteResponse ExecuteWithInput(ProgramEntrypoint main, string inputText, params string[] args)
         {
-            Covenant.Requires(main != null);
+            Covenant.Requires<ArgumentNullException>(main != null, nameof(main));
             Covenant.Requires<ArgumentNullException>(inputText != null);
 
             return ExecuteWithInput(main, Encoding.UTF8.GetBytes(inputText), args);
@@ -327,7 +327,7 @@ namespace Neon.Common
         /// <param name="args">The arguments.</param>
         public void Fork(ProgramEntrypoint main, params string[] args)
         {
-            Covenant.Requires(main != null);
+            Covenant.Requires<ArgumentNullException>(main != null, nameof(main));
 
             if (programThread != null)
             {

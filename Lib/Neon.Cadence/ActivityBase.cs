@@ -155,8 +155,8 @@ namespace Neon.Cadence
         /// <returns>The prepended activity registration key.</returns>
         private static string GetActivityTypeKey(CadenceClient client, string activityTypeName, ActivityMethodAttribute activityMethodAttribute = null)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName), nameof(activityTypeName));
 
             if (string.IsNullOrEmpty(activityMethodAttribute?.Name))
             {
@@ -176,7 +176,7 @@ namespace Neon.Cadence
         /// <returns>The Cadence workflow type name.</returns>
         private static string GetActivityTypeNameFromKey(string activityTypeKey)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeKey));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeKey), nameof(activityTypeKey));
 
             var separatorPos = activityTypeKey.IndexOf(CadenceHelper.ActivityTypeMethodSeparator);
 
@@ -196,8 +196,8 @@ namespace Neon.Cadence
         /// <exception cref="InvalidOperationException">Thrown if a different activity class has already been registered for <paramref name="activityTypeName"/>.</exception>
         internal async static Task RegisterAsync(CadenceClient client, Type activityType, string activityTypeName, string domain)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain));
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain), nameof(domain));
             CadenceHelper.ValidateActivityImplementation(activityType);
 
             var constructor = activityType.GetConstructor(Type.EmptyTypes);
@@ -278,7 +278,7 @@ namespace Neon.Cadence
                         Domain = client.ResolveDomain(domain)
                     });
 
-                // $hack(jeff.lill): 
+                // $hack(jefflill): 
                 //
                 // We're going to ignore any errors here to handle:
                 //
@@ -294,7 +294,7 @@ namespace Neon.Cadence
         /// <param name="client">The client being disposed.</param>
         internal static void UnregisterClient(CadenceClient client)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
             var prefix = $"{client.ClientId}::";
 
@@ -315,8 +315,8 @@ namespace Neon.Cadence
         /// <returns>The <see cref="ActivityRegistration"/>.</returns>
         private static ActivityRegistration GetActivityInvokeInfo(Type activityType, string activityTypeName)
         {
-            Covenant.Requires<ArgumentNullException>(activityType != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName));
+            Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName), nameof(activityTypeName));
 
             var info = new ActivityRegistration();
 
@@ -390,7 +390,7 @@ namespace Neon.Cadence
         /// <returns>The constructed activity.</returns>
         private static ActivityBase Create(CadenceClient client, ActivityRegistration invokeInfo, long? contextId)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
             var activity = (ActivityBase)(invokeInfo.ActivityConstructor.Invoke(noArgs));
 
@@ -408,7 +408,7 @@ namespace Neon.Cadence
         /// <returns>The constructed activity.</returns>
         internal static ActivityBase Create(CadenceClient client, LocalActivityAction activityAction, long? contextId)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
             var activity = (ActivityBase)(activityAction.ActivityConstructor.Invoke(noArgs));
 
@@ -425,8 +425,8 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         internal static async Task OnProxyRequestAsync(CadenceClient client, ProxyRequest request)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(request != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
             ProxyReply reply;
 
@@ -555,15 +555,15 @@ namespace Neon.Cadence
         /// <param name="contextId">The activity's context ID or <c>null</c> for local activities.</param>
         internal void Initialize(CadenceClient client, Type activityType, MethodInfo activityMethod, IDataConverter dataConverter, long? contextId)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(activityType != null);
-            Covenant.Requires<ArgumentNullException>(activityMethod != null);
-            Covenant.Requires<ArgumentNullException>(dataConverter != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
+            Covenant.Requires<ArgumentNullException>(activityMethod != null, nameof(activityMethod));
+            Covenant.Requires<ArgumentNullException>(dataConverter != null, nameof(dataConverter));
             CadenceHelper.ValidateActivityImplementation(activityType);
 
             var activityTask = new ActivityTask()
             {
-                 // $todo(jeff.lill): Need to initialize these properties.
+                 // $todo(jefflill): Need to initialize these properties.
             };
 
             this.Client                  = client;
@@ -662,7 +662,7 @@ namespace Neon.Cadence
         /// <returns>Thye activity results.</returns>
         internal async Task<byte[]> OnInvokeAsync(CadenceClient client, byte[] args)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
             if (IsLocal)
             {

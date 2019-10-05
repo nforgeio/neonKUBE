@@ -152,7 +152,7 @@ namespace Neon.Cadence
         /// <param name="options">The activity options or <c>null</c>.</param>
         internal StartLocalActivityStub(Workflow parentWorkflow, string methodName, LocalActivityOptions options = null)
         {
-            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
 
             var activityInterface = typeof(TActivityInterface);
 
@@ -228,7 +228,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<IAsyncFuture<TResult>> StartAsync<TResult>(params object[] args)
         {
-            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             parentWorkflow.SetStackTrace();
 
             if (hasStarted)
@@ -316,7 +316,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<IAsyncFuture> StartAsync(params object[] args)
         {
-            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             parentWorkflow.SetStackTrace();
 
             if (hasStarted)

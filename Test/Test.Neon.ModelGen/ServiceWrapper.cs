@@ -61,8 +61,8 @@ namespace TestModelGen
         /// <param name="context">The parent assembly context.</param>
         public ServiceWrapper(Type type, string baseAddress, AssemblyContext context)
         {
-            Covenant.Requires<ArgumentNullException>(type != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(baseAddress));
+            Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(baseAddress), nameof(baseAddress));
 
             instance     = Activator.CreateInstance(type, new object[] { null, false });
             instanceType = type;
@@ -190,7 +190,7 @@ namespace TestModelGen
             }
             catch (InvalidCastException)
             {
-                // $hack(jeff.lill):
+                // $hack(jefflill):
                 //
                 // We're going to see this for situations where the service client 
                 // returns one of the data model types that reside in the compiled
@@ -308,7 +308,7 @@ namespace TestModelGen
             }
             catch (InvalidCastException)
             {
-                // $hack(jeff.lill):
+                // $hack(jefflill):
                 //
                 // We're going to see this for situations where the service client 
                 // returns one of the data model types that reside in the compiled

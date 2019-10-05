@@ -57,7 +57,7 @@ namespace Neon.Cadence
         public string TaskList { get; internal set; }
 
 #if TODO
-        // $toodo(jeff.lill): These properties aren't supported yet.
+        // $toodo(jefflill): These properties aren't supported yet.
 
         /// <summary>
         /// Returns the maximum time the workflow is allowed to run from

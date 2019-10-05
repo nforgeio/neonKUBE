@@ -74,7 +74,7 @@ namespace Neon.Docker
         /// <param name="uri">The URI.</param>
         public DockerSettings(string uri)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
 
             this.Uri = new Uri(uri);
         }

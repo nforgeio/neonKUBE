@@ -79,12 +79,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ToolBin", "ToolBin", "{E9E3
 		ToolBin\neon-archive.cmd = ToolBin\neon-archive.cmd
 		ToolBin\neon-archive.ps1 = ToolBin\neon-archive.ps1
 		ToolBin\neon-build.cmd = ToolBin\neon-build.cmd
+		ToolBin\neon-builder.cmd = ToolBin\neon-builder.cmd
+		ToolBin\neon-builder.ps1 = ToolBin\neon-builder.ps1
 		ToolBin\neon-cadence.cmd = ToolBin\neon-cadence.cmd
 		ToolBin\neon-cadence.ps1 = ToolBin\neon-cadence.ps1
-		ToolBin\neonkube-build.cmd = ToolBin\neonkube-build.cmd
-		ToolBin\neonkube-build.ps1 = ToolBin\neonkube-build.ps1
-		ToolBin\nuget-neonforge-local.ps1 = ToolBin\nuget-neonforge-local.ps1
-		ToolBin\nuget-neonforge-public.ps1 = ToolBin\nuget-neonforge-public.ps1
+		ToolBin\neon-nuget-local.cmd = ToolBin\neon-nuget-local.cmd
+		ToolBin\neon-nuget-local.ps1 = ToolBin\neon-nuget-local.ps1
+		ToolBin\neon-nuget-public.cmd = ToolBin\neon-nuget-public.cmd
+		ToolBin\neon-nuget-public.ps1 = ToolBin\neon-nuget-public.ps1
+		ToolBin\neon-publish-images.cmd = ToolBin\neon-publish-images.cmd
 		ToolBin\text.cmd = ToolBin\text.cmd
 		ToolBin\unix-text.cmd = ToolBin\unix-text.cmd
 	EndProjectSection
@@ -98,8 +101,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "uuid-gen", "Tools\uuid-gen\uuid-gen.csproj", "{12E8C084-88B8-47A9-82AD-038C206089AA}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.Kube", "Lib\Neon.Xunit.Kube\Neon.Xunit.Kube.csproj", "{167C080E-3F81-4EB7-93BD-1D8671B51835}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Common", "Test\Test.Neon.Common\Test.Neon.Common.csproj", "{11EDBC14-0BF4-4C6B-86DD-3D292845C62A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Kube.Aws", "Lib\Neon.Kube.Aws\Neon.Kube.Aws.csproj", "{592FFCE1-0D8C-4797-9B3A-5F5F7E5E935B}"
 EndProject
@@ -246,6 +247,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.NeonCli", "Test\Test.NeonCli\Test.NeonCli.csproj", "{9F508BA8-DE43-4D48-AF91-B03E009C0BD4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cluster-manager", "Services\cluster-manager\cluster-manager.csproj", "{BE43C827-D1DF-4F95-98BE-98B315D12583}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Common", "Test\Test.Neon.Common\Test.Neon.Common.csproj", "{49072BAB-857F-4058-B2CE-693085F9269C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -425,18 +428,6 @@ Global
 		{167C080E-3F81-4EB7-93BD-1D8671B51835}.Release|x64.Build.0 = Release|Any CPU
 		{167C080E-3F81-4EB7-93BD-1D8671B51835}.Release|x86.ActiveCfg = Release|Any CPU
 		{167C080E-3F81-4EB7-93BD-1D8671B51835}.Release|x86.Build.0 = Release|Any CPU
-		{11EDBC14-0BF4-4C6B-86DD-3D292845C62A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{11EDBC14-0BF4-4C6B-86DD-3D292845C62A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{11EDBC14-0BF4-4C6B-86DD-3D292845C62A}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{11EDBC14-0BF4-4C6B-86DD-3D292845C62A}.Debug|x64.Build.0 = Debug|Any CPU
-		{11EDBC14-0BF4-4C6B-86DD-3D292845C62A}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{11EDBC14-0BF4-4C6B-86DD-3D292845C62A}.Debug|x86.Build.0 = Debug|Any CPU
-		{11EDBC14-0BF4-4C6B-86DD-3D292845C62A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{11EDBC14-0BF4-4C6B-86DD-3D292845C62A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{11EDBC14-0BF4-4C6B-86DD-3D292845C62A}.Release|x64.ActiveCfg = Release|Any CPU
-		{11EDBC14-0BF4-4C6B-86DD-3D292845C62A}.Release|x64.Build.0 = Release|Any CPU
-		{11EDBC14-0BF4-4C6B-86DD-3D292845C62A}.Release|x86.ActiveCfg = Release|Any CPU
-		{11EDBC14-0BF4-4C6B-86DD-3D292845C62A}.Release|x86.Build.0 = Release|Any CPU
 		{592FFCE1-0D8C-4797-9B3A-5F5F7E5E935B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{592FFCE1-0D8C-4797-9B3A-5F5F7E5E935B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{592FFCE1-0D8C-4797-9B3A-5F5F7E5E935B}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -893,6 +884,18 @@ Global
 		{BE43C827-D1DF-4F95-98BE-98B315D12583}.Release|x64.Build.0 = Release|Any CPU
 		{BE43C827-D1DF-4F95-98BE-98B315D12583}.Release|x86.ActiveCfg = Release|Any CPU
 		{BE43C827-D1DF-4F95-98BE-98B315D12583}.Release|x86.Build.0 = Release|Any CPU
+		{49072BAB-857F-4058-B2CE-693085F9269C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49072BAB-857F-4058-B2CE-693085F9269C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49072BAB-857F-4058-B2CE-693085F9269C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{49072BAB-857F-4058-B2CE-693085F9269C}.Debug|x64.Build.0 = Debug|Any CPU
+		{49072BAB-857F-4058-B2CE-693085F9269C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{49072BAB-857F-4058-B2CE-693085F9269C}.Debug|x86.Build.0 = Debug|Any CPU
+		{49072BAB-857F-4058-B2CE-693085F9269C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49072BAB-857F-4058-B2CE-693085F9269C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49072BAB-857F-4058-B2CE-693085F9269C}.Release|x64.ActiveCfg = Release|Any CPU
+		{49072BAB-857F-4058-B2CE-693085F9269C}.Release|x64.Build.0 = Release|Any CPU
+		{49072BAB-857F-4058-B2CE-693085F9269C}.Release|x86.ActiveCfg = Release|Any CPU
+		{49072BAB-857F-4058-B2CE-693085F9269C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -914,7 +917,6 @@ Global
 		{856207D6-F230-47A3-BF50-3D0451FEC3ED} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{12E8C084-88B8-47A9-82AD-038C206089AA} = {FE7764F7-F5B5-4A92-9BE2-F51690EDF870}
 		{167C080E-3F81-4EB7-93BD-1D8671B51835} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
-		{11EDBC14-0BF4-4C6B-86DD-3D292845C62A} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
 		{592FFCE1-0D8C-4797-9B3A-5F5F7E5E935B} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{CD08B37A-614C-4DEB-9805-ADBD77DA3F8E} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{8315C918-4C26-435C-AC32-47A87CB2792E} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
@@ -961,6 +963,7 @@ Global
 		{A8DC09A4-DCD3-4482-B1BE-587D77B66E21} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
 		{9F508BA8-DE43-4D48-AF91-B03E009C0BD4} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
 		{BE43C827-D1DF-4F95-98BE-98B315D12583} = {9BF7513A-5219-4862-A290-7D2A00589312}
+		{49072BAB-857F-4058-B2CE-693085F9269C} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}

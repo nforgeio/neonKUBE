@@ -42,8 +42,8 @@ namespace Neon.Cadence
         /// <returns>The <see cref="WorkflowStub"/>.</returns>
         public static WorkflowStub FromTyped(object typedStub)
         {
-            Covenant.Requires<ArgumentNullException>(typedStub != null);
-            Covenant.Requires<ArgumentException>(typedStub is ITypedWorkflowStub, $"[{typedStub.GetType().FullName}] is not a typed workflow stub.");
+            Covenant.Requires<ArgumentNullException>(typedStub != null, nameof(typedStub));
+            Covenant.Requires<ArgumentException>(typedStub is ITypedWorkflowStub, nameof(typedStub), $"[{typedStub.GetType().FullName}] is not a typed workflow stub.");
 
             return ((ITypedWorkflowStub)typedStub).ToUntyped();
         }
@@ -59,7 +59,7 @@ namespace Neon.Cadence
         /// <param name="client">The associated client.</param>
         internal WorkflowStub(CadenceClient client)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
             this.client = client;
         }
@@ -159,7 +159,7 @@ namespace Neon.Cadence
         /// <returns>The result as a <c>dynamic</c>.</returns>
         public async Task<object> GetResultAsync(Type resultType)
         {
-            Covenant.Requires<ArgumentNullException>(resultType != null);
+            Covenant.Requires<ArgumentNullException>(resultType != null, nameof(resultType));
             EnsureStarted();
 
             if (Execution == null)
@@ -179,8 +179,8 @@ namespace Neon.Cadence
         /// <returns>The query result.</returns>
         public async Task<TResult> QueryAsync<TResult>(string queryType, params object[] args)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryType));
-            Covenant.Requires<ArgumentNullException>(args != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryType), nameof(queryType));
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
             EnsureStarted();
 
             if (Execution == null)
@@ -203,8 +203,8 @@ namespace Neon.Cadence
         /// <returns>The query result as a <c>dynamic</c>.</returns>
         public async Task<object> QueryAsync(Type resultType, string queryType, params object[] args)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryType));
-            Covenant.Requires<ArgumentNullException>(args != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryType), nameof(queryType));
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
             EnsureStarted();
 
             if (Execution == null)
@@ -225,8 +225,8 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task SignalAsync(string signalName, params object[] args)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
-            Covenant.Requires<ArgumentNullException>(args != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
             EnsureStarted();
 
             if (Execution == null)
@@ -248,9 +248,9 @@ namespace Neon.Cadence
         /// <returns></returns>
         public async Task<WorkflowExecution> SignalWithStartAsync(string signalName, object[] signalArgs, object[] startArgs)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName));
-            Covenant.Requires<ArgumentNullException>(signalArgs != null);
-            Covenant.Requires<ArgumentNullException>(startArgs != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
+            Covenant.Requires<ArgumentNullException>(signalArgs != null, nameof(signalArgs));
+            Covenant.Requires<ArgumentNullException>(startArgs != null, nameof(startArgs));
 
             var signalArgBytes = client.DataConverter.ToData(signalArgs);
             var startArgBytes  = client.DataConverter.ToData(startArgs);
@@ -265,7 +265,7 @@ namespace Neon.Cadence
         /// <returns>The <see cref="WorkflowExecution"/>.</returns>
         public async Task<WorkflowExecution> StartAsync(params object[] args)
         {
-            Covenant.Requires<ArgumentNullException>(args != null);
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
             EnsureNotStarted();
 
             var argBytes = client.DataConverter.ToData(args);

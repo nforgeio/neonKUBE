@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // I'm going to keep this simple for now and only deal with quoting
 // commas and double quote characters.  I believe there are other 

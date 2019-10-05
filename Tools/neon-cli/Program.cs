@@ -142,7 +142,7 @@ You can disable the use of this encrypted folder by specifying
             // We need to verify that we're running with elevated permissions if we're not
             // shimmed into a Docker container.
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // We're currently requiring elevated permissions for all commands, even those
             // that don't actually require elevated permissions.  We may wish to relax this
@@ -163,7 +163,7 @@ You can disable the use of this encrypted folder by specifying
                 }
                 else if (NeonHelper.IsOSX)
                 {
-                    throw new NotImplementedException("$todo(jeff.lill): Implement OSX elevated permissions check.");
+                    throw new NotImplementedException("$todo(jefflill): Implement OSX elevated permissions check.");
                 }
             }
 
@@ -415,7 +415,7 @@ You can disable the use of this encrypted folder by specifying
                 }
                 else
                 {
-                    // $hack(jeff.lill):
+                    // $hack(jefflill):
                     //
                     // Only the [neon cluster prepare ...] command recognizes the [--machine-username] and
                     // [--machine-password] options.  These can cause problems for other commands
@@ -901,7 +901,7 @@ You can disable the use of this encrypted folder by specifying
                 }
                 else if (NeonHelper.IsOSX)
                 {
-                    // $todo(jeff.lill): Implement this
+                    // $todo(jefflill): Implement this
                 }
             }
         }

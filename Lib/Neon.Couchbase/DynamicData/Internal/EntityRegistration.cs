@@ -54,8 +54,8 @@ namespace Neon.Couchbase.DynamicData.Internal
         /// <param name="creator">The entity creation delegate.</param>
         public EntityRegistration(Type entityType, string typeIdentifier, EntityCreateDelegate creator)
         {
-            Covenant.Requires<ArgumentNullException>(entityType != null);
-            Covenant.Requires<ArgumentNullException>(creator != null);
+            Covenant.Requires<ArgumentNullException>(entityType != null, nameof(entityType));
+            Covenant.Requires<ArgumentNullException>(creator != null, nameof(creator));
 
             this.EntityType     = entityType;
             this.TypeIdentifier = typeIdentifier;

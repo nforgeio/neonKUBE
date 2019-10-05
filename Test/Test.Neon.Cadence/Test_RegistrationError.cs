@@ -50,7 +50,6 @@ namespace TestCadence
             var settings = new CadenceSettings()
             {
                 DefaultDomain    = CadenceFixture.DefaultDomain,
-                DefaultTaskList  = CadenceFixture.DefaultTaskList,
                 LogLevel         = CadenceTestHelper.LogLevel,
                 CreateDomain     = true,
                 Debug            = true,

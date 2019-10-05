@@ -50,8 +50,8 @@ namespace Neon.IO
         /// <returns>The modified path.</returns>
         public static string ChangeExtension(string path, string extension)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(extension));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(extension), nameof(extension));
 
             return Path.ChangeExtension(path, extension).ToLinux();
         }
@@ -63,7 +63,7 @@ namespace Neon.IO
         /// <returns>The combined paths.</returns>
         public static string Combine(params string[] paths)
         {
-            Covenant.Requires<ArgumentNullException>(paths != null);
+            Covenant.Requires<ArgumentNullException>(paths != null, nameof(paths));
 
             return Path.Combine(paths).ToLinux();
         }
@@ -75,7 +75,7 @@ namespace Neon.IO
         /// <returns>The directory portion.</returns>
         public static string GetDirectoryName(string path)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
 
             return Path.GetDirectoryName(path).ToLinux();
         }
@@ -87,7 +87,7 @@ namespace Neon.IO
         /// <returns>The file extension.</returns>
         public static string GetExtension(string path)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
 
             return Path.GetExtension(path);
         }
@@ -99,7 +99,7 @@ namespace Neon.IO
         /// <returns>The file name and extension.</returns>
         public static string GetFileName(string path)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
 
             return Path.GetFileName(path);
         }
@@ -111,7 +111,7 @@ namespace Neon.IO
         /// <returns>The file name without the extension.</returns>
         public static string GetFileNameWithoutExtension(string path)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
 
             return Path.GetFileNameWithoutExtension(path);
         }
@@ -123,7 +123,7 @@ namespace Neon.IO
         /// <returns><c>true</c> if the path has an extension.</returns>
         public static bool HasExtension(string path)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
 
             return Path.HasExtension(path);
         }
@@ -135,7 +135,7 @@ namespace Neon.IO
         /// <returns><c>true</c> ifc the path is rooted.</returns>
         public static bool IsPathRooted(string path)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
 
             return path.ToLinux().StartsWith("/");
         }

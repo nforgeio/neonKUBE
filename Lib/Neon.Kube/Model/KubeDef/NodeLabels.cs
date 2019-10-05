@@ -86,7 +86,7 @@ namespace Neon.Kube
         /// </summary>
         public NodeLabels(NodeDefinition node)
         {
-            Covenant.Requires<ArgumentNullException>(node != null);
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
             this.Node = node;
         }
@@ -406,7 +406,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "PhysicalPower", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [YamlMember(Alias = "physicalPower", ApplyNamingConventions = false)]
         [DefaultValue("")]
-        public string PhysicalPower { get; set; } = string.Empty;       // $todo(jeff.lill): Define the format of this string for APC PDUs.
+        public string PhysicalPower { get; set; } = string.Empty;       // $todo(jefflill): Define the format of this string for APC PDUs.
 
         //---------------------------------------------------------------------
         // Define the K8s related labels.
@@ -877,7 +877,7 @@ namespace Neon.Kube
         [Pure]
         public void Validate(ClusterDefinition clusterDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             // Verify that custom node label names and values satisfy the 
             // following criteria:

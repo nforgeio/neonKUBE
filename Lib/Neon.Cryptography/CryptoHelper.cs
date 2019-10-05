@@ -65,8 +65,8 @@ namespace Neon.Cryptography
         /// <returns>The derived key.</returns>
         public static byte[] DeriveKeyFromPassword(string password, int keySize)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(password));
-            Covenant.Requires<ArgumentException>(0 < keySize && keySize <= 512 && keySize % 8 == 0);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(password), nameof(password));
+            Covenant.Requires<ArgumentException>(0 < keySize && keySize <= 512 && keySize % 8 == 0, nameof(keySize));
 
             // We're going to generate a SHA512 hash from the password and then
             // extract the required number of bytes from the the beginning of

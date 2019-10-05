@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# FILE:         nuget-neonforge-public.ps1
+# FILE:         neon-nuget-local.ps1
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
@@ -15,8 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Publishes RELEASE builds of the NeonForge Nuget packages to the
-# local file system and public Nuget.org repositories.
+# Publishes DEBUG builds of the NeonForge Nuget packages to the local
+# file system at: %NF_BUILD%\nuget.
 
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
 {
@@ -44,11 +44,7 @@ function Publish
         [string]$project
     )
 
-	dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Release -o "$env:NF_BUILD\nuget"
-
-	$version = Get-Content "$env:NF_ROOT\product-version.txt" -First 1
-
-	nuget push -Source nuget.org "$env:NF_BUILD\nuget\$project.$version.nupkg"
+	dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Debug --include-symbols --include-source -o "$env:NF_build\nuget"
 }
 
 # Update the project versions first.
@@ -106,5 +102,4 @@ Publish Neon.Xunit
 Publish Neon.Xunit.Cadence
 Publish Neon.Xunit.Couchbase
 Publish Neon.Xunit.Kube
-
 pause

@@ -120,7 +120,7 @@ namespace Neon.Cryptography
     /// </remarks>
     public class NeonVault
     {
-        // $todo(jeff.lill):
+        // $todo(jefflill):
         //
         // I'm not super happy with this implementation because it first encrypts
         // the data to a MemoryStream and then it writes the header line followed
@@ -240,7 +240,7 @@ namespace Neon.Cryptography
         /// </remarks>
         public static bool IsEncrypted(Stream stream, out string passwordName)
         {
-            Covenant.Requires<ArgumentNullException>(stream != null);
+            Covenant.Requires<ArgumentNullException>(stream != null, nameof(stream));
 
             passwordName = null;
 
@@ -298,8 +298,8 @@ namespace Neon.Cryptography
         /// </param>
         public NeonVault(Func<string, string> passwordProvider, string lineEnding = null)
         {
-            Covenant.Requires<ArgumentNullException>(passwordProvider != null);
-            Covenant.Requires<ArgumentException>(lineEnding == null || lineEnding == "\r\n" || lineEnding == "\n");
+            Covenant.Requires<ArgumentNullException>(passwordProvider != null, nameof(passwordProvider));
+            Covenant.Requires<ArgumentException>(lineEnding == null || lineEnding == "\r\n" || lineEnding == "\n", nameof(lineEnding));
 
             if (lineEnding == null)
             {
@@ -393,9 +393,9 @@ namespace Neon.Cryptography
         /// <exception cref="CryptographicException">Thrown if the password was not found or for other encryption problems.</exception>
         public void Encrypt(Stream source, Stream target, string passwordName)
         {
-            Covenant.Requires<ArgumentNullException>(source != null);
-            Covenant.Requires<ArgumentException>(source.CanRead && source.CanSeek);
-            Covenant.Requires<ArgumentNullException>(target != null);
+            Covenant.Requires<ArgumentNullException>(source != null, nameof(source));
+            Covenant.Requires<ArgumentException>(source.CanRead && source.CanSeek, nameof(source));
+            Covenant.Requires<ArgumentNullException>(target != null, nameof(target));
 
             var key = GetKeyFromPassword(passwordName);
 

@@ -37,7 +37,7 @@ namespace Neon.ModelGen
         /// <param name="modelGenerator">The code generator instance.</param>
         public ServiceModel(Type sourceType, ModelGenerator modelGenerator)
         {
-            Covenant.Requires<ArgumentNullException>(sourceType != null);
+            Covenant.Requires<ArgumentNullException>(sourceType != null, nameof(sourceType));
 
             this.SourceType = sourceType;
 

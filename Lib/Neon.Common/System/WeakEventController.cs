@@ -226,8 +226,8 @@ namespace System
         /// <param name="handler">The delegate that handles the event.</param>
         public static void AddHandler<TEventSource, TEventArgs>(TEventSource source, string eventName, EventHandler<TEventArgs> handler)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(eventName));
-            Covenant.Requires<ArgumentNullException>(handler != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(eventName), nameof(eventName));
+            Covenant.Requires<ArgumentNullException>(handler != null, nameof(handler));
 
             var eventInfo   = typeof(TEventSource).GetRuntimeEvent(eventName);
             var bucketIndex = HashToBucket(source, eventName, handler);
@@ -254,8 +254,8 @@ namespace System
         /// <param name="handler">The delegate to remove.</param>
         public static void RemoveHandler<TEventSource, TEventArgs>(TEventSource source, string eventName, EventHandler<TEventArgs> handler)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(eventName));
-            Covenant.Requires<ArgumentNullException>(handler != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(eventName), nameof(eventName));
+            Covenant.Requires<ArgumentNullException>(handler != null, nameof(handler));
 
             var eventInfo   = typeof(TEventSource).GetRuntimeEvent(eventName);
             var bucketIndex = HashToBucket(source, eventName, handler);

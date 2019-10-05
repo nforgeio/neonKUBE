@@ -46,8 +46,8 @@ namespace Neon.Cadence
         /// <inheritdoc/>
         public T FromData<T>(byte[] content)
         {
-            Covenant.Requires<ArgumentNullException>(content != null);
-            Covenant.Requires<ArgumentNullException>(content.Length > 0);
+            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
+            Covenant.Requires<ArgumentNullException>(content.Length > 0, nameof(content));
 
             var type = typeof(T);
 
@@ -64,9 +64,9 @@ namespace Neon.Cadence
         /// <inheritdoc/>
         public object FromData(Type type, byte[] content)
         {
-            Covenant.Requires<ArgumentNullException>(type != null);
-            Covenant.Requires<ArgumentNullException>(content != null);
-            Covenant.Requires<ArgumentNullException>(content.Length > 0);
+            Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
+            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
+            Covenant.Requires<ArgumentNullException>(content.Length > 0, nameof(content));
 
             if (type.Implements<IRoundtripData>())
             {
@@ -81,9 +81,9 @@ namespace Neon.Cadence
         /// <inheritdoc/>
         public object[] FromDataArray(byte[] content, params Type[] valueTypes)
         {
-            Covenant.Requires<ArgumentNullException>(content != null);
-            Covenant.Requires<ArgumentNullException>(content.Length > 0);
-            Covenant.Requires<ArgumentNullException>(valueTypes != null);
+            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
+            Covenant.Requires<ArgumentNullException>(content.Length > 0, nameof(content));
+            Covenant.Requires<ArgumentNullException>(valueTypes != null, nameof(valueTypes));
 
             var jToken = JToken.Parse(Encoding.UTF8.GetString(content));
 

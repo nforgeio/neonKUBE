@@ -102,7 +102,7 @@ namespace Neon.Kube
         {
             CheckInitialized();
 
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             var cluster = new ClusterProxy(clusterDefinition);
             var master = GetMaster(cluster);

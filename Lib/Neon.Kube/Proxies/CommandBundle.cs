@@ -122,7 +122,7 @@ namespace Neon.Kube
 
                         if (string.IsNullOrWhiteSpace(valueString))
                         {
-                            valueString = "-"; // $todo(jeff.lill): Not sure if this makes sense any more.
+                            valueString = "-"; // $todo(jefflill): Not sure if this makes sense any more.
                         }
                         else if (valueString.Contains(' '))
                         {
@@ -159,7 +159,7 @@ namespace Neon.Kube
         /// <returns>The safe argument.</returns>
         private static string SafeArg(string arg)
         {
-            Covenant.Requires<ArgumentNullException>(arg != null);
+            Covenant.Requires<ArgumentNullException>(arg != null, nameof(arg));
 
             if (arg.Length >= 2 && arg.StartsWith("\"") && arg.EndsWith("\""))
             {
@@ -226,7 +226,7 @@ namespace Neon.Kube
         /// </remarks>
         public CommandBundle(string command, params object[] args)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(command));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(command), nameof(command));
 
             this.Command = command;
             this.Args    = args ?? new object[0];
@@ -254,7 +254,7 @@ namespace Neon.Kube
         /// </param>
         public void AddFile(string path, string text, bool isExecutable = false, bool linuxCompatible = true)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
 
             text = text ?? string.Empty;
 
@@ -290,7 +290,7 @@ namespace Neon.Kube
         /// <param name="isExecutable">Optionally specifies that the file is to be marked as executable.</param>
         public void AddFile(string path, byte[] data, bool isExecutable = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
 
             Add(new CommandFile()
             {

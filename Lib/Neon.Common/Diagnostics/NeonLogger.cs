@@ -119,7 +119,7 @@ namespace Neon.Diagnostics
             this.contextId        = contextId;
             this.isLogEnabledFunc = isLogEnabledFunc;
 
-            // $hack(jeff.lill):
+            // $hack(jefflill):
             //
             // We're going to assume that ASP.NET related loggers are always
             // prefixed by: [Microsoft.AspNetCore]

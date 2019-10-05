@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# FILE:         nuget-neonforge-local.ps1
+# FILE:         neon-nuget-public.ps1
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
@@ -15,8 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Publishes DEBUG builds of the NeonForge Nuget packages to the local
-# file system at: %NF_BUILD%\nuget.
+# Publishes RELEASE builds of the NeonForge Nuget packages to the
+# local file system and public Nuget.org repositories.
 
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
 {
@@ -44,7 +44,11 @@ function Publish
         [string]$project
     )
 
-	dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Debug --include-symbols --include-source -o "$env:NF_build\nuget"
+	dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Release -o "$env:NF_BUILD\nuget"
+
+	$version = Get-Content "$env:NF_ROOT\product-version.txt" -First 1
+
+	nuget push -Source nuget.org "$env:NF_BUILD\nuget\$project.$version.nupkg"
 }
 
 # Update the project versions first.
@@ -77,7 +81,7 @@ SetVersion Neon.Xunit.Kube
 
 # Build and publish the projects.
 
-# Publish Neon.Cadence
+Publish Neon.Cadence
 Publish Neon.Common
 Publish Neon.Couchbase
 Publish Neon.Cryptography
@@ -102,4 +106,5 @@ Publish Neon.Xunit
 Publish Neon.Xunit.Cadence
 Publish Neon.Xunit.Couchbase
 Publish Neon.Xunit.Kube
+
 pause

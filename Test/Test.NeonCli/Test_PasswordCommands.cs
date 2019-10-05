@@ -32,7 +32,7 @@ using Neon.Xunit.Kube;
 using Xunit;
 using NeonCli;
 
-// $todo(jeff.lill): 
+// $todo(jefflill): 
 //
 // We're not currently testing prompting actions by these commands.
 

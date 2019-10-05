@@ -47,7 +47,7 @@ namespace Neon.Cadence
         public async static Task<HttpResponseMessage> SendRequestAsync<TRequest>(this HttpClient client, TRequest request)
             where TRequest : ProxyRequest
         {
-            Covenant.Requires<ArgumentNullException>(request != null);
+            Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
             if (client == null)
             {
@@ -96,9 +96,9 @@ namespace Neon.Cadence
             where TRequest : ProxyRequest
             where TReply : ProxyReply
         {
-            Covenant.Requires<ArgumentNullException>(request != null);
-            Covenant.Requires<ArgumentNullException>(reply != null);
-            Covenant.Requires<ArgumentException>(reply.Type == request.ReplyType, $"Reply message type [{reply.Type}] is not a suitable response for a [{request.Type}] request.");
+            Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
+            Covenant.Requires<ArgumentNullException>(reply != null, nameof(reply));
+            Covenant.Requires<ArgumentException>(reply.Type == request.ReplyType, $"Reply message type [{reply.Type}] is not a suitable response for a [{request.Type}] request.", nameof(request));
 
             reply.RequestId = request.RequestId;
 

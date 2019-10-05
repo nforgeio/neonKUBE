@@ -90,7 +90,7 @@ namespace Neon.Couchbase.DynamicData
         /// <param name="registrations">The information about the entities being registered.</param>
         public static void Register(IEnumerable<EntityRegistration> registrations)
         {
-            Covenant.Requires<ArgumentNullException>(registrations != null);
+            Covenant.Requires<ArgumentNullException>(registrations != null, nameof(registrations));
 
             lock (syncRoot)
             {
@@ -196,7 +196,7 @@ namespace Neon.Couchbase.DynamicData
         public static TEntity Create<TEntity>(JObject jObject, IDynamicEntityContext context)
             where TEntity : class, IDynamicEntity, new()
         {
-            Covenant.Requires<ArgumentNullException>(jObject != null);
+            Covenant.Requires<ArgumentNullException>(jObject != null, nameof(jObject));
 
             EntityCreateDelegate    creator  = null;
             string[]                typePath = null;
@@ -280,7 +280,7 @@ namespace Neon.Couchbase.DynamicData
         /// <param name="context">The optional entity context.</param>
         public DynamicEntity(IDictionary<string, string> propertyNameMap, IDynamicEntityContext context = null)
         {
-            Covenant.Requires<ArgumentNullException>(propertyNameMap != null);
+            Covenant.Requires<ArgumentNullException>(propertyNameMap != null, nameof(propertyNameMap));
 
             this.propertyNameMap = propertyNameMap;
             this.context         = context;
@@ -299,7 +299,7 @@ namespace Neon.Couchbase.DynamicData
         /// <inheritdoc/>
         public void _SetLink(string link)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(link));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(link), nameof(link));
             Covenant.Requires<InvalidOperationException>(this._GetLink() == null, "Entity links are invariant and cannot be modified once assigned.");
 
             this.link = link;
@@ -317,7 +317,7 @@ namespace Neon.Couchbase.DynamicData
         /// <inheritdoc/>
         public void _Attach(IDynamicEntity parent)
         {
-            Covenant.Requires<ArgumentNullException>(this.parent != null);
+            Covenant.Requires<ArgumentNullException>(this.parent != null, nameof(parent));
 
             if (this.parent != null && !object.ReferenceEquals(this.parent, this.parent))
             {
@@ -342,7 +342,7 @@ namespace Neon.Couchbase.DynamicData
         /// <param name="newObject">The new <see cref="JObject"/>.</param>
         protected void _Load(JObject newObject)
         {
-            Covenant.Requires<ArgumentNullException>(newObject != null);
+            Covenant.Requires<ArgumentNullException>(newObject != null, nameof(newObject));
 
             if (object.ReferenceEquals(JObject, newObject))
             {

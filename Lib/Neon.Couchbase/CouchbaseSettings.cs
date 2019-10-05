@@ -46,7 +46,7 @@ namespace Neon.Data
         /// <returns>The parsed <see cref="CouchbaseSettings"/>.</returns>
         public static CouchbaseSettings Parse(string jsonOrYaml, bool strict = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonOrYaml));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonOrYaml), nameof(jsonOrYaml));
 
             return NeonHelper.JsonOrYamlDeserialize<CouchbaseSettings>(jsonOrYaml, strict);
         }

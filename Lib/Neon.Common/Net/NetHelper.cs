@@ -466,14 +466,14 @@ namespace Neon.Net
             }
             else if (NeonHelper.IsOSX)
             {
-                // $todo(jeff.lill):
+                // $todo(jefflill):
                 //
                 // We may need to clear the OSX DNS cache here.  Here's some information on 
                 // how to do this:
                 //
                 //      https://help.dreamhost.com/hc/en-us/articles/214981288-Flushing-your-DNS-cache-in-Mac-OS-X-and-Linux
 
-                throw new NotImplementedException("$todo(jeff.lill): Purge the OSX DNS cache.");
+                throw new NotImplementedException("$todo(jefflill): Purge the OSX DNS cache.");
             }
 
             if (NeonHelper.IsWindows || NeonHelper.IsOSX)
@@ -630,8 +630,8 @@ namespace Neon.Net
         /// </exception>
         public static ReachableHost GetReachableHost(IEnumerable<string> hosts, ReachableHostMode failureMode = ReachableHostMode.ReturnFirst)
         {
-            Covenant.Requires<ArgumentNullException>(hosts != null);
-            Covenant.Requires<ArgumentNullException>(hosts.Count() > 0);
+            Covenant.Requires<ArgumentNullException>(hosts != null, nameof(hosts));
+            Covenant.Requires<ArgumentNullException>(hosts.Count() > 0, nameof(hosts));
 
             var reachableHosts = GetReachableHosts(hosts);
 
@@ -686,7 +686,7 @@ namespace Neon.Net
         /// <returns>The <see cref="ReachableHost"/> instances describing the reachable hosts (if any).</returns>
         public static IEnumerable<ReachableHost> GetReachableHosts(IEnumerable<string> hosts)
         {
-            Covenant.Requires<ArgumentNullException>(hosts != null);
+            Covenant.Requires<ArgumentNullException>(hosts != null, nameof(hosts));
 
             if (hosts.IsEmpty())
             {
@@ -821,7 +821,7 @@ namespace Neon.Net
         /// <exception cref="NetworkException">Thrown when there are no available ports.</exception>
         public static int GetUnusedTcpPort(IPAddress address)
         {
-            Covenant.Requires<ArgumentNullException>(address != null);
+            Covenant.Requires<ArgumentNullException>(address != null, nameof(address));
 
             try
             {

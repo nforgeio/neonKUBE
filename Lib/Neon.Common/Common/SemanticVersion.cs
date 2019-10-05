@@ -176,7 +176,7 @@ namespace Neon.Common
         /// <exception cref="FormatException">Thrown if the version could not be parsed.</exception>
         public static SemanticVersion Parse(string versionText)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(versionText));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(versionText), nameof(versionText));
 
             if (!TryParse(versionText, out var version))
             {

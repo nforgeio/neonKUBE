@@ -236,7 +236,7 @@ namespace Neon.Common
         /// <exception cref="KeyNotFoundException">Thrown if thre service map has no description for the service.</exception>
         private ServiceDescription Lookup(string serviceName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(serviceName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(serviceName), nameof(serviceName));
 
             if (!base.TryGetValue(serviceName, out var serviceDescription))
             {

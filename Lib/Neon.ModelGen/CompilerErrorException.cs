@@ -42,8 +42,8 @@ namespace Neon.ModelGen
         /// <returns></returns>
         private static string GetMessage(IEnumerable<Diagnostic> diagnostics)
         {
-            Covenant.Requires<ArgumentNullException>(diagnostics != null);
-            Covenant.Requires<ArgumentException>(diagnostics.Count() > 0);
+            Covenant.Requires<ArgumentNullException>(diagnostics != null, nameof(diagnostics));
+            Covenant.Requires<ArgumentException>(diagnostics.Count() > 0, nameof(diagnostics));
 
             var sb = new StringBuilder();
 

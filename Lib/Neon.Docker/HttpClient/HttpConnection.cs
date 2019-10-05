@@ -68,7 +68,7 @@ namespace Microsoft.Net.Http.Client
 
             if (request.GetHostProperty() == "unix.sock")
             {
-                // $hack(jeff.lill): Hardcoded to HTTP/1.0 for unix sockets
+                // $hack(jefflill): Hardcoded to HTTP/1.0 for unix sockets
 
                 builder.Append("1.1");
             }

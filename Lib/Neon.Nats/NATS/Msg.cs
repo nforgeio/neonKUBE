@@ -62,7 +62,7 @@ namespace NATS.Client
         /// <param name="data">The message payload or <c>null</c>.</param>
         public Msg(string subject, string reply, TMessage data)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(subject));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(subject), nameof(subject));
 
             this.subject = subject;
             this.reply    = reply;
@@ -94,7 +94,7 @@ namespace NATS.Client
         /// <param name="msg">The low-level message.</param>
         internal Msg(Msg msg)
         {
-            Covenant.Requires<ArgumentNullException>(msg != null);
+            Covenant.Requires<ArgumentNullException>(msg != null, nameof(msg));
 
             this.subject = msg.Subject;
             this.reply   = msg.Reply;

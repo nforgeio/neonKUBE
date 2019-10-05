@@ -35,7 +35,7 @@ using Neon.Common;
 using Neon.Kube;
 using Neon.Net;
 
-// $todo(jeff.lill): Verify that there are no unexpected nodes in the cluster.
+// $todo(jefflill): Verify that there are no unexpected nodes in the cluster.
 
 namespace NeonCli
 {
@@ -51,9 +51,9 @@ namespace NeonCli
         /// <param name="clusterDefinition">The cluster definition.</param>
         public static void CheckMaster(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(node != null);
-            Covenant.Requires<ArgumentException>(node.Metadata.IsMaster);
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+            Covenant.Requires<ArgumentException>(node.Metadata.IsMaster, nameof(node));
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             if (!node.IsFaulted)
             {
@@ -70,9 +70,9 @@ namespace NeonCli
         /// <param name="clusterDefinition">The cluster definition.</param>
         public static void CheckWorker(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(node != null);
-            Covenant.Requires<ArgumentException>(node.Metadata.IsWorker);
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+            Covenant.Requires<ArgumentException>(node.Metadata.IsWorker, nameof(node));
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             if (!node.IsFaulted)
             {
@@ -231,7 +231,7 @@ namespace NeonCli
             {
                 if (firstTry)
                 {
-                    // $hack(jeff.lill):
+                    // $hack(jefflill):
                     //
                     // I've seen the NTP check fail on worker nodes, complaining
                     // that the connection attempt was rejected.  I manually restarted

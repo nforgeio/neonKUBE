@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# FILE:         neonkube-build.ps1
+# FILE:         neon-builder.ps1
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
@@ -19,7 +19,7 @@
 # to the [$/build] folder.  This can also optionally build the neonKUBE
 # Desktop installer.
 #
-# USAGE: powershell -file ./build-neonkube.ps1 [OPTIONS]
+# USAGE: powershell -file ./neon-builder.ps1 [OPTIONS]
 #
 # OPTIONS:
 #

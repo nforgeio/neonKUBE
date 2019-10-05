@@ -29,7 +29,7 @@ using Neon.Xunit;
 
 using Xunit;
 
-// $todo(jeff.lill): Need to add tests for MINUTE and QUARTERHOUR.
+// $todo(jefflill): Need to add tests for MINUTE and QUARTERHOUR.
 
 namespace TestCommon
 {

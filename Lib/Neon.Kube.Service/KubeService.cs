@@ -308,8 +308,8 @@ namespace Neon.Kube.Service
             bool        isDirty       = false,
             bool        noProcessExit = false)
         {
-            Covenant.Requires<ArgumentNullException>(serviceMap != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(serviceMap != null, nameof(serviceMap));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             if (!serviceMap.TryGetValue(name, out var description))
             {
@@ -506,7 +506,7 @@ namespace Neon.Kube.Service
         /// <param name="args">The arguments.</param>
         public void SetArguments(IEnumerable<string> args)
         {
-            Covenant.Requires<ArgumentNullException>(args != null);
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
             Arguments.Clear();
 
@@ -708,7 +708,7 @@ namespace Neon.Kube.Service
                     new ThreadStart(
                         () =>
                         {
-                            // $hack(jeff.lill):
+                            // $hack(jefflill):
                             //
                             // Give the Exit() method a bit of time to throw the 
                             // ProgramExitException to make termination handling
@@ -830,7 +830,7 @@ namespace Neon.Kube.Service
         /// </remarks>
         public void SetEnvironmentVariable(string name, string value)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             lock (syncLock)
             {
@@ -856,7 +856,7 @@ namespace Neon.Kube.Service
         /// <returns>The variable value or <paramref name="def"/> if the variable doesn't exist.</returns>
         public string GetEnvironmentVariable(string name, string def = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             lock (syncLock)
             {
@@ -893,8 +893,8 @@ namespace Neon.Kube.Service
         /// <exception cref="FileNotFoundException">Thrown if there's no file at <paramref name="physicalPath"/>.</exception>
         public void SetConfigFilePath(string logicalPath, string physicalPath, Func<string, string> passwordProvider = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(logicalPath));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(physicalPath));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(logicalPath), nameof(logicalPath));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(physicalPath), nameof(physicalPath));
 
             if (!File.Exists(physicalPath))
             {
@@ -922,8 +922,8 @@ namespace Neon.Kube.Service
         /// </param>
         public void SetConfigFile(string logicalPath, string contents, bool linuxLineEndings = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(logicalPath));
-            Covenant.Requires<ArgumentNullException>(contents != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(logicalPath), nameof(logicalPath));
+            Covenant.Requires<ArgumentNullException>(contents != null, nameof(contents));
 
             if (linuxLineEndings)
             {
@@ -958,8 +958,8 @@ namespace Neon.Kube.Service
         /// <param name="contents">The contebnt bytes.</param>
         public void SetConfigFile(string logicalPath, byte[] contents)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(logicalPath));
-            Covenant.Requires<ArgumentNullException>(contents != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(logicalPath), nameof(logicalPath));
+            Covenant.Requires<ArgumentNullException>(contents != null, nameof(contents));
 
             lock (syncLock)
             {

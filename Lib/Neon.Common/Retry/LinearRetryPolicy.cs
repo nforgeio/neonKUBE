@@ -67,8 +67,8 @@ namespace Neon.Retry
         public LinearRetryPolicy(Func<Exception, bool> transientDetector = null, int maxAttempts = 5, TimeSpan? retryInterval = null, TimeSpan? timeout = null, string sourceModule = null)
             : base(sourceModule, timeout)
         {
-            Covenant.Requires<ArgumentException>(maxAttempts > 0);
-            Covenant.Requires<ArgumentException>(retryInterval == null || retryInterval >= TimeSpan.Zero);
+            Covenant.Requires<ArgumentException>(maxAttempts > 0, nameof(maxAttempts));
+            Covenant.Requires<ArgumentException>(retryInterval == null || retryInterval >= TimeSpan.Zero, nameof(retryInterval));
 
             this.transientDetector = transientDetector ?? (e => true);
             this.MaxAttempts       = maxAttempts;
@@ -93,7 +93,7 @@ namespace Neon.Retry
                 sourceModule
             )
         {
-            Covenant.Requires<ArgumentNullException>(exceptionType != null);
+            Covenant.Requires<ArgumentNullException>(exceptionType != null, nameof(exceptionType));
         }
 
         /// <summary>

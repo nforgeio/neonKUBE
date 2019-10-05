@@ -43,7 +43,7 @@ namespace Neon.Kube
         /// </summary>
         public const int KubeLastNodePort = 32767;
 
-        // $todo(jeff.lill):
+        // $todo(jefflill):
         //
         // Remove the [KubeDashboard] definition after we implement
         // the neonKUBE gateway.

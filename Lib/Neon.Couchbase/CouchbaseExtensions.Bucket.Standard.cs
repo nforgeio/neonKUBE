@@ -58,7 +58,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> InsertAsync<T>(this IBucket bucket, T value, uint expiration)
            where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.InsertAsync<T>(value.GetKey(), value, expiration);
         }
 
@@ -74,7 +74,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> InsertAsync<T>(this IBucket bucket, T value, uint expiration, TimeSpan timeout)
            where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.InsertAsync<T>(value.GetKey(), value, expiration, timeout);
         }
 
@@ -89,7 +89,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> InsertAsync<T>(this IBucket bucket, T value, TimeSpan expiration)
            where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.InsertAsync<T>(value.GetKey(), value, expiration);
         }
 
@@ -105,7 +105,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> InsertAsync<T>(this IBucket bucket, T value, TimeSpan expiration, TimeSpan timeout)
            where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.InsertAsync<T>(value.GetKey(), value, expiration, timeout);
         }
 
@@ -120,7 +120,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> InsertAsync<T>(this IBucket bucket, T value, ReplicateTo replicateTo)
            where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.InsertAsync<T>(value.GetKey(), value, replicateTo);
         }
 
@@ -136,7 +136,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> InsertAsync<T>(this IBucket bucket, T value, ReplicateTo replicateTo, TimeSpan timeout)
            where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.InsertAsync<T>(value.GetKey(), value, replicateTo, timeout);
         }
 
@@ -152,7 +152,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> InsertAsync<T>(this IBucket bucket, T value, ReplicateTo replicateTo, PersistTo persistTo)
            where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.InsertAsync<T>(value.GetKey(), value, replicateTo, persistTo);
         }
 
@@ -169,7 +169,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> InsertAsync<T>(this IBucket bucket, T value, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
            where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.InsertAsync<T>(value.GetKey(), value, replicateTo, persistTo, timeout);
         }
 
@@ -186,7 +186,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> InsertAsync<T>(this IBucket bucket, T value, uint expiration, ReplicateTo replicateTo, PersistTo persistTo)
            where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.InsertAsync<T>(value.GetKey(), value, expiration, replicateTo, persistTo);
         }
 
@@ -204,7 +204,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> InsertAsync<T>(this IBucket bucket, T value, uint expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
            where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.InsertAsync<T>(value.GetKey(), value, expiration, replicateTo, persistTo, timeout);
         }
 
@@ -221,7 +221,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> InsertAsync<T>(this IBucket bucket, T value, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo)
            where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.InsertAsync<T>(value.GetKey(), value, expiration, replicateTo, persistTo);
         }
 
@@ -239,7 +239,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> InsertAsync<T>(this IBucket bucket, T value, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
            where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.InsertAsync<T>(value.GetKey(), value, expiration, replicateTo, persistTo, timeout);
         }
 
@@ -253,7 +253,7 @@ namespace Couchbase
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Replace<T>(value.GetKey(), value);
         }
 
@@ -268,7 +268,7 @@ namespace Couchbase
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, uint expiration)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Replace<T>(value.GetKey(), value, expiration);
         }
 
@@ -284,7 +284,7 @@ namespace Couchbase
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, uint expiration, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Replace<T>(value.GetKey(), value, expiration, timeout);
         }
 
@@ -299,7 +299,7 @@ namespace Couchbase
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, TimeSpan expiration)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Replace<T>(value.GetKey(), value, expiration);
         }
 
@@ -315,7 +315,7 @@ namespace Couchbase
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, TimeSpan expiration, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Replace<T>(value.GetKey(), value, expiration, timeout);
         }
 
@@ -330,7 +330,7 @@ namespace Couchbase
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, ulong cas)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Replace<T>(value.GetKey(), value, cas);
         }
 
@@ -346,7 +346,7 @@ namespace Couchbase
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, ulong cas, uint expiration)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Replace<T>(value.GetKey(), value, cas, expiration);
         }
 
@@ -363,7 +363,7 @@ namespace Couchbase
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, ulong cas, uint expiration, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Replace<T>(value.GetKey(), value, cas, expiration, timeout);
         }
 
@@ -379,7 +379,7 @@ namespace Couchbase
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, ulong cas, TimeSpan expiration)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Replace<T>(value.GetKey(), value, cas, expiration);
         }
 
@@ -396,7 +396,7 @@ namespace Couchbase
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, ulong cas, TimeSpan expiration, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Replace<T>(value.GetKey(), value, cas, expiration, timeout);
         }
 
@@ -411,7 +411,7 @@ namespace Couchbase
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, ReplicateTo replicateTo)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Replace<T>(value.GetKey(), value, replicateTo);
         }
 
@@ -427,7 +427,7 @@ namespace Couchbase
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, ReplicateTo replicateTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Replace<T>(value.GetKey(), value, replicateTo, timeout);
         }
 
@@ -443,7 +443,7 @@ namespace Couchbase
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, ulong cas, ReplicateTo replicateTo)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Replace<T>(value.GetKey(), value, cas, replicateTo);
         }
 
@@ -460,7 +460,7 @@ namespace Couchbase
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, ulong cas, ReplicateTo replicateTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Replace<T>(value.GetKey(), value, cas, replicateTo, timeout);
         }
 
@@ -476,7 +476,7 @@ namespace Couchbase
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, ReplicateTo replicateTo, PersistTo persistTo)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Replace<T>(value.GetKey(), value, replicateTo, persistTo);
         }
 
@@ -493,7 +493,7 @@ namespace Couchbase
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Replace<T>(value.GetKey(), value, replicateTo, persistTo, timeout);
         }
 
@@ -510,7 +510,7 @@ namespace Couchbase
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, ulong cas, ReplicateTo replicateTo, PersistTo persistTo)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Replace<T>(value.GetKey(), value, cas, replicateTo, persistTo);
         }
 
@@ -546,7 +546,7 @@ namespace Couchbase
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, ulong cas, uint expiration, ReplicateTo replicateTo, PersistTo persistTo)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Replace<T>(value.GetKey(), value, cas, expiration, replicateTo, persistTo);
         }
 
@@ -565,7 +565,7 @@ namespace Couchbase
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, ulong cas, uint expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Replace<T>(value.GetKey(), value, cas, expiration, replicateTo, persistTo, timeout);
         }
 
@@ -583,7 +583,7 @@ namespace Couchbase
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, ulong cas, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Replace<T>(value.GetKey(), value, cas, expiration, replicateTo, persistTo);
         }
 
@@ -602,7 +602,7 @@ namespace Couchbase
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, ulong cas, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Replace<T>(value.GetKey(), value, cas, expiration, replicateTo, persistTo, timeout);
         }
 
@@ -616,7 +616,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.ReplaceAsync<T>(value.GetKey(), value);
         }
 
@@ -631,7 +631,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, uint expiration)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.ReplaceAsync<T>(value.GetKey(), value, expiration);
         }
 
@@ -647,7 +647,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, uint expiration, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.ReplaceAsync<T>(value.GetKey(), value, expiration, timeout);
         }
 
@@ -662,7 +662,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, TimeSpan expiration)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.ReplaceAsync<T>(value.GetKey(), value, expiration);
         }
 
@@ -678,7 +678,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, TimeSpan expiration, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.ReplaceAsync<T>(value.GetKey(), value, expiration, timeout);
         }
 
@@ -693,7 +693,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, ulong cas)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.ReplaceAsync<T>(value.GetKey(), value, cas);
         }
 
@@ -709,7 +709,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, ulong cas, uint expiration)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.ReplaceAsync<T>(value.GetKey(), value, cas, expiration);
         }
 
@@ -726,7 +726,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, ulong cas, uint expiration, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.ReplaceAsync<T>(value.GetKey(), value, cas, expiration, timeout);
         }
 
@@ -742,7 +742,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, ulong cas, TimeSpan expiration)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.ReplaceAsync<T>(value.GetKey(), value, cas, expiration);
         }
 
@@ -759,7 +759,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, ulong cas, TimeSpan expiration, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.ReplaceAsync<T>(value.GetKey(), value, cas, expiration, timeout);
         }
 
@@ -774,7 +774,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, ReplicateTo replicateTo)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.ReplaceAsync<T>(value.GetKey(), value, replicateTo);
         }
 
@@ -790,7 +790,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, ReplicateTo replicateTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.ReplaceAsync<T>(value.GetKey(), value, replicateTo, timeout);
         }
 
@@ -806,7 +806,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, ulong cas, ReplicateTo replicateTo)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.ReplaceAsync<T>(value.GetKey(), value, cas, replicateTo);
         }
 
@@ -823,7 +823,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, ulong cas, ReplicateTo replicateTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.ReplaceAsync<T>(value.GetKey(), value, cas, replicateTo, timeout);
         }
 
@@ -839,7 +839,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, ReplicateTo replicateTo, PersistTo persistTo)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.ReplaceAsync<T>(value.GetKey(), value, replicateTo, persistTo);
         }
 
@@ -856,7 +856,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.ReplaceAsync<T>(value.GetKey(), value, replicateTo, persistTo, timeout);
         }
 
@@ -873,7 +873,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, ulong cas, ReplicateTo replicateTo, PersistTo persistTo)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.ReplaceAsync<T>(value.GetKey(), value, cas, replicateTo, persistTo);
         }
 
@@ -891,7 +891,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, ulong cas, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.ReplaceAsync<T>(value.GetKey(), value, cas, replicateTo, persistTo, timeout);
         }
 
@@ -909,7 +909,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, ulong cas, uint expiration, ReplicateTo replicateTo, PersistTo persistTo)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.ReplaceAsync<T>(value.GetKey(), value, cas, expiration, replicateTo, persistTo);
         }
 
@@ -928,7 +928,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, ulong cas, uint expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.ReplaceAsync<T>(value.GetKey(), value, cas, expiration, replicateTo, persistTo, timeout);
         }
 
@@ -946,7 +946,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, ulong cas, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.ReplaceAsync<T>(value.GetKey(), value, cas, expiration, replicateTo, persistTo);
         }
 
@@ -965,7 +965,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> ReplaceAsync<T>(this IBucket bucket, T value, ulong cas, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.ReplaceAsync<T>(value.GetKey(), value, cas, expiration, replicateTo, persistTo, timeout);
         }
 
@@ -979,7 +979,7 @@ namespace Couchbase
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Upsert<T>(value.GetKey(), value);
         }
 
@@ -994,7 +994,7 @@ namespace Couchbase
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, uint expiration)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Upsert<T>(value.GetKey(), value, expiration);
         }
 
@@ -1010,7 +1010,7 @@ namespace Couchbase
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, uint expiration, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Upsert<T>(value.GetKey(), value, expiration, timeout);
         }
 
@@ -1025,7 +1025,7 @@ namespace Couchbase
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, TimeSpan expiration)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Upsert<T>(value.GetKey(), value, expiration);
         }
 
@@ -1041,7 +1041,7 @@ namespace Couchbase
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, TimeSpan expiration, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Upsert<T>(value.GetKey(), value, expiration, timeout);
         }
 
@@ -1056,7 +1056,7 @@ namespace Couchbase
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, ulong cas)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Upsert<T>(value.GetKey(), value, cas);
         }
 
@@ -1072,7 +1072,7 @@ namespace Couchbase
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, ulong cas, uint expiration)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Upsert<T>(value.GetKey(), value, cas, expiration);
         }
 
@@ -1089,7 +1089,7 @@ namespace Couchbase
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, ulong cas, uint expiration, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Upsert<T>(value.GetKey(), value, expiration, timeout);
         }
 
@@ -1105,7 +1105,7 @@ namespace Couchbase
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, ulong cas, TimeSpan expiration)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Upsert<T>(value.GetKey(), value, cas, expiration);
         }
 
@@ -1122,7 +1122,7 @@ namespace Couchbase
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, ulong cas, TimeSpan expiration, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value), nameof(value));
             return bucket.Upsert<T>(value.GetKey(), value, expiration, timeout);
         }
 
@@ -1137,7 +1137,7 @@ namespace Couchbase
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, ReplicateTo replicateTo)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Upsert<T>(value.GetKey(), value, replicateTo);
         }
 
@@ -1153,7 +1153,7 @@ namespace Couchbase
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, ReplicateTo replicateTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Upsert<T>(value.GetKey(), value, replicateTo, timeout);
         }
 
@@ -1169,7 +1169,7 @@ namespace Couchbase
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, ReplicateTo replicateTo, PersistTo persistTo)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Upsert<T>(value.GetKey(), value, replicateTo, persistTo);
         }
 
@@ -1186,7 +1186,7 @@ namespace Couchbase
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Upsert<T>(value.GetKey(), value, replicateTo, persistTo, timeout);
         }
 
@@ -1204,7 +1204,7 @@ namespace Couchbase
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, uint expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Upsert<T>(value.GetKey(), value, expiration, replicateTo, persistTo, timeout);
         }
 
@@ -1222,7 +1222,7 @@ namespace Couchbase
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, ulong cas, uint expiration, ReplicateTo replicateTo, PersistTo persistTo)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Upsert<T>(value.GetKey(), value, cas, expiration, replicateTo, persistTo);
         }
 
@@ -1241,7 +1241,7 @@ namespace Couchbase
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, ulong cas, uint expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Upsert<T>(value.GetKey(), value, cas, expiration, replicateTo, persistTo, timeout);
         }
 
@@ -1258,7 +1258,7 @@ namespace Couchbase
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Upsert<T>(value.GetKey(), value, expiration, replicateTo, persistTo);
         }
 
@@ -1276,7 +1276,7 @@ namespace Couchbase
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Upsert<T>(value.GetKey(), value, expiration, replicateTo, persistTo, timeout);
         }
 
@@ -1294,7 +1294,7 @@ namespace Couchbase
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, ulong cas, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Upsert<T>(value.GetKey(), value, cas, expiration, replicateTo, persistTo);
         }
 
@@ -1313,7 +1313,7 @@ namespace Couchbase
         public static IOperationResult<T> Upsert<T>(this IBucket bucket, T value, ulong cas, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Upsert<T>(value.GetKey(), value, cas, expiration, replicateTo, persistTo, timeout);
         }
 
@@ -1327,7 +1327,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.UpsertAsync<T>(value.GetKey(), value);
         }
 
@@ -1342,7 +1342,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, uint expiration)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.UpsertAsync<T>(value.GetKey(), value, expiration);
         }
 
@@ -1358,7 +1358,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, uint expiration, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.UpsertAsync<T>(value.GetKey(), value, expiration, timeout);
         }
 
@@ -1373,7 +1373,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, TimeSpan expiration)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.UpsertAsync<T>(value.GetKey(), value, expiration);
         }
 
@@ -1389,7 +1389,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, TimeSpan expiration, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.UpsertAsync<T>(value.GetKey(), value, expiration, timeout);
         }
 
@@ -1404,7 +1404,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, ulong cas)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.UpsertAsync<T>(value.GetKey(), value, cas);
         }
 
@@ -1420,7 +1420,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, ulong cas, uint expiration)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.UpsertAsync<T>(value.GetKey(), value, cas, expiration);
         }
 
@@ -1437,7 +1437,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, ulong cas, uint expiration, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.UpsertAsync<T>(value.GetKey(), value, cas, expiration, timeout);
         }
 
@@ -1453,7 +1453,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, ulong cas, TimeSpan expiration)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.UpsertAsync<T>(value.GetKey(), value, cas, expiration);
         }
 
@@ -1470,7 +1470,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, ulong cas, TimeSpan expiration, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.UpsertAsync<T>(value.GetKey(), value, cas, expiration, timeout);
         }
 
@@ -1500,7 +1500,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, ReplicateTo replicateTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.UpsertAsync<T>(value.GetKey(), value, replicateTo, timeout);
         }
 
@@ -1516,7 +1516,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, ReplicateTo replicateTo, PersistTo persistTo)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.UpsertAsync<T>(value.GetKey(), value, replicateTo, persistTo);
         }
 
@@ -1533,7 +1533,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.UpsertAsync<T>(value.GetKey(), value, replicateTo, persistTo, timeout);
         }
 
@@ -1550,7 +1550,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, uint expiration, ReplicateTo replicateTo, PersistTo persistTo)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.UpsertAsync<T>(value.GetKey(), value, expiration, replicateTo, persistTo);
         }
 
@@ -1568,7 +1568,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, uint expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.UpsertAsync<T>(value.GetKey(), value, expiration, replicateTo, persistTo, timeout);
         }
 
@@ -1586,7 +1586,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, ulong cas, uint expiration, ReplicateTo replicateTo, PersistTo persistTo)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.UpsertAsync<T>(value.GetKey(), value, cas, expiration, replicateTo, persistTo);
         }
 
@@ -1605,7 +1605,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, ulong cas, uint expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.UpsertAsync<T>(value.GetKey(), value, cas, expiration, replicateTo, persistTo, timeout);
         }
 
@@ -1622,7 +1622,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.UpsertAsync<T>(value.GetKey(), value, expiration, replicateTo, persistTo);
         }
 
@@ -1640,7 +1640,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.UpsertAsync<T>(value.GetKey(), value, expiration, replicateTo, persistTo, timeout);
         }
 
@@ -1658,7 +1658,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, ulong cas, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.UpsertAsync<T>(value.GetKey(), value, cas, expiration, replicateTo, persistTo);
         }
 
@@ -1677,7 +1677,7 @@ namespace Couchbase
         public static Task<IOperationResult<T>> UpsertAsync<T>(this IBucket bucket, T value, ulong cas, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.UpsertAsync<T>(value.GetKey(), value, cas, expiration, replicateTo, persistTo, timeout);
         }
     }

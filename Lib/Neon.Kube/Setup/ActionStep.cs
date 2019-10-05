@@ -63,8 +63,8 @@ namespace Neon.Kube
         /// <param name="action">The action to be invoked.</param>
         private ActionStep(string nodeName, string operationName, Action<SshProxy<NodeDefinition>> action)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
-            Covenant.Requires<ArgumentNullException>(action != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
+            Covenant.Requires<ArgumentNullException>(action != null, nameof(action));
 
             this.nodeName      = nodeName;
             this.operationName = operationName;
@@ -74,7 +74,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Run(ClusterProxy cluster)
         {
-            Covenant.Requires<ArgumentNullException>(cluster != null);
+            Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
 
             var node = cluster.GetNode(nodeName);
 

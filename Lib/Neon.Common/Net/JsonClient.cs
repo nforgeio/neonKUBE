@@ -126,7 +126,7 @@ namespace Neon.Net
 
             // Initialize the dictionary mapping types to enhanced data converters.
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // We're currently suppoting only converters implemented in the Neon.Common assembly.
             // Eventually, we'll probably wish to support custom user converters.
@@ -144,7 +144,7 @@ namespace Neon.Net
         /// <param name="httpClient">The special <see cref="HttpClient"/> instance to be wrapped.</param>
         public JsonClient(HttpClient httpClient)
         {
-            Covenant.Requires<ArgumentNullException>(httpClient != null);
+            Covenant.Requires<ArgumentNullException>(httpClient != null, nameof(httpClient));
 
             HttpClient    = httpClient;
             disposeClient = false;

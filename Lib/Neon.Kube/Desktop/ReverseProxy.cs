@@ -160,8 +160,8 @@ namespace Neon.Kube
             Action<RequestContext>  requestHandler    = null, 
             Action<RequestContext>  responseHandler   = null)
         {
-            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort));
-            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort));
+            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(localPort), nameof(localPort));
+            Covenant.Requires<ArgumentException>(NetHelper.IsValidPort(remotePort), nameof(remotePort));
 
             if (validCertificate != null || clientCertificate != null)
             {
@@ -182,7 +182,7 @@ namespace Neon.Kube
 
             var remoteScheme = remoteTls ? "https" : "http";
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // Enable this when we upgrade to .NET Standard 2.1
             //
@@ -352,7 +352,7 @@ namespace Neon.Kube
         /// <param name="buffer">The buffer.</param>
         private void ReleaseBuffer(byte[] buffer)
         {
-            Covenant.Requires<ArgumentNullException>(buffer != null);
+            Covenant.Requires<ArgumentNullException>(buffer != null, nameof(buffer));
 
             lock (syncLock)
             {
@@ -421,7 +421,7 @@ namespace Neon.Kube
                                             remoteRequest.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(requestContentTypeHeader.First());
                                         }
 
-                                        // $todo(jeff.lill): 
+                                        // $todo(jefflill): 
                                         //
                                         // Not going to worry about these for now.  This will probably
                                         // never be an issue.

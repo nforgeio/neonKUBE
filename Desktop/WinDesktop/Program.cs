@@ -142,7 +142,7 @@ namespace WinDesktop
         public static SshProxy<TMetadata> CreateNodeProxy<TMetadata>(string name, string publicAddress, IPAddress privateAddress, bool appendToLog)
             where TMetadata : class
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             var sshCredentials = KubeHelper.CurrentContext.Extension.SshCredentials; ;
 
@@ -157,7 +157,7 @@ namespace WinDesktop
         {
             lock (SyncLock)
             {
-                // $todo(jeff.lill): Implement this
+                // $todo(jefflill): Implement this
             }
         }
 
@@ -169,7 +169,7 @@ namespace WinDesktop
         {
             lock (SyncLock)
             {
-                // $todo(jeff.lill): Implement this
+                // $todo(jefflill): Implement this
             }
         }
 
@@ -181,7 +181,7 @@ namespace WinDesktop
         {
             lock (SyncLock)
             {
-                // $todo(jeff.lill): Implement this
+                // $todo(jefflill): Implement this
             }
         }
 
@@ -193,7 +193,7 @@ namespace WinDesktop
         {
             lock (SyncLock)
             {
-                // $todo(jeff.lill): Implement this
+                // $todo(jefflill): Implement this
             }
         }
     }

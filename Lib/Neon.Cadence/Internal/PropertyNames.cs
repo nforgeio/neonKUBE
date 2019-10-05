@@ -191,7 +191,7 @@ namespace Neon.Cadence.Internal
         /// <exception cref="KeyNotFoundException">Thrown if the requested property name does not exist.</exception>
         public static PropertyNameUtf8 Lookup(Span<byte> byteSpan)
         {
-            Covenant.Requires<ArgumentNullException>(byteSpan != null);
+            Covenant.Requires<ArgumentNullException>(byteSpan != null, nameof(byteSpan));
 
             var hashCode = PropertyNameUtf8.ComputeHash(byteSpan);
             var list     = buckets[hashCode % buckets.Length];

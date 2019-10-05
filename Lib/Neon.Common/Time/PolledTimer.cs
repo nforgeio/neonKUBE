@@ -118,7 +118,7 @@ namespace Neon.Time
         /// <exception cref="ArgumentException">Thrown if the interval passed is not positive.</exception>
         public PolledTimer(TimeSpan interval)
         {
-            Covenant.Requires<ArgumentException>(interval >= TimeSpan.Zero);
+            Covenant.Requires<ArgumentException>(interval >= TimeSpan.Zero, nameof(interval));
 
             this.interval  = interval;
             this.fireTime  = SysTime.Now + interval;
@@ -135,7 +135,7 @@ namespace Neon.Time
         public PolledTimer(TimeSpan interval, bool autoReset)
             : this(interval)
         {
-            Covenant.Requires<ArgumentException>(interval >= TimeSpan.Zero);
+            Covenant.Requires<ArgumentException>(interval >= TimeSpan.Zero, nameof(interval));
 
             this.autoReset = autoReset;
         }
@@ -202,7 +202,7 @@ namespace Neon.Time
         /// <param name="interval">The interval to be randomized (can be positive or negative).</param>
         public void ResetAddRandom(TimeSpan interval)
         {
-            Covenant.Requires<ArgumentException>(interval >= TimeSpan.Zero);
+            Covenant.Requires<ArgumentException>(interval >= TimeSpan.Zero, nameof(interval));
 
             lock (syncLock)
             {
@@ -246,7 +246,7 @@ namespace Neon.Time
         /// <param name="interval">The timer wait interval.</param>
         public void ResetTemporary(TimeSpan interval)
         {
-            Covenant.Requires<ArgumentException>(interval >= TimeSpan.Zero);
+            Covenant.Requires<ArgumentException>(interval >= TimeSpan.Zero, nameof(interval));
 
             lock (syncLock)
             {
@@ -270,9 +270,9 @@ namespace Neon.Time
         /// <param name="maxInterval">The maximum timer wait interval.</param>
         public void ResetRandomTemporary(TimeSpan minInterval, TimeSpan maxInterval)
         {
-            Covenant.Requires<ArgumentException>(minInterval >= TimeSpan.Zero);
-            Covenant.Requires<ArgumentException>(maxInterval >= TimeSpan.Zero);
-            Covenant.Requires<ArgumentException>(minInterval <= maxInterval);
+            Covenant.Requires<ArgumentException>(minInterval >= TimeSpan.Zero, nameof(minInterval));
+            Covenant.Requires<ArgumentException>(maxInterval >= TimeSpan.Zero, nameof(maxInterval));
+            Covenant.Requires<ArgumentException>(minInterval <= maxInterval, nameof(minInterval));
 
             if (minInterval == maxInterval)
             {

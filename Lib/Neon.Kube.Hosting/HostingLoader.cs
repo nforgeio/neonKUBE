@@ -72,7 +72,7 @@ namespace Neon.Kube
                     return;     // Already initialized
                 }
 
-                // $todo(jeff.lill):
+                // $todo(jefflill):
                 //
                 // This is hardcoded to load all of the built-in hosting manager assemblies.  
                 // In the future, it would be nice if this could be less hardcoded and also 
@@ -180,7 +180,7 @@ namespace Neon.Kube
         /// </returns>
         public HostingManager GetManager(ClusterProxy cluster, string logFolder = null)
         {
-            Covenant.Requires<ArgumentNullException>(cluster != null);
+            Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
             Covenant.Assert(environmentToHostingManager != null, $"[{nameof(HostingLoader)}] is not initialized.  You must call [{nameof(HostingLoader)}.{nameof(HostingLoader.Initialize)}()] first.");
 
             if (!environmentToHostingManager.TryGetValue(cluster.Definition.Hosting.Environment, out var managerType))

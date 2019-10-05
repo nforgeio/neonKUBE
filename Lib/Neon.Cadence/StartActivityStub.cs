@@ -150,7 +150,7 @@ namespace Neon.Cadence
         /// <param name="options">The activity options or <c>null</c>.</param>
         internal StartActivityStub(Workflow parentWorkflow, string methodName, ActivityOptions options = null)
         {
-            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
 
             var activityInterface = typeof(TActivityInterface);
 
@@ -206,7 +206,7 @@ namespace Neon.Cadence
 
             activityTypeName = CadenceHelper.GetActivityTypeName(activityInterface, activityAttribute);
 
-            // $hack(jeff.lill):
+            // $hack(jefflill):
             //
             // It would be nicer if [CadenceHelper.GetActivityTypeName()] accepted an optional
             // [ActivityMethodAttribute] that would be used to append the method name so that
@@ -272,7 +272,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<IAsyncFuture<TResult>> StartAsync<TResult>(params object[] args)
         {
-            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             parentWorkflow.SetStackTrace();
 
             if (hasStarted)
@@ -359,7 +359,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<IAsyncFuture> StartAsync(params object[] args)
         {
-            Covenant.Requires<ArgumentNullException>(parentWorkflow != null);
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             parentWorkflow.SetStackTrace();
 
             if (hasStarted)

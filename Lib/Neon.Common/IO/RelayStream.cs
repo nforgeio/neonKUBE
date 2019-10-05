@@ -23,7 +23,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 
-// $todo(jeff.lill): Implement all [*Async()] method overrides.
+// $todo(jefflill): Implement all [*Async()] method overrides.
 
 namespace Neon.IO
 {
@@ -46,7 +46,7 @@ namespace Neon.IO
         /// <param name="leaveOpen">Optionally leave the underlying stream open when this instance is disposed.</param>
         public RelayStream(Stream stream, bool leaveOpen = false)
         {
-            Covenant.Requires<ArgumentNullException>(stream != null);
+            Covenant.Requires<ArgumentNullException>(stream != null, nameof(stream));
 
             this.stream    = stream;
             this.leaveOpen = leaveOpen;
