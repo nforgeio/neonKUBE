@@ -64,551 +64,6 @@
             Returns the fully qualified path to the build artifacts folder.
             </summary>
         </member>
-        <member name="T:Neon.CodeGen.ActionResult`1">
-            <summary>
-            Used to indicate that a service method uses the <c>IActionResult</c>
-            pattern to return a <typeparamref name="T"/>.
-            </summary>
-            <typeparam name="T">The type being returned.</typeparam>
-        </member>
-        <member name="T:Neon.CodeGen.ControllerValidationAttribute">
-            <summary>
-            <para>
-            Used to have the <c>Neon.Xunit.XunitExtensions.ValidateController&lt;T&gt;()</c>
-            method including the tagged method when validating the service controller
-            against its definining interface.  This is useful for rare situations where a
-            service controller inherits from another class that implements some endpoints.
-            </para>
-            <note>
-            By default, <c>Neon.Xunit.XunitExtensions.ValidateController&lt;T&gt;()</c>
-            only considers service methods implemented directly in the service controller
-            during validation.
-            </note>
-            </summary>
-        </member>
-        <member name="T:Neon.CodeGen.DataModelAttribute">
-            <summary>
-            Used to provide the model code generator additional information
-            about a specific data type.  Use of this optional because the code
-            generator assumes that all types that are not specifically tagged
-            by <see cref="T:Neon.CodeGen.ServiceModelAttribute"/> are data types.
-            </summary>
-        </member>
-        <member name="M:Neon.CodeGen.DataModelAttribute.#ctor">
-            <summary>
-            Constructor.
-            </summary>
-        </member>
-        <member name="P:Neon.CodeGen.DataModelAttribute.Name">
-            <summary>
-            <para>
-            Optionally specifies the type identifier that will be used by
-            generated code to identify the object type at runtime. This
-            will be used when deserializing the object.
-            </para>
-            <para>
-            This defaults to the fully qualified name of the type as it
-            appears in the source assembly as it is scanned by the code 
-            generator.  You may want to set this to reduce the length
-            or just to customize how your data is persistedd.
-            </para>
-            </summary>
-        </member>
-        <member name="T:Neon.CodeGen.FromBodyAttribute">
-            <summary>
-            Used to indicate that a service endpoint parameter is to be obtained
-            by parsing the request body as JSON.
-            </summary>
-        </member>
-        <member name="M:Neon.CodeGen.FromBodyAttribute.#ctor">
-            <summary>
-            Constructor.
-            </summary>
-        </member>
-        <member name="P:Neon.CodeGen.FromBodyAttribute.Name">
-            <summary>
-            This is ignored.
-            </summary>
-        </member>
-        <member name="T:Neon.CodeGen.FromHeaderAttribute">
-            <summary>
-            Used to indicate that a service endpoint parameter is to be obtained
-            by parsing a request header value.
-            </summary>
-            <remarks>
-            By default, this option will look for the HTTP header with the same
-            name as the tagged endpoint parameter.  This can be overriden by setting
-            the <see cref="P:Neon.CodeGen.FromHeaderAttribute.Name"/> property.
-            </remarks>
-        </member>
-        <member name="M:Neon.CodeGen.FromHeaderAttribute.#ctor">
-            <summary>
-            Constructor.
-            </summary>
-        </member>
-        <member name="P:Neon.CodeGen.FromHeaderAttribute.Name">
-            <summary>
-            Optionally overrides the tagged service endpoint method property
-            name when generating the client code.
-            </summary>
-        </member>
-        <member name="T:Neon.CodeGen.FromQueryAttribute">
-            <summary>
-            Used to indicate that a service endpoint parameter is to be obtained
-            by parsing a request URI query parameter.
-            </summary>
-            <remarks>
-            By default, this option will look for the query parameter with the same
-            name as the tagged endpoint parameter.  This can be overriden by setting
-            the <see cref="P:Neon.CodeGen.FromQueryAttribute.Name"/> property.
-            </remarks>
-        </member>
-        <member name="M:Neon.CodeGen.FromQueryAttribute.#ctor(System.String)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="name">
-            Optionally specifies URI query parameter name.  This defaults to 
-            the actual parameter name.
-            </param>
-        </member>
-        <member name="P:Neon.CodeGen.FromQueryAttribute.Name">
-            <summary>
-            Optionally overrides the tagged service endpoint method property
-            name when generating the client code.
-            </summary>
-        </member>
-        <member name="T:Neon.CodeGen.FromRouteAttribute">
-            <summary>
-            Used to indicate that a service endpoint parameter is to be obtained
-            by extracting it from the URI route template.
-            </summary>
-            <remarks>
-            By default, this option will look for the query parameter with the same
-            name as the tagged endpoint parameter.  This can be overriden by setting
-            the <see cref="P:Neon.CodeGen.FromRouteAttribute.Name"/> property.
-            </remarks>
-        </member>
-        <member name="M:Neon.CodeGen.FromRouteAttribute.#ctor(System.String)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="name">
-            Optionally specifies URI query parameter name.  This defaults to 
-            the actual parameter name.
-            </param>
-        </member>
-        <member name="P:Neon.CodeGen.FromRouteAttribute.Name">
-            <summary>
-            Optionally overrides the tagged service endpoint method property
-            name when generating the client code.
-            </summary>
-        </member>
-        <member name="T:Neon.CodeGen.GeneratedClientAttribute">
-            <summary>
-            Used to tag generated service client classes with additional
-            metadata that will be used when validatating the a generated service
-            client actually matches an ASP.NET service implementation.
-            </summary>
-        </member>
-        <member name="M:Neon.CodeGen.GeneratedClientAttribute.#ctor(System.String)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="routeTemplate">The controller's route template.</param>
-        </member>
-        <member name="P:Neon.CodeGen.GeneratedClientAttribute.RouteTemplate">
-            <summary>
-            The route template.
-            </summary>
-        </member>
-        <member name="T:Neon.CodeGen.GeneratedMethodAttribute">
-            <summary>
-            Used to tag generated service client methods with additional
-            metadata that will be used when validatating the a generated service
-            client actually matches an ASP.NET service implementation.
-            </summary>
-        </member>
-        <member name="M:Neon.CodeGen.GeneratedMethodAttribute.#ctor">
-            <summary>
-            Constructor.
-            </summary>
-        </member>
-        <member name="P:Neon.CodeGen.GeneratedMethodAttribute.DefinedAs">
-            <summary>
-            The method name from the service model definition.
-            </summary>
-        </member>
-        <member name="P:Neon.CodeGen.GeneratedMethodAttribute.Returns">
-            <summary>
-            The method result type.
-            </summary>
-        </member>
-        <member name="P:Neon.CodeGen.GeneratedMethodAttribute.RouteTemplate">
-            <summary>
-            The route template.
-            </summary>
-        </member>
-        <member name="P:Neon.CodeGen.GeneratedMethodAttribute.HttpMethod">
-            <summary>
-            The HTTP method for the endpoint.
-            </summary>
-        </member>
-        <member name="T:Neon.CodeGen.GeneratedParamAttribute">
-            <summary>
-            Used to tag generated service client method parameters with additional
-            metadata that will be used when validatating the a generated service
-            client actually matches an ASP.NET service implementation.
-            </summary>
-        </member>
-        <member name="M:Neon.CodeGen.GeneratedParamAttribute.#ctor(Neon.CodeGen.PassAs)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="passAs">Indicates how the client passes the tagged parameter to the service.</param>
-        </member>
-        <member name="P:Neon.CodeGen.GeneratedParamAttribute.PassAs">
-            <summary>
-            Indicates how the client passes the tagged parameter to the service.
-            </summary>
-        </member>
-        <member name="P:Neon.CodeGen.GeneratedParamAttribute.Name">
-            <summary>
-            Parameter name as it appears on the wire for parameters passed
-            as a query, header, or route.
-            </summary>
-        </member>
-        <member name="T:Neon.CodeGen.HashSourceAttribute">
-            <summary>
-            Used to tag data model properties that should be included in the
-            <see cref="M:System.Object.GetHashCode"/> computation.
-            </summary>
-        </member>
-        <member name="M:Neon.CodeGen.HashSourceAttribute.#ctor">
-            <summary>
-            Constructor.
-            </summary>
-        </member>
-        <member name="T:Neon.CodeGen.HttpAttribute">
-            <summary>
-            Base class for the HTTP related attributes below.
-            </summary>
-        </member>
-        <member name="P:Neon.CodeGen.HttpAttribute.Template">
-            <summary>
-            The route template.
-            </summary>
-        </member>
-        <member name="P:Neon.CodeGen.HttpAttribute.HttpMethod">
-            <summary>
-            Returns the HTTP method.
-            </summary>
-        </member>
-        <member name="P:Neon.CodeGen.HttpAttribute.Name">
-            <summary>
-            Optionally overrides the tagged service endpoint method name when
-            generating the client code.
-            </summary>
-        </member>
-        <member name="P:Neon.CodeGen.HttpAttribute.Order">
-            <summary>
-            <b>NOT SUPPORTED:</b> The order in which the route is to be applied.
-            </summary>
-        </member>
-        <member name="T:Neon.CodeGen.HttpDeleteAttribute">
-            <summary>
-            Used to identify a service endpoint that is triggered via the <b>DELETE</b> method.
-            </summary>
-        </member>
-        <member name="M:Neon.CodeGen.HttpDeleteAttribute.#ctor(System.String)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="template">The optional routing template.</param>
-        </member>
-        <member name="T:Neon.CodeGen.HttpGetAttribute">
-            <summary>
-            Used to identify a service endpoint that is triggered via the <b>GET</b> method.
-            </summary>
-        </member>
-        <member name="M:Neon.CodeGen.HttpGetAttribute.#ctor(System.String)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="template">The optional routing template.</param>
-        </member>
-        <member name="T:Neon.CodeGen.HttpHeadAttribute">
-            <summary>
-            Used to identify a service endpoint that is triggered via the <b>HEAD</b> method.
-            </summary>
-        </member>
-        <member name="M:Neon.CodeGen.HttpHeadAttribute.#ctor(System.String)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="template">The optional routing template.</param>
-        </member>
-        <member name="T:Neon.CodeGen.HttpOptionsAttribute">
-            <summary>
-            Used to identify a service endpoint that is triggered via the <b>OPTIONS</b> method.
-            </summary>
-        </member>
-        <member name="M:Neon.CodeGen.HttpOptionsAttribute.#ctor(System.String)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="template">The optional routing template.</param>
-        </member>
-        <member name="T:Neon.CodeGen.HttpPatchAttribute">
-            <summary>
-            Used to identify a service endpoint that is triggered via the <b>PATCH</b> method.
-            </summary>
-        </member>
-        <member name="M:Neon.CodeGen.HttpPatchAttribute.#ctor(System.String)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="template">The optional routing template.</param>
-        </member>
-        <member name="T:Neon.CodeGen.HttpPostAttribute">
-            <summary>
-            Used to identify a service endpoint that is triggered via the <b>POST</b> method.
-            </summary>
-        </member>
-        <member name="M:Neon.CodeGen.HttpPostAttribute.#ctor(System.String)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="template">The optional routing template.</param>
-        </member>
-        <member name="T:Neon.CodeGen.HttpPutAttribute">
-            <summary>
-            Used to identify a service endpoint that is triggered via the <b>PUT</b> method.
-            </summary>
-        </member>
-        <member name="M:Neon.CodeGen.HttpPutAttribute.#ctor(System.String)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="template">The optional routing template.</param>
-        </member>
-        <member name="T:Neon.CodeGen.IActionResult">
-            <summary>
-            Used to indicate that a service method uses the <c>IActionResult</c>
-            pattern to return <c>void</c>.
-            </summary>
-        </member>
-        <member name="T:Neon.CodeGen.NoCodeGenAttribute">
-            <summary>
-            Used to indicate that a class or interface should be ignored
-            during code generation.
-            </summary>
-        </member>
-        <member name="T:Neon.CodeGen.NoControllerValidationAttribute">
-            <summary>
-            Used to prevent the <c>Neon.Xunit.XunitExtensions.ValidateController&lt;T&gt;()</c>
-            method from including the tagged method when validating the service controller
-            against its definining interface.  This is useful for rare situations where a
-            service controller implements some extra endpoints that are not covered by the
-            generated client.
-            </summary>
-        </member>
-        <member name="T:Neon.CodeGen.PassAs">
-            <summary>
-            Identifies how a generated service client will pass a parameter to 
-            an ASP.NET service.
-            </summary>
-        </member>
-        <member name="F:Neon.CodeGen.PassAs.Query">
-            <summary>
-            Passes the parameter is passed as a URI query parameter.
-            </summary>
-        </member>
-        <member name="F:Neon.CodeGen.PassAs.Route">
-            <summary>
-            Passes the parameter within the URI route template. 
-            </summary>
-        </member>
-        <member name="F:Neon.CodeGen.PassAs.Header">
-            <summary>
-            Passes the parameter as an HTTP header.
-            </summary>
-        </member>
-        <member name="F:Neon.CodeGen.PassAs.Body">
-            <summary>
-            Passes the parameter as the HTTP request body. 
-            </summary>
-        </member>
-        <member name="T:Neon.CodeGen.PersistableAttribute">
-            <summary>
-            <para>
-            Used to customize the database related code generated for the tagged
-            data model interface.
-            </para>
-            <para>
-            By default, a <c>public static string GetKey(param object[] args)</c> method
-            is included in generated entity classes so that a database key for a specific
-            entity can be easialy obtained.  This method simply generates a string by
-            calling <see cref="M:System.Object.ToString"/> on all of arguments or using <b>"NULL"</b>
-            for <c>null</c> values which each of these being separated by a single colon
-            and then prepending the entire thing with the entity type.  The generated code 
-            will look something like this:
-            </para>
-            <code lang="C#">
-            public class PersonEntity : Entity&lt;Person&gt;
-            {
-                public static string GetKey(params object[] args)
-                {
-                    if (args.Length == 0)
-                    {
-                        throw new ArgumentException("At least one argument is expected.");
-                    }
-                    
-                    var key = "entity-type::";
-                    
-                    for (int i=0; i $lt; args.Length; i++)
-                    {
-                        var arg = args[i];
-                        
-                        if (i &gt; 0)
-                        {
-                            key += ":";
-                        }
-                        
-                        key += arg != null ? arg.ToString() : "NULL";
-                    }
-            
-                    return key;
-                }
-                
-                ...
-            }
-            </code>
-            </summary>
-        </member>
-        <member name="P:Neon.CodeGen.PersistableAttribute.GetKeyArgs">
-            <summary>
-            This property combined with <see cref="P:Neon.CodeGen.PersistableAttribute.GetKeyString"/> is used
-            to generate a <c>public static string GetKey(...)</c> method.
-            See the class remarks for more information.
-            </summary>
-        </member>
-        <member name="P:Neon.CodeGen.PersistableAttribute.GetKeyString">
-            <summary>
-            This property combined with <see cref="P:Neon.CodeGen.PersistableAttribute.GetKeyArgs"/> is used
-            to generate a <c>public static string GetKey(...)</c> method.
-            See the class remarks for more information.
-            </summary>
-        </member>
-        <member name="T:Neon.CodeGen.PersistableKeyAttribute">
-            <summary>
-            Used to tag the property acting as the database key for an <see cref="T:Neon.Data.IRoundtripData"/>.
-            </summary>
-        </member>
-        <member name="T:Neon.CodeGen.RouteAttribute">
-            <summary>
-            Used to customize request routing at the service level.
-            </summary>
-        </member>
-        <member name="M:Neon.CodeGen.RouteAttribute.#ctor(System.String)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="template">The optional routing template.</param>
-        </member>
-        <member name="P:Neon.CodeGen.RouteAttribute.Template">
-            <summary>
-            The route template.
-            </summary>
-        </member>
-        <member name="P:Neon.CodeGen.RouteAttribute.Name">
-            <summary>
-            The route name.
-            </summary>
-        </member>
-        <member name="P:Neon.CodeGen.RouteAttribute.Order">
-            <summary>
-            <b>NOT SUPPORTED:</b> The order in which the route is to be applied.
-            </summary>
-        </member>
-        <member name="T:Neon.CodeGen.ServiceModelAttribute">
-            <summary>
-            Used to indicate that an <c>interface</c> should be included when
-            generating a service client class.
-            </summary>
-        </member>
-        <member name="M:Neon.CodeGen.ServiceModelAttribute.#ctor(System.String,System.String)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="name">
-            Optionally specifies the name to be used for the generated
-            service client class.  This defaults to the tagged controller
-            class name with a "Controller" suffix being stripped off if
-            present.
-            </param>
-            <param name="group">
-            <para>
-            Optionally specifies that the methods from this controller
-            should be grouped together in a generated controller class
-            composed from multiple service controllers.  Set this to the
-            name to be used for the client property under which these 
-            methods will be generated.
-            </para>
-            <note>
-            <paramref name="name"/> must also be specified when <paramref name="group"/>
-            is set.
-            </note>
-            </param>
-        </member>
-        <member name="P:Neon.CodeGen.ServiceModelAttribute.Name">
-            <summary>
-            <para>
-            Returns the name to be used for the generated client class
-            and for transmitting requests to the server or <c>null</c>
-            if the name is to be derived from the tagged class name.
-            </para>
-            <note>
-            The tagged controller class name will be used as the default
-            name, stripping "Controller" off the end of the class name
-            if present.
-            </note>
-            </summary>
-        </member>
-        <member name="P:Neon.CodeGen.ServiceModelAttribute.Group">
-            <summary>
-            <para>
-            Optionally used to group multiple methods from different
-            controllers with the same <see cref="P:Neon.CodeGen.ServiceModelAttribute.Name"/> together
-            into the same generated service client class or subclass.
-            </para>
-            <para>
-            This defaults to <c>null</c> which means that the service
-            methods from the different controllers will be generated
-            directly within the generated service client.  When this
-            is not <c>null</c> or empty, a subclass using this name
-            with "Client" appended will be generated with the methods
-            from the controllers with this group name.
-            </para>
-            </summary>
-        </member>
-        <member name="T:Neon.CodeGen.TargetAttribute">
-            <summary>
-            Used to group data models and service definitions so that the
-            class included in the generated code can filtered.
-            </summary>
-        </member>
-        <member name="M:Neon.CodeGen.TargetAttribute.#ctor(System.String)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="name">The target name.</param>
-        </member>
-        <member name="P:Neon.CodeGen.TargetAttribute.Name">
-            <summary>
-            Returns the group name.
-            </summary>
-        </member>
         <member name="T:Neon.Collections.ArgDictionary">
             <summary>
             A dictionary of objects keyed by case sensitive strings.
@@ -2595,14 +2050,38 @@
         </member>
         <member name="F:Neon.Common.NeonHelper.DateFormatTZ">
             <summary>
-            Returns the date format string used for serialize dates to
-            strings like: <b>2018-06-05T14:30:13.000Z</b>
+            Returns the date format string used for serialize dates with millisecond
+            precision to strings like: <b>2018-06-05T14:30:13.000Z</b>
             </summary>
         </member>
         <member name="F:Neon.Common.NeonHelper.DateFormatTZOffset">
             <summary>
-            Returns the date format string used for serialize dates to
-            strings like: <b>2018-06-05T14:30:13.000+00:00</b>
+            Returns the date format string used for serialize dates with millisecond
+            precision to strings like: <b>2018-06-05T14:30:13.000+00:00</b>
+            </summary>
+        </member>
+        <member name="F:Neon.Common.NeonHelper.DateFormatMicroTZ">
+            <summary>
+            Returns the date format string used for serialize dates with microsecond
+            precision to strings like: <b>2018-06-05T14:30:13.000000Z</b>
+            </summary>
+        </member>
+        <member name="F:Neon.Common.NeonHelper.DateFormatMicroTZOffset">
+            <summary>
+            Returns the date format string used for serialize dates with microsecond
+            precision to strings like: <b>2018-06-05T14:30:13.000000+00:00</b>
+            </summary>
+        </member>
+        <member name="F:Neon.Common.NeonHelper.DateFormat100NsTZ">
+            <summary>
+            Returns the date format string used for serialize dates with 100 nanosecond
+            precision to strings like: <b>2018-06-05T14:30:13.000000Z</b>
+            </summary>
+        </member>
+        <member name="F:Neon.Common.NeonHelper.DateFormat100NsTZOffset">
+            <summary>
+            Returns the date format string used for serialize dates with 100 nanosecond
+            precision to strings like: <b>2018-06-05T14:30:13.000000+00:00</b>
             </summary>
         </member>
         <member name="F:Neon.Common.NeonHelper.UnixEpoch">
@@ -2634,6 +2113,11 @@
             Set to <c>true</c> when the special UTF-8 encoding provider with the misspelled
             name <b>utf8</b> (without the dash) has been initialized.  See 
             <see cref="M:Neon.Common.NeonHelper.RegisterMisspelledUtf8Provider"/> for more information.
+            </summary>
+        </member>
+        <member name="F:Neon.Common.NeonHelper.netFramework">
+            <summary>
+            Identifies the framework hosting the current process.
             </summary>
         </member>
         <member name="P:Neon.Common.NeonHelper.ServiceContainer">
@@ -2678,6 +2162,11 @@
             Ensures that a special UTF-8 text encoding provider misnamed as <b>utf8</b>
             (without the dash) is registered.  This is required sometimes because
             certain REST APIs may return incorrect <b>charset</b> values.
+            </summary>
+        </member>
+        <member name="P:Neon.Common.NeonHelper.Framework">
+            <summary>
+            Identifies the .NET framework hosting the current process.
             </summary>
         </member>
         <member name="M:Neon.Common.NeonHelper.EscapeCsv(System.String)">
@@ -2894,7 +2383,7 @@
             <para>
             Returns the list of <see cref="T:Newtonsoft.Json.JsonConverter"/> instances that will be automatically
             recognized by the JSON deserializers.  This is initialized with converters for some
-            common types like <see cref="T:Neon.Common.SemanticVersion"/>, <see cref="T:System.TimeSpan"/>, and 
+            common types like <see cref="T:System.DateTime"/>, <see cref="T:System.TimeSpan"/>, and 
             <see cref="T:System.Version"/>.
             </para>
             <note>
@@ -3570,10 +3059,45 @@
             The method does nothing.
             </para>
             <note>
-            A call to this is currently included by <b>Neon.CodeGen</b> to ensure that
+            A call to this is currently included by <b>Neon.ModelGen</b> to ensure that
             the enclosing project references <b>Neon.Common</b>.
             </note>
             </summary>
+        </member>
+        <member name="M:Neon.Common.NeonHelper.GetMethod(System.Type,System.String,System.Type[])">
+            <summary>
+            Uses reflection to locate a specific public, non-public, instance or static method on a type.
+            </summary>
+            <param name="type">The target type.</param>
+            <param name="name">The method name.</param>
+            <param name="parameterTypes">The parameter types.</param>
+            <returns>The <see cref="T:System.Reflection.MethodInfo"/>.</returns>
+            <exception cref="T:System.MissingMethodException">Thrown if the method does not exist.</exception>
+        </member>
+        <member name="M:Neon.Common.NeonHelper.GetConstructor(System.Type,System.Type[])">
+            <summary>
+            Uses reflection to locate a specific public or non-public constructor for a type.
+            </summary>
+            <param name="type">The target type.</param>
+            <param name="parameterTypes">The parameter types.</param>
+            <returns>The <see cref="T:System.Reflection.MethodInfo"/>.</returns>
+            <exception cref="T:System.MissingMethodException">Thrown if the method does not exist.</exception>
+        </member>
+        <member name="M:Neon.Common.NeonHelper.GetTaskResultAsObjectAsync(System.Threading.Tasks.Task)">
+            <summary>
+            Used to await a generic <see cref="T:System.Threading.Tasks.Task`1"/> and return its result as
+            an <see cref="T:System.Object"/>.  This is handy for situations where the task
+            result type is unknown at compile time.
+            </summary>
+            <param name="task">The <see cref="T:System.Threading.Tasks.Task`1"/>.</param>
+            <returns>The task result.</returns>
+        </member>
+        <member name="M:Neon.Common.NeonHelper.GetEnhancedJsonConverters">
+            <summary>
+            Returns instances of the types that implement <see cref="T:Neon.Data.IEnhancedJsonConverter"/> from the
+            <b>Neon.Common</b> assembly.
+            </summary>
+            <returns>The list of converters.</returns>
         </member>
         <member name="M:Neon.Common.NeonHelper.DetectOS">
             <summary>
@@ -4106,6 +3630,31 @@
             <param name="jValue">The value.</param>
             <returns>The serialized value.</returns>
         </member>
+        <member name="T:Neon.Common.NetFramework">
+            <summary>
+            Enumerates the known .NET Framework implementations.
+            </summary>
+        </member>
+        <member name="F:Neon.Common.NetFramework.Unknown">
+            <summary>
+            The framework could not be determined.
+            </summary>
+        </member>
+        <member name="F:Neon.Common.NetFramework.Core">
+            <summary>
+            .NET Core
+            </summary>
+        </member>
+        <member name="F:Neon.Common.NetFramework.Framework">
+            <summary>
+            .NET Framework
+            </summary>
+        </member>
+        <member name="F:Neon.Common.NetFramework.Native">
+            <summary>
+            .NET Native
+            </summary>
+        </member>
         <member name="T:Neon.Common.SpecialUtf8EncodingProvider">
             <summary>
             This is a special class used by <see cref="M:Neon.Common.NeonHelper.RegisterMisspelledUtf8Provider"/>
@@ -4153,38 +3702,59 @@
             </para>
             <list type="table">
             <item>
-                <term><b>KB</b></term>
+                <term><b>K</b></term>
                 <description>1,000</description>
             </item>
             <item>
-                <term><b>KiB</b></term>
+                <term><b>Ki</b></term>
                 <description>1,024</description>
             </item>
             <item>
-                <term><b>MB</b></term>
+                <term><b>M</b></term>
                 <description>1000000</description>
             </item>
             <item>
-                <term><b>MiB</b></term>
+                <term><b>Mi</b></term>
                 <description>1,048,576</description>
             </item>
             <item>
-                <term><b>GB</b></term>
+                <term><b>G</b></term>
                 <description>1,000,000,000</description>
             </item>
             <item>
-                <term><b>GiB</b></term>
+                <term><b>Gi</b></term>
                 <description>1,073,741,824</description>
             </item>
             <item>
-                <term><b>TB</b></term>
+                <term><b>T</b></term>
                 <description>1,000,000,000,000</description>
             </item>
             <item>
-                <term><b>TiB</b></term>
+                <term><b>Ti</b></term>
                 <description>1,099,511,627,776</description>
             </item>
+            <item>
+                <term><b>P</b></term>
+                <description>1,000,000,000,000,000</description>
+            </item>
+            <item>
+                <term><b>Pi</b></term>
+                <description>1,125,899,906,842,624</description>
+            </item>
+            <item>
+                <term><b>Ei</b></term>
+                <description>1,000,000,000,000,000,000‬</description>
+            </item>
+            <item>
+                <term><b>Ei</b></term>
+                <description>1,152,921,504,606,846,976‬</description>
+            </item>
             </list>
+            </summary>
+        </member>
+        <member name="F:Neon.Common.ByteUnits.MilliBytes">
+            <summary>
+            
             </summary>
         </member>
         <member name="F:Neon.Common.ByteUnits.KiloBytes">
@@ -4207,6 +3777,16 @@
             The constant 1,000,000,000
             </summary>
         </member>
+        <member name="F:Neon.Common.ByteUnits.PetaBytes">
+            <summary>
+            One PB: 1,000,000,000,000
+            </summary>
+        </member>
+        <member name="F:Neon.Common.ByteUnits.ExaBytes">
+            <summary>
+            One PB: 1,000,000,000,000,000
+            </summary>
+        </member>
         <member name="F:Neon.Common.ByteUnits.KibiBytes">
             <summary>
             One KiB: 1,024 (2^10)
@@ -4227,7 +3807,17 @@
             The constant 1,099,511,627,776 (2^40)
             </summary>
         </member>
-        <member name="M:Neon.Common.ByteUnits.TryParse(System.String,System.Int64@)">
+        <member name="F:Neon.Common.ByteUnits.PebiBytes">
+            <summary>
+            One PiB: 1,125,899,906,842,624 (2^50)
+            </summary>
+        </member>
+        <member name="F:Neon.Common.ByteUnits.ExbiBytes">
+            <summary>
+            One PiB: 1,152,921,504,606,846,976‬ (2^60)
+            </summary>
+        </member>
+        <member name="M:Neon.Common.ByteUnits.TryParse(System.String,System.Decimal@)">
             <summary>
             Parses a floating point count string that may include one of the optional
             unit suffixes described here <see cref="T:Neon.Common.ByteUnits"/>.
@@ -4238,20 +3828,27 @@
         </member>
         <member name="M:Neon.Common.ByteUnits.Parse(System.String)">
             <summary>
-            Parses a byte count and returns a <c>long</c>.
+            Parses a byte count and returns a <c>decimal</c>.
             </summary>
             <param name="text">The value being parsed.</param>
             <returns>The parsed value.</returns>
             <exception cref="T:System.FormatException">Thrown if the value cannot be parsed.</exception>
         </member>
-        <member name="M:Neon.Common.ByteUnits.ToByteString(System.Int64)">
+        <member name="M:Neon.Common.ByteUnits.ToMilliByteString(System.Decimal)">
+            <summary>
+            Converts a byte count to a string using millibyte units.
+            </summary>
+            <param name="size">The size.</param>
+            <returns>The size in millibytes.</returns>
+        </member>
+        <member name="M:Neon.Common.ByteUnits.ToByteString(System.Decimal)">
             <summary>
             Converts a byte count to a string using byte units.
             </summary>
             <param name="size">The size.</param>
             <returns>The size in bytes.</returns>
         </member>
-        <member name="M:Neon.Common.ByteUnits.ToDoubleString(System.Int64,System.Int64)">
+        <member name="M:Neon.Common.ByteUnits.ToDoubleString(System.Decimal,System.Decimal)">
             <summary>
             Converts the size to the specified units and then renders this
             as an invariant culture fixed point string.
@@ -4260,61 +3857,89 @@
             <param name="units">The units.</param>
             <returns>The floating point string.</returns>
         </member>
-        <member name="M:Neon.Common.ByteUnits.ToKBString(System.Int64)">
+        <member name="M:Neon.Common.ByteUnits.ToKString(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>KB</b> units.
+            Converts a byte count to a string using <b>K</b> units.
             </summary>
             <param name="size">The size.</param>
-            <returns>The size in KB.</returns>
+            <returns>The size in K.</returns>
         </member>
-        <member name="M:Neon.Common.ByteUnits.ToKiBString(System.Int64)">
+        <member name="M:Neon.Common.ByteUnits.ToKiString(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>KiB</b> units.
+            Converts a byte count to a string using <b>Ki</b> units.
             </summary>
             <param name="size">The size.</param>
-            <returns>The size in KiB.</returns>
+            <returns>The size in Ki.</returns>
         </member>
-        <member name="M:Neon.Common.ByteUnits.ToMBString(System.Int64)">
+        <member name="M:Neon.Common.ByteUnits.ToMString(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>MB</b> units.
+            Converts a byte count to a string using <b>M</b> units.
             </summary>
             <param name="size">The size.</param>
-            <returns>The size in MB.</returns>
+            <returns>The size in M.</returns>
         </member>
-        <member name="M:Neon.Common.ByteUnits.ToMiBString(System.Int64)">
+        <member name="M:Neon.Common.ByteUnits.ToMiString(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>MiB</b> units.
+            Converts a byte count to a string using <b>Mi</b> units.
             </summary>
             <param name="size">The size.</param>
-            <returns>The size in MiB.</returns>
+            <returns>The size in Mi.</returns>
         </member>
-        <member name="M:Neon.Common.ByteUnits.ToGBString(System.Int64)">
+        <member name="M:Neon.Common.ByteUnits.ToGString(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>GB</b> units.
+            Converts a byte count to a string using <b>G</b> units.
             </summary>
             <param name="size">The size.</param>
-            <returns>The size in GB.</returns>
+            <returns>The size in G.</returns>
         </member>
-        <member name="M:Neon.Common.ByteUnits.ToGiBString(System.Int64)">
+        <member name="M:Neon.Common.ByteUnits.ToGiString(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>GiB</b> units.
+            Converts a byte count to a string using <b>Gi</b> units.
             </summary>
             <param name="size">The size.</param>
-            <returns>The size in GiB.</returns>
+            <returns>The size in Gi.</returns>
         </member>
-        <member name="M:Neon.Common.ByteUnits.ToTBString(System.Int64)">
+        <member name="M:Neon.Common.ByteUnits.ToTString(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>TB</b> units.
+            Converts a byte count to a string using <b>T</b> units.
             </summary>
             <param name="size">The size.</param>
-            <returns>The size in TB.</returns>
+            <returns>The size in T.</returns>
         </member>
-        <member name="M:Neon.Common.ByteUnits.ToTiBString(System.Int64)">
+        <member name="M:Neon.Common.ByteUnits.ToTiString(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>TiB</b> units.
+            Converts a byte count to a string using <b>Ti</b> units.
             </summary>
             <param name="size">The size.</param>
-            <returns>The size in TiB.</returns>
+            <returns>The size in Ti.</returns>
+        </member>
+        <member name="M:Neon.Common.ByteUnits.ToPString(System.Decimal)">
+            <summary>
+            Converts a byte count to a string using <b>P</b> units.
+            </summary>
+            <param name="size">The size.</param>
+            <returns>The size in P.</returns>
+        </member>
+        <member name="M:Neon.Common.ByteUnits.ToPiString(System.Decimal)">
+            <summary>
+            Converts a byte count to a string using <b>Pi</b> units.
+            </summary>
+            <param name="size">The size.</param>
+            <returns>The size in Pi.</returns>
+        </member>
+        <member name="M:Neon.Common.ByteUnits.ToEString(System.Decimal)">
+            <summary>
+            Converts a byte count to a string using <b>E</b> units.
+            </summary>
+            <param name="size">The size.</param>
+            <returns>The size in E.</returns>
+        </member>
+        <member name="M:Neon.Common.ByteUnits.ToEiString(System.Decimal)">
+            <summary>
+            Converts a byte count to a string using <b>Ei</b> units.
+            </summary>
+            <param name="size">The size.</param>
+            <returns>The size in Ei.</returns>
         </member>
         <member name="T:Neon.Common.ProgramEntrypoint">
             <summary>
@@ -4470,6 +4095,122 @@
             initiated via <see cref="M:Neon.Common.ProgramRunner.Fork(Neon.Common.ProgramEntrypoint,System.String[])"/>.  This
             method will block until <see cref="M:Neon.Common.ProgramRunner.TerminateFork"/> is called.  The
             emulated program must exit cleanly when this returns.
+            </summary>
+        </member>
+        <member name="T:Neon.Common.NeonServiceMap">
+            <summary>
+            Holds more detailed information describing the Neon cluster services.  This a
+            <see cref="T:Neon.Service.ServiceMap"/> keyed by the service names defined in <see cref="T:Neon.Common.NeonServices"/>
+            and the class also has properties named for each service you can use as a shortcut.
+            </summary>
+            <remarks>
+            <note>
+            The default constructor builds a <see cref="T:Neon.Common.NeonServiceMap"/> for all environments, and clones
+            them for each Dev's workstation in the Neon Office, setting the correct static IP.
+            </note>
+            </remarks>
+        </member>
+        <member name="F:Neon.Common.NeonServiceMap.DefaultEndpointName">
+            <summary>
+            The default service endpoint name.
+            </summary>
+        </member>
+        <member name="F:Neon.Common.NeonServiceMap.serviceMaps">
+            <summary>
+            Returns a dictionary holding all service maps.
+            </summary>
+        </member>
+        <member name="P:Neon.Common.NeonServiceMap.Production">
+            <summary>
+            Returns the Production internal service map.
+            </summary>
+        </member>
+        <member name="M:Neon.Common.NeonServiceMap.GetMapName(System.String)">
+            <summary>
+            Returns the $NAME service map.
+            </summary>
+        </member>
+        <member name="M:Neon.Common.NeonServiceMap.#cctor">
+            <summary>
+            Constructor.
+            </summary>
+        </member>
+        <member name="M:Neon.Common.NeonServiceMap.VerifyInit(Neon.Common.NeonServiceMap)">
+            <summary>
+            Ensure that the service description properties have been initialized
+            for all service endpoints.
+            </summary>
+            <param name="map"></param>
+        </member>
+        <member name="M:Neon.Common.NeonServiceMap.BuildProduction">
+            <summary>
+            Builds the <see cref="T:Neon.Common.NeonServiceMap"/> for internal production services.
+            </summary>
+        </member>
+        <member name="M:Neon.Common.NeonServiceMap.CloneWithNewAdress(Neon.Common.NeonServiceMap,System.String)">
+            <summary>
+            Clones a <see cref="T:Neon.Common.NeonServiceMap"/> and changes the <see cref="P:Neon.Service.ServiceDescription.Address"/> for each of the services.
+            </summary>
+        </member>
+        <member name="M:Neon.Common.NeonServiceMap.AddServiceDescription(System.String,Neon.Service.ServiceEndpoint,System.String)">
+            <summary>
+            Adds a <see cref="T:Neon.Service.ServiceDescription"/> for the named service using
+            default details and specifying an optional network endpoint.
+            </summary>
+            <param name="serviceName">The service name.</param>
+            <param name="endpoint">Optionally specifies a single service endpoint.</param>
+            <param name="namespace">The K8s namespace where the service is deployed.</param>
+            <returns>
+            The <see cref="T:Neon.Service.ServiceDescription"/> so that it can be customized further if necessary.
+            </returns>
+            <remarks>
+            This method also initializes any service endpoint <see cref="P:Neon.Service.ServiceEndpoint.ServiceDescription"/>
+            properties to the service description being created and initializes blank or <c>null</c> endpoint
+            names to <see cref="F:Neon.Common.NeonServiceMap.DefaultEndpointName"/>.
+            </remarks>
+        </member>
+        <member name="M:Neon.Common.NeonServiceMap.AddServiceDescription(System.String,System.Collections.Generic.IEnumerable{Neon.Service.ServiceEndpoint})">
+            <summary>
+            Adds a <see cref="T:Neon.Service.ServiceDescription"/> for the named service using
+            default details with a set of network endpoints.
+            </summary>
+            <param name="serviceName">The service name or <c>null</c>.</param>
+            <param name="endpoints">The service's network endpoints.</param>
+            <returns>
+            The <see cref="T:Neon.Service.ServiceDescription"/> so that it can be customized further if necessary.
+            </returns>
+            <remarks>
+            This method also initializes any service endpoints <see cref="P:Neon.Service.ServiceEndpoint.ServiceDescription"/>
+            properties to the service description being created and initializes blank or <c>null</c> endpoint
+            names to <see cref="F:Neon.Common.NeonServiceMap.DefaultEndpointName"/>.
+            </remarks>
+        </member>
+        <member name="M:Neon.Common.NeonServiceMap.Lookup(System.String)">
+            <summary>
+            Returns the <see cref="T:Neon.Service.ServiceDescription"/> for the given service name.
+            </summary>
+            <param name="serviceName">The service name.</param>
+            <returns>The associated <see cref="T:Neon.Service.ServiceDescription"/>.</returns>
+            <exception cref="T:System.Collections.Generic.KeyNotFoundException">Thrown if thre service map has no description for the service.</exception>
+        </member>
+        <member name="T:Neon.Common.NeonServices">
+            <summary>
+            Defines the Neon service names.  
+            </summary>
+        </member>
+        <member name="F:Neon.Common.NeonServices.ClusterManager">
+            <summary>
+            Cluster Manager Operator.
+            </summary>
+        </member>
+        <member name="F:Neon.Common.NeonServices.Elasticsearch">
+            <summary>
+            Elasticsearch.
+            </summary>
+        </member>
+        <member name="F:Neon.Common.NeonServices.Kibana">
+            <summary>
+            Kibana.
             </summary>
         </member>
         <member name="T:Neon.Csv.CsvReader">
@@ -4821,6 +4562,48 @@
             </summary>
             <param name="args">The arguments.</param>
         </member>
+        <member name="T:Neon.Data.DateTimeJsonConverter">
+            <summary>
+            <para>
+            Implements a type converter for <see cref="T:System.DateTime"/> using the culture
+            invariant <b>yyyy-MM-ddTHH:mm:ss.fffZ</b> format.
+            </para>
+            <note>
+            This converter assumes that the <see cref="T:System.DateTime"/> being converted is
+            relative to UTC.
+            </note>
+            </summary>
+        </member>
+        <member name="P:Neon.Data.DateTimeJsonConverter.Type">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Data.DateTimeJsonConverter.ReadJson(Newtonsoft.Json.JsonReader,System.Type,System.DateTime,System.Boolean,Newtonsoft.Json.JsonSerializer)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Data.DateTimeJsonConverter.WriteJson(Newtonsoft.Json.JsonWriter,System.DateTime,Newtonsoft.Json.JsonSerializer)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Data.DateTimeJsonConverter.ToSimpleString(System.Object)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Neon.Data.DateTimeOffsetJsonConverter">
+            <summary>
+            Implements a type converter for <see cref="T:System.DateTimeOffset"/> using the culture
+            invariant <b>yyyy-MM-ddTHH:mm:ss.fffzzz</b> format.
+            </summary>
+        </member>
+        <member name="P:Neon.Data.DateTimeOffsetJsonConverter.Type">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Data.DateTimeOffsetJsonConverter.ReadJson(Newtonsoft.Json.JsonReader,System.Type,System.DateTimeOffset,System.Boolean,Newtonsoft.Json.JsonSerializer)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Data.DateTimeOffsetJsonConverter.WriteJson(Newtonsoft.Json.JsonWriter,System.DateTimeOffset,Newtonsoft.Json.JsonSerializer)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Data.DateTimeOffsetJsonConverter.ToSimpleString(System.Object)">
+            <inheritdoc/>
+        </member>
         <member name="T:Neon.Data.IEnhancedJsonConverter">
             <summary>
             <para>
@@ -4829,7 +4612,7 @@
             </para>
             <note>
             <see cref="T:Newtonsoft.Json.JsonConverter"/> classes need to implement this interface to be
-            automatically supported by classes generated by <b>Neon.CodeGen</b>.
+            automatically supported by classes generated by <b>Neon.ModelGen</b>.
             </note>
             </summary>
         </member>
@@ -4837,6 +4620,13 @@
             <summary>
             Returns the type handled by the converter.
             </summary>
+        </member>
+        <member name="M:Neon.Data.IEnhancedJsonConverter.ToSimpleString(System.Object)">
+            <summary>
+            Converts an object instance to a simple (non-JSON) string.
+            </summary>
+            <param name="instance">The object instance.</param>
+            <returns>The rendered string.</returns>
         </member>
         <member name="T:Neon.Data.JsonExtensions">
             <summary>
@@ -4871,6 +4661,9 @@
         <member name="M:Neon.Data.TimeSpanJsonConverter.WriteJson(Newtonsoft.Json.JsonWriter,System.TimeSpan,Newtonsoft.Json.JsonSerializer)">
             <inheritdoc/>
         </member>
+        <member name="M:Neon.Data.TimeSpanJsonConverter.ToSimpleString(System.Object)">
+            <inheritdoc/>
+        </member>
         <member name="T:Neon.Data.VersionJsonConverter">
             <summary>
             Implements a type converter for <see cref="T:System.Version"/>.
@@ -4885,6 +4678,9 @@
         <member name="M:Neon.Data.VersionJsonConverter.WriteJson(Newtonsoft.Json.JsonWriter,System.Version,Newtonsoft.Json.JsonSerializer)">
             <inheritdoc/>
         </member>
+        <member name="M:Neon.Data.VersionJsonConverter.ToSimpleString(System.Object)">
+            <inheritdoc/>
+        </member>
         <member name="T:Neon.Data.IGeneratedServiceClient">
             <summary>
             Used to identify a generated ASP.NET service client.
@@ -4893,17 +4689,17 @@
         <member name="P:Neon.Data.IGeneratedServiceClient.GeneratorVersion">
             <summary>
             <para>
-            Returns the version of the <b>Neon.CodeGen</b> assembly that generated
+            Returns the version of the <b>Neon.ModelGen</b> assembly that generated
             this code plus the generated code schema version.  This is formatted like:
             </para>
             <code>
             SEMANTIC-VERSION:SCHEMA
             </code>
             <para>
-            where SCHEMA-VERSION is the <b>Neon.CodeGen</b> assembly version and
+            where SCHEMA-VERSION is the <b>Neon.ModelGen</b> assembly version and
             SCHEMA is a simple integer schema version number.  The version will be
             incremented if or when the code generated by future versions of the
-            <b>Neon.CodeGen</b> assembly changes enough to become incompatable
+            <b>Neon.ModelGen</b> assembly changes enough to become incompatable
             with older versions of the <b>Neon.Xunit.XunitExtensions.ValidateController()</b>
             method.  This is likely to never change, but future proofing is always
             a good idea.
@@ -4982,7 +4778,7 @@
         </member>
         <member name="T:Neon.Data.IRoundtripData">
             <summary>
-            Used by the <b>Neon.CodeGen</b> assembly to indicate that a class
+            Used by the <b>Neon.ModelGen</b> assembly to indicate that a class
             was generated as a round-trip data model.
             </summary>
         </member>
@@ -4993,11 +4789,11 @@
             <param name="indented">Optionally pass <c>true</c> to format the output.</param>
             <returns>The serialized JSON string.</returns>
         </member>
-        <member name="M:Neon.Data.IRoundtripData.ToJObject(System.Boolean)">
+        <member name="M:Neon.Data.IRoundtripData.ToJObject">
             <summary>
             Renders the instance as a <see cref="T:Newtonsoft.Json.Linq.JObject"/>.
             </summary>
-            <returns>The cloned <see cref="T:Newtonsoft.Json.Linq.JObject"/>.</returns>
+            <returns>The new <see cref="T:Newtonsoft.Json.Linq.JObject"/>.</returns>
         </member>
         <member name="M:Neon.Data.IRoundtripData.ToBytes">
             <summary>
@@ -5053,7 +4849,7 @@
         <member name="T:Neon.Data.RoundtripDataFactory">
             <summary>
             Used to instantiate code generated classes that implement <see cref="T:Neon.Data.IRoundtripData"/>
-            as generated by the <c>Neon.CodeGen</c> assembly.
+            as generated by the <c>Neon.ModelGen</c> assembly.
             </summary>
         </member>
         <member name="M:Neon.Data.RoundtripDataFactory.CreateFrom``1(Newtonsoft.Json.Linq.JObject)">
@@ -5112,18 +4908,23 @@
         <member name="T:Neon.Data.RoundtripDataHelper">
             <summary>
             Serialization related helpers used by the code generated
-            by the <b>Neon.CodeGen</b> library.
+            by the <b>Neon.ModelGen</b> library.
             </summary>
         </member>
         <member name="F:Neon.Data.RoundtripDataHelper.NoHashPropertiesError">
             <summary>
-            Error message used when <see cref="M:System.Object.GetHashCode"/> is called on
+            The error message used when <see cref="M:System.Object.GetHashCode"/> is called on
             a generated data model that has bo properties tagged with [HashSource].
             </summary>
         </member>
         <member name="P:Neon.Data.RoundtripDataHelper.Serializer">
             <summary>
-            Returns the Json serializer.
+            Returns the Json global serializer.
+            </summary>
+        </member>
+        <member name="M:Neon.Data.RoundtripDataHelper.#cctor">
+            <summary>
+            Static constructor.
             </summary>
         </member>
         <member name="M:Neon.Data.RoundtripDataHelper.PersistableInitialize">
@@ -5237,32 +5038,67 @@
             isn't fine enough.  This defaults to <c>true</c>.
             </summary>
         </member>
-        <member name="M:Neon.Diagnostics.ILogManager.GetLogger(System.String)">
+        <member name="M:Neon.Diagnostics.ILogManager.GetLogger(System.String,System.String,System.Func{System.Boolean})">
             <summary>
             Returns a named logger.
             </summary>
             <param name="sourceModule">The case sensitive logger event source module (defaults to <c>null</c>).</param>
+            <param name="contextId">
+            Optionally specifies additional information that can be used to identify
+            context for logged events.  For example, the Neon.Cadence client uses this 
+             to record the ID of the workflow recording events.
+            </param>
+            <param name="isLogEnabledFunc">
+            Optionally specifies a function that will be called at runtime to
+            determine whether to actually log an event.  This defaults to <c>null</c>
+            which will always log events.
+            </param>
             <returns>The <see cref="T:Neon.Diagnostics.INeonLogger"/> instance.</returns>
         </member>
-        <member name="M:Neon.Diagnostics.ILogManager.GetLogger(System.Type)">
+        <member name="M:Neon.Diagnostics.ILogManager.GetLogger(System.Type,System.String,System.Func{System.Boolean})">
             <summary>
             Returns a logger to be associated with a specific type.  This method
             supports both <c>static</c> and normal types.
             </summary>
             <param name="type">The type.</param>
+            <param name="contextId">
+            Optionally specifies additional information that can be used to identify
+            context for logged events.  For example, the Neon.Cadence client uses this 
+             to record the ID of the workflow recording events.
+            </param>
+            <param name="isLogEnabledFunc">
+            Optionally specifies a function that will be called at runtime to
+            determine whether to actually log an event.  This defaults to <c>null</c>
+            which will always log events.
+            </param>
             <returns>The <see cref="T:Neon.Diagnostics.INeonLogger"/> instance.</returns>
         </member>
-        <member name="M:Neon.Diagnostics.ILogManager.GetLogger``1">
+        <member name="M:Neon.Diagnostics.ILogManager.GetLogger``1(System.String,System.Func{System.Boolean})">
             <summary>
             Returns a logger to be associated with a specific type.  This
             method works only for non-<c>static</c> types.
             </summary>
             <typeparam name="T">The type.</typeparam>
+            <param name="contextId">
+            Optionally specifies additional information that can be used to identify
+            context for logged events.  For example, the Neon.Cadence client uses this 
+             to record the ID of the workflow recording events.
+            </param>
+            <param name="isLogEnabledFunc">
+            Optionally specifies a function that will be called at runtime to
+            determine whether to actually log an event.  This defaults to <c>null</c>
+            which will always log events.
+            </param>
             <returns>The <see cref="T:Neon.Diagnostics.INeonLogger"/> instance.</returns>
         </member>
         <member name="T:Neon.Diagnostics.INeonLogger">
             <summary>
             Defines the methods and properties for a diagnostics logger. 
+            </summary>
+        </member>
+        <member name="P:Neon.Diagnostics.INeonLogger.ContextId">
+            <summary>
+            Returns the logger's context ID or <c>null</c>.
             </summary>
         </member>
         <member name="P:Neon.Diagnostics.INeonLogger.IsLogDebugEnabled">
@@ -5411,84 +5247,6 @@
             <param name="message">The object that will be serialized into the message.</param>
             <param name="e">The exception.</param>
             <param name="activityId">The optional activity ID.</param>
-        </member>
-        <member name="M:Neon.Diagnostics.INeonLogger.LogMetrics(Neon.Diagnostics.LogLevel,System.Collections.Generic.IEnumerable{System.String},System.Collections.Generic.IEnumerable{System.Double})">
-            <summary>
-            Logs text and numeric metrics.
-            </summary>
-            <param name="level">The log level.</param>
-            <param name="textFields">The text fields (or <c>null</c>).</param>
-            <param name="numFields">The numeric fields (or <c>null</c>).</param>
-            <exception cref="T:System.ArgumentException">
-            Thrown if either of <paramref name="textFields"/> or <paramref name="numFields"/> 
-            includes more than 10 items.
-            </exception>
-            <remarks>
-            <para>
-            This can be used to log text and/or numeric metrics in a log event.
-            Text fields will be written to the logged event like <b>[txt.#=VALUE]</b>
-            where <b>#</b> is the field index [0-9].  Numeric fields will be
-            written as <b>[num.#=VALUE]</b>.
-            </para>
-            <para>
-            The <b>neon-log-collector</b> service will recognizes these and
-            persist them as <b>txt.#=VALUE</b> and <b>num.#=VALUE</b> fields
-            in the Elasticsearch <b>logstash-*</b> index.
-            </para>
-            <note>
-            Up to 10 of each type of metric can be passed.
-            </note>
-            </remarks>
-        </member>
-        <member name="M:Neon.Diagnostics.INeonLogger.LogMetrics(Neon.Diagnostics.LogLevel,System.String[])">
-            <summary>
-            Logs text metrics.
-            </summary>
-            <param name="level">The log level.</param>
-            <param name="textFields">The text fields (or <c>null</c>).</param>
-            <exception cref="T:System.ArgumentException">
-            Thrown if <paramref name="textFields"/> includes more than 10 items.
-            </exception>
-            <remarks>
-            <para>
-            This can be used to log text metrics in a log event.  Text fields will 
-            be written to the logged event like <b>[txt.#=VALUE]</b> where
-            <b>#</b> is the field index [0-9].
-            </para>
-            <para>
-            The <b>neon-log-collector</b> service will recognizes these and
-            persist them as <b>txt.#=VALUE</b> fields in the Elasticsearch 
-            <b>logstash-*</b> index.
-            </para>
-            <note>
-            Up to 10 metrics can be passed.
-            </note>
-            </remarks>
-        </member>
-        <member name="M:Neon.Diagnostics.INeonLogger.LogMetrics(Neon.Diagnostics.LogLevel,System.Double[])">
-            <summary>
-            Logs numeric metrics.
-            </summary>
-            <param name="level">The log level.</param>
-            <param name="numFields">The numeric fields (or <c>null</c>).</param>
-            <exception cref="T:System.ArgumentException">
-            Thrown if <paramref name="numFields"/> includes more than 10 items.
-            </exception>
-            <remarks>
-            <para>
-            This can be used to log numeric metrics in a log event.  Numeric fields
-            will  be written to the logged event like <b>[num.#=VALUE]</b> where
-            <b>#</b> is the field index [0-9].
-            </para>
-            <para>
-            The <b>neon-log-collector</b> service will recognizes these and
-            persist them as <b>num.#=VALUE</b> fields in the Elasticsearch 
-            <b>logstash-*</b> index.
-            </para>
-            <note>
-            Up to 10 metrics can be passed.
-            </note>
-            </remarks>
         </member>
         <member name="T:Neon.Diagnostics.LogActivity">
             <summary>
@@ -5719,17 +5477,21 @@
         </member>
         <member name="F:Neon.Diagnostics.LogLevel.Critical">
             <summary>
-            A critical or fatal error has been detected.
+            A critical or fatal error has been detected.  These errors indicate that
+            a very serious failure has occurred that may have crashed the program or
+            at least seriousoly impacts its functioning.
             </summary>
         </member>
         <member name="F:Neon.Diagnostics.LogLevel.SError">
             <summary>
-            A security related error has occurred.
+            A security related error has occurred.  Errors indicate a problem that may be
+            transient, be recovered from, or are perhaps more serious.
             </summary>
         </member>
         <member name="F:Neon.Diagnostics.LogLevel.Error">
             <summary>
-            An error has been detected. 
+            An error has been detected.  Errors indicate a problem that may be
+            transient, be recovered from, or are perhaps more serious.
             </summary>
         </member>
         <member name="F:Neon.Diagnostics.LogLevel.Warn">
@@ -5745,7 +5507,7 @@
         <member name="F:Neon.Diagnostics.LogLevel.SInfo">
             <summary>
             Describes a non-error security operation or condition, such as a 
-            a login or authentication.
+            a successful login or authentication.
             </summary>
         </member>
         <member name="F:Neon.Diagnostics.LogLevel.Debug">
@@ -5790,7 +5552,8 @@
         </member>
         <member name="P:Neon.Diagnostics.LogManager.LogLevel">
             <summary>
-            Specifies the level of events to be actually recorded.
+            Specifies the level of events to be actually recorded.  This defaults to
+            <see cref="F:Neon.Diagnostics.LogLevel.Info"/>.
             </summary>
         </member>
         <member name="M:Neon.Diagnostics.LogManager.SetLogLevel(System.String)">
@@ -5823,21 +5586,31 @@
             isn't fine enough.  This defaults to <c>true</c>.
             </summary>
         </member>
-        <member name="M:Neon.Diagnostics.LogManager.InternalGetLogger(System.String,System.IO.TextWriter)">
+        <member name="M:Neon.Diagnostics.LogManager.InternalGetLogger(System.String,System.IO.TextWriter,System.String,System.Func{System.Boolean})">
             <summary>
             Returns the logger for the existing name.
             </summary>
             <param name="name">The case sensitive logger name.</param>
             <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="P:System.Console.Error"/>.</param>
+            <param name="contextId">
+            Optionally specifies additional information that can be used to identify
+            context for logged events.  For example, the Neon.Cadence client uses this 
+             to record the ID of the workflow recording events.
+            </param>
+            <param name="isLogEnabledFunc">
+            Optionally specifies a function that will be called at runtime to
+            determine whether to actually log an event.  This defaults to <c>null</c>
+            which will always log events.
+            </param>
             <returns>The <see cref="T:Neon.Diagnostics.INeonLogger"/> instance.</returns>
         </member>
-        <member name="M:Neon.Diagnostics.LogManager.GetLogger(System.String)">
+        <member name="M:Neon.Diagnostics.LogManager.GetLogger(System.String,System.String,System.Func{System.Boolean})">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.LogManager.GetLogger(System.Type)">
+        <member name="M:Neon.Diagnostics.LogManager.GetLogger(System.Type,System.String,System.Func{System.Boolean})">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.LogManager.GetLogger``1">
+        <member name="M:Neon.Diagnostics.LogManager.GetLogger``1(System.String,System.Func{System.Boolean})">
             <inheritdoc/>
         </member>
         <member name="M:Neon.Diagnostics.LogManager.Dispose">
@@ -5883,6 +5656,9 @@
             Returns the captured log text.
             </summary>
             <returns>The text.</returns>
+        </member>
+        <member name="P:Neon.Diagnostics.LogRecorder.ContextId">
+            <inheritdoc/>
         </member>
         <member name="P:Neon.Diagnostics.LogRecorder.IsLogDebugEnabled">
             <inheritdoc/>
@@ -5950,15 +5726,6 @@
         <member name="M:Neon.Diagnostics.LogRecorder.LogCritical(System.Object,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.LogMetrics(Neon.Diagnostics.LogLevel,System.Collections.Generic.IEnumerable{System.String},System.Collections.Generic.IEnumerable{System.Double})">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.LogMetrics(Neon.Diagnostics.LogLevel,System.String[])">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.LogMetrics(Neon.Diagnostics.LogLevel,System.Double[])">
-            <inheritdoc/>
-        </member>
         <member name="M:Neon.Diagnostics.LogRecorder.Record(System.String)">
             <summary>
             Logs a line of text directly to the log recorder without also logging it to
@@ -5971,17 +5738,8 @@
             A general purpose implementation of <see cref="T:Neon.Diagnostics.INeonLogger"/> and <see cref="T:Microsoft.Extensions.Logging.ILogger"/>.
             </summary>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.FormatMetrics(System.Collections.Generic.IEnumerable{System.String},System.Collections.Generic.IEnumerable{System.Double})">
-            <summary>
-            Formats metric fields into a message.
-            </summary>
-            <param name="txtFields">The text fields (or <c>null</c>).</param>
-            <param name="numFields">The numeric fields (or <c>null</c>).</param>
-            <exception cref="T:System.ArgumentException">
-            Thrown if either of <paramref name="txtFields"/> or <paramref name="numFields"/> 
-            includes more than 10 items.
-            </exception>
-            <returns>The formatted message.</returns>
+        <member name="P:Neon.Diagnostics.NeonLogger.ContextId">
+            <inheritdoc/>
         </member>
         <member name="P:Neon.Diagnostics.NeonLogger.IsLogDebugEnabled">
             <inheritdoc/>
@@ -6004,7 +5762,7 @@
         <member name="P:Neon.Diagnostics.NeonLogger.IsLogWarnEnabled">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.#ctor(Neon.Diagnostics.ILogManager,System.String,System.Boolean,System.IO.TextWriter)">
+        <member name="M:Neon.Diagnostics.NeonLogger.#ctor(Neon.Diagnostics.ILogManager,System.String,System.Boolean,System.IO.TextWriter,System.String,System.Func{System.Boolean})">
             <summary>
             Constructs a named instance.
             </summary>
@@ -6012,6 +5770,16 @@
             <param name="sourceModule">Optionally identifies the event source module or <c>null</c>.</param>
             <param name="noisyAspNet">Optionally enables normal (noisy) logging of ASP.NET <b>INFO</b> events (see note in remarks).</param>
             <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="P:System.Console.Error"/>.</param>
+            <param name="contextId">
+            Optionally specifies additional information that can be used to identify
+            context for logged events.  For example, the Neon.Cadence client uses this 
+             to record the ID of the workflow recording events.
+            </param>
+            <param name="isLogEnabledFunc">
+            Optionally specifies a function that will be called at runtime to
+            determine whether to actually log an event.  This defaults to <c>null</c>
+            which will always log events.
+            </param>
             <remarks>
             <para>
             The instances returned will log nothing if <paramref name="logManager"/>
@@ -6115,15 +5883,6 @@
         <member name="M:Neon.Diagnostics.NeonLogger.Log``1(Microsoft.Extensions.Logging.LogLevel,Microsoft.Extensions.Logging.EventId,``0,System.Exception,System.Func{``0,System.Exception,System.String})">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.LogMetrics(Neon.Diagnostics.LogLevel,System.Collections.Generic.IEnumerable{System.String},System.Collections.Generic.IEnumerable{System.Double})">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.LogMetrics(Neon.Diagnostics.LogLevel,System.String[])">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.LogMetrics(Neon.Diagnostics.LogLevel,System.Double[])">
-            <inheritdoc/>
-        </member>
         <member name="M:Neon.Diagnostics.NeonLogger.IsEnabled(Microsoft.Extensions.Logging.LogLevel)">
             <inheritdoc/>
         </member>
@@ -6151,7 +5910,10 @@
             <summary>
             Constructor.
             </summary>
-            <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to be wrapped.</param>
+            <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> being wrapped.</param>
+        </member>
+        <member name="P:Neon.Diagnostics.NeonLoggerShim.ContextId">
+            <inheritdoc/>
         </member>
         <member name="P:Neon.Diagnostics.NeonLoggerShim.IsLogDebugEnabled">
             <inheritdoc/>
@@ -6188,13 +5950,14 @@
             <param name="text">The message text.</param>
             <returns>The normalized message.</returns>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.FormatMessage(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.NeonLoggerShim.FormatMessage(Neon.Diagnostics.INeonLogger,System.Object,System.String)">
             <summary>
             Formats the log message.
             </summary>
+            <param name="neonLogger">The <see cref="T:Neon.Diagnostics.INeonLogger"/> implementation or <c>null</c>.</param>
             <param name="message">The message object.</param>
             <param name="activityId">The optional activiity ID.</param>
-            <returns></returns>
+            <returns>The formatted log event.</returns>
         </member>
         <member name="M:Neon.Diagnostics.NeonLoggerShim.LogDebug(System.Object,System.String)">
             <inheritdoc/>
@@ -6236,15 +5999,6 @@
             <inheritdoc/>
         </member>
         <member name="M:Neon.Diagnostics.NeonLoggerShim.LogCritical(System.Object,System.Exception,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.LogMetrics(Neon.Diagnostics.LogLevel,System.Collections.Generic.IEnumerable{System.String},System.Collections.Generic.IEnumerable{System.Double})">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.LogMetrics(Neon.Diagnostics.LogLevel,System.String[])">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.LogMetrics(Neon.Diagnostics.LogLevel,System.Double[])">
             <inheritdoc/>
         </member>
         <member name="M:Neon.Diagnostics.NeonLoggerShim.Log``1(Microsoft.Extensions.Logging.LogLevel,Microsoft.Extensions.Logging.EventId,``0,System.Exception,System.Func{``0,System.Exception,System.String})">
@@ -7251,6 +7005,551 @@
             Deletes the temporary folder and all of its contents.
             </summary>
         </member>
+        <member name="T:Neon.ModelGen.ActionResult`1">
+            <summary>
+            Used to indicate that a service method uses the <c>IActionResult</c>
+            pattern to return a <typeparamref name="T"/>.
+            </summary>
+            <typeparam name="T">The type being returned.</typeparam>
+        </member>
+        <member name="T:Neon.ModelGen.ControllerValidationAttribute">
+            <summary>
+            <para>
+            Used to have the <c>Neon.Xunit.XunitExtensions.ValidateController&lt;T&gt;()</c>
+            method including the tagged method when validating the service controller
+            against its definining interface.  This is useful for rare situations where a
+            service controller inherits from another class that implements some endpoints.
+            </para>
+            <note>
+            By default, <c>Neon.Xunit.XunitExtensions.ValidateController&lt;T&gt;()</c>
+            only considers service methods implemented directly in the service controller
+            during validation.
+            </note>
+            </summary>
+        </member>
+        <member name="T:Neon.ModelGen.DataModelAttribute">
+            <summary>
+            Used to provide the model code generator additional information
+            about a specific data type.  Use of this optional because the code
+            generator assumes that all types that are not specifically tagged
+            by <see cref="T:Neon.ModelGen.ServiceModelAttribute"/> are data types.
+            </summary>
+        </member>
+        <member name="M:Neon.ModelGen.DataModelAttribute.#ctor">
+            <summary>
+            Constructor.
+            </summary>
+        </member>
+        <member name="P:Neon.ModelGen.DataModelAttribute.Name">
+            <summary>
+            <para>
+            Optionally specifies the type identifier that will be used by
+            generated code to identify the object type at runtime. This
+            will be used when deserializing the object.
+            </para>
+            <para>
+            This defaults to the fully qualified name of the type as it
+            appears in the source assembly as it is scanned by the code 
+            generator.  You may want to set this to reduce the length
+            or just to customize how your data is persistedd.
+            </para>
+            </summary>
+        </member>
+        <member name="T:Neon.ModelGen.FromBodyAttribute">
+            <summary>
+            Used to indicate that a service endpoint parameter is to be obtained
+            by parsing the request body as JSON.
+            </summary>
+        </member>
+        <member name="M:Neon.ModelGen.FromBodyAttribute.#ctor">
+            <summary>
+            Constructor.
+            </summary>
+        </member>
+        <member name="P:Neon.ModelGen.FromBodyAttribute.Name">
+            <summary>
+            This is ignored.
+            </summary>
+        </member>
+        <member name="T:Neon.ModelGen.FromHeaderAttribute">
+            <summary>
+            Used to indicate that a service endpoint parameter is to be obtained
+            by parsing a request header value.
+            </summary>
+            <remarks>
+            By default, this option will look for the HTTP header with the same
+            name as the tagged endpoint parameter.  This can be overriden by setting
+            the <see cref="P:Neon.ModelGen.FromHeaderAttribute.Name"/> property.
+            </remarks>
+        </member>
+        <member name="M:Neon.ModelGen.FromHeaderAttribute.#ctor">
+            <summary>
+            Constructor.
+            </summary>
+        </member>
+        <member name="P:Neon.ModelGen.FromHeaderAttribute.Name">
+            <summary>
+            Optionally overrides the tagged service endpoint method property
+            name when generating the client code.
+            </summary>
+        </member>
+        <member name="T:Neon.ModelGen.FromQueryAttribute">
+            <summary>
+            Used to indicate that a service endpoint parameter is to be obtained
+            by parsing a request URI query parameter.
+            </summary>
+            <remarks>
+            By default, this option will look for the query parameter with the same
+            name as the tagged endpoint parameter.  This can be overriden by setting
+            the <see cref="P:Neon.ModelGen.FromQueryAttribute.Name"/> property.
+            </remarks>
+        </member>
+        <member name="M:Neon.ModelGen.FromQueryAttribute.#ctor(System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="name">
+            Optionally specifies URI query parameter name.  This defaults to 
+            the actual parameter name.
+            </param>
+        </member>
+        <member name="P:Neon.ModelGen.FromQueryAttribute.Name">
+            <summary>
+            Optionally overrides the tagged service endpoint method property
+            name when generating the client code.
+            </summary>
+        </member>
+        <member name="T:Neon.ModelGen.FromRouteAttribute">
+            <summary>
+            Used to indicate that a service endpoint parameter is to be obtained
+            by extracting it from the URI route template.
+            </summary>
+            <remarks>
+            By default, this option will look for the query parameter with the same
+            name as the tagged endpoint parameter.  This can be overriden by setting
+            the <see cref="P:Neon.ModelGen.FromRouteAttribute.Name"/> property.
+            </remarks>
+        </member>
+        <member name="M:Neon.ModelGen.FromRouteAttribute.#ctor(System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="name">
+            Optionally specifies URI query parameter name.  This defaults to 
+            the actual parameter name.
+            </param>
+        </member>
+        <member name="P:Neon.ModelGen.FromRouteAttribute.Name">
+            <summary>
+            Optionally overrides the tagged service endpoint method property
+            name when generating the client code.
+            </summary>
+        </member>
+        <member name="T:Neon.ModelGen.GeneratedClientAttribute">
+            <summary>
+            Used to tag generated service client classes with additional
+            metadata that will be used when validatating the a generated service
+            client actually matches an ASP.NET service implementation.
+            </summary>
+        </member>
+        <member name="M:Neon.ModelGen.GeneratedClientAttribute.#ctor(System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="routeTemplate">The controller's route template.</param>
+        </member>
+        <member name="P:Neon.ModelGen.GeneratedClientAttribute.RouteTemplate">
+            <summary>
+            The route template.
+            </summary>
+        </member>
+        <member name="T:Neon.ModelGen.GeneratedMethodAttribute">
+            <summary>
+            Used to tag generated service client methods with additional
+            metadata that will be used when validatating the a generated service
+            client actually matches an ASP.NET service implementation.
+            </summary>
+        </member>
+        <member name="M:Neon.ModelGen.GeneratedMethodAttribute.#ctor">
+            <summary>
+            Constructor.
+            </summary>
+        </member>
+        <member name="P:Neon.ModelGen.GeneratedMethodAttribute.DefinedAs">
+            <summary>
+            The method name from the service model definition.
+            </summary>
+        </member>
+        <member name="P:Neon.ModelGen.GeneratedMethodAttribute.Returns">
+            <summary>
+            The method result type.
+            </summary>
+        </member>
+        <member name="P:Neon.ModelGen.GeneratedMethodAttribute.RouteTemplate">
+            <summary>
+            The route template.
+            </summary>
+        </member>
+        <member name="P:Neon.ModelGen.GeneratedMethodAttribute.HttpMethod">
+            <summary>
+            The HTTP method for the endpoint.
+            </summary>
+        </member>
+        <member name="T:Neon.ModelGen.GeneratedParamAttribute">
+            <summary>
+            Used to tag generated service client method parameters with additional
+            metadata that will be used when validatating the a generated service
+            client actually matches an ASP.NET service implementation.
+            </summary>
+        </member>
+        <member name="M:Neon.ModelGen.GeneratedParamAttribute.#ctor(Neon.ModelGen.PassAs)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="passAs">Indicates how the client passes the tagged parameter to the service.</param>
+        </member>
+        <member name="P:Neon.ModelGen.GeneratedParamAttribute.PassAs">
+            <summary>
+            Indicates how the client passes the tagged parameter to the service.
+            </summary>
+        </member>
+        <member name="P:Neon.ModelGen.GeneratedParamAttribute.Name">
+            <summary>
+            Parameter name as it appears on the wire for parameters passed
+            as a query, header, or route.
+            </summary>
+        </member>
+        <member name="T:Neon.ModelGen.HashSourceAttribute">
+            <summary>
+            Used to tag data model properties that should be included in the
+            <see cref="M:System.Object.GetHashCode"/> computation.
+            </summary>
+        </member>
+        <member name="M:Neon.ModelGen.HashSourceAttribute.#ctor">
+            <summary>
+            Constructor.
+            </summary>
+        </member>
+        <member name="T:Neon.ModelGen.HttpAttribute">
+            <summary>
+            Base class for the HTTP related attributes below.
+            </summary>
+        </member>
+        <member name="P:Neon.ModelGen.HttpAttribute.Template">
+            <summary>
+            The route template.
+            </summary>
+        </member>
+        <member name="P:Neon.ModelGen.HttpAttribute.HttpMethod">
+            <summary>
+            Returns the HTTP method.
+            </summary>
+        </member>
+        <member name="P:Neon.ModelGen.HttpAttribute.Name">
+            <summary>
+            Optionally overrides the tagged service endpoint method name when
+            generating the client code.
+            </summary>
+        </member>
+        <member name="P:Neon.ModelGen.HttpAttribute.Order">
+            <summary>
+            <b>NOT SUPPORTED:</b> The order in which the route is to be applied.
+            </summary>
+        </member>
+        <member name="T:Neon.ModelGen.HttpDeleteAttribute">
+            <summary>
+            Used to identify a service endpoint that is triggered via the <b>DELETE</b> method.
+            </summary>
+        </member>
+        <member name="M:Neon.ModelGen.HttpDeleteAttribute.#ctor(System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="template">The optional routing template.</param>
+        </member>
+        <member name="T:Neon.ModelGen.HttpGetAttribute">
+            <summary>
+            Used to identify a service endpoint that is triggered via the <b>GET</b> method.
+            </summary>
+        </member>
+        <member name="M:Neon.ModelGen.HttpGetAttribute.#ctor(System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="template">The optional routing template.</param>
+        </member>
+        <member name="T:Neon.ModelGen.HttpHeadAttribute">
+            <summary>
+            Used to identify a service endpoint that is triggered via the <b>HEAD</b> method.
+            </summary>
+        </member>
+        <member name="M:Neon.ModelGen.HttpHeadAttribute.#ctor(System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="template">The optional routing template.</param>
+        </member>
+        <member name="T:Neon.ModelGen.HttpOptionsAttribute">
+            <summary>
+            Used to identify a service endpoint that is triggered via the <b>OPTIONS</b> method.
+            </summary>
+        </member>
+        <member name="M:Neon.ModelGen.HttpOptionsAttribute.#ctor(System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="template">The optional routing template.</param>
+        </member>
+        <member name="T:Neon.ModelGen.HttpPatchAttribute">
+            <summary>
+            Used to identify a service endpoint that is triggered via the <b>PATCH</b> method.
+            </summary>
+        </member>
+        <member name="M:Neon.ModelGen.HttpPatchAttribute.#ctor(System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="template">The optional routing template.</param>
+        </member>
+        <member name="T:Neon.ModelGen.HttpPostAttribute">
+            <summary>
+            Used to identify a service endpoint that is triggered via the <b>POST</b> method.
+            </summary>
+        </member>
+        <member name="M:Neon.ModelGen.HttpPostAttribute.#ctor(System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="template">The optional routing template.</param>
+        </member>
+        <member name="T:Neon.ModelGen.HttpPutAttribute">
+            <summary>
+            Used to identify a service endpoint that is triggered via the <b>PUT</b> method.
+            </summary>
+        </member>
+        <member name="M:Neon.ModelGen.HttpPutAttribute.#ctor(System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="template">The optional routing template.</param>
+        </member>
+        <member name="T:Neon.ModelGen.IActionResult">
+            <summary>
+            Used to indicate that a service method uses the <c>IActionResult</c>
+            pattern to return <c>void</c>.
+            </summary>
+        </member>
+        <member name="T:Neon.ModelGen.NoCodeGenAttribute">
+            <summary>
+            Used to indicate that a class or interface should be ignored
+            during code generation.
+            </summary>
+        </member>
+        <member name="T:Neon.ModelGen.NoControllerValidationAttribute">
+            <summary>
+            Used to prevent the <c>Neon.Xunit.XunitExtensions.ValidateController&lt;T&gt;()</c>
+            method from including the tagged method when validating the service controller
+            against its definining interface.  This is useful for rare situations where a
+            service controller implements some extra endpoints that are not covered by the
+            generated client.
+            </summary>
+        </member>
+        <member name="T:Neon.ModelGen.PassAs">
+            <summary>
+            Identifies how a generated service client will pass a parameter to 
+            an ASP.NET service.
+            </summary>
+        </member>
+        <member name="F:Neon.ModelGen.PassAs.Query">
+            <summary>
+            Passes the parameter is passed as a URI query parameter.
+            </summary>
+        </member>
+        <member name="F:Neon.ModelGen.PassAs.Route">
+            <summary>
+            Passes the parameter within the URI route template. 
+            </summary>
+        </member>
+        <member name="F:Neon.ModelGen.PassAs.Header">
+            <summary>
+            Passes the parameter as an HTTP header.
+            </summary>
+        </member>
+        <member name="F:Neon.ModelGen.PassAs.Body">
+            <summary>
+            Passes the parameter as the HTTP request body. 
+            </summary>
+        </member>
+        <member name="T:Neon.ModelGen.PersistableAttribute">
+            <summary>
+            <para>
+            Used to customize the database related code generated for the tagged
+            data model interface.
+            </para>
+            <para>
+            By default, a <c>public static string GetKey(param object[] args)</c> method
+            is included in generated entity classes so that a database key for a specific
+            entity can be easialy obtained.  This method simply generates a string by
+            calling <see cref="M:System.Object.ToString"/> on all of arguments or using <b>"NULL"</b>
+            for <c>null</c> values which each of these being separated by a single colon
+            and then prepending the entire thing with the entity type.  The generated code 
+            will look something like this:
+            </para>
+            <code lang="C#">
+            public class PersonEntity : Entity&lt;Person&gt;
+            {
+                public static string GetKey(params object[] args)
+                {
+                    if (args.Length == 0)
+                    {
+                        throw new ArgumentException("At least one argument is expected.");
+                    }
+                    
+                    var key = "entity-type::";
+                    
+                    for (int i=0; i $lt; args.Length; i++)
+                    {
+                        var arg = args[i];
+                        
+                        if (i &gt; 0)
+                        {
+                            key += ":";
+                        }
+                        
+                        key += arg != null ? arg.ToString() : "NULL";
+                    }
+            
+                    return key;
+                }
+                
+                ...
+            }
+            </code>
+            </summary>
+        </member>
+        <member name="P:Neon.ModelGen.PersistableAttribute.GetKeyArgs">
+            <summary>
+            This property combined with <see cref="P:Neon.ModelGen.PersistableAttribute.GetKeyString"/> is used
+            to generate a <c>public static string GetKey(...)</c> method.
+            See the class remarks for more information.
+            </summary>
+        </member>
+        <member name="P:Neon.ModelGen.PersistableAttribute.GetKeyString">
+            <summary>
+            This property combined with <see cref="P:Neon.ModelGen.PersistableAttribute.GetKeyArgs"/> is used
+            to generate a <c>public static string GetKey(...)</c> method.
+            See the class remarks for more information.
+            </summary>
+        </member>
+        <member name="T:Neon.ModelGen.PersistableKeyAttribute">
+            <summary>
+            Used to tag the property acting as the database key for an <see cref="T:Neon.Data.IRoundtripData"/>.
+            </summary>
+        </member>
+        <member name="T:Neon.ModelGen.RouteAttribute">
+            <summary>
+            Used to customize request routing at the service level.
+            </summary>
+        </member>
+        <member name="M:Neon.ModelGen.RouteAttribute.#ctor(System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="template">The optional routing template.</param>
+        </member>
+        <member name="P:Neon.ModelGen.RouteAttribute.Template">
+            <summary>
+            The route template.
+            </summary>
+        </member>
+        <member name="P:Neon.ModelGen.RouteAttribute.Name">
+            <summary>
+            The route name.
+            </summary>
+        </member>
+        <member name="P:Neon.ModelGen.RouteAttribute.Order">
+            <summary>
+            <b>NOT SUPPORTED:</b> The order in which the route is to be applied.
+            </summary>
+        </member>
+        <member name="T:Neon.ModelGen.ServiceModelAttribute">
+            <summary>
+            Used to indicate that an <c>interface</c> should be included when
+            generating a service client class.
+            </summary>
+        </member>
+        <member name="M:Neon.ModelGen.ServiceModelAttribute.#ctor(System.String,System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="name">
+            Optionally specifies the name to be used for the generated
+            service client class.  This defaults to the tagged controller
+            class name with a "Controller" suffix being stripped off if
+            present.
+            </param>
+            <param name="group">
+            <para>
+            Optionally specifies that the methods from this controller
+            should be grouped together in a generated controller class
+            composed from multiple service controllers.  Set this to the
+            name to be used for the client property under which these 
+            methods will be generated.
+            </para>
+            <note>
+            <paramref name="name"/> must also be specified when <paramref name="group"/>
+            is set.
+            </note>
+            </param>
+        </member>
+        <member name="P:Neon.ModelGen.ServiceModelAttribute.Name">
+            <summary>
+            <para>
+            Returns the name to be used for the generated client class
+            and for transmitting requests to the server or <c>null</c>
+            if the name is to be derived from the tagged class name.
+            </para>
+            <note>
+            The tagged controller class name will be used as the default
+            name, stripping "Controller" off the end of the class name
+            if present.
+            </note>
+            </summary>
+        </member>
+        <member name="P:Neon.ModelGen.ServiceModelAttribute.Group">
+            <summary>
+            <para>
+            Optionally used to group multiple methods from different
+            controllers with the same <see cref="P:Neon.ModelGen.ServiceModelAttribute.Name"/> together
+            into the same generated service client class or subclass.
+            </para>
+            <para>
+            This defaults to <c>null</c> which means that the service
+            methods from the different controllers will be generated
+            directly within the generated service client.  When this
+            is not <c>null</c> or empty, a subclass using this name
+            with "Client" appended will be generated with the methods
+            from the controllers with this group name.
+            </para>
+            </summary>
+        </member>
+        <member name="T:Neon.ModelGen.TargetAttribute">
+            <summary>
+            Used to group data models and service definitions so that the
+            class included in the generated code can filtered.
+            </summary>
+        </member>
+        <member name="M:Neon.ModelGen.TargetAttribute.#ctor(System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="name">The target name.</param>
+        </member>
+        <member name="P:Neon.ModelGen.TargetAttribute.Name">
+            <summary>
+            Returns the group name.
+            </summary>
+        </member>
         <member name="T:Neon.Net.HttpException">
             <summary>
             Describes an HTTP error.
@@ -7355,10 +7654,17 @@
         </member>
         <member name="M:Neon.Net.JsonClient.#ctor(System.Net.Http.HttpMessageHandler,System.Boolean)">
             <summary>
-            Constructor.
+            Used to construct a client for most situations, optionally specifying a custom <see cref="T:System.Net.Http.HttpMessageHandler"/>.
             </summary>
             <param name="handler">The optional message handler.</param>
             <param name="disposeHandler">Indicates whether the handler passed will be disposed automatically (defaults to <c>false</c>).</param>
+        </member>
+        <member name="M:Neon.Net.JsonClient.#ctor(System.Net.Http.HttpClient)">
+            <summary>
+            Used in special situations (like ASP.NET Blazor) where a special <see cref="P:Neon.Net.JsonClient.HttpClient"/> needs
+            to be created and provided.
+            </summary>
+            <param name="httpClient">The special <see cref="P:Neon.Net.JsonClient.HttpClient"/> instance to be wrapped.</param>
         </member>
         <member name="M:Neon.Net.JsonClient.Finalize">
             <summary>
@@ -9075,6 +9381,52 @@
         <member name="M:Neon.Retry.NoRetryPolicy.InvokeAsync``1(System.Func{System.Threading.Tasks.Task{``0}})">
             <inheritdoc/>
         </member>
+        <member name="T:Neon.Retry.RetryPolicy">
+            <summary>
+            Base class for used to help implement a <see cref="T:Neon.Retry.IRetryPolicy"/>.
+            </summary>
+        </member>
+        <member name="M:Neon.Retry.RetryPolicy.#ctor(System.String,System.Nullable{System.TimeSpan})">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="sourceModule">Optionally enables transient error logging by identifying the source module (defaults to <c>null</c>).</param>
+            <param name="timeout">Optionally specifies the maximum time the operation should be retried (defaults to no limit).</param>
+        </member>
+        <member name="P:Neon.Retry.RetryPolicy.Timeout">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Retry.RetryPolicy.Clone">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Retry.RetryPolicy.InvokeAsync(System.Func{System.Threading.Tasks.Task})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Retry.RetryPolicy.InvokeAsync``1(System.Func{System.Threading.Tasks.Task{``0}})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Retry.RetryPolicy.LogTransient(System.Exception)">
+            <summary>
+            Logs a transient exception that is going to be retried if logging
+            is enabled.
+            </summary>
+            <param name="e">The exception.</param>
+        </member>
+        <member name="M:Neon.Retry.RetryPolicy.AdjustDelay(System.TimeSpan)">
+            <summary>
+            Adjusts the delay <see cref="T:System.TimeSpan"/> passed to ensure such
+            that delaying the next retry won't exceed the overall retry
+            timeout (if specified).
+            </summary>
+            <param name="delay">The requested delay.</param>
+            <returns>The adjusted delay.</returns>
+            <remarks>
+            <note>
+            If the result is <see cref="F:System.TimeSpan.Zero"/> or negative, the
+            calling retry policy should immediately stop retrying.
+            </note>
+            </remarks>
+        </member>
         <member name="T:Neon.Retry.RetryPolicyBase">
             <summary>
             Base class for used to help implement a <see cref="T:Neon.Retry.IRetryPolicy"/>.
@@ -9318,8 +9670,9 @@
             <summary>
             When set, this overrides <see cref="P:Neon.Service.ServiceDescription.Name"/>, <see cref="P:Neon.Service.ServiceDescription.Namespace"/>, and
             <see cref="P:Neon.Service.ServiceDescription.Domain"/> when generating the <see cref="P:Neon.Service.ServiceDescription.Hostname"/> result.
-            This is typically set when testing on a local machine.  This defaults
-            to <c>null</c>.
+            This is typically set for public service endpoints for public deployments
+            or when emulating a cluster on a local machine for testing purposes.  
+            This defaults to <c>null</c>.
             </summary>
         </member>
         <member name="P:Neon.Service.ServiceDescription.Hostname">
@@ -9371,7 +9724,7 @@
             The parent <see cref="P:Neon.Service.ServiceEndpoint.ServiceDescription"/>.
             </para>
             <note>
-            This must be initialized berfore attempting to reference the endpoint.
+            This must be initialized before attempting to reference the endpoint.
             </note>
             </summary>
         </member>
@@ -9400,8 +9753,16 @@
         </member>
         <member name="P:Neon.Service.ServiceEndpoint.Port">
             <summary>
-            This specifies the network port to be used for URIs accessing this service.  This defaults to <b>0</b>
-            (which is not a valid port).
+            <para>
+            This specifies the network port to be used for URIs accessing this service.  This defaults to <b>-1</b>
+            which indicates that HTTP and HTTPS based endpoints will be initialized to their default ports <b>80</b>
+            and <b>443</b> so you don't need to specify and explicit ports for these.  You will need to set this to
+            a valid port for TCP and UDP protocols.
+            </para>
+            <note>
+            <b>CAUTION:</b> It's best not to rely on this value when setting up your service network endpoints and
+            reference the port from <see cref="P:Neon.Service.ServiceEndpoint.Uri"/> instead because that will always be a valid TCP port number.
+            </note>
             </summary>
         </member>
         <member name="P:Neon.Service.ServiceEndpoint.ApiInfo">
@@ -9420,13 +9781,13 @@
             just the port.  The path prefix is ignored for TCP and UDP.
             </para>
             <para>
-            When <see cref="P:Neon.Service.ServiceEndpoint.Port"/> is zero for HTTP or HTTPS endpoints, the URL returned 
+            When <see cref="P:Neon.Service.ServiceEndpoint.Port"/> is <b>-1</b> for HTTP or HTTPS endpoints, the URL returned 
             will use the default port for thbe protocol (80/443).  For TCP and UDP protocols,
-            the port must be a valid non-zero network port.
+            the port must be a valid (non-negative) network port.
             </para>
             <note>
             For production, this property returns the partially qualified hostname for
-            the host, omitting the cluster domain (e.g. <b>cluster.local</b>.  Use 
+            the host, omitting the cluster domain (e.g. <b>cluster.local</b>).  Use 
             <see cref="P:Neon.Service.ServiceEndpoint.FullUri"/> if you need the fully qualified URI.
             </note>
             </summary>
@@ -10004,6 +10365,29 @@
             <summary>
             Called by a <see cref="T:Neon.Tasks.AsyncReaderWriterLock.Lock"/> to release a write lock.
             </summary>
+        </member>
+        <member name="T:Neon.Tasks.IAsyncFuture">
+            <summary>
+            Defines an interface that completes a future operation asynchronously.
+            </summary>
+        </member>
+        <member name="M:Neon.Tasks.IAsyncFuture.GetAsync">
+            <summary>
+            Returns when the asynchronous operation has completed.
+            </summary>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="T:Neon.Tasks.IAsyncFuture`1">
+            <summary>
+            Defines an interface that returns the value from the asynchronous operation.
+            </summary>
+            <typeparam name="T">The result type.</typeparam>
+        </member>
+        <member name="M:Neon.Tasks.IAsyncFuture`1.GetAsync">
+            <summary>
+            Returns the value from the operation.
+            </summary>
+            <returns></returns>
         </member>
         <member name="T:Neon.Tasks.NonDisposableTask">
             <summary>
@@ -11248,7 +11632,7 @@
             Code Contracts are also somewhat of a pain to configure as project propoerties.
             </para>
             <para>
-            This class includes the <see cref="M:System.Diagnostics.Contracts.Covenant.Requires(System.Boolean,System.String)"/>, <see cref="M:System.Diagnostics.Contracts.Covenant.Requires``1(System.Boolean,System.String)"/>
+            This class includes the <see cref="M:System.Diagnostics.Contracts.Covenant.Requires(System.Boolean,System.String)"/>, <see cref="M:System.Diagnostics.Contracts.Covenant.Requires``1(System.Boolean,System.String,System.String)"/>
             and <see cref="M:System.Diagnostics.Contracts.Covenant.Assert(System.Boolean,System.String)"/> methods that can be used to capture validation
             requirements in code, but these methods don't currently generate any code. 
             </para>
@@ -11262,13 +11646,21 @@
             <param name="message">An optional message to be included in the exception thrown.</param>
             <exception cref="T:Neon.Diagnostics.AssertException">Thrown if <paramref name="condition"/> is <c>false</c>.</exception>
         </member>
-        <member name="M:System.Diagnostics.Contracts.Covenant.Requires``1(System.Boolean,System.String)">
+        <member name="M:System.Diagnostics.Contracts.Covenant.Requires``1(System.Boolean,System.String,System.String)">
             <summary>
             Verifies a method pre-condition throwing a custom exception.
             </summary>
             <typeparam name="TException">The exception to be thrown if the condition is <c>false</c>.</typeparam>
             <param name="condition">The condition to be tested.</param>
-            <param name="message">An optional message to be included in the exception thrown.</param>
+            <param name="arg1">The first optional string argument to the exception constructor.</param>
+            <param name="arg2">The second optional string argument to the exception constructor.</param>
+            <remarks>
+            <para>
+            This method throws a <typeparamref name="TException"/> instance when <paramref name="condition"/>
+            is <c>false</c>.  Up to two string arguments may be passed to the exception constructor when an
+            appropriate constructor exists, otherwise these arguments will be ignored.
+            </para>
+            </remarks>
         </member>
         <member name="M:System.Diagnostics.Contracts.Covenant.Assert(System.Boolean,System.String)">
             <summary>
@@ -11836,6 +12228,38 @@
             </para>
             </remarks>
         </member>
+        <member name="T:System.ReflectionExtensions">
+            <summary>
+            Reflection related extension methods.
+            </summary>
+        </member>
+        <member name="M:System.ReflectionExtensions.Implements``1(System.Type)">
+            <summary>
+            Determines whether a <see cref="T:System.Type"/> implements a specific interface.
+            </summary>
+            <typeparam name="TInterface">The required interface type.</typeparam>
+            <param name="type">The type being tested.</param>
+            <returns><c>true</c> if <paramref name="type"/> implements <paramref name="type"/>.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="type"/> is <c>null</c>.</exception>
+            <exception cref="T:System.ArgumentException">Thrown if <typeparamref name="TInterface"/> is not an <c>interface</c>.</exception>
+        </member>
+        <member name="M:System.ReflectionExtensions.Implements(System.Type,System.Type)">
+            <summary>
+            Determines whether a <see cref="T:System.Type"/> implements a specific interface.
+            </summary>
+            <param name="type">The type being tested.</param>
+            <param name="interfaceType">The interface type.</param>
+            <returns><c>true</c> if <paramref name="type"/> implements <paramref name="type"/>.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown if either of <paramref name="type"/> or <paramref name="interfaceType"/> are <c>null</c>.</exception>
+            <exception cref="T:System.ArgumentException">Thrown if <paramref name="interfaceType"/> is not an <c>interface</c>.</exception>
+        </member>
+        <member name="M:System.ReflectionExtensions.GetParameterTypes(System.Reflection.MethodInfo)">
+            <summary>
+            Returns the array of types for a method's parameters.
+            </summary>
+            <param name="method">The method.</param>
+            <returns>The parameter type array.</returns>
+        </member>
         <member name="T:System.Text.StringBuilderExtensions">
             <summary>
             System class extensions.
@@ -11893,21 +12317,6 @@
             <param name="timespan">The <see cref="T:System.TimeSpan"/>.</param>
             <param name="dateTime">The <see cref="T:System.DateTime"/>.</param>
             <returns>The adjusted <see cref="T:System.TimeSpan"/>.</returns>
-        </member>
-        <member name="T:System.TypeExtensions">
-            <summary>
-            Type extension methods.
-            </summary>
-        </member>
-        <member name="M:System.TypeExtensions.Implements``1(System.Type)">
-            <summary>
-            Determines whether a <see cref="T:System.Type"/> implements a specific interface.
-            </summary>
-            <typeparam name="TInterface">The required interface type.</typeparam>
-            <param name="type">The type beinbg tested.</param>
-            <returns><c>true</c> if <paramref name="type"/> implements <paramref name="type"/>.</returns>
-            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="type"/> is <c>null</c>.</exception>
-            <exception cref="T:System.ArgumentException">Thrown if <typeparamref name="TInterface"/> is not an <c>interface</c>.</exception>
         </member>
         <member name="T:System.WeakEventController">
             <summary>

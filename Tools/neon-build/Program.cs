@@ -146,6 +146,20 @@ ARGUMENTS:
                             }
                         }
 
+                        var packagesPath = Path.Combine(Program.RepoRootFolder, "packages");
+
+                        if (Directory.Exists(packagesPath))
+                        {
+                            NeonHelper.DeleteFolder(packagesPath);
+                        }
+
+                        var cadenceResourcesPath = Path.Combine(Program.RepoRootFolder, "Lib", "Neon.Cadence", "Resources");
+
+                        if (Directory.Exists(cadenceResourcesPath))
+                        {
+                            NeonHelper.DeleteFolder(cadenceResourcesPath);
+                        }
+
                         foreach (var folder in Directory.EnumerateDirectories(Program.RepoRootFolder, "bin", SearchOption.AllDirectories))
                         {
                             if (Directory.Exists(folder))

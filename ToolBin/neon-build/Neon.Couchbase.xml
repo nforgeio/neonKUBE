@@ -2038,6 +2038,16 @@
             Constructor.
             </summary>
         </member>
+        <member name="P:Couchbase.EntitySerializer.SupportedDeserializationOptions">
+            <summary>
+            Not required.
+            </summary>
+        </member>
+        <member name="P:Couchbase.EntitySerializer.DeserializationOptions">
+            <summary>
+            Not required.
+            </summary>
+        </member>
         <member name="M:Couchbase.EntitySerializer.Deserialize``1(System.Byte[],System.Int32,System.Int32)">
             <inheritdoc/>
         </member>
@@ -3436,6 +3446,12 @@
             <inheritdoc/>
         </member>
         <member name="M:Couchbase.NeonBucket.UpsertAsync``1(System.String,``0,System.UInt64,System.TimeSpan,Couchbase.ReplicateTo,Couchbase.PersistTo,System.TimeSpan)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Couchbase.NeonBucket.ExportDeferredAnalyticsQueryHandle``1(Couchbase.Analytics.IAnalyticsDeferredResultHandle{``0})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Couchbase.NeonBucket.ImportDeferredAnalyticsQueryHandle``1(System.String)">
             <inheritdoc/>
         </member>
         <member name="T:Neon.Data.CouchbaseImporter">
