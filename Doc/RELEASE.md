@@ -50,7 +50,7 @@
 
 4. Create a draft for the next GitHub release.
 
-    * Be sure to set the branch to the new release branch.
+    * Be sure to set the branch to the new release.
 
 5. Build and publish all of the Docker images: `powershell -file %NF_ROOT%/Images/publish.ps1 -all`
 
