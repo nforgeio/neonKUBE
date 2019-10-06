@@ -29,23 +29,30 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Implements an untyped client side stub to a single workflow instance.  This can 
+    /// Implements an untyped client side stub to a single external workflow instance.  This can 
     /// be used to invoke, signal, query, and cancel a workflow when the actual workflow 
     /// interface isn't available.
     /// </summary>
     public class WorkflowStub
     {
         /// <summary>
+        /// <para>
         /// Returns the untyped <see cref="WorkflowStub"/> from a typed stub.
+        /// </para>
+        /// <note>
+        /// This works only for external workflow stubs (not child stubs) an only for
+        /// stubs that have already been started.
+        /// </note>
         /// </summary>
-        /// <param name="typedStub">The source workflow stub.</param>
+        /// <param name="stub">The source typed workflow stub.</param>
         /// <returns>The <see cref="WorkflowStub"/>.</returns>
-        public static WorkflowStub FromTyped(object typedStub)
+        /// 
+        public static WorkflowStub FromTyped(object stub)
         {
-            Covenant.Requires<ArgumentNullException>(typedStub != null, nameof(typedStub));
-            Covenant.Requires<ArgumentException>(typedStub is ITypedWorkflowStub, nameof(typedStub), $"[{typedStub.GetType().FullName}] is not a typed workflow stub.");
+            Covenant.Requires<ArgumentNullException>(stub != null, nameof(stub));
+            Covenant.Requires<ArgumentException>(stub is ITypedWorkflowStub, nameof(stub), $"[{stub.GetType().FullName}] is not a typed workflow stub.");
 
-            return ((ITypedWorkflowStub)typedStub).ToUntyped();
+            return ((ITypedWorkflowStub)stub).ToUntyped();
         }
 
         //---------------------------------------------------------------------
@@ -54,7 +61,7 @@ namespace Neon.Cadence
         private CadenceClient   client;
 
         /// <summary>
-        /// Default constructor.
+        /// Default internal constructor.
         /// </summary>
         /// <param name="client">The associated client.</param>
         internal WorkflowStub(CadenceClient client)
@@ -62,6 +69,26 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
             this.client = client;
+        }
+
+        /// <summary>
+        /// Used to construct an untyped stub from a typed external stub.
+        /// </summary>
+        /// <param name="client">The associated client.</param>
+        /// <param name="workflowTypeName">The workflow type name.</param>
+        /// <param name="execution">The workflow execution.</param>
+        /// <param name="options">The workflow options.</param>
+        internal WorkflowStub(CadenceClient client, string workflowTypeName, WorkflowExecution execution, WorkflowOptions options)
+        {
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
+            Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentNullException>(options != null);
+
+            this.client           = client;
+            this.WorkflowTypeName = workflowTypeName;
+            this.Execution        = execution;
+            this.Options          = options;
         }
 
         /// <summary>

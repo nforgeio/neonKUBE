@@ -2524,9 +2524,12 @@ namespace TestCadence
                 var task         = stub.HelloAsync("Jeff");
                 var externalStub = Workflow.NewExternalWorkflowStub(TestWorkflowId);
 
-                // $debug(jefflill): DELETE THIS!
-                await Task.Delay(1000);
-                //--------------------------------
+                // $hack(jeff.lill): 
+                //
+                // Wait a bit to allow the workflow to be recorded before
+                // we wait for the result.
+
+                await Task.Delay(TimeSpan.FromSeconds(5));
 
                 await externalStub.GetResultAsync();
 
@@ -2603,6 +2606,9 @@ namespace TestCadence
 
             [WorkflowMethod(Name = "child")]
             Task<WorkflowExecution> ChildAsync();
+
+            [WorkflowMethod(Name = "hello")]
+            Task<string> HelloAsync(string name);
         }
 
         [Workflow(AutoRegister = true)]
@@ -2644,6 +2650,11 @@ namespace TestCadence
             {
                 return await Task.FromResult(Workflow.Execution);
             }
+
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
         }
 
         [Fact]
@@ -2653,11 +2664,36 @@ namespace TestCadence
             // Call a workflow that confirms that [Workflow.GetExecutionAsync()]
             // works correctly against a child workflow.
 
-            WorkflowExternalStub.Reset();
+            var stub = client.NewWorkflowStub<IWorkflowChildGetExecution>();
+
+            Assert.True(await stub.RunAsync());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ToUntyped()
+        {
+            // Verify that we can convert an external workflow stub into an
+            // untyped [WorkflowStub].
 
             var stub = client.NewWorkflowStub<IWorkflowExternalStub>();
 
-            Assert.True(await stub.HelloTestByIdNoResultAsync());
+            // We should see an [InvalidOperationException] when we attempt
+            // the conversion before the workflow has been started.
+
+            Assert.Throws<InvalidOperationException>(() => client.ToUntyped(stub));
+
+            // Now start a workflow, convert the stub and verify that we can
+            // obtain the correct result.
+
+            Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
+
+            var untypedStub = client.ToUntyped(stub);
+
+            Assert.Equal("Hello Jeff!", await untypedStub.GetResultAsync<string>());
+            Assert.NotNull(untypedStub.Execution);
+            Assert.NotEmpty(untypedStub.Execution.WorkflowId);
+            Assert.NotEmpty(untypedStub.Execution.RunId);
         }
 
 #if TODO

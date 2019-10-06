@@ -196,12 +196,19 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
+        /// <para>
         /// Creates a new untyped <see cref="WorkflowStub"/> from the dynamic stub.
+        /// </para>
+        /// <note>
+        /// The workflow must have already been started via the stub.
+        /// </note>
         /// </summary>
         /// <returns>The new <see cref="WorkflowStub"/>.</returns>
+        /// <exception cref="ArgumentException">Thrown if the stub passed is not external (e.g. it's a child stub).</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the stubbed workflow has not been started yet.</exception>
         public WorkflowStub ToUntyped()
         {
-            return (WorkflowStub)toUntyped.Invoke(this, Type.EmptyTypes);
+            return (WorkflowStub)toUntyped.Invoke(this, Array.Empty<object>());
         }
     }
 }

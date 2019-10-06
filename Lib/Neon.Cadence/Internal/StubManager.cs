@@ -200,6 +200,7 @@ namespace Neon.Cadence.Internal
             private static MethodInfo       localActivityOptionsNormalize;  // from: LocalActivityOptions
             private static MethodInfo       childWorkflowOptionsNormalize;  // from: ChildWorkflowOptions
             private static MethodInfo       workflowOptionsNormalize;       // from: WorkflowOptions
+            private static ConstructorInfo  workflowStubConstructor;        // from: WorkflowStub
 
             static ___StubHelper()
             {
@@ -225,6 +226,7 @@ namespace Neon.Cadence.Internal
                 localActivityOptionsNormalize = NeonHelper.GetMethod(typeof(LocalActivityOptions), ""Normalize"", typeof(CadenceClient), typeof(LocalActivityOptions));
                 childWorkflowOptionsNormalize = NeonHelper.GetMethod(typeof(ChildWorkflowOptions), ""Normalize"", typeof(CadenceClient), typeof(ChildWorkflowOptions), typeof(System.Type));
                 workflowOptionsNormalize      = NeonHelper.GetMethod(typeof(WorkflowOptions), ""Normalize"", typeof(CadenceClient), typeof(WorkflowOptions), typeof(System.Type));
+                workflowStubConstructor       = NeonHelper.GetConstructor(typeof(WorkflowStub), new Type[] { typeof(CadenceClient), typeof(string), typeof(WorkflowExecution), typeof(WorkflowOptions) });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
@@ -339,6 +341,12 @@ namespace Neon.Cadence.Internal
             public static WorkflowOptions NormalizeOptions(CadenceClient client, WorkflowOptions options, System.Type interfaceType)
             {
                 return (WorkflowOptions)workflowOptionsNormalize.Invoke(null, new object[] { client, options, interfaceType });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static WorkflowStub NewWorkflowStub(CadenceClient client, string workflowTypeName, WorkflowExecution execution, WorkflowOptions options)
+            {
+                return (WorkflowStub)workflowStubConstructor.Invoke(new object[] { client, workflowTypeName, execution, options });
             }
         }
 ");
@@ -532,7 +540,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"namespace Neon.Cadence.Stubs");
             sbSource.AppendLine($"{{");
-            sbSource.AppendLine($"    public class {stubClassName} : {interfaceFullName}");
+            sbSource.AppendLine($"    public class {stubClassName} : ITypedWorkflowStub, {interfaceFullName}");
             sbSource.AppendLine($"    {{");
 
             sbSource.AppendLine($"        //-----------------------------------------------------------------");
@@ -606,6 +614,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.dataConverter = dataConverter;");
             sbSource.AppendLine($"            this.hasStarted    = true;");
             sbSource.AppendLine($"            this.execution     = execution;");
+            sbSource.AppendLine($"            this.workflowId    = execution.WorkflowId;");
             sbSource.AppendLine($"            this.domain        = ___StubHelper.ResolveDomain(client, domain);");
             sbSource.AppendLine($"        }}");
 
@@ -652,20 +661,30 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"        public WorkflowStub ToUntyped()");
             sbSource.AppendLine($"        {{");
-            sbSource.AppendLine($"            return ___StubHelper.NewWorkflowStub(client, workflowTypeName, options);");
-            sbSource.AppendLine($"        }}");
-
-            // Generate the method that returns the workflow stub's execution.
-
+            sbSource.AppendLine($"            if (childOptions != null)");
+            sbSource.AppendLine($"            {{");
+            sbSource.AppendLine($"                throw new ArgumentException(\"stub\", \"Workflow stub for [{workflowInterface.FullName}] is a child workflow stub and cannot be converted to a [{typeof(WorkflowStub).Name}].\");");
+            sbSource.AppendLine($"            }}");
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public WorkflowExecution GetExecution()");
-            sbSource.AppendLine($"        {{");
             sbSource.AppendLine($"            if (!hasStarted || execution == null)");
             sbSource.AppendLine($"            {{");
             sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has not been been started.\");");
             sbSource.AppendLine($"            }}");
             sbSource.AppendLine();
-            sbSource.AppendLine($"            return execution;");
+            sbSource.AppendLine($"            return (WorkflowStub)___StubHelper.NewWorkflowStub(client, workflowTypeName, execution, options);");
+            sbSource.AppendLine($"        }}");
+
+            // Generate the method that returns the external workflow stub's execution.
+
+            sbSource.AppendLine();
+            sbSource.AppendLine($"        public WorkflowExecution GetExecution()");
+            sbSource.AppendLine($"        {{");
+            sbSource.AppendLine($"            if (!hasStarted || (execution == null && childExecution == null))");
+            sbSource.AppendLine($"            {{");
+            sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has not been been started.\");");
+            sbSource.AppendLine($"            }}");
+            sbSource.AppendLine();
+            sbSource.AppendLine($"            return execution ?? childExecution.Execution;");
             sbSource.AppendLine($"        }}");
 
             // Generate the workflow entry point methods.
@@ -977,11 +996,6 @@ namespace Neon.Cadence.Internal
 
             //-----------------------------------------------------------------
             // Compile the new workflow stub class into an assembly.
-
-            //--------------------------------
-            // $debug(jefflill): DELETE THIS!
-            var interfaceTypeName = workflowInterface.Name;
-            //--------------------------------
 
             var syntaxTree = CSharpSyntaxTree.ParseText(source);
             var dotnetPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
@@ -1320,7 +1334,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"namespace Neon.Cadence.Stubs");
             sbSource.AppendLine($"{{");
-            sbSource.AppendLine($"    public class {stubClassName} : ITypedWorkflowStub, {interfaceFullName}");
+            sbSource.AppendLine($"    public class {stubClassName} : {interfaceFullName}");
             sbSource.AppendLine($"    {{");
             sbSource.AppendLine($"        //-----------------------------------------------------------------");
             sbSource.AppendLine($"        // Private types");
