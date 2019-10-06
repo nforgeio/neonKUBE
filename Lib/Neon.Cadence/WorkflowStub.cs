@@ -35,12 +35,102 @@ namespace Neon.Cadence
     /// </summary>
     public class WorkflowStub
     {
+        //---------------------------------------------------------------------
+        // Private types
+
+        /// <summary>
+        /// Defines the helper methods used to perform external stub operations
+        /// as a local activity so they can be replayed from history.
+        /// </summary>
+        /// <remarks>
+        /// <note>
+        /// These methods are going to use byte arrays to receive arguments from
+        /// the caller and also to return results.  These will use the current
+        /// data converter for encoding.
+        /// </note>
+        /// </remarks>
+        private interface IHelperActivity : IActivity
+        {
+            /// <summary>
+            /// Cancels an external workflow.
+            /// </summary>
+            /// <param name="workflowId">The target workflow ID.</param>
+            /// <param name="runId">The target runID.</param>
+            /// <returns>The tracking <see cref="Task"/>.</returns>
+            Task CancelAsync(string workflowId, string runId);
+
+            /// <summary>
+            /// Waits for and returns the result for an external workflow.
+            /// </summary>
+            /// <param name="workflowId">The target workflow ID.</param>
+            /// <param name="runId">The target runID.</param>
+            /// <returns>The encoded workflow result.</returns>
+            Task<byte[]> GetResultAsync(string workflowId, string runId);
+
+            /// <summary>
+            /// Queries an external workflow.
+            /// </summary>
+            /// <param name="workflowId">The target workflow ID.</param>
+            /// <param name="runId">The target runID.</param>
+            /// <param name="queryType">Identifies the query.</param>
+            /// <param name="args">The encoded query arguments.</param>
+            /// <returns>The encode query result.</returns>
+            Task<byte[]> QueryAsync(string workflowId, string runId, string queryType, byte[] args);
+
+            /// <summary>
+            /// Signals an external workflow.
+            /// </summary>
+            /// <param name="workflowId">The target workflow ID.</param>
+            /// <param name="runId">The target runID.</param>
+            /// <param name="signalName">Identifies the signal.</param>
+            /// <param name="args">The encoded signal arguments.</param>
+            /// <returns>The tracking <see cref="Task"/>.</returns>
+            Task SignalAsync(string workflowId, string runId, string signalName, byte[] args);
+        }
+
+        /// <summary>
+        /// Implements <see cref="IHelperActivity"/>.
+        /// </summary>
+        private class HelperActivity : ActivityBase, IHelperActivity
+        {
+            public async Task CancelAsync(string workflowId, string runId)
+            {
+                var stub = Activity.Client.NewUntypedWorkflowStub(workflowId, runId);
+
+                await stub.CancelAsync();
+            }
+
+            public async Task<byte[]> GetResultAsync(string workflowId, string runId)
+            {
+                var stub = Activity.Client.NewUntypedWorkflowStub(workflowId, runId);
+
+                return await stub.GetResultAsync<byte[]>();
+            }
+
+            public async Task<byte[]> QueryAsync(string workflowId, string runId, string queryType, byte[] args)
+            {
+                var stub = Activity.Client.NewUntypedWorkflowStub(workflowId, runId);
+
+                return await stub.QueryAsync<byte[]>(queryType, args);
+            }
+
+            public async Task SignalAsync(string workflowId, string runId, string signalName, byte[] args)
+            {
+                var stub = Activity.Client.NewUntypedWorkflowStub(workflowId, runId);
+
+                await stub.SignalAsync(signalName, args);
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Static members
+
         /// <summary>
         /// <para>
         /// Returns the untyped <see cref="WorkflowStub"/> from a typed stub.
         /// </para>
         /// <note>
-        /// This works only for external workflow stubs (not child stubs) an only for
+        /// This works only for external workflow stubs (not child stubs) and only for
         /// stubs that have already been started.
         /// </note>
         /// </summary>
@@ -59,16 +149,23 @@ namespace Neon.Cadence
         // Instance members
 
         private CadenceClient   client;
+        private bool            withinWorkflow;
 
         /// <summary>
         /// Default internal constructor.
         /// </summary>
         /// <param name="client">The associated client.</param>
-        internal WorkflowStub(CadenceClient client)
+        /// <param name="withinWorkflow">
+        /// Optionally indicates that the stub was created from within a workflow and that 
+        /// operations such as get result, query, signal, and cancel must be performed
+        /// within local activities such that that can be replayed from history correctly.
+        /// </param>
+        internal WorkflowStub(CadenceClient client, bool withinWorkflow = false)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
-            this.client = client;
+            this.client         = client;
+            this.withinWorkflow = withinWorkflow;
         }
 
         /// <summary>
@@ -89,6 +186,7 @@ namespace Neon.Cadence
             this.WorkflowTypeName = workflowTypeName;
             this.Execution        = execution;
             this.Options          = options;
+            this.withinWorkflow   = false;
         }
 
         /// <summary>
@@ -96,13 +194,19 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="client">The associated client.</param>
         /// <param name="execution">The workflow execution.</param>
-        internal WorkflowStub(CadenceClient client, WorkflowExecution execution)
+        /// <param name="withinWorkflow">
+        /// Optionally indicates that the stub was created from within a workflow and that 
+        /// operations such as get result, query, signal, and cancel must be performed
+        /// within local activities such that that can be replayed from history correctly.
+        /// </param>
+        internal WorkflowStub(CadenceClient client, WorkflowExecution execution, bool withinWorkflow = false)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(execution != null);
 
-            this.client    = client;
-            this.Execution = execution;
+            this.client         = client;
+            this.Execution      = execution;
+            this.withinWorkflow = withinWorkflow;
         }
 
         /// <summary>

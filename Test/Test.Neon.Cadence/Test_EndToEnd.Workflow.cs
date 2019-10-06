@@ -2697,72 +2697,28 @@ namespace TestCadence
         }
 
 #if TODO
-        // $todo(jefflill):
-        //
-        // I'm not actually sure what the point of external child workflow stubs
-        // are and there are some implementation gaps.  We're going to leave these
-        // unimplemented for now and revisit later.
-        //
-        //      https://github.com/nforgeio/neonKUBE/issues/615
-        //
-        // Note that the one test by workflow ID below is coded and that we'd need
-        // to implement another test to do the same by workflow execution.
-
         //---------------------------------------------------------------------
 
-        public interface IWorkflowExternalChildStubById : IWorkflow
+        public interface IWorkflowWaitForExternalStub : IWorkflow
         {
             [WorkflowMethod]
-            Task<string> RunAsync();
+            Task<string> ByIdAsync();
 
-            [QueryMethod("query")]
-            Task<string> QueryAsync(string name);
-
-            [SignalMethod("signal")]
-            Task SignalExitAsync(string value);
+            [WorkflowMethod]
+            Task<string> ByExecutionAsync();
         }
 
         [Workflow(AutoRegister = true)]
-        public class WorkflowExternalChildStubById : WorkflowBase, IWorkflowExternalChildStubById
+        public class WorkflowWaitForExternalStub : WorkflowBase, IWorkflowWaitForExternalStub
         {
-            private string  signalValue;
-            private bool    signalled;
-
-            public async Task<string> RunAsync()
+            public async Task<string> ByIdAsync()
             {
-                // Spin for up to 20 seconds, waiting for SignalExitAsync() to be called
-                // and then throw an exception if there was no signal or else return
-                // the signal value passed.
-
-                for (int i = 0; i < 20; i++)
-                {
-                    if (signalled)
-                    {
-                        break;
-                    }
-
-                    await Workflow.SleepAsync(TimeSpan.FromSeconds(1));
-                }
-
-                if (!signalled)
-                {
-                    throw new Exception("Signal not received in time.");
-                }
-
-                return await Task.FromResult(signalValue);
+                return string.Empty;
             }
 
-            public async Task<string> QueryAsync(string name)
+            public async Task<string> ByExecutionAsync()
             {
-                return await Task.FromResult($"Hello {name}!");
-            }
-
-            public async Task SignalExitAsync(string value)
-            {
-                signalValue = value;
-                signalled   = true;
-
-                await Task.CompletedTask;
+                return string.Empty;
             }
         }
 
@@ -2772,89 +2728,22 @@ namespace TestCadence
             Task<string> RunAsync();
         }
 
-        [Workflow(AutoRegister = true)]
-        public class WorkflowExternalParentStubById : WorkflowBase, IWorkflowExternalParentStubById
-        {
-            public async Task<string> RunAsync()
-            {
-                // Start a child workflow normally and then create an external stub for it.
-                // We'll use this stub to verify that:
-                //
-                //      1. We cannot use the stub to re-execute the workflow.
-                //      2. We can query the workflow.
-                //      3. We can signal the workflow, causing it to complete.
-                //
-                // NOTE: This code is a a somewhat fragile due to the general situation
-                //       decribed by:
-                //
-                //       https://github.com/nforgeio/neonKUBE/issues/627
-                //
-                // We're going to temporarily introduce delays to mitigate this. 
-
-                const string workflowId = "my-child-workflow-external-1";
-                const string signalArg  = "Hello World!";
-
-                var delay = TimeSpan.FromSeconds(0.5);
-
-                var options      = new ChildWorkflowOptions() { WorkflowId = workflowId };
-                var stub         = Workflow.NewChildWorkflowStub<IWorkflowExternalChildStubById>(options);
-                var task         = stub.RunAsync();
-                var externalStub = Workflow.NewExternalWorkflowStub<IWorkflowExternalChildStubById>(workflowId);
-
-                await Task.Delay(delay);
-
-                // Verify that we're not allowed to re-execute the workflow via the external stub.
-
-                var executed = false;
-
-                try
-                {
-                    await externalStub.RunAsync();
-                    executed = true;
-                }
-                catch (InvalidOperationException)
-                {
-                }
-                catch (Exception e)
-                {
-                    return $"Unexpected [{e.GetType().FullName}] exeception.";
-                }
-
-                if (executed)
-                {
-                    return "External stub allowed re-execution.";
-                }
-
-                // Ensure that the child exits after receiving a signal via the external stub.
-
-                await externalStub.SignalExitAsync(signalArg);
-
-                try
-                {
-                    var result = await task;
-
-                    if (result != signalArg)
-                    {
-                        return $"Invalid signal result: [{result}] instead of [{signalArg}]";
-                    }
-                    else
-                    {
-                        return result;
-                    }
-                }
-                catch (Exception e)
-                {
-                    return NeonHelper.ExceptionError(e);
-                }
-            }
-        }
-
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_ExternalChildStubById()
+        public async Task Workflow_WaitForExternalStubById()
         {
             // Verifies that stubs returned by Workflow.NewExternalWorkflowStub(workflowId)
-            // work correctly.
+            // works correctly.
+
+            // $todo(jeff.lill):
+            //
+            // The stub returned by Workflow.NewExternalWorkflowStub(workflowId) actually
+            // performs the lookup via a local activity to ensure that the result will
+            // play back from history correctly.  Signal and cancel will also be performed
+            // in local activities.
+            //
+            // We're not currently verifying that this local activity indirection
+            // actually happens.
 
             var stub   = client.NewWorkflowStub<IWorkflowExternalParentStubById>();
             var result = await stub.RunAsync();

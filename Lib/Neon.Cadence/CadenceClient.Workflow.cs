@@ -208,7 +208,6 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="workflowId">The workflow ID.</param>
         /// <param name="runId">The workflow run ID.</param>
-        /// <param name="workflowTypeName">The workflow type name.</param>
         /// <returns>The <see cref="WorkflowStub"/>.</returns>
         /// <remarks>
         /// <para>
@@ -233,11 +232,10 @@ namespace Neon.Cadence
         /// </code>
         /// </note>
         /// </remarks>
-        public WorkflowStub NewUntypedWorkflowStub(string workflowId, string runId, string workflowTypeName)
+        public WorkflowStub NewUntypedWorkflowStub(string workflowId, string runId)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId), nameof(runId));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             EnsureNotDisposed();
 
             return new WorkflowStub(this)

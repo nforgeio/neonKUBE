@@ -172,7 +172,7 @@ namespace TestCadence
             // Now connect another stub to the workflow and verify that we
             // can use it to obtain the result.
 
-            stub = client.NewUntypedWorkflowStub(execution.WorkflowId, execution.RunId, nameof(TestWorkflowStub_Execute));
+            stub = client.NewUntypedWorkflowStub(execution.WorkflowId, execution.RunId);
 
             Assert.Equal("Hello Jeff!", await stub.GetResultAsync<string>());
 
