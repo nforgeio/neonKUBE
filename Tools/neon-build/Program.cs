@@ -151,6 +151,7 @@ ARGUMENTS:
                         if (Directory.Exists(packagesPath))
                         {
                             NeonHelper.DeleteFolder(packagesPath);
+                            Directory.Delete(packagesPath);
                         }
 
                         var cadenceResourcesPath = Path.Combine(Program.RepoRootFolder, "Lib", "Neon.Cadence", "Resources");

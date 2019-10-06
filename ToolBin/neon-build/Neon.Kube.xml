@@ -7408,19 +7408,19 @@
             <summary>IsDirtyString: true</summary>
         </member>
         <member name="F:ThisAssembly.Git.Branch">
-            <summary>Branch: master</summary>
+            <summary>Branch: release-0.6.7-alpha</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: 02d7abcc1</summary>
+            <summary>Commit: ea7dcaf1d</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: 02d7abcc1dcbcc07c498c8f8d32903ad4fdb3bce</summary>
+            <summary>Sha: ea7dcaf1d1e39c4a0302b0554cdfa8d12898d827</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 32</summary>
+            <summary>Commits on top of base version: 46</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: v0.6.6-alpha-32-g02d7abcc1</summary>
+            <summary>Tag: v0.6.6-alpha-46-gea7dcaf1d</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
             <summary>Base tag: v0.6.6-alpha</summary>
@@ -7447,7 +7447,7 @@
             <summary>Minor: 6</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 38</summary>
+            <summary>Patch: 52</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: alpha</summary>
