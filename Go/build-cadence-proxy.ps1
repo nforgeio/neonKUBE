@@ -87,5 +87,5 @@ neon-build gzip "$buildPath\cadence-proxy.win.exe" "$neonCadenceResourceFolder\c
 
 #---------------------------------------------------------------------
 
-# Go back to the original directory
+# Return to the original directory
 Set-Location $orgDirectory
