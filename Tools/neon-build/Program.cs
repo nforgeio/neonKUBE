@@ -146,6 +146,9 @@ ARGUMENTS:
                             }
                         }
 
+#if TODO
+                        // $todo(jeff.lill): https://github.com/nforgeio/neonKUBE/issues/689
+
                         var packagesPath = Path.Combine(Program.RepoRootFolder, "packages");
 
                         if (Directory.Exists(packagesPath))
@@ -153,6 +156,7 @@ ARGUMENTS:
                             NeonHelper.DeleteFolder(packagesPath);
                             Directory.Delete(packagesPath);
                         }
+#endif
 
                         var cadenceResourcesPath = Path.Combine(Program.RepoRootFolder, "Lib", "Neon.Cadence", "Resources");
 

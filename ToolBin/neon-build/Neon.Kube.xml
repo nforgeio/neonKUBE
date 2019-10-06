@@ -7411,16 +7411,16 @@
             <summary>Branch: release-0.6.7-alpha</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: ea7dcaf1d</summary>
+            <summary>Commit: 22b560972</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: ea7dcaf1d1e39c4a0302b0554cdfa8d12898d827</summary>
+            <summary>Sha: 22b5609726b4c13228acf58b88a1a7b35f491f62</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 46</summary>
+            <summary>Commits on top of base version: 47</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: v0.6.6-alpha-46-gea7dcaf1d</summary>
+            <summary>Tag: v0.6.6-alpha-47-g22b560972</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
             <summary>Base tag: v0.6.6-alpha</summary>
@@ -7447,7 +7447,7 @@
             <summary>Minor: 6</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 52</summary>
+            <summary>Patch: 53</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: alpha</summary>
