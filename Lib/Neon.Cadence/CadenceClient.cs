@@ -1412,8 +1412,14 @@ namespace Neon.Cadence.WorkflowStub
             // Crank up the background threads which will handle [cadence-proxy]
             // request timeouts.
 
-            heartbeatThread = new Thread(new ThreadStart(HeartbeatThread));
-            heartbeatThread.Start();
+            // $todo(jefflill):
+            //
+            // Disabling this for now due to occasional heartbeat timeout errors.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/680
+
+            //heartbeatThread = new Thread(new ThreadStart(HeartbeatThread));
+            //heartbeatThread.Start();
 
             timeoutThread = new Thread(new ThreadStart(TimeoutThread));
             timeoutThread.Start();
