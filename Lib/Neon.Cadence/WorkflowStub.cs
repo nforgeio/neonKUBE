@@ -72,7 +72,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Used to construct an untyped stub from a typed external stub.
+        /// Used to construct an untyped workflow stub that can be used to start an external workflow.
         /// </summary>
         /// <param name="client">The associated client.</param>
         /// <param name="workflowTypeName">The workflow type name.</param>
@@ -89,6 +89,20 @@ namespace Neon.Cadence
             this.WorkflowTypeName = workflowTypeName;
             this.Execution        = execution;
             this.Options          = options;
+        }
+
+        /// <summary>
+        /// Used to construct an untyped workflow stub that can manage an existing external workflow.
+        /// </summary>
+        /// <param name="client">The associated client.</param>
+        /// <param name="execution">The workflow execution.</param>
+        internal WorkflowStub(CadenceClient client, WorkflowExecution execution)
+        {
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(execution != null);
+
+            this.client    = client;
+            this.Execution = execution;
         }
 
         /// <summary>

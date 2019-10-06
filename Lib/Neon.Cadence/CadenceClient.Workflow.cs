@@ -327,6 +327,8 @@ namespace Neon.Cadence
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             EnsureNotDisposed();
 
+            return new WorkflowStub(
+
             throw new NotImplementedException();
         }
 
