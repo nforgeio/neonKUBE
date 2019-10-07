@@ -1663,7 +1663,7 @@ namespace Neon.Cadence.WorkflowStub
                 return Settings.DefaultDomain;
             }
 
-            throw new ArgumentNullException($"One of [{nameof(domain)}] parameter or the client's default domain (specified as [{nameof(CadenceClient)}.{nameof(CadenceClient.Settings)}.{nameof(CadenceSettings.DefaultDomain)}]) must be non-empty.");
+            throw new ArgumentNullException(nameof(domain),$"One of [{nameof(domain)}] parameter or the client's default domain (specified as [{nameof(CadenceClient)}.{nameof(CadenceClient.Settings)}.{nameof(CadenceSettings.DefaultDomain)}]) must be non-empty.");
         }
 
         /// <summary>

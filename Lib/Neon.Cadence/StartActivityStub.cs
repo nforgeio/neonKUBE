@@ -201,7 +201,7 @@ namespace Neon.Cadence
 
             if (this.targetMethod == null)
             {
-                throw new ArgumentException($"Activity interface [{activityInterface.FullName}] does not have a method tagged by [ActivityMethod(Name = {methodName})].");
+                throw new ArgumentException($"Activity interface [{activityInterface.FullName}] does not have a method tagged by [ActivityMethod(Name = {methodName})].", nameof(activityInterface));
             }
 
             activityTypeName = CadenceHelper.GetActivityTypeName(activityInterface, activityAttribute);
@@ -284,7 +284,7 @@ namespace Neon.Cadence
 
             if (parameters.Length != args.Length)
             {
-                throw new ArgumentException($"Invalid number of parameters: [{parameters.Length}] expected but [{args.Length}] were passed.");
+                throw new ArgumentException($"Invalid number of parameters: [{parameters.Length}] expected but [{args.Length}] were passed.", nameof(parameters));
             }
 
             hasStarted = true;
@@ -303,14 +303,14 @@ namespace Neon.Cadence
 
             if (resultType == typeof(Task))
             {
-                throw new ArgumentException($"Activity method [{nameof(TActivityInterface)}.{targetMethod.Name}()] does not return [void].");
+                throw new ArgumentException($"Activity method [{nameof(TActivityInterface)}.{targetMethod.Name}()] does not return [void].", nameof(TActivityInterface));
             }
 
             resultType = resultType.GenericTypeArguments.First();
 
             if (!resultType.IsAssignableFrom(typeof(TResult)))
             {
-                throw new ArgumentException($"Activity method [{nameof(TActivityInterface)}.{targetMethod.Name}()] returns [{resultType.FullName}] which is not compatible with [{nameof(TResult)}].");
+                throw new ArgumentException($"Activity method [{nameof(TActivityInterface)}.{targetMethod.Name}()] returns [{resultType.FullName}] which is not compatible with [{nameof(TResult)}].", nameof(TActivityInterface));
             }
 
             // Start the activity.
@@ -371,7 +371,7 @@ namespace Neon.Cadence
 
             if (parameters.Length != args.Length)
             {
-                throw new ArgumentException($"Invalid number of parameters: [{parameters.Length}] expected but [{args.Length}] were passed.");
+                throw new ArgumentException($"Invalid number of parameters: [{parameters.Length}] expected but [{args.Length}] were passed.", nameof(parameters));
             }
 
             hasStarted = true;

@@ -96,7 +96,7 @@ namespace Neon.Cadence
 
             if (string.IsNullOrEmpty(options.TaskList))
             {
-                throw new ArgumentNullException("You must specify a valid task list explicitly or via an [ActivityInterface(TaskList = \"my-tasklist\")] attribute on the target activity interface.");
+                throw new ArgumentNullException(nameof(options), "You must specify a valid task list explicitly or via an [ActivityInterface(TaskList = \"my-tasklist\")] attribute on the target activity interface.");
             }
 
             return options;

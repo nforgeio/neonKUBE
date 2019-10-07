@@ -438,7 +438,7 @@ namespace Neon.Cadence.Internal
                 }
             }
 
-            throw new ArgumentException($"Workflow implementation class [{workflowType.FullName}] does not implement a workflow interface.");
+            throw new ArgumentException($"Workflow implementation class [{workflowType.FullName}] does not implement a workflow interface.", nameof(workflowType));
         }
 
         /// <summary>
@@ -644,7 +644,7 @@ namespace Neon.Cadence.Internal
                 }
             }
 
-            throw new ArgumentException($"Workflow implementation class [{activityType.FullName}] does not implement a workflow interface.");
+            throw new ArgumentException($"Workflow implementation class [{activityType.FullName}] does not implement a workflow interface.", nameof(activityType));
         }
         /// <summary>
         /// Ensures that the timespan passed doesn't exceed the minimum or maximum

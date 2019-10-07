@@ -204,7 +204,7 @@ namespace Neon.Cadence
 
             if (constructor == null)
             {
-                throw new ArgumentException($"Activity type [{activityType.FullName}] does not have a default constructor.");
+                throw new ArgumentException($"Activity type [{activityType.FullName}] does not have a default constructor.", nameof(activityType));
             }
 
             // We need to register each activity method that implements an activity interface method
@@ -326,7 +326,7 @@ namespace Neon.Cadence
 
             if (info.ActivityConstructor == null)
             {
-                throw new ArgumentException($"Activity type [{activityType.FullName}] does not have a default constructor.");
+                throw new ArgumentException($"Activity type [{activityType.FullName}] does not have a default constructor.", nameof(activityType));
             }
 
             // Locate the target method.  Note that the activity type name will be
@@ -375,7 +375,7 @@ namespace Neon.Cadence
 
             if (info.ActivityMethod == null)
             {
-                throw new ArgumentException($"Activity type [{activityType.FullName}] does not have an entry point method tagged with [ActivityMethod(Name = \"{activityMethodName}\")].");
+                throw new ArgumentException($"Activity type [{activityType.FullName}] does not have an entry point method tagged with [ActivityMethod(Name = \"{activityMethodName}\")].", nameof(activityType));
             }
 
             return info;

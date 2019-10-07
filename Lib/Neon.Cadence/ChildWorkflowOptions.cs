@@ -94,7 +94,7 @@ namespace Neon.Cadence
 
             if (string.IsNullOrEmpty(options.TaskList))
             {
-                throw new ArgumentNullException("You must specify a valid task list explicitly or via an [WorkflowInterface(TaskList = \"my-tasklist\")] attribute on the target workflow interface.");
+                throw new ArgumentNullException(nameof(options), "You must specify a valid task list explicitly or via an [WorkflowInterface(TaskList = \"my-tasklist\")] attribute on the target workflow interface.");
             }
 
             return options;

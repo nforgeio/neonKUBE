@@ -199,7 +199,7 @@ namespace Neon.Net
         {
             if (!TryParse(input, out var cidr))
             {
-                throw new ArgumentException(nameof(input));
+                throw new ArgumentException("Invalid CIDR.", nameof(input));
             }
 
             return cidr.ToString();

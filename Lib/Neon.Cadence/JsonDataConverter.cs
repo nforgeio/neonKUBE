@@ -89,14 +89,14 @@ namespace Neon.Cadence
 
             if (jToken.Type != JTokenType.Array)
             {
-                throw new ArgumentException($"Content encodes a [{jToken.Type}] instead of the expected [{JTokenType.Array}].");
+                throw new ArgumentException($"Content encodes a [{jToken.Type}] instead of the expected [{JTokenType.Array}].", nameof(jToken));
             }
 
             var jArray = (JArray)jToken;
 
             if (jArray.Count != valueTypes.Length)
             {
-                throw new ArgumentException($"Content array length [{jArray.Count}] does not match the expected number of values [{valueTypes.Length}].");
+                throw new ArgumentException($"Content array length [{jArray.Count}] does not match the expected number of values [{valueTypes.Length}].", nameof(jArray));
             }
 
             var output = new object[valueTypes.Length];
@@ -122,7 +122,7 @@ namespace Neon.Cadence
 
                         default:
 
-                            throw new ArgumentException($"Unexpected [{item.Type}] in JSON array.  Only [{nameof(JTokenType.Object)}] or [{nameof(JTokenType.Null)}] are allowed.");
+                            throw new ArgumentException($"Unexpected [{item.Type}] in JSON array.  Only [{nameof(JTokenType.Object)}] or [{nameof(JTokenType.Null)}] are allowed.", nameof(item));
                     }
                 }
                 else

@@ -1386,7 +1386,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"            if (this.activityConstructor == null)");
             sbSource.AppendLine($"            {{");
-            sbSource.AppendLine($"                throw new ArgumentException($\"Activity type [{{activityType.FullName}}] does not have a public default constructor.\");");
+            sbSource.AppendLine($"                throw new ArgumentException($\"Activity type [{{activityType.FullName}}] does not have a public default constructor.\", nameof(activityType));");
             sbSource.AppendLine($"            }}");
             sbSource.AppendLine();
             sbSource.AppendLine($"            this.nameToMethod = new Dictionary<string, MethodInfo>();");
@@ -1513,7 +1513,7 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine();
                 sbSource.AppendLine($"                if (!this.nameToMethod.TryGetValue(\"{details.ActivityMethodAttribute.Name ?? string.Empty}\", out var ___activityMethod))");
                 sbSource.AppendLine($"                {{");
-                sbSource.AppendLine($"                    throw new ArgumentException($\"Activity type [{{activityType.FullName}}] does not have an activity method named [\\\"{details.ActivityMethodAttribute.Name ?? string.Empty}\\\"].  Be sure your activity method is tagged by [ActivityMethod].\");");
+                sbSource.AppendLine($"                    throw new ArgumentException($\"Activity type [{{activityType.FullName}}] does not have an activity method named [\\\"{details.ActivityMethodAttribute.Name ?? string.Empty}\\\"].  Be sure your activity method is tagged by [ActivityMethod].\", nameof(activityType));");
                 sbSource.AppendLine($"                }}");
                 sbSource.AppendLine();
                 sbSource.AppendLine($"                ___resultBytes = await ___StubHelper.ExecuteLocalActivityAsync(this.workflow, this.activityType, this.activityConstructor, ___activityMethod, ___argBytes, ___localOptions);");
