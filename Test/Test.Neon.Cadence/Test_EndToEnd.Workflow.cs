@@ -2609,11 +2609,22 @@ namespace TestCadence
 
             [WorkflowMethod(Name = "hello")]
             Task<string> HelloAsync(string name);
+
+            [WorkflowMethod(Name = "child-stub")]
+            Task<bool> ChildStubWithResultAsync();
+
+            [WorkflowMethod(Name = "wait-for-signal")]
+            Task<string> WaitForSignalAsync(string name);
+
+            [SignalMethod("signal")]
+            Task SignalAsync(string signal);
         }
 
         [Workflow(AutoRegister = true)]
         public class WorkflowChildGetExecution : WorkflowBase, IWorkflowChildGetExecution
         {
+            private static string receivedSignal;
+
             public async Task<bool> RunAsync()
             {
                 // Create a child stub and then verify that we see an [InvalidOperationException]
@@ -2654,6 +2665,39 @@ namespace TestCadence
             public async Task<string> HelloAsync(string name)
             {
                 return await Task.FromResult($"Hello {name}!");
+            }
+
+            public async Task<bool> ChildStubWithResultAsync()
+            {
+                // We're going to execute [WaitForSignalAsync] as a child workflow,
+                // send it a signal, and then verify that the signal was received.
+
+                receivedSignal = null;
+
+                var stub    = Workflow.NewUntypedChildWorkflowStub<string>($"{typeof(IWorkflowChildGetExecution).FullName}::wait-for-signal");
+                var future  = await stub.ExecuteAsync("Jeff");
+
+                await stub.SignalAsync("signal", "hello-signal");
+
+                var result = await future.GetAsync();
+
+                return result == "Hello Jeff:hello-signal";
+            }
+
+            public async Task<string> WaitForSignalAsync(string name)
+            {
+                // Wait for a signal from the parent workflow.
+
+                NeonHelper.WaitFor(() => receivedSignal != null, TimeSpan.FromSeconds(maxWaitSeconds));
+
+                return await Task.FromResult($"Hello {name}:{receivedSignal}");
+            }
+
+            public async Task SignalAsync(string signal)
+            {
+                receivedSignal = signal;
+
+                await Task.CompletedTask;
             }
         }
 
@@ -2696,63 +2740,17 @@ namespace TestCadence
             Assert.NotEmpty(untypedStub.Execution.RunId);
         }
 
-#if TODO
-        //---------------------------------------------------------------------
-
-        public interface IWorkflowWaitForExternalStub : IWorkflow
-        {
-            [WorkflowMethod]
-            Task<string> ByIdAsync();
-
-            [WorkflowMethod]
-            Task<string> ByExecutionAsync();
-        }
-
-        [Workflow(AutoRegister = true)]
-        public class WorkflowWaitForExternalStub : WorkflowBase, IWorkflowWaitForExternalStub
-        {
-            public async Task<string> ByIdAsync()
-            {
-                return string.Empty;
-            }
-
-            public async Task<string> ByExecutionAsync()
-            {
-                return string.Empty;
-            }
-        }
-
-        public interface IWorkflowExternalParentStubById : IWorkflow
-        {
-            [WorkflowMethod]
-            Task<string> RunAsync();
-        }
-
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_WaitForExternalStubById()
+        public async Task Workflow_ChildWorkflowStub_WithResult()
         {
-            // Verifies that stubs returned by Workflow.NewExternalWorkflowStub(workflowId)
-            // works correctly.
+            // Call a workflow that creates a [ChildWorkflowStub] and starts a child
+            // workflow, passing it a parameter, signalling it, and then verifying
+            // that it returns the correct result.
 
-            // $todo(jeff.lill):
-            //
-            // The stub returned by Workflow.NewExternalWorkflowStub(workflowId) actually
-            // performs the lookup via a local activity to ensure that the result will
-            // play back from history correctly.  Signal and cancel will also be performed
-            // in local activities.
-            //
-            // We're not currently verifying that this local activity indirection
-            // actually happens.
+            var stub = client.NewWorkflowStub<IWorkflowChildGetExecution>();
 
-            var stub   = client.NewWorkflowStub<IWorkflowExternalParentStubById>();
-            var result = await stub.RunAsync();
-
-            if (result != null)
-            {
-                Assert.True(false, $"Test Error: {result}");
-            }
+            Assert.True(await stub.ChildStubWithResultAsync());
         }
-#endif
     }
 }

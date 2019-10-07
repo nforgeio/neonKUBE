@@ -39,84 +39,6 @@ namespace Neon.Cadence
     public class StartChildWorkflowStub<TWorkflowInterface>
         where TWorkflowInterface : class
     {
-        //---------------------------------------------------------------------
-        // Private types
-
-        /// <summary>
-        /// Implements a child workflow future that returns <c>void</c>.
-        /// </summary>
-        private class AsyncFuture : IAsyncFuture
-        {
-            private bool            completed = false;
-            private Workflow        parentWorkflow;
-            private ChildExecution  execution;
-
-            /// <summary>
-            /// Constructor.
-            /// </summary>
-            /// <param name="parentWorkflow">Identifies the parent workflow context.</param>
-            /// <param name="execution">The child execution.</param>
-            public AsyncFuture(Workflow parentWorkflow, ChildExecution execution)
-            {
-                this.parentWorkflow = parentWorkflow;
-                this.execution      = execution;
-            }
-
-            /// <inheritdoc/>
-            public async Task GetAsync()
-            {
-                if (completed)
-                {
-                    throw new InvalidOperationException($"[{nameof(IAsyncFuture<object>)}.GetAsync()] may only be called once per stub instance.");
-                }
-
-                completed = true;
-
-                await parentWorkflow.Client.GetChildWorkflowResultAsync(parentWorkflow, execution);
-            }
-        }
-
-        /// <summary>
-        /// Implements a child workflow future that returns a value.
-        /// </summary>
-        /// <typeparam name="TResult">The workflow result type.</typeparam>
-        private class AsyncFuture<TResult> : IAsyncFuture<TResult>
-        {
-            private bool            completed = false;
-            private Workflow        parentWorkflow;
-            private ChildExecution  execution;
-
-            /// <summary>
-            /// Constructor.
-            /// </summary>
-            /// <param name="parentWorkflow">Identifies the parent workflow context.</param>
-            /// <param name="execution">The child execution.</param>
-            /// <param name="resultType">Specifies the workflow result type or <c>null</c> for <c>void</c> workflow methods.</param>
-            public AsyncFuture(Workflow parentWorkflow, ChildExecution execution, Type resultType)
-            {
-                this.parentWorkflow = parentWorkflow;
-                this.execution      = execution;
-            }
-
-            /// <inheritdoc/>
-            public async Task<TResult> GetAsync()
-            {
-                if (completed)
-                {
-                    throw new InvalidOperationException($"[{nameof(IAsyncFuture<object>)}.GetAsync()] may only be called once per stub instance.");
-                }
-
-                completed = true;
-
-                var resultBytes = await parentWorkflow.Client.GetChildWorkflowResultAsync(parentWorkflow, execution);
-
-                return parentWorkflow.Client.DataConverter.FromData<TResult>(resultBytes);
-            }
-        }
-
-        //---------------------------------------------------------------------
-        // Implementation
-
         private Workflow                parentWorkflow;
         private MethodInfo              targetMethod;
         private ChildWorkflowOptions    options;
@@ -185,7 +107,7 @@ namespace Neon.Cadence
 
             if (this.targetMethod == null)
             {
-                throw new ArgumentException($"Workflow interface [{workflowInterface.FullName}] does not have a method tagged by [WorkflowMethod(Name = {methodName})].");
+                throw new ArgumentException($"Workflow interface [{workflowInterface.FullName}] does not have a method tagged by [WorkflowMethod(Name = {methodName})].", nameof(workflowInterface));
             }
 
             workflowTypeName = CadenceHelper.GetWorkflowTypeName(workflowInterface, workflowAttribute);
@@ -232,7 +154,7 @@ namespace Neon.Cadence
 
             if (parameters.Length != args.Length)
             {
-                throw new ArgumentException($"Invalid number of parameters: [{parameters.Length}] expected but [{args.Length}] were passed.");
+                throw new ArgumentException($"Invalid number of parameters: [{parameters.Length}] expected but [{args.Length}] were passed.", nameof(parameters));
             }
 
             hasStarted = true;
@@ -261,17 +183,17 @@ namespace Neon.Cadence
 
             if (resultType == typeof(Task))
             {
-                throw new ArgumentException($"Workflow method [{nameof(TWorkflowInterface)}.{targetMethod.Name}()] does not return [void].");
+                throw new ArgumentException($"Workflow method [{nameof(TWorkflowInterface)}.{targetMethod.Name}()] does not return [void].", nameof(TWorkflowInterface));
             }
             
             resultType = resultType.GenericTypeArguments.First();
             
             if (!resultType.IsAssignableFrom(typeof(TResult)))
             {
-                throw new ArgumentException($"Workflow method [{nameof(TWorkflowInterface)}.{targetMethod.Name}()] returns [{resultType.FullName}] which is not compatible with [{nameof(TResult)}].");
+                throw new ArgumentException($"Workflow method [{nameof(TWorkflowInterface)}.{targetMethod.Name}()] returns [{resultType.FullName}] which is not compatible with [{nameof(TResult)}].", nameof(TWorkflowInterface));
             }
 
-            return new AsyncFuture<TResult>(parentWorkflow, execution, resultType);
+            return new AsyncChildFuture<TResult>(parentWorkflow, execution, resultType);
         }
 
         /// <summary>
@@ -303,7 +225,7 @@ namespace Neon.Cadence
 
             if (parameters.Length != args.Length)
             {
-                throw new ArgumentException($"Invalid number of parameters: [{parameters.Length}] expected but [{args.Length}] were passed.");
+                throw new ArgumentException($"Invalid number of parameters: [{parameters.Length}] expected but [{args.Length}] were passed.", nameof(parameters));
             }
 
             hasStarted = true;
@@ -328,7 +250,7 @@ namespace Neon.Cadence
 
             // Create and return the future.
 
-            return new AsyncFuture(parentWorkflow, execution);
+            return new AsyncChildFuture(parentWorkflow, execution);
         }
 
         /// <summary>

@@ -63,7 +63,8 @@ namespace Neon.Cadence.Internal
         /// TaskList that the child workflow needs to be scheduled on.
         /// Optional: the parent workflow task list will be used if this is not provided.
         /// </summary>
-        [JsonProperty(PropertyName = "TaskList", Required = Required.Always)]
+        [JsonProperty(PropertyName = "TaskList", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue("")]
         public string TaskList { get; set; }
 
         /// <summary>

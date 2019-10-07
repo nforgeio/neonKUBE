@@ -92,11 +92,6 @@ namespace Neon.Cadence
                 }
             }
 
-            if (string.IsNullOrEmpty(options.TaskList))
-            {
-                throw new ArgumentNullException(nameof(options), "You must specify a valid task list explicitly or via an [WorkflowInterface(TaskList = \"my-tasklist\")] attribute on the target workflow interface.");
-            }
-
             return options;
         }
 
@@ -255,7 +250,7 @@ namespace Neon.Cadence
                 CronSchedule                 = this.CronSchedule,
                 ExecutionStartToCloseTimeout = CadenceHelper.ToCadence(this.ScheduleToCloseTimeout.Value),
                 RetryPolicy                  = this.RetryOptions?.ToInternal(),
-                TaskList                     = this.TaskList,
+                TaskList                     = this.TaskList ?? string.Empty,
                 TaskStartToCloseTimeout      = CadenceHelper.ToCadence(this.TaskStartToCloseTimeout.Value),
                 WaitForCancellation          = this.WaitUntilFinished,
                 WorkflowID                   = this.WorkflowId,
