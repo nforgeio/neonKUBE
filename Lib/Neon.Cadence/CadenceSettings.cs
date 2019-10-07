@@ -245,6 +245,18 @@ namespace Neon.Cadence
         internal TimeSpan WorkflowTaskStartToCloseTimeout => TimeSpan.FromSeconds(Math.Min(Math.Max(WorkflowTaskStartToCloseTimeoutSeconds, 1), 60));
 
         /// <summary>
+        /// Specifies what happens when Cadence workflows attempt to reuse workflow IDs.
+        /// This defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicateFailedOnly"/>.
+        /// Workflows can customize this via <see cref="WorkflowOptions"/> or <see cref="ChildWorkflowOptions"/>
+        /// or by setting this in the <see cref="WorkflowMethodAttribute"/> tagging the 
+        /// workflow entry point method
+        /// </summary>
+        [JsonProperty(PropertyName = "WorkflowIdReusePolicy", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "workflowIdReusePolicy", ApplyNamingConventions = false)]
+        [DefaultValue(WorkflowIdReusePolicy.AllowDuplicateFailedOnly)]
+        public WorkflowIdReusePolicy WorkflowIdReusePolicy { get; set; } = WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
+
+        /// <summary>
         /// Specifies the default maximum time an activity is allowed to wait after being
         /// scheduled until it's actually scheduled to execute on a worker.  This defaults
         /// to <b>24 hours</b>.
@@ -376,7 +388,6 @@ namespace Neon.Cadence
         [YamlIgnore]
         public bool DebugPrelaunched { get; set; } = false;
 
-
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally disable health heartbeats.  This can be
         /// useful while debugging the client but should never be set for production.
@@ -420,5 +431,48 @@ namespace Neon.Cadence
         [JsonIgnore]
         [YamlIgnore]
         public TimeSpan DebugHttpTimeout { get; set; } = TimeSpan.FromSeconds(30);
+
+        /// <summary>
+        /// Returns a copy of the current instance.
+        /// </summary>
+        /// <returns>Thye cloned <see cref="CadenceSettings"/>.</returns>
+        public CadenceSettings Clone()
+        {
+            return new CadenceSettings()
+            {
+                ActivityHeartbeatTimeoutSeconds        = this.ActivityHeartbeatTimeoutSeconds,
+                ActivityScheduleToCloseTimeoutSeconds  = this.ActivityScheduleToCloseTimeoutSeconds,
+                ActivityScheduleToStartTimeoutSeconds  = this.ActivityScheduleToStartTimeoutSeconds,
+                ActivityStartToCloseTimeoutSeconds     = this.ActivityStartToCloseTimeoutSeconds,
+                BinaryFolder                           = this.BinaryFolder,
+                ClientIdentity                         = this.ClientIdentity,
+                ClientTimeoutSeconds                   = this.ClientTimeoutSeconds,
+                ConnectRetries                         = this.ConnectRetries,
+                ConnectRetryDelaySeconds               = this.ConnectRetryDelaySeconds,
+                CreateDomain                           = this.CreateDomain,
+                Debug                                  = this.Debug,
+                DebugDisableHandshakes                 = this.DebugDisableHandshakes,
+                DebugDisableHeartbeats                 = this.DebugDisableHeartbeats,
+                DebugHttpTimeout                       = this.DebugHttpTimeout,
+                DebugIgnoreHeartbeats                  = this.DebugIgnoreHeartbeats,
+                DebugIgnoreTimeouts                    = this.DebugIgnoreTimeouts,
+                DebugPrelaunched                       = this.DebugPrelaunched,
+                DefaultDomain                          = this.DefaultDomain,
+                HeartbeatIntervalSeconds               = this.HeartbeatIntervalSeconds,
+                HeartbeatTimeoutSeconds                = this.HeartbeatTimeoutSeconds,
+                ListenPort                             = this.ListenPort,
+                LogCadence                             = this.LogCadence,
+                LogCadenceProxy                        = this.LogCadenceProxy,
+                LogDuringReplay                        = this.LogDuringReplay,
+                LogLevel                               = this.LogLevel,
+                ProxyTimeoutSeconds                    = this.ProxyTimeoutSeconds,
+                SecurityToken                          = this.SecurityToken,
+                Servers                                = this.Servers,
+                WorkflowIdReusePolicy                  = this.WorkflowIdReusePolicy,
+                WorkflowScheduleToCloseTimeoutSeconds  = this.WorkflowScheduleToCloseTimeoutSeconds,
+                WorkflowScheduleToStartTimeoutSeconds  = this.WorkflowScheduleToStartTimeoutSeconds,
+                WorkflowTaskStartToCloseTimeoutSeconds = this.WorkflowTaskStartToCloseTimeoutSeconds
+            };
+        }
     }
 }
