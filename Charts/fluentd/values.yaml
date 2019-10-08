@@ -133,18 +133,24 @@ configMaps:
       scheme "#{ENV['OUTPUT_SCHEME']}"
       ssl_version "#{ENV['OUTPUT_SSL_VERSION']}"
       logstash_format true
-     <buffer>
+      reload_connections false
+      reconnect_on_error true
+      reload_on_failure true
+      slow_flush_log_threshold 25.0
+      <buffer>
         @type file
         path /var/log/fluentd-buffers/kubernetes.system.buffer
         flush_mode interval
-        retry_type exponential_backoff
-        flush_thread_count 2
         flush_interval 5s
-        retry_forever
+        flush_thread_count 4
+        chunk_full_threshold 0.9
+        # retry_forever
+        retry_type exponential_backoff
+        retry_timeout 1m
         retry_max_interval 30
         chunk_limit_size "#{ENV['OUTPUT_BUFFER_CHUNK_LIMIT']}"
         queue_limit_length "#{ENV['OUTPUT_BUFFER_QUEUE_LIMIT']}"
-        overflow_action block
+        overflow_action drop_oldest_chunk
       </buffer>
     </match>
 
