@@ -9,7 +9,7 @@
 PATH=${PATH}:/
 
 # container init
-/container-init.sh
+. ./container-init.sh
 
 # Launch the service.
 
