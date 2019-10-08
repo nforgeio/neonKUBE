@@ -207,7 +207,7 @@ namespace Neon.Cadence
         /// Creates an untyped stub for a known workflow execution.
         /// </summary>
         /// <param name="workflowId">The workflow ID.</param>
-        /// <param name="runId">The workflow run ID.</param>
+        /// <param name="runId">Optionally specifies the workflow run ID.</param>
         /// <returns>The <see cref="WorkflowStub"/>.</returns>
         /// <remarks>
         /// <para>
@@ -216,26 +216,10 @@ namespace Neon.Cadence
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </para>
-        /// <note>
-        /// <para>
-        /// .NET and Java workflows can implement multiple workflow method using attributes
-        /// and annotations to assign unique names to each.  Each workflow method is actually
-        /// registered with Cadence as a distinct workflow type.  Workflow methods with a blank
-        /// or <c>null</c> name will simply be registered using the workflow type name.
-        /// </para>
-        /// <para>
-        /// Workflow methods with a name will be registered using a combination  of the workflow
-        /// type name and the method name, using <b>"::"</b> as the separator, like:
-        /// </para>
-        /// <code>
-        /// WORKFLOW-TYPENAME::METHOD-NAME
-        /// </code>
-        /// </note>
         /// </remarks>
-        public WorkflowStub NewUntypedWorkflowStub(string workflowId, string runId)
+        public WorkflowStub NewUntypedWorkflowStub(string workflowId, string runId = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId), nameof(runId));
             EnsureNotDisposed();
 
             return new WorkflowStub(this)
@@ -248,7 +232,6 @@ namespace Neon.Cadence
         /// Creates an untyped stub for a known workflow execution.
         /// </summary>
         /// <param name="execution">The workflow execution.</param>
-        /// <param name="workflowTypeName">The workflow type name.</param>
         /// <returns>The <see cref="WorkflowStub"/>.</returns>
         /// <remarks>
         /// <para>
@@ -257,26 +240,10 @@ namespace Neon.Cadence
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </para>
-        /// <note>
-        /// <para>
-        /// .NET and Java workflows can implement multiple workflow method using attributes
-        /// and annotations to assign unique names to each.  Each workflow method is actually
-        /// registered with Cadence as a distinct workflow type.  Workflow methods with a blank
-        /// or <c>null</c> name will simply be registered using the workflow type name.
-        /// </para>
-        /// <para>
-        /// Workflow methods with a name will be registered using a combination  of the workflow
-        /// type name and the method name, using <b>"::"</b> as the separator, like:
-        /// </para>
-        /// <code>
-        /// WORKFLOW-TYPENAME::METHOD-NAME
-        /// </code>
-        /// </note>
         /// </remarks>
-        public WorkflowStub NewUntypedWorkflowStub(WorkflowExecution execution, string workflowTypeName)
+        public WorkflowStub NewUntypedWorkflowStub(WorkflowExecution execution)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             EnsureNotDisposed();
 
             return new WorkflowStub(this)

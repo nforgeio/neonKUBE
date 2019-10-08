@@ -178,7 +178,7 @@ namespace TestCadence
 
             // There's one more method override for attaching to an existing workflow.
 
-            stub = client.NewUntypedWorkflowStub(execution, nameof(TestWorkflowStub_Execute));
+            stub = client.NewUntypedWorkflowStub(execution);
 
             Assert.Equal("Hello Jeff!", await stub.GetResultAsync<string>());
         }
