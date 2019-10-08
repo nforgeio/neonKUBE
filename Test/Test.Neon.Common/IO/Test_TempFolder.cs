@@ -59,7 +59,7 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CustomRoot()
         {
-            string customRoot = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("D"));
+            string customRoot = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("d"));
             string testFolderPath;
             string testFilePath;
 

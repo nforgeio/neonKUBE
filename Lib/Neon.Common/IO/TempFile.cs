@@ -88,7 +88,7 @@ namespace Neon.IO
 
             Directory.CreateDirectory(folder);
 
-            Path = System.IO.Path.GetFullPath(System.IO.Path.Combine(folder, Guid.NewGuid().ToString("D") + suffix));
+            Path = System.IO.Path.GetFullPath(System.IO.Path.Combine(folder, Guid.NewGuid().ToString("d") + suffix));
         }
 
         /// <inheritdoc/>
