@@ -61,7 +61,7 @@ namespace TestModelGen
         /// <param name="instanceType">The target type.</param>
         public DataWrapper(Type instanceType)
         {
-            Covenant.Requires<ArgumentNullException>(instanceType != null);
+            Covenant.Requires<ArgumentNullException>(instanceType != null, nameof(instanceType));
 
             this.instance     = Activator.CreateInstance(instanceType);
             this.instanceType = instanceType;
@@ -79,8 +79,8 @@ namespace TestModelGen
         /// <param name="bytes">The JSON text.</param>
         public DataWrapper(Type instanceType, string bytes)
         {
-            Covenant.Requires<ArgumentNullException>(instanceType != null);
-            Covenant.Requires<ArgumentNullException>(bytes != null);
+            Covenant.Requires<ArgumentNullException>(instanceType != null, nameof(instanceType));
+            Covenant.Requires<ArgumentNullException>(bytes != null, nameof(bytes));
 
             try
             {
@@ -114,8 +114,8 @@ namespace TestModelGen
         /// <param name="bytes">The JSON bytes.</param>
         public DataWrapper(Type instanceType, byte[] bytes)
         {
-            Covenant.Requires<ArgumentNullException>(instanceType != null);
-            Covenant.Requires<ArgumentNullException>(bytes != null);
+            Covenant.Requires<ArgumentNullException>(instanceType != null, nameof(instanceType));
+            Covenant.Requires<ArgumentNullException>(bytes != null, nameof(bytes));
 
             try
             {
@@ -149,8 +149,8 @@ namespace TestModelGen
         /// <param name="jObject">The <see cref="JObject"/>.</param>
         public DataWrapper(Type instanceType, JObject jObject)
         {
-            Covenant.Requires<ArgumentNullException>(instanceType != null);
-            Covenant.Requires<ArgumentNullException>(jObject != null);
+            Covenant.Requires<ArgumentNullException>(instanceType != null, nameof(instanceType));
+            Covenant.Requires<ArgumentNullException>(jObject != null, nameof(jObject));
 
             try
             {
@@ -195,7 +195,7 @@ namespace TestModelGen
         {
             get
             {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(propertyName));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(propertyName), nameof(propertyName));
 
                 try
                 {
@@ -223,7 +223,7 @@ namespace TestModelGen
 
             set
             {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(propertyName));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(propertyName), nameof(propertyName));
 
                 try
                 {

@@ -25,7 +25,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // Implement variations of WaitAsync() that include timeouts.  This will probably
 // require a global background thread (or something) to poll for timeouts.

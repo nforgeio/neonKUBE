@@ -25,13 +25,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // Implement variations of *LockAsync() that include timeouts.  This will probably
 // require a global background thread (or something) to poll for timeouts.
 // Kind of icky, but this would be useful.
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // Look into implementing additional fairness policies so that writes can't
 // completely starve reads.

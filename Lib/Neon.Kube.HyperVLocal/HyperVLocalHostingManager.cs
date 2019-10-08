@@ -516,7 +516,7 @@ namespace Neon.Kube
         /// <param name="node">The target node.</param>
         private void ProvisionVM(SshProxy<NodeDefinition> node)
         {
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // This code currently assumes that the VM will use DHCP to obtain
             // its initial network configuration so the code can SSH into the
@@ -546,7 +546,7 @@ namespace Neon.Kube
 
                 node.Status = $"create: disk";
 
-                // $hack(jeff.lill): Update console at 2 sec intervals to mitigate annoying flicker
+                // $hack(jefflill): Update console at 2 sec intervals to mitigate annoying flicker
 
                 var updateInterval = TimeSpan.FromSeconds(2);
                 var stopwatch      = new Stopwatch();
@@ -714,7 +714,7 @@ namespace Neon.Kube
 
                         node.Status = $"resize: primary drive";
 
-                        // $hack(jeff.lill):
+                        // $hack(jefflill):
                         //
                         // I've seen a transient error here but can't reproduce it.  I'm going
                         // to assume for now that the file system might not be quite ready for

@@ -56,7 +56,7 @@ namespace Neon.Cadence.Internal
         public string RunId
         {
             get => GetStringProperty(PropertyNames.RunId);
-            set => SetStringProperty(PropertyNames.RunId, value);
+            set => SetStringProperty(PropertyNames.RunId, value ?? string.Empty);
         }
 
         /// <summary>

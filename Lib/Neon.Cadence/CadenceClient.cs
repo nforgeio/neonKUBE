@@ -182,57 +182,57 @@ namespace Neon.Cadence
     /// </para>
     /// <para><b>Task Lists</b></para>
     /// <para>
-    /// Task lists provide an additional way to customize where workflows and activities are executed.
-    /// A task list is simply a string used in addition to the domain to indicate which workflows and
-    /// activities will be scheduled for execution by workers.  For external workflows,
-    /// you can specify a default task list via <see cref="CadenceSettings.DefaultTaskList"/>.  
-    /// Any non-empty custom string is allowed for task lists.  Child workflow and activity task lists
-    /// will default to the parent workflow's task list by default.
+    /// Task lists are used by Cadence to identify the set of workflows and activities that
+    /// are implemented by workers.  For example, if you deploy a program called <b>payments.exe</b>
+    /// that implements payment related workflows and activities like <b>validate</b>,
+    /// <b>debit</b>, <b>credit</b>,... you could register these and then start a worker using
+    /// <b>tasklist=payments</b>.
     /// </para>
     /// <para>
-    /// Task lists are typically only required for somewhat advanced deployments.  Let's go through
-    /// an example to see how this works.  Imagine that you're a movie studio that needs to render
-    /// an animated movie with Cadence.  You've implemented a workflow that breaks the movie up into
-    /// 5 minute segments and then schedules an activity to render each segment.  Now assume that 
-    /// we have two kinds of servers, one just a basic general purpose server and the other that
-    /// includes high-end GPUs that are required for rendering.  In the simple case, you'd like
-    /// the workflows to execute on the regular server and the activites to run on the GPU machines
-    /// (because there's no point in wasting any expensive GPU machine resources on the workflow).
+    /// You'll need to provide the correct task list when executing a workflow or normal (non-local)
+    /// activity.  Cadence will schedule the workflow or activity on one of the workers that
+    /// was started with the specified task list.  The most convienent way to specify the task list
+    /// is to tag your workflow and activity interfaces with <c>[WorkflowInterface(TaskList = "payments")]</c>
+    /// and <c>[ActivityInterface(TaskList = "payments")]</c> attributes, specifying the target task list.
     /// </para>
     /// <para>
-    /// This scenario can addressed by having the application running on the regular machines
-    /// call <see cref="StartWorkerAsync(string, WorkerOptions, string)"/> with <see cref="WorkerOptions.DisableActivityWorker"/><c>=true</c>
-    /// and the application running on the GPU servers call this with with <see cref="WorkerOptions.DisableWorkflowWorker"/><c>=true</c>.
-    /// Both could specify the domain as <b>"render"</b> and set  task list as <b>"all"</b>
-    /// (or something).  With this setup, workflows will be scheduled on the regular machines 
-    /// and activities on the GPU machines.
+    /// You may also specify a custom task list in the workflow and activity options used when
+    /// executing a workflow or activity.  A task list specified in one of these options takes
+    /// precedence over the task list specified in an attribute.
+    /// </para>
+    /// <note>
+    /// The .NET client will complain if a task list is not specified in either an interface
+    /// attribute or the options.
+    /// </note>
+    /// <note>
+    /// <para>
+    /// <b>IMPORTANT:</b> You need to take care to ensure that the task lists you use for your
+    /// workers uniquely identify the set of workflows and activities registered for the workers.
+    /// For example, if you start two workers, <b>worker-a</b> and <b>worker-b</b> using the same
+    /// task list, but <b>worker-a</b> registers the <b>foo</b> workflow and <b>worker-b</b>
+    /// registers the <c>bar</c> activity, you're going run into trouble.
     /// </para>
     /// <para>
-    /// Now imagine a more complex scenario where we need to render two movies on the cluster at 
-    /// the same time and we'd like to dedicate two thirds of our GPU machines to <b>movie1</b> and
-    /// the other third to <b>movie2</b>.  This can be accomplished via task lists:
+    /// The problem is that Cadcence assumes that both workers implement the same workflows, both
+    /// <b>foo</b> and <b>bar</b> in this case.  Say you start a <b>foo</b> workflow.  Cadence
+    /// will select one of <b>worker-a</b> or <b>worker-b</b> to run the workflow.  If Cadence
+    /// happens to select <b>worker-a</b> everything will work as expected because <b>foo</b>
+    /// is registered there.  If Cadence selects <b>worker-b</b> the initial execution will fail
+    /// because <b>foo</b> is not registered there.  Cadence handles this a decision task failure
+    /// and will attempt to reschedule the workflow on another worker (hopefully <b>worker-a</b>
+    /// this time).
     /// </para>
     /// <para>
-    /// We'd start by defining a task list for each movie: <b>"movie1"</b> and <b>"movie2"</b> and
-    /// then call <see cref="StartWorkerAsync(string, WorkerOptions, string)"/> with <see cref="WorkerOptions.DisableActivityWorker"/><c>=true</c>
-    /// twice on the regular machines and once for each task list.  This will schedule workflows for each movie
-    /// on these machines (this is OK for this scenario because the workflow won't consume many
-    /// resources).  Then on 2/3s of the GPU machines, we'll call <see cref="StartWorkerAsync(string, WorkerOptions, string)"/> 
-    /// with <see cref="WorkerOptions.DisableWorkflowWorker"/><c>=true</c> with the <b>"movie1"</b>
-    /// task list and the remaining one third of the GPU machines <b>"movie2"</b> as the task list. 
-    /// Then we'll start the rendering workflow for the first movie specifying <b>"movie1"</b> as the
-    /// task list and again for the second movie specifying <b>"movie2"</b>.
+    /// Cadence fault tolerance will probably end up being able to handle this sort misconfiguration,
+    /// but at the cost of additional delays as well as unnecessary communication overhead to workers
+    /// that will never be able to execute unregistered workflows and activities.
     /// </para>
     /// <para>
-    /// The two movie workflows will be scheduled on the regular machines and these will each
-    /// start the rendering activities using the <b>"movie1"</b> task list for the first movie
-    /// and <b>"movie2"</b> for the second one and Cadence will then schedule these activities
-    /// on the appropriate GPU servers.
+    /// So the moral of this store is carefully choose your task lists to match the set of workflows
+    /// and activities implemented by your application.  One common approach is to name the task list
+    /// after the service or application that implements the workflow anbd activities.
     /// </para>
-    /// <para>
-    /// These are just a couple examples.  Domains, task lists, and worker options can be combined
-    /// in different ways to manage where workflows and activities will be scheduled for execution.
-    /// </para>
+    /// </note>
     /// </remarks>
     public partial class CadenceClient : IDisposable
     {
@@ -282,7 +282,7 @@ namespace Neon.Cadence
             /// </param>
             public Operation(long requestId, ProxyRequest request, TimeSpan timeout = default)
             {
-                Covenant.Requires<ArgumentNullException>(request != null);
+                Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
                 request.RequestId = requestId;
 
@@ -336,7 +336,7 @@ namespace Neon.Cadence
             /// </remarks>
             public void SetReply(ProxyReply reply)
             {
-                Covenant.Requires<ArgumentNullException>(reply != null);
+                Covenant.Requires<ArgumentNullException>(reply != null, nameof(reply));
 
                 CompletionSource.TrySetResult(reply);
             }
@@ -371,7 +371,7 @@ namespace Neon.Cadence
             /// </remarks>
             public void SetException(Exception e)
             {
-                Covenant.Requires<ArgumentNullException>(e != null);
+                Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
 
                 CompletionSource.TrySetException(e);
             }
@@ -618,8 +618,8 @@ namespace Neon.Cadence
         /// </remarks>
         private static Process StartProxy(IPEndPoint endpoint, CadenceSettings settings, long clientId)
         {
-            Covenant.Requires<ArgumentNullException>(endpoint != null);
-            Covenant.Requires<ArgumentNullException>(settings != null);
+            Covenant.Requires<ArgumentNullException>(endpoint != null, nameof(endpoint));
+            Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
 
             var binaryFolder = settings.BinaryFolder;
 
@@ -761,8 +761,8 @@ namespace Neon.Cadence
         /// </remarks>
         public static async Task<CadenceClient> ConnectAsync(CadenceSettings settings)
         {
-            Covenant.Requires<ArgumentNullException>(settings != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), "You must specifiy a non-empty default Cadence domain.");
+            Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), nameof(settings), "You must specifiy a non-empty default Cadence domain.");
 
             InitializeCompiler();
 
@@ -811,7 +811,7 @@ namespace Neon.Cadence
                 {
                     case "/":
 
-                        // $hack(jeff.lill):
+                        // $hack(jefflill):
                         //
                         // We need to receive the entire request body before deserializing the
                         // the message because BinaryReader doesn't seem to play nice with reading
@@ -819,9 +819,6 @@ namespace Neon.Cadence
                         // to read more than about 64KiB bytes of data which is the default size
                         // of the Kestrel receive buffer.  This suggests that there's some kind
                         // of problem reading the next buffer from the request socket.
-                        //
-                        // This isn't a huge issue since we're going to convert cadence-proxy into
-                        // a shared library where we'll be passing message buffers directly.
 
                         var bodyStream = MemoryStreamPool.Alloc();
 
@@ -898,7 +895,7 @@ namespace Neon.Cadence
                 {
                     case "/":
 
-                        // $hack(jeff.lill):
+                        // $hack(jefflill):
                         //
                         // We need to receive the entire request body before deserializing the
                         // the message because BinaryReader doesn't seem to play nice with reading
@@ -960,7 +957,7 @@ namespace Neon.Cadence
         /// <returns>The HTTP reply information.</returns>
         private static async Task<HttpReply> OnRootRequestAsync(ProxyMessage proxyMessage)
         {
-            Covenant.Requires<ArgumentNullException>(proxyMessage != null);
+            Covenant.Requires<ArgumentNullException>(proxyMessage != null, nameof(proxyMessage));
 
             var httpReply = new HttpReply() { StatusCode = StatusCodes.Status200OK };
             var request   = proxyMessage as ProxyRequest;
@@ -1164,7 +1161,7 @@ namespace Neon.Cadence
                 // So it's conceivable that this additional delay could push a
                 // workflow to timeout.
 
-                // $todo(jeff.lill):
+                // $todo(jefflill):
                 //
                 // A potentially better approach would be to have the registrationd
                 // methods prebuild (and cache) all of the stubs and/or implement
@@ -1277,8 +1274,8 @@ namespace Neon.Cadence.WorkflowStub
         /// <param name="settings">The <see cref="CadenceSettings"/>.</param>
         private CadenceClient(CadenceSettings settings)
         {
-            Covenant.Requires<ArgumentNullException>(settings != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain));
+            Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), nameof(settings));
 
             this.ClientId = Interlocked.Increment(ref nextClientId);
             this.Settings = settings;
@@ -1415,6 +1412,15 @@ namespace Neon.Cadence.WorkflowStub
             // Crank up the background threads which will handle [cadence-proxy]
             // request timeouts.
 
+            // $todo(jefflill):
+            //
+            // Disabling this for now due to occasional heartbeat timeout errors.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/680
+
+            //heartbeatThread = new Thread(new ThreadStart(HeartbeatThread));
+            //heartbeatThread.Start();
+
             timeoutThread = new Thread(new ThreadStart(TimeoutThread));
             timeoutThread.Start();
         }
@@ -1465,7 +1471,7 @@ namespace Neon.Cadence.WorkflowStub
 
                     CallProxyAsync(new DisconnectRequest()).Wait();
 
-                    // Terminate the proxy if there are no remaining connections.
+                    // Terminate the associated proxy.
 
                     lock (syncLock)
                     {
@@ -1485,7 +1491,16 @@ namespace Neon.Cadence.WorkflowStub
 
                         WorkflowBase.UnregisterClient(this);
                         ActivityBase.UnregisterClient(this);
-                        proxyProcess.Kill();
+
+                        if (proxyProcess != null)
+                        {
+                            // The [DisconnectRequest] sent above should have gracefully disconnected
+                            // from the Cadence cluster so we can just kill the cadence-proxy process.
+                            // There's no reason to send a [TerminateRequest] anymore.
+
+                            proxyProcess.Kill();
+                            proxyProcess = null;
+                        }
 
                         if (httpServer != null)
                         {
@@ -1611,7 +1626,7 @@ namespace Neon.Cadence.WorkflowStub
         /// <returns>The workflow .NET type or <c>null</c> if the type was not found.</returns>
         internal Type GetActivityType(string activityTypeName)
         {
-            Covenant.Requires<ArgumentNullException>(activityTypeName != null);
+            Covenant.Requires<ArgumentNullException>(activityTypeName != null, nameof(activityTypeName));
 
             lock (syncLock)
             {
@@ -1624,31 +1639,6 @@ namespace Neon.Cadence.WorkflowStub
                     return null;
                 }
             }
-        }
-
-        /// <summary>
-        /// Returns the Cadence task list to be referenced for an operation.  If <paramref name="taskList"/>
-        /// is not <c>null</c> or empty then that will be returned otherwise <see cref="CadenceSettings.DefaultTaskList"/>
-        /// will be returned.  Note that one of <paramref name="taskList"/> or the default task list
-        /// must be non-empty.
-        /// </summary>
-        /// <param name="taskList">The specific task list to use or null/empty.</param>
-        /// <returns>The task list to be referenced.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="taskList"/> and the default task list are both null or empty.</exception>
-        internal string ResolveTaskList(string taskList)
-        {
-            EnsureNotDisposed();
-
-            if (!string.IsNullOrEmpty(taskList))
-            {
-                return taskList;
-            }
-            else if (!string.IsNullOrEmpty(Settings.DefaultTaskList))
-            {
-                return Settings.DefaultTaskList;
-            }
-
-            throw new ArgumentNullException($"One of [{nameof(taskList)}] parameter or the client's default task list (specified as [{nameof(CadenceClient)}.{nameof(CadenceClient.Settings)}.{nameof(CadenceSettings.DefaultTaskList)}]) must be non-empty.");
         }
 
         /// <summary>
@@ -1673,7 +1663,7 @@ namespace Neon.Cadence.WorkflowStub
                 return Settings.DefaultDomain;
             }
 
-            throw new ArgumentNullException($"One of [{nameof(domain)}] parameter or the client's default domain (specified as [{nameof(CadenceClient)}.{nameof(CadenceClient.Settings)}.{nameof(CadenceSettings.DefaultDomain)}]) must be non-empty.");
+            throw new ArgumentNullException(nameof(domain),$"One of [{nameof(domain)}] parameter or the client's default domain (specified as [{nameof(CadenceClient)}.{nameof(CadenceClient.Settings)}.{nameof(CadenceSettings.DefaultDomain)}]) must be non-empty.");
         }
 
         /// <summary>
@@ -1759,8 +1749,8 @@ namespace Neon.Cadence.WorkflowStub
         /// <returns>The tracking <see cref="Task"/>.</returns>
         internal async Task ProxyReplyAsync(ProxyRequest request, ProxyReply reply)
         {
-            Covenant.Requires<ArgumentNullException>(request != null);
-            Covenant.Requires<ArgumentNullException>(reply != null);
+            Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
+            Covenant.Requires<ArgumentNullException>(reply != null, nameof(reply));
 
             reply.ClientId = ClientId;
 
@@ -1797,6 +1787,76 @@ namespace Neon.Cadence.WorkflowStub
 
         /// <summary>
         /// Implements the connection's background thread which is responsible
+        /// for checking <b>cadence-proxy</b> health via heartbeat requests.
+        /// </summary>
+        private void HeartbeatThread()
+        {
+            Task.Run(
+                async () =>
+                {
+                    var sleepTime = Settings.HeartbeatInterval;
+                    var exception = (Exception)null;
+
+                    try
+                    {
+                        while (!closingConnection)
+                        {
+                            Thread.Sleep(sleepTime);
+
+                            if (!Settings.DebugDisableHeartbeats)
+                            {
+                                // Verify [cadence-proxy] health via by sending a heartbeat
+                                // and waiting a bit for a reply.
+
+                                try
+                                {
+                                    var heartbeatReply = await CallProxyAsync(new HeartbeatRequest(), timeout: Settings.HeartbeatTimeout);
+
+                                    if (heartbeatReply.Error != null)
+                                    {
+                                        throw new Exception($"[cadence-proxy]: Heartbeat returns [{heartbeatReply.Error}].");
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    log.LogError("Heartbeat check failed.  Closing Cadence connection.", e);
+                                    exception = new CadenceTimeoutException("Heartbeat check failed.", e);
+
+                                    // Break out of the while loop so we'll signal the application that
+                                    // the connection has closed and then exit the thread below.
+
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        // We shouldn't see any exceptions here except perhaps
+                        // [TaskCanceledException] when the connection is in
+                        // the process of being closed.
+
+                        if (!closingConnection || !e.Contains<TaskCanceledException>())
+                        {
+                            exception = e;
+                            log.LogError(e);
+                        }
+                    }
+
+                    if (exception == null && pendingException != null)
+                    {
+                        exception = pendingException;
+                    }
+
+                    // This is a good place to signal the client application that the
+                    // connection has been closed.
+
+                    RaiseConnectionClosed(exception);
+                });
+        }
+
+        /// <summary>
+        /// Implements the connection's background thread which is responsible
         /// for handling <b>cadence-proxy</b> request timeouts.
         /// </summary>
         private void TimeoutThread()
@@ -1812,8 +1872,8 @@ namespace Neon.Cadence.WorkflowStub
 
                     // Look for any operations that have been running longer than
                     // the specified timeout and then individually cancel and
-                    // remove them, and then notify the application that they were
-                    // cancelled.
+                    // remove them, and then notify the application that they 
+                    // were cancelled.
 
                     if (!Settings.DebugIgnoreTimeouts)
                     {

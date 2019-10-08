@@ -368,7 +368,7 @@ namespace Neon.Xunit.Couchbase
                     }
                     catch
                     {
-                        // $hack(jeff.lill):
+                        // $hack(jefflill):
                         //
                         // It looks like we need to create a new bucket if the query service 
                         // wasn't ready.  I'm guessing that this is due to the Couchbase index

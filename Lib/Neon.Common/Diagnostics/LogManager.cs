@@ -30,7 +30,7 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // The logging model is a little wonky, especially for dependency injection purists.
 // [LogManager] exposes the static [Default] property that is a shortcut that returns
@@ -114,7 +114,7 @@ namespace Neon.Diagnostics
         private LogLevel                        logLevel     = LogLevel.Info;
         private TextWriter                      writer       = null;
 
-        // $todo(jeff.lill)
+        // $todo(jefflill)
         //
         // Using [nameToLogger] to implement thread safety via a [Monitor] may introduce
         // some performance overhead for ASP.NET sites with lots of traffic.  It

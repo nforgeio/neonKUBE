@@ -115,7 +115,7 @@ namespace Neon.Xunit
         /// </remarks>
         public TestFixtureStatus Start(Func<TService> serviceCreator = null, TimeSpan runningTimeout = default)
         {
-            Covenant.Requires<ArgumentNullException>(serviceCreator != null);
+            Covenant.Requires<ArgumentNullException>(serviceCreator != null, nameof(serviceCreator));
 
             base.CheckDisposed();
 
@@ -140,7 +140,7 @@ namespace Neon.Xunit
         /// </exception>
         public void StartAsComposed(Func<TService> serviceCreator = null, TimeSpan runningTimeout = default)
         {
-            Covenant.Requires<ArgumentNullException>(serviceCreator != null);
+            Covenant.Requires<ArgumentNullException>(serviceCreator != null, nameof(serviceCreator));
 
             if (runningTimeout == default)
             {
@@ -262,7 +262,7 @@ namespace Neon.Xunit
         /// </remarks>
         public void Restart(Func<TService> serviceCreator = null, TimeSpan runningTimeout = default)
         {
-            Covenant.Requires<ArgumentNullException>(serviceCreator != null);
+            Covenant.Requires<ArgumentNullException>(serviceCreator != null, nameof(serviceCreator));
 
             if (runningTimeout == default)
             {
@@ -347,7 +347,7 @@ namespace Neon.Xunit
         /// </remarks>
         public HttpClient GetHttpClient(string endpointName = "", HttpClientHandler handler = null)
         {
-            Covenant.Requires<ArgumentNullException>(endpointName != null);
+            Covenant.Requires<ArgumentNullException>(endpointName != null, nameof(endpointName));
 
             if (!Service.Description.Endpoints.TryGetValue(endpointName, out var endpoint))
             {
@@ -406,7 +406,7 @@ namespace Neon.Xunit
         /// </remarks>
         public JsonClient GetJsonClient(string endpointName = "", HttpClientHandler handler = null)
         {
-            Covenant.Requires<ArgumentNullException>(endpointName != null);
+            Covenant.Requires<ArgumentNullException>(endpointName != null, nameof(endpointName));
 
             if (!Service.Description.Endpoints.TryGetValue(endpointName, out var endpoint))
             {

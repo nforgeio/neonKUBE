@@ -284,7 +284,7 @@ namespace Neon.Time
         /// <exception cref="FormatException">Thrown if the input is not valid.</exception>
         public static GoTimeSpan Parse(string input)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input), nameof(input));
 
             if (!TryParse(input, out var goTimeSpan))
             {

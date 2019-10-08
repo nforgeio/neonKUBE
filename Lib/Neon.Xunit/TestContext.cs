@@ -282,7 +282,7 @@ namespace Neon.Xunit
         /// <exception cref="KeyNotFoundException">Thrown if the file doesn't exist.</exception>
         public byte[] GetFileBytes(string filename)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(filename));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(filename), nameof(filename));
 
             return Files[filename];
         }

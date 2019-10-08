@@ -63,7 +63,7 @@ namespace Neon.Data
         /// <inheritdoc/>
         public string ToSimpleString(object instance)
         {
-            Covenant.Requires<ArgumentNullException>(instance != null);
+            Covenant.Requires<ArgumentNullException>(instance != null, nameof(instance));
 
             return ((TimeSpan)instance).ToString(format);
         }

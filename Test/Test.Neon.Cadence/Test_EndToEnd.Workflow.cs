@@ -44,6 +44,7 @@ namespace TestCadence
     {
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowWithNoResult : IWorkflow
         {
             [WorkflowMethod]
@@ -92,6 +93,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowWithResult : IWorkflow
         {
             [WorkflowMethod]
@@ -142,6 +144,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowLogger : IWorkflow
         {
             [WorkflowMethod]
@@ -164,7 +167,7 @@ namespace TestCadence
         {
             // Verify that logging within a workflow doesn't barf.
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // It would be nice to add additional tests that actually
             // verify that something reasonable was logged, including
@@ -179,6 +182,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowUtcNow : IWorkflow
         {
             [WorkflowMethod]
@@ -210,6 +214,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowSleep : IWorkflow
         {
             [WorkflowMethod]
@@ -249,6 +254,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowSleepUntil : IWorkflow
         {
             [WorkflowMethod]
@@ -295,6 +301,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowStubExecTwice : IWorkflow
         {
             [WorkflowMethod]
@@ -325,6 +332,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowMultiEntrypoints : IWorkflow
         {
             [WorkflowMethod(Name = "hello")]
@@ -365,6 +373,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowMultipleStubCalls : IWorkflow
         {
             [WorkflowMethod]
@@ -394,6 +403,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface ICronActivity : IActivity
         {
             [ActivityMethod]
@@ -413,6 +423,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface ICronWorkflow : IWorkflow
         {
             [WorkflowMethod]
@@ -495,6 +506,7 @@ namespace TestCadence
         private const int RandomSampleCount         = 1000;
         private const int MaxDuplicateRandomSamples = RandomSampleCount / 10;
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IRandomWorkflow : IWorkflow
         {
             [WorkflowMethod(Name = "GetRandomDoubles")]
@@ -814,8 +826,8 @@ namespace TestCadence
         {
             public BytesHolder(byte[] bytes)
             {
-                Covenant.Requires<ArgumentNullException>(bytes != null);
-                Covenant.Requires<ArgumentException>(bytes.Length > 4);
+                Covenant.Requires<ArgumentNullException>(bytes != null, nameof(bytes));
+                Covenant.Requires<ArgumentException>(bytes.Length > 4, nameof(bytes));
 
                 this.Bytes = bytes;
             }
@@ -906,6 +918,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowEcho : IWorkflow
         {
             [WorkflowMethod]
@@ -943,6 +956,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowSideEffect : IWorkflow
         {
             [WorkflowMethod(Name = "SideEffect")]
@@ -982,6 +996,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowMutableSideEffect : IWorkflow
         {
             [WorkflowMethod(Name = "MutableSideEffect")]
@@ -1021,6 +1036,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowSignal : IWorkflow
         {
             [WorkflowMethod]
@@ -1134,6 +1150,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowQuery : IWorkflow
         {
             [WorkflowMethod]
@@ -1279,6 +1296,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowGetVersion : IWorkflow
         {
             [WorkflowMethod]
@@ -1309,6 +1327,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IChildActivity : IActivity
         {
             [ActivityMethod]
@@ -1324,6 +1343,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowComplex : IWorkflow
         {
             [WorkflowMethod]
@@ -1470,6 +1490,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IParallelActivity : IActivity
         {
             [ActivityMethod]
@@ -1493,6 +1514,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowChild : IWorkflow
         {
             [WorkflowMethod]
@@ -1622,6 +1644,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowParent : IWorkflow
         {
             [WorkflowMethod]
@@ -2059,6 +2082,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowDifferentNamesInterface : IWorkflow
         {
             [WorkflowMethod]
@@ -2091,6 +2115,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowFail : IWorkflow
         {
             [WorkflowMethod]
@@ -2134,6 +2159,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowUnregistered : IWorkflow
         {
             [WorkflowMethod]
@@ -2166,6 +2192,7 @@ namespace TestCadence
             public int Age { get; set; }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowComplexData : IWorkflow
         {
             [WorkflowMethod]
@@ -2235,8 +2262,11 @@ namespace TestCadence
             public string RunId { get; set; }
             public string WorkflowType { get; set; }
             public string TaskList { get; set; }
+            public string ExecutionWorkflowId { get; set; }
+            public string ExecutionRunId { get; set; }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowInfo : IWorkflow
         {
             [WorkflowMethod]
@@ -2248,7 +2278,12 @@ namespace TestCadence
         {
             public async Task<WorkflowInfoTest> GetWorkflowInfoAsync()
             {
-                return await Task.FromResult(new WorkflowInfoTest(Workflow.WorkflowInfo));
+                var info = new WorkflowInfoTest(Workflow.WorkflowInfo);
+
+                info.ExecutionWorkflowId = Workflow.Execution.WorkflowId;
+                info.ExecutionRunId      = Workflow.Execution.RunId;
+
+                return await Task.FromResult(info);
             }
         }
 
@@ -2262,7 +2297,6 @@ namespace TestCadence
             var options = new WorkflowOptions()
             {
                 Domain     = client.Settings.DefaultDomain,
-                TaskList   = client.Settings.DefaultTaskList,
                 WorkflowId = "my-workflow-id"
             };
 
@@ -2271,11 +2305,13 @@ namespace TestCadence
 
             Assert.Equal(options.Domain, info.Domain);
             Assert.NotEmpty(info.RunId);
-            Assert.Equal(options.TaskList, info.TaskList);
+            Assert.Equal(CadenceTestHelper.TaskList, info.TaskList);
             Assert.Equal(options.WorkflowId, info.WorkflowId);
             Assert.Equal("my-workflow-info-type", info.WorkflowType);
+            Assert.Equal(options.WorkflowId, info.ExecutionWorkflowId);
+            Assert.NotEmpty(info.ExecutionRunId);
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // These properties are not supported yet:
             //
@@ -2285,6 +2321,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowContinueAsNew0 : IWorkflow
         {
             [WorkflowMethod(Name = "Hello")]
@@ -2364,6 +2401,7 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowContinueAsNew1 : IWorkflow
         {
             [WorkflowMethod]
@@ -2398,7 +2436,7 @@ namespace TestCadence
             // Verify that we can continue a workflow as new without using a stub
             // and with new options.
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // This test could be improved.  We're not actually verifying that
             // the new options actually had an effect.  For now, we're just
@@ -2428,7 +2466,7 @@ namespace TestCadence
             // Verify that we can continue a workflow as new using a stub
             // and with new options.
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // This test could be improved.  We're not actually verifying that
             // the new options actually had an effect.  For now, we're just
@@ -2439,47 +2477,86 @@ namespace TestCadence
             Assert.Equal("WF1 says: Hello Jeff!", await stub.HelloStubOptionsAsync("Jeff"));
         }
 
-#if TODO
-        // $todo(jeff.lill):
-        //
-        // I'm not actually sure what the point of external child workflow stubs
-        // are and there are some implementation gaps.  We're going to leave these
-        // unimplemented for now and revisit later.
-        //
-        //      https://github.com/nforgeio/neonKUBE/issues/615
-        //
-        // Note that the one test by workflow ID below is coded and that we'd need
-        // to implement another test to do the same by workflow execution.
-
         //---------------------------------------------------------------------
 
-        public interface IWorkflowExternalChildStubById : IWorkflow
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IWorkflowExternalStub : IWorkflow
         {
-            [WorkflowMethod]
-            Task<string> RunAsync();
+            [WorkflowMethod(Name = "hello-test")]
+            Task<bool> HelloTestByIdNoResultAsync();
 
-            [QueryMethod("query")]
-            Task<string> QueryAsync(string name);
+            [WorkflowMethod(Name = "hello")]
+            Task<string> HelloAsync(string name);
+
+            [WorkflowMethod(Name = "signal-test")]
+            Task<bool> SignalTestAsync();
+
+            [WorkflowMethod(Name = "wait-for-signal")]
+            Task<string> WaitForSignalAsync();
 
             [SignalMethod("signal")]
-            Task SignalExit(string value);
+            Task SignalAsync(string value);
         }
 
         [Workflow(AutoRegister = true)]
-        public class WorkflowExternalChildStubById : WorkflowBase, IWorkflowExternalChildStubById
+        public class WorkflowExternalStub : WorkflowBase, IWorkflowExternalStub
         {
-            private string  signalValue;
-            private bool    signaled;
+            public static bool IsRunning = false;
 
-            public async Task<string> RunAsync()
+            public static new void Reset()
             {
-                // Spin for up to 20 seconds, waiting for SignalExit() to be called
+                IsRunning = false;
+            }
+
+            private bool    signalled;
+            private string  signalValue;
+
+            public async Task<bool> HelloTestByIdNoResultAsync()
+            {
+                // Start a child workflow using a typed stub and a specific workflow ID
+                // and then create an external stub with the same ID and then verify
+                // that we can wait for the workflow using the stub Task as well as
+                // the external stub (without retrieving the result).
+
+                const string TestWorkflowId = "WorkflowExternalStub-HelloTestByIdNoResultAsync";
+
+                var stub         = Workflow.NewChildWorkflowStub<IWorkflowExternalStub>(new ChildWorkflowOptions() { WorkflowId = TestWorkflowId });
+                var task         = stub.HelloAsync("Jeff");
+                var externalStub = Workflow.NewExternalWorkflowStub(TestWorkflowId);
+
+                // $hack(jeff.lill): 
+                //
+                // Wait a bit to allow the workflow to be recorded before
+                // we wait for the result.
+
+                await Task.Delay(TimeSpan.FromSeconds(5));
+
+                await externalStub.GetResultAsync();
+
+                var result = await task;
+
+                return result == "Hello Jeff!";
+            }
+
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
+
+            public async Task<bool> SignalTestAsync()
+            {
+                return await Task.FromResult(false);
+            }
+
+            public async Task<string> WaitForSignalAsync()
+            {
+                // Spin for up to 20 seconds, waiting for SignalAsync() to be called
                 // and then throw an exception if there was no signal or else return
                 // the signal value passed.
 
                 for (int i = 0; i < 20; i++)
                 {
-                    if (signaled)
+                    if (signalled)
                     {
                         break;
                     }
@@ -2487,7 +2564,7 @@ namespace TestCadence
                     await Workflow.SleepAsync(TimeSpan.FromSeconds(1));
                 }
 
-                if (!signaled)
+                if (!signalled)
                 {
                     throw new Exception("Signal not received in time.");
                 }
@@ -2495,118 +2572,423 @@ namespace TestCadence
                 return await Task.FromResult(signalValue);
             }
 
-            public async Task<string> QueryAsync(string name)
-            {
-                return await Task.FromResult($"Hello {name}!");
-            }
-
-            public async Task SignalExit(string value)
+            public async Task SignalAsync(string value)
             {
                 signalValue = value;
-                signaled    = true;
+                signalled   = true;
 
                 await Task.CompletedTask;
             }
         }
 
-        public interface IWorkflowExternalParentStubById : IWorkflow
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ExternalWorkflowStub()
         {
-            [WorkflowMethod]
-            Task<string> RunAsync();
+            // Call a workflow that executes a child workflow by ID using a typed 
+            // stub and then creates an external stub and then waits for that as
+            // well without retrieving the result.
+
+            WorkflowExternalStub.Reset();
+
+            var stub = client.NewWorkflowStub<IWorkflowExternalStub>();
+
+            Assert.True(await stub.HelloTestByIdNoResultAsync());
+        }
+
+        //---------------------------------------------------------------------
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IWorkflowChildGetExecution : IWorkflow
+        {
+            [WorkflowMethod(Name = "run")]
+            Task<bool> RunAsync();
+
+            [WorkflowMethod(Name = "child")]
+            Task<WorkflowExecution> ChildAsync();
+
+            [WorkflowMethod(Name = "hello")]
+            Task<string> HelloAsync(string name);
+
+            [WorkflowMethod(Name = "child-stub")]
+            Task<bool> ChildStubWithResultAsync();
+
+            [WorkflowMethod(Name = "wait-for-signal")]
+            Task<string> WaitForSignalAsync(string name);
+
+            [SignalMethod("signal")]
+            Task SignalAsync(string signal);
         }
 
         [Workflow(AutoRegister = true)]
-        public class WorkflowExternalParentStubById : WorkflowBase, IWorkflowExternalParentStubById
+        public class WorkflowChildGetExecution : WorkflowBase, IWorkflowChildGetExecution
         {
-            public async Task<string> RunAsync()
+            private static string receivedSignal;
+
+            public async Task<bool> RunAsync()
             {
-                // Start a child workflow normally and then create an external stub for it.
-                // We'll use this stub to verify that:
-                //
-                //      1. We cannot use the stub to re-execute the workflow.
-                //      2. We can query the workflow.
-                //      3. We can signal the workflow, causing it to complete.
-                //
-                // NOTE: This code is a a somewhat fragile due to the general situation
-                //       decribed by:
-                //
-                //       https://github.com/nforgeio/neonKUBE/issues/627
-                //
-                // We're going to temporarily introduce delays to mitigate this. 
+                // Create a child stub and then verify that we see an [InvalidOperationException]
+                // when we call [Workflow.GetExecutionAsync()] because it hasn't been started yet.
 
-                const string workflowId = "my-child-workflow-external-1";
-                const string signalArg  = "Hello World!";
-
-                var delay = TimeSpan.FromSeconds(0.5);
-
-                var options      = new ChildWorkflowOptions() { WorkflowId = workflowId };
-                var stub         = Workflow.NewChildWorkflowStub<IWorkflowExternalChildStubById>(options);
-                var task         = stub.RunAsync();
-                var externalStub = Workflow.NewExternalWorkflowStub<IWorkflowExternalChildStubById>(workflowId);
-
-                await Task.Delay(delay);
-
-                // Verify that we're not allowed to re-execute the workflow via the external stub.
-
-                var executed = false;
+                var stub = Workflow.NewChildWorkflowStub<IWorkflowChildGetExecution>();
 
                 try
                 {
-                    await externalStub.RunAsync();
-                    executed = true;
+                    await Workflow.GetWorkflowExecutionAsync(stub);
+                    return false;   // We should never go here.
                 }
                 catch (InvalidOperationException)
                 {
+                    // Expecting this.
                 }
-                catch (Exception e)
+                catch
                 {
-                    return $"Unexpected [{e.GetType().FullName}] exeception.";
+                    return false;
                 }
 
-                if (executed)
-                {
-                    return "External stub allowed re-execution.";
-                }
+                // Call the child workflow and then compare the [WorkflowExecution] 
+                // returned by the child with that returned by [Workflow.GetExecutionAsync()].
+                // These should match.
 
-                // Ensure that the child exits after receiving a signal via the external stub.
+                var childExecution = await stub.ChildAsync();
+                var stubExecution  = await Workflow.GetWorkflowExecutionAsync(stub);
 
-                await externalStub.SignalExit(signalArg);
+                return childExecution.WorkflowId == stubExecution.WorkflowId &&
+                       childExecution.RunId == stubExecution.RunId;
+            }
 
-                try
-                {
-                    var result = await task;
+            public async Task<WorkflowExecution> ChildAsync()
+            {
+                return await Task.FromResult(Workflow.Execution);
+            }
 
-                    if (result != signalArg)
-                    {
-                        return $"Invalid signal result: [{result}] instead of [{signalArg}]";
-                    }
-                    else
-                    {
-                        return result;
-                    }
-                }
-                catch (Exception e)
-                {
-                    return NeonHelper.ExceptionError(e);
-                }
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
+
+            public async Task<bool> ChildStubWithResultAsync()
+            {
+                // We're going to execute [WaitForSignalAsync] as a child workflow,
+                // send it a signal, and then verify that the signal was received.
+
+                receivedSignal = null;
+
+                var stub    = Workflow.NewUntypedChildWorkflowStub<string>($"{typeof(IWorkflowChildGetExecution).FullName}::wait-for-signal");
+                var future  = await stub.ExecuteAsync("Jeff");
+
+                await stub.SignalAsync("signal", "hello-signal");
+
+                var result = await future.GetAsync();
+
+                return result == "Hello Jeff:hello-signal";
+            }
+
+            public async Task<string> WaitForSignalAsync(string name)
+            {
+                // Wait for a signal from the parent workflow.
+
+                NeonHelper.WaitFor(() => receivedSignal != null, TimeSpan.FromSeconds(maxWaitSeconds));
+
+                return await Task.FromResult($"Hello {name}:{receivedSignal}");
+            }
+
+            public async Task SignalAsync(string signal)
+            {
+                receivedSignal = signal;
+
+                await Task.CompletedTask;
             }
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_ExternalChildStubById()
+        public async Task Workflow_ChildGetExecution()
         {
-            // Verifies that stubs returned by Workflow.NewExternalWorkflowStub(workflowId)
-            // work correctly.
+            // Call a workflow that confirms that [Workflow.GetExecutionAsync()]
+            // works correctly against a child workflow.
 
-            var stub   = client.NewWorkflowStub<IWorkflowExternalParentStubById>();
-            var result = await stub.RunAsync();
+            var stub = client.NewWorkflowStub<IWorkflowChildGetExecution>();
 
-            if (result != null)
+            Assert.True(await stub.RunAsync());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ToUntyped()
+        {
+            // Verify that we can convert an external workflow stub into an
+            // untyped [WorkflowStub].
+
+            var stub = client.NewWorkflowStub<IWorkflowExternalStub>();
+
+            // We should see an [InvalidOperationException] when we attempt
+            // the conversion before the workflow has been started.
+
+            Assert.Throws<InvalidOperationException>(() => client.ToUntyped(stub));
+
+            // Now start a workflow, convert the stub and verify that we can
+            // obtain the correct result.
+
+            Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
+
+            var untypedStub = client.ToUntyped(stub);
+
+            Assert.Equal("Hello Jeff!", await untypedStub.GetResultAsync<string>());
+            Assert.NotNull(untypedStub.Execution);
+            Assert.NotEmpty(untypedStub.Execution.WorkflowId);
+            Assert.NotEmpty(untypedStub.Execution.RunId);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ChildWorkflowStub_WithResult()
+        {
+            // Call a workflow that creates a [ChildWorkflowStub] and starts a child
+            // workflow, passing it a parameter, signalling it, and then verifying
+            // that it returns the correct result.
+
+            var stub = client.NewWorkflowStub<IWorkflowChildGetExecution>();
+
+            Assert.True(await stub.ChildStubWithResultAsync());
+        }
+
+        //---------------------------------------------------------------------
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IWorkflowIdReuse : IWorkflow
+        {
+            [WorkflowMethod(Name = "hello")]
+            Task<string> HelloAsync(string name);
+
+            [WorkflowMethod(Name = "hello-via-attribute", WorkflowIdReusePolicy = WorkflowIdReusePolicy.AllowDuplicate)]
+            Task<string> HelloWithAttributeAsync(string name);
+
+            [WorkflowMethod(Name = "child-no-reuse")]
+            Task<bool> ChildNoReuseAsync();
+
+            [WorkflowMethod(Name = "child-reuse-via-options")]
+            Task<bool> ChildReuseViaOptionsAsync();
+
+            [WorkflowMethod(Name = "child-reuse-via-attribute")]
+            Task<bool> ChildReuseViaAttributeAsync();
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowIdReuse : WorkflowBase, IWorkflowIdReuse
+        {
+            public async Task<string> HelloAsync(string name)
             {
-                Assert.True(false, $"Test Error: {result}");
+                return await Task.FromResult($"Hello {name}!");
+            }
+
+            public async Task<string> HelloWithAttributeAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
+
+            public async Task<bool> ChildNoReuseAsync()
+            {
+                // Verify that we can have Cadence reject duplicate workflow IDs.
+
+                var options = new ChildWorkflowOptions()
+                {
+                    WorkflowId            = $"Child_IdNoReuse-{Guid.NewGuid().ToString("d")}",
+                    WorkflowIdReusePolicy = WorkflowIdReusePolicy.RejectDuplicate
+                };
+
+                // Do the first run; this should succeed.
+
+                var stub = Workflow.NewChildWorkflowStub<IWorkflowIdReuse>(options);
+
+                if (await stub.HelloAsync("Jack") != "Hello Jack!")
+                {
+                    return false;
+                }
+
+                // Do the second run with the same ID.
+                
+                // Child workflows seem to work differently from external workflows 
+                // in this situation.  Child workflows return a WorkflowExecutionAlreadyStartedError
+                // when the workflow is already running whereas external workflows
+                // will simply return the result from the previous run.
+
+                stub = Workflow.NewChildWorkflowStub<IWorkflowIdReuse>(options);
+
+                try
+                {
+                    await stub.HelloAsync("Jill");
+                    return false;   // We're expecting an exception.
+                }
+                catch (CadenceWorkflowRunningException)
+                {
+                    return true;    // Expecting this.
+                }
+            }
+
+            public async Task<bool> ChildReuseViaOptionsAsync()
+            {
+                // Verify that we can have Cadence allow duplicate workflow IDs
+                // using child options.
+
+                var options = new ChildWorkflowOptions()
+                {
+                    WorkflowId            = $"Child_ReuseViaOptions-{Guid.NewGuid().ToString("d")}",
+                    WorkflowIdReusePolicy = WorkflowIdReusePolicy.AllowDuplicate
+                };
+
+                // Do the first run; this should succeed.
+
+                var stub = Workflow.NewChildWorkflowStub<IWorkflowIdReuse>(options);
+
+                if (await stub.HelloAsync("Jack") != "Hello Jack!")
+                {
+                    return false;
+                }
+
+                // Do the second run with the same ID; this should also succeed.
+
+                stub = Workflow.NewChildWorkflowStub<IWorkflowIdReuse>(options);
+
+                return await stub.HelloAsync("Jill") == "Hello Jill!";
+            }
+
+            public async Task<bool> ChildReuseViaAttributeAsync()
+            {
+                // Verify that we can have Cadence allow duplicate workflow IDs
+                // using the method attribute.
+
+                var options = new ChildWorkflowOptions()
+                {
+                    WorkflowId = $"Child_ReuseViaAttribute-{Guid.NewGuid().ToString("d")}"
+                };
+
+                // Do the first run; this should succeed.
+
+                var stub = Workflow.NewChildWorkflowStub<IWorkflowIdReuse>(options);
+
+                if (await stub.HelloWithAttributeAsync("Jack") != "Hello Jack!")
+                {
+                    return false;
+                }
+
+                // Do the second run with the same ID; this should also succeed.
+
+                stub = Workflow.NewChildWorkflowStub<IWorkflowIdReuse>(options);
+
+                return await stub.HelloWithAttributeAsync("Jill") == "Hello Jill!";
             }
         }
-#endif
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ExternalIdNoReuse()
+        {
+            // Verify that we can have Cadence reject duplicate workflow IDs.
+
+            var options = new WorkflowOptions()
+            {
+                WorkflowId            = $"Workflow_ExternalIdNoReuse-{Guid.NewGuid().ToString("d")}",
+                WorkflowIdReusePolicy = WorkflowIdReusePolicy.RejectDuplicate
+            };
+
+            // Do the first run; this should succeed.
+
+            var stub = client.NewWorkflowStub<IWorkflowIdReuse>(options);
+
+            Assert.Equal("Hello Jack!", await stub.HelloAsync("Jack"));
+
+            // Do the second run with the same ID.  This shouldn't actually start
+            // another workflow and will return the result from the original
+            // workflow instead.
+
+            stub = client.NewWorkflowStub<IWorkflowIdReuse>(options);
+
+            Assert.Equal("Hello Jack!", await stub.HelloAsync("Jill"));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ExternalIdReuseViaOptions()
+        {
+            // Verify that we can reuse a workflow ID for an external
+            // workflow via options.
+
+            var options = new WorkflowOptions()
+            {
+                WorkflowId            = $"Workflow_ExternalIdReuseViaOptions-{Guid.NewGuid().ToString("d")}",
+                WorkflowIdReusePolicy = WorkflowIdReusePolicy.AllowDuplicate
+            };
+
+            // Do the first run.
+
+            var stub = client.NewWorkflowStub<IWorkflowIdReuse>(options);
+
+            Assert.Equal("Hello Jack!", await stub.HelloAsync("Jack"));
+
+            // Do the second run.
+
+            stub = client.NewWorkflowStub<IWorkflowIdReuse>(options);
+
+            Assert.Equal("Hello Jill!", await stub.HelloAsync("Jill"));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ExternalIdReuseViaAttribute()
+        {
+            // Verify that we can reuse a workflow ID for an external
+            // workflow via a [WorkflowMethod] attribute.
+
+            var options = new WorkflowOptions()
+            {
+                WorkflowId = $"Workflow_ExternalIdReuseViaAttribute-{Guid.NewGuid().ToString("d")}",
+            };
+
+            // Do the first run.
+
+            var stub = client.NewWorkflowStub<IWorkflowIdReuse>(options);
+
+            Assert.Equal("Hello Jack!", await stub.HelloWithAttributeAsync("Jack"));
+
+            // Do the second run.
+
+            stub = client.NewWorkflowStub<IWorkflowIdReuse>(options);
+
+            Assert.Equal("Hello Jill!", await stub.HelloWithAttributeAsync("Jill"));
+        }
+        
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ChildIdNoReuse()
+        {
+            // Verify that we can have Cadence reject duplicate child workflow IDs.
+
+            var stub = client.NewWorkflowStub<IWorkflowIdReuse>();
+
+            Assert.True(await stub.ChildNoReuseAsync());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ChildIdReuseViaOptions()
+        {
+            // Verify that we can have Cadence use duplicate child workflow IDs.
+
+            var stub = client.NewWorkflowStub<IWorkflowIdReuse>();
+
+            Assert.True(await stub.ChildReuseViaOptionsAsync());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ChildIdReuseViaAttribute()
+        {
+            // Verify that we can have Cadence use duplicate child workflow IDs.
+
+            var stub = client.NewWorkflowStub<IWorkflowIdReuse>();
+
+            Assert.True(await stub.ChildReuseViaAttributeAsync());
+        }
     }
 }

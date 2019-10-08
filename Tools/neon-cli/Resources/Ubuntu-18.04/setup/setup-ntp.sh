@@ -76,7 +76,7 @@ cat <<EOF > /etc/ntp.conf
 # NTP to modify the system clock in steps of 1 second (normally,
 # this is much smaller).
 
-# \$todo(jeff.lill):
+# \$todo(jefflill):
 #
 # This was the default setting when NTP was installed but I'm not 
 # entirely sure that this is what we'd want for production.  The

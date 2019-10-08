@@ -92,10 +92,10 @@ namespace Neon.IO
         /// <param name="recursive">Optionally apply the permissions recursively.</param>
         public static void Set(string path, string mode, bool recursive = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(mode));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(mode), nameof(mode));
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // We're going to hack this by running [chmod MODE PATH].  Eventually,
             // we could convert this to using a low-level package but I didn't

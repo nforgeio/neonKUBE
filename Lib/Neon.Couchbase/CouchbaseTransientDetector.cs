@@ -46,7 +46,7 @@ namespace Couchbase
         /// <returns><c>true</c> if the error was potentially transient.</returns>
         public static bool IsTransient(Exception e)
         {
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // I'm making a guess at these for now.  I'm not sure if this is the
             // complete list of potentially transient exceptions and Couchbase 
@@ -78,7 +78,7 @@ namespace Couchbase
                 //
                 // We're going to consider these to be transient.
 
-                // $heck(jeff.lill):
+                // $heck(jefflill):
                 //
                 // Note that CODE=5000 looks like a generic code, so we need to key off of the
                 // message text too.  This will be fragile.
@@ -125,7 +125,7 @@ namespace Couchbase
                 return false;
             }
 
-            // $hack(jeff.lill):
+            // $hack(jefflill):
             //
             // I'm not entirely convinced that the [ResponseStatus.KeyExists] status
             // code by itself indicates that this was due to a CAS failure.  It seems

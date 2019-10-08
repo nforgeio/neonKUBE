@@ -153,9 +153,9 @@ namespace Neon.Kube
         /// <exception cref="FormatException">Thrown if the name is not valid.</exception>
         public static KubeContextName Parse(string text)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(text));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(text), nameof(text));
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // We should probably honor any Kubernetes restrictions on 
             // the name parts.
@@ -236,8 +236,8 @@ namespace Neon.Kube
         /// </remarks>
         public KubeContextName(string username, string cluster, string kubeNamespace = "default")
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(cluster));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username), nameof(username));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(cluster), nameof(cluster));
 
             if (string.IsNullOrEmpty(kubeNamespace))
             {

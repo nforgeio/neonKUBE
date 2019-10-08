@@ -94,7 +94,7 @@ namespace Neon.Web
             IServiceContainer   source = null,
             bool                disableResponseCompression = false)
         {
-            Covenant.Requires<ArgumentNullException>(builder != null);
+            Covenant.Requires<ArgumentNullException>(builder != null, nameof(builder));
 
             source = source ?? NeonHelper.ServiceContainer;
 

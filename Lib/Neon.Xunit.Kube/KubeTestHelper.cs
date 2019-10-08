@@ -96,7 +96,7 @@ namespace Neon.Xunit.Kube
         /// </remarks>
         public static TempFolder TempFolder(string filename, string data)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(filename));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(filename), nameof(filename));
 
             var folder = new TempFolder();
 

@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.Reflection;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
@@ -40,10 +41,21 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="client">The associated Cadence client.</param>
         /// <param name="options">The input options or <c>null</c>.</param>
+        /// <param name="workflowInterface">Optionally specifies the workflow interface definition.</param>
         /// <returns>The normalized options.</returns>
-        public static ChildWorkflowOptions Normalize(CadenceClient client, ChildWorkflowOptions options)
+        /// <exception cref="ArgumentNullException">Thrown if a valid task list is not specified.</exception>
+        public static ChildWorkflowOptions Normalize(CadenceClient client, ChildWorkflowOptions options, Type workflowInterface = null)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+
+            WorkflowInterfaceAttribute interfaceAttribute = null;
+
+            if (workflowInterface != null)
+            {
+                CadenceHelper.ValidateWorkflowInterface(workflowInterface);
+
+                interfaceAttribute = workflowInterface.GetCustomAttribute<WorkflowInterfaceAttribute>();
+            }
 
             if (options == null)
             {
@@ -71,12 +83,10 @@ namespace Neon.Cadence
 
             if (string.IsNullOrEmpty(options.TaskList))
             {
-                options.TaskList = client.Settings.DefaultTaskList;
-            }
-
-            if (!options.WorkflowIdReusePolicy.HasValue)
-            {
-                options.WorkflowIdReusePolicy = Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
+                if (interfaceAttribute != null && !string.IsNullOrEmpty(interfaceAttribute.TaskList))
+                {
+                    options.TaskList = interfaceAttribute.TaskList;
+                }
             }
 
             return options;
@@ -93,9 +103,21 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Optionally specifies the domain where the child workflow will run. 
-        /// This defaults to the parent workflow's domain.
+        /// Specifies the task list where the child workflow will be scheduled.
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// A task list must be specified when executing a workflow.  For workflows
+        /// started via a typed stub, this will default to the type list specified
+        /// by the <c>[WorkflowInterface(TaskList = "my-tasklist"]</c> tagging the
+        /// interface (if any).
+        /// </para>
+        /// <para>
+        /// For workflow stubs created from an interface without a specified task list
+        /// or workflows created via untyped or external stubs, this will need to
+        /// be explicitly set to a non-empty value.
+        /// </para>
+        /// </remarks>
         public string Domain { get; set; } = null;
 
         /// <summary>
@@ -141,10 +163,13 @@ namespace Neon.Cadence
         public bool WaitUntilFinished { get; set; } = false;
 
         /// <summary>
-        /// Controls how Cadence handles workflows that attempt to reuse workflow IDs.
-        /// This defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicateFailedOnly"/>.
+        /// Optionally determines how Cadence handles workflows that attempt to reuse workflow IDs.
+        /// This generally defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicateFailedOnly"/>
+        /// but the default can be customized via the <see cref="WorkflowMethodAttribute"/> tagging
+        /// the workflow entry point method or <see cref="CadenceSettings.WorkflowIdReusePolicy"/>
+        /// (which defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicateFailedOnly"/>.
         /// </summary>
-        public WorkflowIdReusePolicy? WorkflowIdReusePolicy { get; set; }
+        public WorkflowIdReusePolicy WorkflowIdReusePolicy { get; set; } = WorkflowIdReusePolicy.UseDefault;
 
         /// <summary>
         /// Optionally specifies retry options.
@@ -225,11 +250,11 @@ namespace Neon.Cadence
                 CronSchedule                 = this.CronSchedule,
                 ExecutionStartToCloseTimeout = CadenceHelper.ToCadence(this.ScheduleToCloseTimeout.Value),
                 RetryPolicy                  = this.RetryOptions?.ToInternal(),
-                TaskList                     = this.TaskList,
+                TaskList                     = this.TaskList ?? string.Empty,
                 TaskStartToCloseTimeout      = CadenceHelper.ToCadence(this.TaskStartToCloseTimeout.Value),
                 WaitForCancellation          = this.WaitUntilFinished,
                 WorkflowID                   = this.WorkflowId,
-                WorkflowIdReusePolicy        = (int)(this.WorkflowIdReusePolicy ?? Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly)
+                WorkflowIdReusePolicy        = (int)(this.WorkflowIdReusePolicy == WorkflowIdReusePolicy.UseDefault ? Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly : this.WorkflowIdReusePolicy)
             };
         }
 

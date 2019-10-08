@@ -185,7 +185,7 @@ namespace Neon.Kube
 
             // Determine the primary disk size.
 
-            // $hack(jeff.lill):
+            // $hack(jefflill):
             //
             // I'm not entirely sure how to determine which block device is hosting
             // the primary file system for all systems.  For now, I'm just going to

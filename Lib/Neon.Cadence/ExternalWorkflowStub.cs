@@ -35,17 +35,36 @@ namespace Neon.Cadence
     /// </summary>
     public class ExternalWorkflowStub
     {
+        private CadenceClient   client;
+        private string          domain;
+
+        /// <summary>
+        /// Internal constructor by workflow execution.
+        /// </summary>
+        /// <param name="client">Specifies the associated client.</param>
+        /// <param name="execution">Specifies the target workflow execution.</param>
+        /// <param name="domain">Optionally specifies the target domain (defaults to the client's default domain).</param>
+        internal ExternalWorkflowStub(CadenceClient client, WorkflowExecution execution, string domain = null)
+        {
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
+
+            this.client    = client;
+            this.domain    = client.ResolveDomain(domain);
+            this.Execution = execution;
+        }
+
         /// <summary>
         /// Returns the workflow execution.
         /// </summary>
-        public WorkflowExecution Execution => throw new NotImplementedException();
+        public WorkflowExecution Execution { get; private set; }
 
         /// <summary>
         /// Cancels the workflow.
         /// </summary>
-        public Task Cancel()
+        public async Task CancelAsync()
         {
-            throw new NotImplementedException();
+            await client.CancelWorkflowAsync(Execution, domain);
         }
 
         /// <summary>
@@ -54,9 +73,31 @@ namespace Neon.Cadence
         /// <param name="signalName">Specifies the signal name.</param>
         /// <param name="args">Specifies the signal arguments.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public Task Signal(string signalName, params object[] args)
+        public async Task Signal(string signalName, params object[] args)
         {
-            throw new NotImplementedException();
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+
+            await client.SignalWorkflowAsync(Execution, signalName, client.DataConverter.ToData(args));
+        }
+
+        /// <summary>
+        /// Waits for the workflow complete if necessary, without returning the result.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task GetResultAsync()
+        {
+            await client.GetWorkflowResultAsync(Execution, domain);
+        }
+
+        /// <summary>
+        /// Returns the workflow result, waiting for the workflow to complete if necessary.
+        /// </summary>
+        /// <typeparam name="TResult">The workflow result type.</typeparam>
+        /// <returns>The workflow result.</returns>
+        public async Task<TResult> GetResultAsync<TResult>()
+        {
+            return client.DataConverter.FromData<TResult>(await client.GetWorkflowResultAsync(Execution, domain));
         }
     }
 }

@@ -48,8 +48,8 @@ namespace Neon.Cadence
         /// <returns>The <see cref="WorkflowMethodMap"/>.</returns>
         public static WorkflowMethodMap Create(Type workflowType)
         {
-            Covenant.Requires<ArgumentNullException>(workflowType != null);
-            Covenant.Requires<ArgumentException>(!workflowType.IsInterface);
+            Covenant.Requires<ArgumentNullException>(workflowType != null, nameof(workflowType));
+            Covenant.Requires<ArgumentException>(!workflowType.IsInterface, nameof(workflowType));
 
             var map = new WorkflowMethodMap();
 

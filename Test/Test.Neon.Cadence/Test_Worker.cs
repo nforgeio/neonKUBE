@@ -51,11 +51,11 @@ namespace TestCadence
         {
             var settings = new CadenceSettings()
             {
-                DefaultDomain    = CadenceFixture.DefaultDomain,
-                DefaultTaskList  = CadenceFixture.DefaultTaskList,
-                LogLevel         = CadenceTestHelper.LogLevel,
-                Debug            = true,
-                DebugPrelaunched = CadenceTestHelper.DebugPrelaunched
+                DefaultDomain          = CadenceFixture.DefaultDomain,
+                LogLevel               = CadenceTestHelper.LogLevel,
+                Debug                  = true,
+                DebugPrelaunched       = CadenceTestHelper.DebugPrelaunched,
+                DebugDisableHeartbeats = CadenceTestHelper.DebugDisableHeartbeats
             };
 
             fixture.Start(settings, keepConnection: true);

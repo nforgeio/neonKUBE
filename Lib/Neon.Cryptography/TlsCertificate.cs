@@ -39,7 +39,7 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.IO;
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // Look into using [SecureString] for the [KeyPem] property.
 
@@ -148,7 +148,7 @@ namespace Neon.Cryptography
         /// <returns>The normalized text.</returns>
         public static string NormalizePem(string input)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input), nameof(input));
 
             // Strip out any blank lines (some services like Namecheap.com will
             // generate certificates with blank lines between the certificates
@@ -220,9 +220,9 @@ namespace Neon.Cryptography
             string      issuedBy  = null,
             string      issuedTo  = null)
         {
-            Covenant.Requires<ArgumentException>(!string.IsNullOrEmpty(hostname));
-            Covenant.Requires<ArgumentException>(bitCount == 1024 || bitCount == 2048 || bitCount == 4096);
-            Covenant.Requires<ArgumentException>(validDays > 1);
+            Covenant.Requires<ArgumentException>(!string.IsNullOrEmpty(hostname), nameof(hostname));
+            Covenant.Requires<ArgumentException>(bitCount == 1024 || bitCount == 2048 || bitCount == 4096, nameof(bitCount));
+            Covenant.Requires<ArgumentException>(validDays > 1, nameof(validDays));
 
             var tempFolder   = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             var certPath     = Path.Combine(tempFolder, "cache.crt");
@@ -367,9 +367,9 @@ subjectAltName         = @alt_names
             string      issuedBy  = null,
             string      issuedTo  = null)
         {
-            Covenant.Requires<ArgumentNullException>(hostnames != null && hostnames.Count() > 0);
-            Covenant.Requires<ArgumentException>(bitCount == 1024 || bitCount == 2048 || bitCount == 4096);
-            Covenant.Requires<ArgumentException>(validDays > 1);
+            Covenant.Requires<ArgumentNullException>(hostnames != null && hostnames.Count() > 0, nameof(hostnames));
+            Covenant.Requires<ArgumentException>(bitCount == 1024 || bitCount == 2048 || bitCount == 4096, nameof(bitCount));
+            Covenant.Requires<ArgumentException>(validDays > 1, nameof(validDays));
 
             var tempFolder   = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             var certPath     = Path.Combine(tempFolder, "cache.crt");
@@ -474,7 +474,7 @@ subjectAltName         = @alt_names
         /// <exception cref="ArgumentException">Thrown if the certificate is not valid.</exception>
         public static void Validate(string path)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
 
             var certificate = TlsCertificate.Load(path);
 
@@ -564,7 +564,7 @@ subjectAltName         = @alt_names
         /// <param name="pemCombined">The certificate(s) followed by the private key text.</param>
         public TlsCertificate(string pemCombined)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(pemCombined));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(pemCombined), nameof(pemCombined));
 
             var certPos = pemCombined.IndexOf("-----BEGIN CERTIFICATE-----");
             var keyPos  = pemCombined.IndexOf("-----BEGIN PRIVATE KEY-----");
@@ -608,7 +608,7 @@ subjectAltName         = @alt_names
         /// <param name="keyPem">The optional private key PEM text.</param>
         public TlsCertificate(string certPem, string keyPem = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(certPem));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(certPem), nameof(CertPem));
 
             if (!certPem.StartsWith("-----BEGIN CERTIFICATE-----"))
             {
@@ -838,7 +838,7 @@ subjectAltName         = @alt_names
         /// <exception cref="InvalidOperationException"> Thrown if <see cref="Hosts"/> is <c>null</c> or empty.</exception>
         public bool IsValidHost(string hostname)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname), nameof(hostname));
 
             if (ValidFrom == null || ValidUntil == null)
             {
@@ -954,7 +954,7 @@ subjectAltName         = @alt_names
         /// </remarks>
         public void ParseCertUtil(string info)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(info));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(info), nameof(info));
 
             const string datePattern = "M/d/yyyy h:mm tt";
 
@@ -1061,14 +1061,14 @@ subjectAltName         = @alt_names
         /// </remarks>
         public void ParseOpenSsl(string info)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(info));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(info), nameof(info));
 
             const string datePattern = "MMM d HH:mm:ss yyyy";
 
             var notBefore = ExtractField("Not Before:", info).Replace(" GMT", string.Empty);
             var notAfter  = ExtractField("Not After :", info).Replace(" GMT", string.Empty);
 
-            // $hack(jeff.lill):
+            // $hack(jefflill):
             //
             // OpenSSH on Linux includes an extra space for single digit day fields
             // like: "Feb  4 01:45:25 2117".  This causes ParseExact() to fail.  We're
@@ -1171,7 +1171,7 @@ subjectAltName         = @alt_names
                     File.Delete(tempPath);
                 }
 
-                // $todo(jeff.lill):
+                // $todo(jefflill):
                 //
                 // Hacking this using the [CertUtil] and [OpenSSL] tools until we completely port
                 // to using X509Certificate.  The main thing we need to do to accomplish this is
@@ -1266,7 +1266,7 @@ subjectAltName         = @alt_names
 
                 if (hasPrivateKey && !publicOnly)
                 {
-                    // $todo(jeff.lill):
+                    // $todo(jefflill):
                     //
                     // Enable this when we upgrade to .NET Standard 2.1
                     //
@@ -1295,7 +1295,7 @@ subjectAltName         = @alt_names
         /// <exception cref="ArgumentException">Thrown if <paramref name="pem"/> includes more than one base-64 encoded section.</exception>
         private byte[] ExtractPemBytes(string pem)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(pem));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(pem), nameof(pem));
 
             // Verify that we don't have multiple base-64 sections.
 
@@ -1346,7 +1346,7 @@ subjectAltName         = @alt_names
 
             var bytes = ExtractPemBytes(KeyPem);
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // Hopefully we we'll be able to use the standard library once
             // .NET Standard 2.1 is released.

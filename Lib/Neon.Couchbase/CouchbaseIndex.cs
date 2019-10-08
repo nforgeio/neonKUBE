@@ -48,8 +48,8 @@ namespace Couchbase
         /// <param name="indexInfo">The index information.</param>
         internal CouchbaseIndex(dynamic indexInfo)
         {
-            Covenant.Requires<ArgumentNullException>(indexInfo != null);
-            Covenant.Requires<ArgumentException>(indexInfo.indexes != null);
+            Covenant.Requires<ArgumentNullException>(indexInfo != null, nameof(indexInfo));
+            Covenant.Requires<ArgumentException>(indexInfo.indexes != null, nameof(indexInfo));
 
             var index = indexInfo.indexes;
 

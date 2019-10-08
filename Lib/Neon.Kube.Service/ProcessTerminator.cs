@@ -134,7 +134,7 @@ namespace Neon.Kube.Service
         /// <param name="disposable"></param>
         public void AddDisposable(IDisposable disposable)
         {
-            Covenant.Requires<ArgumentNullException>(disposable != null);
+            Covenant.Requires<ArgumentNullException>(disposable != null, nameof(disposable));
 
             // We're simply going to add a handler that disposes the instance
             // to keep things super simple.

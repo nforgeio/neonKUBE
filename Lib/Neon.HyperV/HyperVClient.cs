@@ -224,7 +224,7 @@ namespace Neon.HyperV
             string                      switchName        = null,
             IEnumerable<VirtualDrive>   extraDrives       = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
 
             var driveFolder = DefaultDriveFolder;
@@ -252,7 +252,7 @@ namespace Neon.HyperV
 
             // Resize the VHDX.
 
-            // $hack(jeff.lill):
+            // $hack(jefflill):
             //
             // For some reason, the PowerShell [Resize-VHD] command does not like 
             // hard disk file names formatted as we're doing (e.g. with embedded
@@ -373,7 +373,7 @@ namespace Neon.HyperV
         /// <param name="machineName">The machine name.</param>
         public void RemoveVM(string machineName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
 
             var machine = GetVM(machineName);
@@ -430,7 +430,7 @@ namespace Neon.HyperV
         /// <returns>The <see cref="VirtualMachine"/>.</returns>
         public VirtualMachine GetVM(string machineName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
 
             try
@@ -455,7 +455,7 @@ namespace Neon.HyperV
         /// <returns><c>true</c> if the machine exists.</returns>
         public bool VMExists(string machineName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
 
             return ListVMs().Count(vm => vm.Name.Equals(machineName, StringComparison.InvariantCultureIgnoreCase)) > 0;
@@ -467,7 +467,7 @@ namespace Neon.HyperV
         /// <param name="machineName">The machine name.</param>
         public void StartVM(string machineName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
 
             try
@@ -486,7 +486,7 @@ namespace Neon.HyperV
         /// <param name="machineName">The machine name.</param>
         public void StopVM(string machineName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
 
             try
@@ -588,8 +588,8 @@ namespace Neon.HyperV
         /// <param name="gateway">Address of the cluster network gateway, used to identify a connected network interface.</param>
         public void NewVMExternalSwitch(string switchName, IPAddress gateway)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(switchName));
-            Covenant.Requires<ArgumentNullException>(gateway != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(switchName), nameof(switchName));
+            Covenant.Requires<ArgumentNullException>(gateway != null, nameof(gateway));
 
             if (!NetworkInterface.GetIsNetworkAvailable())
             {
@@ -599,7 +599,7 @@ namespace Neon.HyperV
             // We're going to look for an active (non-loopback) interface that is configured
             // to use the correct upstream gateway and also has at least one nameserver.
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // This may be a problem for machines with multiple active network interfaces
             // because I may choose the wrong one (e.g. the slower card).  It might be

@@ -27,7 +27,7 @@ using Neon.Xunit;
 
 using Xunit;
 
-// $todo(jeff.lill): Verify logging behaviors.
+// $todo(jefflill): Verify logging behaviors.
 
 namespace TestCommon
 {

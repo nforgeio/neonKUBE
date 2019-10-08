@@ -142,6 +142,7 @@ func (b *WorkflowClientBuilder) build() error {
 		b.Logger.Error("Failed to create transport channel", zap.Error(err))
 		return err
 	}
+
 	b.Logger.Info("Creating RPC dispatcher outbound",
 		zap.String("ServiceName", _cadenceFrontendService),
 		zap.String("HostPort", b.hostPort),

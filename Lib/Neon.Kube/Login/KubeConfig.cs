@@ -184,7 +184,7 @@ namespace Neon.Kube
         /// <returns>The <see cref="KubeConfigCluster"/> or <c>null</c>.</returns>
         public KubeConfigCluster GetCluster(string name)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             return Clusters.SingleOrDefault(c => c.Name == name);
         }
@@ -196,7 +196,7 @@ namespace Neon.Kube
         /// <returns>The <see cref="KubeConfigUser"/> or <c>null</c>.</returns>
         public KubeConfigUser GetUser(string name)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             return Users.SingleOrDefault(c => c.Name == name);
         }
@@ -208,7 +208,7 @@ namespace Neon.Kube
         /// <returns>The <see cref="KubeConfigContext"/> or <c>null</c>.</returns>
         public KubeConfigContext GetContext(string rawName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(rawName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(rawName), nameof(rawName));
 
             return Contexts.SingleOrDefault(c => c.Name == rawName);
         }
@@ -220,7 +220,7 @@ namespace Neon.Kube
         /// <returns>The <see cref="KubeConfigContext"/> or <c>null</c>.</returns>
         public KubeConfigContext GetContext(KubeContextName name)
         {
-            Covenant.Requires<ArgumentNullException>(name != null);
+            Covenant.Requires<ArgumentNullException>(name != null, nameof(name));
 
             var rawName = name.ToString();
 
@@ -236,11 +236,11 @@ namespace Neon.Kube
         /// <param name="noSave">Optionally prevent context save after the change.</param>
         public void SetContext(KubeConfigContext context, KubeConfigCluster cluster, KubeConfigUser user, bool noSave = false)
         {
-            Covenant.Requires<ArgumentNullException>(context != null);
-            Covenant.Requires<ArgumentNullException>(cluster != null);
-            Covenant.Requires<ArgumentNullException>(user != null);
-            Covenant.Requires(context.Properties.Cluster == cluster.Name);
-            Covenant.Requires(context.Properties.User == user.Name);
+            Covenant.Requires<ArgumentNullException>(context != null, nameof(context));
+            Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
+            Covenant.Requires<ArgumentNullException>(user != null, nameof(user));
+            Covenant.Requires<ArgumentNullException>(context.Properties.Cluster == cluster.Name, nameof(context));
+            Covenant.Requires<ArgumentNullException>(context.Properties.User == user.Name, nameof(context));
 
             var updated = false;
 
@@ -310,7 +310,7 @@ namespace Neon.Kube
         /// <param name="noSave">Optionally prevent context save after the change.</param>
         public void RemoveContext(KubeConfigContext context, bool noSave = false)
         {
-            Covenant.Requires<ArgumentNullException>(context != null);
+            Covenant.Requires<ArgumentNullException>(context != null, nameof(context));
 
             for (int i = 0; i < Contexts.Count; i++)
             {

@@ -27,7 +27,7 @@ using Neon.Xunit;
 
 using Xunit;
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // Test response files and CommandLine.Format()
 

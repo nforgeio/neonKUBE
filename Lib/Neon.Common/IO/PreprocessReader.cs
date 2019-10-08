@@ -265,7 +265,7 @@ namespace Neon.IO
         /// <param name="reader">The source <see cref="TextReader"/>.</param>
         public PreprocessReader(TextReader reader)
         {
-            Covenant.Requires<ArgumentNullException>(reader != null);
+            Covenant.Requires<ArgumentNullException>(reader != null, nameof(reader));
 
             this.reader            = reader;
             this.stateStack        = new Stack<State>();
@@ -282,7 +282,7 @@ namespace Neon.IO
         public PreprocessReader(TextReader reader, Dictionary<string, string> variables)
             : this(reader)
         {
-            Covenant.Requires<ArgumentNullException>(reader != null);
+            Covenant.Requires<ArgumentNullException>(reader != null, nameof(reader));
 
             if (variables != null)
             {
@@ -355,7 +355,7 @@ namespace Neon.IO
 
             set
             {
-                Covenant.Requires<ArgumentNullException>(value != null);
+                Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
 
                 variableExpansionRegex = value;
             }
@@ -429,7 +429,7 @@ namespace Neon.IO
 
             set
             {
-                Covenant.Requires<ArgumentException>(value >= 0);
+                Covenant.Requires<ArgumentException>(value >= 0, nameof(value));
 
                 tabStop = value;
             }
@@ -444,7 +444,7 @@ namespace Neon.IO
 
             set
             {
-                Covenant.Requires<ArgumentException>(value >= 0);
+                Covenant.Requires<ArgumentException>(value >= 0, nameof(value));
 
                 indent = new string(' ', value);
             }
@@ -464,8 +464,8 @@ namespace Neon.IO
         /// <param name="value">The option value (defaults to the empty string).</param>
         public void Set(string name, string value = "")
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(name));
-            Covenant.Requires<ArgumentException>(VariableValidationRegex.IsMatch(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(name), nameof(name));
+            Covenant.Requires<ArgumentException>(VariableValidationRegex.IsMatch(name), nameof(name));
 
             value = value ?? string.Empty;
 
@@ -479,8 +479,8 @@ namespace Neon.IO
         /// <param name="value">The option value (defaults to the null).</param>
         public void Set(string name, object value = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(name));
-            Covenant.Requires<ArgumentException>(VariableValidationRegex.IsMatch(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(name), nameof(name));
+            Covenant.Requires<ArgumentException>(VariableValidationRegex.IsMatch(name), nameof(name));
 
             value = value ?? string.Empty;
 
@@ -499,8 +499,8 @@ namespace Neon.IO
         /// </remarks>
         public void Set(string name, bool value)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(name));
-            Covenant.Requires<ArgumentException>(VariableValidationRegex.IsMatch(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(name), nameof(name));
+            Covenant.Requires<ArgumentException>(VariableValidationRegex.IsMatch(name), nameof(name));
 
             variables[name] = NeonHelper.ToBoolString(value);
         }

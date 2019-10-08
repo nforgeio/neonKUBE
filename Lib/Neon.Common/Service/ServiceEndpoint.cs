@@ -127,7 +127,7 @@ namespace Neon.Service
         [DefaultValue(0)]
         public int Port { get; set; } = -1;
 
-        // $todo(jeff.lill): 
+        // $todo(jefflill): 
         //
         // We're not doing anything with Swagger documentation yet because
         // we'd have to figure out where the generatedf code comment XML

@@ -58,7 +58,7 @@ namespace TestCadence
         /// This should be disabled for normal CI/CD environments.
         /// </note>
         /// </summary>
-        public const bool KeepCadenceServerOpen = true;     // $debug(jeff.lill): Set this back to FALSE.
+        public const bool KeepCadenceServerOpen = true;     // $debug(jefflill): Set this back to FALSE.
 
         /// <summary>
         /// Specifies the log level to use for Cadence related unit tests.
@@ -68,14 +68,29 @@ namespace TestCadence
 
         /// <summary>
         /// <para>
-        /// Optionally runns Cadence in debug mode by assuming that <b>cadence-proxy</b> is already
-        /// running as a seperate process.
+        /// Optionally runs Cadence in prelaunched mode for unit testing.
         /// </para>
         /// <note>
-        /// This must always be reset to <c>false</c> after any manually debugging so
+        /// This must always be reset to <c>false</c> after any manual debugging so
         /// that unit tests will work properly.
         /// </note>
         /// </summary>
-        public const bool DebugPrelaunched = false; 
+        public const bool DebugPrelaunched = false;
+
+        /// <summary>
+        /// <para>
+        /// Optionally runs Cadence in without heartbeats for unit testing.
+        /// </para>
+        /// <note>
+        /// This must always be reset to <c>false</c> after any manual debugging so
+        /// that unit tests will work properly.
+        /// </note>
+        /// </summary>
+        public const bool DebugDisableHeartbeats = false;
+
+        /// <summary>
+        /// The Cadence task list to be used for test workers.
+        /// </summary>
+        public const string TaskList = "tests";
     }
 }

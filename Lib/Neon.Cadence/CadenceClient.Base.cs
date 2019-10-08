@@ -91,15 +91,19 @@ namespace Neon.Cadence
         /// Signals Cadence that the application is capable of executing workflows and/or activities for a specific
         /// domain and task list.
         /// </summary>
-        /// <param name="taskList">Optionally overrides the default <see cref="CadenceClient"/> task list.</param>
+        /// <param name="taskList">Specifies the task list implemented by the worker.  This must not be empty.</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
         /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="taskList"/> is <c>null</c> or empty.</exception>
         /// <exception cref="InvalidOperationException">
         /// Thrown when an attempt is made to recreate a worker with the
         /// same properties on a given client.  See the note in the remarks.
         /// </exception>
         /// <remarks>
+        /// <note>
+        /// <see cref="CadenceClient"/> for more information on task lists.
+        /// </note>
         /// <para>
         /// Your workflow application will need to call this method so that Cadence will know
         /// that it can schedule activities to run within the current process.  You'll need
@@ -124,11 +128,11 @@ namespace Neon.Cadence
         /// and throws an <see cref="InvalidOperationException"/> when a restart is attempted.
         /// </note>
         /// </remarks>
-        public async Task<Worker> StartWorkerAsync(string taskList = null, WorkerOptions options = null, string domain = null)
+        public async Task<Worker> StartWorkerAsync(string taskList, WorkerOptions options = null, string domain = null)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList), nameof(taskList), "Workers must be started with a non-empty workflow.");
             EnsureNotDisposed();
 
-            taskList = ResolveTaskList(taskList);
             options  = options ?? new WorkerOptions();
             domain   = ResolveDomain(domain);
 
@@ -149,7 +153,7 @@ namespace Neon.Cadence
                     // registrations will happen infrequently (typically just once
                     // per service, when it starts).
 
-                    // $note(jeff.lill):
+                    // $note(jefflill):
                     //
                     // If the worker exists but its RefCount==0, then we're going to
                     // throw an exception because Cadence doesn't support recreating
@@ -224,7 +228,7 @@ namespace Neon.Cadence
         /// </remarks>
         internal async Task StopWorkerAsync(Worker worker)
         {
-            Covenant.Requires<ArgumentNullException>(worker != null);
+            Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             EnsureNotDisposed();
 
             using (await workerRegistrationMutex.AcquireAsync())
@@ -241,7 +245,7 @@ namespace Neon.Cadence
                     return;
                 }
 
-                // $note(jeff.lill):
+                // $note(jefflill):
                 //
                 // If Cadence was able to restart a given worker, we'd uncomment
                 // this line.

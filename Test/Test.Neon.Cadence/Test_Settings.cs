@@ -1,0 +1,154 @@
+﻿//-----------------------------------------------------------------------------
+// FILE:        Test_Settings.cs
+// CONTRIBUTOR: Jeff Lill
+// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading.Tasks;
+
+using Neon.Cadence;
+using Neon.Cadence.Internal;
+using Neon.Common;
+using Neon.Data;
+using Neon.IO;
+using Neon.Xunit;
+using Neon.Xunit.Cadence;
+
+using Newtonsoft.Json;
+using Xunit;
+
+namespace TestCadence
+{
+    public class Test_Settings : IClassFixture<CadenceFixture>, IDisposable
+    {
+        private CadenceFixture  fixture;
+
+        public Test_Settings(CadenceFixture fixture)
+        {
+            var settings = new CadenceSettings()
+            {
+                DefaultDomain          = CadenceFixture.DefaultDomain,
+                LogLevel               = CadenceTestHelper.LogLevel,
+                CreateDomain           = true,
+                Debug                  = true,
+                DebugPrelaunched       = CadenceTestHelper.DebugPrelaunched,
+                DebugDisableHeartbeats = CadenceTestHelper.DebugDisableHeartbeats
+            };
+
+            this.fixture = fixture;
+
+            fixture.Start(settings, keepConnection: true, keepOpen: CadenceTestHelper.KeepCadenceServerOpen, noClient: true);
+        }
+
+        public void Dispose()
+        {
+        }
+
+        //---------------------------------------------------------------------
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IWorkflowIdReuse : IWorkflow
+        {
+            [WorkflowMethod(Name = "hello")]
+            Task<string> HelloAsync(string name);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowIdReuse : WorkflowBase, IWorkflowIdReuse
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ExternalIdNoReuse()
+        {
+            // Verify that default Cadence settings reject duplicate workflow IDs.
+
+            Assert.Equal(WorkflowIdReusePolicy.AllowDuplicateFailedOnly, fixture.Settings.WorkflowIdReusePolicy);
+
+            using (var client = await CadenceClient.ConnectAsync(fixture.Settings))
+            {
+                await client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly());
+                await client.StartWorkerAsync(CadenceTestHelper.TaskList);
+
+                var options = new WorkflowOptions()
+                {
+                    WorkflowId = $"Workflow_ExternalIdNoReuse-{Guid.NewGuid().ToString("d")}"
+                };
+
+                // Do the first run; this should succeed.
+
+                var stub = client.NewWorkflowStub<IWorkflowIdReuse>(options);
+
+                Assert.Equal("Hello Jack!", await stub.HelloAsync("Jack"));
+
+                // Do the second run with the same ID.  This shouldn't actually start
+                // another workflow and will return the result from the original
+                // workflow instead.
+
+                stub = client.NewWorkflowStub<IWorkflowIdReuse>(options);
+
+                Assert.Equal("Hello Jack!", await stub.HelloAsync("Jill"));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ExternalIdReuseViaSettings()
+        {
+            // Verify that we can reuse a workflow ID for an external
+            // workflow via client settings.
+
+            var settings = fixture.Settings.Clone();
+
+            settings.WorkflowIdReusePolicy = WorkflowIdReusePolicy.AllowDuplicate;
+
+            using (var client = await CadenceClient.ConnectAsync(settings))
+            {
+                await client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly());
+                await client.StartWorkerAsync(CadenceTestHelper.TaskList);
+
+                var options = new WorkflowOptions()
+                {
+                    WorkflowId = $"Workflow_ExternalIdReuseViaOptions-{Guid.NewGuid().ToString("d")}"
+                };
+
+                // Do the first run.
+
+                var stub = client.NewWorkflowStub<IWorkflowIdReuse>(options);
+
+                Assert.Equal("Hello Jack!", await stub.HelloAsync("Jack"));
+
+                // Do the second run.
+
+                stub = client.NewWorkflowStub<IWorkflowIdReuse>(options);
+
+                Assert.Equal("Hello Jill!", await stub.HelloAsync("Jill"));
+            }
+        }
+    }
+}

@@ -614,7 +614,7 @@ namespace TestCommon
             Assert.False(NetHelper.IsValidHost("/test.com"));
             Assert.False(NetHelper.IsValidHost("{test}.com"));
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // This test is failing but isn't a huge deal.  At some point
             // I should go back and fix the regex in NetHelper.

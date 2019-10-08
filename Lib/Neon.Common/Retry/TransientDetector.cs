@@ -42,7 +42,7 @@ namespace Neon.Retry
         /// <returns><c>true</c></returns>
         public static bool Always(Exception e)
         {
-            Covenant.Requires<ArgumentException>(e != null);
+            Covenant.Requires<ArgumentException>(e != null, nameof(e));
 
             return true;
         }
@@ -54,7 +54,7 @@ namespace Neon.Retry
         /// <returns><c>false</c></returns>
         public static bool Never(Exception e)
         {
-            Covenant.Requires<ArgumentException>(e != null);
+            Covenant.Requires<ArgumentException>(e != null, nameof(e));
 
             return false;
         }
@@ -72,7 +72,7 @@ namespace Neon.Retry
         /// </remarks>
         public static bool Network(Exception e)
         {
-            Covenant.Requires<ArgumentException>(e != null);
+            Covenant.Requires<ArgumentException>(e != null, nameof(e));
 
             if (e is TransientException)
             {
@@ -150,7 +150,7 @@ namespace Neon.Retry
         /// </remarks>
         public static bool Http(Exception e)
         {
-            Covenant.Requires<ArgumentException>(e != null);
+            Covenant.Requires<ArgumentException>(e != null, nameof(e));
 
             var aggregateException = e as AggregateException;
 
@@ -190,7 +190,7 @@ namespace Neon.Retry
 
             if (httpRequestException != null)
             {
-                // $hack(jeff.lill): 
+                // $hack(jefflill): 
                 //
                 // Extract the formatted status code from the message which
                 // will look like this:
@@ -238,7 +238,7 @@ namespace Neon.Retry
         /// </remarks>
         public static bool NetworkOrHttp(Exception e)
         {
-            Covenant.Requires<ArgumentException>(e != null);
+            Covenant.Requires<ArgumentException>(e != null, nameof(e));
 
             return Network(e) || Http(e);
         }
@@ -256,7 +256,7 @@ namespace Neon.Retry
         /// </returns>
         internal static bool MatchException(Exception e, Type exceptionType)
         {
-            Covenant.Requires<ArgumentException>(exceptionType != null);
+            Covenant.Requires<ArgumentException>(exceptionType != null, nameof(exceptionType));
 
             if (e == null)
             {

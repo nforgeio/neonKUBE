@@ -144,7 +144,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override bool Provision(bool force)
         {
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // I'm not implementing [force] here.  I'm not entirely sure
             // that this makes sense for production clusters.
@@ -276,7 +276,7 @@ namespace Neon.Kube
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
         private void VerifyReady(SshProxy<XenClient> xenSshProxy)
         {
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // It would be nice to verify that XenServer actually has enough 
             // resources (RAM, DISK, and perhaps CPU) here as well.
@@ -457,7 +457,7 @@ namespace Neon.Kube
 
                         xenSshProxy.Status = FormatVmStatus(vmName, $"resize: primary drive");
 
-                        // $hack(jeff.lill):
+                        // $hack(jefflill):
                         //
                         // I've seen a transient error here but can't reproduce it.  I'm going
                         // to assume for now that the file system might not be quite ready for

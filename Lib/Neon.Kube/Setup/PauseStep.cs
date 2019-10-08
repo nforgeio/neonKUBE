@@ -41,7 +41,7 @@ namespace Neon.Kube
         /// <param name="delay">The amount of time to pause.</param>
         public PauseStep(TimeSpan delay)
         {
-            Covenant.Requires<ArgumentException>(delay >= TimeSpan.Zero);
+            Covenant.Requires<ArgumentException>(delay >= TimeSpan.Zero, nameof(delay));
 
             this.delay = delay;
         }
@@ -49,7 +49,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Run(ClusterProxy cluster)
         {
-            Covenant.Requires<ArgumentNullException>(cluster != null);
+            Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
 
             foreach (var node in cluster.Nodes)
             {

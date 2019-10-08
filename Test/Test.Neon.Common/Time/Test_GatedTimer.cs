@@ -29,7 +29,7 @@ using Neon.Xunit;
 
 using Xunit;
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // This is very old code that could be simplified using the
 // C# => operator and closures.
@@ -120,7 +120,7 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Change()
         {
-            // $todo(jeff.lill): Need to implement this.
+            // $todo(jefflill): Need to implement this.
         }
     }
 }

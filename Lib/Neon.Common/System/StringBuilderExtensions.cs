@@ -40,7 +40,7 @@ namespace System.Text
         /// <param name="line">The line.</param>
         public static void AppendLineLinux(this StringBuilder sb, string line = null)
         {
-            Covenant.Requires<ArgumentNullException>(sb != null);
+            Covenant.Requires<ArgumentNullException>(sb != null, nameof(sb));
 
             if (line != null)
             {
@@ -64,7 +64,7 @@ namespace System.Text
         /// </remarks>
         public static void AppendWithSeparator(this StringBuilder sb, string text, string separator = " ")
         {
-            Covenant.Requires<ArgumentNullException>(separator != null);
+            Covenant.Requires<ArgumentNullException>(separator != null, nameof(separator));
 
             if (string.IsNullOrEmpty(text))
             {

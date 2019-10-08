@@ -18,7 +18,7 @@
 using System;
 using System.Threading;
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // This class uses [Environment.TickCount] to measure time from system boot.
 // There are two problems with this:
@@ -159,7 +159,7 @@ namespace Neon.Time
 
             // Get the timer resolution for the current machine.
 
-            resolution = TimeSpan.FromMilliseconds(15);     // $hack(jeff.lill): This is a guess
+            resolution = TimeSpan.FromMilliseconds(15);     // $hack(jefflill): This is a guess
         }
 
         /// <summary>

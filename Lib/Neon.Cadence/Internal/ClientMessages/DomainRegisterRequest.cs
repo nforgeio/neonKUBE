@@ -22,7 +22,7 @@ using System.ComponentModel;
 using Neon.Cadence;
 using Neon.Common;
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // There are several more parameters we could specify but these
 // don't seem critical at this point.

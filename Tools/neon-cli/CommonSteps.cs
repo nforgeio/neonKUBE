@@ -45,7 +45,7 @@ namespace NeonCli
         {
             node.Status = "check: OS";
 
-            // $todo(jeff.lill): We're currently hardcoded to Ubuntu 18.04.x
+            // $todo(jefflill): We're currently hardcoded to Ubuntu 18.04.x
 
             if (!node.OsName.Equals("Ubuntu", StringComparison.InvariantCultureIgnoreCase) || node.OsVersion < Version.Parse("18.04"))
             {
@@ -277,9 +277,9 @@ TCPKeepAlive yes
         /// <param name="shutdown">Optionally shuts down the node.</param>
         public static void PrepareNode(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo, bool shutdown = false)
         {
-            Covenant.Requires<ArgumentNullException>(node != null);
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
-            Covenant.Requires<ArgumentNullException>(kubeSetupInfo != null);
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<ArgumentNullException>(kubeSetupInfo != null, nameof(kubeSetupInfo));
 
             if (node.FileExists($"{KubeHostFolders.State}/setup/prepared"))
             {
@@ -333,7 +333,7 @@ TCPKeepAlive yes
             // We need to upload the cluster configuration and initialize drives attached 
             // to the node.  We're going to assume that these are not already initialized.
 
-            // $todo(jeff.lill): 
+            // $todo(jefflill): 
             //
             // We may need an option that allows an operator to pre-build a hardware
             // based drive array or something.  I'm going to defer this to later and

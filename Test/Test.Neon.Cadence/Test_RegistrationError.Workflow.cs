@@ -43,6 +43,7 @@ namespace TestCadence
     {
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowDuplicateBlankEntrypoint : IWorkflow
         {
             [WorkflowMethod]
@@ -79,6 +80,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowDuplicateEntrypoint : IWorkflow
         {
             [WorkflowMethod(Name ="same")]
@@ -114,6 +116,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowNoEntrypoint : IWorkflow
         {
         }
@@ -135,6 +138,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowDuplicateSignal : IWorkflow
         {
             [WorkflowMethod]
@@ -178,6 +182,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowDuplicateQuery : IWorkflow
         {
             [WorkflowMethod]
@@ -221,12 +226,14 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowMultiInterface1 : IWorkflow
         {
             [WorkflowMethod]
             Task Run1Async();
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowMultiInterface2 : IWorkflow
         {
             [WorkflowMethod]

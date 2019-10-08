@@ -43,8 +43,8 @@ namespace Neon.Kube
         /// <returns>The <see cref="SshCredentials"/>.</returns>
         public static SshCredentials FromUserPassword(string username, string password)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
-            Covenant.Requires<ArgumentNullException>(password != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username), nameof(username));
+            Covenant.Requires<ArgumentNullException>(password != null, nameof(password));
 
             return new SshCredentials()
             {
@@ -61,8 +61,8 @@ namespace Neon.Kube
         /// <returns>The <see cref="SshCredentials"/>.</returns>
         public static SshCredentials FromPrivateKey(string username, string privateKey)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
-            Covenant.Requires<ArgumentNullException>(privateKey != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username), nameof(username));
+            Covenant.Requires<ArgumentNullException>(privateKey != null, nameof(privateKey));
 
             using (var privateKeyStream = new MemoryStream(Encoding.UTF8.GetBytes(privateKey)))
             {

@@ -23,8 +23,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/go-chi/chi"
 	"go.uber.org/zap"
+
+	"github.com/go-chi/chi"
 )
 
 // Instance is a server instance that contains

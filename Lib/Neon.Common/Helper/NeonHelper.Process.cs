@@ -51,7 +51,7 @@ namespace Neon.Common
         /// </remarks>
         private static string GetProgramPath(string program)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(program));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(program), nameof(program));
 
             var programExtensions = new string[] { ".exe", ".cmd" };
 
@@ -315,7 +315,7 @@ namespace Neon.Common
                 // Relay STDOUT and STDERR output from the child process
                 // to this process's STDOUT and STDERR streams.
 
-                // $todo(jeff.lill):
+                // $todo(jefflill):
                 //
                 // This won't work properly for binary data streaming
                 // back from the process because we're not going to be
@@ -761,7 +761,7 @@ namespace Neon.Common
         /// <param name="uri">The target URI.</param>
         public static void OpenBrowser(string uri)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
 
             if (IsWindows)
             {
@@ -774,13 +774,13 @@ namespace Neon.Common
             }
             else if (IsOSX)
             {
-                // $todo(jeff.lill): Test this.
+                // $todo(jefflill): Test this.
 
                 Process.Start("open", uri);
             }
             else if (IsLinux)
             {
-                // $todo(jeff.lill): test this.
+                // $todo(jefflill): test this.
 
                 Process.Start("xdg-open", uri);
             }
@@ -798,7 +798,7 @@ namespace Neon.Common
         /// <returns>The process exit code.</returns>
         public static int ExecuteShell(string command)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command), nameof(command));
 
             Process process;
 
@@ -808,13 +808,13 @@ namespace Neon.Common
             }
             else if (IsOSX)
             {
-                // $todo(jeff.lill): Test this.
+                // $todo(jefflill): Test this.
 
                 process = Process.Start("bash", $"-c '{command}'");
             }
             else if (IsLinux)
             {
-                // $todo(jeff.lill): test this.
+                // $todo(jefflill): test this.
 
                 process = Process.Start("bash", $"-c '{command}'");
             }

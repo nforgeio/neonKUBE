@@ -49,12 +49,12 @@ namespace TestCadence
         {
             var settings = new CadenceSettings()
             {
-                DefaultDomain    = CadenceFixture.DefaultDomain,
-                DefaultTaskList  = CadenceFixture.DefaultTaskList,
-                LogLevel         = CadenceTestHelper.LogLevel,
-                CreateDomain     = true,
-                Debug            = true,
-                DebugPrelaunched = CadenceTestHelper.DebugPrelaunched
+                DefaultDomain          = CadenceFixture.DefaultDomain,
+                LogLevel               = CadenceTestHelper.LogLevel,
+                CreateDomain           = true,
+                Debug                  = true,
+                DebugPrelaunched       = CadenceTestHelper.DebugPrelaunched,
+                DebugDisableHeartbeats = CadenceTestHelper.DebugDisableHeartbeats
             };
 
             if (fixture.Start(settings, keepConnection: true, keepOpen: CadenceTestHelper.KeepCadenceServerOpen) == TestFixtureStatus.Started)

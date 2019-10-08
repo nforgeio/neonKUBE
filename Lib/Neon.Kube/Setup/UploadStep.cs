@@ -65,8 +65,8 @@ namespace Neon.Kube
         /// <param name="permissions">Optionally specifies target file permissions (compatible with the <c>chmod</c> command).</param>
         private UploadStep(string nodeName, string path, string text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
 
             this.nodeName       = nodeName;
             this.path           = path;
@@ -79,7 +79,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Run(ClusterProxy cluster)
         {
-            Covenant.Requires<ArgumentNullException>(cluster != null);
+            Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
 
             var node   = cluster.GetNode(nodeName);
             var status = this.ToString();

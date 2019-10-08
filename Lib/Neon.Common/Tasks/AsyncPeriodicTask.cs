@@ -80,8 +80,8 @@ namespace Neon.Tasks
         /// <param name="cancellationTokenSource">Optionally specifies the <see cref="CancellationTokenSource"/> that can be used to stop the task.</param>
         public AsyncPeriodicTask(TimeSpan interval, Func<Task<bool>> onTaskAsync, Func<Exception, Task<bool>> onExceptionAsync = null, Func<Task> onTerminateAsync = null, CancellationTokenSource cancellationTokenSource = default)
         {
-            Covenant.Requires<ArgumentException>(interval >= TimeSpan.Zero);
-            Covenant.Requires<ArgumentNullException>(onTaskAsync != null);
+            Covenant.Requires<ArgumentException>(interval >= TimeSpan.Zero, nameof(interval));
+            Covenant.Requires<ArgumentNullException>(onTaskAsync != null, nameof(onTaskAsync));
 
             this.Interval                = interval;
             this.onTaskAsync             = onTaskAsync;

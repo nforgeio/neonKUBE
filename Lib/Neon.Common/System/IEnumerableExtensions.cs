@@ -46,8 +46,8 @@ namespace System.Collections.Generic
         /// </exception>
         public static IEnumerable<T> SelectRandom<T>(this IEnumerable<T> items, int count = 1)
         {
-            Covenant.Requires<ArgumentNullException>(items != null);
-            Covenant.Requires<ArgumentException>(count > 0);
+            Covenant.Requires<ArgumentNullException>(items != null, nameof(items));
+            Covenant.Requires<ArgumentException>(count > 0, nameof(count));
 
             var sourceValues = items.ToList();
 

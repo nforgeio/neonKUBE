@@ -98,25 +98,6 @@ namespace Neon.Cadence
         public bool CreateDomain { get; set; } = false;
 
         /// <summary>
-        /// Specifies the default Cadence task list for this client.  This defaults to <b>null</b>.
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Specifying a default task list can be convienent for many scenarios, especially for those where
-        /// the application workflows and activities are restricted to a single task list (which is pretty common).
-        /// </para>
-        /// <para>
-        /// The default task list can be overridden for individual method calls by passing a value as the optional <b>taskList</b>
-        /// paramater.  You can also leave this setting as <c>null</c> which will require that values be passed to
-        /// the <b>tasklist</b> parameters.
-        /// </para>
-        /// </remarks>
-        [JsonProperty(PropertyName = "DefaultTaskList", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "defaultTaskList", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string DefaultTaskList { get; set; }
-
-        /// <summary>
         /// Optionally specifies the maximum time the client should wait for synchronous 
         /// operations to complete.  This defaults to <b>60 seconds</b>.
         /// </summary>
@@ -170,20 +151,33 @@ namespace Neon.Cadence
         internal TimeSpan ProxyTimeout => TimeSpan.FromSeconds(ProxyTimeoutSeconds);
 
         /// <summary>
-        /// Optionally specifies the maximum time to allow the <b>cadence-proxy</b>
-        /// to gracefully close its Cadence cluster connection and terminate.  The proxy
-        /// will be forceably killed when this time is exceeded.  This defaults to
-        /// <b>10 seconds</b>.
+        /// Optionally specifies the interval at which heartbeats are transmitted to
+        /// <b>cadence-proxy</b> as a health check.  This defaults to <b>5 seconds</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "TerminateTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "terminateTimeout", ApplyNamingConventions = false)]
-        [DefaultValue(0.0)]
-        public double TerminateTimeoutSeconds { get; set; } = 10.0;
+        [JsonProperty(PropertyName = "HeartbeatIntervalSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "heartbeatIntervalSeconds", ApplyNamingConventions = false)]
+        [DefaultValue(5.0)]
+        public double HeartbeatIntervalSeconds { get; set; } = 5.0;
 
         /// <summary>
-        /// Returns <see cref="TerminateTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// Returns <see cref="HeartbeatIntervalSeconds"/> as a <see cref="TimeSpan"/>.
         /// </summary>
-        internal TimeSpan TerminateTimeout => TimeSpan.FromSeconds(Math.Max(TerminateTimeoutSeconds, 0));
+        internal TimeSpan HeartbeatInterval => TimeSpan.FromSeconds(HeartbeatIntervalSeconds);
+
+        /// <summary>
+        /// Optionally specifies the maximum time to allow the <b>cadence-proxy</b>
+        /// to respond to a heartbeat message.  The proxy will be considered to be 
+        /// unhealthy when this happens.  This defaults to <b>5 seconds</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "HeartbeatTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "heartbeatTimeoutSeconds", ApplyNamingConventions = false)]
+        [DefaultValue(5.0)]
+        public double HeartbeatTimeoutSeconds { get; set; } = 5.0;
+
+        /// <summary>
+        /// Returns <see cref="HeartbeatTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// </summary>
+        internal TimeSpan HeartbeatTimeout => TimeSpan.FromSeconds(HeartbeatTimeoutSeconds);
 
         /// <summary>
         /// Specifies the number of times to retry connecting to the Cadence cluster.  This defaults
@@ -249,6 +243,18 @@ namespace Neon.Cadence
         /// Returns <see cref="WorkflowTaskStartToCloseTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
         /// </summary>
         internal TimeSpan WorkflowTaskStartToCloseTimeout => TimeSpan.FromSeconds(Math.Min(Math.Max(WorkflowTaskStartToCloseTimeoutSeconds, 1), 60));
+
+        /// <summary>
+        /// Specifies what happens when Cadence workflows attempt to reuse workflow IDs.
+        /// This defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicateFailedOnly"/>.
+        /// Workflows can customize this via <see cref="WorkflowOptions"/> or <see cref="ChildWorkflowOptions"/>
+        /// or by setting this in the <see cref="WorkflowMethodAttribute"/> tagging the 
+        /// workflow entry point method
+        /// </summary>
+        [JsonProperty(PropertyName = "WorkflowIdReusePolicy", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "workflowIdReusePolicy", ApplyNamingConventions = false)]
+        [DefaultValue(WorkflowIdReusePolicy.AllowDuplicateFailedOnly)]
+        public WorkflowIdReusePolicy WorkflowIdReusePolicy { get; set; } = WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
 
         /// <summary>
         /// Specifies the default maximum time an activity is allowed to wait after being
@@ -383,6 +389,13 @@ namespace Neon.Cadence
         public bool DebugPrelaunched { get; set; } = false;
 
         /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Optionally disable health heartbeats.  This can be
+        /// useful while debugging the client but should never be set for production.
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        public bool DebugDisableHeartbeats { get; set; } = false;
+
+        /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally indicates that the <b>cadence-client</b>
         /// will not perform the <see cref="InitializeRequest"/>/<see cref="InitializeReply"/>
         /// and <see cref="TerminateRequest"/>/<see cref="TerminateReply"/> handshakes 
@@ -391,7 +404,7 @@ namespace Neon.Cadence
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        internal bool DebugDisableHandshakes { get; set; } = false;
+        public bool DebugDisableHandshakes { get; set; } = false;
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally ignore operation timeouts.  This can be
@@ -400,7 +413,7 @@ namespace Neon.Cadence
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        internal bool DebugIgnoreTimeouts { get; set; } = false;
+        public bool DebugIgnoreTimeouts { get; set; } = false;
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally disables heartbeat handling by the
@@ -408,7 +421,7 @@ namespace Neon.Cadence
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        internal bool DebugIgnoreHeartbeats { get; set; } = false;
+        public bool DebugIgnoreHeartbeats { get; set; } = false;
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally specifies the timeout to use for 
@@ -417,6 +430,49 @@ namespace Neon.Cadence
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        internal TimeSpan DebugHttpTimeout { get; set; } = TimeSpan.FromSeconds(30);
+        public TimeSpan DebugHttpTimeout { get; set; } = TimeSpan.FromSeconds(30);
+
+        /// <summary>
+        /// Returns a copy of the current instance.
+        /// </summary>
+        /// <returns>Thye cloned <see cref="CadenceSettings"/>.</returns>
+        public CadenceSettings Clone()
+        {
+            return new CadenceSettings()
+            {
+                ActivityHeartbeatTimeoutSeconds        = this.ActivityHeartbeatTimeoutSeconds,
+                ActivityScheduleToCloseTimeoutSeconds  = this.ActivityScheduleToCloseTimeoutSeconds,
+                ActivityScheduleToStartTimeoutSeconds  = this.ActivityScheduleToStartTimeoutSeconds,
+                ActivityStartToCloseTimeoutSeconds     = this.ActivityStartToCloseTimeoutSeconds,
+                BinaryFolder                           = this.BinaryFolder,
+                ClientIdentity                         = this.ClientIdentity,
+                ClientTimeoutSeconds                   = this.ClientTimeoutSeconds,
+                ConnectRetries                         = this.ConnectRetries,
+                ConnectRetryDelaySeconds               = this.ConnectRetryDelaySeconds,
+                CreateDomain                           = this.CreateDomain,
+                Debug                                  = this.Debug,
+                DebugDisableHandshakes                 = this.DebugDisableHandshakes,
+                DebugDisableHeartbeats                 = this.DebugDisableHeartbeats,
+                DebugHttpTimeout                       = this.DebugHttpTimeout,
+                DebugIgnoreHeartbeats                  = this.DebugIgnoreHeartbeats,
+                DebugIgnoreTimeouts                    = this.DebugIgnoreTimeouts,
+                DebugPrelaunched                       = this.DebugPrelaunched,
+                DefaultDomain                          = this.DefaultDomain,
+                HeartbeatIntervalSeconds               = this.HeartbeatIntervalSeconds,
+                HeartbeatTimeoutSeconds                = this.HeartbeatTimeoutSeconds,
+                ListenPort                             = this.ListenPort,
+                LogCadence                             = this.LogCadence,
+                LogCadenceProxy                        = this.LogCadenceProxy,
+                LogDuringReplay                        = this.LogDuringReplay,
+                LogLevel                               = this.LogLevel,
+                ProxyTimeoutSeconds                    = this.ProxyTimeoutSeconds,
+                SecurityToken                          = this.SecurityToken,
+                Servers                                = this.Servers,
+                WorkflowIdReusePolicy                  = this.WorkflowIdReusePolicy,
+                WorkflowScheduleToCloseTimeoutSeconds  = this.WorkflowScheduleToCloseTimeoutSeconds,
+                WorkflowScheduleToStartTimeoutSeconds  = this.WorkflowScheduleToStartTimeoutSeconds,
+                WorkflowTaskStartToCloseTimeoutSeconds = this.WorkflowTaskStartToCloseTimeoutSeconds
+            };
+        }
     }
 }

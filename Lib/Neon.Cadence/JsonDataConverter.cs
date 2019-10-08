@@ -46,8 +46,8 @@ namespace Neon.Cadence
         /// <inheritdoc/>
         public T FromData<T>(byte[] content)
         {
-            Covenant.Requires<ArgumentNullException>(content != null);
-            Covenant.Requires<ArgumentNullException>(content.Length > 0);
+            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
+            Covenant.Requires<ArgumentNullException>(content.Length > 0, nameof(content));
 
             var type = typeof(T);
 
@@ -64,9 +64,9 @@ namespace Neon.Cadence
         /// <inheritdoc/>
         public object FromData(Type type, byte[] content)
         {
-            Covenant.Requires<ArgumentNullException>(type != null);
-            Covenant.Requires<ArgumentNullException>(content != null);
-            Covenant.Requires<ArgumentNullException>(content.Length > 0);
+            Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
+            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
+            Covenant.Requires<ArgumentNullException>(content.Length > 0, nameof(content));
 
             if (type.Implements<IRoundtripData>())
             {
@@ -81,22 +81,22 @@ namespace Neon.Cadence
         /// <inheritdoc/>
         public object[] FromDataArray(byte[] content, params Type[] valueTypes)
         {
-            Covenant.Requires<ArgumentNullException>(content != null);
-            Covenant.Requires<ArgumentNullException>(content.Length > 0);
-            Covenant.Requires<ArgumentNullException>(valueTypes != null);
+            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
+            Covenant.Requires<ArgumentNullException>(content.Length > 0, nameof(content));
+            Covenant.Requires<ArgumentNullException>(valueTypes != null, nameof(valueTypes));
 
             var jToken = JToken.Parse(Encoding.UTF8.GetString(content));
 
             if (jToken.Type != JTokenType.Array)
             {
-                throw new ArgumentException($"Content encodes a [{jToken.Type}] instead of the expected [{JTokenType.Array}].");
+                throw new ArgumentException($"Content encodes a [{jToken.Type}] instead of the expected [{JTokenType.Array}].", nameof(jToken));
             }
 
             var jArray = (JArray)jToken;
 
             if (jArray.Count != valueTypes.Length)
             {
-                throw new ArgumentException($"Content array length [{jArray.Count}] does not match the expected number of values [{valueTypes.Length}].");
+                throw new ArgumentException($"Content array length [{jArray.Count}] does not match the expected number of values [{valueTypes.Length}].", nameof(jArray));
             }
 
             var output = new object[valueTypes.Length];
@@ -122,7 +122,7 @@ namespace Neon.Cadence
 
                         default:
 
-                            throw new ArgumentException($"Unexpected [{item.Type}] in JSON array.  Only [{nameof(JTokenType.Object)}] or [{nameof(JTokenType.Null)}] are allowed.");
+                            throw new ArgumentException($"Unexpected [{item.Type}] in JSON array.  Only [{nameof(JTokenType.Object)}] or [{nameof(JTokenType.Null)}] are allowed.", nameof(item));
                     }
                 }
                 else

@@ -28,7 +28,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Collections;
 
-// $todo(jeff.lill): Support IPv6.
+// $todo(jefflill): Support IPv6.
 
 namespace Neon.Net
 {
@@ -122,7 +122,7 @@ namespace Neon.Net
         /// <exception cref="ArgumentException">Thrown if the input is not correctly formatted.</exception>
         public static NetworkCidr Parse(string input)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input), nameof(input));
 
             var slashPos = input.IndexOf('/');
 
@@ -199,7 +199,7 @@ namespace Neon.Net
         {
             if (!TryParse(input, out var cidr))
             {
-                throw new ArgumentException(nameof(input));
+                throw new ArgumentException("Invalid CIDR.", nameof(input));
             }
 
             return cidr.ToString();
@@ -222,9 +222,9 @@ namespace Neon.Net
         /// <param name="prefixLength">The network prefix mask length in bits.</param>
         public NetworkCidr(IPAddress address, int prefixLength)
         {
-            Covenant.Requires<ArgumentNullException>(address != null);
-            Covenant.Requires<ArgumentException>(address.AddressFamily == AddressFamily.InterNetwork);
-            Covenant.Requires<ArgumentException>(0 <= prefixLength && prefixLength <= 32);
+            Covenant.Requires<ArgumentNullException>(address != null, nameof(address));
+            Covenant.Requires<ArgumentException>(address.AddressFamily == AddressFamily.InterNetwork, nameof(address));
+            Covenant.Requires<ArgumentException>(0 <= prefixLength && prefixLength <= 32, nameof(prefixLength));
 
             Initialize(address, prefixLength);
         }
@@ -375,7 +375,7 @@ namespace Neon.Net
         /// <returns><c>true</c> if <paramref name="subnet"/> is fully contained.</returns>
         public bool Contains(NetworkCidr subnet)
         {
-            Covenant.Requires<ArgumentNullException>(subnet != null);
+            Covenant.Requires<ArgumentNullException>(subnet != null, nameof(subnet));
 
             return Contains(subnet.FirstAddress) && Contains(subnet.LastAddress);
         }
@@ -388,7 +388,7 @@ namespace Neon.Net
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="subnet"/> is <c>null</c>.</exception>
         public bool Overlaps(NetworkCidr subnet)
         {
-            Covenant.Requires<ArgumentNullException>(subnet != null);
+            Covenant.Requires<ArgumentNullException>(subnet != null, nameof(subnet));
 
             var first       = NetHelper.AddressToUint(this.FirstAddress);
             var last        = NetHelper.AddressToUint(this.LastAddress);

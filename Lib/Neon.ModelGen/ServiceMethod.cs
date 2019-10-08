@@ -34,7 +34,7 @@ namespace Neon.ModelGen
         /// <param name="serviceModel">The parent <see cref="ServiceModel"/>.</param>
         public ServiceMethod(ServiceModel serviceModel)
         {
-            Covenant.Requires<ArgumentNullException>(serviceModel != null);
+            Covenant.Requires<ArgumentNullException>(serviceModel != null, nameof(serviceModel));
 
             this.ServiceModel = serviceModel;
             this.Parameters   = new List<MethodParameter>();

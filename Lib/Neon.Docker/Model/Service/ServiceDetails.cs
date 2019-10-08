@@ -147,7 +147,7 @@ namespace Neon.Docker
         /// <returns>The value of the variable or <c>null</c> if the variable doesn't exist.</returns>
         public string GetEnv(string variable)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(variable));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(variable), nameof(variable));
 
             var pattern = $"{variable}=";
 

@@ -21,7 +21,7 @@
 # NOTE: Variables formatted like $<name> will be expanded by [neon-cli]
 #       using a [PreprocessReader].
 
-# $todo(jeff.lill):
+# $todo(jefflill):
 #
 # I need to research whether I need to do additional Linux tuning of the RAID
 # chunk size and other SSD related file system parameters.  The article below

@@ -112,7 +112,7 @@ namespace Neon.Common
                     return settings;
                 });
 
-        // $todo(jeff.lill):
+        // $todo(jefflill):
         //
         // It would be nice to have a way to detect when the [JsonConverters] is modified
         // after it's too late.  Perhaps using an [ObservableCollection].
@@ -198,7 +198,7 @@ namespace Neon.Common
         /// </remarks>
         public static T JsonDeserialize<T>(string json, bool strict = false)
         {
-            Covenant.Requires<ArgumentNullException>(json != null);
+            Covenant.Requires<ArgumentNullException>(json != null, nameof(json));
 
             return JsonConvert.DeserializeObject<T>(json, strict ? JsonStrictSerializerSettings.Value : JsonRelaxedSerializerSettings.Value);
         }
@@ -217,7 +217,7 @@ namespace Neon.Common
         /// </remarks>
         public static T JsonDeserialize<T>(byte[] jsonBytes, bool strict = false)
         {
-            Covenant.Requires<ArgumentNullException>(jsonBytes != null);
+            Covenant.Requires<ArgumentNullException>(jsonBytes != null, nameof(jsonBytes));
 
             return JsonConvert.DeserializeObject<T>(Encoding.UTF8.GetString(jsonBytes), strict ? JsonStrictSerializerSettings.Value : JsonRelaxedSerializerSettings.Value);
         }
@@ -236,8 +236,8 @@ namespace Neon.Common
         /// </remarks>
         public static object JsonDeserialize(Type type, string json, bool strict = false)
         {
-            Covenant.Requires<ArgumentNullException>(type != null);
-            Covenant.Requires<ArgumentNullException>(json != null);
+            Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
+            Covenant.Requires<ArgumentNullException>(json != null, nameof(json));
 
             return JsonConvert.DeserializeObject(json, type, strict ? JsonStrictSerializerSettings.Value : JsonRelaxedSerializerSettings.Value);
         }
@@ -256,8 +256,8 @@ namespace Neon.Common
         /// </remarks>
         public static object JsonDeserialize(Type type, byte[] jsonBytes, bool strict = false)
         {
-            Covenant.Requires<ArgumentNullException>(type != null);
-            Covenant.Requires<ArgumentNullException>(jsonBytes != null);
+            Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
+            Covenant.Requires<ArgumentNullException>(jsonBytes != null, nameof(jsonBytes));
 
             return JsonConvert.DeserializeObject(Encoding.UTF8.GetString(jsonBytes), type, strict ? JsonStrictSerializerSettings.Value : JsonRelaxedSerializerSettings.Value);
         }

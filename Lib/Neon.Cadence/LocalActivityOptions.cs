@@ -43,7 +43,7 @@ namespace Neon.Cadence
         /// <returns>The normalized options.</returns>
         internal static LocalActivityOptions Normalize(CadenceClient client, LocalActivityOptions options)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
             if (options == null)
             {

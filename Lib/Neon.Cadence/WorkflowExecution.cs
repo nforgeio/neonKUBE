@@ -37,14 +37,19 @@ namespace Neon.Cadence
     public class WorkflowExecution
     {
         /// <summary>
+        /// Defaulty constructor.
+        /// </summary>
+        public WorkflowExecution()
+        {
+        }
+
+        /// <summary>
         /// Internal constructor.
         /// </summary>
         /// <param name="workflowId">The original ID for the workflow.</param>
         /// <param name="runId">Optionally specifies the current run ID for the workflow.</param>
-        public WorkflowExecution(string workflowId, string runId = null)
+        internal WorkflowExecution(string workflowId, string runId = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
-
             this.WorkflowId = workflowId;
             this.RunId      = runId;
         }

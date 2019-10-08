@@ -51,8 +51,8 @@ namespace Neon.Xunit
         /// <param name="handler">The custom asynchronous request handler.</param>
         public MockHttpServer(string urlPrefix, Func<RequestContext, Task> handler)
         {
-            Covenant.Requires<ArgumentNullException>(urlPrefix != null);
-            Covenant.Requires<ArgumentNullException>(handler != null);
+            Covenant.Requires<ArgumentNullException>(urlPrefix != null, nameof(urlPrefix));
+            Covenant.Requires<ArgumentNullException>(handler != null, nameof(handler));
 
             if (!NeonHelper.IsWindows)
             {
@@ -131,7 +131,7 @@ namespace Neon.Xunit
         /// <returns>The argument value or <c>null</c>.</returns>
         public static string QueryGet(this Request request, string name)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             if (string.IsNullOrEmpty(request.QueryString))
             {

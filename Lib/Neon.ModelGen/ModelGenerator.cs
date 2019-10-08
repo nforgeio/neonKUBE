@@ -37,7 +37,7 @@ using Newtonsoft.Json;
 using Neon.Common;
 using Neon.Data;
 
-// $todo(jeff.lill):
+// $todo(jefflill):
 //
 // At somepoint in the future it would be nice to read any
 // XML code documentation and include this in the generated
@@ -98,7 +98,7 @@ namespace Neon.ModelGen
             Action<MetadataReferences>      referenceHandler = null,
             CSharpCompilationOptions        options          = null)
         {
-            Covenant.Requires<ArgumentNullException>(source != null);
+            Covenant.Requires<ArgumentNullException>(source != null, nameof(source));
 
             var syntaxTree = CSharpSyntaxTree.ParseText(source);
             var references = new MetadataReferences();
@@ -204,7 +204,7 @@ namespace Neon.ModelGen
             // this to be able pass "complex" types like [TimeSpan] to web services via route or the
             // query string.
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // This limits us to support only JSON converters hosted by [Neon.Common].  At some point,
             // it might be nice if we could handle user provided converters as well.
@@ -234,8 +234,8 @@ namespace Neon.ModelGen
         /// <returns>A <see cref="ModelGeneratorOutput"/> instance holding the results.</returns>
         public ModelGeneratorOutput Generate(params Assembly[] assemblies)
         {
-            Covenant.Requires<ArgumentNullException>(assemblies != null);
-            Covenant.Requires<ArgumentException>(assemblies.Length > 0, "At least one assembly must be passed.");
+            Covenant.Requires<ArgumentNullException>(assemblies != null, nameof(assemblies));
+            Covenant.Requires<ArgumentException>(assemblies.Length > 0, nameof(assemblies), "At least one assembly must be passed.");
 
             writer = new StringWriter();
 
@@ -1060,7 +1060,7 @@ namespace Neon.ModelGen
         /// <returns><c>true</c> if the type is safe.</returns>
         private bool IsSafeType(Type type)
         {
-            Covenant.Requires<ArgumentNullException>(type != null);
+            Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
 
             if (type == typeof(string))
             {
@@ -2360,8 +2360,8 @@ namespace Neon.ModelGen
         /// <param name="serviceModels">One or more service models to be included in the generated output.</param>
         private void GenerateServiceClient(string clientTypeName, IEnumerable<ServiceModel> serviceModels)
         {
-            Covenant.Requires<ArgumentNullException>(serviceModels != null);
-            Covenant.Requires<ArgumentException>(serviceModels.Any());
+            Covenant.Requires<ArgumentNullException>(serviceModels != null, nameof(serviceModels));
+            Covenant.Requires<ArgumentException>(serviceModels.Any(), nameof(serviceModels));
 
             // Ensure that all of the service models have the same client name.
 
@@ -2405,7 +2405,7 @@ namespace Neon.ModelGen
             var nonRootClientGroups    = clientGroups.Where(cg => !string.IsNullOrEmpty(cg.Key));
             var hasNonRootClientGroups = nonRootClientGroups.Any();
 
-            // $todo(jeff.lill):
+            // $todo(jefflill):
             //
             // Generate the class and method comments below by parsing any code documentation.
 
@@ -2518,7 +2518,7 @@ namespace Neon.ModelGen
 
             writer.WriteLine($"        public {clientTypeName}(HttpClient httpClient)");
             writer.WriteLine($"        {{");
-            writer.WriteLine($"            Covenant.Requires<ArgumentNullException>(httpClient != null);");
+            writer.WriteLine($"            Covenant.Requires<ArgumentNullException>(httpClient != null, nameof(httpClient));");
             writer.WriteLine();
             writer.WriteLine($"            this.client = new JsonClient(httpClient);");
 

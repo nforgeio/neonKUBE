@@ -112,8 +112,8 @@ namespace Neon.Xen
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
             public XenTemplate Install(string uri, string name = null, string repositoryNameOrUuid = "Local storage")
             {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(repositoryNameOrUuid));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(repositoryNameOrUuid), nameof(repositoryNameOrUuid));
 
                 if (!Uri.TryCreate(uri, UriKind.Absolute, out var uriParsed))
                 {
@@ -148,8 +148,8 @@ namespace Neon.Xen
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
             public XenTemplate Rename(XenTemplate template, string newName)
             {
-                Covenant.Requires<ArgumentNullException>(template != null);
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(newName));
+                Covenant.Requires<ArgumentNullException>(template != null, nameof(template));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(newName), nameof(newName));
 
                 client.SafeInvoke("template-param-set", $"uuid={template.Uuid}", $"name-label={newName}");
 
@@ -163,7 +163,7 @@ namespace Neon.Xen
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
             public void Destroy(XenTemplate template)
             {
-                Covenant.Requires<ArgumentNullException>(template != null);
+                Covenant.Requires<ArgumentNullException>(template != null, nameof(template));
 
                 client.SafeInvoke("vm-destroy", $"uuid={template.Uuid}");
             }

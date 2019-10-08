@@ -92,7 +92,7 @@ namespace Neon.Kube
 
             : this(kubeContext.Extension.ClusterDefinition, nodeProxyCreator, appendToLog: appendToLog, defaultRunOptions: defaultRunOptions)
         {
-            Covenant.Requires<ArgumentNullException>(kubeContext != null);
+            Covenant.Requires<ArgumentNullException>(kubeContext != null, nameof(kubeContext));
 
             this.KubeContext = kubeContext;
         }
@@ -125,7 +125,7 @@ namespace Neon.Kube
             bool                appendToLog       = false,
             RunOptions          defaultRunOptions = RunOptions.None)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             if (nodeProxyCreator == null)
             {
@@ -351,7 +351,7 @@ namespace Neon.Kube
         /// <param name="steps">The configuration steps.</param>
         public void Configure(ConfigStepList steps)
         {
-            Covenant.Requires<ArgumentNullException>(steps != null);
+            Covenant.Requires<ArgumentNullException>(steps != null, nameof(steps));
 
             foreach (var step in steps)
             {
@@ -371,7 +371,7 @@ namespace Neon.Kube
         /// <returns>The steps.</returns>
         public IEnumerable<ConfigStep> GetFileUploadSteps(IEnumerable<SshProxy<NodeDefinition>> nodes, string path, string text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null)
         {
-            Covenant.Requires<ArgumentNullException>(nodes != null);
+            Covenant.Requires<ArgumentNullException>(nodes != null, nameof(nodes));
 
             var steps = new ConfigStepList();
 
@@ -395,7 +395,7 @@ namespace Neon.Kube
         /// <returns>The steps.</returns>
         public IEnumerable<ConfigStep> GetFileUploadSteps(SshProxy<NodeDefinition> node, string path, string text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null)
         {
-            Covenant.Requires<ArgumentNullException>(node != null);
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
             return GetFileUploadSteps(new List<SshProxy<NodeDefinition>>() { node }, path, text, tabStop, outputEncoding, permissions);
         }

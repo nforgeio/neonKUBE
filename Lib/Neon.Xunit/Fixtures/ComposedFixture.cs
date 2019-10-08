@@ -91,8 +91,8 @@ namespace Neon.Xunit
         public void AddFixture<TFixture>(string name, TFixture subFixture, Action<TFixture> action = null)
             where TFixture : ITestFixture
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-            Covenant.Requires<ArgumentNullException>(subFixture != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(subFixture != null, nameof(subFixture));
             Covenant.Requires<InvalidOperationException>(!subFixture.IsRunning, "A subfixture cannot be added after it has already been initialized.");
 
             var fixtureType = typeof(TFixture);
@@ -120,8 +120,8 @@ namespace Neon.Xunit
         public void AddServiceFixture<TService>(string name, KubeServiceFixture<TService> subFixture, Func<TService> serviceCreator)
             where TService : KubeService
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-            Covenant.Requires<ArgumentNullException>(subFixture != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+            Covenant.Requires<ArgumentNullException>(subFixture != null, nameof(subFixture));
             Covenant.Requires<InvalidOperationException>(!subFixture.IsRunning, "A subfixture cannot be added after it has already been initialized.");
 
             CheckDisposed();

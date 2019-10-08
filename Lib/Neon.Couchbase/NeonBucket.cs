@@ -103,8 +103,8 @@ namespace Couchbase
         /// </remarks>
         public NeonBucket(IBucket bucket, CouchbaseSettings settings, bool? ignoreDurability = null)
         {
-            Covenant.Requires<ArgumentNullException>(bucket != null);
-            Covenant.Requires<ArgumentNullException>(settings != null);
+            Covenant.Requires<ArgumentNullException>(bucket != null, nameof(bucket));
+            Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
 
             this.bucket   = bucket;
             this.settings = settings;
@@ -156,7 +156,7 @@ namespace Couchbase
         /// <param name="bucket">The bucket to be set or <c>null</c>.</param>
         public void SetInternalBucket(IBucket bucket)
         {
-            Covenant.Requires<ArgumentNullException>(bucket != null);
+            Covenant.Requires<ArgumentNullException>(bucket != null, nameof(bucket));
 
             this.bucket = bucket;
         }

@@ -44,6 +44,7 @@ namespace TestCadence
     {
         //---------------------------------------------------------------------
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface ITestWorkflowStub_Execute : IWorkflow
         {
             [WorkflowMethod]
@@ -143,7 +144,7 @@ namespace TestCadence
 
             // Use an untyped workflow stub to execute a workflow.
 
-            var stub      = client.NewUntypedWorkflowStub(nameof(TestWorkflowStub_Execute));
+            var stub = client.NewUntypedWorkflowStub(nameof(TestWorkflowStub_Execute), new WorkflowOptions() { TaskList = CadenceTestHelper.TaskList });
             var execution = await stub.StartAsync("Jeff");
 
             Assert.NotNull(execution);
@@ -162,7 +163,7 @@ namespace TestCadence
 
             // Use an untyped workflow stub to execute a workflow.
 
-            var stub      = client.NewUntypedWorkflowStub(nameof(TestWorkflowStub_Execute));
+            var stub      = client.NewUntypedWorkflowStub(nameof(TestWorkflowStub_Execute), new WorkflowOptions() { TaskList = CadenceTestHelper.TaskList });
             var execution = await stub.StartAsync("Jeff");
 
             Assert.NotNull(execution);
@@ -171,13 +172,13 @@ namespace TestCadence
             // Now connect another stub to the workflow and verify that we
             // can use it to obtain the result.
 
-            stub = client.NewUntypedWorkflowStub(execution.WorkflowId, execution.RunId, nameof(TestWorkflowStub_Execute));
+            stub = client.NewUntypedWorkflowStub(execution.WorkflowId, execution.RunId);
 
             Assert.Equal("Hello Jeff!", await stub.GetResultAsync<string>());
 
             // There's one more method override for attaching to an existing workflow.
 
-            stub = client.NewUntypedWorkflowStub(execution, nameof(TestWorkflowStub_Execute));
+            stub = client.NewUntypedWorkflowStub(execution);
 
             Assert.Equal("Hello Jeff!", await stub.GetResultAsync<string>());
         }
@@ -191,8 +192,8 @@ namespace TestCadence
             // Use an untyped workflow stub to execute a workflow and then
             // verify that we're able to send signals to it.
 
-            var stub = client.NewUntypedWorkflowStub($"{nameof(TestWorkflowStub_Execute)}::wait-for-signals");
-            
+            var stub = client.NewUntypedWorkflowStub($"{nameof(TestWorkflowStub_Execute)}::wait-for-signals", new WorkflowOptions() { TaskList = CadenceTestHelper.TaskList });
+
             await stub.StartAsync();
             await TestWorkflowStub_Execute.WaitUntilRunningAsync();
 

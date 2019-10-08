@@ -148,10 +148,83 @@
             defaults to <see cref="F:Neon.Kube.KubeConst.KubeDashboardProxyPort"/>.
             </summary>
         </member>
+        <member name="P:Neon.Kube.KubeClientConfig.KibanaDashboardProxyPort">
+            <summary>
+            The local network port used for proxying requests to
+            the Kibanarnetes dashboard for the current cluster.  This 
+            defaults to <see cref="F:Neon.Kube.KubeConst.KibanaDashboardProxyPort"/>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.KubeClientConfig.PrometheusDashboardProxyPort">
+            <summary>
+            The local network port used for proxying requests to
+            the Prometheusrnetes dashboard for the current cluster.  This 
+            defaults to <see cref="F:Neon.Kube.KubeConst.PrometheusDashboardProxyPort"/>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.KubeClientConfig.KialiDashboardProxyPort">
+            <summary>
+            The local network port used for proxying requests to
+            the Kialirnetes dashboard for the current cluster.  This 
+            defaults to <see cref="F:Neon.Kube.KubeConst.KialiDashboardProxyPort"/>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.KubeClientConfig.GrafanaDashboardProxyPort">
+            <summary>
+            The local network port used for proxying requests to
+            the Grafanarnetes dashboard for the current cluster.  This 
+            defaults to <see cref="F:Neon.Kube.KubeConst.GrafanaDashboardProxyPort"/>.
+            </summary>
+        </member>
         <member name="M:Neon.Kube.KubeClientConfig.Validate">
             <summary>
             Ensures that the state is valid.
             </summary>
+        </member>
+        <member name="T:Neon.Kube.PortForward">
+            <summary>
+            <para>
+            Implements a reverse HTTP or proxy between an endpoint on the local machine
+            and an endpoint on a remote machine.
+            </para>
+            <note>
+            This is supported <b>only on Windows</b>.
+            </note>
+            </summary>
+            <remarks>
+            <para>
+            Use the <see cref="T:Neon.Kube.PortForward"/> constructor to create a proxy.  You'll
+            pass the local and remote endpoints and optional request and response 
+            handlers.
+            </para>
+            <para>
+            The request handler will be called when a request is received on the local
+            endpoint give the handler a chance to modify the request before it is
+            forwarded on to the remote endpoint.  The response handler is called when
+            a response is received from the remote endpoint, giving the handler a
+            chance to examine and possibly modify the response before it is returned
+            to the caller.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Neon.Kube.PortForward.#cctor">
+            <summary>
+            Static constructor.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.PortForward.#ctor(System.String,System.Int32,System.Int32,System.String)">
+            <summary>
+            Constructs a port forward.
+            </summary>
+            <param name="serviceName">The service to connect to.</param>
+            <param name="localPort">The local port.</param>
+            <param name="remotePort">The remote port.</param>
+            <param name="namespace">The namespace which the service is running.</param>
+            Optionally specifies an acceptable server certificate.  This can be used 
+            as a way to allow access for a specific self-signed certificate.
+        </member>
+        <member name="M:Neon.Kube.PortForward.Dispose">
+            <ingeritdoc/>
         </member>
         <member name="T:Neon.Kube.RemoteOperation">
             <summary>
@@ -330,6 +403,23 @@
             </summary>
             <returns>A <see cref="T:Neon.Kube.KubeClientInfo"/>.</returns>
         </member>
+        <member name="M:Neon.Kube.HeadendClient.GetHelmChartZipAsync(System.String,System.String)">
+            <summary>
+            Gets a helm chart from the NeonKube repository and returns it as a zip file
+            </summary>
+            <param name="chartName">The Helm chart name.</param>
+            <param name="branch">The branch to get the chart from. Defaults to master.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Neon.Kube.HeadendClient.AddGitFilesToZipAsync(System.IO.Compression.ZipArchive,System.String,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="zip">The zip file.</param>
+            <param name="directory">The directory to add.</param>
+            <param name="baseDirectory">The base directory.</param>
+            <returns>A zip </returns>
+        </member>
         <member name="M:Neon.Kube.HeadendClient.Dispose">
             <inheritdoc/>
         </member>
@@ -395,6 +485,11 @@
         <member name="F:Neon.Kube.KubeDashboardConfig.DashboardYaml_1_10_1">
             <summary>
             Modified YAML for Dashboard 1.10.1
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeDashboardConfig.DashboardYaml_2_0_0_beta4">
+            <summary>
+            Modified YAML for Dashboard 2.0.0-rc4
             </summary>
         </member>
         <member name="T:Neon.Kube.KubeSetupInfo">
@@ -924,6 +1019,30 @@
             the Kubernetes dashboard for the current cluster.
             </summary>
         </member>
+        <member name="F:Neon.Kube.KubeConst.KibanaDashboardProxyPort">
+            <summary>
+            The default local network port used for proxying requests to
+            the Kibana dashboard for the current cluster.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeConst.PrometheusDashboardProxyPort">
+            <summary>
+            The default local network port used for proxying requests to
+            the Prometheus dashboard for the current cluster.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeConst.KialiDashboardProxyPort">
+            <summary>
+            The default local network port used for proxying requests to
+            the Kiali dashboard for the current cluster.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeConst.GrafanaDashboardProxyPort">
+            <summary>
+            The default local network port used for proxying requests to
+            the Grafana dashboard for the current cluster.
+            </summary>
+        </member>
         <member name="F:Neon.Kube.KubeConst.SysAdminUser">
             <summary>
             The default host machine sysadmin username.
@@ -973,6 +1092,24 @@
             <note>
             This explictly set to the first valid normal Linux user ID to
             be compatible with as many Docker images as possible.
+            </note>
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeConst.LocalStorageClassName">
+            <summary>
+            <para>
+            The default name for the local <see cref="T:k8s.Models.V1StorageClass"/>
+            </para>
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeConst.LocalVolumePath">
+            <summary>
+            <para>
+            The default path for the <see cref="F:Neon.Kube.KubeConst.LocalStorageClassName"/>
+            </para>
+            <note>
+            This is temporary, once Kubernetes supports dynamic provisioning of local storage volumes, we'll use
+            that instead.
             </note>
             </summary>
         </member>
@@ -1357,6 +1494,27 @@
             </summary>
             <param name="args">The command arguments.</param>
             <returns>The <see cref="T:Neon.Common.ExecuteResponse"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeHelper.PortForward(System.String,System.Int32,System.Int32,System.String,System.Diagnostics.Process)">
+            <summary>
+            Executes a <b>kubectl port-forward</b> command on the local workstation.
+            </summary>
+            <param name="serviceName">The service to forward.</param>
+            <param name="remotePort">The service port.</param>
+            <param name="localPort">The local port to forward to.</param>
+            <param name="namespace">The Kubernetes namespace where the service is running.</param>
+            <param name="process">The <see cref="T:System.Diagnostics.Process"/> to use.</param>
+            <returns>The <see cref="T:Neon.Common.ExecuteResponse"/>.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeHelper.ExecInPod(k8s.IKubernetes,k8s.Models.V1Pod,System.String,System.String[])">
+            <summary>
+            Executes a command in a k8s pod.
+            </summary>
+            <param name="client">The <see cref="T:k8s.Kubernetes"/> client to use.</param>
+            <param name="pod">The pod where the command should run.</param>
+            <param name="namespace">The namespace where the pod is running.</param>
+            <param name="command">The command to run.</param>
+            <returns></returns>
         </member>
         <member name="M:Neon.Kube.KubeHelper.LookupPassword(System.String)">
             <summary>
@@ -2768,7 +2926,7 @@
             <para>
             Specifies the default size of the Ceph OSD drives created for cloud and
             hypervisor based environments (<see cref="T:Neon.Common.ByteUnits"/>).  This can be 
-            overridden  for specific nodes.  This defaults to <b>16GiB</b>.
+            overridden  for specific nodes.  This defaults to <b>16Gi</b>.
             </para>
             <note>
             The default may be too small for production environments
@@ -2780,7 +2938,7 @@
             <para>
             Specifies the default amount of RAM to allocate to Ceph OSD processes for 
             caching (<see cref="T:Neon.Common.ByteUnits"/>).  his can be overridden for specific nodes. 
-            This defaults to <b>256MiB</b>.
+            This defaults to <b>256Mi</b>.
             </para>
             <note>
             <para>
@@ -2803,7 +2961,7 @@
             <summary>
             <para>
             Specifies the default size to allocate for the OSD journals  (<see cref="T:Neon.Common.ByteUnits"/>).  
-            This  can be overridden for specific nodes.  This defaults to <b>1GiB</b>.
+            This  can be overridden for specific nodes.  This defaults to <b>1Gi</b>.
             </para>
             <note>
             The default may be too small for production environments
@@ -2813,7 +2971,7 @@
         <member name="P:Neon.Kube.CephOptions.OSDObjectSizeMax">
             <summary>
             Specifies the maximum size of a Ceph RADOS object in bytes (<see cref="T:Neon.Common.ByteUnits"/>).  
-            This can be overridden for specific nodes.  This defaults to <b>5GiB</b>.
+            This can be overridden for specific nodes.  This defaults to <b>5Gi</b>.
             </summary>
         </member>
         <member name="P:Neon.Kube.CephOptions.OSDReplicaCount">
@@ -2842,7 +3000,7 @@
             <para>
             Specifies the default amount of RAM to allocate to Ceph MDS processes for 
             caching (<see cref="T:Neon.Common.ByteUnits"/>). This can be overridden for specific nodes. 
-            This defaults to <b>64MiB</b>.
+            This defaults to <b>64Mi</b>.
             </para>
             <note>
             <para>
@@ -2976,16 +3134,16 @@
             Ceph file system.
             </summary>
         </member>
-        <member name="P:Neon.Kube.ClusterDefinition.EFK">
+        <member name="P:Neon.Kube.ClusterDefinition.Mon">
             <summary>
             Returns the options to be used for configuring the cluster integrated
-            Elasticsearch/Fluentd/Kibana (EFK) logging stack.
+            Elasticsearch/Fluentd/Kibana (Mon) logging stack.
             </summary>
         </member>
         <member name="P:Neon.Kube.ClusterDefinition.Prometheus">
             <summary>
             Returns the options to be used for configuring the cluster integrated
-            Elasticsearch/Fluentd/Kibana (EFK) logging stack.
+            Elasticsearch/Fluentd/Kibana (Mon) logging stack.
             </summary>
         </member>
         <member name="P:Neon.Kube.ClusterDefinition.DrivePrefix">
@@ -3176,19 +3334,35 @@
             Clears any sensitive properties like the Docker registry credentials.
             </summary>
         </member>
-        <member name="T:Neon.Kube.EFKOptions">
+        <member name="T:Neon.Kube.ElasticsearchOptions">
             <summary>
-            Specifies the options for configuring the cluster integrated
-            Elasticsearch/Fluentd/Kibana (EFK) logging stack.
+            Specifies the options for configuring the cluster integrated Elasticsearch 
+            metrics stack: <a href="https://Elastic.co/">https://Elastic.co/</a>
             </summary>
         </member>
-        <member name="P:Neon.Kube.EFKOptions.Enabled">
+        <member name="P:Neon.Kube.ElasticsearchOptions.Enabled">
             <summary>
-            Indicates whether the EFK stack is to be enabled for the cluster.  
+            Indicates whether Elasticsearch metrics are to be enabled for the cluster.  
             This defaults to <c>true</c>.
             </summary>
         </member>
-        <member name="M:Neon.Kube.EFKOptions.Validate(Neon.Kube.ClusterDefinition)">
+        <member name="P:Neon.Kube.ElasticsearchOptions.DiskSize">
+            <summary>
+            Indicates whether Elasticsearch metrics are to be enabled for the cluster.  
+            This defaults to <c>true</c>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ElasticsearchOptions.Resources">
+            <summary>
+            Compute Resources required by Elasticsearch.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ElasticsearchOptions.LogRetentionDays">
+            <summary>
+            Log retention period. Logs beyond this number of days will be purged by the ClusterManager
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.ElasticsearchOptions.Validate(Neon.Kube.ClusterDefinition)">
             <summary>
             Validates the options and also ensures that all <c>null</c> properties are
             initialized to their default values.
@@ -3224,6 +3398,23 @@
         <member name="F:Neon.Kube.EnvironmentType.Production">
             <summary>
             Production environment.
+            </summary>
+        </member>
+        <member name="T:Neon.Kube.EtcdOptions">
+            <summary>
+            Specifies the options for configuring the cluster integrated Etcd 
+            metrics stack: <a href="https://Etcd.io/">https://Etcd.io/</a>
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.EtcdOptions.Resources">
+            <summary>
+            Compute Resources required by Etcd.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.EtcdOptions.DiskSize">
+            <summary>
+            Indicates disk size for Etcd nodes.  
+            This defaults to <c>false</c>.
             </summary>
         </member>
         <member name="T:Neon.Kube.GoogleOptions">
@@ -3537,6 +3728,38 @@
             <param name="clusterDefinition">The cluster definition.</param>
             <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         </member>
+        <member name="T:Neon.Kube.Ingress">
+            <summary>
+            Specifies the ingress rules for the cluster.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.Ingress.Name">
+            <summary>
+            The name of the ingress rule.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.Ingress.Port">
+            <summary>
+            The ingress port.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.Ingress.TargetPort">
+            <summary>
+            The target port for the ingress rule.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.Ingress.NodePort">
+            <summary>
+            The Kubernetes NodePort. This is where the ingress gateway will listen.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.Ingress.Validate(Neon.Kube.ClusterDefinition)">
+            <summary>
+            Validates the options.
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
+            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        </member>
         <member name="T:Neon.Kube.KubernetesOptions">
             <summary>
             Describes the Kubernetes options for a neonKUBE.
@@ -3664,6 +3887,28 @@
             <param name="clusterDefinition">The cluster definition.</param>
             <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         </member>
+        <member name="T:Neon.Kube.M3DBOptions">
+            <summary>
+            Specifies the options for configuring the cluster integrated M3DB 
+            metrics stack: <a href="https://M3DB.io/">https://M3DB.io/</a>
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.M3DBOptions.Resources">
+            <summary>
+            Compute Resources required by Elasticsearch.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.M3DBOptions.Etcd">
+            <summary>
+            Etcd options.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.M3DBOptions.DiskSize">
+            <summary>
+            Indicates disk size for M3DB nodes.  
+            This defaults to <c>false</c>.
+            </summary>
+        </member>
         <member name="T:Neon.Kube.MachineOptions">
             <summary>
             Specifies hosting settings for bare metal or virtual machines.
@@ -3675,6 +3920,36 @@
             </summary>
         </member>
         <member name="M:Neon.Kube.MachineOptions.Validate(Neon.Kube.ClusterDefinition)">
+            <summary>
+            Validates the options and also ensures that all <c>null</c> properties are
+            initialized to their default values.
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
+            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        </member>
+        <member name="T:Neon.Kube.MonOptions">
+            <summary>
+            Specifies the options for configuring the cluster integrated
+            Elasticsearch/Fluentd/Kibana (EFK) logging stack.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.MonOptions.Enabled">
+            <summary>
+            Indicates whether the EFK stack is to be enabled for the cluster.  
+            This defaults to <c>true</c>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.MonOptions.Elasticsearch">
+            <summary>
+            Elasticsearch options.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.MonOptions.Prometheus">
+            <summary>
+            Prometheus options
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.MonOptions.Validate(Neon.Kube.ClusterDefinition)">
             <summary>
             Validates the options and also ensures that all <c>null</c> properties are
             initialized to their default values.
@@ -3797,6 +4072,11 @@
             This defaults to <c>false</c>.
             </summary>
         </member>
+        <member name="P:Neon.Kube.NetworkOptions.Ingress">
+            <summary>
+            Optionally sets the ingress ports.
+            </summary>
+        </member>
         <member name="T:Neon.Kube.NetworkOptions.SubnetDefinition">
             <summary>
             Used for checking subnet conflicts below.
@@ -3900,6 +4180,11 @@
             Specifies the labels to be assigned to the host node.  These can provide
             detailed information such as the host CPU, RAM, storage, etc.  <see cref="T:Neon.Kube.NodeLabels"/>
             for more information.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.NodeDefinition.Taints">
+            <summary>
+            Specifies the taints to be assigned to the host node.  
             </summary>
         </member>
         <member name="P:Neon.Kube.NodeDefinition.Azure">
@@ -4314,6 +4599,42 @@
             </para>
             </remarks>
         </member>
+        <member name="F:Neon.Kube.NodeLabels.LabelIstio">
+            <summary>
+            Reserved label name for <see cref="P:Neon.Kube.NodeLabels.Istio"/>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.NodeLabels.Istio">
+            <summary>
+            <b>io.neonkube.mon.istio.enabled</b> [<c>bool</c>]: Indicates that Istio 
+            will be deployed to this node.  
+            This defaults to <c>false</c>.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.NodeLabels.LabelElasticsearch">
+            <summary>
+            Reserved label name for <see cref="P:Neon.Kube.NodeLabels.Elasticsearch"/>.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.NodeLabels.LabelM3DB">
+            <summary>
+            Reserved label name for <see cref="P:Neon.Kube.NodeLabels.M3DB"/>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.NodeLabels.Elasticsearch">
+            <summary>
+            <b>io.neonkube.mon.elasticsearch.enabled</b> [<c>bool</c>]: Indicates that Elasticsearch 
+            will be deployed to this node if <see cref="P:Neon.Kube.ElasticsearchOptions.Enabled"/> is <c>true</c>.  
+            This defaults to <c>false</c>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.NodeLabels.M3DB">
+            <summary>
+            <b>io.neonkube.mon.m3db.enabled</b> [<c>bool</c>]: Indicates that M3DB 
+            will be deployed to this node if <see cref="P:Neon.Kube.PrometheusOptions.Enabled"/> is <c>true</c>.  
+            This defaults to <c>false</c>.
+            </summary>
+        </member>
         <member name="F:Neon.Kube.NodeLabels.LabelCephMON">
             <summary>
             Reserved label name for <see cref="P:Neon.Kube.NodeLabels.CephMON"/>.
@@ -4332,6 +4653,11 @@
         <member name="F:Neon.Kube.NodeLabels.LabelCephMDS">
             <summary>
             Reserved label name for <see cref="P:Neon.Kube.NodeLabels.CephMDS"/>.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.NodeLabels.LabelCephMGR">
+            <summary>
+            Reserved label name for <see cref="P:Neon.Kube.NodeLabels.CephMGR"/>.
             </summary>
         </member>
         <member name="F:Neon.Kube.NodeLabels.LabelCephOSDDriveSize">
@@ -4416,6 +4742,13 @@
             commands (like ls, find, etc.) without placing an enormous burden on
             the Ceph Storage Cluster.
             </remarks>
+        </member>
+        <member name="P:Neon.Kube.NodeLabels.CephMGR">
+            <summary>
+            <b>io.neonkube.ceph.mgr</b> [<c>bool</c>]: Indicates that a Ceph MGR 
+            (manager server) will be deployed to this node if <see cref="P:Neon.Kube.CephOptions.Enabled"/> 
+            is <c>true</c>.  This defaults to <c>false</c>.
+            </summary>
         </member>
         <member name="P:Neon.Kube.NodeLabels.CephOSDDriveSize">
             <summary>
@@ -4607,6 +4940,22 @@
             <summary>
             Indicates whether Prometheus metrics are to be enabled for the cluster.  
             This defaults to <c>true</c>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.PrometheusOptions.Persistence">
+            <summary>
+            Indicates whether Prometheus persistence is to be enabled.  
+            This defaults to <c>false</c>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.PrometheusOptions.Resources">
+            <summary>
+            Compute Resources required by Elasticsearch.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.PrometheusOptions.M3DB">
+            <summary>
+            M3DB specific options.
             </summary>
         </member>
         <member name="M:Neon.Kube.PrometheusOptions.Validate(Neon.Kube.ClusterDefinition)">
@@ -7053,28 +7402,28 @@
             <summary>Provides access to the git information for the current assembly.</summary>
         </member>
         <member name="F:ThisAssembly.Git.IsDirty">
-            <summary>IsDirty: false</summary>
+            <summary>IsDirty: true</summary>
         </member>
         <member name="F:ThisAssembly.Git.IsDirtyString">
-            <summary>IsDirtyString: false</summary>
+            <summary>IsDirtyString: true</summary>
         </member>
         <member name="F:ThisAssembly.Git.Branch">
-            <summary>Branch: cadence</summary>
+            <summary>Branch: release-0.6.7-alpha</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: a925d70d</summary>
+            <summary>Commit: 22b560972</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: a925d70d4c861cf13ab7c21191032d4bc06d07f8</summary>
+            <summary>Sha: 22b5609726b4c13228acf58b88a1a7b35f491f62</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 49</summary>
+            <summary>Commits on top of base version: 47</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: 0.5.2-alpha-49-ga925d70d</summary>
+            <summary>Tag: v0.6.6-alpha-47-g22b560972</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
-            <summary>Base tag: 0.5.2-alpha</summary>
+            <summary>Base tag: v0.6.6-alpha</summary>
         </member>
         <member name="T:ThisAssembly.Git.BaseVersion">
             <summary>Provides access to the base version information used to determine the <see cref="T:ThisAssembly.Git.SemVer" />.</summary>      
@@ -7083,10 +7432,10 @@
             <summary>Major: 0</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Minor">
-            <summary>Minor: 5</summary>
+            <summary>Minor: 6</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Patch">
-            <summary>Patch: 2</summary>
+            <summary>Patch: 6</summary>
         </member>
         <member name="T:ThisAssembly.Git.SemVer">
             <summary>Provides access to SemVer information for the current assembly.</summary>
@@ -7095,10 +7444,10 @@
             <summary>Major: 0</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Minor">
-            <summary>Minor: 5</summary>
+            <summary>Minor: 6</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 51</summary>
+            <summary>Patch: 53</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: alpha</summary>

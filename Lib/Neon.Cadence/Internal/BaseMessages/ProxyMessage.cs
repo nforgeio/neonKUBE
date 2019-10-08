@@ -439,7 +439,7 @@ namespace Neon.Cadence.Internal
         {
             if (!ignoreTypeCode && Type == InternalMessageTypes.Unspecified)
             {
-                throw new ArgumentException($"Message type [{this.GetType().FullName}] has not initialized its [{nameof(Type)}] property.");
+                throw new ArgumentException($"Message type [{this.GetType().FullName}] has not initialized its [{nameof(Type)}] property.", nameof(ProxyMessage));
             }
 
             var output = MemoryStreamPool.Alloc();
@@ -507,7 +507,7 @@ namespace Neon.Cadence.Internal
         {
             if (!ignoreTypeCode && Type == InternalMessageTypes.Unspecified)
             {
-                throw new ArgumentException($"Message type [{this.GetType().FullName}] has not initialized its [{nameof(Type)}] property.");
+                throw new ArgumentException($"Message type [{this.GetType().FullName}] has not initialized its [{nameof(Type)}] property.", nameof(ProxyMessage));
             }
 
             var output = SerializeAsStream(ignoreTypeCode);
