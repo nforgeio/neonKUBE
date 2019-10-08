@@ -1706,7 +1706,7 @@ namespace TestCadence
                 // which means we'll be calling the [RunAsync()] method which also has
                 // no defined workflow method name.
 
-                var childStub = Workflow.NewStartChildWorkflowStub<IWorkflowChild>();
+                var childStub = Workflow.NewChildWorkflowFutureStub<IWorkflowChild>();
                 var future    = await childStub.StartAsync();
                 
                 await future.GetAsync();
@@ -1721,7 +1721,7 @@ namespace TestCadence
 
             public async Task<string> StartHelloChildAsync(string name)
             {
-                var childStub = Workflow.NewStartChildWorkflowStub<IWorkflowChild>("hello");
+                var childStub = Workflow.NewChildWorkflowFutureStub<IWorkflowChild>("hello");
                 var future    = await childStub.StartAsync<string>(name);
                 
                 return await future.GetAsync();
@@ -1745,7 +1745,7 @@ namespace TestCadence
             {
                 WorkflowChild.Reset();
 
-                var childStub = Workflow.NewStartChildWorkflowStub<IWorkflowChild>("wait-for-signal");
+                var childStub = Workflow.NewChildWorkflowFutureStub<IWorkflowChild>("wait-for-signal");
 
                 Assert.Null(childStub.Stub);        // This will be NULL until we start the child.
 
@@ -2674,8 +2674,8 @@ namespace TestCadence
 
                 receivedSignal = null;
 
-                var stub    = Workflow.NewUntypedChildWorkflowStub<string>($"{typeof(IWorkflowChildGetExecution).FullName}::wait-for-signal");
-                var future  = await stub.ExecuteAsync("Jeff");
+                var stub   = Workflow.NewUntypedChildWorkflowFutureStub<string>($"{typeof(IWorkflowChildGetExecution).FullName}::wait-for-signal");
+                var future = await stub.StartAsync("Jeff");
 
                 await stub.SignalAsync("signal", "hello-signal");
 

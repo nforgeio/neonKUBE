@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ChildWorkflowStub.cs
+// FILE:	    ChildWorkflowFutureStub.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -27,20 +27,28 @@ using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Tasks;
 
+// $todo(jefflill):
+//
+// It would be nice to add query methods to this like we did for external
+// workflows.  Note that queries will need to be run within local activities
+// so that they'll replay from history correctly.
+//
+//      https://github.com/nforgeio/neonKUBE/issues/617
+
 namespace Neon.Cadence
 {
     /// <summary>
     /// <para>
     /// Manages starting and signalling a child workflow instance based on
-    /// its workflow type name and arguments.  This is useful when the child
-    /// workflow type is not known at compile time as well provinding a way
-    /// to call child workflows written in another language.
+    /// its workflow type name and arguments.  This is useful when you need
+    /// to perform other operations in parallel with a child by separating
+    /// workflow execution and retrieving the result into separate operations.
     /// </para>
     /// <para>
     /// Use this version for workflows that don't return a result.
     /// </para>
     /// </summary>
-    public class ChildWorkflowStub
+    public class ChildWorkflowFutureStub
     {
         private Workflow            parentWorkflow;
         private CadenceClient       client;
@@ -52,7 +60,7 @@ namespace Neon.Cadence
         /// <param name="parentWorkflow">The parent workflow.</param>
         /// <param name="workflowTypeName">The workflow type name.</param>
         /// <param name="options">Optional child workflow options.</param>
-        internal ChildWorkflowStub(Workflow parentWorkflow, string workflowTypeName, ChildWorkflowOptions options = null)
+        internal ChildWorkflowFutureStub(Workflow parentWorkflow, string workflowTypeName, ChildWorkflowOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
@@ -96,12 +104,19 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Starts the child workflow.
+        /// Starts the child workflow, returning an <see cref="IAsyncFuture"/> that can be used
+        /// to retrieve the workflow result.
         /// </summary>
         /// <param name="args">The workflow arguments.</param>
         /// <returns>An <see cref="IAsyncFuture"/> that can be used to retrieve the workflow result as an <c>object</c>.</returns>
         /// <exception cref="InvalidOperationException">Thrown if the child workflow has already been started.</exception>
-        public async Task<IAsyncFuture> ExecuteAsync(params object[] args)
+        /// <remarks>
+        /// <note>
+        /// <b>IMPORTANT:</b> You need to take care to ensure that the parameters passed
+        /// are compatible with the target workflow arguments.
+        /// </note>
+        /// </remarks>
+        public async Task<IAsyncFuture> StartAsync(params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
@@ -114,7 +129,7 @@ namespace Neon.Cadence
 
             // Create and return the future.
 
-            return new AsyncChildFuture(parentWorkflow, childExecution);
+            return new AsyncChildWorkflowFuture(parentWorkflow, childExecution);
         }
 
         /// <summary>
@@ -124,6 +139,12 @@ namespace Neon.Cadence
         /// <param name="args">The signal arguments.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown if the child workflow has not been started.</exception>
+        /// <remarks>
+        /// <note>
+        /// <b>IMPORTANT:</b> You need to take care to ensure that the parameters passed
+        /// are compatible with the target workflow signal arguments.
+        /// </note>
+        /// </remarks>
         public async Task SignalAsync(string signalName, params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
@@ -153,16 +174,15 @@ namespace Neon.Cadence
     /// <summary>
     /// <para>
     /// Manages starting and signalling a child workflow instance based on
-    /// its workflow type name and arguments.  This is useful when the child
-    /// workflow type is not known at compile time as well provinding a way
-    /// to call child workflows written in another language.
+    /// its workflow type name and arguments.  This is useful when you need
+    /// to perform other operations in parallel with a child.
     /// </para>
     /// <para>
     /// Use this version for workflows that return a result.
     /// </para>
     /// </summary>
     /// <typeparam name="TResult">Specifies the workflow result type.</typeparam>
-    public class ChildWorkflowStub<TResult>
+    public class ChildWorkflowFutureStub<TResult>
     {
         private Workflow            parentWorkflow;
         private CadenceClient       client;
@@ -174,7 +194,7 @@ namespace Neon.Cadence
         /// <param name="parentWorkflow">The parent workflow.</param>
         /// <param name="workflowTypeName">The workflow type name.</param>
         /// <param name="options">Optional child workflow options.</param>
-        internal ChildWorkflowStub(Workflow parentWorkflow, string workflowTypeName, ChildWorkflowOptions options = null)
+        internal ChildWorkflowFutureStub(Workflow parentWorkflow, string workflowTypeName, ChildWorkflowOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
@@ -218,12 +238,19 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Starts the child workflow.
+        /// Starts the child workflow, returning an <see cref="IAsyncFuture{T}"/> that can be used
+        /// to retrieve the workflow result.
         /// </summary>
         /// <param name="args">The workflow arguments.</param>
         /// <returns>An <see cref="IAsyncFuture{T}"/> that can be used to retrieve the workflow result.</returns>
         /// <exception cref="InvalidOperationException">Thrown if the child workflow has already been started.</exception>
-        public async Task<IAsyncFuture<TResult>> ExecuteAsync(params object[] args)
+        /// <remarks>
+        /// <note>
+        /// <b>IMPORTANT:</b> You need to take care to ensure that the parameters and 
+        /// result type passed are compatible with the target workflow arguments.
+        /// </note>
+        /// </remarks>
+        public async Task<IAsyncFuture<TResult>> StartAsync(params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
@@ -236,7 +263,7 @@ namespace Neon.Cadence
 
             // Create and return the future.
 
-            return new AsyncChildFuture<TResult>(parentWorkflow, childExecution, typeof(TResult));
+            return new AsyncChildWorkflowFuture<TResult>(parentWorkflow, childExecution, typeof(TResult));
         }
 
         /// <summary>
@@ -246,6 +273,12 @@ namespace Neon.Cadence
         /// <param name="args">The signal arguments.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown if the child workflow has not been started.</exception>
+        /// <remarks>
+        /// <note>
+        /// <b>IMPORTANT:</b> You need to take care to ensure that the parameters passed
+        /// are compatible with the target workflow signal arguments.
+        /// </note>
+        /// </remarks>
         public async Task SignalAsync(string signalName, params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));

@@ -33,7 +33,7 @@ namespace Neon.Cadence
 {
     /// <summary>
     /// Used to execute a child workflow in parallel with other child workflows or activities.
-    /// Instances are created via <see cref="Workflow.NewStartChildWorkflowStub{TWorkflowInterface}(string, ChildWorkflowOptions)"/>.
+    /// Instances are created via <see cref="Workflow.NewChildWorkflowFutureStub{TWorkflowInterface}(string, ChildWorkflowOptions)"/>.
     /// </summary>
     /// <typeparam name="TWorkflowInterface">Specifies the workflow interface.</typeparam>
     public class StartChildWorkflowStub<TWorkflowInterface>
@@ -193,7 +193,7 @@ namespace Neon.Cadence
                 throw new ArgumentException($"Workflow method [{nameof(TWorkflowInterface)}.{targetMethod.Name}()] returns [{resultType.FullName}] which is not compatible with [{nameof(TResult)}].", nameof(TWorkflowInterface));
             }
 
-            return new AsyncChildFuture<TResult>(parentWorkflow, execution, resultType);
+            return new AsyncChildWorkflowFuture<TResult>(parentWorkflow, execution, resultType);
         }
 
         /// <summary>
@@ -250,7 +250,7 @@ namespace Neon.Cadence
 
             // Create and return the future.
 
-            return new AsyncChildFuture(parentWorkflow, execution);
+            return new AsyncChildWorkflowFuture(parentWorkflow, execution);
         }
 
         /// <summary>

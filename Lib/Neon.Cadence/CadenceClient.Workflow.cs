@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Tasks;
 using Neon.Time;
 
 namespace Neon.Cadence
@@ -246,6 +247,29 @@ namespace Neon.Cadence
             {
                 Execution = execution
             };
+        }
+
+        /// <summary>
+        /// Creates a stub suitable for starting an external workflow and then waiting
+        /// for the result as separate operations.
+        /// </summary>
+        /// <typeparam name="TWorkflowInterface">The target workflow interface.</typeparam>
+        /// <param name="methodName">
+        /// Optionally identifies the target workflow method.  This is the name specified in
+        /// <c>[WorkflowMethod]</c> attribute for the workflow method or <c>null</c>/empty for
+        /// the default workflow method.
+        /// </param>
+        /// <param name="options">Optionally specifies custom <see cref="WorkflowOptions"/>.</param>
+        /// <returns>A <see cref="StartChildWorkflowStub{TWorkflowInterface}"/> instance.</returns>
+        public WorkflowFutureStub<TWorkflowInterface> NewWorkflowFutureStub<TWorkflowInterface>(string methodName = null, WorkflowOptions options = null)
+            where TWorkflowInterface : class
+        {
+            CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
+            EnsureNotDisposed();
+
+            options = WorkflowOptions.Normalize(this, options, typeof(TWorkflowInterface));
+
+            return new WorkflowFutureStub<TWorkflowInterface>(this, methodName, options);
         }
 
         /// <summary>
