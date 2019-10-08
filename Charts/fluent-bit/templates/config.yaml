@@ -170,6 +170,7 @@ data:
         end
         dedot_keys(record["kubernetes"]["annotations"])
         dedot_keys(record["kubernetes"]["labels"])
+        dedot_keys(record["cluster"])
         return 1, timestamp, record
     end
 
