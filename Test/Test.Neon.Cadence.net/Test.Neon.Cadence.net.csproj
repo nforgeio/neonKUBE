@@ -325,6 +325,9 @@
     <Compile Include="..\Test.Neon.Cadence\Test_Replay.cs">
       <Link>Test_Replay.cs</Link>
     </Compile>
+    <Compile Include="..\Test.Neon.Cadence\Test_Settings.cs">
+      <Link>Test_Settings.cs</Link>
+    </Compile>
     <Compile Include="..\Test.Neon.Cadence\Test_StubManager.ActivityError.cs">
       <Link>Test_StubManager.ActivityError.cs</Link>
     </Compile>

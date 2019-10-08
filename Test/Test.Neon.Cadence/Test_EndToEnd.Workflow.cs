@@ -2752,5 +2752,243 @@ namespace TestCadence
 
             Assert.True(await stub.ChildStubWithResultAsync());
         }
+
+        //---------------------------------------------------------------------
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IWorkflowIdReuse : IWorkflow
+        {
+            [WorkflowMethod(Name = "hello")]
+            Task<string> HelloAsync(string name);
+
+            [WorkflowMethod(Name = "hello-via-attribute", WorkflowIdReusePolicy = WorkflowIdReusePolicy.AllowDuplicate)]
+            Task<string> HelloWithAttributeAsync(string name);
+
+            [WorkflowMethod(Name = "child-no-reuse")]
+            Task<bool> ChildNoReuseAsync();
+
+            [WorkflowMethod(Name = "child-reuse-via-options")]
+            Task<bool> ChildReuseViaOptionsAsync();
+
+            [WorkflowMethod(Name = "child-reuse-via-attribute")]
+            Task<bool> ChildReuseViaAttributeAsync();
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowIdReuse : WorkflowBase, IWorkflowIdReuse
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
+
+            public async Task<string> HelloWithAttributeAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
+
+            public async Task<bool> ChildNoReuseAsync()
+            {
+                // Verify that we can have Cadence reject duplicate workflow IDs.
+
+                var options = new ChildWorkflowOptions()
+                {
+                    WorkflowId            = $"Child_IdNoReuse-{Guid.NewGuid().ToString("d")}",
+                    WorkflowIdReusePolicy = WorkflowIdReusePolicy.RejectDuplicate
+                };
+
+                // Do the first run; this should succeed.
+
+                var stub = Workflow.NewChildWorkflowStub<IWorkflowIdReuse>(options);
+
+                if (await stub.HelloAsync("Jack") != "Hello Jack!")
+                {
+                    return false;
+                }
+
+                // Do the second run with the same ID.
+                
+                // Child workflows seem to work differently from external workflows 
+                // in this situation.  Child workflows return a WorkflowExecutionAlreadyStartedError
+                // when the workflow is already running whereas external workflows
+                // will simply return the result from the previous run.
+
+                stub = Workflow.NewChildWorkflowStub<IWorkflowIdReuse>(options);
+
+                try
+                {
+                    await stub.HelloAsync("Jill");
+                    return false;   // We're expecting an exception.
+                }
+                catch (CadenceWorkflowRunningException)
+                {
+                    return true;    // Expecting this.
+                }
+            }
+
+            public async Task<bool> ChildReuseViaOptionsAsync()
+            {
+                // Verify that we can have Cadence allow duplicate workflow IDs
+                // using child options.
+
+                var options = new ChildWorkflowOptions()
+                {
+                    WorkflowId            = $"Child_ReuseViaOptions-{Guid.NewGuid().ToString("d")}",
+                    WorkflowIdReusePolicy = WorkflowIdReusePolicy.AllowDuplicate
+                };
+
+                // Do the first run; this should succeed.
+
+                var stub = Workflow.NewChildWorkflowStub<IWorkflowIdReuse>(options);
+
+                if (await stub.HelloAsync("Jack") != "Hello Jack!")
+                {
+                    return false;
+                }
+
+                // Do the second run with the same ID; this should also succeed.
+
+                stub = Workflow.NewChildWorkflowStub<IWorkflowIdReuse>(options);
+
+                return await stub.HelloAsync("Jill") == "Hello Jill!";
+            }
+
+            public async Task<bool> ChildReuseViaAttributeAsync()
+            {
+                // Verify that we can have Cadence allow duplicate workflow IDs
+                // using the method attribute.
+
+                var options = new ChildWorkflowOptions()
+                {
+                    WorkflowId = $"Child_ReuseViaAttribute-{Guid.NewGuid().ToString("d")}"
+                };
+
+                // Do the first run; this should succeed.
+
+                var stub = Workflow.NewChildWorkflowStub<IWorkflowIdReuse>(options);
+
+                if (await stub.HelloWithAttributeAsync("Jack") != "Hello Jack!")
+                {
+                    return false;
+                }
+
+                // Do the second run with the same ID; this should also succeed.
+
+                stub = Workflow.NewChildWorkflowStub<IWorkflowIdReuse>(options);
+
+                return await stub.HelloWithAttributeAsync("Jill") == "Hello Jill!";
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ExternalIdNoReuse()
+        {
+            // Verify that we can have Cadence reject duplicate workflow IDs.
+
+            var options = new WorkflowOptions()
+            {
+                WorkflowId            = $"Workflow_ExternalIdNoReuse-{Guid.NewGuid().ToString("d")}",
+                WorkflowIdReusePolicy = WorkflowIdReusePolicy.RejectDuplicate
+            };
+
+            // Do the first run; this should succeed.
+
+            var stub = client.NewWorkflowStub<IWorkflowIdReuse>(options);
+
+            Assert.Equal("Hello Jack!", await stub.HelloAsync("Jack"));
+
+            // Do the second run with the same ID.  This shouldn't actually start
+            // another workflow and will return the result from the original
+            // workflow instead.
+
+            stub = client.NewWorkflowStub<IWorkflowIdReuse>(options);
+
+            Assert.Equal("Hello Jack!", await stub.HelloAsync("Jill"));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ExternalIdReuseViaOptions()
+        {
+            // Verify that we can reuse a workflow ID for an external
+            // workflow via options.
+
+            var options = new WorkflowOptions()
+            {
+                WorkflowId            = $"Workflow_ExternalIdReuseViaOptions-{Guid.NewGuid().ToString("d")}",
+                WorkflowIdReusePolicy = WorkflowIdReusePolicy.AllowDuplicate
+            };
+
+            // Do the first run.
+
+            var stub = client.NewWorkflowStub<IWorkflowIdReuse>(options);
+
+            Assert.Equal("Hello Jack!", await stub.HelloAsync("Jack"));
+
+            // Do the second run.
+
+            stub = client.NewWorkflowStub<IWorkflowIdReuse>(options);
+
+            Assert.Equal("Hello Jill!", await stub.HelloAsync("Jill"));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ExternalIdReuseViaAttribute()
+        {
+            // Verify that we can reuse a workflow ID for an external
+            // workflow via a [WorkflowMethod] attribute.
+
+            var options = new WorkflowOptions()
+            {
+                WorkflowId = $"Workflow_ExternalIdReuseViaAttribute-{Guid.NewGuid().ToString("d")}",
+            };
+
+            // Do the first run.
+
+            var stub = client.NewWorkflowStub<IWorkflowIdReuse>(options);
+
+            Assert.Equal("Hello Jack!", await stub.HelloWithAttributeAsync("Jack"));
+
+            // Do the second run.
+
+            stub = client.NewWorkflowStub<IWorkflowIdReuse>(options);
+
+            Assert.Equal("Hello Jill!", await stub.HelloWithAttributeAsync("Jill"));
+        }
+        
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ChildIdNoReuse()
+        {
+            // Verify that we can have Cadence reject duplicate child workflow IDs.
+
+            var stub = client.NewWorkflowStub<IWorkflowIdReuse>();
+
+            Assert.True(await stub.ChildNoReuseAsync());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ChildIdReuseViaOptions()
+        {
+            // Verify that we can have Cadence use duplicate child workflow IDs.
+
+            var stub = client.NewWorkflowStub<IWorkflowIdReuse>();
+
+            Assert.True(await stub.ChildReuseViaOptionsAsync());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ChildIdReuseViaAttribute()
+        {
+            // Verify that we can have Cadence use duplicate child workflow IDs.
+
+            var stub = client.NewWorkflowStub<IWorkflowIdReuse>();
+
+            Assert.True(await stub.ChildReuseViaAttributeAsync());
+        }
     }
 }

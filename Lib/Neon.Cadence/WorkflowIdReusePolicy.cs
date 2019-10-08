@@ -45,8 +45,14 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Prohibits starting a workflow with the same ID as another workflow,
-        /// running or not.
+        /// whether that workflow is running or not.
         /// </summary>
-        RejectDuplicate = 2
+        RejectDuplicate = 2,
+
+        /// <summary>
+        /// Indicates that the reuse policy specified by <see cref="WorkflowOptions.WorkflowIdReusePolicy"/>
+        /// or <see cref="CadenceSettings.WorkflowIdReusePolicy"/> should be used.
+        /// </summary>
+        UseDefault = -1,
     }
 }

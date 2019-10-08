@@ -180,7 +180,7 @@ namespace Neon.Cadence
         /// </para>
         /// <note>
         /// This can be overridden when the workflow is executed using
-        /// <see cref="WorkflowOptions"/>,
+        /// <see cref="WorkflowOptions"/>.
         /// </note>
         /// </summary>
         public string WorkflowId
@@ -209,6 +209,6 @@ namespace Neon.Cadence
         /// <see cref="WorkflowOptions"/>,
         /// </note>
         /// </summary>
-        public WorkflowIdReusePolicy? WorkflowIdReusePolicy { get; set; }
+        public WorkflowIdReusePolicy WorkflowIdReusePolicy { get; set; } = WorkflowIdReusePolicy.UseDefault;
     }
 }
