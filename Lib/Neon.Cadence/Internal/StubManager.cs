@@ -669,15 +669,26 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"        {{");
             sbSource.AppendLine($"            if (isChild)");
             sbSource.AppendLine($"            {{");
-            sbSource.AppendLine($"                throw new ArgumentException(\"Workflow stub for [{workflowInterface.FullName}] is a child workflow stub and cannot be converted to a [{typeof(WorkflowStub).Name}].\", \"stub\");");
-            sbSource.AppendLine($"            }}");
+            sbSource.AppendLine($"                if (!hasStarted || childExecution == null)");
+            sbSource.AppendLine($"                {{");
+            sbSource.AppendLine($"                    throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has not been been started.\");");
+            sbSource.AppendLine($"                }}");
             sbSource.AppendLine();
-            sbSource.AppendLine($"            if (!hasStarted || execution == null)");
+
+            // Note that we're passing a new [WorkflowOptions] instance here to make the [WorkflowStub] constructor happy.
+            // This shouldn't matter because the workflow has already started.
+
+            sbSource.AppendLine($"                return (WorkflowStub)___StubHelper.NewWorkflowStub(client, workflowTypeName, childExecution.Execution, new WorkflowOptions());");
+            sbSource.AppendLine($"            }}");
+            sbSource.AppendLine($"            else");
             sbSource.AppendLine($"            {{");
-            sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has not been been started.\");");
-            sbSource.AppendLine($"            }}");
+            sbSource.AppendLine($"                if (!hasStarted || execution == null)");
+            sbSource.AppendLine($"                {{");
+            sbSource.AppendLine($"                    throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has not been been started.\");");
+            sbSource.AppendLine($"                }}");
             sbSource.AppendLine();
-            sbSource.AppendLine($"            return (WorkflowStub)___StubHelper.NewWorkflowStub(client, workflowTypeName, execution, options);");
+            sbSource.AppendLine($"                return (WorkflowStub)___StubHelper.NewWorkflowStub(client, workflowTypeName, execution, options);");
+            sbSource.AppendLine($"            }}");
             sbSource.AppendLine($"        }}");
 
             // Generate the method that returns the external workflow stub's execution.
