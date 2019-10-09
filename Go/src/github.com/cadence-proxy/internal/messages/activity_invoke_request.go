@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -44,8 +44,8 @@ type (
 func NewActivityInvokeRequest() *ActivityInvokeRequest {
 	request := new(ActivityInvokeRequest)
 	request.ActivityRequest = NewActivityRequest()
-	request.SetType(messagetypes.ActivityInvokeRequest)
-	request.SetReplyType(messagetypes.ActivityInvokeReply)
+	request.SetType(internal.ActivityInvokeRequest)
+	request.SetReplyType(internal.ActivityInvokeReply)
 
 	return request
 }

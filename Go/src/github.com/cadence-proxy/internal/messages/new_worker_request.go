@@ -20,7 +20,7 @@ package messages
 import (
 	worker "go.uber.org/cadence/worker"
 
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -43,8 +43,8 @@ type (
 func NewNewWorkerRequest() *NewWorkerRequest {
 	request := new(NewWorkerRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.SetType(messagetypes.NewWorkerRequest)
-	request.SetReplyType(messagetypes.NewWorkerReply)
+	request.SetType(internal.NewWorkerRequest)
+	request.SetReplyType(internal.NewWorkerReply)
 
 	return request
 }

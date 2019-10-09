@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -38,7 +38,7 @@ type (
 func NewDomainDeprecateReply() *DomainDeprecateReply {
 	reply := new(DomainDeprecateReply)
 	reply.ProxyReply = NewProxyReply()
-	reply.SetType(messagetypes.DomainDeprecateReply)
+	reply.SetType(internal.DomainDeprecateReply)
 
 	return reply
 }

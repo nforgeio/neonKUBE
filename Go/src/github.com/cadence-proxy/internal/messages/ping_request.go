@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -42,8 +42,8 @@ type (
 func NewPingRequest() *PingRequest {
 	request := new(PingRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.SetType(messagetypes.PingRequest)
-	request.SetReplyType(messagetypes.PingReply)
+	request.SetType(internal.PingRequest)
+	request.SetReplyType(internal.PingReply)
 
 	return request
 }

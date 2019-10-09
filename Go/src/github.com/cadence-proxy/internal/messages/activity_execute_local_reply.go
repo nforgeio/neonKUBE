@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -39,7 +39,7 @@ type (
 func NewActivityExecuteLocalReply() *ActivityExecuteLocalReply {
 	reply := new(ActivityExecuteLocalReply)
 	reply.ActivityReply = NewActivityReply()
-	reply.SetType(messagetypes.ActivityExecuteLocalReply)
+	reply.SetType(internal.ActivityExecuteLocalReply)
 
 	return reply
 }

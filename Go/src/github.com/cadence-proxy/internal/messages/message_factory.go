@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 // CreateNewTypedMessage creates newly initialized message of the specified type
@@ -26,7 +26,7 @@ import (
 // param messageType message.MessageType -> the MessageType to be created
 //
 // returns IProxyMessage -> the initialized message as an IProxyMessage interface
-func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
+func CreateNewTypedMessage(messageType internal.MessageType) IProxyMessage {
 	var message IProxyMessage
 	switch messageType {
 
@@ -34,345 +34,345 @@ func CreateNewTypedMessage(messageType messagetypes.MessageType) IProxyMessage {
 	// Client messages
 
 	// Cancel
-	case messagetypes.CancelRequest:
+	case internal.CancelRequest:
 		message = NewCancelRequest()
-	case messagetypes.CancelReply:
+	case internal.CancelReply:
 		message = NewCancelReply()
 
 	// Connect
-	case messagetypes.ConnectReply:
+	case internal.ConnectReply:
 		message = NewConnectReply()
-	case messagetypes.ConnectRequest:
+	case internal.ConnectRequest:
 		message = NewConnectRequest()
 
 	// Disconnect
-	case messagetypes.DisconnectReply:
+	case internal.DisconnectReply:
 		message = NewDisconnectReply()
-	case messagetypes.DisconnectRequest:
+	case internal.DisconnectRequest:
 		message = NewDisconnectRequest()
 
 	// DomainDescribe
-	case messagetypes.DomainDescribeReply:
+	case internal.DomainDescribeReply:
 		message = NewDomainDescribeReply()
-	case messagetypes.DomainDescribeRequest:
+	case internal.DomainDescribeRequest:
 		message = NewDomainDescribeRequest()
 
 	// DomainRegister
-	case messagetypes.DomainRegisterReply:
+	case internal.DomainRegisterReply:
 		message = NewDomainRegisterReply()
-	case messagetypes.DomainRegisterRequest:
+	case internal.DomainRegisterRequest:
 		message = NewDomainRegisterRequest()
 
 	// DomainUpdate
-	case messagetypes.DomainUpdateReply:
+	case internal.DomainUpdateReply:
 		message = NewDomainUpdateReply()
-	case messagetypes.DomainUpdateRequest:
+	case internal.DomainUpdateRequest:
 		message = NewDomainUpdateRequest()
 
 	// DomainDeprecate
-	case messagetypes.DomainDeprecateReply:
+	case internal.DomainDeprecateReply:
 		message = NewDomainDeprecateReply()
-	case messagetypes.DomainDeprecateRequest:
+	case internal.DomainDeprecateRequest:
 		message = NewDomainDeprecateRequest()
 
 	// Heartbeat
-	case messagetypes.HeartbeatReply:
+	case internal.HeartbeatReply:
 		message = NewHeartbeatReply()
-	case messagetypes.HeartbeatRequest:
+	case internal.HeartbeatRequest:
 		message = NewHeartbeatRequest()
 
 	// Initialize
-	case messagetypes.InitializeReply:
+	case internal.InitializeReply:
 		message = NewInitializeReply()
-	case messagetypes.InitializeRequest:
+	case internal.InitializeRequest:
 		message = NewInitializeRequest()
 
 	// Terminate
-	case messagetypes.TerminateReply:
+	case internal.TerminateReply:
 		message = NewTerminateReply()
-	case messagetypes.TerminateRequest:
+	case internal.TerminateRequest:
 		message = NewTerminateRequest()
 
 	// NewWorker
-	case messagetypes.NewWorkerReply:
+	case internal.NewWorkerReply:
 		message = NewNewWorkerReply()
-	case messagetypes.NewWorkerRequest:
+	case internal.NewWorkerRequest:
 		message = NewNewWorkerRequest()
 
 	// StopWorker
-	case messagetypes.StopWorkerRequest:
+	case internal.StopWorkerRequest:
 		message = NewStopWorkerRequest()
-	case messagetypes.StopWorkerReply:
+	case internal.StopWorkerReply:
 		message = NewStopWorkerReply()
 
 	// Ping
-	case messagetypes.PingReply:
+	case internal.PingReply:
 		message = NewPingReply()
-	case messagetypes.PingRequest:
+	case internal.PingRequest:
 		message = NewPingRequest()
 
 	// Log
-	case messagetypes.LogReply:
+	case internal.LogReply:
 		message = NewLogReply()
-	case messagetypes.LogRequest:
+	case internal.LogRequest:
 		message = NewLogRequest()
 
 	// --------------------------------------------------------------------------
 	// Workflow messages
 
 	// WorkflowExecute
-	case messagetypes.WorkflowExecuteReply:
+	case internal.WorkflowExecuteReply:
 		message = NewWorkflowExecuteReply()
-	case messagetypes.WorkflowExecuteRequest:
+	case internal.WorkflowExecuteRequest:
 		message = NewWorkflowExecuteRequest()
 
 	// WorkflowInvoke
-	case messagetypes.WorkflowInvokeReply:
+	case internal.WorkflowInvokeReply:
 		message = NewWorkflowInvokeReply()
-	case messagetypes.WorkflowInvokeRequest:
+	case internal.WorkflowInvokeRequest:
 		message = NewWorkflowInvokeRequest()
 
 	// WorkflowRegister
-	case messagetypes.WorkflowRegisterReply:
+	case internal.WorkflowRegisterReply:
 		message = NewWorkflowRegisterReply()
-	case messagetypes.WorkflowRegisterRequest:
+	case internal.WorkflowRegisterRequest:
 		message = NewWorkflowRegisterRequest()
 
 	// WorkflowCancel
-	case messagetypes.WorkflowCancelReply:
+	case internal.WorkflowCancelReply:
 		message = NewWorkflowCancelReply()
-	case messagetypes.WorkflowCancelRequest:
+	case internal.WorkflowCancelRequest:
 		message = NewWorkflowCancelRequest()
 
 	// WorkflowSignal
-	case messagetypes.WorkflowSignalInvokeRequest:
+	case internal.WorkflowSignalInvokeRequest:
 		message = NewWorkflowSignalInvokeRequest()
-	case messagetypes.WorkflowSignalInvokeReply:
+	case internal.WorkflowSignalInvokeReply:
 		message = NewWorkflowSignalInvokeReply()
 
 	// WorkflowTerminate
-	case messagetypes.WorkflowTerminateReply:
+	case internal.WorkflowTerminateReply:
 		message = NewWorkflowTerminateReply()
-	case messagetypes.WorkflowTerminateRequest:
+	case internal.WorkflowTerminateRequest:
 		message = NewWorkflowTerminateRequest()
 
 	// WorkflowSignalWithStart
-	case messagetypes.WorkflowSignalWithStartReply:
+	case internal.WorkflowSignalWithStartReply:
 		message = NewWorkflowSignalWithStartReply()
-	case messagetypes.WorkflowSignalWithStartRequest:
+	case internal.WorkflowSignalWithStartRequest:
 		message = NewWorkflowSignalWithStartRequest()
 
 	// WorkflowSetCacheSize
-	case messagetypes.WorkflowSetCacheSizeRequest:
+	case internal.WorkflowSetCacheSizeRequest:
 		message = NewWorkflowSetCacheSizeRequest()
-	case messagetypes.WorkflowSetCacheSizeReply:
+	case internal.WorkflowSetCacheSizeReply:
 		message = NewWorkflowSetCacheSizeReply()
 
 	// WorkflowQuery
-	case messagetypes.WorkflowQueryReply:
+	case internal.WorkflowQueryReply:
 		message = NewWorkflowQueryReply()
-	case messagetypes.WorkflowQueryRequest:
+	case internal.WorkflowQueryRequest:
 		message = NewWorkflowQueryRequest()
 
 	// WorkflowMutable
-	case messagetypes.WorkflowMutableReply:
+	case internal.WorkflowMutableReply:
 		message = NewWorkflowMutableReply()
-	case messagetypes.WorkflowMutableRequest:
+	case internal.WorkflowMutableRequest:
 		message = NewWorkflowMutableRequest()
 
 	// WorkflowDescribeExecution
-	case messagetypes.WorkflowDescribeExecutionReply:
+	case internal.WorkflowDescribeExecutionReply:
 		message = NewWorkflowDescribeExecutionReply()
-	case messagetypes.WorkflowDescribeExecutionRequest:
+	case internal.WorkflowDescribeExecutionRequest:
 		message = NewWorkflowDescribeExecutionRequest()
 
 	// WorkflowGetResult
-	case messagetypes.WorkflowGetResultRequest:
+	case internal.WorkflowGetResultRequest:
 		message = NewWorkflowGetResultRequest()
-	case messagetypes.WorkflowGetResultReply:
+	case internal.WorkflowGetResultReply:
 		message = NewWorkflowGetResultReply()
 
 	// WorkflowSignalSubscribe
-	case messagetypes.WorkflowSignalSubscribeReply:
+	case internal.WorkflowSignalSubscribeReply:
 		message = NewWorkflowSignalSubscribeReply()
-	case messagetypes.WorkflowSignalSubscribeRequest:
+	case internal.WorkflowSignalSubscribeRequest:
 		message = NewWorkflowSignalSubscribeRequest()
 
 	// WorkflowSignal
-	case messagetypes.WorkflowSignalReply:
+	case internal.WorkflowSignalReply:
 		message = NewWorkflowSignalReply()
-	case messagetypes.WorkflowSignalRequest:
+	case internal.WorkflowSignalRequest:
 		message = NewWorkflowSignalRequest()
 
 	// WorkflowHasLastResult
-	case messagetypes.WorkflowHasLastResultReply:
+	case internal.WorkflowHasLastResultReply:
 		message = NewWorkflowHasLastResultReply()
-	case messagetypes.WorkflowHasLastResultRequest:
+	case internal.WorkflowHasLastResultRequest:
 		message = NewWorkflowHasLastResultRequest()
 
 	// WorkflowGetLastResult
-	case messagetypes.WorkflowGetLastResultReply:
+	case internal.WorkflowGetLastResultReply:
 		message = NewWorkflowGetLastResultReply()
-	case messagetypes.WorkflowGetLastResultRequest:
+	case internal.WorkflowGetLastResultRequest:
 		message = NewWorkflowGetLastResultRequest()
 
 	// WorkflowDisconnectContext
-	case messagetypes.WorkflowDisconnectContextReply:
+	case internal.WorkflowDisconnectContextReply:
 		message = NewWorkflowDisconnectContextReply()
-	case messagetypes.WorkflowDisconnectContextRequest:
+	case internal.WorkflowDisconnectContextRequest:
 		message = NewWorkflowDisconnectContextRequest()
 
 	// WorkflowGetTime
-	case messagetypes.WorkflowGetTimeReply:
+	case internal.WorkflowGetTimeReply:
 		message = NewWorkflowGetTimeReply()
-	case messagetypes.WorkflowGetTimeRequest:
+	case internal.WorkflowGetTimeRequest:
 		message = NewWorkflowGetTimeRequest()
 
 	// WorkflowSleep
-	case messagetypes.WorkflowSleepReply:
+	case internal.WorkflowSleepReply:
 		message = NewWorkflowSleepReply()
-	case messagetypes.WorkflowSleepRequest:
+	case internal.WorkflowSleepRequest:
 		message = NewWorkflowSleepRequest()
 
 	// WorkflowExecuteChild
-	case messagetypes.WorkflowExecuteChildReply:
+	case internal.WorkflowExecuteChildReply:
 		message = NewWorkflowExecuteChildReply()
-	case messagetypes.WorkflowExecuteChildRequest:
+	case internal.WorkflowExecuteChildRequest:
 		message = NewWorkflowExecuteChildRequest()
 
 	// WorkflowWaitForChild
-	case messagetypes.WorkflowWaitForChildReply:
+	case internal.WorkflowWaitForChildReply:
 		message = NewWorkflowWaitForChildReply()
-	case messagetypes.WorkflowWaitForChildRequest:
+	case internal.WorkflowWaitForChildRequest:
 		message = NewWorkflowWaitForChildRequest()
 
 	// WorkflowSignalChild
-	case messagetypes.WorkflowSignalChildReply:
+	case internal.WorkflowSignalChildReply:
 		message = NewWorkflowSignalChildReply()
-	case messagetypes.WorkflowSignalChildRequest:
+	case internal.WorkflowSignalChildRequest:
 		message = NewWorkflowSignalChildRequest()
 
 	// WorkflowCancelChild
-	case messagetypes.WorkflowCancelChildReply:
+	case internal.WorkflowCancelChildReply:
 		message = NewWorkflowCancelChildReply()
-	case messagetypes.WorkflowCancelChildRequest:
+	case internal.WorkflowCancelChildRequest:
 		message = NewWorkflowCancelChildRequest()
 
 	// WorkflowSetQueryHandler
-	case messagetypes.WorkflowSetQueryHandlerReply:
+	case internal.WorkflowSetQueryHandlerReply:
 		message = NewWorkflowSetQueryHandlerReply()
-	case messagetypes.WorkflowSetQueryHandlerRequest:
+	case internal.WorkflowSetQueryHandlerRequest:
 		message = NewWorkflowSetQueryHandlerRequest()
 
 	// WorkflowQueryInvoke
-	case messagetypes.WorkflowQueryInvokeReply:
+	case internal.WorkflowQueryInvokeReply:
 		message = NewWorkflowQueryInvokeReply()
-	case messagetypes.WorkflowQueryInvokeRequest:
+	case internal.WorkflowQueryInvokeRequest:
 		message = NewWorkflowQueryInvokeRequest()
 
 	// WorkflowGetVersion
-	case messagetypes.WorkflowGetVersionReply:
+	case internal.WorkflowGetVersionReply:
 		message = NewWorkflowGetVersionReply()
-	case messagetypes.WorkflowGetVersionRequest:
+	case internal.WorkflowGetVersionRequest:
 		message = NewWorkflowGetVersionRequest()
 
 	// WorkflowFutureReady
-	case messagetypes.WorkflowFutureReadyReply:
+	case internal.WorkflowFutureReadyReply:
 		message = NewWorkflowFutureReadyReply()
-	case messagetypes.WorkflowFutureReadyRequest:
+	case internal.WorkflowFutureReadyRequest:
 		message = NewWorkflowFutureReadyRequest()
 
 	// --------------------------------------------------------------------------
 	// Activity messages
 
 	// ActivityExecute
-	case messagetypes.ActivityExecuteReply:
+	case internal.ActivityExecuteReply:
 		message = NewActivityExecuteReply()
-	case messagetypes.ActivityExecuteRequest:
+	case internal.ActivityExecuteRequest:
 		message = NewActivityExecuteRequest()
 
 	// ActivityInvoke
-	case messagetypes.ActivityInvokeReply:
+	case internal.ActivityInvokeReply:
 		message = NewActivityInvokeReply()
-	case messagetypes.ActivityInvokeRequest:
+	case internal.ActivityInvokeRequest:
 		message = NewActivityInvokeRequest()
 
 	// ActivityGetHeartbeatDetails
-	case messagetypes.ActivityGetHeartbeatDetailsReply:
+	case internal.ActivityGetHeartbeatDetailsReply:
 		message = NewActivityGetHeartbeatDetailsReply()
-	case messagetypes.ActivityGetHeartbeatDetailsRequest:
+	case internal.ActivityGetHeartbeatDetailsRequest:
 		message = NewActivityGetHeartbeatDetailsRequest()
 
 	// ActivityRecordHeartbeat
-	case messagetypes.ActivityRecordHeartbeatReply:
+	case internal.ActivityRecordHeartbeatReply:
 		message = NewActivityRecordHeartbeatReply()
-	case messagetypes.ActivityRecordHeartbeatRequest:
+	case internal.ActivityRecordHeartbeatRequest:
 		message = NewActivityRecordHeartbeatRequest()
 
 	// ActivityHasHeartbeatDetails
-	case messagetypes.ActivityHasHeartbeatDetailsReply:
+	case internal.ActivityHasHeartbeatDetailsReply:
 		message = NewActivityHasHeartbeatDetailsReply()
-	case messagetypes.ActivityHasHeartbeatDetailsRequest:
+	case internal.ActivityHasHeartbeatDetailsRequest:
 		message = NewActivityHasHeartbeatDetailsRequest()
 
 	// ActivityStopping
-	case messagetypes.ActivityStoppingReply:
+	case internal.ActivityStoppingReply:
 		message = NewActivityStoppingReply()
-	case messagetypes.ActivityStoppingRequest:
+	case internal.ActivityStoppingRequest:
 		message = NewActivityStoppingRequest()
 
 	// ActivityRegister
-	case messagetypes.ActivityRegisterReply:
+	case internal.ActivityRegisterReply:
 		message = NewActivityRegisterReply()
-	case messagetypes.ActivityRegisterRequest:
+	case internal.ActivityRegisterRequest:
 		message = NewActivityRegisterRequest()
 
 	// ActivityExecuteLocal
-	case messagetypes.ActivityExecuteLocalReply:
+	case internal.ActivityExecuteLocalReply:
 		message = NewActivityExecuteLocalReply()
-	case messagetypes.ActivityExecuteLocalRequest:
+	case internal.ActivityExecuteLocalRequest:
 		message = NewActivityExecuteLocalRequest()
 
 	// ActivityInvokeLocal
-	case messagetypes.ActivityInvokeLocalReply:
+	case internal.ActivityInvokeLocalReply:
 		message = NewActivityInvokeLocalReply()
-	case messagetypes.ActivityInvokeLocalRequest:
+	case internal.ActivityInvokeLocalRequest:
 		message = NewActivityInvokeLocalRequest()
 
 	// ActivityGetInfo
-	case messagetypes.ActivityGetInfoReply:
+	case internal.ActivityGetInfoReply:
 		message = NewActivityGetInfoReply()
-	case messagetypes.ActivityGetInfoRequest:
+	case internal.ActivityGetInfoRequest:
 		message = NewActivityGetInfoRequest()
 
 	// ActivityComplete
-	case messagetypes.ActivityCompleteReply:
+	case internal.ActivityCompleteReply:
 		message = NewActivityCompleteReply()
-	case messagetypes.ActivityCompleteRequest:
+	case internal.ActivityCompleteRequest:
 		message = NewActivityCompleteRequest()
 
 	// ActivityStart
-	case messagetypes.ActivityStartReply:
+	case internal.ActivityStartReply:
 		message = NewActivityStartReply()
-	case messagetypes.ActivityStartRequest:
+	case internal.ActivityStartRequest:
 		message = NewActivityStartRequest()
 
 	// ActivityGetResult
-	case messagetypes.ActivityGetResultReply:
+	case internal.ActivityGetResultReply:
 		message = NewActivityGetResultReply()
-	case messagetypes.ActivityGetResultRequest:
+	case internal.ActivityGetResultRequest:
 		message = NewActivityGetResultRequest()
 
 		// ActivityStartLocal
-	case messagetypes.ActivityStartLocalReply:
+	case internal.ActivityStartLocalReply:
 		message = NewActivityStartLocalReply()
-	case messagetypes.ActivityStartLocalRequest:
+	case internal.ActivityStartLocalRequest:
 		message = NewActivityStartLocalRequest()
 
 	// ActivityGetLocalResult
-	case messagetypes.ActivityGetLocalResultReply:
+	case internal.ActivityGetLocalResultReply:
 		message = NewActivityGetLocalResultReply()
-	case messagetypes.ActivityGetLocalResultRequest:
+	case internal.ActivityGetLocalResultRequest:
 		message = NewActivityGetLocalResultRequest()
 
 	// default

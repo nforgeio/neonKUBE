@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -43,8 +43,8 @@ type (
 func NewActivityRegisterRequest() *ActivityRegisterRequest {
 	request := new(ActivityRegisterRequest)
 	request.ActivityRequest = NewActivityRequest()
-	request.SetType(messagetypes.ActivityRegisterRequest)
-	request.SetReplyType(messagetypes.ActivityRegisterReply)
+	request.SetType(internal.ActivityRegisterRequest)
+	request.SetReplyType(internal.ActivityRegisterReply)
 
 	return request
 }

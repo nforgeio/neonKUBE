@@ -42,9 +42,7 @@ func handleLogReply(reply *messages.LogReply, op *messages.Operation) error {
 // Workflow message types
 
 func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *messages.Operation) error {
-	defer func() {
-		_ = WorkflowContexts.Remove(op.GetContextID())
-	}()
+	defer WorkflowContexts.Remove(op.GetContextID())
 
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
@@ -53,8 +51,7 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *messages
 		zap.Int64("ClientId", clientID),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// WorkflowContext at the specified WorflowContextID
 	wectx := WorkflowContexts.Get(contextID)
@@ -121,8 +118,7 @@ func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply, 
 		zap.Int64("ClientId", reply.GetClientID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// WorkflowContext at the specified WorflowContextID
 	if wectx := WorkflowContexts.Get(contextID); wectx == nil {
@@ -140,8 +136,7 @@ func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply, op
 		zap.Int64("ClientId", reply.GetClientID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// WorkflowContext at the specified WorflowContextID
 	if wectx := WorkflowContexts.Get(contextID); wectx == nil {
@@ -159,8 +154,7 @@ func handleWorkflowFutureReadyReply(reply *messages.WorkflowFutureReadyReply, op
 		zap.Int64("ClientId", reply.GetClientID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// set the reply
 	return op.SendChannel(true, nil)
@@ -180,8 +174,7 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply, op *messages
 		zap.Int64("ClientId", reply.GetClientID()),
 		zap.Int64("ActivityContextId", contextID),
 		zap.Int64("RequestId", requestID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// ActivityContext at the specified WorflowContextID
 	if actx := ActivityContexts.Get(contextID); actx == nil {
@@ -208,8 +201,7 @@ func handleActivityStoppingReply(reply *messages.ActivityStoppingReply, op *mess
 		zap.Int64("ClientId", reply.GetClientID()),
 		zap.Int64("ActivityContextId", contextID),
 		zap.Int64("RequestId", requestID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// ActivityContext at the specified WorflowContextID
 	if actx := ActivityContexts.Get(contextID); actx == nil {
@@ -221,9 +213,7 @@ func handleActivityStoppingReply(reply *messages.ActivityStoppingReply, op *mess
 }
 
 func handleActivityInvokeLocalReply(reply *messages.ActivityInvokeLocalReply, op *messages.Operation) error {
-	defer func() {
-		_ = ActivityContexts.Remove(op.GetContextID())
-	}()
+	defer ActivityContexts.Remove(op.GetContextID())
 
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
@@ -231,8 +221,7 @@ func handleActivityInvokeLocalReply(reply *messages.ActivityInvokeLocalReply, op
 		zap.Int64("ClientId", reply.GetClientID()),
 		zap.Int64("ActivityContextId", contextID),
 		zap.Int64("RequestId", requestID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// ActivityContext at the specified WorflowContextID
 	if actx := ActivityContexts.Get(contextID); actx == nil {

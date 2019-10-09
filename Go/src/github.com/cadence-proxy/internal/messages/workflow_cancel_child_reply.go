@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -39,7 +39,7 @@ type (
 func NewWorkflowCancelChildReply() *WorkflowCancelChildReply {
 	reply := new(WorkflowCancelChildReply)
 	reply.WorkflowReply = NewWorkflowReply()
-	reply.SetType(messagetypes.WorkflowCancelChildReply)
+	reply.SetType(internal.WorkflowCancelChildReply)
 
 	return reply
 }

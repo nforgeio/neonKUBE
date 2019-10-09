@@ -48,8 +48,7 @@ func handlePingRequest(requestCtx context.Context, request *messages.PingRequest
 	Logger.Debug("PingRequest Received",
 		zap.Int64("ClientId", request.GetClientID()),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new PingReply
 	reply := createReplyMessage(request)
@@ -64,8 +63,7 @@ func handleCancelRequest(requestCtx context.Context, request *messages.CancelReq
 		zap.Int64("ClientId", request.GetClientID()),
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int64("TargetId", targetID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new InitializeReply
 	reply := createReplyMessage(request)
@@ -78,8 +76,7 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 	Logger.Debug("ConnectRequest Received",
 		zap.Int64("ClientId", request.GetClientID()),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new ConnectReply
 	reply := createReplyMessage(request)
@@ -103,8 +100,8 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 		defaultDomain,
 		request.GetRetries(),
 		request.GetRetryDelay(),
-		&opts,
-	)
+		&opts)
+
 	if err != nil {
 		buildReply(reply, proxyerror.NewCadenceError(internal.ErrConnection))
 		return reply
@@ -123,19 +120,22 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 
 		// register the domain
 		retention := int32(365)
-		err = clientHelper.RegisterDomain(ctx,
+		err = clientHelper.RegisterDomain(
+			ctx,
 			&cadenceshared.RegisterDomainRequest{
 				Name:                                   &defaultDomain,
 				WorkflowExecutionRetentionPeriodInDays: &retention,
 			},
 		)
+
 		if err != nil {
 			if _, ok := err.(*cadenceshared.DomainAlreadyExistsError); !ok {
 				Logger.Error("failed to register domain",
 					zap.String("Domain Name", defaultDomain),
-					zap.Error(err),
-				)
+					zap.Error(err))
+
 				buildReply(reply, proxyerror.NewCadenceError(err))
+
 				return reply
 			}
 		}
@@ -152,8 +152,7 @@ func handleDisconnectRequest(requestCtx context.Context, request *messages.Disco
 	Logger.Debug("DisconnectRequest Received",
 		zap.Int64("ClientId", clientID),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new DisconnectReply
 	reply := createReplyMessage(request)
@@ -168,11 +167,12 @@ func handleDisconnectRequest(requestCtx context.Context, request *messages.Disco
 	if err := clientHelper.DestroyClient(); err != nil {
 		Logger.Error("Could not disconnect cadence client.",
 			zap.Int64("ClientID", clientID),
-			zap.Error(err),
-		)
+			zap.Error(err))
+
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
+
 	_ = Clients.Remove(clientID)
 
 	Logger.Info("Successfully removed client.", zap.Int64("ClientID", clientID))
@@ -185,8 +185,7 @@ func handleHeartbeatRequest(requestCtx context.Context, request *messages.Heartb
 	Logger.Debug("HeartbeatRequest Received",
 		zap.Int64("ClientId", request.GetClientID()),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new HeartbeatReply
 	reply := createReplyMessage(request)
@@ -196,11 +195,10 @@ func handleHeartbeatRequest(requestCtx context.Context, request *messages.Heartb
 }
 
 func handleInitializeRequest(requestCtx context.Context, request *messages.InitializeRequest) messages.IProxyReply {
-	Logger.Debug("InitializeRequest Received",
+	Logger.Info("InitializeRequest Received",
 		zap.Int64("ClientId", request.GetClientID()),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new InitializeReply
 	reply := createReplyMessage(request)
@@ -211,10 +209,10 @@ func handleInitializeRequest(requestCtx context.Context, request *messages.Initi
 	} else {
 		address := *request.GetLibraryAddress()
 		port := request.GetLibraryPort()
-		replyAddress = fmt.Sprintf("http://%s:%d/",
+		replyAddress = fmt.Sprintf(
+			"http://%s:%d/",
 			address,
-			port,
-		)
+			port)
 	}
 
 	logLevel := request.GetLogLevel()
@@ -224,8 +222,8 @@ func handleInitializeRequest(requestCtx context.Context, request *messages.Initi
 
 	Logger.Info("Initialization info",
 		zap.String("Reply Address", replyAddress),
-		zap.String("LogLevel", logLevel.String()),
-	)
+		zap.String("LogLevel", logLevel.String()))
+
 	buildReply(reply, nil)
 
 	return reply
@@ -235,8 +233,7 @@ func handleTerminateRequest(requestCtx context.Context, request *messages.Termin
 	Logger.Debug("TerminateRequest Received",
 		zap.Int64("ClientId", request.GetClientID()),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new TerminateReply
 	reply := createReplyMessage(request)
@@ -258,8 +255,7 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("Domain", domain),
 		zap.String("TaskList", taskList),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new NewWorkerReply
 	reply := createReplyMessage(request)
@@ -281,20 +277,21 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 	worker, err := clientHelper.StartWorker(
 		domain,
 		taskList,
-		*opts,
-	)
+		*opts)
+
 	if err != nil {
 		buildReply(reply, proxyerror.NewCadenceError(err), workerID)
 		return reply
 	}
+
 	workerID = Workers.Add(workerID, worker)
 
 	Logger.Info("New Worker Created",
 		zap.Int64("WorkerId", workerID),
 		zap.Int64("ClientId", clientID),
 		zap.String("Domain", domain),
-		zap.String("TaskList", taskList),
-	)
+		zap.String("TaskList", taskList))
+
 	buildReply(reply, nil, workerID)
 
 	return reply
@@ -307,8 +304,7 @@ func handleStopWorkerRequest(requestCtx context.Context, request *messages.StopW
 		zap.Int64("WorkerId", workerID),
 		zap.Int64("ClientId", clientID),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new StopWorkerReply
 	reply := createReplyMessage(request)
@@ -326,13 +322,14 @@ func handleStopWorkerRequest(requestCtx context.Context, request *messages.StopW
 		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
 		return reply
 	}
+
 	clientHelper.StopWorker(worker)
 	workerID = Workers.Remove(workerID)
 
 	Logger.Info("Worker has been removed from Workers",
 		zap.Int64("WorkerID", workerID),
-		zap.Int64("ClientId", clientID),
-	)
+		zap.Int64("ClientId", clientID))
+
 	buildReply(reply, nil)
 
 	return reply
@@ -345,8 +342,7 @@ func handleDomainDescribeRequest(requestCtx context.Context, request *messages.D
 		zap.String("Domain", domain),
 		zap.Int64("ClientId", clientID),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new DomainDescribeReply
 	reply := createReplyMessage(request)
@@ -367,6 +363,7 @@ func handleDomainDescribeRequest(requestCtx context.Context, request *messages.D
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
+
 	buildReply(reply, nil, describeDomainResponse)
 
 	return reply
@@ -379,8 +376,7 @@ func handleDomainRegisterRequest(requestCtx context.Context, request *messages.D
 		zap.String("Domain", domainName),
 		zap.Int64("ClientId", clientID),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new DomainRegisterReply
 	reply := createReplyMessage(request)
@@ -412,11 +408,13 @@ func handleDomainRegisterRequest(requestCtx context.Context, request *messages.D
 	if err != nil {
 		Logger.Error("failed to register domain",
 			zap.String("Domain Name", domainName),
-			zap.Error(err),
-		)
+			zap.Error(err))
+
 		buildReply(reply, proxyerror.NewCadenceError(err))
+
 		return reply
 	}
+
 	buildReply(reply, nil)
 
 	return reply
@@ -429,8 +427,7 @@ func handleDomainUpdateRequest(requestCtx context.Context, request *messages.Dom
 		zap.String("Domain", domain),
 		zap.Int64("ClientId", clientID),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new DomainUpdateReply
 	reply := createReplyMessage(request)
@@ -472,6 +469,7 @@ func handleDomainUpdateRequest(requestCtx context.Context, request *messages.Dom
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
+
 	buildReply(reply, nil)
 
 	return reply
@@ -487,8 +485,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 		zap.String("Workflow", workflowName),
 		zap.Int64("ClientId", clientID),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowRegisterReply
 	reply := createReplyMessage(request)
@@ -502,8 +499,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 			zap.Int64("ClientId", clientID),
 			zap.Int64("ContextId", contextID),
 			zap.Int64("RequestId", requestID),
-			zap.Int("ProcessId", os.Getpid()),
-		)
+			zap.Int("ProcessId", os.Getpid()))
 
 		// set the WorkflowContext in WorkflowContexts
 		wectx := proxyworkflow.NewWorkflowContext(ctx)
@@ -546,8 +542,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 			zap.Int64("ClientId", clientID),
 			zap.Int64("ContextId", contextID),
 			zap.Int64("RequestId", requestID),
-			zap.Int("ProcessId", os.Getpid()),
-		)
+			zap.Int("ProcessId", os.Getpid()))
 
 		// block and get result
 		result := <-op.GetChannel()
@@ -563,8 +558,8 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.Error(s),
-				zap.Int("ProcessId", os.Getpid()),
-			)
+				zap.Int("ProcessId", os.Getpid()))
+
 			return nil, s
 
 		case []byte:
@@ -574,8 +569,8 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.ByteString("Result", s),
-				zap.Int("ProcessId", os.Getpid()),
-			)
+				zap.Int("ProcessId", os.Getpid()))
+
 			return s, nil
 
 		default:
@@ -585,11 +580,12 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.Any("Result", s),
-				zap.Int("ProcessId", os.Getpid()),
-			)
+				zap.Int("ProcessId", os.Getpid()))
+
 			return nil, fmt.Errorf("Unexpected result type %v.  result must be an error or []byte.", reflect.TypeOf(s))
 		}
 	}
+
 	workflow.RegisterWithOptions(workflowFunc, workflow.RegisterOptions{Name: workflowName})
 	Logger.Debug("workflow successfully registered", zap.String("WorkflowName", workflowName))
 	buildReply(reply, nil)
@@ -606,8 +602,7 @@ func handleWorkflowExecuteRequest(requestCtx context.Context, request *messages.
 		zap.Int64("ClientId", clientID),
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("Domain", domain),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowExecuteReply
 	reply := createReplyMessage(request)
@@ -634,16 +629,18 @@ func handleWorkflowExecuteRequest(requestCtx context.Context, request *messages.
 		domain,
 		opts,
 		workflowName,
-		request.GetArgs(),
-	)
+		request.GetArgs())
+
 	if err != nil {
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
+
 	workflowExecution := workflow.Execution{
 		ID:    workflowRun.GetID(),
 		RunID: workflowRun.GetRunID(),
 	}
+
 	buildReply(reply, nil, &workflowExecution)
 
 	return reply
@@ -658,8 +655,7 @@ func handleWorkflowCancelRequest(requestCtx context.Context, request *messages.W
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowId", workflowID),
 		zap.String("RunId", runID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowCancelReply
 	reply := createReplyMessage(request)
@@ -679,12 +675,13 @@ func handleWorkflowCancelRequest(requestCtx context.Context, request *messages.W
 		ctx,
 		workflowID,
 		runID,
-		*request.GetDomain(),
-	)
+		*request.GetDomain())
+
 	if err != nil {
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
+
 	buildReply(reply, nil)
 
 	return reply
@@ -699,8 +696,7 @@ func handleWorkflowTerminateRequest(requestCtx context.Context, request *message
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowId", workflowID),
 		zap.String("RunId", runID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowTerminateReply
 	reply := createReplyMessage(request)
@@ -722,12 +718,13 @@ func handleWorkflowTerminateRequest(requestCtx context.Context, request *message
 		*request.GetRunID(),
 		*request.GetDomain(),
 		*request.GetReason(),
-		request.GetDetails(),
-	)
+		request.GetDetails())
+
 	if err != nil {
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
+
 	buildReply(reply, nil)
 
 	return reply
@@ -742,8 +739,7 @@ func handleWorkflowSignalWithStartRequest(requestCtx context.Context, request *m
 		zap.Int64("ClientId", clientID),
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowId", workflowID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowSignalWithStartReply
 	reply := createReplyMessage(request)
@@ -767,12 +763,13 @@ func handleWorkflowSignalWithStartRequest(requestCtx context.Context, request *m
 		request.GetSignalArgs(),
 		*request.GetOptions(),
 		workflow,
-		request.GetWorkflowArgs(),
-	)
+		request.GetWorkflowArgs())
+
 	if err != nil {
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
+
 	buildReply(reply, nil, workflowExecution)
 
 	return reply
@@ -782,8 +779,7 @@ func handleWorkflowSetCacheSizeRequest(requestCtx context.Context, request *mess
 	Logger.Debug("WorkflowSetCacheSizeRequest Received",
 		zap.Int64("ClientId", request.GetClientID()),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowSetCacheSizeReply
 	reply := createReplyMessage(request)
@@ -799,8 +795,7 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 	Logger.Debug("WorkflowMutableRequest Received",
 		zap.Int64("ClientId", request.GetClientID()),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowMutableReply
 	reply := createReplyMessage(request)
@@ -827,18 +822,25 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 			if _v, _ok := b.(*proxyerror.CadenceError); _ok {
 				if v.GetType() == _v.GetType() &&
 					v.ToString() == _v.ToString() {
+
 					return true
 				}
+
 				return false
 			}
+
 			return false
 		}
+
 		if v, ok := a.([]byte); ok {
 			if _v, _ok := b.([]byte); _ok {
+
 				return bytes.Equal(v, _v)
 			}
+
 			return false
 		}
+
 		return false
 	}
 
@@ -849,8 +851,7 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 			ctx,
 			*mutableID,
 			mutableFunc,
-			equals,
-		)
+			equals)
 	} else {
 		value = workflow.SideEffect(ctx, mutableFunc)
 	}
@@ -858,10 +859,12 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 	// extract the result
 	var result []byte
 	err := value.Get(&result)
+
 	if err != nil {
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
+
 	buildReply(reply, nil, result)
 
 	return reply
@@ -876,8 +879,7 @@ func handleWorkflowDescribeExecutionRequest(requestCtx context.Context, request 
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowId", workflowID),
 		zap.String("RunId", runID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowDescribeExecutionReply
 	reply := createReplyMessage(request)
@@ -897,12 +899,13 @@ func handleWorkflowDescribeExecutionRequest(requestCtx context.Context, request 
 		ctx,
 		workflowID,
 		runID,
-		*request.GetDomain(),
-	)
+		*request.GetDomain())
+
 	if err != nil {
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
+
 	buildReply(reply, nil, dwer)
 
 	return reply
@@ -913,8 +916,7 @@ func handleWorkflowGetResultRequest(requestCtx context.Context, request *message
 	Logger.Debug("WorkflowGetResultRequest Received",
 		zap.Int64("ClientId", clientID),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowGetResultReply
 	reply := createReplyMessage(request)
@@ -934,8 +936,8 @@ func handleWorkflowGetResultRequest(requestCtx context.Context, request *message
 		ctx,
 		*request.GetWorkflowID(),
 		*request.GetRunID(),
-		*request.GetDomain(),
-	)
+		*request.GetDomain())
+
 	if err != nil {
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
@@ -948,6 +950,7 @@ func handleWorkflowGetResultRequest(requestCtx context.Context, request *message
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
+
 	buildReply(reply, nil, result)
 
 	return reply
@@ -962,8 +965,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 		zap.Int64("ClientId", clientID),
 		zap.Int64("ContextId", request.GetContextID()),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowSignalSubscribeReply
 	reply := createReplyMessage(request)
@@ -974,6 +976,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
 		return reply
 	}
+
 	ctx := wectx.GetContext()
 
 	// create selector for receiving signals
@@ -984,8 +987,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 		Logger.Debug("SignalReceived",
 			zap.String("Siganl", signalName),
 			zap.Int64("ClientId", clientID),
-			zap.ByteString("args", signalArgs),
-		)
+			zap.ByteString("args", signalArgs))
 
 		// create the WorkflowSignalInvokeRequest
 		requestID := NextRequestID()
@@ -1017,8 +1019,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 				zap.Int64("ClientId", clientID),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
-				zap.Error(s),
-			)
+				zap.Error(s))
 
 		case bool:
 			Logger.Info("signal completed successfully",
@@ -1026,8 +1027,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 				zap.Int64("ClientId", clientID),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
-				zap.Bool("Success", s),
-			)
+				zap.Bool("Success", s))
 
 		default:
 			Logger.Error("signal result unexpected",
@@ -1035,8 +1035,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 				zap.Int64("ClientId", clientID),
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
-				zap.Any("Result", s),
-			)
+				zap.Any("Result", s))
 		}
 	})
 
@@ -1076,8 +1075,7 @@ func handleWorkflowSignalRequest(requestCtx context.Context, request *messages.W
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowId", workflowID),
 		zap.String("RunId", runID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowSignalReply
 	reply := createReplyMessage(request)
@@ -1099,12 +1097,13 @@ func handleWorkflowSignalRequest(requestCtx context.Context, request *messages.W
 		runID,
 		*request.GetDomain(),
 		signalName,
-		request.GetSignalArgs(),
-	)
+		request.GetSignalArgs())
+
 	if err != nil {
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
+
 	buildReply(reply, nil)
 
 	return reply
@@ -1116,8 +1115,7 @@ func handleWorkflowHasLastResultRequest(requestCtx context.Context, request *mes
 		zap.Int64("ClientId", request.GetClientID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowHasLastResultReply
 	reply := createReplyMessage(request)
@@ -1143,8 +1141,7 @@ func handleWorkflowGetLastResultRequest(requestCtx context.Context, request *mes
 		zap.Int64("ClientId", request.GetClientID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowGetLastResultReply
 	reply := createReplyMessage(request)
@@ -1167,6 +1164,7 @@ func handleWorkflowGetLastResultRequest(requestCtx context.Context, request *mes
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
+
 	buildReply(reply, nil, result)
 
 	return reply
@@ -1178,8 +1176,7 @@ func handleWorkflowDisconnectContextRequest(requestCtx context.Context, request 
 		zap.Int64("ClientId", request.GetClientID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowDisconnectContextReply
 	reply := createReplyMessage(request)
@@ -1196,6 +1193,7 @@ func handleWorkflowDisconnectContextRequest(requestCtx context.Context, request 
 	disconnectedCtx, cancel := workflow.NewDisconnectedContext(wectx.GetContext())
 	wectx.SetContext(disconnectedCtx)
 	wectx.SetCancelFunction(cancel)
+
 	buildReply(reply, nil)
 
 	return reply
@@ -1207,8 +1205,7 @@ func handleWorkflowGetTimeRequest(requestCtx context.Context, request *messages.
 		zap.Int64("ClientId", request.GetClientID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowGetTimeReply
 	reply := createReplyMessage(request)
@@ -1223,6 +1220,7 @@ func handleWorkflowGetTimeRequest(requestCtx context.Context, request *messages.
 	// set replay status
 	ctx := wectx.GetContext()
 	setReplayStatus(ctx, reply)
+
 	buildReply(reply, nil, workflow.Now(ctx))
 
 	return reply
@@ -1236,8 +1234,7 @@ func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.Wo
 		zap.Int64("ClientId", clientID),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowSleepReply
 	reply := createReplyMessage(request)
@@ -1267,6 +1264,7 @@ func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.Wo
 		buildReply(reply, proxyerror.NewCadenceError(err, proxyerror.Cancelled))
 		return reply
 	}
+
 	buildReply(reply, nil)
 
 	return reply
@@ -1282,8 +1280,7 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 		zap.Int64("ClientId", clientID),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowExecuteChildReply
 	reply := createReplyMessage(request)
@@ -1329,6 +1326,7 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 	if err != nil {
 		buildReply(reply, proxyerror.NewCadenceError(err))
 	}
+
 	buildReply(reply, nil, append(make([]interface{}, 0), childID, childWE))
 
 	return reply
@@ -1342,14 +1340,18 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 		zap.Int64("ClientId", request.GetClientID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowWaitForChildReply
 	reply := createReplyMessage(request)
 
 	// get the child context from the parent workflow context
 	wectx := WorkflowContexts.Get(contextID)
+	if wectx == nil {
+		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
+		return reply
+	}
+
 	cctx := wectx.GetChildContext(childID)
 	if cctx == nil {
 		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
@@ -1369,13 +1371,15 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 		} else {
 			cadenceError = proxyerror.NewCadenceError(err)
 		}
+
 		buildReply(reply, cadenceError)
+
 		return reply
 	}
+
 	buildReply(reply, nil, result)
-	defer func() {
-		_ = wectx.RemoveChildContext(childID)
-	}()
+
+	defer wectx.RemoveChildContext(childID)
 
 	return reply
 }
@@ -1388,18 +1392,22 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 	signalName := *request.GetSignalName()
 	Logger.Debug("WorkflowSignalChildRequest Received",
 		zap.String("Signal", signalName),
+		zap.Int64("ChildId", childID),
 		zap.Int64("ClientId", clientID),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
-		zap.Int64("ChildId", childID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowSignalChildReply
 	reply := createReplyMessage(request)
 
 	// get the child context from the parent workflow context
 	wectx := WorkflowContexts.Get(contextID)
+	if wectx == nil {
+		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
+		return reply
+	}
+
 	cctx := wectx.GetChildContext(childID)
 	if cctx == nil {
 		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
@@ -1414,8 +1422,7 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 	future := cctx.GetFuture().SignalChildWorkflow(
 		ctx,
 		signalName,
-		request.GetSignalArgs(),
-	)
+		request.GetSignalArgs())
 
 	// Send ACK: Commented out because its no longer needed.
 	// op := sendFutureACK(contextID, requestID, clientID)
@@ -1427,6 +1434,7 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
+
 	buildReply(reply, nil, result)
 
 	return reply
@@ -1440,14 +1448,18 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 		zap.Int64("ClientId", request.GetClientID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowCancelChildReply
 	reply := createReplyMessage(request)
 
 	// get the child context from the parent workflow context
 	wectx := WorkflowContexts.Get(contextID)
+	if wectx == nil {
+		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
+		return reply
+	}
+
 	cctx := wectx.GetChildContext(childID)
 	if cctx == nil {
 		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
@@ -1461,6 +1473,7 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 	// call the cancel function
 	cancel := cctx.GetCancelFunction()
 	cancel()
+
 	buildReply(reply, nil)
 
 	return reply
@@ -1475,8 +1488,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 		zap.Int64("ClientId", clientID),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowSetQueryHandlerReply
 	reply := createReplyMessage(request)
@@ -1497,8 +1509,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 			zap.Int64("ClientId", clientID),
 			zap.Int64("ContextId", contextID),
 			zap.Int64("RequestId", requestID),
-			zap.Int("ProcessId", os.Getpid()),
-		)
+			zap.Int("ProcessId", os.Getpid()))
 
 		workflowQueryInvokeRequest := messages.NewWorkflowQueryInvokeRequest()
 		workflowQueryInvokeRequest.SetRequestID(requestID)
@@ -1524,8 +1535,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 			zap.Int64("ClientId", clientID),
 			zap.Int64("ContextId", contextID),
 			zap.Int64("RequestId", requestID),
-			zap.Int("ProcessId", os.Getpid()),
-		)
+			zap.Int("ProcessId", os.Getpid()))
 
 		// wait for ActivityInvokeReply
 		result := <-op.GetChannel()
@@ -1537,8 +1547,8 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.Error(s),
-				zap.Int("ProcessId", os.Getpid()),
-			)
+				zap.Int("ProcessId", os.Getpid()))
+
 			return nil, s
 
 		case []byte:
@@ -1548,8 +1558,8 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.ByteString("Result", s),
-				zap.Int("ProcessId", os.Getpid()),
-			)
+				zap.Int("ProcessId", os.Getpid()))
+
 			return s, nil
 
 		default:
@@ -1559,8 +1569,8 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 				zap.Int64("ContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.Any("Result", s),
-				zap.Int("ProcessId", os.Getpid()),
-			)
+				zap.Int("ProcessId", os.Getpid()))
+
 			return nil, fmt.Errorf("Unexpected result type %v.  result must be an error or []byte.", reflect.TypeOf(s))
 		}
 	}
@@ -1572,6 +1582,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
+
 	buildReply(reply, nil)
 
 	return reply
@@ -1588,8 +1599,7 @@ func handleWorkflowQueryRequest(requestCtx context.Context, request *messages.Wo
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.String("WorkflowId", workflowID),
 		zap.String("RunId", runID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowQueryReply
 	reply := createReplyMessage(request)
@@ -1611,8 +1621,8 @@ func handleWorkflowQueryRequest(requestCtx context.Context, request *messages.Wo
 		runID,
 		*request.GetDomain(),
 		queryName,
-		request.GetQueryArgs(),
-	)
+		request.GetQueryArgs())
+
 	if err != nil {
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
@@ -1627,6 +1637,7 @@ func handleWorkflowQueryRequest(requestCtx context.Context, request *messages.Wo
 			return reply
 		}
 	}
+
 	buildReply(reply, nil, result)
 
 	return reply
@@ -1638,8 +1649,7 @@ func handleWorkflowGetVersionRequest(requestCtx context.Context, request *messag
 		zap.Int64("ClientId", request.GetClientID()),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowGetVersionReply
 	reply := createReplyMessage(request)
@@ -1650,6 +1660,7 @@ func handleWorkflowGetVersionRequest(requestCtx context.Context, request *messag
 		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
 		return reply
 	}
+
 	ctx := wectx.GetContext()
 
 	// set ReplayStatus
@@ -1660,8 +1671,8 @@ func handleWorkflowGetVersionRequest(requestCtx context.Context, request *messag
 		ctx,
 		*request.GetChangeID(),
 		workflow.Version(request.GetMinSupported()),
-		workflow.Version(request.GetMaxSupported()),
-	)
+		workflow.Version(request.GetMaxSupported()))
+
 	buildReply(reply, nil, version)
 
 	return reply
@@ -1677,8 +1688,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 		zap.String("Activity", activityName),
 		zap.Int64("ClientId", clientID),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityRegisterReply
 	reply := createReplyMessage(request)
@@ -1692,8 +1702,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 			zap.Int64("ClientId", clientID),
 			zap.Int64("ActivityContextId", contextID),
 			zap.Int64("RequestId", requestID),
-			zap.Int("ProcessId", os.Getpid()),
-		)
+			zap.Int("ProcessId", os.Getpid()))
 
 		// add the context to ActivityContexts
 		actx := proxyactivity.NewActivityContext(ctx)
@@ -1727,8 +1736,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 				zap.Int64("ClientId", clientID),
 				zap.Int64("ActivityContextId", contextID),
 				zap.Int64("RequestId", requestID),
-				zap.Int("ProcessId", os.Getpid()),
-			)
+				zap.Int("ProcessId", os.Getpid()))
 
 			// send an ActivityStoppingRequest to the client
 			activityStoppingRequest := messages.NewActivityStoppingRequest()
@@ -1752,8 +1760,8 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 				zap.Int64("ClientId", clientID),
 				zap.Int64("ActivityContextId", contextID),
 				zap.Int64("RequestId", requestID),
-				zap.Int("ProcessId", os.Getpid()),
-			)
+				zap.Int("ProcessId", os.Getpid()))
+
 			<-stoppingReplyChan
 		}
 
@@ -1766,8 +1774,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 			zap.Int64("ClientId", clientID),
 			zap.Int64("ActivityContextId", contextID),
 			zap.Int64("RequestId", requestID),
-			zap.Int("ProcessId", os.Getpid()),
-		)
+			zap.Int("ProcessId", os.Getpid()))
 
 		// wait for ActivityInvokeReply
 		result := <-op.GetChannel()
@@ -1779,8 +1786,8 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 				zap.Int64("ActivityContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.Error(s),
-				zap.Int("ProcessId", os.Getpid()),
-			)
+				zap.Int("ProcessId", os.Getpid()))
+
 			return nil, s
 
 		case []byte:
@@ -1790,8 +1797,8 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 				zap.Int64("ActivityContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.ByteString("Result", s),
-				zap.Int("ProcessId", os.Getpid()),
-			)
+				zap.Int("ProcessId", os.Getpid()))
+
 			return s, nil
 
 		default:
@@ -1801,13 +1808,15 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 				zap.Int64("ActivityContextId", contextID),
 				zap.Int64("RequestId", requestID),
 				zap.Any("Result", s),
-				zap.Int("ProcessId", os.Getpid()),
-			)
+				zap.Int("ProcessId", os.Getpid()))
+
 			return nil, fmt.Errorf("Unexpected result type %v.  result must be an error or []byte.", reflect.TypeOf(s))
 		}
 	}
+
 	activity.RegisterWithOptions(activityFunc, activity.RegisterOptions{Name: activityName})
 	Logger.Debug("Activity Successfully Registered", zap.String("ActivityName", activityName))
+
 	buildReply(reply, nil)
 
 	return reply
@@ -1823,8 +1832,7 @@ func handleActivityExecuteRequest(requestCtx context.Context, request *messages.
 		zap.Int64("ClientId", clientID),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityExecuteReply
 	reply := createReplyMessage(request)
@@ -1858,6 +1866,7 @@ func handleActivityExecuteRequest(requestCtx context.Context, request *messages.
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
+
 	buildReply(reply, nil, result)
 
 	return reply
@@ -1875,8 +1884,7 @@ func handleActivityStartRequest(requestCtx context.Context, request *messages.Ac
 		zap.Int64("ClientId", clientID),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityStartReply
 	reply := createReplyMessage(request)
@@ -1906,6 +1914,7 @@ func handleActivityStartRequest(requestCtx context.Context, request *messages.Ac
 
 	// add to workflow context map
 	_ = wectx.AddActivityFuture(activityID, future)
+
 	buildReply(reply, nil)
 
 	return reply
@@ -1921,8 +1930,7 @@ func handleActivityGetResultRequest(requestCtx context.Context, request *message
 		zap.Int64("ClientId", clientID),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityGetResultReply
 	reply := createReplyMessage(request)
@@ -1956,8 +1964,7 @@ func handleActivityHasHeartbeatDetailsRequest(requestCtx context.Context, reques
 	Logger.Debug("ActivityHasHeartbeatDetailsRequest Received",
 		zap.Int64("ClientId", request.GetClientID()),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityHasHeartbeatDetailsReply
 	reply := createReplyMessage(request)
@@ -1976,8 +1983,7 @@ func handleActivityGetHeartbeatDetailsRequest(requestCtx context.Context, reques
 	Logger.Debug("ActivityGetHeartbeatDetailsRequest Received",
 		zap.Int64("ClientId", request.GetClientID()),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityGetHeartbeatDetailsReply
 	reply := createReplyMessage(request)
@@ -2008,8 +2014,7 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 		zap.Int64("ClientId", clientID),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityRecordHeartbeatReply
 	reply := createReplyMessage(request)
@@ -2034,6 +2039,7 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 				buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
 				return reply
 			}
+
 			activity.RecordHeartbeat(ActivityContexts.Get(contextID).GetContext(), details)
 
 		} else {
@@ -2043,21 +2049,22 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 				*request.GetWorkflowID(),
 				*request.GetRunID(),
 				*request.GetActivityID(),
-				details,
-			)
+				details)
 		}
+
 	} else {
 		err = clientHelper.RecordActivityHeartbeat(
 			ctx,
 			request.GetTaskToken(),
 			*request.GetDomain(),
-			details,
-		)
+			details)
 	}
+
 	if err != nil {
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
+
 	buildReply(reply, nil)
 
 	return reply
@@ -2069,8 +2076,7 @@ func handleActivityGetInfoRequest(requestCtx context.Context, request *messages.
 		zap.Int64("ClientId", request.GetClientID()),
 		zap.Int64("ActivityContextId", contextID),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityGetInfoReply
 	reply := createReplyMessage(request)
@@ -2085,6 +2091,7 @@ func handleActivityGetInfoRequest(requestCtx context.Context, request *messages.
 	// get info
 	// build the reply
 	info := activity.GetInfo(actx.GetContext())
+
 	buildReply(reply, nil, &info)
 
 	return reply
@@ -2095,8 +2102,7 @@ func handleActivityCompleteRequest(requestCtx context.Context, request *messages
 	Logger.Debug("ActivityCompleteRequest Received",
 		zap.Int64("ClientId", clientID),
 		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityCompleteReply
 	reply := createReplyMessage(request)
@@ -2115,6 +2121,7 @@ func handleActivityCompleteRequest(requestCtx context.Context, request *messages
 	// and complete activity
 	var err error
 	taskToken := request.GetTaskToken()
+
 	if taskToken == nil {
 		err = clientHelper.CompleteActivityByID(
 			ctx,
@@ -2123,21 +2130,22 @@ func handleActivityCompleteRequest(requestCtx context.Context, request *messages
 			*request.GetRunID(),
 			*request.GetActivityID(),
 			request.GetResult(),
-			request.GetError(),
-		)
+			request.GetError())
+
 	} else {
 		err = clientHelper.CompleteActivity(
 			ctx,
 			taskToken,
 			*request.GetDomain(),
 			request.GetResult(),
-			request.GetError(),
-		)
+			request.GetError())
 	}
+
 	if err != nil {
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
+
 	buildReply(reply, nil)
 
 	return reply
@@ -2153,8 +2161,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 		zap.Int64("ClientId", clientID),
 		zap.Int64("RequestId", requestID),
 		zap.Int64("ContextId", contextID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityExecuteLocalReply
 	reply := createReplyMessage(request)
@@ -2196,8 +2203,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 			zap.Int64("ContextId", contextID),
 			zap.Int64("ActivityContextId", activityContextID),
 			zap.Int64("RequestId", requestID),
-			zap.Int("ProcessId", os.Getpid()),
-		)
+			zap.Int("ProcessId", os.Getpid()))
 
 		// wait for ActivityInvokeReply
 		result := <-op.GetChannel()
@@ -2210,8 +2216,8 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 				zap.Int64("ActivityContextId", activityContextID),
 				zap.Int64("RequestId", requestID),
 				zap.Error(s),
-				zap.Int("ProcessId", os.Getpid()),
-			)
+				zap.Int("ProcessId", os.Getpid()))
+
 			return nil, s
 
 		case []byte:
@@ -2222,8 +2228,8 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 				zap.Int64("ActivityContextId", activityContextID),
 				zap.Int64("RequestId", requestID),
 				zap.Any("Result", s),
-				zap.Int("ProcessId", os.Getpid()),
-			)
+				zap.Int("ProcessId", os.Getpid()))
+
 			return s, nil
 
 		default:
@@ -2234,8 +2240,8 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 				zap.Int64("ActivityContextId", activityContextID),
 				zap.Int64("RequestId", requestID),
 				zap.Any("Result", s),
-				zap.Int("ProcessId", os.Getpid()),
-			)
+				zap.Int("ProcessId", os.Getpid()))
+
 			return nil, fmt.Errorf("Unexpected result type %v.  result must be an error or []byte.", reflect.TypeOf(s))
 		}
 	}
@@ -2261,6 +2267,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
+
 	buildReply(reply, nil, result)
 
 	return reply
@@ -2278,8 +2285,7 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 		zap.Int64("ClientId", clientID),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityStartLocalReply
 	reply := createReplyMessage(request)
@@ -2322,8 +2328,7 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 			zap.Int64("ContextId", contextID),
 			zap.Int64("ActivityContextId", activityContextID),
 			zap.Int64("RequestId", requestID),
-			zap.Int("ProcessId", os.Getpid()),
-		)
+			zap.Int("ProcessId", os.Getpid()))
 
 		// wait for ActivityInvokeReply
 		result := <-op.GetChannel()
@@ -2336,8 +2341,8 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 				zap.Int64("ActivityContextId", activityContextID),
 				zap.Int64("RequestId", requestID),
 				zap.Error(s),
-				zap.Int("ProcessId", os.Getpid()),
-			)
+				zap.Int("ProcessId", os.Getpid()))
+
 			return nil, s
 
 		case []byte:
@@ -2348,8 +2353,8 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 				zap.Int64("ActivityContextId", activityContextID),
 				zap.Int64("RequestId", requestID),
 				zap.Any("Result", s),
-				zap.Int("ProcessId", os.Getpid()),
-			)
+				zap.Int("ProcessId", os.Getpid()))
+
 			return s, nil
 
 		default:
@@ -2360,8 +2365,8 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 				zap.Int64("ActivityContextId", activityContextID),
 				zap.Int64("RequestId", requestID),
 				zap.Any("Result", s),
-				zap.Int("ProcessId", os.Getpid()),
-			)
+				zap.Int("ProcessId", os.Getpid()))
+
 			return nil, fmt.Errorf("Unexpected result type %v.  result must be an error or []byte.", reflect.TypeOf(s))
 		}
 	}
@@ -2398,8 +2403,7 @@ func handleActivityGetLocalResultRequest(requestCtx context.Context, request *me
 		zap.Int64("ClientId", clientID),
 		zap.Int64("ContextId", contextID),
 		zap.Int64("RequestId", requestID),
-		zap.Int("ProcessId", os.Getpid()),
-	)
+		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityGetLocalResultReply
 	reply := createReplyMessage(request)
@@ -2416,6 +2420,7 @@ func handleActivityGetLocalResultRequest(requestCtx context.Context, request *me
 		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
 		return reply
 	}
+
 	defer wectx.RemoveActivityFuture(activityID)
 
 	var result []byte
@@ -2423,6 +2428,7 @@ func handleActivityGetLocalResultRequest(requestCtx context.Context, request *me
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
+
 	buildReply(reply, nil, result)
 
 	return reply

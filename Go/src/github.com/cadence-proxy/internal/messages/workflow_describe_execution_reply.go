@@ -20,7 +20,7 @@ package messages
 import (
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -41,7 +41,7 @@ type (
 func NewWorkflowDescribeExecutionReply() *WorkflowDescribeExecutionReply {
 	reply := new(WorkflowDescribeExecutionReply)
 	reply.WorkflowReply = NewWorkflowReply()
-	reply.SetType(messagetypes.WorkflowDescribeExecutionReply)
+	reply.SetType(internal.WorkflowDescribeExecutionReply)
 
 	return reply
 }

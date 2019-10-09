@@ -20,7 +20,7 @@ package messages
 import (
 	"time"
 
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -41,7 +41,7 @@ type (
 func NewWorkflowGetTimeReply() *WorkflowGetTimeReply {
 	reply := new(WorkflowGetTimeReply)
 	reply.WorkflowReply = NewWorkflowReply()
-	reply.SetType(messagetypes.WorkflowGetTimeReply)
+	reply.SetType(internal.WorkflowGetTimeReply)
 
 	return reply
 }
