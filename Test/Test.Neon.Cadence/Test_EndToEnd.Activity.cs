@@ -483,10 +483,10 @@ namespace TestCadence
                             return HeartbeatResult.Error2;
                         }
 
-                        // Sleep for 1/2 the heartbeat timeout and verify that the
+                        // Sleep for 1/2 the heartbeat timeout (plus a bit) and verify that the
                         // next heartbeat is recorded afterwards.
 
-                        await Task.Delay(TimeSpan.FromTicks(Activity.Task.HeartbeatTimeout.Ticks / 2));
+                        await Task.Delay(TimeSpan.FromTicks(Activity.Task.HeartbeatTimeout.Ticks / 2) + TimeSpan.FromMilliseconds(50));
 
                         if (!await Activity.HeartbeatAsync())
                         {
@@ -533,7 +533,7 @@ namespace TestCadence
                         // Sleep long enough such that we'll definitely exceed the heart minimum
                         // and verify that next heartbeat is recorded.
 
-                        await Task.Delay(TimeSpan.FromTicks(Activity.Task.HeartbeatTimeout.Ticks / 2));
+                        await Task.Delay(TimeSpan.FromTicks(Activity.Task.HeartbeatTimeout.Ticks / 2) + TimeSpan.FromMilliseconds(50));
 
                         if (!await Activity.HeartbeatAsync())
                         {

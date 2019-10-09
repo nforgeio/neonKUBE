@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -1656,8 +1657,8 @@ namespace TestCadence
             [WorkflowMethod(Name = "hello")]
             Task<string> HelloChildAsync(string name);
 
-            [WorkflowMethod(Name = "start-hello")]
-            Task<string> StartHelloChildAsync(string name);
+            [WorkflowMethod(Name = "future-hello")]
+            Task<string> FutureHelloChildAsync(string name);
 
             [WorkflowMethod(Name = "hello-activity")]
             Task<string> HelloChildActivityAsync(string name);
@@ -1719,7 +1720,7 @@ namespace TestCadence
                 return await childStub.HelloAsync(name);
             }
 
-            public async Task<string> StartHelloChildAsync(string name)
+            public async Task<string> FutureHelloChildAsync(string name)
             {
                 var childStub = Workflow.NewChildWorkflowFutureStub<IWorkflowChild>("hello");
                 var future    = await childStub.StartAsync<string>(name);
@@ -1922,7 +1923,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_ChildStart_NoArgsOrResult ()
+        public async Task Workflow_FutureChild_NoArgsOrResult ()
         {
             // Verify that we can run a child workflow via a future that 
             // accepts no args and doesn't return a result.  This also tests
@@ -1940,7 +1941,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_ChildStart_ArgsAndResult()
+        public async Task Workflow_FutureChild_ArgsAndResult()
         {
             // Verify that we can run a child workflow via a future that 
             // accepts a parameter and returns a result.
@@ -1949,7 +1950,7 @@ namespace TestCadence
 
             var stub = client.NewWorkflowStub<IWorkflowParent>();
 
-            Assert.Equal("Hello Jeff!", await stub.StartHelloChildAsync("Jeff"));
+            Assert.Equal("Hello Jeff!", await stub.FutureHelloChildAsync("Jeff"));
         }
 
         [Fact]
@@ -2683,6 +2684,11 @@ namespace TestCadence
         {
             private static string receivedSignal;
 
+            public static new void Reset()
+            {
+                receivedSignal = null;
+            }
+
             public async Task<bool> RunAsync()
             {
                 // Create a child stub and then verify that we see an [InvalidOperationException]
@@ -2732,9 +2738,15 @@ namespace TestCadence
 
                 receivedSignal = null;
 
-                var parentWorkflowTypeName = $"{this.Workflow.Parent}".Replace("+", ".");
-                
-                var stub   = Workflow.NewUntypedChildWorkflowFutureStub<string>($"{parentWorkflowTypeName}::wait-for-signal");
+                var parentWorkflowType = Workflow.WorkflowInfo.WorkflowType;
+                var posMethod          = parentWorkflowType.LastIndexOf("::");
+
+                if (posMethod != -1)
+                {
+                    parentWorkflowType = parentWorkflowType.Substring(0, posMethod);
+                }
+
+                var stub   = Workflow.NewUntypedChildWorkflowFutureStub<string>(parentWorkflowType + "::wait-for-signal");
                 var future = await stub.StartAsync("Jeff");
 
                 await stub.SignalAsync("signal", "hello-signal");
@@ -2748,7 +2760,20 @@ namespace TestCadence
             {
                 // Wait for a signal from the parent workflow.
 
-                NeonHelper.WaitFor(() => receivedSignal != null, TimeSpan.FromSeconds(maxWaitSeconds));
+                var startTimeUtc = await Workflow.UtcNowAsync();
+                var waitTime     = TimeSpan.FromSeconds(maxWaitSeconds);
+
+                while (receivedSignal == null)
+                {
+                    var utcNow = await Workflow.UtcNowAsync();
+
+                    if (utcNow - startTimeUtc > waitTime)
+                    {
+                        return "Timed out waiting for signal";
+                    }
+
+                    await Workflow.SleepAsync(TimeSpan.FromSeconds(1));
+                }
 
                 return await Task.FromResult($"Hello {name}:{receivedSignal}");
             }
@@ -2767,6 +2792,8 @@ namespace TestCadence
         {
             // Call a workflow that confirms that [Workflow.GetExecutionAsync()]
             // works correctly against a child workflow.
+
+            WorkflowChildGetExecution.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowChildGetExecution>();
 
@@ -2802,7 +2829,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_ChildWorkflowStub_WithResult()
+        public async Task Workflow_FutureChild_WithResult()
         {
             // Call a workflow that creates a [ChildWorkflowStub] and starts a child
             // workflow, passing it a parameter, signalling it, and then verifying
@@ -3075,22 +3102,48 @@ namespace TestCadence
         [Workflow(AutoRegister = true, Name = "WorkflowUntypedChildFuture")]
         public class WorkflowUntypedChildFuture : WorkflowBase, IWorkflowUntypedChildFuture
         {
-            private static bool     HasExecuted    = false;
-            private static string   ReceivedSignal = null;
+            public static bool      HasExecuted    = false;
+            public static string    ReceivedSignal = null;
+            public static bool      Error          = false;
 
             public static new void Reset()
             {
                 HasExecuted    = false;
                 ReceivedSignal = null;
+                Error          = false;
+            }
+
+            private async Task<bool> WaitForSignal()
+            {
+                // Wait for a signal from the parent workflow.
+
+                var startTimeUtc = await Workflow.UtcNowAsync();
+                var waitTime     = TimeSpan.FromSeconds(maxWaitSeconds);
+
+                while (ReceivedSignal == null)
+                {
+                    var utcNow = await Workflow.UtcNowAsync();
+
+                    if (utcNow - startTimeUtc > waitTime)
+                    {
+                        return false;
+                    }
+
+                    await Workflow.SleepAsync(TimeSpan.FromSeconds(1));
+                }
+
+                return true;
             }
 
             public async Task RunAsync()
             {
                 HasExecuted = true;
 
-                // Wait for a signal before returning.
-
-                NeonHelper.WaitFor(() => ReceivedSignal != null, TimeSpan.FromSeconds(maxWaitSeconds));
+                if (!await WaitForSignal())
+                {
+                    Error = true;
+                    return;
+                }
 
                 await Task.CompletedTask;
             }
@@ -3099,9 +3152,10 @@ namespace TestCadence
             {
                 HasExecuted = true;
 
-                // Wait for a signal before returning.
-
-                NeonHelper.WaitFor(() => ReceivedSignal != null, TimeSpan.FromSeconds(maxWaitSeconds));
+                if (!await WaitForSignal())
+                {
+                    return "ERROR: Timed out waiting for signal";
+                }
 
                 return await Task.FromResult($"Hello {name}!");
             }
@@ -3119,7 +3173,6 @@ namespace TestCadence
                 var future = await stub.StartAsync();
 
                 await stub.SignalAsync("signal", "test");
-
                 await future.GetAsync();
 
                 return WorkflowUntypedChildFuture.HasExecuted;
@@ -3161,7 +3214,7 @@ namespace TestCadence
 
             var stub = client.NewWorkflowStub<IWorkflowUntypedChildFuture>(workflowTypeName: "WorkflowUntypedChildFuture");
 
-            Assert.True(await stub.WithNoResult());
+            Assert.True(await stub.WithNoResult() && !WorkflowUntypedChildFuture.Error);
         }
 
         [Fact]
@@ -3173,7 +3226,7 @@ namespace TestCadence
 
             var stub = client.NewWorkflowStub<IWorkflowUntypedChildFuture>(workflowTypeName: "WorkflowUntypedChildFuture");
 
-            Assert.True(await stub.WithResult());
+            Assert.True(await stub.WithResult() && !WorkflowUntypedChildFuture.Error);
         }
     }
 }

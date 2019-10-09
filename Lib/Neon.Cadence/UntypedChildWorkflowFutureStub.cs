@@ -161,7 +161,7 @@ namespace Neon.Cadence
                     return (WorkflowSignalChildReply) await client.CallProxyAsync(
                         new WorkflowSignalChildRequest()
                         {
-                            ContextId   = parentWorkflow.ContextId,
+                             ContextId  = parentWorkflow.ContextId,
                              ChildId    = childExecution.ChildId,
                              SignalName = signalName,
                              SignalArgs = client.DataConverter.ToData(args)
@@ -296,8 +296,8 @@ namespace Neon.Cadence
                     return (WorkflowSignalChildReply) await client.CallProxyAsync(
                         new WorkflowSignalChildRequest()
                         {
-                             ChildId    = childExecution.ChildId,
                              ContextId  = parentWorkflow.ContextId,
+                             ChildId    = childExecution.ChildId,
                              SignalName = signalName,
                              SignalArgs = client.DataConverter.ToData(args)
                         });
