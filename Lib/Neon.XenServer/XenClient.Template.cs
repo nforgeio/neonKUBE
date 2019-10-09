@@ -117,14 +117,14 @@ namespace Neon.Xen
 
                 if (!Uri.TryCreate(uri, UriKind.Absolute, out var uriParsed))
                 {
-                    throw new ArgumentException($"[{uri}] is not a valid URI");
+                    throw new ArgumentException($"[{uri}] is not a valid URI", nameof(uri));
                 }
 
                 var sr = client.Repository.GetTargetStorageRepository(repositoryNameOrUuid);
 
                 if (uriParsed.Scheme != "http" && uriParsed.Scheme != "ftp")
                 {
-                    throw new ArgumentException($"[{uri}] uses an unsupported scheme.  Only [http/ftp] are allowed.");
+                    throw new ArgumentException($"[{uri}] uses an unsupported scheme.  Only [http/ftp] are allowed.", nameof(uri));
                 }
 
                 var response = client.SafeInvoke("vm-import", $"url={uri}", $"sr-uuid={sr.Uuid}");

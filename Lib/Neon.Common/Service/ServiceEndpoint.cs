@@ -170,7 +170,7 @@ namespace Neon.Service
             {
                 if (Port != -1 && !NetHelper.IsValidPort(Port))
                 {
-                    throw new ArgumentException($"Invalid network port [{Port}].");
+                    throw new ArgumentException($"Invalid network port [{Port}].", nameof(Uri));
                 }
 
                 if (ServiceDescription == null)
@@ -206,7 +206,7 @@ namespace Neon.Service
 
                         if (Port == -1)
                         {
-                            throw new ArgumentException("TCP endpoints require a non-zero port.");
+                            throw new ArgumentException("TCP endpoints require a non-zero port.", nameof(Uri));
                         }
 
                         return new Uri($"tcp://{ServiceDescription.Hostname}:{Port}");
@@ -215,7 +215,7 @@ namespace Neon.Service
 
                         if (Port == -1)
                         {
-                            throw new ArgumentException("UDP endpoints require a non-zero port.");
+                            throw new ArgumentException("UDP endpoints require a non-zero port.", nameof(Uri));
                         }
 
                         return new Uri($"udp://{ServiceDescription.Hostname}:{Port}");
@@ -255,7 +255,7 @@ namespace Neon.Service
             {
                 if (Port != -1 && !NetHelper.IsValidPort(Port))
                 {
-                    throw new ArgumentException($"Invalid network port [{Port}].");
+                    throw new ArgumentException($"Invalid network port [{Port}].", nameof(FullUri));
                 }
 
                 if (ServiceDescription == null)
@@ -291,7 +291,7 @@ namespace Neon.Service
 
                         if (Port == -1)
                         {
-                            throw new ArgumentException("TCP endpoints require a non-zero port.");
+                            throw new ArgumentException("TCP endpoints require a non-zero port.", nameof(FullUri));
                         }
 
                         return new Uri($"tcp://{ServiceDescription.Hostname}:{Port}");
@@ -300,7 +300,7 @@ namespace Neon.Service
 
                         if (Port == -1)
                         {
-                            throw new ArgumentException("UDP endpoints require a non-zero port.");
+                            throw new ArgumentException("UDP endpoints require a non-zero port.", nameof(FullUri));
                         }
 
                         return new Uri($"udp://{ServiceDescription.Hostname}:{Port}");

@@ -669,7 +669,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"        {{");
             sbSource.AppendLine($"            if (isChild)");
             sbSource.AppendLine($"            {{");
-            sbSource.AppendLine($"                throw new ArgumentException(\"stub\", \"Workflow stub for [{workflowInterface.FullName}] is a child workflow stub and cannot be converted to a [{typeof(WorkflowStub).Name}].\");");
+            sbSource.AppendLine($"                throw new ArgumentException(\"Workflow stub for [{workflowInterface.FullName}] is a child workflow stub and cannot be converted to a [{typeof(WorkflowStub).Name}].\", \"stub\");");
             sbSource.AppendLine($"            }}");
             sbSource.AppendLine();
             sbSource.AppendLine($"            if (!hasStarted || execution == null)");

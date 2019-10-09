@@ -2391,9 +2391,9 @@ namespace Renci.SshNet.Common
             const string characterSet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
             if (characterSet.Length < radix)
-                throw new ArgumentException("charSet length less than radix", "characterSet");
+                throw new ArgumentException("charSet length less than radix", nameof(characterSet));
             if (radix == 1)
-                throw new ArgumentException("There is no such thing as radix one notation", "radix");
+                throw new ArgumentException("There is no such thing as radix one notation", nameof(radix));
 
             if (_sign == 0)
                 return "0";
