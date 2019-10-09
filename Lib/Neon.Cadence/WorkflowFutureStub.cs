@@ -78,9 +78,9 @@ namespace Neon.Cadence
         {
             get
             {
-                if (this.execution != null)
+                if (this.execution == null)
                 {
-                    throw new InvalidOperationException($"Workflow[{ WorkflowTypeName }] has not been started.");
+                    throw new InvalidOperationException($"Workflow [{WorkflowTypeName}] has not been started.");
                 }
 
                 return execution;
@@ -104,7 +104,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
-            if (Execution != null)
+            if (execution != null)
             {
                 throw new InvalidOperationException("Cannot start a stub more than once.");
             }
@@ -243,7 +243,7 @@ namespace Neon.Cadence
             {
                 if (execution == null)
                 {
-                    throw new InvalidOperationException($"Workflow[{ WorkflowTypeName }] has not been started.");
+                    throw new InvalidOperationException($"Workflow [{WorkflowTypeName}] has not been started.");
                 }
 
                 return execution;

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ChildWorkflowFutureStub.cs
+// FILE:	    UntypedChildWorkflowFutureStub.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -48,7 +48,7 @@ namespace Neon.Cadence
     /// Use this version for workflows that don't return a result.
     /// </para>
     /// </summary>
-    public class ChildWorkflowFutureStub
+    public class UntypedChildWorkflowFutureStub
     {
         private Workflow            parentWorkflow;
         private CadenceClient       client;
@@ -60,7 +60,7 @@ namespace Neon.Cadence
         /// <param name="parentWorkflow">The parent workflow.</param>
         /// <param name="workflowTypeName">The workflow type name.</param>
         /// <param name="options">Optional child workflow options.</param>
-        internal ChildWorkflowFutureStub(Workflow parentWorkflow, string workflowTypeName, ChildWorkflowOptions options = null)
+        internal UntypedChildWorkflowFutureStub(Workflow parentWorkflow, string workflowTypeName, ChildWorkflowOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
@@ -70,9 +70,9 @@ namespace Neon.Cadence
             this.WorkflowTypeName = workflowTypeName;
             this.Options          = ChildWorkflowOptions.Normalize(client, options);
 
-            if (string.IsNullOrEmpty(options.Domain))
+            if (string.IsNullOrEmpty(Options.Domain))
             {
-                options.Domain = parentWorkflow.WorkflowInfo.Domain;
+                Options.Domain = parentWorkflow.WorkflowInfo.Domain;
             }
         }
 
@@ -94,9 +94,9 @@ namespace Neon.Cadence
         {
             get
             {
-                if (this.childExecution != null)
+                if (this.childExecution == null)
                 {
-                    throw new InvalidOperationException($"Workflow[{ WorkflowTypeName }] has not been started.");
+                    throw new InvalidOperationException($"Workflow [{WorkflowTypeName}] has not been started.");
                 }
 
                 return childExecution.Execution;
@@ -120,7 +120,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
-            if (Execution != null)
+            if (childExecution != null)
             {
                 throw new InvalidOperationException("Cannot start a stub more than once.");
             }
@@ -182,7 +182,7 @@ namespace Neon.Cadence
     /// </para>
     /// </summary>
     /// <typeparam name="TResult">Specifies the workflow result type.</typeparam>
-    public class ChildWorkflowFutureStub<TResult>
+    public class UntypedChildWorkflowFutureStub<TResult>
     {
         private Workflow            parentWorkflow;
         private CadenceClient       client;
@@ -194,7 +194,7 @@ namespace Neon.Cadence
         /// <param name="parentWorkflow">The parent workflow.</param>
         /// <param name="workflowTypeName">The workflow type name.</param>
         /// <param name="options">Optional child workflow options.</param>
-        internal ChildWorkflowFutureStub(Workflow parentWorkflow, string workflowTypeName, ChildWorkflowOptions options = null)
+        internal UntypedChildWorkflowFutureStub(Workflow parentWorkflow, string workflowTypeName, ChildWorkflowOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
@@ -230,7 +230,7 @@ namespace Neon.Cadence
             {
                 if (childExecution == null)
                 {
-                    throw new InvalidOperationException($"Workflow[{ WorkflowTypeName }] has not been started.");
+                    throw new InvalidOperationException($"Workflow [{WorkflowTypeName}] has not been started.");
                 }
 
                 return childExecution.Execution;

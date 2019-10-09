@@ -260,7 +260,7 @@ namespace Neon.Cadence
         /// the default workflow method.
         /// </param>
         /// <param name="options">Optionally specifies custom <see cref="WorkflowOptions"/>.</param>
-        /// <returns>A <see cref="StartChildWorkflowStub{TWorkflowInterface}"/> instance.</returns>
+        /// <returns>A <see cref="ChildWorkflowStub{TWorkflowInterface}"/> instance.</returns>
         public WorkflowFutureStub<TWorkflowInterface> NewWorkflowFutureStub<TWorkflowInterface>(string methodName = null, WorkflowOptions options = null)
             where TWorkflowInterface : class
         {

@@ -1804,7 +1804,7 @@ namespace TestCadence
             {
                 // Execute an activity with no parameters or a result using a future.
 
-                var runActivityStub   = Workflow.NewStartActivityStub<IParallelActivity>();
+                var runActivityStub   = Workflow.NewActivityFutureStub<IParallelActivity>();
                 var runActivityFuture = await runActivityStub.StartAsync();
 
                 await runActivityFuture.GetAsync();
@@ -1828,7 +1828,7 @@ namespace TestCadence
             {
                 // Execute an activity with parameters and a result using a future.
 
-                var helloActivityStub   = Workflow.NewStartActivityStub<IParallelActivity>("hello");
+                var helloActivityStub   = Workflow.NewActivityFutureStub<IParallelActivity>("hello");
                 var helloActivityFuture = await helloActivityStub.StartAsync<string>("Jeff");
                 var greeting            = await helloActivityFuture.GetAsync();
 
@@ -1851,8 +1851,8 @@ namespace TestCadence
                 // Execute two activities in parallel.  This exercises activities with
                 // and without parameters or results.
 
-                var runActivityStub     = Workflow.NewStartActivityStub<IParallelActivity>();
-                var helloActivityStub   = Workflow.NewStartActivityStub<IParallelActivity>("hello");
+                var runActivityStub     = Workflow.NewActivityFutureStub<IParallelActivity>();
+                var helloActivityStub   = Workflow.NewActivityFutureStub<IParallelActivity>("hello");
                 var runActivityFuture   = await runActivityStub.StartAsync();
                 var helloActivityFuture = await helloActivityStub.StartAsync<string>("Jeff");
 
@@ -2989,6 +2989,131 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IWorkflowIdReuse>();
 
             Assert.True(await stub.ChildReuseViaAttributeAsync());
+        }
+
+        //---------------------------------------------------------------------
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IWorkflowUntypedChildFuture : IWorkflow
+        {
+            [WorkflowMethod(Name = "run")]
+            Task RunAsync();
+
+            [WorkflowMethod(Name = "hello")]
+            Task<string> HelloAsync(string name);
+
+            [WorkflowMethod(Name = "with-result")]
+            Task<bool> WithResult();
+
+            [WorkflowMethod(Name = "with-no-result")]
+            Task<bool> WithNoResult();
+
+            [SignalMethod("signal")]
+            Task SignalAsync(string signal);
+        }
+
+        [Workflow(AutoRegister = true, Name = "WorkflowUntypedChildFuture")]
+        public class WorkflowUntypedChildFuture : WorkflowBase, IWorkflowUntypedChildFuture
+        {
+            private static bool     HasExecuted    = false;
+            private static string   ReceivedSignal = null;
+
+            public static new void Reset()
+            {
+                HasExecuted    = false;
+                ReceivedSignal = null;
+            }
+
+            public async Task RunAsync()
+            {
+                HasExecuted = true;
+
+                // Wait for a signal before returning.
+
+                NeonHelper.WaitFor(() => ReceivedSignal != null, TimeSpan.FromSeconds(maxWaitSeconds));
+
+                await Task.CompletedTask;
+            }
+
+            public async Task<string> HelloAsync(string name)
+            {
+                HasExecuted = true;
+
+                // Wait for a signal before returning.
+
+                NeonHelper.WaitFor(() => ReceivedSignal != null, TimeSpan.FromSeconds(maxWaitSeconds));
+
+                return await Task.FromResult($"Hello {name}!");
+            }
+
+            public async Task<bool> WithNoResult()
+            {
+                WorkflowUntypedChildFuture.Reset();
+
+                // Create an untyped child stub for RunAsync() which doesn't take 
+                // and parameters and returns no result, verify that we can start
+                // and signal it and then verify that we can wait for it to
+                // return and that it actually was executed.
+
+                var stub   = Workflow.NewUntypedChildWorkflowFutureStub("WorkflowUntypedChildFuture::run");
+                var future = await stub.StartAsync();
+
+                await stub.SignalAsync("signal", "test");
+
+                await future.GetAsync();
+
+                return WorkflowUntypedChildFuture.HasExecuted;
+            }
+
+            public async Task<bool> WithResult()
+            {
+                WorkflowUntypedChildFuture.Reset();
+
+                // Create an untyped child stub for HelloAsync() which take a
+                // parameters and returns a result, verify that we can start
+                // and signal it and then verify that we can wait for it to
+                // return and that it actually was executed.
+
+                var stub   = Workflow.NewUntypedChildWorkflowFutureStub<string>("WorkflowUntypedChildFuture::hello");
+                var future = await stub.StartAsync("Jeff");
+
+                await stub.SignalAsync("signal", "test");
+
+                var result = await future.GetAsync();
+
+                return WorkflowUntypedChildFuture.HasExecuted && result == "Hello Jeff!";
+            }
+
+            public async Task SignalAsync(string signal)
+            {
+                ReceivedSignal = signal;
+
+                await Task.CompletedTask;
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_UntypedChildFuture_WithNoResult()
+        {
+            // Verify that a child workflow with no arguments or result can be 
+            // called and signalled via an untyped future stub.
+
+            var stub = client.NewWorkflowStub<IWorkflowUntypedChildFuture>(workflowTypeName: "WorkflowUntypedChildFuture");
+
+            Assert.True(await stub.WithNoResult());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_UntypedChildFuture_WithResult()
+        {
+            // Verify that a child workflow with an argument and result can be 
+            // called and signalled via an untyped future stub.
+
+            var stub = client.NewWorkflowStub<IWorkflowUntypedChildFuture>(workflowTypeName: "WorkflowUntypedChildFuture");
+
+            Assert.True(await stub.WithResult());
         }
     }
 }

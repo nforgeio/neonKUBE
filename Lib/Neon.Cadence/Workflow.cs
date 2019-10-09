@@ -1328,7 +1328,7 @@ namespace Neon.Cadence
         /// the default workflow method.
         /// </param>
         /// <param name="options">Optionally specifies custom <see cref="ChildWorkflowOptions"/>.</param>
-        /// <returns>A <see cref="StartChildWorkflowStub{TWorkflowInterface}"/> instance.</returns>
+        /// <returns>A <see cref="ChildWorkflowStub{TWorkflowInterface}"/> instance.</returns>
         /// <remarks>
         /// <para>
         /// Sometimes workflows need to run child workflows in parallel with other child workflows or
@@ -1411,7 +1411,7 @@ namespace Neon.Cadence
         /// Here we call <see cref="NewChildWorkflowFutureStub{TWorkflowInterface}(string, ChildWorkflowOptions)"/> specifying
         /// <b>"child"</b> as the workflow method name.  This matches the <c>[WorkflowMethod(Name = "child")]</c>
         /// attribute decorating the <c>ChildAsync()</c> workflow interface method.  Then we start the child workflow by awaiting 
-        /// <see cref="StartChildWorkflowStub{TWorkflowInterface}.StartAsync(object[])"/>. This returns an <see cref="IAsyncFuture{T}"/> whose 
+        /// <see cref="ChildWorkflowStub{TWorkflowInterface}.StartAsync(object[])"/>. This returns an <see cref="IAsyncFuture{T}"/> whose 
         /// <see cref="IAsyncFuture.GetAsync"/> method returns the workflow result.  The code above calls this to retrieve the 
         /// result from the first child after executing the second child in parallel.
         /// </para>
@@ -1427,7 +1427,7 @@ namespace Neon.Cadence
         /// </para>
         /// </note>
         /// </remarks>
-        public StartChildWorkflowStub<TWorkflowInterface> NewChildWorkflowFutureStub<TWorkflowInterface>(string methodName = null, ChildWorkflowOptions options = null)
+        public ChildWorkflowStub<TWorkflowInterface> NewChildWorkflowFutureStub<TWorkflowInterface>(string methodName = null, ChildWorkflowOptions options = null)
             where TWorkflowInterface : class
         {
             Client.EnsureNotDisposed();
@@ -1435,7 +1435,7 @@ namespace Neon.Cadence
 
             options = ChildWorkflowOptions.Normalize(Client, options, typeof(TWorkflowInterface));
 
-            return new StartChildWorkflowStub<TWorkflowInterface>(this, methodName, options);
+            return new ChildWorkflowStub<TWorkflowInterface>(this, methodName, options);
         }
 
         /// <summary>
@@ -1445,7 +1445,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="workflowTypeName">The workflow type name (see the remarks).</param>
         /// <param name="options">Optionally specifies the child workflow options.</param>
-        /// <returns>The <see cref="ChildWorkflowFutureStub"/>.</returns>
+        /// <returns>The <see cref="UntypedChildWorkflowFutureStub"/>.</returns>
         /// <remarks>
         /// <para>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
@@ -1471,14 +1471,14 @@ namespace Neon.Cadence
         /// from other languages.  The Java Cadence client works the same way.
         /// </para>
         /// </remarks>
-        public ChildWorkflowFutureStub NewUntypedChildWorkflowFutureStub(string workflowTypeName, ChildWorkflowOptions options = null)
+        public UntypedChildWorkflowFutureStub NewUntypedChildWorkflowFutureStub(string workflowTypeName, ChildWorkflowOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
 
             Client.EnsureNotDisposed();
             SetStackTrace();
 
-            return new ChildWorkflowFutureStub(this, workflowTypeName, options);
+            return new UntypedChildWorkflowFutureStub(this, workflowTypeName, options);
         }
 
         /// <summary>
@@ -1489,7 +1489,7 @@ namespace Neon.Cadence
         /// <typeparam name="TResult">Specifies the child workflow result type.</typeparam>
         /// <param name="workflowTypeName">The workflow type name (see the remarks).</param>
         /// <param name="options">Optionally specifies the child workflow options.</param>
-        /// <returns>The <see cref="ChildWorkflowFutureStub"/>.</returns>
+        /// <returns>The <see cref="UntypedChildWorkflowFutureStub"/>.</returns>
         /// <remarks>
         /// <para>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
@@ -1515,14 +1515,14 @@ namespace Neon.Cadence
         /// from other languages.  The Java Cadence client works the same way.
         /// </para>
         /// </remarks>
-        public ChildWorkflowFutureStub<TResult> NewUntypedChildWorkflowFutureStub<TResult>(string workflowTypeName, ChildWorkflowOptions options = null)
+        public UntypedChildWorkflowFutureStub<TResult> NewUntypedChildWorkflowFutureStub<TResult>(string workflowTypeName, ChildWorkflowOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
 
             Client.EnsureNotDisposed();
             SetStackTrace();
 
-            return new ChildWorkflowFutureStub<TResult>(this, workflowTypeName, options);
+            return new UntypedChildWorkflowFutureStub<TResult>(this, workflowTypeName, options);
         }
 
         /// <summary>
@@ -1567,7 +1567,7 @@ namespace Neon.Cadence
         /// the default activity method.
         /// </param>
         /// <param name="options">Optionally specifies the activity options.</param>
-        /// <returns>The new <see cref="StartActivityStub{TActivityInterface}"/>.</returns>
+        /// <returns>The new <see cref="ActivityFutureStub{TActivityInterface}"/>.</returns>
         /// <remarks>
         /// <para>
         /// Sometimes workflows need to run activities in parallel with other child workflows or
@@ -1655,7 +1655,7 @@ namespace Neon.Cadence
         ///     [WorkflowMethod]
         ///     public Task MainAsync()
         ///     {
-        ///         var fooStub  = Workflow.NewStartActivityStub("foo");
+        ///         var fooStub  = Workflow.NewActivityFutureStub("foo");
         ///         var future   = fooStub.StartAsync("FOO");
         ///         var barStub  = Workflow.NewActivityStub&lt;IMyActivity&gt;();
         ///         var barValue = await barStub.BarAsync("BAR");   // Returns: "BAR"
@@ -1664,10 +1664,10 @@ namespace Neon.Cadence
         /// }
         /// </code>
         /// <para>
-        /// Here we call <see cref="NewStartActivityStub{TActivityInterface}(string, ActivityOptions)"/> specifying
+        /// Here we call <see cref="NewActivityFutureStub{TActivityInterface}(string, ActivityOptions)"/> specifying
         /// <b>"foo"</b> as the workflow method name.  This matches the <c>[ActivityMethod(Name = "foo")]</c> decorating
         /// the <c>FooAsync()</c> activity interface method.  Then we start the first activity by awaiting 
-        /// <see cref="StartActivityStub{TActivityInterface}"/>.  This returns an <see cref="IAsyncFuture{T}"/> whose 
+        /// <see cref="ActivityFutureStub{TActivityInterface}"/>.  This returns an <see cref="IAsyncFuture{T}"/> whose 
         /// <see cref="IAsyncFuture.GetAsync"/> method returns the activity result.  The code above calls this to
         /// retrieve the result from the first activity after executing the second activity in parallel.
         /// </para>
@@ -1683,7 +1683,7 @@ namespace Neon.Cadence
         /// </para>
         /// </note>
         /// </remarks>
-        public StartActivityStub<TActivityInterface> NewStartActivityStub<TActivityInterface>(string methodName = null, ActivityOptions options = null)
+        public ActivityFutureStub<TActivityInterface> NewActivityFutureStub<TActivityInterface>(string methodName = null, ActivityOptions options = null)
             where TActivityInterface : class
         {
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
@@ -1692,7 +1692,7 @@ namespace Neon.Cadence
 
             options = ActivityOptions.Normalize(Client, options, typeof(TActivityInterface));
 
-            return new StartActivityStub<TActivityInterface>(this, methodName, options);
+            return new ActivityFutureStub<TActivityInterface>(this, methodName, options);
         }
 
         /// <summary>
@@ -1804,10 +1804,10 @@ namespace Neon.Cadence
         /// }
         /// </code>
         /// <para>
-        /// Here we call <see cref="NewStartActivityStub{TActivityInterface}(string, ActivityOptions)"/> specifying
+        /// Here we call <see cref="NewActivityFutureStub{TActivityInterface}(string, ActivityOptions)"/> specifying
         /// <b>"foo"</b> as the workflow method name.  This matches the <c>[ActivityMethod(Name = "foo")]</c> decorating
         /// the <c>FooAsync()</c> activity interface method.  Then we start the first activity by awaiting 
-        /// <see cref="StartActivityStub{TActivityInterface}"/>.  This returns an <see cref="IAsyncFuture{T}"/> whose 
+        /// <see cref="ActivityFutureStub{TActivityInterface}"/>.  This returns an <see cref="IAsyncFuture{T}"/> whose 
         /// <see cref="IAsyncFuture.GetAsync"/> method returns the activity result.  The code above calls this to
         /// retrieve the result from the first activity after executing the second activity in parallel.
         /// </para>
@@ -1823,7 +1823,7 @@ namespace Neon.Cadence
         /// </para>
         /// </note>
         /// </remarks>
-        public StartLocalActivityStub<TActivityInterface, TActivityImplementation> NewStartLocalActivityStub<TActivityInterface, TActivityImplementation>(string methodName = null, LocalActivityOptions options = null)
+        public LocalActivityFutureStub<TActivityInterface, TActivityImplementation> NewStartLocalActivityStub<TActivityInterface, TActivityImplementation>(string methodName = null, LocalActivityOptions options = null)
             where TActivityInterface : class
             where TActivityImplementation : TActivityInterface
         {
@@ -1831,7 +1831,7 @@ namespace Neon.Cadence
             Client.EnsureNotDisposed();
             SetStackTrace();
 
-            return new StartLocalActivityStub<TActivityInterface, TActivityImplementation>(this, methodName, options);
+            return new LocalActivityFutureStub<TActivityInterface, TActivityImplementation>(this, methodName, options);
         }
         
         //---------------------------------------------------------------------

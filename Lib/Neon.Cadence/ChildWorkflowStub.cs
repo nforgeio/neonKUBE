@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    StartChildWorkflowStub.cs
+// FILE:	    ChildWorkflowStub.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -36,7 +36,7 @@ namespace Neon.Cadence
     /// Instances are created via <see cref="Workflow.NewChildWorkflowFutureStub{TWorkflowInterface}(string, ChildWorkflowOptions)"/>.
     /// </summary>
     /// <typeparam name="TWorkflowInterface">Specifies the workflow interface.</typeparam>
-    public class StartChildWorkflowStub<TWorkflowInterface>
+    public class ChildWorkflowStub<TWorkflowInterface>
         where TWorkflowInterface : class
     {
         private Workflow                parentWorkflow;
@@ -51,7 +51,7 @@ namespace Neon.Cadence
         /// <param name="parentWorkflow">The associated parent workflow.</param>
         /// <param name="methodName">Identifies the target workflow method or <c>null</c> or empty.</param>
         /// <param name="options">The child workflow options or <c>null</c>.</param>
-        internal StartChildWorkflowStub(Workflow parentWorkflow, string methodName, ChildWorkflowOptions options)
+        internal ChildWorkflowStub(Workflow parentWorkflow, string methodName, ChildWorkflowOptions options)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
 
@@ -137,7 +137,7 @@ namespace Neon.Cadence
         /// These are checked at runtime but not while compiling.
         /// </para>
         /// <note>
-        /// Any given <see cref="StartChildWorkflowStub{TWorkflowInterface}"/> may only be executed once.
+        /// Any given <see cref="ChildWorkflowStub{TWorkflowInterface}"/> may only be executed once.
         /// </note>
         /// </remarks>
         public async Task<IAsyncFuture<TResult>> StartAsync<TResult>(params object[] args)
@@ -208,7 +208,7 @@ namespace Neon.Cadence
         /// These are checked at runtime but not while compiling.
         /// </para>
         /// <note>
-        /// Any given <see cref="StartChildWorkflowStub{TWorkflowInterface}"/> may only be executed once.
+        /// Any given <see cref="ChildWorkflowStub{TWorkflowInterface}"/> may only be executed once.
         /// </note>
         /// </remarks>
         public async Task<IAsyncFuture> StartAsync(params object[] args)

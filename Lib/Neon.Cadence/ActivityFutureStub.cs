@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    StartActivityStub.cs
+// FILE:	    ActivityFutureStub.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -33,10 +33,10 @@ namespace Neon.Cadence
 {
     /// <summary>
     /// Used to execute an activity in parallel with other activities or child
-    /// workflows.  Instances are created via <see cref="Workflow.NewStartActivityStub{TActivityInterface}(string, ActivityOptions)"/>.
+    /// workflows.  Instances are created via <see cref="Workflow.NewActivityFutureStub{TActivityInterface}(string, ActivityOptions)"/>.
     /// </summary>
     /// <typeparam name="TActivityInterface">Specifies the activity interface.</typeparam>
-    public class StartActivityStub<TActivityInterface>
+    public class ActivityFutureStub<TActivityInterface>
         where TActivityInterface : class
     {
         //---------------------------------------------------------------------
@@ -148,7 +148,7 @@ namespace Neon.Cadence
         /// <param name="parentWorkflow">The associated parent workflow.</param>
         /// <param name="methodName">Identifies the target activity method or <c>null</c> or empty.</param>
         /// <param name="options">The activity options or <c>null</c>.</param>
-        internal StartActivityStub(Workflow parentWorkflow, string methodName, ActivityOptions options = null)
+        internal ActivityFutureStub(Workflow parentWorkflow, string methodName, ActivityOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
 
@@ -267,7 +267,7 @@ namespace Neon.Cadence
         /// These are checked at runtime but not while compiling.
         /// </para>
         /// <note>
-        /// Any given <see cref="StartActivityStub{TActivityInterface}"/> may only be executed once.
+        /// Any given <see cref="ActivityFutureStub{TActivityInterface}"/> may only be executed once.
         /// </note>
         /// </remarks>
         public async Task<IAsyncFuture<TResult>> StartAsync<TResult>(params object[] args)
@@ -354,7 +354,7 @@ namespace Neon.Cadence
         /// These are checked at runtime but not while compiling.
         /// </para>
         /// <note>
-        /// Any given <see cref="StartActivityStub{TActivityInterface}"/> may only be executed once.
+        /// Any given <see cref="ActivityFutureStub{TActivityInterface}"/> may only be executed once.
         /// </note>
         /// </remarks>
         public async Task<IAsyncFuture> StartAsync(params object[] args)

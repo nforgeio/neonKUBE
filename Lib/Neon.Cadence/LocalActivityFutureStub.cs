@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    StartLocalActivityStub.cs
+// FILE:	    LocalActivityFutureStub.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -37,7 +37,7 @@ namespace Neon.Cadence
     /// </summary>
     /// <typeparam name="TActivityInterface">Specifies the activity interface.</typeparam>
     /// <typeparam name="TActivityImplementation">Specifies the local activity implementation class.</typeparam> 
-    public class StartLocalActivityStub<TActivityInterface, TActivityImplementation>
+    public class LocalActivityFutureStub<TActivityInterface, TActivityImplementation>
         where TActivityInterface : class
         where TActivityImplementation : TActivityInterface
     {
@@ -150,7 +150,7 @@ namespace Neon.Cadence
         /// <param name="parentWorkflow">The associated parent workflow.</param>
         /// <param name="methodName">Identifies the target activity method or <c>null</c> or empty.</param>
         /// <param name="options">The activity options or <c>null</c>.</param>
-        internal StartLocalActivityStub(Workflow parentWorkflow, string methodName, LocalActivityOptions options = null)
+        internal LocalActivityFutureStub(Workflow parentWorkflow, string methodName, LocalActivityOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
 
@@ -223,7 +223,7 @@ namespace Neon.Cadence
         /// These are checked at runtime but not while compiling.
         /// </para>
         /// <note>
-        /// Any given <see cref="StartActivityStub{TActivityInterface}"/> may only be executed once.
+        /// Any given <see cref="ActivityFutureStub{TActivityInterface}"/> may only be executed once.
         /// </note>
         /// </remarks>
         public async Task<IAsyncFuture<TResult>> StartAsync<TResult>(params object[] args)
@@ -311,7 +311,7 @@ namespace Neon.Cadence
         /// These are checked at runtime but not while compiling.
         /// </para>
         /// <note>
-        /// Any given <see cref="StartActivityStub{TActivityInterface}"/> may only be executed once.
+        /// Any given <see cref="ActivityFutureStub{TActivityInterface}"/> may only be executed once.
         /// </note>
         /// </remarks>
         public async Task<IAsyncFuture> StartAsync(params object[] args)
