@@ -19,7 +19,7 @@ package messages
 
 import (
 	proxyworkflow "github.com/cadence-proxy/internal/cadence/workflow"
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -52,7 +52,7 @@ type (
 func NewWorkflowReply() *WorkflowReply {
 	reply := new(WorkflowReply)
 	reply.ProxyReply = NewProxyReply()
-	reply.SetType(messagetypes.Unspecified)
+	reply.SetType(internal.Unspecified)
 
 	return reply
 }

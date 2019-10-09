@@ -26,8 +26,8 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"github.com/cadence-proxy/internal"
+	dotnetlogger "github.com/cadence-proxy/internal/dotnet-logger"
 	"github.com/cadence-proxy/internal/messages"
-	dotnetlogger "github.com/cadence-proxy/internal/messages/dotnet-logger"
 )
 
 type (

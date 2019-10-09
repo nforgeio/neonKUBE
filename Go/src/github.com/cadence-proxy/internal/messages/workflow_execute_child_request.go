@@ -22,7 +22,7 @@ import (
 
 	"go.uber.org/cadence/workflow"
 
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -47,8 +47,8 @@ type (
 func NewWorkflowExecuteChildRequest() *WorkflowExecuteChildRequest {
 	request := new(WorkflowExecuteChildRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
-	request.SetType(messagetypes.WorkflowExecuteChildRequest)
-	request.SetReplyType(messagetypes.WorkflowExecuteChildReply)
+	request.SetType(internal.WorkflowExecuteChildRequest)
+	request.SetReplyType(internal.WorkflowExecuteChildReply)
 
 	return request
 }

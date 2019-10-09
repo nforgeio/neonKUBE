@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -41,8 +41,8 @@ type (
 func NewCancelRequest() *CancelRequest {
 	request := new(CancelRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.SetType(messagetypes.CancelRequest)
-	request.SetReplyType(messagetypes.CancelReply)
+	request.SetType(internal.CancelRequest)
+	request.SetReplyType(internal.CancelReply)
 
 	return request
 }

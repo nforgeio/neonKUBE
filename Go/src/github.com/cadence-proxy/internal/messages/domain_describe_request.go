@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -41,8 +41,8 @@ type (
 func NewDomainDescribeRequest() *DomainDescribeRequest {
 	request := new(DomainDescribeRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.SetType(messagetypes.DomainDescribeRequest)
-	request.SetReplyType(messagetypes.DomainDescribeReply)
+	request.SetType(internal.DomainDescribeRequest)
+	request.SetReplyType(internal.DomainDescribeReply)
 
 	return request
 }

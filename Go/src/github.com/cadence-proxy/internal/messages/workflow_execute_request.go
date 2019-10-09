@@ -20,7 +20,7 @@ package messages
 import (
 	"go.uber.org/cadence/client"
 
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -46,8 +46,8 @@ type (
 func NewWorkflowExecuteRequest() *WorkflowExecuteRequest {
 	request := new(WorkflowExecuteRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
-	request.SetType(messagetypes.WorkflowExecuteRequest)
-	request.SetReplyType(messagetypes.WorkflowExecuteReply)
+	request.SetType(internal.WorkflowExecuteRequest)
+	request.SetReplyType(internal.WorkflowExecuteReply)
 
 	return request
 }

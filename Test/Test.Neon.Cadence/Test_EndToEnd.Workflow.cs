@@ -2674,7 +2674,9 @@ namespace TestCadence
 
                 receivedSignal = null;
 
-                var stub   = Workflow.NewUntypedChildWorkflowFutureStub<string>($"{typeof(IWorkflowChildGetExecution).FullName}::wait-for-signal");
+                var parentWorkflowTypeName = $"{this.Workflow.Parent}".Replace("+", ".");
+                
+                var stub   = Workflow.NewUntypedChildWorkflowFutureStub<string>($"{parentWorkflowTypeName}::wait-for-signal");
                 var future = await stub.StartAsync("Jeff");
 
                 await stub.SignalAsync("signal", "hello-signal");
