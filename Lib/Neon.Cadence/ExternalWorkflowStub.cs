@@ -35,11 +35,78 @@ namespace Neon.Cadence
     /// </summary>
     public class ExternalWorkflowStub
     {
+        //---------------------------------------------------------------------
+        // Local types
+
+        [ActivityInterface]
+        private interface ILocalOperations : IActivity
+        {
+            /// <summary>
+            /// Cancels the specified workflow.
+            /// </summary>
+            /// <param name="execution">The target workflow execution.</param>
+            /// <returns>The tracking <see cref="Task"/>.</returns>
+            Task CancelAsync(WorkflowExecution execution);
+
+            /// <summary>
+            /// Waits for the specified workflow to complete.
+            /// </summary>
+            /// <param name="execution">The target workflow execution.</param>
+            /// <returns>The tracking <see cref="Task"/>.</returns>
+            Task GetResultAsync(WorkflowExecution execution);
+
+            /// <summary>
+            /// Waits for the specified workflow to complete and then returns the
+            /// workflow result.
+            /// </summary>
+            /// <param name="execution">The target workflow execution.</param>
+            /// <returns>The workflow result.</returns>
+            Task<byte[]> GetResultBytesAsync(WorkflowExecution execution);
+
+            /// <summary>
+            /// Signals the specified workflow.
+            /// </summary>
+            /// <param name="execution">The target workflow execution.</param>
+            /// <param name="signalName">The signal name.</param>
+            /// <param name="args">The signal arguments.</param>
+            /// <returns>The tracking <see cref="Task"/>.</returns>
+            Task SignalAsync(WorkflowExecution execution, string signalName, params object[] args);
+        }
+
+        private class LocalOperations : ActivityBase, ILocalOperations
+        {
+            public async Task CancelAsync(WorkflowExecution execution)
+            {
+                await Activity.Client.CancelWorkflowAsync(execution);
+            }
+
+            public async Task GetResultAsync(WorkflowExecution execution)
+            {
+                await Activity.Client.GetWorkflowResultAsync(execution);
+            }
+
+            public async Task<byte[]> GetResultBytesAsync(WorkflowExecution execution)
+            {
+                return await Activity.Client.GetWorkflowResultAsync(execution);
+            }
+
+            public async Task SignalAsync(WorkflowExecution execution, string signalName, params object[] args)
+            {
+                var dataConverter = Activity.Client.DataConverter;
+
+                await Activity.Client.SignalWorkflowAsync(execution, signalName, dataConverter.ToData(args));
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
+        private Workflow        parentWorkflow;
         private CadenceClient   client;
         private string          domain;
 
         /// <summary>
-        /// Internal constructor by workflow execution.
+        /// Internal constructor for use outside of a workflow.
         /// </summary>
         /// <param name="client">Specifies the associated client.</param>
         /// <param name="execution">Specifies the target workflow execution.</param>
@@ -55,6 +122,23 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Internal constructor for use within a workflow.
+        /// </summary>
+        /// <param name="parentWorkflow">Specifies the parent workflow.</param>
+        /// <param name="execution">Specifies the target workflow execution.</param>
+        /// <param name="domain">Optionally specifies the target domain (defaults to the client's default domain).</param>
+        internal ExternalWorkflowStub(Workflow parentWorkflow, WorkflowExecution execution, string domain = null)
+        {
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
+
+            this.parentWorkflow = parentWorkflow;
+            this.client         = parentWorkflow.Client;
+            this.domain         = client.ResolveDomain(domain);
+            this.Execution      = execution;
+        }
+
+        /// <summary>
         /// Returns the workflow execution.
         /// </summary>
         public WorkflowExecution Execution { get; private set; }
@@ -64,7 +148,16 @@ namespace Neon.Cadence
         /// </summary>
         public async Task CancelAsync()
         {
-            await client.CancelWorkflowAsync(Execution, domain);
+            if (parentWorkflow != null)
+            {
+                var stub = parentWorkflow.NewLocalActivityStub<ILocalOperations, LocalOperations>();
+
+                await stub.CancelAsync(Execution);
+            }
+            else
+            {
+                await client.CancelWorkflowAsync(Execution, domain);
+            }
         }
 
         /// <summary>
@@ -73,12 +166,21 @@ namespace Neon.Cadence
         /// <param name="signalName">Specifies the signal name.</param>
         /// <param name="args">Specifies the signal arguments.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task Signal(string signalName, params object[] args)
+        public async Task SignalAsync(string signalName, params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
-            await client.SignalWorkflowAsync(Execution, signalName, client.DataConverter.ToData(args));
+            if (parentWorkflow != null)
+            {
+                var stub = parentWorkflow.NewLocalActivityStub<ILocalOperations, LocalOperations>();
+
+                await stub.SignalAsync(Execution, signalName, args);
+            }
+            else
+            {
+                await client.SignalWorkflowAsync(Execution, signalName, client.DataConverter.ToData(args));
+            }
         }
 
         /// <summary>
@@ -87,7 +189,16 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task GetResultAsync()
         {
-            await client.GetWorkflowResultAsync(Execution, domain);
+            if (parentWorkflow != null)
+            {
+                var stub = parentWorkflow.NewLocalActivityStub<ILocalOperations, LocalOperations>();
+
+                await stub.GetResultAsync(Execution);
+            }
+            else
+            {
+                await client.GetWorkflowResultAsync(Execution, domain);
+            }
         }
 
         /// <summary>
@@ -97,7 +208,17 @@ namespace Neon.Cadence
         /// <returns>The workflow result.</returns>
         public async Task<TResult> GetResultAsync<TResult>()
         {
-            return client.DataConverter.FromData<TResult>(await client.GetWorkflowResultAsync(Execution, domain));
+            if (parentWorkflow != null)
+            {
+                var stub  = parentWorkflow.NewLocalActivityStub<ILocalOperations, LocalOperations>();
+                var bytes = await stub.GetResultBytesAsync(Execution);
+
+                return client.DataConverter.FromData<TResult>(bytes);
+            }
+            else
+            {
+                return client.DataConverter.FromData<TResult>(await client.GetWorkflowResultAsync(Execution, domain));
+            }
         }
     }
 }
