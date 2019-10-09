@@ -414,7 +414,7 @@ namespace Neon.Time
 
                     if (interval.Ticks < 0)
                     {
-                        throw new ArgumentException(BadIntervalMsg, "value");
+                        throw new ArgumentException(BadIntervalMsg, nameof(value));
                     }
 
                     this.interval = value;

@@ -327,7 +327,7 @@ namespace Neon.HyperV
 
                     if (drive.Size <= 0)
                     {
-                        throw new ArgumentException("Virtual drive size must be greater than 0.");
+                        throw new ArgumentException("Virtual drive size must be greater than 0.", nameof(drive));
                     }
 
                     if (File.Exists(drive.Path))

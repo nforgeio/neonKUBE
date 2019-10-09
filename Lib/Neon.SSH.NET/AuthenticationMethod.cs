@@ -34,7 +34,7 @@ namespace Renci.SshNet
         protected AuthenticationMethod(string username)
         {
             if (username.IsNullOrWhiteSpace())
-                throw new ArgumentException("username");
+                throw new ArgumentException(nameof(username));
 
             Username = username;
         }

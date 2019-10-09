@@ -2482,34 +2482,37 @@ namespace TestCadence
         [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowExternalStub : IWorkflow
         {
-            [WorkflowMethod(Name = "hello-test")]
-            Task<bool> HelloTestByIdNoResultAsync();
+            [WorkflowMethod(Name = "run")]
+            Task RunAsync();
 
             [WorkflowMethod(Name = "hello")]
             Task<string> HelloAsync(string name);
 
-            [WorkflowMethod(Name = "signal-test")]
-            Task<bool> SignalTestAsync();
+            [WorkflowMethod(Name = "hello-test-byid-noresult")]
+            Task<bool> HelloTestByIdNoResultAsync();
 
-            [WorkflowMethod(Name = "wait-for-signal")]
-            Task<string> WaitForSignalAsync();
+            [WorkflowMethod(Name = "hello-test-byid-withresult")]
+            Task<bool> HelloTestByIdWithResultAsync();
 
-            [SignalMethod("signal")]
-            Task SignalAsync(string value);
+            [WorkflowMethod(Name = "hello-test-byexecution-noresult")]
+            Task<bool> HelloTestByExecutionNoResultAsync();
+
+            [WorkflowMethod(Name = "hello-test-byexecution-withresult")]
+            Task<bool> HelloTestByExecutionWithResultAsync();
         }
 
         [Workflow(AutoRegister = true)]
         public class WorkflowExternalStub : WorkflowBase, IWorkflowExternalStub
         {
-            public static bool IsRunning = false;
-
-            public static new void Reset()
+            public async Task RunAsync()
             {
-                IsRunning = false;
+                await Task.CompletedTask;
             }
 
-            private bool    signalled;
-            private string  signalValue;
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
 
             public async Task<bool> HelloTestByIdNoResultAsync()
             {
@@ -2518,11 +2521,35 @@ namespace TestCadence
                 // that we can wait for the workflow using the stub Task as well as
                 // the external stub (without retrieving the result).
 
-                const string TestWorkflowId = "WorkflowExternalStub-HelloTestByIdNoResultAsync";
+                var TestWorkflowId = "WorkflowExternalStub-HelloTestByIdNoResultAsync-" + Guid.NewGuid().ToString("d");
+                var stub           = Workflow.NewChildWorkflowStub<IWorkflowExternalStub>(new ChildWorkflowOptions() { WorkflowId = TestWorkflowId });
+                var task           = stub.RunAsync();
+                var externalStub   = Workflow.NewExternalWorkflowStub(TestWorkflowId);
 
-                var stub         = Workflow.NewChildWorkflowStub<IWorkflowExternalStub>(new ChildWorkflowOptions() { WorkflowId = TestWorkflowId });
-                var task         = stub.HelloAsync("Jeff");
-                var externalStub = Workflow.NewExternalWorkflowStub(TestWorkflowId);
+                // $hack(jeff.lill): 
+                //
+                // Wait a bit to allow the workflow to be recorded before
+                // we wait for the result.
+
+                await Task.Delay(TimeSpan.FromSeconds(5));
+
+                await externalStub.GetResultAsync();
+                await task;
+
+                return true;
+            }
+
+            public async Task<bool> HelloTestByIdWithResultAsync()
+            {
+                // Start a child workflow using a typed stub and a specific workflow ID
+                // and then create an external stub with the same ID and then verify
+                // that we can wait for the workflow using the stub Task as well as
+                // the external stub (retrieving the result).
+
+                var TestWorkflowId = "WorkflowExternalStub-HelloTestByIdWithResultAsync-" + Guid.NewGuid().ToString("d");
+                var stub           = Workflow.NewChildWorkflowStub<IWorkflowExternalStub>(new ChildWorkflowOptions() { WorkflowId = TestWorkflowId });
+                var task           = stub.HelloAsync("Jeff");
+                var externalStub   = Workflow.NewExternalWorkflowStub(TestWorkflowId);
 
                 // $hack(jeff.lill): 
                 //
@@ -2538,62 +2565,93 @@ namespace TestCadence
                 return result == "Hello Jeff!";
             }
 
-            public async Task<string> HelloAsync(string name)
+            public async Task<bool> HelloTestByExecutionNoResultAsync()
             {
-                return await Task.FromResult($"Hello {name}!");
+                // Start a child workflow using a typed stub and a specific workflow ID
+                // and then create an external stub with the same ID and then verify
+                // that we can wait for the workflow using the stub Task as well as
+                // the external stub (without retrieving the result).
+
+                var TestWorkflowId = "WorkflowExternalStub-HelloTestByIdNoResultAsync-" + Guid.NewGuid().ToString("d");
+                var stub           = Workflow.NewChildWorkflowStub<IWorkflowExternalStub>(new ChildWorkflowOptions() { WorkflowId = TestWorkflowId });
+                
+                await stub.RunAsync();
+
+                var externalStub = Workflow.NewExternalWorkflowStub(WorkflowStub.FromTyped(stub).Execution);
+
+                await externalStub.GetResultAsync();
+
+                return true;
             }
 
-            public async Task<bool> SignalTestAsync()
+            public async Task<bool> HelloTestByExecutionWithResultAsync()
             {
-                return await Task.FromResult(false);
-            }
+                // Start a child workflow using a typed stub and a specific workflow ID
+                // and then create an external stub with the same ID and then verify
+                // that we can wait for the workflow using the stub Task as well as
+                // the external stub (retrieving the result).
 
-            public async Task<string> WaitForSignalAsync()
-            {
-                // Spin for up to 20 seconds, waiting for SignalAsync() to be called
-                // and then throw an exception if there was no signal or else return
-                // the signal value passed.
+                var TestWorkflowId = "WorkflowExternalStub-HelloTestByIdWithResultAsync-" + Guid.NewGuid().ToString("d");
+                var stub           = Workflow.NewChildWorkflowStub<IWorkflowExternalStub>(new ChildWorkflowOptions() { WorkflowId = TestWorkflowId });
+                var result1        = await stub.HelloAsync("Jeff");
+                var externalStub   = Workflow.NewExternalWorkflowStub(WorkflowStub.FromTyped(stub).Execution);
+                var result2        = await externalStub.GetResultAsync<string>();
 
-                for (int i = 0; i < 20; i++)
-                {
-                    if (signalled)
-                    {
-                        break;
-                    }
-
-                    await Workflow.SleepAsync(TimeSpan.FromSeconds(1));
-                }
-
-                if (!signalled)
-                {
-                    throw new Exception("Signal not received in time.");
-                }
-
-                return await Task.FromResult(signalValue);
-            }
-
-            public async Task SignalAsync(string value)
-            {
-                signalValue = value;
-                signalled   = true;
-
-                await Task.CompletedTask;
+                return result1 == "Hello Jeff!" && result1 == result2;
             }
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_ExternalWorkflowStub()
+        public async Task Workflow_ExternalWorkflowStub_ById_NoResult()
         {
             // Call a workflow that executes a child workflow by ID using a typed 
             // stub and then creates an external stub and then waits for that as
             // well without retrieving the result.
 
-            WorkflowExternalStub.Reset();
-
             var stub = client.NewWorkflowStub<IWorkflowExternalStub>();
 
             Assert.True(await stub.HelloTestByIdNoResultAsync());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ExternalWorkflowStub_ById_WithResult()
+        {
+            // Call a workflow that executes a child workflow by ID using a typed 
+            // stub and then creates an external stub and then waits for that as
+            // well without retrieving the result.
+
+            var stub = client.NewWorkflowStub<IWorkflowExternalStub>();
+
+            Assert.True(await stub.HelloTestByIdWithResultAsync());
+        }
+
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ExternalWorkflowStub_ByExecution_NoResult()
+        {
+            // Call a workflow that executes a child workflow by execution using a typed 
+            // stub and then creates an external stub and then waits for that as
+            // well without retrieving the result.
+
+            var stub = client.NewWorkflowStub<IWorkflowExternalStub>();
+
+            Assert.True(await stub.HelloTestByExecutionNoResultAsync());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ExternalWorkflowStub_ByExecution_WithResult()
+        {
+            // Call a workflow that executes a child workflow by execution using a typed 
+            // stub and then creates an external stub and then waits for that as
+            // well without retrieving the result.
+
+            var stub = client.NewWorkflowStub<IWorkflowExternalStub>();
+
+            Assert.True(await stub.HelloTestByExecutionWithResultAsync());
         }
 
         //---------------------------------------------------------------------
@@ -2727,14 +2785,14 @@ namespace TestCadence
             // We should see an [InvalidOperationException] when we attempt
             // the conversion before the workflow has been started.
 
-            Assert.Throws<InvalidOperationException>(() => client.ToUntyped(stub));
+            Assert.Throws<InvalidOperationException>(() => WorkflowStub.FromTyped(stub));
 
             // Now start a workflow, convert the stub and verify that we can
             // obtain the correct result.
 
             Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
 
-            var untypedStub = client.ToUntyped(stub);
+            var untypedStub = WorkflowStub.FromTyped(stub);
 
             Assert.Equal("Hello Jeff!", await untypedStub.GetResultAsync<string>());
             Assert.NotNull(untypedStub.Execution);

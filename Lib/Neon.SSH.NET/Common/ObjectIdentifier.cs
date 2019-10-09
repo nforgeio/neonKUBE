@@ -20,7 +20,7 @@ namespace Renci.SshNet.Common
             : this()
         {
             if (identifiers.Length < 2)
-                throw new ArgumentException("identifiers");
+                throw new ArgumentException(nameof(identifiers));
 
             Identifiers = identifiers;
         }

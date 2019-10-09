@@ -383,30 +383,6 @@ namespace Neon.Cadence
             return StubManager.NewWorkflowStub<TWorkflowInterface>(this, options: options, workflowTypeName: workflowTypeName);
         }
 
-        /// <summary>
-        /// <para>
-        /// Converts an already started typed workflow stub to an untyped <see cref="WorkflowStub"/>.
-        /// </para>
-        /// <note>
-        /// The stub must have already been started for this to work and child stubs may not converted.
-        /// </note>
-        /// </summary>
-        /// <param name="stub">The typed stub.</param>
-        /// <returns>The converted <see cref="WorkflowStub"/>.</returns>
-        /// <exception cref="ArgumentException">Thrown if the stub passed is not external (e.g. it's a child stub).</exception>
-        /// <exception cref="InvalidOperationException">Thrown if the stubbed workflow has not been started yet.</exception>
-        /// <remarks>
-        /// This is handy for obtaining the <see cref="WorkflowExecution"/> or result for the workflow as
-        /// well cancelling it.
-        /// </remarks>
-        public WorkflowStub ToUntyped(object stub)
-        {
-            Covenant.Requires<ArgumentNullException>(stub != null, nameof(stub));
-            Covenant.Requires<ArgumentException>(stub is ITypedWorkflowStub, nameof(stub), $"[{nameof(stub)}] is not a workflow stub.");
-
-            return ((ITypedWorkflowStub)stub).ToUntyped();
-        }
-
         //---------------------------------------------------------------------
         // Internal workflow related methods used by dynamically generated workflow stubs.
 

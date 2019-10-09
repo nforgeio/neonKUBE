@@ -205,7 +205,7 @@ namespace Neon.Time
         {
             if (!TryParse(value))
             {
-                throw new ArgumentException("Invalid [RecurringTimer] string.");
+                throw new ArgumentException("Invalid [RecurringTimer] string.", nameof(value));
             }
         }
 

@@ -3082,7 +3082,7 @@ echo $? > {cmdFolder}/exit
 
             if (string.IsNullOrEmpty(hostname))
             {
-                throw new ArgumentException($"No hostname is specified for the [{name}] certificate test.");
+                throw new ArgumentException($"No hostname is specified for the [{name}] certificate test.", nameof(name));
             }
 
             // Verify that the private key looks reasonable.
@@ -3096,7 +3096,7 @@ echo $? > {cmdFolder}/exit
 
             if (!certificate.CertPem.StartsWith("-----BEGIN CERTIFICATE-----"))
             {
-                throw new ArgumentException($"The [{name}] certificate is not PEM encoded.");
+                throw new ArgumentException($"The [{name}] certificate is not PEM encoded.", nameof(name));
             }
 
             // We're going to split the certificate into two files, the issued
