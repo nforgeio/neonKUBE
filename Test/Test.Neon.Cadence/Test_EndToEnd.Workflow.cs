@@ -296,7 +296,7 @@ namespace TestCadence
 
             await stub.SleepUntilUtcAsync(startUtcNow - TimeSpan.FromDays(1));
 
-            Assert.True(DateTime.UtcNow - startUtcNow < TimeSpan.FromSeconds(1));
+            Assert.True(DateTime.UtcNow - startUtcNow < TimeSpan.FromSeconds(2));
         }
 
         //---------------------------------------------------------------------
