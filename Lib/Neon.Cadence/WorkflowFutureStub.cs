@@ -31,8 +31,8 @@ namespace Neon.Cadence
 {
     /// <summary>
     /// <para>
-    /// Manages starting and signalling an external workflow instance based on
-    /// its workflow type name and arguments.  This class separates workflow 
+    /// Manages starting, signalling, or querying an external workflow instance
+    /// based on its workflow type name and arguments.  This class separates workflow 
     /// execution and retrieving the result into separate operations.
     /// </para>
     /// <para>
@@ -193,7 +193,7 @@ namespace Neon.Cadence
 
     /// <summary>
     /// <para>
-    /// Manages starting and signalling an external workflow instance based on
+    /// Manages starting, signalling, or querying an external workflow instance
     /// its workflow type name and arguments.  This class separates workflow 
     /// execution and retrieving the result into separate operations.
     /// </para>

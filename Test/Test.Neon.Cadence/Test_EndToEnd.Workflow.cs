@@ -99,6 +99,9 @@ namespace TestCadence
         {
             [WorkflowMethod]
             Task<string> HelloAsync(string name);
+
+            [WorkflowMethod(Name = "run")]
+            Task RunAsync();
         }
 
         [Workflow(AutoRegister = true)]
@@ -108,6 +111,29 @@ namespace TestCadence
             {
                 return await Task.FromResult($"Hello {name}!");
             }
+
+            public async Task RunAsync()
+            {
+                await Task.CompletedTask;
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Workflow_GetWorkflowTypeName()
+        {
+            // Verify that [CadenceHelper.GetWorkflowTypeName()] works correctly
+            // for default and named methods.
+
+            const string baseTypeName = "TestCadence.Test_EndToEnd.WorkflowWithResult";
+
+            Assert.Equal(baseTypeName, CadenceHelper.GetWorkflowTypeName<IWorkflowWithResult>());
+            Assert.Equal(baseTypeName, CadenceHelper.GetWorkflowTypeName<IWorkflowWithResult>(""));
+            Assert.Equal(baseTypeName + "::run", CadenceHelper.GetWorkflowTypeName<IWorkflowWithResult>("run"));
+
+            // Verify that we see an exception if the targeted method doesn't exist.
+
+            Assert.Throws<ArgumentException>(() => CadenceHelper.GetWorkflowTypeName<IWorkflowWithResult>("does-not-exist"));
         }
 
         [Fact]

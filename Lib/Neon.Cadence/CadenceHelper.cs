@@ -1067,5 +1067,24 @@ namespace Neon.Cadence.Internal
 
             return (workflowTypeName, targetMethod, methodAttribute);
         }
+
+        /// <summary>
+        /// Returns the workflow type name for a workflow interface and target method.
+        /// </summary>
+        /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
+        /// <param name="methodName">
+        /// Optionally specifies the target method name (as specified in the <c>[WorkflowMethod]</c>
+        /// attribiute tagging the workflow method within the interface.
+        /// </param>
+        /// <returns>The workflow type name for the workflow interface and target method.</returns>
+        /// <exception cref="ArgumentException">Thrown if target method does not exist.</exception>
+        /// <remarks>
+        /// <paramref name="methodName"/> is optional.  When this is passed as <c>null</c>
+        /// or empty, the default workflow method will be targeted (if any).
+        /// </remarks>
+        public static string GetWorkflowTypeName<TWorkflowInterface>(string methodName = null)
+        {
+            return GetWorkflowTarget(typeof(TWorkflowInterface), methodName).WorkflowTypeName;
+        }
     }
 }
