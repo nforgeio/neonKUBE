@@ -53,7 +53,7 @@ namespace Neon.ModelGen
 
                 if (Targets.Count == 0)
                 {
-                    throw new ArgumentException("At least one target group must be specified.");
+                    throw new ArgumentException("At least one target group must be specified.", nameof(targetGroups));
                 }
             }
         }

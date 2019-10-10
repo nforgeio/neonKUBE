@@ -20,7 +20,7 @@ package messages
 import (
 	"go.uber.org/cadence/workflow"
 
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -45,8 +45,8 @@ type (
 func NewActivityStartRequest() *ActivityStartRequest {
 	request := new(ActivityStartRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
-	request.SetType(messagetypes.ActivityStartRequest)
-	request.SetReplyType(messagetypes.ActivityStartReply)
+	request.SetType(internal.ActivityStartRequest)
+	request.SetReplyType(internal.ActivityStartReply)
 
 	return request
 }

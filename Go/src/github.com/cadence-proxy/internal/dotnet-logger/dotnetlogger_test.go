@@ -20,7 +20,7 @@ package dotnetlogger_test
 import (
 	"testing"
 
-	dotnetlogger "github.com/cadence-proxy/internal/messages/dotnet-logger"
+	dotnetlogger "github.com/cadence-proxy/internal/dotnet-logger"
 
 	"go.uber.org/goleak"
 	"go.uber.org/zap/zapcore"

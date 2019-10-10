@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -44,8 +44,8 @@ type (
 func NewWorkflowTerminateRequest() *WorkflowTerminateRequest {
 	request := new(WorkflowTerminateRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
-	request.SetType(messagetypes.WorkflowTerminateRequest)
-	request.SetReplyType(messagetypes.WorkflowTerminateReply)
+	request.SetType(internal.WorkflowTerminateRequest)
+	request.SetReplyType(internal.WorkflowTerminateReply)
 
 	return request
 }

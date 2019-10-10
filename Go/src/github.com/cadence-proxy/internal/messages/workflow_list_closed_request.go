@@ -20,7 +20,7 @@ package messages
 import (
 	"fmt"
 
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -46,8 +46,8 @@ type (
 func NewWorkflowListClosedRequest() *WorkflowListClosedRequest {
 	request := new(WorkflowListClosedRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
-	request.SetType(messagetypes.WorkflowListClosedRequest)
-	request.SetReplyType(messagetypes.WorkflowListClosedReply)
+	request.SetType(internal.WorkflowListClosedRequest)
+	request.SetReplyType(internal.WorkflowListClosedReply)
 
 	return request
 }

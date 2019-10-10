@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -40,8 +40,8 @@ type (
 func NewStopWorkerRequest() *StopWorkerRequest {
 	request := new(StopWorkerRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.SetType(messagetypes.StopWorkerRequest)
-	request.SetReplyType(messagetypes.StopWorkerReply)
+	request.SetType(internal.StopWorkerRequest)
+	request.SetReplyType(internal.StopWorkerReply)
 
 	return request
 }

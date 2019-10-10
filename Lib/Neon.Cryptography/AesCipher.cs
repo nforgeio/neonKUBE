@@ -201,7 +201,7 @@ namespace Neon.Cryptography
 
                 default:
 
-                    throw new ArgumentException($"Invalid key [size={keyBytes.Length * 8}].  Only these sizes are currently supported: 128, 192, and 256.");
+                    throw new ArgumentException($"Invalid key [size={keyBytes.Length * 8}].  Only these sizes are currently supported: 128, 192, and 256.", nameof(key));
             }
 
             aes = new AesManaged()

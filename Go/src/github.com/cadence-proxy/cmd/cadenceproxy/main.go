@@ -59,6 +59,7 @@ func main() {
 		internal.Debug = debugMode
 		logLevel = zapcore.DebugLevel
 	}
+
 	internal.DebugPrelaunched = debugPrelaunched
 
 	// set the initialization logger
@@ -69,6 +70,7 @@ func main() {
 			logLevel,
 		),
 	)
+
 	defer l.Sync()
 
 	// create the HTTP client used to
@@ -77,6 +79,7 @@ func main() {
 	client := http.Client{
 		Transport: http.DefaultTransport,
 	}
+
 	client.Transport.(*http.Transport).MaxIdleConnsPerHost = 10
 
 	// create the instance, set the routes,

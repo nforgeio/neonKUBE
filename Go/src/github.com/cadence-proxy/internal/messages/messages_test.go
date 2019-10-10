@@ -46,10 +46,9 @@ import (
 	proxyclient "github.com/cadence-proxy/internal/cadence/client"
 	proxyerror "github.com/cadence-proxy/internal/cadence/error"
 	proxyworkflow "github.com/cadence-proxy/internal/cadence/workflow"
+	dotnetlogger "github.com/cadence-proxy/internal/dotnet-logger"
 	"github.com/cadence-proxy/internal/endpoints"
 	"github.com/cadence-proxy/internal/messages"
-	dotnetlogger "github.com/cadence-proxy/internal/messages/dotnet-logger"
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
 	"github.com/cadence-proxy/internal/server"
 )
 
@@ -151,7 +150,7 @@ func (s *UnitTestSuite) TestInitializeRequest() {
 
 	var message messages.IProxyMessage = messages.NewInitializeRequest()
 	if v, ok := message.(*messages.InitializeRequest); ok {
-		s.Equal(messagetypes.InitializeReply, v.GetReplyType())
+		s.Equal(internal.InitializeReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
@@ -261,7 +260,7 @@ func (s *UnitTestSuite) TestConnectRequest() {
 
 	var message messages.IProxyMessage = messages.NewConnectRequest()
 	if v, ok := message.(*messages.ConnectRequest); ok {
-		s.Equal(messagetypes.ConnectReply, v.GetReplyType())
+		s.Equal(internal.ConnectReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
@@ -398,7 +397,7 @@ func (s *UnitTestSuite) TestDisconnectRequest() {
 
 	var message messages.IProxyMessage = messages.NewDisconnectRequest()
 	if v, ok := message.(*messages.DisconnectRequest); ok {
-		s.Equal(messagetypes.DisconnectReply, v.GetReplyType())
+		s.Equal(internal.DisconnectReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
@@ -496,7 +495,7 @@ func (s *UnitTestSuite) TestDomainDescribeRequest() {
 
 	var message messages.IProxyMessage = messages.NewDomainDescribeRequest()
 	if v, ok := message.(*messages.DomainDescribeRequest); ok {
-		s.Equal(messagetypes.DomainDescribeReply, v.GetReplyType())
+		s.Equal(internal.DomainDescribeReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
@@ -634,7 +633,7 @@ func (s *UnitTestSuite) TestDomainRegisterRequest() {
 
 	var message messages.IProxyMessage = messages.NewDomainRegisterRequest()
 	if v, ok := message.(*messages.DomainRegisterRequest); ok {
-		s.Equal(messagetypes.DomainRegisterReply, v.GetReplyType())
+		s.Equal(internal.DomainRegisterReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
@@ -767,7 +766,7 @@ func (s *UnitTestSuite) TestDomainDeprecateRequest() {
 
 	var message messages.IProxyMessage = messages.NewDomainDeprecateRequest()
 	if v, ok := message.(*messages.DomainDeprecateRequest); ok {
-		s.Equal(messagetypes.DomainDeprecateReply, v.GetReplyType())
+		s.Equal(internal.DomainDeprecateReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
@@ -874,7 +873,7 @@ func (s *UnitTestSuite) TestDomainUpdateRequest() {
 
 	var message messages.IProxyMessage = messages.NewDomainUpdateRequest()
 	if v, ok := message.(*messages.DomainUpdateRequest); ok {
-		s.Equal(messagetypes.DomainUpdateReply, v.GetReplyType())
+		s.Equal(internal.DomainUpdateReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
@@ -1007,7 +1006,7 @@ func (s *UnitTestSuite) TestTerminateRequest() {
 
 	var message messages.IProxyMessage = messages.NewTerminateRequest()
 	if v, ok := message.(*messages.TerminateRequest); ok {
-		s.Equal(messagetypes.TerminateReply, v.GetReplyType())
+		s.Equal(internal.TerminateReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
@@ -1099,7 +1098,7 @@ func (s *UnitTestSuite) TestHeartbeatRequest() {
 
 	var message messages.IProxyMessage = messages.NewHeartbeatRequest()
 	if v, ok := message.(*messages.HeartbeatRequest); ok {
-		s.Equal(messagetypes.HeartbeatReply, v.GetReplyType())
+		s.Equal(internal.HeartbeatReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
@@ -1191,7 +1190,7 @@ func (s *UnitTestSuite) TestCancelRequest() {
 
 	var message messages.IProxyMessage = messages.NewCancelRequest()
 	if v, ok := message.(*messages.CancelRequest); ok {
-		s.Equal(messagetypes.CancelReply, v.GetReplyType())
+		s.Equal(internal.CancelReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
@@ -1807,7 +1806,7 @@ func (s *UnitTestSuite) TestWorkflowRegisterRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowRegisterRequest); ok {
-		s.Equal(messagetypes.WorkflowRegisterReply, v.ReplyType)
+		s.Equal(internal.WorkflowRegisterReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetName())
 		s.Nil(v.GetDomain())
@@ -1910,7 +1909,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowExecuteRequest); ok {
-		s.Equal(messagetypes.WorkflowExecuteReply, v.ReplyType)
+		s.Equal(internal.WorkflowExecuteReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetDomain())
 		s.Nil(v.GetWorkflow())
@@ -2037,7 +2036,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowInvokeRequest); ok {
-		s.Equal(messagetypes.WorkflowInvokeReply, v.ReplyType)
+		s.Equal(internal.WorkflowInvokeReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(int64(0), v.GetContextID())
 		s.Nil(v.GetArgs())
@@ -2269,7 +2268,7 @@ func (s *UnitTestSuite) TestWorkflowCancelRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowCancelRequest); ok {
-		s.Equal(messagetypes.WorkflowCancelReply, v.ReplyType)
+		s.Equal(internal.WorkflowCancelReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetWorkflowID())
 		s.Nil(v.GetRunID())
@@ -2379,7 +2378,7 @@ func (s *UnitTestSuite) TestWorkflowTerminateRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowTerminateRequest); ok {
-		s.Equal(messagetypes.WorkflowTerminateReply, v.ReplyType)
+		s.Equal(internal.WorkflowTerminateReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetWorkflowID())
 		s.Nil(v.GetRunID())
@@ -2503,7 +2502,7 @@ func (s *UnitTestSuite) TestWorkflowSignalRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowSignalRequest); ok {
-		s.Equal(messagetypes.WorkflowSignalReply, v.ReplyType)
+		s.Equal(internal.WorkflowSignalReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetWorkflowID())
 		s.Nil(v.GetRunID())
@@ -2627,7 +2626,7 @@ func (s *UnitTestSuite) TestWorkflowSignalWithStartRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowSignalWithStartRequest); ok {
-		s.Equal(messagetypes.WorkflowSignalWithStartReply, v.ReplyType)
+		s.Equal(internal.WorkflowSignalWithStartReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetWorkflow())
 		s.Nil(v.GetWorkflowID())
@@ -2825,7 +2824,7 @@ func (s *UnitTestSuite) TestWorkflowCancelChildRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowCancelChildRequest); ok {
-		s.Equal(messagetypes.WorkflowCancelChildReply, v.ReplyType)
+		s.Equal(internal.WorkflowCancelChildReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(int64(0), v.GetChildID())
 
@@ -2873,7 +2872,7 @@ func (s *UnitTestSuite) TestWorkflowQueryRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowQueryRequest); ok {
-		s.Equal(messagetypes.WorkflowQueryReply, v.ReplyType)
+		s.Equal(internal.WorkflowQueryReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetWorkflowID())
 		s.Nil(v.GetRunID())
@@ -3004,7 +3003,7 @@ func (s *UnitTestSuite) TestWorkflowMutableRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowMutableRequest); ok {
-		s.Equal(messagetypes.WorkflowMutableReply, v.ReplyType)
+		s.Equal(internal.WorkflowMutableReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetMutableID())
 		s.Nil(v.GetResult())
@@ -3125,7 +3124,7 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowDescribeExecutionRequest); ok {
-		s.Equal(messagetypes.WorkflowDescribeExecutionReply, v.ReplyType)
+		s.Equal(internal.WorkflowDescribeExecutionReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetWorkflowID())
 		s.Nil(v.GetRunID())
@@ -3289,7 +3288,7 @@ func (s *UnitTestSuite) TestWorkflowDisconnectContextRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowDisconnectContextRequest); ok {
-		s.Equal(messagetypes.WorkflowDisconnectContextReply, v.ReplyType)
+		s.Equal(internal.WorkflowDisconnectContextReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 
 		// Round-trip
@@ -3397,7 +3396,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowExecuteChildRequest); ok {
-		s.Equal(messagetypes.WorkflowExecuteChildReply, v.ReplyType)
+		s.Equal(internal.WorkflowExecuteChildReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetWorkflow())
 		s.Nil(v.GetArgs())
@@ -3522,7 +3521,7 @@ func (s *UnitTestSuite) TestWorkflowGetLastResultRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowGetLastResultRequest); ok {
-		s.Equal(messagetypes.WorkflowGetLastResultReply, v.ReplyType)
+		s.Equal(internal.WorkflowGetLastResultReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 
 		// Round-trip
@@ -3617,7 +3616,7 @@ func (s *UnitTestSuite) TestWorkflowGetResultRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowGetResultRequest); ok {
-		s.Equal(messagetypes.WorkflowGetResultReply, v.ReplyType)
+		s.Equal(internal.WorkflowGetResultReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetWorkflowID())
 		s.Nil(v.GetRunID())
@@ -3733,7 +3732,7 @@ func (s *UnitTestSuite) TestWorkflowGetTimeRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowGetTimeRequest); ok {
-		s.Equal(messagetypes.WorkflowGetTimeReply, v.ReplyType)
+		s.Equal(internal.WorkflowGetTimeReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 
 		// Round-trip
@@ -3828,7 +3827,7 @@ func (s *UnitTestSuite) TestWorkflowHasLastResultRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowHasLastResultRequest); ok {
-		s.Equal(messagetypes.WorkflowHasLastResultReply, v.ReplyType)
+		s.Equal(internal.WorkflowHasLastResultReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 
 		// Round-trip
@@ -3923,7 +3922,7 @@ func (s *UnitTestSuite) TestWorkflowQueryInvokeRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowQueryInvokeRequest); ok {
-		s.Equal(messagetypes.WorkflowQueryInvokeReply, v.ReplyType)
+		s.Equal(internal.WorkflowQueryInvokeReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(int64(0), v.GetContextID())
 		s.Nil(v.GetQueryName())
@@ -4037,7 +4036,7 @@ func (s *UnitTestSuite) TestWorkflowSetQueryHandlerRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowSetQueryHandlerRequest); ok {
-		s.Equal(messagetypes.WorkflowSetQueryHandlerReply, v.ReplyType)
+		s.Equal(internal.WorkflowSetQueryHandlerReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(int64(0), v.GetContextID())
 		s.Nil(v.GetQueryName())
@@ -4145,7 +4144,7 @@ func (s *UnitTestSuite) TestWorkflowSignalChildRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowSignalChildRequest); ok {
-		s.Equal(messagetypes.WorkflowSignalChildReply, v.ReplyType)
+		s.Equal(internal.WorkflowSignalChildReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(int64(0), v.GetContextID())
 		s.Equal(int64(0), v.GetChildID())
@@ -4259,7 +4258,7 @@ func (s *UnitTestSuite) TestWorkflowSignalInvokeRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowSignalInvokeRequest); ok {
-		s.Equal(messagetypes.WorkflowSignalInvokeReply, v.ReplyType)
+		s.Equal(internal.WorkflowSignalInvokeReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(int64(0), v.GetContextID())
 		s.Nil(v.GetSignalName())
@@ -4373,7 +4372,7 @@ func (s *UnitTestSuite) TestWorkflowSignalSubscribeRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowSignalSubscribeRequest); ok {
-		s.Equal(messagetypes.WorkflowSignalSubscribeReply, v.ReplyType)
+		s.Equal(internal.WorkflowSignalSubscribeReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(int64(0), v.GetContextID())
 		s.Nil(v.GetSignalName())
@@ -4475,7 +4474,7 @@ func (s *UnitTestSuite) TestWorkflowSleepRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowSleepRequest); ok {
-		s.Equal(messagetypes.WorkflowSleepReply, v.ReplyType)
+		s.Equal(internal.WorkflowSleepReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(int64(0), v.GetContextID())
 		s.Equal(int64(0), v.GetDuration().Nanoseconds())
@@ -4576,7 +4575,7 @@ func (s *UnitTestSuite) TestWorkflowFutureReadyRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowFutureReadyRequest); ok {
-		s.Equal(messagetypes.WorkflowFutureReadyReply, v.ReplyType)
+		s.Equal(internal.WorkflowFutureReadyReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(int64(0), v.GetContextID())
 		s.Equal(int64(0), v.GetFutureOperationID())
@@ -4683,7 +4682,7 @@ func (s *UnitTestSuite) TestWorkflowWaitForChildRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowWaitForChildRequest); ok {
-		s.Equal(messagetypes.WorkflowWaitForChildReply, v.ReplyType)
+		s.Equal(internal.WorkflowWaitForChildReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(int64(0), v.GetContextID())
 		s.Equal(int64(0), v.GetChildID())
@@ -4790,7 +4789,7 @@ func (s *UnitTestSuite) TestWorkflowGetVersionRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowGetVersionRequest); ok {
-		s.Equal(messagetypes.WorkflowGetVersionReply, v.ReplyType)
+		s.Equal(internal.WorkflowGetVersionReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(int64(0), v.GetContextID())
 		s.Equal(int32(0), v.GetMaxSupported())
@@ -4857,7 +4856,7 @@ func (s *UnitTestSuite) TestActivityCompleteRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.ActivityCompleteRequest); ok {
-		s.Equal(messagetypes.ActivityCompleteReply, v.ReplyType)
+		s.Equal(internal.ActivityCompleteReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetTaskToken())
 		s.Nil(v.GetResult())
@@ -5044,7 +5043,7 @@ func (s *UnitTestSuite) TestActivityExecuteLocalRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.ActivityExecuteLocalRequest); ok {
-		s.Equal(messagetypes.ActivityExecuteLocalReply, v.ReplyType)
+		s.Equal(internal.ActivityExecuteLocalReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetArgs())
 		s.Nil(v.GetOptions())
@@ -5154,7 +5153,7 @@ func (s *UnitTestSuite) TestActivityExecuteRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.ActivityExecuteRequest); ok {
-		s.Equal(messagetypes.ActivityExecuteReply, v.ReplyType)
+		s.Equal(internal.ActivityExecuteReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetArgs())
 		s.Nil(v.GetOptions())
@@ -5273,7 +5272,7 @@ func (s *UnitTestSuite) TestActivityGetHeartbeatDetailsRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.ActivityGetHeartbeatDetailsRequest); ok {
-		s.Equal(messagetypes.ActivityGetHeartbeatDetailsReply, v.ReplyType)
+		s.Equal(internal.ActivityGetHeartbeatDetailsReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 
 		// Round-trip
@@ -5375,7 +5374,7 @@ func (s *UnitTestSuite) TestActivityGetInfoRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.ActivityGetInfoRequest); ok {
-		s.Equal(messagetypes.ActivityGetInfoReply, v.ReplyType)
+		s.Equal(internal.ActivityGetInfoReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 
 		// Round-trip
@@ -5470,7 +5469,7 @@ func (s *UnitTestSuite) TestActivityHasHeartbeatDetailsRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.ActivityHasHeartbeatDetailsRequest); ok {
-		s.Equal(messagetypes.ActivityHasHeartbeatDetailsReply, v.ReplyType)
+		s.Equal(internal.ActivityHasHeartbeatDetailsReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 
 		// Round-trip
@@ -5565,7 +5564,7 @@ func (s *UnitTestSuite) TestActivityInvokeLocalRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.ActivityInvokeLocalRequest); ok {
-		s.Equal(messagetypes.ActivityInvokeLocalReply, v.ReplyType)
+		s.Equal(internal.ActivityInvokeLocalReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetArgs())
 		s.Equal(int64(0), v.GetActivityTypeID())
@@ -5672,7 +5671,7 @@ func (s *UnitTestSuite) TestActivityInvokeRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.ActivityInvokeRequest); ok {
-		s.Equal(messagetypes.ActivityInvokeReply, v.ReplyType)
+		s.Equal(internal.ActivityInvokeReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetArgs())
 		s.Nil(v.GetActivity())
@@ -5774,7 +5773,7 @@ func (s *UnitTestSuite) TestActivityRecordHeartbeatRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.ActivityRecordHeartbeatRequest); ok {
-		s.Equal(messagetypes.ActivityRecordHeartbeatReply, v.ReplyType)
+		s.Equal(internal.ActivityRecordHeartbeatReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetDetails())
 		s.Nil(v.GetTaskToken())
@@ -5902,7 +5901,7 @@ func (s *UnitTestSuite) TestActivityRegisterRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.ActivityRegisterRequest); ok {
-		s.Equal(messagetypes.ActivityRegisterReply, v.ReplyType)
+		s.Equal(internal.ActivityRegisterReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetName())
 		s.Nil(v.GetDomain())
@@ -6005,7 +6004,7 @@ func (s *UnitTestSuite) TestActivityStoppingRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.ActivityStoppingRequest); ok {
-		s.Equal(messagetypes.ActivityStoppingReply, v.ReplyType)
+		s.Equal(internal.ActivityStoppingReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetActivityID())
 
@@ -6054,7 +6053,7 @@ func (s *UnitTestSuite) TestActivityStartRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.ActivityStartRequest); ok {
-		s.Equal(messagetypes.ActivityStartReply, v.ReplyType)
+		s.Equal(internal.ActivityStartReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(int64(0), v.GetClientID())
 		s.Nil(v.GetArgs())
@@ -6185,7 +6184,7 @@ func (s *UnitTestSuite) TestActivityGetResultRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.ActivityGetResultRequest); ok {
-		s.Equal(messagetypes.ActivityGetResultReply, v.ReplyType)
+		s.Equal(internal.ActivityGetResultReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(int64(0), v.GetClientID())
 		s.Equal(int64(0), v.GetActivityID())
@@ -6298,7 +6297,7 @@ func (s *UnitTestSuite) TestActivityStartLocalRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.ActivityStartLocalRequest); ok {
-		s.Equal(messagetypes.ActivityStartLocalReply, v.ReplyType)
+		s.Equal(internal.ActivityStartLocalReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(int64(0), v.GetClientID())
 		s.Equal(int64(0), v.GetActivityID())
@@ -6424,7 +6423,7 @@ func (s *UnitTestSuite) TestActivityGetLocalResultRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.ActivityGetLocalResultRequest); ok {
-		s.Equal(messagetypes.ActivityGetLocalResultReply, v.ReplyType)
+		s.Equal(internal.ActivityGetLocalResultReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(int64(0), v.GetClientID())
 		s.Equal(int64(0), v.GetActivityID())
@@ -6540,7 +6539,7 @@ func (s *UnitTestSuite) TestProxyMessage() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.ProxyMessage); ok {
-		s.Equal(messagetypes.Unspecified, v.Type)
+		s.Equal(internal.Unspecified, v.Type)
 		s.Empty(v.Properties)
 		s.Empty(v.Attachments)
 		s.Equal(int64(0), v.GetClientID())
@@ -6591,7 +6590,7 @@ func (s *UnitTestSuite) TestProxyMessage() {
 	if v, ok := message.(*messages.ProxyMessage); ok {
 
 		// type and property values
-		s.Equal(messagetypes.Unspecified, v.Type)
+		s.Equal(internal.Unspecified, v.Type)
 		s.Equal(7, len(v.Properties))
 		s.Equal("1", *v.Properties["One"])
 		s.Equal("2", *v.Properties["Two"])
@@ -6622,9 +6621,9 @@ func (s *UnitTestSuite) TestProxyRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.ProxyRequest); ok {
-		s.Equal(messagetypes.Unspecified, v.GetType())
+		s.Equal(internal.Unspecified, v.GetType())
 		s.Equal(int64(0), v.GetRequestID())
-		s.Equal(messagetypes.Unspecified, v.GetReplyType())
+		s.Equal(internal.Unspecified, v.GetReplyType())
 		s.False(v.GetIsCancellable())
 		s.Equal(int64(0), v.GetClientID())
 
@@ -6653,7 +6652,7 @@ func (s *UnitTestSuite) TestProxyRequest() {
 
 	if v, ok := message.(*messages.ProxyRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(messagetypes.Unspecified, v.GetReplyType())
+		s.Equal(internal.Unspecified, v.GetReplyType())
 		s.True(v.GetIsCancellable())
 		s.Equal(int64(666), v.GetClientID())
 	}
@@ -6713,7 +6712,7 @@ func (s *UnitTestSuite) TestWorkflowRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.WorkflowRequest); ok {
-		s.Equal(v.ReplyType, messagetypes.Unspecified)
+		s.Equal(v.ReplyType, internal.Unspecified)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(int64(0), v.GetContextID())
 
@@ -6797,7 +6796,7 @@ func (s *UnitTestSuite) TestActivityRequest() {
 	s.NotNil(message)
 
 	if v, ok := message.(*messages.ActivityRequest); ok {
-		s.Equal(v.ReplyType, messagetypes.Unspecified)
+		s.Equal(v.ReplyType, internal.Unspecified)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(int64(0), v.GetContextID())
 

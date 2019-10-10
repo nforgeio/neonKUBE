@@ -32,7 +32,7 @@ TEST_LOGS		= ./test/logs
 # test dirs
 NEON_TEST_DIR 	= $(NF_ROOT)/Test/Test.Neon.Cadence/bin/Debug/netcoreapp3.0
 TEST_DIRS 		= internal/messages  \
-	internal/messages/dotnet-logger
+				  internal/dotnet-logger
 
 # programs in the /cmd dir to build
 PROGS = cadenceproxy \

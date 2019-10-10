@@ -156,7 +156,7 @@ namespace Neon.Kube
 
             if (string.IsNullOrEmpty(InstallationId) || !Guid.TryParse(InstallationId, out var guid))
             {
-                InstallationId = Guid.NewGuid().ToString("D").ToLowerInvariant();
+                InstallationId = Guid.NewGuid().ToString("d");
             }
 
             if (StatusPollSeconds <= 0)

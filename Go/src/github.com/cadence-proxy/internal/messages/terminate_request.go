@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -42,8 +42,8 @@ type (
 func NewTerminateRequest() *TerminateRequest {
 	request := new(TerminateRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.SetType(messagetypes.TerminateRequest)
-	request.SetReplyType(messagetypes.TerminateReply)
+	request.SetType(internal.TerminateRequest)
+	request.SetReplyType(internal.TerminateReply)
 
 	return request
 }

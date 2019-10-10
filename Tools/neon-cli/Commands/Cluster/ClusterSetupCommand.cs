@@ -2653,8 +2653,8 @@ chmod 666 /run/ssh-key*
 
             if (NeonHelper.IsWindows)
             {
-                var pemKeyPath = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("D"));
-                var ppkKeyPath = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("D"));
+                var pemKeyPath = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("d"));
+                var ppkKeyPath = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("d"));
 
                 try
                 {

@@ -74,7 +74,7 @@ namespace Neon.Diagnostics
         {
             return new LogActivity()
             {
-                Id  = Guid.NewGuid().ToString("D"),
+                Id  = Guid.NewGuid().ToString("d"),
                 log = log
             };
         }

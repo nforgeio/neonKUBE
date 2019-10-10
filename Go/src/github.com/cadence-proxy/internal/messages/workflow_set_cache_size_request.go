@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -47,8 +47,8 @@ type (
 func NewWorkflowSetCacheSizeRequest() *WorkflowSetCacheSizeRequest {
 	request := new(WorkflowSetCacheSizeRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
-	request.SetType(messagetypes.WorkflowSetCacheSizeRequest)
-	request.SetReplyType(messagetypes.WorkflowSetCacheSizeReply)
+	request.SetType(internal.WorkflowSetCacheSizeRequest)
+	request.SetReplyType(internal.WorkflowSetCacheSizeReply)
 
 	return request
 }

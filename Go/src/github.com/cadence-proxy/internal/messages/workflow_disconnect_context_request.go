@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -44,8 +44,8 @@ type (
 func NewWorkflowDisconnectContextRequest() *WorkflowDisconnectContextRequest {
 	request := new(WorkflowDisconnectContextRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
-	request.SetType(messagetypes.WorkflowDisconnectContextRequest)
-	request.SetReplyType(messagetypes.WorkflowDisconnectContextReply)
+	request.SetType(internal.WorkflowDisconnectContextRequest)
+	request.SetReplyType(internal.WorkflowDisconnectContextReply)
 
 	return request
 }

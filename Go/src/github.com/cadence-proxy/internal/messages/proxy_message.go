@@ -31,7 +31,7 @@ import (
 
 	"github.com/a3linux/amazon-ssm-agent/agent/times"
 
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -42,7 +42,7 @@ type (
 	// Attachments are any data attachments (in bytes) that
 	// are needed to perform the ProxyMessage
 	ProxyMessage struct {
-		Type        messagetypes.MessageType
+		Type        internal.MessageType
 		Properties  map[string]*string
 		Attachments [][]byte
 	}
@@ -72,8 +72,8 @@ type (
 		SetRequestID(value int64)
 		GetClientID() int64
 		SetClientID(value int64)
-		GetType() messagetypes.MessageType
-		SetType(value messagetypes.MessageType)
+		GetType() internal.MessageType
+		SetType(value internal.MessageType)
 	}
 )
 
@@ -86,7 +86,7 @@ func NewProxyMessage() *ProxyMessage {
 	message := new(ProxyMessage)
 	message.Properties = make(map[string]*string)
 	message.Attachments = make([][]byte, 0)
-	message.SetType(messagetypes.Unspecified)
+	message.SetType(internal.Unspecified)
 
 	return message
 }
@@ -117,7 +117,7 @@ func Deserialize(buf *bytes.Buffer, allowUnspecified bool, typeCode ...string) (
 	var message IProxyMessage
 
 	// get the message type
-	messageType := messagetypes.MessageType(ReadInt32(buf))
+	messageType := internal.MessageType(ReadInt32(buf))
 
 	// check for allow unspecified
 	if !allowUnspecified {
@@ -285,7 +285,7 @@ func (proxyMessage *ProxyMessage) Serialize(allowUnspecified bool) ([]byte, erro
 
 	// if the type code is not to be ignored, but the message
 	// type is unspecified, then throw an error
-	if (!allowUnspecified) && (proxyMessage.Type == messagetypes.Unspecified) {
+	if (!allowUnspecified) && (proxyMessage.Type == internal.Unspecified) {
 		err := fmt.Errorf("proxy message has not initialized its [%v] property", proxyMessage.Type)
 		return nil, err
 	}
@@ -385,15 +385,15 @@ func (proxyMessage *ProxyMessage) SetClientID(value int64) {
 
 // GetType gets the message type
 //
-// returns messagetypes.MessageType -> the type of message
-func (proxyMessage *ProxyMessage) GetType() messagetypes.MessageType {
+// returns internal.MessageType -> the type of message
+func (proxyMessage *ProxyMessage) GetType() internal.MessageType {
 	return proxyMessage.Type
 }
 
 // SetType sets the message type
 //
-// param value messagetypes.MessageType -> the message type to set
-func (proxyMessage *ProxyMessage) SetType(value messagetypes.MessageType) {
+// param value internal.MessageType -> the message type to set
+func (proxyMessage *ProxyMessage) SetType(value internal.MessageType) {
 	proxyMessage.Type = value
 }
 

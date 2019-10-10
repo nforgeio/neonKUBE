@@ -19,7 +19,7 @@ package messages
 
 import (
 	"github.com/cadence-proxy/internal/cadence/error"
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -45,8 +45,8 @@ type (
 func NewActivityCompleteRequest() *ActivityCompleteRequest {
 	request := new(ActivityCompleteRequest)
 	request.ActivityRequest = NewActivityRequest()
-	request.SetType(messagetypes.ActivityCompleteRequest)
-	request.SetReplyType(messagetypes.ActivityCompleteReply)
+	request.SetType(internal.ActivityCompleteRequest)
+	request.SetReplyType(internal.ActivityCompleteReply)
 
 	return request
 }

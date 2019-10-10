@@ -73,7 +73,7 @@ namespace Neon.IO
             }
             else if (suffix.Length > 0 && !suffix.StartsWith("."))
             {
-                throw new ArgumentException($"Non-empty [{nameof(suffix)}] arguments must be prefixed with a period.");
+                throw new ArgumentException($"Non-empty [{nameof(suffix)}] arguments must be prefixed with a period.", nameof(suffix));
             }
 
             if (string.IsNullOrEmpty(folder))
@@ -88,7 +88,7 @@ namespace Neon.IO
 
             Directory.CreateDirectory(folder);
 
-            Path = System.IO.Path.GetFullPath(System.IO.Path.Combine(folder, Guid.NewGuid().ToString("D") + suffix));
+            Path = System.IO.Path.GetFullPath(System.IO.Path.Combine(folder, Guid.NewGuid().ToString("d") + suffix));
         }
 
         /// <inheritdoc/>
