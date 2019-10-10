@@ -1418,8 +1418,8 @@ namespace Neon.Cadence.WorkflowStub
             //
             //      https://github.com/nforgeio/neonKUBE/issues/680
 
-            //heartbeatThread = new Thread(new ThreadStart(HeartbeatThread));
-            //heartbeatThread.Start();
+            heartbeatThread = new Thread(new ThreadStart(HeartbeatThread));
+            heartbeatThread.Start();
 
             timeoutThread = new Thread(new ThreadStart(TimeoutThread));
             timeoutThread.Start();
