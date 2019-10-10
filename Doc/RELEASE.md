@@ -13,15 +13,15 @@
 
 3. Update the product version here too: `$/Lib/Neon.Common/Build.cs`
 
-4. Rebuild the RELEASE version via:
+4. Run all unit tests in **RELEASE** mode
+
+5. Build and publish all of the Docker images: `neon-publish-images -all`
+
+6. Rebuild the RELEASE version via:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neon-builder -release -installer`
 
-5. Verify that the new release installer works.
-
-6. Build and publish all of the Docker images: `neon-publish-images -all`
-
-7. Run all unit tests in **RELEASE** mode
+7. Verify that the new release installer works.
 
 8. Publish the nuget packages: `neon-nuget-public`
 
