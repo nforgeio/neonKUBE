@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -44,8 +44,8 @@ type (
 func NewWorkflowListOpenExecutionsRequest() *WorkflowListOpenExecutionsRequest {
 	request := new(WorkflowListOpenExecutionsRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
-	request.SetType(messagetypes.WorkflowListOpenExecutionsRequest)
-	request.SetReplyType(messagetypes.WorkflowListOpenExecutionsReply)
+	request.SetType(internal.WorkflowListOpenExecutionsRequest)
+	request.SetReplyType(internal.WorkflowListOpenExecutionsReply)
 
 	return request
 }

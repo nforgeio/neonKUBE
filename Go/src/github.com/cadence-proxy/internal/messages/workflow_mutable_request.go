@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -44,8 +44,8 @@ type (
 func NewWorkflowMutableRequest() *WorkflowMutableRequest {
 	request := new(WorkflowMutableRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
-	request.SetType(messagetypes.WorkflowMutableRequest)
-	request.SetReplyType(messagetypes.WorkflowMutableReply)
+	request.SetType(internal.WorkflowMutableRequest)
+	request.SetReplyType(internal.WorkflowMutableReply)
 
 	return request
 }

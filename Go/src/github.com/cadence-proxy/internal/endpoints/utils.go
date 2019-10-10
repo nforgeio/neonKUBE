@@ -34,7 +34,6 @@ import (
 	proxyworker "github.com/cadence-proxy/internal/cadence/worker"
 	proxyworkflow "github.com/cadence-proxy/internal/cadence/workflow"
 	"github.com/cadence-proxy/internal/messages"
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
 
 //----------------------------------------------------------------------------
@@ -46,15 +45,16 @@ func CheckRequestValidity(w http.ResponseWriter, r *http.Request) (int, error) {
 	if r.Header.Get("Content-Type") != internal.ContentType {
 		err := fmt.Errorf("incorrect Content-Type %s. Content must be %s",
 			r.Header.Get("Content-Type"),
-			internal.ContentType,
-		)
+			internal.ContentType)
+
 		return http.StatusBadRequest, err
 	}
+
 	if r.Method != http.MethodPut {
 		err := fmt.Errorf("invalid HTTP Method: %s, must be HTTP Metho: %s",
 			r.Method,
-			http.MethodPut,
-		)
+			http.MethodPut)
+
 		return http.StatusMethodNotAllowed, err
 	}
 
@@ -193,12 +193,12 @@ func isForceReplayErr(err error) bool {
 
 func verifyClientHelper(request messages.IProxyRequest, helper *proxyclient.ClientHelper) error {
 	switch request.GetType() {
-	case messagetypes.InitializeRequest,
-		messagetypes.PingRequest,
-		messagetypes.ConnectRequest,
-		messagetypes.TerminateRequest,
-		messagetypes.CancelRequest,
-		messagetypes.HeartbeatRequest:
+	case internal.InitializeRequest,
+		internal.PingRequest,
+		internal.ConnectRequest,
+		internal.TerminateRequest,
+		internal.CancelRequest,
+		internal.HeartbeatRequest:
 		return nil
 
 	default:

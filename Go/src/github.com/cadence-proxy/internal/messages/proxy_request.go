@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -32,7 +32,7 @@ type (
 	// the corresponding MessageType for replying to this ProxyRequest
 	ProxyRequest struct {
 		*ProxyMessage
-		ReplyType messagetypes.MessageType
+		ReplyType internal.MessageType
 	}
 
 	// IProxyRequest is an interface for all ProxyRequest message types.
@@ -41,8 +41,8 @@ type (
 	// allow message types that implement it to get and set their nested ProxyRequest
 	IProxyRequest interface {
 		IProxyMessage
-		GetReplyType() messagetypes.MessageType
-		SetReplyType(value messagetypes.MessageType)
+		GetReplyType() internal.MessageType
+		SetReplyType(value internal.MessageType)
 		GetIsCancellable() bool
 		SetIsCancellable(value bool)
 	}
@@ -55,8 +55,8 @@ type (
 func NewProxyRequest() *ProxyRequest {
 	request := new(ProxyRequest)
 	request.ProxyMessage = NewProxyMessage()
-	request.SetType(messagetypes.Unspecified)
-	request.SetReplyType(messagetypes.Unspecified)
+	request.SetType(internal.Unspecified)
+	request.SetReplyType(internal.Unspecified)
 
 	return request
 }
@@ -69,7 +69,7 @@ func NewProxyRequest() *ProxyRequest {
 //
 // returns MessageType -> the message type to reply to the
 // request with
-func (request *ProxyRequest) GetReplyType() messagetypes.MessageType {
+func (request *ProxyRequest) GetReplyType() internal.MessageType {
 	return request.ReplyType
 }
 
@@ -78,7 +78,7 @@ func (request *ProxyRequest) GetReplyType() messagetypes.MessageType {
 //
 // param value MessageType -> the message type to reply to the
 // request with
-func (request *ProxyRequest) SetReplyType(value messagetypes.MessageType) {
+func (request *ProxyRequest) SetReplyType(value internal.MessageType) {
 	request.ReplyType = value
 }
 

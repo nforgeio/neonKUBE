@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    StartLocalActivityStub.cs
+// FILE:	    LocalActivityFutureStub.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -37,7 +37,7 @@ namespace Neon.Cadence
     /// </summary>
     /// <typeparam name="TActivityInterface">Specifies the activity interface.</typeparam>
     /// <typeparam name="TActivityImplementation">Specifies the local activity implementation class.</typeparam> 
-    public class StartLocalActivityStub<TActivityInterface, TActivityImplementation>
+    public class LocalActivityFutureStub<TActivityInterface, TActivityImplementation>
         where TActivityInterface : class
         where TActivityImplementation : TActivityInterface
     {
@@ -87,7 +87,6 @@ namespace Neon.Cadence
                 parentWorkflow.UpdateReplay(reply);
             }
         }
-
 
         /// <summary>
         /// Implements an activity future that returns a value.
@@ -148,9 +147,13 @@ namespace Neon.Cadence
         /// Internal constructor.
         /// </summary>
         /// <param name="parentWorkflow">The associated parent workflow.</param>
-        /// <param name="methodName">Identifies the target activity method or <c>null</c> or empty.</param>
+        /// <param name="methodName">
+        /// Optionally identifies the target activity method by the name specified in
+        /// the <c>[ActivityMethod]</c> attribute tagging the method.  Pass a <c>null</c>
+        /// or empty string to specify the default method.
+        /// </param>
         /// <param name="options">The activity options or <c>null</c>.</param>
-        internal StartLocalActivityStub(Workflow parentWorkflow, string methodName, LocalActivityOptions options = null)
+        internal LocalActivityFutureStub(Workflow parentWorkflow, string methodName = null, LocalActivityOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
 
@@ -158,57 +161,11 @@ namespace Neon.Cadence
 
             CadenceHelper.ValidateActivityInterface(activityInterface);
 
-            var activityAttribute = activityInterface.GetCustomAttribute<ActivityAttribute>();
-            var methodAttribute   = (ActivityMethodAttribute)null;
-
             this.parentWorkflow = parentWorkflow;
             this.hasStarted     = false;
-
-            if (string.IsNullOrEmpty(methodName))
-            {
-                // Look for the entrypoint method with a null or empty method name.
-
-                foreach (var method in activityInterface.GetMethods())
-                {
-                    methodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();
-
-                    if (methodAttribute != null)
-                    {
-                        if (string.IsNullOrEmpty(methodAttribute.Name))
-                        {
-                            this.targetMethod = method;
-                            break;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                // Look for the entrypoint method with the matching method name.
-
-                foreach (var method in activityInterface.GetMethods())
-                {
-                    methodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();
-
-                    if (methodAttribute != null)
-                    {
-                        if (methodName == methodAttribute.Name)
-                        {
-                            this.targetMethod = method;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (this.targetMethod == null)
-            {
-                throw new ArgumentException($"Activity interface [{activityInterface.FullName}] does not have a method tagged by [ActivityMethod(Name = {methodName})].", nameof(activityInterface));
-            }
-
-            this.options = LocalActivityOptions.Normalize(parentWorkflow.Client, options);
+            this.targetMethod   = CadenceHelper.GetActivityTarget(activityInterface, methodName).TargetMethod;
+            this.options        = LocalActivityOptions.Normalize(parentWorkflow.Client, options);
         }
-
 
         /// <summary>
         /// Starts the target activity that returns <c>void</c>, passing the specified arguments.
@@ -223,7 +180,7 @@ namespace Neon.Cadence
         /// These are checked at runtime but not while compiling.
         /// </para>
         /// <note>
-        /// Any given <see cref="StartActivityStub{TActivityInterface}"/> may only be executed once.
+        /// Any given <see cref="ActivityFutureStub{TActivityInterface}"/> may only be executed once.
         /// </note>
         /// </remarks>
         public async Task<IAsyncFuture<TResult>> StartAsync<TResult>(params object[] args)
@@ -233,7 +190,7 @@ namespace Neon.Cadence
 
             if (hasStarted)
             {
-                throw new InvalidOperationException("Cannot start a stub more than once.");
+                throw new InvalidOperationException("Cannot start a future stub more than once.");
             }
 
             var parameters = targetMethod.GetParameters();
@@ -311,7 +268,7 @@ namespace Neon.Cadence
         /// These are checked at runtime but not while compiling.
         /// </para>
         /// <note>
-        /// Any given <see cref="StartActivityStub{TActivityInterface}"/> may only be executed once.
+        /// Any given <see cref="ActivityFutureStub{TActivityInterface}"/> may only be executed once.
         /// </note>
         /// </remarks>
         public async Task<IAsyncFuture> StartAsync(params object[] args)
@@ -321,7 +278,7 @@ namespace Neon.Cadence
 
             if (hasStarted)
             {
-                throw new InvalidOperationException("Cannot start a stub more than once.");
+                throw new InvalidOperationException("Cannot start a future stub more than once.");
             }
 
             var parameters = targetMethod.GetParameters();

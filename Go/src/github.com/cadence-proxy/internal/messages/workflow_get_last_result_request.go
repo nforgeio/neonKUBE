@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -44,8 +44,8 @@ type (
 func NewWorkflowGetLastResultRequest() *WorkflowGetLastResultRequest {
 	request := new(WorkflowGetLastResultRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
-	request.SetType(messagetypes.WorkflowGetLastResultRequest)
-	request.SetReplyType(messagetypes.WorkflowGetLastResultReply)
+	request.SetType(internal.WorkflowGetLastResultRequest)
+	request.SetReplyType(internal.WorkflowGetLastResultReply)
 
 	return request
 }

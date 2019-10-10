@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -44,8 +44,8 @@ type (
 func NewActivityStoppingRequest() *ActivityStoppingRequest {
 	request := new(ActivityStoppingRequest)
 	request.ActivityRequest = NewActivityRequest()
-	request.SetType(messagetypes.ActivityStoppingRequest)
-	request.SetReplyType(messagetypes.ActivityStoppingReply)
+	request.SetType(internal.ActivityStoppingRequest)
+	request.SetReplyType(internal.ActivityStoppingReply)
 
 	return request
 }

@@ -29,7 +29,7 @@ import (
 	proxyclient "github.com/cadence-proxy/internal/cadence/client"
 	proxyerror "github.com/cadence-proxy/internal/cadence/error"
 	"github.com/cadence-proxy/internal/messages"
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 func buildReply(reply messages.IProxyReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
@@ -47,73 +47,73 @@ func buildReply(reply messages.IProxyReply, cadenceError *proxyerror.CadenceErro
 	// client message types
 
 	// InitializeReply
-	case messagetypes.InitializeReply:
+	case internal.InitializeReply:
 		if v, ok := reply.(*messages.InitializeReply); ok {
 			buildInitializeReply(v, cadenceError)
 		}
 
 	// HeartbeatReply
-	case messagetypes.HeartbeatReply:
+	case internal.HeartbeatReply:
 		if v, ok := reply.(*messages.HeartbeatReply); ok {
 			buildHeartbeatReply(v, cadenceError)
 		}
 
 	// CancelReply
-	case messagetypes.CancelReply:
+	case internal.CancelReply:
 		if v, ok := reply.(*messages.CancelReply); ok {
 			buildCancelReply(v, cadenceError, value)
 		}
 
 	// ConnectReply
-	case messagetypes.ConnectReply:
+	case internal.ConnectReply:
 		if v, ok := reply.(*messages.ConnectReply); ok {
 			buildConnectReply(v, cadenceError)
 		}
 
 	// ConnectReply
-	case messagetypes.DisconnectReply:
+	case internal.DisconnectReply:
 		if v, ok := reply.(*messages.DisconnectReply); ok {
 			buildDisconnectReply(v, cadenceError)
 		}
 
 	// DomainDescribeReply
-	case messagetypes.DomainDescribeReply:
+	case internal.DomainDescribeReply:
 		if v, ok := reply.(*messages.DomainDescribeReply); ok {
 			buildDomainDescribeReply(v, cadenceError, value)
 		}
 
 	// DomainRegisterReply
-	case messagetypes.DomainRegisterReply:
+	case internal.DomainRegisterReply:
 		if v, ok := reply.(*messages.DomainRegisterReply); ok {
 			buildDomainRegisterReply(v, cadenceError)
 		}
 
 	// DomainUpdateReply
-	case messagetypes.DomainUpdateReply:
+	case internal.DomainUpdateReply:
 		if v, ok := reply.(*messages.DomainUpdateReply); ok {
 			buildDomainUpdateReply(v, cadenceError)
 		}
 
 	// TerminateReply
-	case messagetypes.TerminateReply:
+	case internal.TerminateReply:
 		if v, ok := reply.(*messages.TerminateReply); ok {
 			buildTerminateReply(v, cadenceError)
 		}
 
 	// NewWorkerReply
-	case messagetypes.NewWorkerReply:
+	case internal.NewWorkerReply:
 		if v, ok := reply.(*messages.NewWorkerReply); ok {
 			buildNewWorkerReply(v, cadenceError, value)
 		}
 
 	// StopWorkerReply
-	case messagetypes.StopWorkerReply:
+	case internal.StopWorkerReply:
 		if v, ok := reply.(*messages.StopWorkerReply); ok {
 			buildStopWorkerReply(v, cadenceError)
 		}
 
 	// PingReply
-	case messagetypes.PingReply:
+	case internal.PingReply:
 		if v, ok := reply.(*messages.PingReply); ok {
 			buildPingReply(v, cadenceError)
 		}
@@ -122,139 +122,139 @@ func buildReply(reply messages.IProxyReply, cadenceError *proxyerror.CadenceErro
 	// workflow message types
 
 	// WorkflowExecuteReply
-	case messagetypes.WorkflowExecuteReply:
+	case internal.WorkflowExecuteReply:
 		if v, ok := reply.(*messages.WorkflowExecuteReply); ok {
 			buildWorkflowExecuteReply(v, cadenceError, value)
 		}
 
 	// WorkflowRegisterReply
-	case messagetypes.WorkflowRegisterReply:
+	case internal.WorkflowRegisterReply:
 		if v, ok := reply.(*messages.WorkflowRegisterReply); ok {
 			buildWorkflowRegisterReply(v, cadenceError)
 		}
 
 	// WorkflowCancelReply
-	case messagetypes.WorkflowCancelReply:
+	case internal.WorkflowCancelReply:
 		if v, ok := reply.(*messages.WorkflowCancelReply); ok {
 			buildWorkflowCancelReply(v, cadenceError)
 		}
 
 	// WorkflowSignalWithStartReply
-	case messagetypes.WorkflowSignalWithStartReply:
+	case internal.WorkflowSignalWithStartReply:
 		if v, ok := reply.(*messages.WorkflowSignalWithStartReply); ok {
 			buildWorkflowSignalWithStartReply(v, cadenceError, value)
 		}
 
 	// WorkflowQueryReply
-	case messagetypes.WorkflowQueryReply:
+	case internal.WorkflowQueryReply:
 		if v, ok := reply.(*messages.WorkflowQueryReply); ok {
 			buildWorkflowQueryReply(v, cadenceError, value)
 		}
 
 	// WorkflowSetQueryHandlerReply
-	case messagetypes.WorkflowSetQueryHandlerReply:
+	case internal.WorkflowSetQueryHandlerReply:
 		if v, ok := reply.(*messages.WorkflowSetQueryHandlerReply); ok {
 			buildWorkflowSetQueryHandlerReply(v, cadenceError)
 		}
 
 	// WorkflowSetCacheSizeReply
-	case messagetypes.WorkflowSetCacheSizeReply:
+	case internal.WorkflowSetCacheSizeReply:
 		if v, ok := reply.(*messages.WorkflowSetCacheSizeReply); ok {
 			buildWorkflowSetCacheSizeReply(v, cadenceError)
 		}
 
 	// WorkflowMutableReply
-	case messagetypes.WorkflowMutableReply:
+	case internal.WorkflowMutableReply:
 		if v, ok := reply.(*messages.WorkflowMutableReply); ok {
 			buildWorkflowMutableReply(v, cadenceError, value)
 		}
 
 	// WorkflowTerminateReply
-	case messagetypes.WorkflowTerminateReply:
+	case internal.WorkflowTerminateReply:
 		if v, ok := reply.(*messages.WorkflowTerminateReply); ok {
 			buildWorkflowTerminateReply(v, cadenceError)
 		}
 
 	// WorkflowDescribeExecutionReply
-	case messagetypes.WorkflowDescribeExecutionReply:
+	case internal.WorkflowDescribeExecutionReply:
 		if v, ok := reply.(*messages.WorkflowDescribeExecutionReply); ok {
 			buildWorkflowDescribeExecutionReply(v, cadenceError, value)
 		}
 
 	// WorkflowGetResultReply
-	case messagetypes.WorkflowGetResultReply:
+	case internal.WorkflowGetResultReply:
 		if v, ok := reply.(*messages.WorkflowGetResultReply); ok {
 			buildWorkflowGetResultReply(v, cadenceError, value)
 		}
 
 	// WorkflowHasLastResultReply
-	case messagetypes.WorkflowHasLastResultReply:
+	case internal.WorkflowHasLastResultReply:
 		if v, ok := reply.(*messages.WorkflowHasLastResultReply); ok {
 			buildWorkflowHasLastResultReply(v, cadenceError, value)
 		}
 
 	// WorkflowGetLastResultReply
-	case messagetypes.WorkflowGetLastResultReply:
+	case internal.WorkflowGetLastResultReply:
 		if v, ok := reply.(*messages.WorkflowGetLastResultReply); ok {
 			buildWorkflowGetLastResultReply(v, cadenceError, value)
 		}
 
 	// WorkflowDisconnectContextReply
-	case messagetypes.WorkflowDisconnectContextReply:
+	case internal.WorkflowDisconnectContextReply:
 		if v, ok := reply.(*messages.WorkflowDisconnectContextReply); ok {
 			buildWorkflowDisconnectContextReply(v, cadenceError)
 		}
 
 	// WorkflowGetTimeReply
-	case messagetypes.WorkflowGetTimeReply:
+	case internal.WorkflowGetTimeReply:
 		if v, ok := reply.(*messages.WorkflowGetTimeReply); ok {
 			buildWorkflowGetTimeReply(v, cadenceError, value)
 		}
 
 	// WorkflowSleepReply
-	case messagetypes.WorkflowSleepReply:
+	case internal.WorkflowSleepReply:
 		if v, ok := reply.(*messages.WorkflowSleepReply); ok {
 			buildWorkflowSleepReply(v, cadenceError)
 		}
 
 	// WorkflowExecuteChildReply
-	case messagetypes.WorkflowExecuteChildReply:
+	case internal.WorkflowExecuteChildReply:
 		if v, ok := reply.(*messages.WorkflowExecuteChildReply); ok {
 			buildWorkflowExecuteChildReply(v, cadenceError, value)
 		}
 
 	// WorkflowWaitForChildReply
-	case messagetypes.WorkflowWaitForChildReply:
+	case internal.WorkflowWaitForChildReply:
 		if v, ok := reply.(*messages.WorkflowWaitForChildReply); ok {
 			buildWorkflowWaitForChildReply(v, cadenceError, value)
 		}
 
 	// WorkflowSignalChildReply
-	case messagetypes.WorkflowSignalChildReply:
+	case internal.WorkflowSignalChildReply:
 		if v, ok := reply.(*messages.WorkflowSignalChildReply); ok {
 			buildWorkflowSignalChildReply(v, cadenceError, value)
 		}
 
 	// WorkflowCancelChildReply
-	case messagetypes.WorkflowCancelChildReply:
+	case internal.WorkflowCancelChildReply:
 		if v, ok := reply.(*messages.WorkflowCancelChildReply); ok {
 			buildWorkflowCancelChildReply(v, cadenceError)
 		}
 
 	// WorkflowSignalReply
-	case messagetypes.WorkflowSignalReply:
+	case internal.WorkflowSignalReply:
 		if v, ok := reply.(*messages.WorkflowSignalReply); ok {
 			buildWorkflowSignalReply(v, cadenceError)
 		}
 
 	// WorkflowSignalSubscribeReply
-	case messagetypes.WorkflowSignalSubscribeReply:
+	case internal.WorkflowSignalSubscribeReply:
 		if v, ok := reply.(*messages.WorkflowSignalSubscribeReply); ok {
 			buildWorkflowSignalSubscribeReply(v, cadenceError)
 		}
 
 	// WorkflowGetVersionReply
-	case messagetypes.WorkflowGetVersionReply:
+	case internal.WorkflowGetVersionReply:
 		if v, ok := reply.(*messages.WorkflowGetVersionReply); ok {
 			buildWorkflowGetVersionReply(v, cadenceError, value)
 		}
@@ -263,73 +263,73 @@ func buildReply(reply messages.IProxyReply, cadenceError *proxyerror.CadenceErro
 	// activity message types
 
 	// ActivityRegisterReply
-	case messagetypes.ActivityRegisterReply:
+	case internal.ActivityRegisterReply:
 		if v, ok := reply.(*messages.ActivityRegisterReply); ok {
 			buildActivityRegisterReply(v, cadenceError)
 		}
 
 	// ActivityExecuteReply
-	case messagetypes.ActivityExecuteReply:
+	case internal.ActivityExecuteReply:
 		if v, ok := reply.(*messages.ActivityExecuteReply); ok {
 			buildActivityExecuteReply(v, cadenceError, value)
 		}
 
 	// ActivityHasHeartbeatDetailsReply
-	case messagetypes.ActivityHasHeartbeatDetailsReply:
+	case internal.ActivityHasHeartbeatDetailsReply:
 		if v, ok := reply.(*messages.ActivityHasHeartbeatDetailsReply); ok {
 			buildActivityHasHeartbeatDetailsReply(v, cadenceError, value)
 		}
 
 	// ActivityGetHeartbeatDetailsReply
-	case messagetypes.ActivityGetHeartbeatDetailsReply:
+	case internal.ActivityGetHeartbeatDetailsReply:
 		if v, ok := reply.(*messages.ActivityGetHeartbeatDetailsReply); ok {
 			buildActivityGetHeartbeatDetailsReply(v, cadenceError, value)
 		}
 
 	// ActivityRecordHeartbeatReply
-	case messagetypes.ActivityRecordHeartbeatReply:
+	case internal.ActivityRecordHeartbeatReply:
 		if v, ok := reply.(*messages.ActivityRecordHeartbeatReply); ok {
 			buildActivityRecordHeartbeatReply(v, cadenceError, value)
 		}
 
 	// ActivityGetInfoReply
-	case messagetypes.ActivityGetInfoReply:
+	case internal.ActivityGetInfoReply:
 		if v, ok := reply.(*messages.ActivityGetInfoReply); ok {
 			buildActivityGetInfoReply(v, cadenceError, value)
 		}
 
 	// ActivityCompleteReply
-	case messagetypes.ActivityCompleteReply:
+	case internal.ActivityCompleteReply:
 		if v, ok := reply.(*messages.ActivityCompleteReply); ok {
 			buildActivityCompleteReply(v, cadenceError)
 		}
 
 	// ActivityExecuteLocalReply
-	case messagetypes.ActivityExecuteLocalReply:
+	case internal.ActivityExecuteLocalReply:
 		if v, ok := reply.(*messages.ActivityExecuteLocalReply); ok {
 			buildActivityExecuteLocalReply(v, cadenceError, value)
 		}
 
 	// ActivityStartReply
-	case messagetypes.ActivityStartReply:
+	case internal.ActivityStartReply:
 		if v, ok := reply.(*messages.ActivityStartReply); ok {
 			buildActivityStartReply(v, cadenceError)
 		}
 
 	// ActivityGetResultReply
-	case messagetypes.ActivityGetResultReply:
+	case internal.ActivityGetResultReply:
 		if v, ok := reply.(*messages.ActivityGetResultReply); ok {
 			buildActivityGetResultReply(v, cadenceError, value)
 		}
 
 	// ActivityStartLocalReply
-	case messagetypes.ActivityStartLocalReply:
+	case internal.ActivityStartLocalReply:
 		if v, ok := reply.(*messages.ActivityStartLocalReply); ok {
 			buildActivityStartLocalReply(v, cadenceError)
 		}
 
 	// ActivityGetLocalResultReply
-	case messagetypes.ActivityGetLocalResultReply:
+	case internal.ActivityGetLocalResultReply:
 		if v, ok := reply.(*messages.ActivityGetLocalResultReply); ok {
 			buildActivityGetLocalResultReply(v, cadenceError, value)
 		}

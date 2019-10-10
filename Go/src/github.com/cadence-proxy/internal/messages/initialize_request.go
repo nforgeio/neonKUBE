@@ -18,8 +18,8 @@
 package messages
 
 import (
-	"github.com/cadence-proxy/internal/messages/dotnet-logger"
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
+	dotnetlogger "github.com/cadence-proxy/internal/dotnet-logger"
 )
 
 type (
@@ -42,8 +42,8 @@ type (
 func NewInitializeRequest() *InitializeRequest {
 	request := new(InitializeRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.SetType(messagetypes.InitializeRequest)
-	request.SetReplyType(messagetypes.InitializeReply)
+	request.SetType(internal.InitializeRequest)
+	request.SetReplyType(internal.InitializeReply)
 
 	return request
 }

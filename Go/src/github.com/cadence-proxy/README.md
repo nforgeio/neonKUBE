@@ -179,7 +179,7 @@ The ProxyRequest class is inherited by all request messages. Its purpose is to a
 ```
 type ProxyRequest struct {
     *ProxyMessage
-    ReplyType messagetypes.MessageType
+    ReplyType internal.MessageType
 }
 ```
 
@@ -261,6 +261,8 @@ cadence-proxy/
                 child_contexts.go
                 contexts.go
                 replay_status.go
+            dotnet-logger/
+                log_level.go 
         endpoints/
             echo.go
             logger.go
@@ -271,11 +273,7 @@ cadence-proxy/
             router.go
             utils.go
             vars.go
-        messages/
-            dotnet-logger/
-                log_level.go 
-            types/
-                message_types.go
+        messages/                
             activity_reply.go
             activity_request.go
             proxy_message.go
@@ -290,6 +288,8 @@ cadence-proxy/
             operation.go
         server/
             instance.go
+        message_types.go
+        vars.go
     test/
         *
         * (all test.test files organized by package)

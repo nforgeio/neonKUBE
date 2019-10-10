@@ -279,5 +279,26 @@ namespace Neon.Cadence
                 WorkflowIdReusePolicy        = this.WorkflowIdReusePolicy
             };
         }
+
+        /// <summary>
+        /// Used internally within generated workflow stubs to convert a <see cref="ChildWorkflowOptions"/>
+        /// instance into an equivalent <see cref="WorkflowOptions"/> as a bit of a hack.
+        /// </summary>
+        /// <returns>The converted <see cref="WorkflowOptions"/>.</returns>
+        internal WorkflowOptions ToWorkflowOptions()
+        {
+            return new WorkflowOptions()
+            {
+                Domain                  = this.Domain,
+                Memo                    = null,
+                RetryOptions            = this.RetryOptions,
+                ScheduleToCloseTimeout  = this.ScheduleToCloseTimeout,
+                ScheduleToStartTimeout  = this.ScheduleToStartTimeout,
+                TaskList                = this.TaskList,
+                TaskStartToCloseTimeout = this.TaskStartToCloseTimeout,
+                WorkflowId              = this.WorkflowId,
+                WorkflowIdReusePolicy   = this.WorkflowIdReusePolicy
+            };
+        }
     }
 }

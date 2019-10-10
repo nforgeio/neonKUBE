@@ -36,7 +36,7 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// Cadence helper methods and constants.
     /// </summary>
-    internal static class CadenceHelper
+    public static class CadenceHelper
     {
         private static readonly string genericTaskNamePrefix;
 
@@ -45,29 +45,29 @@ namespace Neon.Cadence.Internal
         /// name from the optional workflow method name.  This string may not be
         /// embedded in a normal workflow type name.
         /// </summary>
-        public const string WorkflowTypeMethodSeparator = "::";
+        internal const string WorkflowTypeMethodSeparator = "::";
 
         /// <summary>
         /// The optional separator string used to separate the base activity type
         /// name from the optional activity method name.  This string may not be
         /// embedded in a normal activity type name.
         /// </summary>
-        public const string ActivityTypeMethodSeparator = "::";
+        internal const string ActivityTypeMethodSeparator = "::";
 
         /// <summary>
         /// Number of nanoseconds per second (spoiler alert: it's 1 billion).
         /// </summary>
-        public const long NanosecondsPerSecond = 1000000000L;
+        internal const long NanosecondsPerSecond = 1000000000L;
 
         /// <summary>
         /// Returns the maximum timespan supported by Cadence.
         /// </summary>
-        public static TimeSpan MaxTimespan { get; private set; } = TimeSpan.FromTicks(long.MaxValue / 100);
+        internal static TimeSpan MaxTimespan { get; private set; } = TimeSpan.FromTicks(long.MaxValue / 100);
 
         /// <summary>
         /// Returns the minimum timespan supported by Cadence.
         /// </summary>
-        public static TimeSpan MinTimespan { get; private set; } = TimeSpan.FromTicks(long.MinValue / 100);
+        internal static TimeSpan MinTimespan { get; private set; } = TimeSpan.FromTicks(long.MinValue / 100);
 
         /// <summary>
         /// Static constructor.
@@ -101,7 +101,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="name">The workflow type name being checked.</param>
         /// <exception cref="WorkflowTypeException">Thrown if the name passed is not valid.</exception>
-        public static void ValidateWorkflowTypeName(string name)
+        internal static void ValidateWorkflowTypeName(string name)
         {
             if (name != null && name.Contains(CadenceHelper.WorkflowTypeMethodSeparator))
             {
@@ -126,7 +126,7 @@ namespace Neon.Cadence.Internal
         /// with the leadting "I" removed.
         /// </para>
         /// </remarks>
-        public static string GetWorkflowTypeName(Type workflowType, WorkflowAttribute workflowAttribute)
+        internal static string GetWorkflowTypeName(Type workflowType, WorkflowAttribute workflowAttribute)
         {
             Covenant.Requires<ArgumentNullException>(workflowType != null, nameof(workflowType));
 
@@ -181,7 +181,7 @@ namespace Neon.Cadence.Internal
         /// with the leadting "I" removed.
         /// </para>
         /// </remarks>
-        public static string GetActivityTypeName(Type activityType, ActivityAttribute activityAttribute)
+        internal static string GetActivityTypeName(Type activityType, ActivityAttribute activityAttribute)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
 
@@ -224,7 +224,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="workflowInterface">The type being tested.</param>
         /// <exception cref="ActivityTypeException">Thrown when the interface is not valid.</exception>
-        public static void ValidateWorkflowInterface(Type workflowInterface)
+        internal static void ValidateWorkflowInterface(Type workflowInterface)
         {
             Covenant.Requires<ArgumentNullException>(workflowInterface != null, nameof(workflowInterface));
 
@@ -353,7 +353,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="workflowType">The type being tested.</param>
         /// <exception cref="WorkflowTypeException">Thrown when the interface is not valid.</exception>
-        public static void ValidateWorkflowImplementation(Type workflowType)
+        internal static void ValidateWorkflowImplementation(Type workflowType)
         {
             Covenant.Requires<ArgumentNullException>(workflowType != null, nameof(workflowType));
 
@@ -425,7 +425,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="workflowType">The workflow implementation class.</param>
         /// <returns>The workflow interface type.</returns>
-        public static Type GetWorkflowInterface(Type workflowType)
+        internal static Type GetWorkflowInterface(Type workflowType)
         {
             Covenant.Requires<ArgumentNullException>(workflowType != null, nameof(workflowType));
             Covenant.Requires<ArgumentException>(workflowType.IsClass, nameof(workflowType));
@@ -446,7 +446,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="name">The activity type name being checked.</param>
         /// <exception cref="ActivityTypeException">Thrown if the name passed is not valid.</exception>
-        public static void ValidateActivityTypeName(string name)
+        internal static void ValidateActivityTypeName(string name)
         {
             if (name != null && name.Contains(CadenceHelper.ActivityTypeMethodSeparator))
             {
@@ -459,7 +459,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="activityInterface">The type being tested.</param>
         /// <exception cref="ActivityTypeException">Thrown when the interface is not valid.</exception>
-        public static void ValidateActivityInterface(Type activityInterface)
+        internal static void ValidateActivityInterface(Type activityInterface)
         {
             Covenant.Requires<ArgumentNullException>(activityInterface != null, nameof(activityInterface));
 
@@ -532,7 +532,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="activityType">The type being tested.</param>
         /// <exception cref="ActivityTypeException">Thrown when the interface is not valid.</exception>
-        public static void ValidateActivityImplementation(Type activityType)
+        internal static void ValidateActivityImplementation(Type activityType)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
 
@@ -631,7 +631,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="activityType">The activity implementation class.</param>
         /// <returns>The activity interface type.</returns>
-        public static Type GetActivityInterface(Type activityType)
+        internal static Type GetActivityInterface(Type activityType)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
             Covenant.Requires<ArgumentException>(activityType.IsClass, nameof(activityType));
@@ -646,13 +646,14 @@ namespace Neon.Cadence.Internal
 
             throw new ArgumentException($"Workflow implementation class [{activityType.FullName}] does not implement a workflow interface.", nameof(activityType));
         }
+
         /// <summary>
         /// Ensures that the timespan passed doesn't exceed the minimum or maximum
         /// supported by Cadence/GOLANG.
         /// </summary>
         /// <param name="timespan">The input.</param>
         /// <returns>The adjusted output.</returns>
-        public static TimeSpan Normalize(TimeSpan timespan)
+        internal static TimeSpan Normalize(TimeSpan timespan)
         {
             if (timespan > MaxTimespan)
             {
@@ -674,7 +675,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="timespan">The input .NET timespan.</param>
         /// <returns>The duration in nanoseconds.</returns>
-        public static long ToCadence(TimeSpan timespan)
+        internal static long ToCadence(TimeSpan timespan)
         {
             timespan = Normalize(timespan);
 
@@ -687,7 +688,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="timestamp">The timestamp string.</param>
         /// <returns>The parsed <see cref="DateTime"/>.</returns>
-        public static DateTime ParseCadenceTimestamp(string timestamp)
+        internal static DateTime ParseCadenceTimestamp(string timestamp)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(timestamp), nameof(timestamp));
 
@@ -750,7 +751,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="type">The referenced type.</param>
         /// <returns>The type reference as a string or <c>null</c> if the type is not valid.</returns>
-        public static string TypeToCSharp(Type type)
+        internal static string TypeToCSharp(Type type)
         {
             if (type == typeof(void))
             {
@@ -816,7 +817,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="stream">The stream with the assembly bytes.</param>
         /// <returns>The loaded <see cref="Assembly"/>.</returns>
-        public static Assembly LoadAssembly(Stream stream)
+        internal static Assembly LoadAssembly(Stream stream)
         {
             Covenant.Requires<ArgumentNullException>(stream != null, nameof(stream));
 
@@ -911,6 +912,179 @@ namespace Neon.Cadence.Internal
 
                     return "warn";
             }
+        }
+
+        /// <summary>
+        /// Returns the activity type and method information for an activity interface and 
+        /// an optional target method name.
+        /// </summary>
+        /// <param name="activityInterface">The target activity interface.</param>
+        /// <param name="methodName">
+        /// Optionally specifies the target method name (as specified in the <c>[ActivityMethod]</c>
+        /// attribiute tagging the activity method within the interface.
+        /// </param>
+        /// <returns>The activity type name for the activity interface as well as the method information and attribute.</returns>
+        /// <exception cref="ArgumentException">Thrown if target method does not exist.</exception>
+        /// <remarks>
+        /// <paramref name="methodName"/> is optional.  When this is passed as <c>null</c>
+        /// or empty, the default activity method will be targeted (if any).
+        /// </remarks>
+        internal static (string ActivityTypeName, MethodInfo TargetMethod, ActivityMethodAttribute MethodAttribute) GetActivityTarget(Type activityInterface, string methodName = null)
+        {
+            Covenant.Requires<ArgumentNullException>(activityInterface != null);
+
+            CadenceHelper.ValidateActivityInterface(activityInterface);
+
+            var activityAttribute = activityInterface.GetCustomAttribute<ActivityAttribute>();
+            var methodAttribute   = (ActivityMethodAttribute)null;
+            var targetMethod      = (MethodInfo)null;
+
+            if (string.IsNullOrEmpty(methodName))
+            {
+                // Look for the entrypoint method with a null or empty method name.
+
+                foreach (var method in activityInterface.GetMethods())
+                {
+                    methodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();
+
+                    if (methodAttribute != null)
+                    {
+                        if (string.IsNullOrEmpty(methodAttribute.Name))
+                        {
+                            targetMethod = method;
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Look for the entrypoint method with the matching method name.
+
+                foreach (var method in activityInterface.GetMethods())
+                {
+                    methodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();
+
+                    if (methodAttribute != null)
+                    {
+                        if (methodName == methodAttribute.Name)
+                        {
+                            targetMethod = method;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (targetMethod == null)
+            {
+                throw new ArgumentException($"Activity interface [{activityInterface.FullName}] does not have a method tagged by [ActivityMethod(Name = {methodName})].", nameof(activityInterface));
+            }
+
+            var activityTypeName = CadenceHelper.GetActivityTypeName(activityInterface, activityAttribute);
+
+            if (!string.IsNullOrEmpty(methodAttribute.Name))
+            {
+                activityTypeName += $"::{methodAttribute.Name}";
+            }
+
+            return (activityTypeName, targetMethod, methodAttribute);
+        }
+
+        /// <summary>
+        /// Returns the workflow type and method information for a workflow interface and 
+        /// an optional target method name.
+        /// </summary>
+        /// <param name="workflowInterface">The target workflow interface.</param>
+        /// <param name="methodName">
+        /// Optionally specifies the target method name (as specified in the <c>[WorkflowMethod]</c>
+        /// attribiute tagging the workflow method within the interface.
+        /// </param>
+        /// <returns>The workflow type name for the workflow interface as well as the method information and attribute.</returns>
+        /// <exception cref="ArgumentException">Thrown if target method does not exist.</exception>
+        /// <remarks>
+        /// <paramref name="methodName"/> is optional.  When this is passed as <c>null</c>
+        /// or empty, the default workflow method will be targeted (if any).
+        /// </remarks>
+        internal static (string WorkflowTypeName, MethodInfo TargetMethod, WorkflowMethodAttribute MethodAttribute) GetWorkflowTarget(Type workflowInterface, string methodName = null)
+        {
+            Covenant.Requires<ArgumentNullException>(workflowInterface != null);
+
+            CadenceHelper.ValidateWorkflowInterface(workflowInterface);
+
+            var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
+            var methodAttribute   = (WorkflowMethodAttribute)null;
+            var targetMethod      = (MethodInfo)null;
+
+            if (string.IsNullOrEmpty(methodName))
+            {
+                // Look for the entrypoint method with a null or empty method name.
+
+                foreach (var method in workflowInterface.GetMethods())
+                {
+                    methodAttribute = method.GetCustomAttribute<WorkflowMethodAttribute>();
+
+                    if (methodAttribute != null)
+                    {
+                        if (string.IsNullOrEmpty(methodAttribute.Name))
+                        {
+                            targetMethod = method;
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Look for the entrypoint method with the matching method name.
+
+                foreach (var method in workflowInterface.GetMethods())
+                {
+                    methodAttribute = method.GetCustomAttribute<WorkflowMethodAttribute>();
+
+                    if (methodAttribute != null)
+                    {
+                        if (methodName == methodAttribute.Name)
+                        {
+                            targetMethod = method;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (targetMethod == null)
+            {
+                throw new ArgumentException($"Workflow interface [{workflowInterface.FullName}] does not have a method tagged by [WorkflowMethod(Name = {methodName})].", nameof(workflowInterface));
+            }
+
+            var workflowTypeName = CadenceHelper.GetWorkflowTypeName(workflowInterface, workflowAttribute);
+
+            if (!string.IsNullOrEmpty(methodAttribute.Name))
+            {
+                workflowTypeName += $"::{methodAttribute.Name}";
+            }
+
+            return (workflowTypeName, targetMethod, methodAttribute);
+        }
+
+        /// <summary>
+        /// Returns the workflow type name for a workflow interface and target method.
+        /// </summary>
+        /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
+        /// <param name="methodName">
+        /// Optionally specifies the target method name (as specified in the <c>[WorkflowMethod]</c>
+        /// attribiute tagging the workflow method within the interface.
+        /// </param>
+        /// <returns>The workflow type name for the workflow interface and target method.</returns>
+        /// <exception cref="ArgumentException">Thrown if target method does not exist.</exception>
+        /// <remarks>
+        /// <paramref name="methodName"/> is optional.  When this is passed as <c>null</c>
+        /// or empty, the default workflow method will be targeted (if any).
+        /// </remarks>
+        public static string GetWorkflowTypeName<TWorkflowInterface>(string methodName = null)
+        {
+            return GetWorkflowTarget(typeof(TWorkflowInterface), methodName).WorkflowTypeName;
         }
     }
 }

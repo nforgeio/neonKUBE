@@ -17,7 +17,7 @@ namespace uuid_gen
         /// <param name="args">Command line arguments.</param>
         public static void Main(string[] args)
         {
-            Console.Write(Guid.NewGuid().ToString("D").ToLowerInvariant());
+            Console.Write(Guid.NewGuid().ToString("d"));
         }
     }
 }

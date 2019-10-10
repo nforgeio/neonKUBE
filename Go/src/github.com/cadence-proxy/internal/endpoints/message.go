@@ -29,7 +29,6 @@ import (
 	"github.com/cadence-proxy/internal"
 	proxyerror "github.com/cadence-proxy/internal/cadence/error"
 	"github.com/cadence-proxy/internal/messages"
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
 )
 
 var (
@@ -150,9 +149,10 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 				request.GetType().String(),
 				request.GetRequestID(),
 				request.GetClientID(),
-				string(debug.Stack()),
-			)
+				string(debug.Stack()))
+
 			buildReply(reply, proxyerror.NewCadenceError(err))
+
 			Logger.Error("Panic", zap.Error(err))
 
 			// send the reply
@@ -161,6 +161,7 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 			if err != nil {
 				Logger.Fatal(err.Error())
 			}
+
 			err = resp.Body.Close()
 			if err != nil {
 				return
@@ -186,73 +187,73 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 		// Client message types
 
 		// InitializeRequest
-		case messagetypes.InitializeRequest:
+		case internal.InitializeRequest:
 			if v, ok := request.(*messages.InitializeRequest); ok {
 				reply = handleInitializeRequest(ctx, v)
 			}
 
 		// HeartbeatRequest
-		case messagetypes.HeartbeatRequest:
+		case internal.HeartbeatRequest:
 			if v, ok := request.(*messages.HeartbeatRequest); ok {
 				reply = handleHeartbeatRequest(ctx, v)
 			}
 
 		// CancelRequest
-		case messagetypes.CancelRequest:
+		case internal.CancelRequest:
 			if v, ok := request.(*messages.CancelRequest); ok {
 				reply = handleCancelRequest(ctx, v)
 			}
 
 		// ConnectRequest
-		case messagetypes.ConnectRequest:
+		case internal.ConnectRequest:
 			if v, ok := request.(*messages.ConnectRequest); ok {
 				reply = handleConnectRequest(ctx, v)
 			}
 
 		// DisconnectRequest
-		case messagetypes.DisconnectRequest:
+		case internal.DisconnectRequest:
 			if v, ok := request.(*messages.DisconnectRequest); ok {
 				reply = handleDisconnectRequest(ctx, v)
 			}
 
 		// DomainDescribeRequest
-		case messagetypes.DomainDescribeRequest:
+		case internal.DomainDescribeRequest:
 			if v, ok := request.(*messages.DomainDescribeRequest); ok {
 				reply = handleDomainDescribeRequest(ctx, v)
 			}
 
 		// DomainRegisterRequest
-		case messagetypes.DomainRegisterRequest:
+		case internal.DomainRegisterRequest:
 			if v, ok := request.(*messages.DomainRegisterRequest); ok {
 				reply = handleDomainRegisterRequest(ctx, v)
 			}
 
 		// DomainUpdateRequest
-		case messagetypes.DomainUpdateRequest:
+		case internal.DomainUpdateRequest:
 			if v, ok := request.(*messages.DomainUpdateRequest); ok {
 				reply = handleDomainUpdateRequest(ctx, v)
 			}
 
 		// TerminateRequest
-		case messagetypes.TerminateRequest:
+		case internal.TerminateRequest:
 			if v, ok := request.(*messages.TerminateRequest); ok {
 				reply = handleTerminateRequest(ctx, v)
 			}
 
 		// NewWorkerRequest
-		case messagetypes.NewWorkerRequest:
+		case internal.NewWorkerRequest:
 			if v, ok := request.(*messages.NewWorkerRequest); ok {
 				reply = handleNewWorkerRequest(ctx, v)
 			}
 
 		// StopWorkerRequest
-		case messagetypes.StopWorkerRequest:
+		case internal.StopWorkerRequest:
 			if v, ok := request.(*messages.StopWorkerRequest); ok {
 				reply = handleStopWorkerRequest(ctx, v)
 			}
 
 		// PingRequest
-		case messagetypes.PingRequest:
+		case internal.PingRequest:
 			if v, ok := request.(*messages.PingRequest); ok {
 				reply = handlePingRequest(ctx, v)
 			}
@@ -261,139 +262,139 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 		// Workflow message types
 
 		// WorkflowRegisterRequest
-		case messagetypes.WorkflowRegisterRequest:
+		case internal.WorkflowRegisterRequest:
 			if v, ok := request.(*messages.WorkflowRegisterRequest); ok {
 				reply = handleWorkflowRegisterRequest(ctx, v)
 			}
 
 		// WorkflowExecuteRequest
-		case messagetypes.WorkflowExecuteRequest:
+		case internal.WorkflowExecuteRequest:
 			if v, ok := request.(*messages.WorkflowExecuteRequest); ok {
 				reply = handleWorkflowExecuteRequest(ctx, v)
 			}
 
 		// WorkflowCancelRequest
-		case messagetypes.WorkflowCancelRequest:
+		case internal.WorkflowCancelRequest:
 			if v, ok := request.(*messages.WorkflowCancelRequest); ok {
 				reply = handleWorkflowCancelRequest(ctx, v)
 			}
 
 		// WorkflowTerminateRequest
-		case messagetypes.WorkflowTerminateRequest:
+		case internal.WorkflowTerminateRequest:
 			if v, ok := request.(*messages.WorkflowTerminateRequest); ok {
 				reply = handleWorkflowTerminateRequest(ctx, v)
 			}
 
 		// WorkflowSignalWithStartRequest
-		case messagetypes.WorkflowSignalWithStartRequest:
+		case internal.WorkflowSignalWithStartRequest:
 			if v, ok := request.(*messages.WorkflowSignalWithStartRequest); ok {
 				reply = handleWorkflowSignalWithStartRequest(ctx, v)
 			}
 
 		// WorkflowSetCacheSizeRequest
-		case messagetypes.WorkflowSetCacheSizeRequest:
+		case internal.WorkflowSetCacheSizeRequest:
 			if v, ok := request.(*messages.WorkflowSetCacheSizeRequest); ok {
 				reply = handleWorkflowSetCacheSizeRequest(ctx, v)
 			}
 
 		// WorkflowQueryRequest
-		case messagetypes.WorkflowQueryRequest:
+		case internal.WorkflowQueryRequest:
 			if v, ok := request.(*messages.WorkflowQueryRequest); ok {
 				reply = handleWorkflowQueryRequest(ctx, v)
 			}
 
 		// WorkflowMutableRequest
-		case messagetypes.WorkflowMutableRequest:
+		case internal.WorkflowMutableRequest:
 			if v, ok := request.(*messages.WorkflowMutableRequest); ok {
 				reply = handleWorkflowMutableRequest(ctx, v)
 			}
 
 		// WorkflowDescribeExecutionRequest
-		case messagetypes.WorkflowDescribeExecutionRequest:
+		case internal.WorkflowDescribeExecutionRequest:
 			if v, ok := request.(*messages.WorkflowDescribeExecutionRequest); ok {
 				reply = handleWorkflowDescribeExecutionRequest(ctx, v)
 			}
 
 		// WorkflowGetResultRequest
-		case messagetypes.WorkflowGetResultRequest:
+		case internal.WorkflowGetResultRequest:
 			if v, ok := request.(*messages.WorkflowGetResultRequest); ok {
 				reply = handleWorkflowGetResultRequest(ctx, v)
 			}
 
 		// WorkflowSignalSubscribeRequest
-		case messagetypes.WorkflowSignalSubscribeRequest:
+		case internal.WorkflowSignalSubscribeRequest:
 			if v, ok := request.(*messages.WorkflowSignalSubscribeRequest); ok {
 				reply = handleWorkflowSignalSubscribeRequest(ctx, v)
 			}
 
 		// WorkflowSignalRequest
-		case messagetypes.WorkflowSignalRequest:
+		case internal.WorkflowSignalRequest:
 			if v, ok := request.(*messages.WorkflowSignalRequest); ok {
 				reply = handleWorkflowSignalRequest(ctx, v)
 			}
 
 		// WorkflowHasLastResultRequest
-		case messagetypes.WorkflowHasLastResultRequest:
+		case internal.WorkflowHasLastResultRequest:
 			if v, ok := request.(*messages.WorkflowHasLastResultRequest); ok {
 				reply = handleWorkflowHasLastResultRequest(ctx, v)
 			}
 
 		// WorkflowGetLastResultRequest
-		case messagetypes.WorkflowGetLastResultRequest:
+		case internal.WorkflowGetLastResultRequest:
 			if v, ok := request.(*messages.WorkflowGetLastResultRequest); ok {
 				reply = handleWorkflowGetLastResultRequest(ctx, v)
 			}
 
 		// WorkflowDisconnectContextRequest
-		case messagetypes.WorkflowDisconnectContextRequest:
+		case internal.WorkflowDisconnectContextRequest:
 			if v, ok := request.(*messages.WorkflowDisconnectContextRequest); ok {
 				reply = handleWorkflowDisconnectContextRequest(ctx, v)
 			}
 
 		// WorkflowGetTimeRequest
-		case messagetypes.WorkflowGetTimeRequest:
+		case internal.WorkflowGetTimeRequest:
 			if v, ok := request.(*messages.WorkflowGetTimeRequest); ok {
 				reply = handleWorkflowGetTimeRequest(ctx, v)
 			}
 
 		// WorkflowSleepRequest
-		case messagetypes.WorkflowSleepRequest:
+		case internal.WorkflowSleepRequest:
 			if v, ok := request.(*messages.WorkflowSleepRequest); ok {
 				reply = handleWorkflowSleepRequest(ctx, v)
 			}
 
 		// WorkflowExecuteChildRequest
-		case messagetypes.WorkflowExecuteChildRequest:
+		case internal.WorkflowExecuteChildRequest:
 			if v, ok := request.(*messages.WorkflowExecuteChildRequest); ok {
 				reply = handleWorkflowExecuteChildRequest(ctx, v)
 			}
 
 		// WorkflowWaitForChildRequest
-		case messagetypes.WorkflowWaitForChildRequest:
+		case internal.WorkflowWaitForChildRequest:
 			if v, ok := request.(*messages.WorkflowWaitForChildRequest); ok {
 				reply = handleWorkflowWaitForChildRequest(ctx, v)
 			}
 
 		// WorkflowSignalChildRequest
-		case messagetypes.WorkflowSignalChildRequest:
+		case internal.WorkflowSignalChildRequest:
 			if v, ok := request.(*messages.WorkflowSignalChildRequest); ok {
 				reply = handleWorkflowSignalChildRequest(ctx, v)
 			}
 
 		// WorkflowCancelChildRequest
-		case messagetypes.WorkflowCancelChildRequest:
+		case internal.WorkflowCancelChildRequest:
 			if v, ok := request.(*messages.WorkflowCancelChildRequest); ok {
 				reply = handleWorkflowCancelChildRequest(ctx, v)
 			}
 
 		// WorkflowSetQueryHandlerRequest
-		case messagetypes.WorkflowSetQueryHandlerRequest:
+		case internal.WorkflowSetQueryHandlerRequest:
 			if v, ok := request.(*messages.WorkflowSetQueryHandlerRequest); ok {
 				reply = handleWorkflowSetQueryHandlerRequest(ctx, v)
 			}
 
 		// WorkflowGetVersionRequest
-		case messagetypes.WorkflowGetVersionRequest:
+		case internal.WorkflowGetVersionRequest:
 			if v, ok := request.(*messages.WorkflowGetVersionRequest); ok {
 				reply = handleWorkflowGetVersionRequest(ctx, v)
 			}
@@ -402,73 +403,73 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 		// Activity message types
 
 		// ActivityExecuteRequest
-		case messagetypes.ActivityExecuteRequest:
+		case internal.ActivityExecuteRequest:
 			if v, ok := request.(*messages.ActivityExecuteRequest); ok {
 				reply = handleActivityExecuteRequest(ctx, v)
 			}
 
 		// ActivityRegisterRequest
-		case messagetypes.ActivityRegisterRequest:
+		case internal.ActivityRegisterRequest:
 			if v, ok := request.(*messages.ActivityRegisterRequest); ok {
 				reply = handleActivityRegisterRequest(ctx, v)
 			}
 
 		// ActivityHasHeartbeatDetailsRequest
-		case messagetypes.ActivityHasHeartbeatDetailsRequest:
+		case internal.ActivityHasHeartbeatDetailsRequest:
 			if v, ok := request.(*messages.ActivityHasHeartbeatDetailsRequest); ok {
 				reply = handleActivityHasHeartbeatDetailsRequest(ctx, v)
 			}
 
 		// ActivityGetHeartbeatDetailsRequest
-		case messagetypes.ActivityGetHeartbeatDetailsRequest:
+		case internal.ActivityGetHeartbeatDetailsRequest:
 			if v, ok := request.(*messages.ActivityGetHeartbeatDetailsRequest); ok {
 				reply = handleActivityGetHeartbeatDetailsRequest(ctx, v)
 			}
 
 		// ActivityRecordHeartbeatRequest
-		case messagetypes.ActivityRecordHeartbeatRequest:
+		case internal.ActivityRecordHeartbeatRequest:
 			if v, ok := request.(*messages.ActivityRecordHeartbeatRequest); ok {
 				reply = handleActivityRecordHeartbeatRequest(ctx, v)
 			}
 
 		// ActivityGetInfoRequest
-		case messagetypes.ActivityGetInfoRequest:
+		case internal.ActivityGetInfoRequest:
 			if v, ok := request.(*messages.ActivityGetInfoRequest); ok {
 				reply = handleActivityGetInfoRequest(ctx, v)
 			}
 
 		// ActivityCompleteRequest
-		case messagetypes.ActivityCompleteRequest:
+		case internal.ActivityCompleteRequest:
 			if v, ok := request.(*messages.ActivityCompleteRequest); ok {
 				reply = handleActivityCompleteRequest(ctx, v)
 			}
 
 		// ActivityExecuteLocalRequest
-		case messagetypes.ActivityExecuteLocalRequest:
+		case internal.ActivityExecuteLocalRequest:
 			if v, ok := request.(*messages.ActivityExecuteLocalRequest); ok {
 				reply = handleActivityExecuteLocalRequest(ctx, v)
 			}
 
 		// ActivityStartRequest
-		case messagetypes.ActivityStartRequest:
+		case internal.ActivityStartRequest:
 			if v, ok := request.(*messages.ActivityStartRequest); ok {
 				reply = handleActivityStartRequest(ctx, v)
 			}
 
 		// ActivityGetResultRequest
-		case messagetypes.ActivityGetResultRequest:
+		case internal.ActivityGetResultRequest:
 			if v, ok := request.(*messages.ActivityGetResultRequest); ok {
 				reply = handleActivityGetResultRequest(ctx, v)
 			}
 
 		// ActivityStartLocalRequest
-		case messagetypes.ActivityStartLocalRequest:
+		case internal.ActivityStartLocalRequest:
 			if v, ok := request.(*messages.ActivityStartLocalRequest); ok {
 				reply = handleActivityStartLocalRequest(ctx, v)
 			}
 
 		// ActivityGetLocalResultRequest
-		case messagetypes.ActivityGetLocalResultRequest:
+		case internal.ActivityGetLocalResultRequest:
 			if v, ok := request.(*messages.ActivityGetLocalResultRequest); ok {
 				reply = handleActivityGetLocalResultRequest(ctx, v)
 			}
@@ -490,6 +491,7 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 	if err != nil {
 		Logger.Fatal(err.Error())
 	}
+
 	err = resp.Body.Close()
 	if err != nil {
 		return
@@ -511,10 +513,11 @@ func handleIProxyReply(reply messages.IProxyReply) (err error) {
 				r,
 				reply.GetType().String(),
 				reply.GetRequestID(),
-				string(debug.Stack()),
-			)
+				string(debug.Stack()))
+
 			Logger.Error("Panic", zap.Error(err))
 		}
+
 		Operations.Remove(requestID)
 	}()
 
@@ -527,59 +530,50 @@ func handleIProxyReply(reply messages.IProxyReply) (err error) {
 		// handle the messages individually based on their message type
 		switch reply.GetType() {
 
-		// -------------------------------------------------------------------------
-		// client message types
-
 		// LogReply
-		case messagetypes.LogReply:
+		case internal.LogReply:
 			if v, ok := reply.(*messages.LogReply); ok {
 				err = handleLogReply(v, op)
 			}
 
-		// -------------------------------------------------------------------------
-		// Workflow message types
-
 		// WorkflowInvokeReply
-		case messagetypes.WorkflowInvokeReply:
+		case internal.WorkflowInvokeReply:
 			if v, ok := reply.(*messages.WorkflowInvokeReply); ok {
 				err = handleWorkflowInvokeReply(v, op)
 			}
 
 		// WorkflowSignalInvokeReply
-		case messagetypes.WorkflowSignalInvokeReply:
+		case internal.WorkflowSignalInvokeReply:
 			if v, ok := reply.(*messages.WorkflowSignalInvokeReply); ok {
 				err = handleWorkflowSignalInvokeReply(v, op)
 			}
 
 		// WorkflowQueryInvokeReply
-		case messagetypes.WorkflowQueryInvokeReply:
+		case internal.WorkflowQueryInvokeReply:
 			if v, ok := reply.(*messages.WorkflowQueryInvokeReply); ok {
 				err = handleWorkflowQueryInvokeReply(v, op)
 			}
 
 		// WorkflowFutureReadyReply
-		case messagetypes.WorkflowFutureReadyReply:
+		case internal.WorkflowFutureReadyReply:
 			if v, ok := reply.(*messages.WorkflowFutureReadyReply); ok {
 				err = handleWorkflowFutureReadyReply(v, op)
 			}
 
-		// -------------------------------------------------------------------------
-		// Activity message types
-
 		// ActivityInvokeReply
-		case messagetypes.ActivityInvokeReply:
+		case internal.ActivityInvokeReply:
 			if v, ok := reply.(*messages.ActivityInvokeReply); ok {
 				err = handleActivityInvokeReply(v, op)
 			}
 
 		// ActivityStoppingReply
-		case messagetypes.ActivityStoppingReply:
+		case internal.ActivityStoppingReply:
 			if v, ok := reply.(*messages.ActivityStoppingReply); ok {
 				err = handleActivityStoppingReply(v, op)
 			}
 
 		// ActivityInvokeLocalReply
-		case messagetypes.ActivityInvokeLocalReply:
+		case internal.ActivityInvokeLocalReply:
 			if v, ok := reply.(*messages.ActivityInvokeLocalReply); ok {
 				err = handleActivityInvokeLocalReply(v, op)
 			}

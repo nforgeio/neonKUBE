@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    StartActivityStub.cs
+// FILE:	    ActivityFutureStub.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -33,10 +33,10 @@ namespace Neon.Cadence
 {
     /// <summary>
     /// Used to execute an activity in parallel with other activities or child
-    /// workflows.  Instances are created via <see cref="Workflow.NewStartActivityStub{TActivityInterface}(string, ActivityOptions)"/>.
+    /// workflows.  Instances are created via <see cref="Workflow.NewActivityFutureStub{TActivityInterface}(string, ActivityOptions)"/>.
     /// </summary>
     /// <typeparam name="TActivityInterface">Specifies the activity interface.</typeparam>
-    public class StartActivityStub<TActivityInterface>
+    public class ActivityFutureStub<TActivityInterface>
         where TActivityInterface : class
     {
         //---------------------------------------------------------------------
@@ -146,9 +146,13 @@ namespace Neon.Cadence
         /// Internal constructor.
         /// </summary>
         /// <param name="parentWorkflow">The associated parent workflow.</param>
-        /// <param name="methodName">Identifies the target activity method or <c>null</c> or empty.</param>
+        /// <param name="methodName">
+        /// Optionally identifies the target activity method by the name specified in
+        /// the <c>[ActivityMethod]</c> attribute tagging the method.  Pass a <c>null</c>
+        /// or empty string to target the default method.
+        /// </param>
         /// <param name="options">The activity options or <c>null</c>.</param>
-        internal StartActivityStub(Workflow parentWorkflow, string methodName, ActivityOptions options = null)
+        internal ActivityFutureStub(Workflow parentWorkflow, string methodName = null, ActivityOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
 
@@ -156,66 +160,14 @@ namespace Neon.Cadence
 
             CadenceHelper.ValidateActivityInterface(activityInterface);
 
-            var activityAttribute = activityInterface.GetCustomAttribute<ActivityAttribute>();
-            var methodAttribute   = (ActivityMethodAttribute)null;
-
             this.parentWorkflow = parentWorkflow;
             this.hasStarted     = false;
 
-            if (string.IsNullOrEmpty(methodName))
-            {
-                // Look for the entrypoint method with a null or empty method name.
+            var activityTarget  = CadenceHelper.GetActivityTarget(activityInterface, methodName);
+            var methodAttribute = activityTarget.MethodAttribute;
 
-                foreach (var method in activityInterface.GetMethods())
-                {
-                    methodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();
-
-                    if (methodAttribute != null)
-                    {
-                        if (string.IsNullOrEmpty(methodAttribute.Name))
-                        {
-                            this.targetMethod = method;
-                            break;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                // Look for the entrypoint method with the matching method name.
-
-                foreach (var method in activityInterface.GetMethods())
-                {
-                    methodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();
-
-                    if (methodAttribute != null)
-                    {
-                        if (methodName == methodAttribute.Name)
-                        {
-                            this.targetMethod = method;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (this.targetMethod == null)
-            {
-                throw new ArgumentException($"Activity interface [{activityInterface.FullName}] does not have a method tagged by [ActivityMethod(Name = {methodName})].", nameof(activityInterface));
-            }
-
-            activityTypeName = CadenceHelper.GetActivityTypeName(activityInterface, activityAttribute);
-
-            // $hack(jefflill):
-            //
-            // It would be nicer if [CadenceHelper.GetActivityTypeName()] accepted an optional
-            // [ActivityMethodAttribute] that would be used to append the method name so that
-            // we won't need to hardcode that behavior here.
-
-            if (!string.IsNullOrEmpty(methodAttribute.Name))
-            {
-                activityTypeName += $"::{methodAttribute.Name}";
-            }
+            activityTypeName    = activityTarget.ActivityTypeName;
+            targetMethod        = activityTarget.TargetMethod;
 
             if (options == null)
             {
@@ -267,7 +219,7 @@ namespace Neon.Cadence
         /// These are checked at runtime but not while compiling.
         /// </para>
         /// <note>
-        /// Any given <see cref="StartActivityStub{TActivityInterface}"/> may only be executed once.
+        /// Any given <see cref="ActivityFutureStub{TActivityInterface}"/> may only be executed once.
         /// </note>
         /// </remarks>
         public async Task<IAsyncFuture<TResult>> StartAsync<TResult>(params object[] args)
@@ -277,7 +229,7 @@ namespace Neon.Cadence
 
             if (hasStarted)
             {
-                throw new InvalidOperationException("Cannot start a stub more than once.");
+                throw new InvalidOperationException("Cannot start a future stub more than once.");
             }
 
             var parameters = targetMethod.GetParameters();
@@ -354,7 +306,7 @@ namespace Neon.Cadence
         /// These are checked at runtime but not while compiling.
         /// </para>
         /// <note>
-        /// Any given <see cref="StartActivityStub{TActivityInterface}"/> may only be executed once.
+        /// Any given <see cref="ActivityFutureStub{TActivityInterface}"/> may only be executed once.
         /// </note>
         /// </remarks>
         public async Task<IAsyncFuture> StartAsync(params object[] args)
@@ -364,7 +316,7 @@ namespace Neon.Cadence
 
             if (hasStarted)
             {
-                throw new InvalidOperationException("Cannot start a stub more than once.");
+                throw new InvalidOperationException("Cannot start a future stub more than once.");
             }
 
             var parameters = targetMethod.GetParameters();

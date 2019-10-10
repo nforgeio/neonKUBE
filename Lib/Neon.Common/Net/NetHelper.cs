@@ -310,7 +310,7 @@ namespace Neon.Net
             //
             //      https://github.com/nforgeio/neonKUBE/issues/271
 
-            var updateHost    = section != null ? $"{section.ToLowerInvariant()}.neonforge-marker" : $"H-{Guid.NewGuid().ToString("D")}.neonforge-marker";
+            var updateHost    = section != null ? $"{section.ToLowerInvariant()}.neonforge-marker" : $"H-{Guid.NewGuid().ToString("d")}.neonforge-marker";
             var addressBytes  = NeonHelper.GetCryptoRandomBytes(4);
             var updateAddress = GetRandomAddress();
             var lines         = new List<string>();

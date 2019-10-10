@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -43,8 +43,8 @@ type (
 func NewWorkflowWaitForChildRequest() *WorkflowWaitForChildRequest {
 	request := new(WorkflowWaitForChildRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
-	request.SetType(messagetypes.WorkflowWaitForChildRequest)
-	request.SetReplyType(messagetypes.WorkflowWaitForChildReply)
+	request.SetType(internal.WorkflowWaitForChildRequest)
+	request.SetReplyType(internal.WorkflowWaitForChildReply)
 
 	return request
 }

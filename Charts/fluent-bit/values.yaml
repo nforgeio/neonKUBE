@@ -48,8 +48,8 @@ backend:
     host: fluentd.monitoring
     port: 24224
     tls: "off"
-    tls_verify: "on"
-    tls_debug: 1
+    tls_verify: "off"
+    tls_debug: 0
     shared_key:
   es:
     host: elasticsearch
@@ -200,6 +200,21 @@ dnsPolicy: ClusterFirst
 ##
 tolerations:
   - key: "node-role.kubernetes.io/master"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "neonkube.io/ceph"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "neonkube.io/cassandra"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "neonkube.io/couchbase"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "neonkube.io/m3"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "neonkube.io/elasticsearch"
     operator: "Exists"
     effect: "NoSchedule"
 

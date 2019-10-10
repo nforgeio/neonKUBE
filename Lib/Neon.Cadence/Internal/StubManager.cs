@@ -181,52 +181,54 @@ namespace Neon.Cadence.Internal
             sbSource.Append(
 @"        private static class ___StubHelper
         {
-            private static MethodInfo       startWorkflowAsync;             // from: CadenceClient
-            private static MethodInfo       getWorkflowResultAsync;         // from: CadenceClient
-            private static MethodInfo       startChildWorkflowAsync;        // from: CadenceClient
-            private static MethodInfo       getChildWorkflowResultAsync;    // from: CadenceClient
-            private static MethodInfo       getWorkflowDescriptionAsync;    // from: CadenceClient
-            private static MethodInfo       cancelWorkflowAsync;            // from: CadenceClient
-            private static MethodInfo       terminateWorkflowAsync;         // from: CadenceClient
-            private static MethodInfo       signalWorkflowAsync;            // from: CadenceClient
-            private static MethodInfo       signalWorkflowWithStartAsync;   // from: CadenceClient
-            private static MethodInfo       signalChildWorkflowAsync;       // from: CadenceClient
-            private static MethodInfo       queryWorkflowAsync;             // from: CadenceClient
-            private static MethodInfo       resolveDomain;                  // from: CadenceClient
-            private static MethodInfo       newWorkflowStub;                // from: CadenceClient
-            private static MethodInfo       executeActivityAsync;           // from: Workflow
-            private static MethodInfo       executeLocalActivityAsync;      // from: Workflow
-            private static MethodInfo       activityOptionsNormalize;       // from: ActivityOptions
-            private static MethodInfo       localActivityOptionsNormalize;  // from: LocalActivityOptions
-            private static MethodInfo       childWorkflowOptionsNormalize;  // from: ChildWorkflowOptions
-            private static MethodInfo       workflowOptionsNormalize;       // from: WorkflowOptions
-            private static ConstructorInfo  workflowStubConstructor;        // from: WorkflowStub
+            private static MethodInfo       startWorkflowAsync;                     // from: CadenceClient
+            private static MethodInfo       getWorkflowResultAsync;                 // from: CadenceClient
+            private static MethodInfo       startChildWorkflowAsync;                // from: CadenceClient
+            private static MethodInfo       getChildWorkflowResultAsync;            // from: CadenceClient
+            private static MethodInfo       getWorkflowDescriptionAsync;            // from: CadenceClient
+            private static MethodInfo       cancelWorkflowAsync;                    // from: CadenceClient
+            private static MethodInfo       terminateWorkflowAsync;                 // from: CadenceClient
+            private static MethodInfo       signalWorkflowAsync;                    // from: CadenceClient
+            private static MethodInfo       signalWorkflowWithStartAsync;           // from: CadenceClient
+            private static MethodInfo       signalChildWorkflowAsync;               // from: CadenceClient
+            private static MethodInfo       queryWorkflowAsync;                     // from: CadenceClient
+            private static MethodInfo       resolveDomain;                          // from: CadenceClient
+            private static MethodInfo       newWorkflowStub;                        // from: CadenceClient
+            private static MethodInfo       executeActivityAsync;                   // from: Workflow
+            private static MethodInfo       executeLocalActivityAsync;              // from: Workflow
+            private static MethodInfo       activityOptionsNormalize;               // from: ActivityOptions
+            private static MethodInfo       localActivityOptionsNormalize;          // from: LocalActivityOptions
+            private static MethodInfo       childWorkflowOptionsNormalize;          // from: ChildWorkflowOptions
+            private static MethodInfo       childWorkflowOptionsToWorkflowOptions;  // from: ChildWorkflowOptions
+            private static MethodInfo       workflowOptionsNormalize;               // from: WorkflowOptions
+            private static ConstructorInfo  workflowStubConstructor;                // from: WorkflowStub
 
             static ___StubHelper()
             {
                 var clientType   = typeof(CadenceClient);
                 var workflowType = typeof(Workflow);
 
-                startWorkflowAsync            = NeonHelper.GetMethod(clientType, ""StartWorkflowAsync"", typeof(string), typeof(byte[]), typeof(WorkflowOptions));
-                getWorkflowResultAsync        = NeonHelper.GetMethod(clientType, ""GetWorkflowResultAsync"", typeof(WorkflowExecution), typeof(string));
-                startChildWorkflowAsync       = NeonHelper.GetMethod(clientType, ""StartChildWorkflowAsync"", typeof(Workflow), typeof(string), typeof(byte[]), typeof(ChildWorkflowOptions));
-                getChildWorkflowResultAsync   = NeonHelper.GetMethod(clientType, ""GetChildWorkflowResultAsync"", typeof(Workflow), typeof(ChildExecution));
-                getWorkflowDescriptionAsync   = NeonHelper.GetMethod(clientType, ""GetWorkflowDescriptionAsync"", typeof(WorkflowExecution), typeof(string));
-                cancelWorkflowAsync           = NeonHelper.GetMethod(clientType, ""CancelWorkflowAsync"", typeof(WorkflowExecution), typeof(string));
-                terminateWorkflowAsync        = NeonHelper.GetMethod(clientType, ""TerminateWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
-                signalWorkflowAsync           = NeonHelper.GetMethod(clientType, ""SignalWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
-                signalWorkflowWithStartAsync  = NeonHelper.GetMethod(clientType, ""SignalWorkflowWithStartAsync"", typeof(string), typeof(string), typeof(byte[]), typeof(byte[]), typeof(WorkflowOptions));
-                signalChildWorkflowAsync      = NeonHelper.GetMethod(clientType, ""SignalChildWorkflowAsync"", typeof(Workflow), typeof(ChildExecution), typeof(string), typeof(byte[]));
-                queryWorkflowAsync            = NeonHelper.GetMethod(clientType, ""QueryWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
-                resolveDomain                 = NeonHelper.GetMethod(clientType, ""ResolveDomain"", typeof(string));
-                newWorkflowStub               = NeonHelper.GetMethod(clientType, ""NewWorkflowStub"", typeof(string), typeof(WorkflowOptions));
-                executeActivityAsync          = NeonHelper.GetMethod(workflowType, ""ExecuteActivityAsync"", typeof(string), typeof(byte[]), typeof(ActivityOptions));
-                executeLocalActivityAsync     = NeonHelper.GetMethod(workflowType, ""ExecuteLocalActivityAsync"", typeof(Type), typeof(ConstructorInfo), typeof(MethodInfo), typeof(byte[]), typeof(LocalActivityOptions));
-                activityOptionsNormalize      = NeonHelper.GetMethod(typeof(ActivityOptions), ""Normalize"", typeof(CadenceClient), typeof(ActivityOptions), typeof(System.Type));
-                localActivityOptionsNormalize = NeonHelper.GetMethod(typeof(LocalActivityOptions), ""Normalize"", typeof(CadenceClient), typeof(LocalActivityOptions));
-                childWorkflowOptionsNormalize = NeonHelper.GetMethod(typeof(ChildWorkflowOptions), ""Normalize"", typeof(CadenceClient), typeof(ChildWorkflowOptions), typeof(System.Type));
-                workflowOptionsNormalize      = NeonHelper.GetMethod(typeof(WorkflowOptions), ""Normalize"", typeof(CadenceClient), typeof(WorkflowOptions), typeof(System.Type));
-                workflowStubConstructor       = NeonHelper.GetConstructor(typeof(WorkflowStub), new Type[] { typeof(CadenceClient), typeof(string), typeof(WorkflowExecution), typeof(WorkflowOptions) });
+                startWorkflowAsync                    = NeonHelper.GetMethod(clientType, ""StartWorkflowAsync"", typeof(string), typeof(byte[]), typeof(WorkflowOptions));
+                getWorkflowResultAsync                = NeonHelper.GetMethod(clientType, ""GetWorkflowResultAsync"", typeof(WorkflowExecution), typeof(string));
+                startChildWorkflowAsync               = NeonHelper.GetMethod(clientType, ""StartChildWorkflowAsync"", typeof(Workflow), typeof(string), typeof(byte[]), typeof(ChildWorkflowOptions));
+                getChildWorkflowResultAsync           = NeonHelper.GetMethod(clientType, ""GetChildWorkflowResultAsync"", typeof(Workflow), typeof(ChildExecution));
+                getWorkflowDescriptionAsync           = NeonHelper.GetMethod(clientType, ""GetWorkflowDescriptionAsync"", typeof(WorkflowExecution), typeof(string));
+                cancelWorkflowAsync                   = NeonHelper.GetMethod(clientType, ""CancelWorkflowAsync"", typeof(WorkflowExecution), typeof(string));
+                terminateWorkflowAsync                = NeonHelper.GetMethod(clientType, ""TerminateWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
+                signalWorkflowAsync                   = NeonHelper.GetMethod(clientType, ""SignalWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
+                signalWorkflowWithStartAsync          = NeonHelper.GetMethod(clientType, ""SignalWorkflowWithStartAsync"", typeof(string), typeof(string), typeof(byte[]), typeof(byte[]), typeof(WorkflowOptions));
+                signalChildWorkflowAsync              = NeonHelper.GetMethod(clientType, ""SignalChildWorkflowAsync"", typeof(Workflow), typeof(ChildExecution), typeof(string), typeof(byte[]));
+                queryWorkflowAsync                    = NeonHelper.GetMethod(clientType, ""QueryWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
+                resolveDomain                         = NeonHelper.GetMethod(clientType, ""ResolveDomain"", typeof(string));
+                newWorkflowStub                       = NeonHelper.GetMethod(clientType, ""NewWorkflowStub"", typeof(string), typeof(WorkflowOptions));
+                executeActivityAsync                  = NeonHelper.GetMethod(workflowType, ""ExecuteActivityAsync"", typeof(string), typeof(byte[]), typeof(ActivityOptions));
+                executeLocalActivityAsync             = NeonHelper.GetMethod(workflowType, ""ExecuteLocalActivityAsync"", typeof(Type), typeof(ConstructorInfo), typeof(MethodInfo), typeof(byte[]), typeof(LocalActivityOptions));
+                activityOptionsNormalize              = NeonHelper.GetMethod(typeof(ActivityOptions), ""Normalize"", typeof(CadenceClient), typeof(ActivityOptions), typeof(System.Type));
+                localActivityOptionsNormalize         = NeonHelper.GetMethod(typeof(LocalActivityOptions), ""Normalize"", typeof(CadenceClient), typeof(LocalActivityOptions));
+                childWorkflowOptionsNormalize         = NeonHelper.GetMethod(typeof(ChildWorkflowOptions), ""Normalize"", typeof(CadenceClient), typeof(ChildWorkflowOptions), typeof(System.Type));
+                childWorkflowOptionsToWorkflowOptions = NeonHelper.GetMethod(typeof(ChildWorkflowOptions), ""ToWorkflowOptions"");
+                workflowOptionsNormalize              = NeonHelper.GetMethod(typeof(WorkflowOptions), ""Normalize"", typeof(CadenceClient), typeof(WorkflowOptions), typeof(System.Type));
+                workflowStubConstructor               = NeonHelper.GetConstructor(typeof(WorkflowStub), new Type[] { typeof(CadenceClient), typeof(string), typeof(WorkflowExecution), typeof(WorkflowOptions) });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
@@ -335,6 +337,12 @@ namespace Neon.Cadence.Internal
             public static ChildWorkflowOptions NormalizeOptions(CadenceClient client, ChildWorkflowOptions options, System.Type interfaceType)
             {
                 return (ChildWorkflowOptions)childWorkflowOptionsNormalize.Invoke(null, new object[] { client, options, interfaceType });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static WorkflowOptions ToWorkflowOptions(ChildWorkflowOptions options)
+            {
+                return (WorkflowOptions)childWorkflowOptionsToWorkflowOptions.Invoke(options, Array.Empty<object>());
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
@@ -669,15 +677,26 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"        {{");
             sbSource.AppendLine($"            if (isChild)");
             sbSource.AppendLine($"            {{");
-            sbSource.AppendLine($"                throw new ArgumentException(\"stub\", \"Workflow stub for [{workflowInterface.FullName}] is a child workflow stub and cannot be converted to a [{typeof(WorkflowStub).Name}].\");");
-            sbSource.AppendLine($"            }}");
+            sbSource.AppendLine($"                if (!hasStarted || childExecution == null)");
+            sbSource.AppendLine($"                {{");
+            sbSource.AppendLine($"                    throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has not been been started.\");");
+            sbSource.AppendLine($"                }}");
             sbSource.AppendLine();
-            sbSource.AppendLine($"            if (!hasStarted || execution == null)");
+
+            // Note that we're converting the [ChildWorkflowOptions] into a [WorkflowOptions] 
+            // as a bit of a hack to make the [WorkflowStub] constructor happy.
+
+            sbSource.AppendLine($"                return (WorkflowStub)___StubHelper.NewWorkflowStub(client, workflowTypeName, childExecution.Execution, ___StubHelper.ToWorkflowOptions(childOptions));");
+            sbSource.AppendLine($"            }}");
+            sbSource.AppendLine($"            else");
             sbSource.AppendLine($"            {{");
-            sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has not been been started.\");");
-            sbSource.AppendLine($"            }}");
+            sbSource.AppendLine($"                if (!hasStarted || execution == null)");
+            sbSource.AppendLine($"                {{");
+            sbSource.AppendLine($"                    throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has not been been started.\");");
+            sbSource.AppendLine($"                }}");
             sbSource.AppendLine();
-            sbSource.AppendLine($"            return (WorkflowStub)___StubHelper.NewWorkflowStub(client, workflowTypeName, execution, options);");
+            sbSource.AppendLine($"                return (WorkflowStub)___StubHelper.NewWorkflowStub(client, workflowTypeName, execution, options);");
+            sbSource.AppendLine($"            }}");
             sbSource.AppendLine($"        }}");
 
             // Generate the method that returns the external workflow stub's execution.

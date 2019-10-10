@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -42,8 +42,8 @@ type (
 func NewHeartbeatRequest() *HeartbeatRequest {
 	request := new(HeartbeatRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.SetType(messagetypes.HeartbeatRequest)
-	request.SetReplyType(messagetypes.HeartbeatReply)
+	request.SetType(internal.HeartbeatRequest)
+	request.SetReplyType(internal.HeartbeatReply)
 
 	return request
 }

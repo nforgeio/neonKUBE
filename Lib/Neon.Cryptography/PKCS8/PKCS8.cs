@@ -314,7 +314,7 @@ namespace Neon.Cryptography
 
                     //csp.Flags = CspProviderFlags.UseMachineKeyStore;
                     csp.Flags = CspProviderFlags.CreateEphemeralKey;
-                    csp.KeyContainerName = Guid.NewGuid().ToString("D");
+                    csp.KeyContainerName = Guid.NewGuid().ToString("d");
 
                     rsa = new RSACryptoServiceProvider(csp);
                     rsa.ImportParameters(param);

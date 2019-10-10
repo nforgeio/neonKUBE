@@ -53,7 +53,7 @@ namespace System.Collections.Generic
 
             if (sourceValues.Count < count)
             {
-                throw new ArgumentException($"Cannot select [{count}] random items from a collection that has only [{sourceValues}] items.");
+                throw new ArgumentException($"Cannot select [{count}] random items from a collection that has only [{sourceValues}] items.", nameof(items));
             }
             else if (sourceValues.Count == count)
             {

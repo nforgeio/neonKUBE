@@ -259,7 +259,7 @@ namespace Neon.HyperV
             // square brackets).  We're going to work around this by temporarily
             // renaming the disk file while we're resizing it.
 
-            var tempDrivePath = Path.Combine(driveFolder, Guid.NewGuid().ToString("D") + ".vhdx");
+            var tempDrivePath = Path.Combine(driveFolder, Guid.NewGuid().ToString("d") + ".vhdx");
 
             File.Move(drivePath, tempDrivePath);
 
@@ -327,7 +327,7 @@ namespace Neon.HyperV
 
                     if (drive.Size <= 0)
                     {
-                        throw new ArgumentException("Virtual drive size must be greater than 0.");
+                        throw new ArgumentException("Virtual drive size must be greater than 0.", nameof(drive));
                     }
 
                     if (File.Exists(drive.Path))

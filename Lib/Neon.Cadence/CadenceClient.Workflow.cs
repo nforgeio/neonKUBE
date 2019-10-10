@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Tasks;
 using Neon.Time;
 
 namespace Neon.Cadence
@@ -249,6 +250,29 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Creates a stub suitable for starting an external workflow and then waiting
+        /// for the result as separate operations.
+        /// </summary>
+        /// <typeparam name="TWorkflowInterface">The target workflow interface.</typeparam>
+        /// <param name="methodName">
+        /// Optionally identifies the target workflow method.  This is the name specified in
+        /// <c>[WorkflowMethod]</c> attribute for the workflow method or <c>null</c>/empty for
+        /// the default workflow method.
+        /// </param>
+        /// <param name="options">Optionally specifies custom <see cref="WorkflowOptions"/>.</param>
+        /// <returns>A <see cref="ChildWorkflowStub{TWorkflowInterface}"/> instance.</returns>
+        public WorkflowFutureStub<TWorkflowInterface> NewWorkflowFutureStub<TWorkflowInterface>(string methodName = null, WorkflowOptions options = null)
+            where TWorkflowInterface : class
+        {
+            CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
+            EnsureNotDisposed();
+
+            options = WorkflowOptions.Normalize(this, options, typeof(TWorkflowInterface));
+
+            return new WorkflowFutureStub<TWorkflowInterface>(this, methodName, options);
+        }
+
+        /// <summary>
         /// Creates a typed workflow stub connected to a known workflow execution.
         /// This can be used to signal and query the workflow via the type-safe
         /// interface methods.
@@ -357,30 +381,6 @@ namespace Neon.Cadence
             EnsureNotDisposed();
 
             return StubManager.NewWorkflowStub<TWorkflowInterface>(this, options: options, workflowTypeName: workflowTypeName);
-        }
-
-        /// <summary>
-        /// <para>
-        /// Converts an already started typed workflow stub to an untyped <see cref="WorkflowStub"/>.
-        /// </para>
-        /// <note>
-        /// The stub must have already been started for this to work and child stubs may not converted.
-        /// </note>
-        /// </summary>
-        /// <param name="stub">The typed stub.</param>
-        /// <returns>The converted <see cref="WorkflowStub"/>.</returns>
-        /// <exception cref="ArgumentException">Thrown if the stub passed is not external (e.g. it's a child stub).</exception>
-        /// <exception cref="InvalidOperationException">Thrown if the stubbed workflow has not been started yet.</exception>
-        /// <remarks>
-        /// This is handy for obtaining the <see cref="WorkflowExecution"/> or result for the workflow as
-        /// well cancelling it.
-        /// </remarks>
-        public WorkflowStub ToUntyped(object stub)
-        {
-            Covenant.Requires<ArgumentNullException>(stub != null, nameof(stub));
-            Covenant.Requires<ArgumentException>(stub is ITypedWorkflowStub, nameof(stub), $"[{nameof(stub)}] is not a workflow stub.");
-
-            return ((ITypedWorkflowStub)stub).ToUntyped();
         }
 
         //---------------------------------------------------------------------
