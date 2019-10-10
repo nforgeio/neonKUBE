@@ -1411,7 +1411,7 @@ namespace Neon.Cadence
         /// Here we call <see cref="NewChildWorkflowFutureStub{TWorkflowInterface}(string, ChildWorkflowOptions)"/> specifying
         /// <b>"child"</b> as the workflow method name.  This matches the <c>[WorkflowMethod(Name = "child")]</c>
         /// attribute decorating the <c>ChildAsync()</c> workflow interface method.  Then we start the child workflow by awaiting 
-        /// <see cref="ChildWorkflowStub{TWorkflowInterface}.StartAsync(object[])"/>. This returns an <see cref="IAsyncFuture{T}"/> whose 
+        /// <see cref="ChildWorkflowStub{TWorkflowInterface}.StartAsync(object[])"/>. This returns an <see cref="AsyncChildWorkflowFuture{T}"/> whose 
         /// <see cref="IAsyncFuture.GetAsync"/> method returns the workflow result.  The code above calls this to retrieve the 
         /// result from the first child after executing the second child in parallel.
         /// </para>

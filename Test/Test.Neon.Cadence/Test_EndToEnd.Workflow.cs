@@ -2500,6 +2500,12 @@ namespace TestCadence
 
             [WorkflowMethod(Name = "hello-test-byexecution-withresult")]
             Task<bool> HelloTestByExecutionWithResultAsync();
+
+            [WorkflowMethod(Name = "sleep")]
+            Task<string> SleepAsync(int seconds, string message);
+
+            [WorkflowMethod(Name = "wait-for-external")]
+            Task<string> WaitForExternalAsync(WorkflowExecution execution);
         }
 
         [Workflow(AutoRegister = true)]
@@ -2570,8 +2576,8 @@ namespace TestCadence
             {
                 // Start a child workflow using a typed stub and a specific workflow ID
                 // and then create an external stub with the same ID and then verify
-                // that we can wait for the workflow using the stub Task as well as
-                // the external stub (without retrieving the result).
+                // that we can wait for the workflow using the stub as well as the
+                // external stub (without retrieving the result).
 
                 var TestWorkflowId = "WorkflowExternalStub-HelloTestByIdNoResultAsync-" + Guid.NewGuid().ToString("d");
                 var stub           = Workflow.NewChildWorkflowStub<IWorkflowExternalStub>(new ChildWorkflowOptions() { WorkflowId = TestWorkflowId });
@@ -2589,8 +2595,8 @@ namespace TestCadence
             {
                 // Start a child workflow using a typed stub and a specific workflow ID
                 // and then create an external stub with the same ID and then verify
-                // that we can wait for the workflow using the stub Task as well as
-                // the external stub (retrieving the result).
+                // that we can wait for the workflow using the stub as well as the
+                // external stub (retrieving the result).
 
                 var TestWorkflowId = "WorkflowExternalStub-HelloTestByIdWithResultAsync-" + Guid.NewGuid().ToString("d");
                 var stub           = Workflow.NewChildWorkflowStub<IWorkflowExternalStub>(new ChildWorkflowOptions() { WorkflowId = TestWorkflowId });
@@ -2599,6 +2605,26 @@ namespace TestCadence
                 var result2        = await externalStub.GetResultAsync<string>();
 
                 return result1 == "Hello Jeff!" && result1 == result2;
+            }
+
+            public async Task<string> SleepAsync(int seconds, string message)
+            {
+                // This simply sleeps for the specified time and then returns
+                // the message passed.
+
+                await Workflow.SleepAsync(TimeSpan.FromSeconds(seconds));
+
+                return message;
+            }
+
+            public async Task<string> WaitForExternalAsync(WorkflowExecution execution)
+            {
+                // We're going to wait for the workflow with the external ID 
+                // and return its result.
+
+                var externalStub = Workflow.NewExternalWorkflowStub(execution);
+
+                return await externalStub.GetResultAsync<string>();
             }
         }
 
@@ -2628,7 +2654,6 @@ namespace TestCadence
             Assert.True(await stub.HelloTestByIdWithResultAsync());
         }
 
-
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ExternalWorkflowStub_ByExecution_NoResult()
@@ -2653,6 +2678,36 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IWorkflowExternalStub>();
 
             Assert.True(await stub.HelloTestByExecutionWithResultAsync());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_ExternalWaitForLongTime()
+        {
+            // Create an external workflow that will run for a relatively long
+            // time and then pass the external ID to a child workflow that will
+            // wait for it and return the result.
+            //
+            // The purpose is to test whether Cadence has any hard limits for
+            // how long a local activity can run (because the external stub
+            // will uses a local activity to wait for the result).
+            //
+            // The Cadence documentation states that local activities should
+            // run for only a few seconds.  I'm hoping they recommend this
+            // to encourage longer running activities to use heartbeats and
+            // I hope Cadence doesn't enforce a limit.
+
+            const int sleepSeconds = 5;
+
+            var sleepStub      = client.NewWorkflowFutureStub<IWorkflowExternalStub, string>("sleep");
+            var sleepFuture    = await sleepStub.StartAsync(sleepSeconds, "It works!");
+            var sleepExecution = sleepFuture.Execution;
+
+            //var waitStub       = client.NewWorkflowStub< IWorkflowExternalStub>();
+
+            //Assert.Equal("It works!", await waitStub.WaitForExternalAsync(sleepExecution));
+
+            Assert.Equal("It works!", await sleepFuture.GetAsync());
         }
 
         //---------------------------------------------------------------------

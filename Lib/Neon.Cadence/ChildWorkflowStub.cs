@@ -59,69 +59,16 @@ namespace Neon.Cadence
 
             CadenceHelper.ValidateWorkflowInterface(workflowInterface);
 
-            options = ChildWorkflowOptions.Normalize(parentWorkflow.Client, options);
+            this.parentWorkflow   = parentWorkflow;
+            this.options          = ChildWorkflowOptions.Normalize(parentWorkflow.Client, options);
+            this.hasStarted       = false;
 
             var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
-            var methodAttribute   = (WorkflowMethodAttribute)null;
+            var workflowTarget    = CadenceHelper.GetWorkflowTarget(workflowInterface, methodName);
+            var methodAttribute   = workflowTarget.MethodAttribute;
 
-            this.parentWorkflow = parentWorkflow;
-            this.options        = options;
-            this.hasStarted     = false;
-
-            if (string.IsNullOrEmpty(methodName))
-            {
-                // Look for the entrypoint method with a null or empty method name.
-
-                foreach (var method in workflowInterface.GetMethods())
-                {
-                    methodAttribute = method.GetCustomAttribute<WorkflowMethodAttribute>();
-
-                    if (methodAttribute != null)
-                    {
-                        if (string.IsNullOrEmpty(methodAttribute.Name))
-                        {
-                            this.targetMethod = method;
-                            break;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                // Look for the entrypoint method with the matching method name.
-
-                foreach (var method in workflowInterface.GetMethods())
-                {
-                    methodAttribute = method.GetCustomAttribute<WorkflowMethodAttribute>();
-
-                    if (methodAttribute != null)
-                    {
-                        if (methodName == methodAttribute.Name)
-                        {
-                            this.targetMethod = method;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (this.targetMethod == null)
-            {
-                throw new ArgumentException($"Workflow interface [{workflowInterface.FullName}] does not have a method tagged by [WorkflowMethod(Name = {methodName})].", nameof(workflowInterface));
-            }
-
-            workflowTypeName = CadenceHelper.GetWorkflowTypeName(workflowInterface, workflowAttribute);
-
-            // $hack(jefflill):
-            //
-            // It would be nicer if [CadenceHelper.GetWorkflowTypeName()] accepted an optional
-            // [WorkflowMethodAttribute] that would be used to append the method name so that
-            // we won't need to hardcode that behavior here.
-
-            if (!string.IsNullOrEmpty(methodAttribute.Name))
-            {
-                workflowTypeName += $"::{methodAttribute.Name}";
-            }
+            workflowTypeName      = workflowTarget.WorkflowTypeName;
+            targetMethod          = workflowTarget.TargetMethod;
         }
 
         /// <summary>
@@ -129,7 +76,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <typeparam name="TResult">The workflow result type.</typeparam>
         /// <param name="args">The arguments to be passed to the workflow.</param>
-        /// <returns>The <see cref="IAsyncFuture{T}"/> with the <see cref="IAsyncFuture{T}.GetAsync"/> than can be used to retrieve the workfow result.</returns>
+        /// <returns>The <see cref="AsyncChildWorkflowFuture{T}"/> with the <see cref="AsyncChildWorkflowFuture{T}.GetAsync"/> than can be used to retrieve the workfow result.</returns>
         /// <exception cref="InvalidOperationException">Thrown when attempting to start a stub more than once.</exception>
         /// <remarks>
         /// <para>
@@ -140,7 +87,7 @@ namespace Neon.Cadence
         /// Any given <see cref="ChildWorkflowStub{TWorkflowInterface}"/> may only be executed once.
         /// </note>
         /// </remarks>
-        public async Task<IAsyncFuture<TResult>> StartAsync<TResult>(params object[] args)
+        public async Task<AsyncChildWorkflowFuture<TResult>> StartAsync<TResult>(params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             parentWorkflow.SetStackTrace();
@@ -200,7 +147,7 @@ namespace Neon.Cadence
         /// Starts the target workflow that returns <c>void</c>, passing any specified arguments.
         /// </summary>
         /// <param name="args">The arguments to be passed to the workflow.</param>
-        /// <returns>The <see cref="IAsyncFuture{T}"/> with the <see cref="IAsyncFuture{T}.GetAsync"/> than can be used to retrieve the workfow result.</returns>
+        /// <returns>The <see cref="AsyncChildWorkflowFuture{T}"/> with the <see cref="AsyncChildWorkflowFuture{T}.GetAsync"/> than can be used to retrieve the workfow result.</returns>
         /// <exception cref="InvalidOperationException">Thrown when attempting to start a stub more than once.</exception>
         /// <remarks>
         /// <para>
@@ -211,7 +158,7 @@ namespace Neon.Cadence
         /// Any given <see cref="ChildWorkflowStub{TWorkflowInterface}"/> may only be executed once.
         /// </note>
         /// </remarks>
-        public async Task<IAsyncFuture> StartAsync(params object[] args)
+        public async Task<AsyncChildWorkflowFuture> StartAsync(params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             parentWorkflow.SetStackTrace();

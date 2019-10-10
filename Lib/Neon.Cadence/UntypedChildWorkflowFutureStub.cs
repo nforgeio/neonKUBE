@@ -239,11 +239,11 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Starts the child workflow, returning an <see cref="IAsyncFuture{T}"/> that can be used
+        /// Starts the child workflow, returning an <see cref="AsyncChildWorkflowFuture{T}"/> that can be used
         /// to retrieve the workflow result.
         /// </summary>
         /// <param name="args">The workflow arguments.</param>
-        /// <returns>An <see cref="IAsyncFuture{T}"/> that can be used to retrieve the workflow result.</returns>
+        /// <returns>An <see cref="AsyncChildWorkflowFuture{T}"/> that can be used to retrieve the workflow result.</returns>
         /// <exception cref="InvalidOperationException">Thrown if the child workflow has already been started.</exception>
         /// <remarks>
         /// <note>
@@ -251,7 +251,7 @@ namespace Neon.Cadence
         /// result type passed are compatible with the target workflow arguments.
         /// </note>
         /// </remarks>
-        public async Task<IAsyncFuture<TResult>> StartAsync(params object[] args)
+        public async Task<AsyncChildWorkflowFuture<TResult>> StartAsync(params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
