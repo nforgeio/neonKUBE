@@ -94,7 +94,7 @@ namespace Neon.Cadence
         /// result.
         /// </summary>
         /// <param name="args">The workflow arguments.</param>
-        /// <returns>An <see cref="AsyncExternalWorkflowFuture"/> that can be used to retrieve the workflow result as an <c>object</c>.</returns>
+        /// <returns>An <see cref="ExternalWorkflowFuture"/> that can be used to retrieve the workflow result as an <c>object</c>.</returns>
         /// <exception cref="InvalidOperationException">Thrown if the workflow has already been started.</exception>
         /// <remarks>
         /// <note>
@@ -102,7 +102,7 @@ namespace Neon.Cadence
         /// are compatible with the target workflow method.
         /// </note>
         /// </remarks>
-        public async Task<AsyncExternalWorkflowFuture> StartAsync(params object[] args)
+        public async Task<ExternalWorkflowFuture> StartAsync(params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
@@ -115,7 +115,7 @@ namespace Neon.Cadence
 
             // Create and return the future.
 
-            return new AsyncExternalWorkflowFuture(client, execution);
+            return new ExternalWorkflowFuture(client, execution);
         }
 
         /// <summary>
@@ -124,7 +124,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <typeparam name="TResult">The workflow result type.</typeparam>
         /// <param name="args">The workflow arguments.</param>
-        /// <returns>An <see cref="AsyncExternalWorkflowFuture{TResult}"/> that can be used to retrieve the workflow result as an <c>object</c>.</returns>
+        /// <returns>An <see cref="ExternalWorkflowFuture{TResult}"/> that can be used to retrieve the workflow result as an <c>object</c>.</returns>
         /// <exception cref="InvalidOperationException">Thrown if the workflow has already been started.</exception>
         /// <remarks>
         /// <note>
@@ -132,7 +132,7 @@ namespace Neon.Cadence
         /// and the result type are compatible with the target workflow method.
         /// </note>
         /// </remarks>
-        public async Task<AsyncExternalWorkflowFuture<TResult>> StartAsync<TResult>(params object[] args)
+        public async Task<ExternalWorkflowFuture<TResult>> StartAsync<TResult>(params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
@@ -145,7 +145,7 @@ namespace Neon.Cadence
 
             // Create and return the future.
 
-            return new AsyncExternalWorkflowFuture<TResult>(client, execution);
+            return new ExternalWorkflowFuture<TResult>(client, execution);
         }
 
         /// <summary>

@@ -74,7 +74,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <typeparam name="TResult">The workflow result type.</typeparam>
         /// <param name="args">The arguments to be passed to the workflow.</param>
-        /// <returns>The <see cref="AsyncChildWorkflowFuture{T}"/> with the <see cref="AsyncChildWorkflowFuture{T}.GetAsync"/> than can be used to retrieve the workfow result.</returns>
+        /// <returns>The <see cref="ChildWorkflowFuture{T}"/> with the <see cref="ChildWorkflowFuture{T}.GetAsync"/> than can be used to retrieve the workfow result.</returns>
         /// <exception cref="InvalidOperationException">Thrown when attempting to start a stub more than once.</exception>
         /// <remarks>
         /// <para>
@@ -85,7 +85,7 @@ namespace Neon.Cadence
         /// Any given <see cref="ChildWorkflowStub{TWorkflowInterface}"/> may only be executed once.
         /// </note>
         /// </remarks>
-        public async Task<AsyncChildWorkflowFuture<TResult>> StartAsync<TResult>(params object[] args)
+        public async Task<ChildWorkflowFuture<TResult>> StartAsync<TResult>(params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             parentWorkflow.SetStackTrace();
@@ -138,14 +138,14 @@ namespace Neon.Cadence
                 throw new ArgumentException($"Workflow method [{nameof(TWorkflowInterface)}.{targetMethod.Name}()] returns [{resultType.FullName}] which is not compatible with [{nameof(TResult)}].", nameof(TWorkflowInterface));
             }
 
-            return new AsyncChildWorkflowFuture<TResult>(parentWorkflow, execution);
+            return new ChildWorkflowFuture<TResult>(parentWorkflow, execution);
         }
 
         /// <summary>
         /// Starts the target workflow that returns <c>void</c>, passing any specified arguments.
         /// </summary>
         /// <param name="args">The arguments to be passed to the workflow.</param>
-        /// <returns>The <see cref="AsyncChildWorkflowFuture{T}"/> with the <see cref="AsyncChildWorkflowFuture{T}.GetAsync"/> than can be used to retrieve the workfow result.</returns>
+        /// <returns>The <see cref="ChildWorkflowFuture{T}"/> with the <see cref="ChildWorkflowFuture{T}.GetAsync"/> than can be used to retrieve the workfow result.</returns>
         /// <exception cref="InvalidOperationException">Thrown when attempting to start a stub more than once.</exception>
         /// <remarks>
         /// <para>
@@ -156,7 +156,7 @@ namespace Neon.Cadence
         /// Any given <see cref="ChildWorkflowStub{TWorkflowInterface}"/> may only be executed once.
         /// </note>
         /// </remarks>
-        public async Task<AsyncChildWorkflowFuture> StartAsync(params object[] args)
+        public async Task<ChildWorkflowFuture> StartAsync(params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             parentWorkflow.SetStackTrace();
@@ -195,7 +195,7 @@ namespace Neon.Cadence
 
             // Create and return the future.
 
-            return new AsyncChildWorkflowFuture(parentWorkflow, execution);
+            return new ChildWorkflowFuture(parentWorkflow, execution);
         }
 
         /// <summary>

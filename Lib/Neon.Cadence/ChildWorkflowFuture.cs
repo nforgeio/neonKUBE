@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AsyncExternalWorkflowFuture.cs
+// FILE:	    ChildWorkflowFuture.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,28 +32,29 @@ using Neon.Tasks;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Implements an external workflow future that returns <c>void</c>.
+    /// Implements a child workflow future that returns <c>void</c>.
     /// </summary>
-    public class AsyncExternalWorkflowFuture : IAsyncFuture
+    public class ChildWorkflowFuture : IAsyncFuture
     {
         private bool            completed = false;
-        private CadenceClient   client;
+        private Workflow        parentWorkflow;
+        private ChildExecution  execution;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="client">The associated client.</param>
-        /// <param name="execution">The workflow execution.</param>
-        internal AsyncExternalWorkflowFuture(CadenceClient client, WorkflowExecution execution)
+        /// <param name="parentWorkflow">Identifies the parent workflow context.</param>
+        /// <param name="execution">The child workflow execution.</param>
+        internal ChildWorkflowFuture(Workflow parentWorkflow, ChildExecution execution)
         {
-            this.client    = client;
-            this.Execution = execution;
+            this.parentWorkflow = parentWorkflow;
+            this.execution      = execution;
         }
 
         /// <summary>
         /// Returns the workflow execution.
         /// </summary>
-        public WorkflowExecution Execution { get; private set; }
+        public WorkflowExecution Execution => execution.Execution;
 
         /// <inheritdoc/>
         public async Task GetAsync()
@@ -65,34 +66,35 @@ namespace Neon.Cadence
 
             completed = true;
 
-            await client.GetWorkflowResultAsync(Execution);
+            await parentWorkflow.Client.GetChildWorkflowResultAsync(parentWorkflow, execution);
         }
     }
 
     /// <summary>
-    /// Implements an external workflow future that returns a value.
+    /// Implements a child workflow future that returns a value.
     /// </summary>
     /// <typeparam name="TResult">The workflow result type.</typeparam>
-    public class AsyncExternalWorkflowFuture<TResult> : IAsyncFuture<TResult>
+    public class ChildWorkflowFuture<TResult> : IAsyncFuture<TResult>
     {
         private bool            completed = false;
-        private CadenceClient   client;
+        private Workflow        parentWorkflow;
+        private ChildExecution  execution;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="client">The associated client.</param>
-        /// <param name="execution">The workflow execution.</param>
-        internal AsyncExternalWorkflowFuture(CadenceClient client, WorkflowExecution execution)
+        /// <param name="parentWorkflow">Identifies the parent workflow context.</param>
+        /// <param name="execution">The child workflow execution.</param>
+        internal ChildWorkflowFuture(Workflow parentWorkflow, ChildExecution execution)
         {
-            this.client    = client;
-            this.Execution = execution;
+            this.parentWorkflow = parentWorkflow;
+            this.execution      = execution;
         }
 
         /// <summary>
         /// Returns the workflow execution.
         /// </summary>
-        public WorkflowExecution Execution { get; private set; }
+        public WorkflowExecution Execution => execution.Execution;
 
         /// <inheritdoc/>
         public async Task<TResult> GetAsync()
@@ -104,9 +106,9 @@ namespace Neon.Cadence
 
             completed = true;
 
-            var resultBytes = await client.GetWorkflowResultAsync(Execution);
+            var resultBytes = await parentWorkflow.Client.GetChildWorkflowResultAsync(parentWorkflow, execution);
 
-            return client.DataConverter.FromData<TResult>(resultBytes);
+            return parentWorkflow.Client.DataConverter.FromData<TResult>(resultBytes);
         }
     }
 }

@@ -2723,21 +2723,22 @@ namespace TestCadence
             // to encourage longer running activities to use heartbeats and
             // I hope Cadence doesn't enforce a limit.
 
+            // I manually ran this for 5 minutes using the setting below to
+            // confirm that Cadence doesn't enforce a time limit on local
+            // activities.  We'll reset to 5 seconds for normal test runs.
+
+            // const int sleepSeconds = 300;
+
             const int sleepSeconds = 5;
 
             var sleepStub      = client.NewWorkflowFutureStub<IWorkflowExternalStub>("sleep");
-            var sleepFuture    = await sleepStub.StartAsync(sleepSeconds, "It works!");
+            var sleepFuture    = await sleepStub.StartAsync<string>(sleepSeconds, "It works!");
             var sleepExecution = sleepFuture.Execution;
 
-            //var waitStub       = client.NewWorkflowStub< IWorkflowExternalStub>();
+            var waitStub = client.NewWorkflowStub<IWorkflowExternalStub>();
 
-            //Assert.Equal("It works!", await waitStub.WaitForExternalAsync(sleepExecution));
-
-            // Assert.Equal("It works!", await sleepFuture.GetAsync());
-
-            // $todo(jefflill): IMPLEMENT THIs!
-
-            Assert.True(false);
+            Assert.Equal("It works!", await waitStub.WaitForExternalAsync(sleepExecution));
+            Assert.Equal("It works!", await sleepFuture.GetAsync());
         }
 
         //---------------------------------------------------------------------
@@ -2939,14 +2940,22 @@ namespace TestCadence
         {
             // Call a workflow that returns a result using the future stub.
 
-            //var stub   = client.NewWorkflowFutureStub<IWorkflowChildGetExecution, string>("hello");
-            //var future = await stub.StartAsync("Jeff");
+            var stub = client.NewWorkflowFutureStub<IWorkflowChildGetExecution>("hello");
+            var future = await stub.StartAsync<string>("Jeff");
 
-            // Assert.Equal("Hello Jeff!", await future.GetAsync());
+            Assert.Equal("Hello Jeff!", await future.GetAsync());
+        }
 
-            // $todo(jeff.lill): IMPLEMENT THIS!
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Future_WithoutResult()
+        {
+            // Call a workflow that returns no result using the future stub.
 
-            Assert.True(false);
+            var stub = client.NewWorkflowFutureStub<IWorkflowChildGetExecution>("no-result");
+            var future = await stub.StartAsync();
+
+            await future.GetAsync();
         }
 
         //---------------------------------------------------------------------
