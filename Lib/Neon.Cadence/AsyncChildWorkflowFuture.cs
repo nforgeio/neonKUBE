@@ -85,8 +85,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="parentWorkflow">Identifies the parent workflow context.</param>
         /// <param name="execution">The child workflow execution.</param>
-        /// <param name="resultType">Specifies the workflow result type or <c>null</c> for <c>void</c> workflow methods.</param>
-        internal AsyncChildWorkflowFuture(Workflow parentWorkflow, ChildExecution execution, Type resultType)
+        internal AsyncChildWorkflowFuture(Workflow parentWorkflow, ChildExecution execution)
         {
             this.parentWorkflow = parentWorkflow;
             this.execution      = execution;

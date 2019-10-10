@@ -36,8 +36,8 @@ namespace Neon.Cadence
     /// </summary>
     public class AsyncExternalWorkflowFuture : IAsyncFuture
     {
-        private bool                completed = false;
-        private CadenceClient       client;
+        private bool            completed = false;
+        private CadenceClient   client;
 
         /// <summary>
         /// Constructor.
@@ -75,16 +75,15 @@ namespace Neon.Cadence
     /// <typeparam name="TResult">The workflow result type.</typeparam>
     public class AsyncExternalWorkflowFuture<TResult> : IAsyncFuture<TResult>
     {
-        private bool                completed = false;
-        private CadenceClient       client;
+        private bool            completed = false;
+        private CadenceClient   client;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="client">The associated client.</param>
         /// <param name="execution">The workflow execution.</param>
-        /// <param name="resultType">Specifies the workflow result type or <c>null</c> for <c>void</c> workflow methods.</param>
-        internal AsyncExternalWorkflowFuture(CadenceClient client, WorkflowExecution execution, Type resultType)
+        internal AsyncExternalWorkflowFuture(CadenceClient client, WorkflowExecution execution)
         {
             this.client    = client;
             this.Execution = execution;

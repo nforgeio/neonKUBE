@@ -63,12 +63,10 @@ namespace Neon.Cadence
             this.options          = ChildWorkflowOptions.Normalize(parentWorkflow.Client, options);
             this.hasStarted       = false;
 
-            var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
             var workflowTarget    = CadenceHelper.GetWorkflowTarget(workflowInterface, methodName);
-            var methodAttribute   = workflowTarget.MethodAttribute;
 
-            workflowTypeName      = workflowTarget.WorkflowTypeName;
-            targetMethod          = workflowTarget.TargetMethod;
+            this.workflowTypeName = workflowTarget.WorkflowTypeName;
+            this.targetMethod     = workflowTarget.TargetMethod;
         }
 
         /// <summary>
@@ -94,7 +92,7 @@ namespace Neon.Cadence
 
             if (hasStarted)
             {
-                throw new InvalidOperationException("Cannot start a stub more than once.");
+                throw new InvalidOperationException("Cannot start a future stub more than once.");
             }
 
             var parameters = targetMethod.GetParameters();
@@ -140,7 +138,7 @@ namespace Neon.Cadence
                 throw new ArgumentException($"Workflow method [{nameof(TWorkflowInterface)}.{targetMethod.Name}()] returns [{resultType.FullName}] which is not compatible with [{nameof(TResult)}].", nameof(TWorkflowInterface));
             }
 
-            return new AsyncChildWorkflowFuture<TResult>(parentWorkflow, execution, resultType);
+            return new AsyncChildWorkflowFuture<TResult>(parentWorkflow, execution);
         }
 
         /// <summary>
@@ -165,7 +163,7 @@ namespace Neon.Cadence
 
             if (hasStarted)
             {
-                throw new InvalidOperationException("Cannot start a stub more than once.");
+                throw new InvalidOperationException("Cannot start a future stub more than once.");
             }
 
             var parameters = targetMethod.GetParameters();

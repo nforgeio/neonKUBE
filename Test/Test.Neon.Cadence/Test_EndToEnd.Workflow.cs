@@ -2725,7 +2725,7 @@ namespace TestCadence
 
             const int sleepSeconds = 5;
 
-            var sleepStub      = client.NewWorkflowFutureStub<IWorkflowExternalStub, string>("sleep");
+            var sleepStub      = client.NewWorkflowFutureStub<IWorkflowExternalStub>("sleep");
             var sleepFuture    = await sleepStub.StartAsync(sleepSeconds, "It works!");
             var sleepExecution = sleepFuture.Execution;
 
@@ -2733,7 +2733,11 @@ namespace TestCadence
 
             //Assert.Equal("It works!", await waitStub.WaitForExternalAsync(sleepExecution));
 
-            Assert.Equal("It works!", await sleepFuture.GetAsync());
+            // Assert.Equal("It works!", await sleepFuture.GetAsync());
+
+            // $todo(jefflill): IMPLEMENT THIs!
+
+            Assert.True(false);
         }
 
         //---------------------------------------------------------------------
@@ -2755,6 +2759,9 @@ namespace TestCadence
 
             [WorkflowMethod(Name = "wait-for-signal")]
             Task<string> WaitForSignalAsync(string name);
+
+            [WorkflowMethod(Name = "no-result")]
+            Task NoResultAsync();
 
             [SignalMethod("signal")]
             Task SignalAsync(string signal);
@@ -2859,6 +2866,11 @@ namespace TestCadence
                 return await Task.FromResult($"Hello {name}:{receivedSignal}");
             }
 
+            public async Task NoResultAsync()
+            {
+                await Task.CompletedTask;
+            }
+
             public async Task SignalAsync(string signal)
             {
                 receivedSignal = signal;
@@ -2919,6 +2931,22 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IWorkflowChildGetExecution>();
 
             Assert.True(await stub.ChildStubWithResultAsync());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Future_WithResult()
+        {
+            // Call a workflow that returns a result using the future stub.
+
+            //var stub   = client.NewWorkflowFutureStub<IWorkflowChildGetExecution, string>("hello");
+            //var future = await stub.StartAsync("Jeff");
+
+            // Assert.Equal("Hello Jeff!", await future.GetAsync());
+
+            // $todo(jeff.lill): IMPLEMENT THIS!
+
+            Assert.True(false);
         }
 
         //---------------------------------------------------------------------

@@ -105,10 +105,10 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Starts the child workflow, returning an <see cref="IAsyncFuture"/> that can be used
-        /// to retrieve the workflow result.
+        /// to wait for the workflow to complete.  This version doesn't return a workflow result.
         /// </summary>
         /// <param name="args">The workflow arguments.</param>
-        /// <returns>An <see cref="IAsyncFuture"/> that can be used to retrieve the workflow result as an <c>object</c>.</returns>
+        /// <returns>An <see cref="AsyncChildWorkflowFuture"/> that can be used to retrieve the workflow result as an <c>object</c>.</returns>
         /// <exception cref="InvalidOperationException">Thrown if the child workflow has already been started.</exception>
         /// <remarks>
         /// <note>
@@ -116,13 +116,13 @@ namespace Neon.Cadence
         /// are compatible with the target workflow arguments.
         /// </note>
         /// </remarks>
-        public async Task<IAsyncFuture> StartAsync(params object[] args)
+        public async Task<AsyncChildWorkflowFuture> StartAsync(params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
             if (childExecution != null)
             {
-                throw new InvalidOperationException("Cannot start a stub more than once.");
+                throw new InvalidOperationException("Cannot start a future stub more than once.");
             }
 
             childExecution = await client.StartChildWorkflowAsync(parentWorkflow, WorkflowTypeName, client.DataConverter.ToData(args), Options);
@@ -130,6 +130,36 @@ namespace Neon.Cadence
             // Create and return the future.
 
             return new AsyncChildWorkflowFuture(parentWorkflow, childExecution);
+        }
+
+        /// <summary>
+        /// Starts the child workflow, returning an <see cref="IAsyncFuture"/> that can be used
+        /// to wait for the the workflow to complete and obtain its result.
+        /// </summary>
+        /// <typeparam name="TResult">The workflow result type.</typeparam>
+        /// <param name="args">The workflow arguments.</param>
+        /// <returns>An <see cref="AsyncChildWorkflowFuture{TResult}"/> that can be used to retrieve the workflow result as an <c>object</c>.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the child workflow has already been started.</exception>
+        /// <remarks>
+        /// <note>
+        /// <b>IMPORTANT:</b> You need to take care to ensure that the parameters passed
+        /// are compatible with the target workflow arguments.
+        /// </note>
+        /// </remarks>
+        public async Task<AsyncChildWorkflowFuture<TResult>> StartAsync<TResult>(params object[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+
+            if (childExecution != null)
+            {
+                throw new InvalidOperationException("Cannot start a future stub more than once.");
+            }
+
+            childExecution = await client.StartChildWorkflowAsync(parentWorkflow, WorkflowTypeName, client.DataConverter.ToData(args), Options);
+
+            // Create and return the future.
+
+            return new AsyncChildWorkflowFuture<TResult>(parentWorkflow, childExecution);
         }
 
         /// <summary>
@@ -257,14 +287,14 @@ namespace Neon.Cadence
 
             if (childExecution != null)
             {
-                throw new InvalidOperationException("Cannot start a stub more than once.");
+                throw new InvalidOperationException("Cannot start a future stub more than once.");
             }
 
             childExecution = await client.StartChildWorkflowAsync(parentWorkflow, WorkflowTypeName, client.DataConverter.ToData(args), Options);
 
             // Create and return the future.
 
-            return new AsyncChildWorkflowFuture<TResult>(parentWorkflow, childExecution, typeof(TResult));
+            return new AsyncChildWorkflowFuture<TResult>(parentWorkflow, childExecution);
         }
 
         /// <summary>

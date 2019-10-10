@@ -146,9 +146,13 @@ namespace Neon.Cadence
         /// Internal constructor.
         /// </summary>
         /// <param name="parentWorkflow">The associated parent workflow.</param>
-        /// <param name="methodName">Identifies the target activity method or <c>null</c> or empty.</param>
+        /// <param name="methodName">
+        /// Optionally identifies the target activity method by the name specified in
+        /// the <c>[ActivityMethod]</c> attribute tagging the method.  Pass a <c>null</c>
+        /// or empty string to target the default method.
+        /// </param>
         /// <param name="options">The activity options or <c>null</c>.</param>
-        internal ActivityFutureStub(Workflow parentWorkflow, string methodName, ActivityOptions options = null)
+        internal ActivityFutureStub(Workflow parentWorkflow, string methodName = null, ActivityOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
 
@@ -225,7 +229,7 @@ namespace Neon.Cadence
 
             if (hasStarted)
             {
-                throw new InvalidOperationException("Cannot start a stub more than once.");
+                throw new InvalidOperationException("Cannot start a future stub more than once.");
             }
 
             var parameters = targetMethod.GetParameters();
@@ -312,7 +316,7 @@ namespace Neon.Cadence
 
             if (hasStarted)
             {
-                throw new InvalidOperationException("Cannot start a stub more than once.");
+                throw new InvalidOperationException("Cannot start a future stub more than once.");
             }
 
             var parameters = targetMethod.GetParameters();

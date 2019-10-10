@@ -254,7 +254,6 @@ namespace Neon.Cadence
         /// for the result as separate operations.
         /// </summary>
         /// <typeparam name="TWorkflowInterface">The target workflow interface.</typeparam>
-        /// <typeparam name="TResult">The workflow method result type.</typeparam>
         /// <param name="methodName">
         /// Optionally identifies the target workflow method.  This is the name specified in
         /// <c>[WorkflowMethod]</c> attribute for the workflow method or <c>null</c>/empty for
@@ -262,7 +261,7 @@ namespace Neon.Cadence
         /// </param>
         /// <param name="options">Optionally specifies custom <see cref="WorkflowOptions"/>.</param>
         /// <returns>A <see cref="ChildWorkflowStub{TWorkflowInterface}"/> instance.</returns>
-        public WorkflowFutureStub<TResult> NewWorkflowFutureStub<TWorkflowInterface, TResult>(string methodName = null, WorkflowOptions options = null)
+        public WorkflowFutureStub<TWorkflowInterface> NewWorkflowFutureStub<TWorkflowInterface>(string methodName = null, WorkflowOptions options = null)
             where TWorkflowInterface : class
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
@@ -270,7 +269,7 @@ namespace Neon.Cadence
 
             options = WorkflowOptions.Normalize(this, options, typeof(TWorkflowInterface));
 
-            return new WorkflowFutureStub<TResult>(this, methodName, options);
+            return new WorkflowFutureStub<TWorkflowInterface>(this, methodName, options);
         }
 
         /// <summary>
