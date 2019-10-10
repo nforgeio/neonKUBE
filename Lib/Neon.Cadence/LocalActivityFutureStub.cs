@@ -158,53 +158,13 @@ namespace Neon.Cadence
 
             CadenceHelper.ValidateActivityInterface(activityInterface);
 
-            var activityAttribute = activityInterface.GetCustomAttribute<ActivityAttribute>();
-            var methodAttribute   = (ActivityMethodAttribute)null;
-
             this.parentWorkflow = parentWorkflow;
             this.hasStarted     = false;
 
-            if (string.IsNullOrEmpty(methodName))
-            {
-                // Look for the entrypoint method with a null or empty method name.
+            var activityTarget  = CadenceHelper.GetActivityTarget(activityInterface, methodName);
+            var methodAttribute = activityTarget.MethodAttribute;
 
-                foreach (var method in activityInterface.GetMethods())
-                {
-                    methodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();
-
-                    if (methodAttribute != null)
-                    {
-                        if (string.IsNullOrEmpty(methodAttribute.Name))
-                        {
-                            this.targetMethod = method;
-                            break;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                // Look for the entrypoint method with the matching method name.
-
-                foreach (var method in activityInterface.GetMethods())
-                {
-                    methodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();
-
-                    if (methodAttribute != null)
-                    {
-                        if (methodName == methodAttribute.Name)
-                        {
-                            this.targetMethod = method;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (this.targetMethod == null)
-            {
-                throw new ArgumentException($"Activity interface [{activityInterface.FullName}] does not have a method tagged by [ActivityMethod(Name = {methodName})].", nameof(activityInterface));
-            }
+            targetMethod        = activityTarget.TargetMethod;
 
             this.options = LocalActivityOptions.Normalize(parentWorkflow.Client, options);
         }
