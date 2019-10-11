@@ -16,7 +16,7 @@ using k8s.Models;
 namespace ClusterManager
 {
     /// <summary>
-    /// The Loopie cluster initialization operator.
+    /// The Neon cluster initialization operator.
     /// </summary>
     public static class Program
     {
