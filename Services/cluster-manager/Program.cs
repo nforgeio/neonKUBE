@@ -4,15 +4,14 @@
 // COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using Neon.Common;
 
+using Neon.Common;
 using Neon.Kube;
 
 using k8s;
 using k8s.Models;
-
-using System.Collections.Generic;
 
 namespace ClusterManager
 {

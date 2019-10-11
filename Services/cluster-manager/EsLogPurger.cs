@@ -14,16 +14,18 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using ICSharpCode.SharpZipLib.Zip;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
+using Neon.Kube.Service;
 using Neon.Net;
 using Neon.Tasks;
-using Neon.Kube.Service;
+
+using ICSharpCode.SharpZipLib.Zip;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 using k8s;
 
 namespace ClusterManager
@@ -38,8 +40,10 @@ namespace ClusterManager
         {
             using (var jsonClient = new JsonClient())
             {
-                jsonClient.BaseAddress = KubernetesClientConfiguration.IsInCluster() ?
-                    this.ServiceMap[NeonServices.Elasticsearch].Endpoints.Default.Uri : new Uri($"http://localhost:{this.ServiceMap[NeonServices.Elasticsearch].Endpoints.Default.Port}");
+                jsonClient.BaseAddress = KubernetesClientConfiguration.IsInCluster()
+                    ? this.ServiceMap[NeonServices.Elasticsearch].Endpoints.Default.Uri 
+                    : new Uri($"http://localhost:{this.ServiceMap[NeonServices.Elasticsearch].Endpoints.Default.Port}");
+
                 var periodicTask =
                     new AsyncPeriodicTask(
                         logPurgerInterval,

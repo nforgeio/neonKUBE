@@ -22,14 +22,12 @@ using Neon.Service;
 using Neon.Data;
 using Neon.Net;
 
+using Helm.Helm;
 using Newtonsoft.Json;
-
 using YamlDotNet.RepresentationModel;
 
 using k8s;
 using k8s.Models;
-
-using Helm.Helm;
 
 using Couchbase;
 using Couchbase.Linq;
@@ -49,8 +47,6 @@ namespace ClusterManager
             : base(serviceMap, name, ThisAssembly.Git.Branch, ThisAssembly.Git.Commit, ThisAssembly.Git.IsDirty)
         {
         }
-
-
 
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)

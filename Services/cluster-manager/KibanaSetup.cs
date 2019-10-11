@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -14,19 +15,15 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using ICSharpCode.SharpZipLib.Zip;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Net;
+using Neon.Retry;
 using Neon.Tasks;
 using Neon.Kube.Service;
+
 using k8s;
-using Neon.Retry;
-using System.Dynamic;
 
 namespace ClusterManager
 {
