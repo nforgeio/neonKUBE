@@ -35,8 +35,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -573,7 +571,6 @@ namespace Neon.Cadence
         private static bool                             proxyWritten  = false;
         private static long                             nextClientId  = 0;
         private static Dictionary<long, CadenceClient>  idToClient    = new Dictionary<long, CadenceClient>();
-        private static bool                             compilerReady = false;
         private static long                             nextRequestId = 0;
         private static Dictionary<long, Operation>      operations    = new Dictionary<long, Operation>();
         private static INeonLogger                      cadenceLogger;
@@ -763,8 +760,6 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), nameof(settings), "You must specifiy a non-empty default Cadence domain.");
-
-            InitializeCompiler();
 
             var client = new CadenceClient(settings);
 
@@ -1143,113 +1138,17 @@ namespace Neon.Cadence
             await client.ProxyReplyAsync(request, new LogReply());
         }
 
-        /// <summary>
-        /// Ensures that the Microsoft C# compiler libraries are preloaded and ready
-        /// so that subsequent complations won't take excessive time.
-        /// </summary>
-        private static void InitializeCompiler()
-        {
-            lock (syncLock)
-            {
-                // The .NET client dynamically generates code at runtime to implement
-                // workflow stubs.  The Microsoft C# compiler classes take about 1.8
-                // seconds to load and compile code for the first time.  Subsequent
-                // compiles take about 200ms.
-                //
-                // The problem with this is that 1.8 seconds is quite long and is
-                // roughly 1/5th of the default decision task timeout of 10 seconds.
-                // So it's conceivable that this additional delay could push a
-                // workflow to timeout.
-
-                // $todo(jefflill):
-                //
-                // A potentially better approach would be to have the registrationd
-                // methods prebuild (and cache) all of the stubs and/or implement
-                // more specific stub generation methods.
-                //
-                //      https://github.com/nforgeio/neonKUBE/issues/615
-
-                const string source =
-@"
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-
-using Neon.Cadence;
-using Neon.Cadence.Internal;
-using Neon.Common;
-
-namespace Neon.Cadence.WorkflowStub
-{
-    internal class __CompilerInitialized
-    {
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public async Task<int> DoNothingAsync()
-        {
-            // Call a few things so the the C# compiler will need to load some assemblies.
-
-            await CadenceClient.ConnectAsync(new CadenceSettings());
-            return await Task.FromResult(0);
-        }
-    }
-}
-";
-                if (compilerReady)
-                {
-                    return;
-                }
-
-                var syntaxTree = CSharpSyntaxTree.ParseText(source);
-                var references = new List<MetadataReference>();
-
-                // Reference these required assemblies.
-
-                references.Add(MetadataReference.CreateFromFile(typeof(NeonHelper).Assembly.Location));
-
-                // Reference all loaded assemblies.
-
-                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()
-                    .Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.Location)))
-                {
-                    references.Add(MetadataReference.CreateFromFile(assembly.Location));
-                }
-
-                var assemblyName    = "Neon-Cadence-WorkflowStub-Initialize";
-                var compilerOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Release);
-                var compilation     = CSharpCompilation.Create(assemblyName, new[] { syntaxTree }, references, compilerOptions);
-                var assemblyStream  = new MemoryStream();
-
-                using (var pdbStream = new MemoryStream())
-                {
-                    var emitted = compilation.Emit(assemblyStream, pdbStream);
-
-                    if (!emitted.Success)
-                    {
-                        throw new CompilerErrorException(emitted.Diagnostics);
-                    }
-                }
-
-                assemblyStream.Position = 0;
-                CadenceHelper.LoadAssembly(assemblyStream);
-
-                compilerReady = true;
-            }
-        }
-
         //---------------------------------------------------------------------
         // Instance members
 
-        private IPAddress                       address       = IPAddress.Parse("127.0.0.2");    // Using a non-default loopback to avoid port conflicts
-        private Process                         proxyProcess  = null;
-        private int                             proxyPort     = 0;
-        private Dictionary<long, Worker>        workers       = new Dictionary<long, Worker>();
-        private Dictionary<string, Type>        activityTypes = new Dictionary<string, Type>();
-        private bool                            isDisposed    = false;
+        private IPAddress                       address                 = IPAddress.Parse("127.0.0.2");    // Using a non-default loopback to avoid port conflicts
+        private Process                         proxyProcess            = null;
+        private int                             proxyPort               = 0;
+        private Dictionary<long, Worker>        workers                 = new Dictionary<long, Worker>();
+        private Dictionary<string, Type>        activityTypes           = new Dictionary<string, Type>();
+        private bool                            isDisposed              = false;
+        private List<Type>                      registeredActivityTypes = new List<Type>();
+        private List<Type>                      registeredWorkflowTypes = new List<Type>();
         private HttpClient                      proxyClient;
         private HttpServer                      httpServer;
         private Exception                       pendingException;

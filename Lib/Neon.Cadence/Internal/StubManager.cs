@@ -364,14 +364,14 @@ namespace Neon.Cadence.Internal
         /// Returns the <see cref="DynamicWorkflowStub"/> for a workflow interface, dynamically generating code
         /// to implement the stub if necessary.
         /// </summary>
-        /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
+        /// <param name="workflowInterface">The workflow interface type.</param>
         /// <param name="isChild">Indicates whether an external or child workflow stub is required.</param>
         /// <returns>The stub instance.</returns>
-        /// <exception cref="WorkflowTypeException">Thrown when there are problems with the <typeparamref name="TWorkflowInterface"/>.</exception>
-        public static DynamicWorkflowStub GetWorkflowStub<TWorkflowInterface>(bool isChild)
-            where TWorkflowInterface : class
+        /// <exception cref="WorkflowTypeException">Thrown when there are problems with the <paramref name="workflowInterface"/>.</exception>
+        public static DynamicWorkflowStub GetWorkflowStub(Type workflowInterface, bool isChild)
         {
-            var workflowInterface     = typeof(TWorkflowInterface);
+            Covenant.Requires<ArgumentNullException>(workflowInterface != null, nameof(workflowInterface));
+
             var workflowAttribute     = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
             var workflowInterfaceName = workflowInterface.FullName;
 
@@ -1139,7 +1139,7 @@ namespace Neon.Cadence.Internal
                 workflowTypeName = CadenceHelper.GetWorkflowTypeName(workflowInterface, workflowAttribute);
             }
 
-            var stub = GetWorkflowStub<TWorkflowInterface>(isChild: false);
+            var stub = GetWorkflowStub(typeof(TWorkflowInterface), isChild: false);
 
             return (TWorkflowInterface)stub.Create(client, client.DataConverter, workflowTypeName, options, typeof(TWorkflowInterface));
         }
@@ -1172,7 +1172,7 @@ namespace Neon.Cadence.Internal
                 workflowTypeName = CadenceHelper.GetWorkflowTypeName(workflowInterface, workflowAttribute);
             }
 
-            var stub = GetWorkflowStub<TWorkflowInterface>(isChild: true);
+            var stub = GetWorkflowStub(typeof(TWorkflowInterface), isChild: true);
 
             return (TWorkflowInterface)stub.Create(client, client.DataConverter, parentWorkflow, workflowTypeName, options, typeof(TWorkflowInterface));
         }
@@ -1204,7 +1204,7 @@ namespace Neon.Cadence.Internal
                 workflowTypeName = CadenceHelper.GetWorkflowTypeName(workflowInterface, workflowAttribute);
             }
 
-            var stub = GetWorkflowStub<TWorkflowInterface>(isChild: true);
+            var stub = GetWorkflowStub(typeof(TWorkflowInterface), isChild: true);
 
             return (TWorkflowInterface)stub.Create(client, client.DataConverter, parentWorkflow, workflowTypeName, execution);
         }
@@ -1234,7 +1234,7 @@ namespace Neon.Cadence.Internal
 
             CadenceHelper.ValidateWorkflowInterface(workflowInterface);
 
-            var stub = GetWorkflowStub<TWorkflowInterface>(isChild: true);
+            var stub = GetWorkflowStub(typeof(TWorkflowInterface), isChild: true);
 
             return (TWorkflowInterface)stub.Create(client, client.DataConverter, parentWorkflow, workflowId, domain);
         }
@@ -1261,7 +1261,7 @@ namespace Neon.Cadence.Internal
 
             CadenceHelper.ValidateWorkflowInterface(workflowInterface);
 
-            var stub = GetWorkflowStub<TWorkflowInterface>(isChild: true);
+            var stub = GetWorkflowStub(typeof(TWorkflowInterface), isChild: true);
 
             return (TWorkflowInterface)stub.Create(client, client.DataConverter, parentWorkflow, execution);
         }
@@ -1284,7 +1284,7 @@ namespace Neon.Cadence.Internal
 
             CadenceHelper.ValidateWorkflowInterface(workflowInterface);
 
-            var stub             = GetWorkflowStub<TWorkflowInterface>(isChild: false);
+            var stub             = GetWorkflowStub(typeof(TWorkflowInterface), isChild: false);
             var workflowTypeName = CadenceHelper.GetWorkflowTypeName(workflowInterface, workflowInterface.GetCustomAttribute<WorkflowAttribute>());
 
             return (TWorkflowInterface)stub.Create(client, client.DataConverter, workflowTypeName, options);
@@ -1294,12 +1294,13 @@ namespace Neon.Cadence.Internal
         /// Returns a <see cref="DynamicActivityStub"/> wrapping the specified activity interface for
         /// a workflow, dynamically generating the required type if required.
         /// </summary>
-        /// <typeparam name="TActivityInterface">The activity interface.</typeparam>
+        /// <param name="activityInterface">The activity interface type.</param>
         /// <returns>The activity stub instance.</returns>
         /// <exception cref="ActivityTypeException">Thrown when there are problems with the <typeparamref name="TActivityInterface"/>.</exception>
-        public static DynamicActivityStub GetActivityStub<TActivityInterface>()
+        public static DynamicActivityStub GetActivityStub(Type activityInterface)
         {
-            var activityInterface = typeof(TActivityInterface);
+            Covenant.Requires<ArgumentNullException>(activityInterface != null, nameof(activityInterface));
+
             var activityTypeName  = activityInterface.FullName;
             var activityAttribute = activityInterface.GetCustomAttribute<ActivityAttribute>();
 
@@ -1662,7 +1663,7 @@ namespace Neon.Cadence.Internal
 
             options = ActivityOptions.Normalize(client, options, typeof(TActivityInterface));
 
-            var stub = GetActivityStub<TActivityInterface>();
+            var stub = GetActivityStub(typeof(TActivityInterface));
 
             return (TActivityInterface)stub.Create(client, workflow, activityTypeName, options, typeof(TActivityInterface));
         }
@@ -1688,7 +1689,7 @@ namespace Neon.Cadence.Internal
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
             CadenceHelper.ValidateActivityImplementation(activityType);
 
-            var stub = GetActivityStub<TActivityInterface>();
+            var stub = GetActivityStub(typeof(TActivityInterface));
 
             return (TActivityInterface)stub.CreateLocal(client, workflow, activityType, options ?? new LocalActivityOptions());
         }

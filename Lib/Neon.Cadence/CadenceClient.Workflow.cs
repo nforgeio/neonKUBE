@@ -77,6 +77,11 @@ namespace Neon.Cadence
             }
 
             await WorkflowBase.RegisterAsync(this, workflowType, workflowTypeName, ResolveDomain(domain));
+
+            lock (registeredWorkflowTypes)
+            {
+                registeredWorkflowTypes.Add(CadenceHelper.GetWorkflowInterface(typeof(TWorkflow)));
+            }
         }
 
         /// <summary>
@@ -116,6 +121,11 @@ namespace Neon.Cadence
                     var workflowTypeName = CadenceHelper.GetWorkflowTypeName(type, workflowAttribute);
 
                     await WorkflowBase.RegisterAsync(this, type, workflowTypeName, ResolveDomain(domain));
+
+                    lock (registeredWorkflowTypes)
+                    {
+                        registeredWorkflowTypes.Add(CadenceHelper.GetWorkflowInterface(type));
+                    }
                 }
             }
         }

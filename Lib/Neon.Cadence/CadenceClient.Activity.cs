@@ -75,6 +75,11 @@ namespace Neon.Cadence
             }
 
             await ActivityBase.RegisterAsync(this, activityType, activityTypeName, ResolveDomain(domain));
+
+            lock (registeredActivityTypes)
+            {
+                registeredActivityTypes.Add(CadenceHelper.GetActivityInterface(typeof(TActivity)));
+            }
         }
 
         /// <summary>
@@ -118,6 +123,11 @@ namespace Neon.Cadence
                     var activityTypeName = CadenceHelper.GetActivityTypeName(type, activityAttribute);
 
                     await ActivityBase.RegisterAsync(this, type, activityTypeName, ResolveDomain(domain));
+
+                    lock (registeredActivityTypes)
+                    {
+                        registeredActivityTypes.Add(CadenceHelper.GetActivityInterface(type));
+                    }
                 }
             }
         }
