@@ -52,12 +52,15 @@ namespace ClusterManager
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
-
         }
 
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
+            // Let KubeService know that we're running.
+
+            SetRunning();
+            
             await SetupClusterAsync();
 
             logPurgerInterval = TimeSpan.FromSeconds(int.Parse(GetEnvironmentVariable("LOG_PURGE_INTERVAL") ?? "3600"));
@@ -77,10 +80,6 @@ namespace ClusterManager
 
             tasks.Add(LogPurgerAsync(logPurgerInterval, retentionDays));
 
-            // Let KubeService know that we're running.
-
-            SetRunning();
-            
             // Wait for all tasks to exit cleanly for a normal shutdown.
 
             await NeonHelper.WaitAllAsync(tasks);

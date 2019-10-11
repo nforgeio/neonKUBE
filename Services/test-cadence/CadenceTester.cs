@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
+using Neon.Cadence;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube.Service;
@@ -38,6 +39,60 @@ namespace CadenceTester
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
+            // Verify the environment variables.
+
+            var settings = new CadenceSettings();
+            var servers  = GetEnvironmentVariable("CADENCE_SERVERS");
+            var domain   = GetEnvironmentVariable("CADENCE_DOMAIN");
+            var taskList = GetEnvironmentVariable("CADENCE_TASKLIST");
+            var error    = false;
+
+            if (string.IsNullOrEmpty(servers))
+            {
+                error = true;
+                Log.LogError("The [CADENCE_SERVERS] environment variable is required.");
+            }
+
+            try
+            {
+                foreach (var item in servers.Split(','))
+                {
+                    var uri = new Uri(item.Trim(), UriKind.Absolute);
+
+                    settings.Servers.Add(uri.ToString());
+                }
+            }
+            catch
+            {
+                error = true;
+                Log.LogError(() => $"One or more URIs are invalid: CADENCE_SERVERS={servers}");
+            }
+
+            if (string.IsNullOrEmpty(domain))
+            {
+                error = true;
+                Log.LogError("The [CADENCE_DOMAIN] environment variable is required.");
+            }
+
+            if (string.IsNullOrEmpty(taskList))
+            {
+                error = true;
+                Log.LogError("The [CADENCE_TASKLIST] environment variable is required.");
+            }
+
+            if (error)
+            {
+                return 1;
+            }
+
+            // Connect to Cadence and register the workflows and activities.
+
+            using (var client = await CadenceClient.ConnectAsync(settings))
+            {
+            }
+
+            // Let KubeService know that we're running.
+
             SetRunning();
 
             return 0;
