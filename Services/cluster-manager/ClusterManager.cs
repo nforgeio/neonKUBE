@@ -76,6 +76,10 @@ namespace ClusterManager
             // that are older than the number of retention days.
 
             tasks.Add(LogPurgerAsync(logPurgerInterval, retentionDays));
+
+            // Let KubeService know that we're running.
+
+            SetRunning();
             
             // Wait for all tasks to exit cleanly for a normal shutdown.
 
