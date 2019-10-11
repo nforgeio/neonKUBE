@@ -17,6 +17,7 @@
     <ProjectReference Include="..\..\Lib\Neon.Cadence\Neon.Cadence.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Kube.Service\Neon.Kube.Service.csproj" />
+    <ProjectReference Include="..\..\Test\Test.Neon.Models\Test.Neon.Models.csproj" />
   </ItemGroup>
 
 </Project>
