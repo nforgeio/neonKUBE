@@ -36,5 +36,10 @@ namespace Neon.Common
         /// Kibana.
         /// </summary>
         public const string Kibana = "kibana-kibana";
+
+        /// <summary>
+        /// Non-production service used to test Cadence running in a Linux container.
+        /// </summary>
+        public const string TestCadence = "test-cadence";
     }
 }

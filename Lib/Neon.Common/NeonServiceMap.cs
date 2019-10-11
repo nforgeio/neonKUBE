@@ -110,6 +110,7 @@ namespace Neon.Common
             serviceMaps["production"].AddServiceDescription(NeonServices.ClusterManager, new ServiceEndpoint());
             serviceMaps["production"].AddServiceDescription(NeonServices.Elasticsearch, new ServiceEndpoint() { Port = 9200 }, "monitoring");
             serviceMaps["production"].AddServiceDescription(NeonServices.Kibana, new ServiceEndpoint() { Port = 5601 }, "monitoring");
+            serviceMaps["production"].AddServiceDescription(NeonServices.TestCadence, new ServiceEndpoint());
 
             VerifyInit(Production);
         }

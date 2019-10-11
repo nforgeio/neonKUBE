@@ -253,7 +253,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cluster-manager", "Services
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Common", "Test\Test.Neon.Common\Test.Neon.Common.csproj", "{49072BAB-857F-4058-B2CE-693085F9269C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cadence-tester", "Services\cadence-tester\cadence-tester.csproj", "{75ED3E48-DFC6-481B-8168-A184DDD19FFB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "test-cadence", "Services\test-cadence\test-cadence.csproj", "{75ED3E48-DFC6-481B-8168-A184DDD19FFB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
