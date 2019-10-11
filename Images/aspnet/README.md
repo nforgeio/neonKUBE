@@ -4,7 +4,7 @@ These images are tagged using the corresponding version from the Microsoft repo 
 
 # Description
 
-cluster base runtime images for Microsoft .NET Core Linux containers.  These images are based off of the corresponding basic **Alpine runtime** images at [microsoft/dotnet](https://hub.docker.com/r/microsoft/dotnet/).  Use the smaller [nkubeio/dotnet](https://hub.docker.com/r/nkubeio/dotnet/) image if you don't need ASP.NET support.
+The repo includes the base runtime images for Microsoft ASP.NET Core Linux containers.  Use the smaller [nkubeio/dotnet](https://hub.docker.com/r/nkubeio/dotnet/) image if you don't need ASP.NET support.
 
 Note that any images that extend this one should launch the [tini](https://github.com/krallin/tini) init manager as the first process within the container so that Linux signals will be forwarded to child processes and so zombie processes will be reaped.  You'll need to specify a Docker entrypoint like:
 
