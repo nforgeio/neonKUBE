@@ -2947,21 +2947,7 @@ namespace Neon.ModelGen
 
             if (bodyParameter != null)
             {
-                if (!nameToDataModel.ContainsKey(bodyParameter.ParameterInfo.ParameterType.FullName))
-                {
-                    if (bodyParameter.ParameterInfo.ParameterType.IsEnum)
-                    {
-                        sbArguments.AppendWithSeparator($"document: NeonHelper.EnumToString({bodyParameter.Name})", argSeparator);
-                    }
-                    else
-                    {
-                        sbArguments.AppendWithSeparator($"document: {bodyParameter.Name}.ToString()", argSeparator);
-                    }
-                }
-                else
-                {
-                    sbArguments.AppendWithSeparator($"document: RoundtripDataHelper.Serialize({bodyParameter.Name})", argSeparator);
-                }
+                sbArguments.AppendWithSeparator($"document: RoundtripDataHelper.Serialize({bodyParameter.Name})", argSeparator);
             }
 
             if (queryParameters.Count() > 0)

@@ -33,7 +33,7 @@ namespace Test.Neon.Workflows
     public interface IHelloWorkflow : IWorkflow
     {
         /// <summary>
-        /// Returns a string like <b>"Hello NAME!"</b> where **NAME**
+        /// Returns a string like <b>"Hello NAME!"</b> where <i>NAME</i>
         /// is the parameter passed.
         /// </summary>
         /// <param name="name">The input name.</param>
