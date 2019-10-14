@@ -1604,10 +1604,12 @@ namespace Neon.ModelGen
                     {
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
-                        writer.WriteLine($"        /// The backing <see cref=\"JObject\"/> used to hold the serialized data.");
-                        writer.WriteLine($"        /// This was made public for advanced unit testing but its use should generally");
-                        writer.WriteLine($"        /// be avoided for other purposes.  Use <see cref=\"ToJObject()\"/> instead.");
+                        writer.WriteLine($"        /// <b>INTERNAL USE ONLY:</b> This is the <see cref=\"JObject\"/> is used to back");
+                        writer.WriteLine($"        /// all serialized round-trip.  This was made public for advanced unit testing but");
+                        writer.WriteLine($"        /// its use should generallybe avoided for other purposes.  Use <see cref=\"ToJObject()\"/>.");
+                        writer.WriteLine($"        /// instead.  \"__O\" is short for \"object\".");
                         writer.WriteLine($"        /// </summary>");
+                        writer.WriteLine($"        [JsonIgnore]");
                         writer.WriteLine($"        public JObject __O {{ get; set; }}");
                     }
                 }
@@ -2221,7 +2223,7 @@ namespace Neon.ModelGen
 
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
-                        writer.WriteLine($"        /// Identifies the persisted type.");
+                        writer.WriteLine($"        /// Identifies the persisted object type.  \"__T\" is short for \"type\".");
                         writer.WriteLine($"        /// </summary>");
                         writer.WriteLine($"        public string __T");
                         writer.WriteLine($"        {{");
