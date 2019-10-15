@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainOptions.cs
+// FILE:	    InternalBadBinaries.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -23,21 +23,20 @@ using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
 
+using Newtonsoft.Json;
+
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Domain configuration options.
+    /// $todojefflill): Don't know what this is.
     /// </summary>
-    public class DomainOptions
+    internal class InternalBadBinaries
     {
         /// <summary>
-        /// The workflow history retention period in days.
+        /// $todojefflill): Don't know what this is.
         /// </summary>
-        public int RetentionDays { get; set; }
-
-        /// <summary>
-        /// Enables metrics for workflows and activities running in the domain.
-        /// </summary>
-        public bool EmitMetrics { get; set; }
+        [JsonProperty(PropertyName = "binaries", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public Dictionary<string, InternalBadBinaryInfo> Binaries { get; set; }
     }
 }

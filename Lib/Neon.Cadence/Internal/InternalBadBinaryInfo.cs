@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    UpdateDomainRequest.cs
+// FILE:	    InternalBadBinaryInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -20,29 +20,41 @@ using System.Collections.Generic;
 using System.ComponentModel;
 
 using Neon.Cadence;
-using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence
+using Newtonsoft.Json;
+
+// $todo(jefflill)
+//
+// Performance could be improved by maintaining output stream and buffer pools
+// rather than allocating these every time.
+
+namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Holds the changes to be made to a Cadence domain.
+    /// $todo(jefflill): Don't know what this is.
     /// </summary>
-    public class UpdateDomainRequest
+    internal class InternalBadBinaryInfo
     {
         /// <summary>
-        /// The domain name.
+        /// $todo(jefflill): Don't know what this is.
         /// </summary>
-        public string Name { get; set; }
+        [JsonProperty(PropertyName = "reason", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(0)]
+        public string Reason { get; set; }
 
         /// <summary>
-        /// The updated basic domain properties.
+        /// $todo(jefflill): Don't know what this is.
         /// </summary>
-        public UpdateDomainInfo DomainInfo { get; set; } = new UpdateDomainInfo();
+        [JsonProperty(PropertyName = "operator", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(0)]
+        public string Operator { get; set; }
 
         /// <summary>
-        /// The updated domain options.
+        /// $todo(jefflill): Don't know what this is.
         /// </summary>
-        public DomainConfiguration Options { get; set; } = new DomainConfiguration();
+        [JsonProperty(PropertyName = "createdTimeNano", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(0)]
+        public long CreatedTimeNano { get; set; }
     }
 }

@@ -50,11 +50,11 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// The domain configuration.
         /// </summary>
-        //public InternalDomainConfiguration Configuratiopn
-        //{
-        //    get => GetJsonProperty<InternalDomainConfiguration>(PropertyNames.Configuration);
-        //    set => SetJsonProperty<InternalDomainConfiguration>(PropertyNames.Configuration, value);
-        //}
+        public InternalDomainConfiguration Configuration
+        {
+            get => GetJsonProperty<InternalDomainConfiguration>(PropertyNames.Configuration);
+            set => SetJsonProperty<InternalDomainConfiguration>(PropertyNames.Configuration, value);
+        }
 
         /// <summary>
         /// $todo(jefflill): Don't know what this is.
@@ -91,6 +91,8 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (DomainListReply)target;
 
+            typedTarget.DomainInfo      = this.DomainInfo;
+            typedTarget.Configuration   = this.Configuration;
             typedTarget.FailoverVersion = this.FailoverVersion;
             typedTarget.IsGlobalDomain  = this.IsGlobalDomain;
         }

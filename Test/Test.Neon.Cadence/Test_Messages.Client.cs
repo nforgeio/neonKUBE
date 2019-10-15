@@ -2041,5 +2041,175 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
             }
         }
+
+        /// <summary>
+        /// Returns an <see cref="InternalDomainInfo"/> instance for testing purposes.
+        /// </summary>
+        /// <returns>The test info.</returns>
+        private InternalDomainInfo GetTestDomainInfo()
+        {
+            var data = new Dictionary<string, byte[]>();
+
+            data.Add("test", new byte[] { 0, 1, 2, 3, 4 });
+
+            return new InternalDomainInfo()
+            {
+                Name         = "my-domain",
+                DomainStatus = DomainStatus.Deprecated,
+                Description  = "Test domain",
+                OwnerEmail   = "jeff@lilltek.com",
+                Data         = data,
+                Uuid         = "1111-2222-3333-4444"
+            };
+        }
+
+        /// <summary>
+        /// Validates an <see cref="InternalDomainInfo"/> instance for testing purposes.
+        /// </summary>
+        /// <param name="info">The domain info.</param>
+        private void ValidateTestDomainInfo(InternalDomainInfo info)
+        {
+            Assert.NotNull(info);
+            Assert.Equal("my-domain", info.Name);
+            Assert.Equal(DomainStatus.Deprecated, info.DomainStatus);
+            Assert.Equal("jeff@lilltek.com", info.OwnerEmail);
+            Assert.Single(info.Data);
+            Assert.Equal("test", info.Data.First().Key);
+            Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, info.Data.First().Value);
+            Assert.Equal("1111-2222-3333-4444", info.Uuid);
+        }
+
+        /// <summary>
+        /// Returns an <see cref="InternalDomainConfiguration"/> for testing purposes.
+        /// </summary>
+        /// <returns></returns>
+        private InternalDomainConfiguration GetTestDomainConfiguration()
+        {
+            var badBinariesMap = new Dictionary<string, InternalBadBinaryInfo>();
+
+            badBinariesMap.Add("bad",
+                new InternalBadBinaryInfo()
+                {
+                    Reason          = "foo",
+                    Operator        = "bar",
+                    CreatedTimeNano = 5000000000L
+                });
+
+            var badBinaries = new InternalBadBinaries()
+            {
+                Binaries = badBinariesMap
+            };
+
+            return new InternalDomainConfiguration()
+            {
+                WorkflowExecutionRetentionPeriodInDays = 30,
+                EmitMetric                             = true,
+                BadBinaries                            = badBinaries,
+                HistoryArchivalStatus                  = ArchivalStatus.Enabled,
+                HistoryArchivalUri                     = "http://history",
+                VisibilityArchivalStatus               = ArchivalStatus.Disabled,
+                VisibilityArchivalUri                  = "http://visibility"
+            };
+        }
+
+        /// <summary>
+        /// Validates a test <see cref="InternalDomainConfiguration"/>.
+        /// </summary>
+        /// <param name="config">The domain config.</param>
+        private void ValidateTestDomainConfiguration(InternalDomainConfiguration config)
+        {
+            Assert.NotNull(config);
+            Assert.Equal(30, config.WorkflowExecutionRetentionPeriodInDays);
+            Assert.True(config.EmitMetric);
+            Assert.NotNull(config.BadBinaries);
+            Assert.Single(config.BadBinaries.Binaries);
+            Assert.Equal("bad", config.BadBinaries.Binaries.First().Key);
+            Assert.Equal("foo", config.BadBinaries.Binaries.First().Value.Reason);
+            Assert.Equal("bar", config.BadBinaries.Binaries.First().Value.Operator);
+            Assert.Equal(5000000000L, config.BadBinaries.Binaries.First().Value.CreatedTimeNano);
+            Assert.Equal(ArchivalStatus.Enabled, config.HistoryArchivalStatus);
+            Assert.Equal("http://history", config.HistoryArchivalUri);
+            Assert.Equal(ArchivalStatus.Disabled, config.VisibilityArchivalStatus);
+            Assert.Equal("http://visibility", config.VisibilityArchivalUri);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_DomainListReply()
+        {
+            DomainListReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new DomainListReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DomainListReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Error);
+                Assert.Null(message.DomainInfo);
+                Assert.Null(message.Configuration);
+                Assert.Equal(0, message.FailoverVersion);
+                Assert.False(message.IsGlobalDomain);
+
+                // Round-trip
+
+                message.ClientId        = 444;
+                message.RequestId       = 555;
+                message.DomainInfo      = GetTestDomainInfo();
+                message.Configuration   = GetTestDomainConfiguration();
+                message.FailoverVersion = 666;
+                message.IsGlobalDomain  = true;
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                ValidateTestDomainInfo(message.DomainInfo);
+                ValidateTestDomainConfiguration(message.Configuration);
+                Assert.Equal(666, message.FailoverVersion);
+                Assert.True(message.IsGlobalDomain);
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DomainListReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                ValidateTestDomainInfo(message.DomainInfo);
+                ValidateTestDomainConfiguration(message.Configuration);
+                Assert.Equal(666, message.FailoverVersion);
+                Assert.True(message.IsGlobalDomain);
+
+                // Clone()
+
+                message = (DomainListReply)message.Clone();
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                ValidateTestDomainInfo(message.DomainInfo);
+                ValidateTestDomainConfiguration(message.Configuration);
+                Assert.Equal(666, message.FailoverVersion);
+                Assert.True(message.IsGlobalDomain);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                ValidateTestDomainInfo(message.DomainInfo);
+                ValidateTestDomainConfiguration(message.Configuration);
+                Assert.Equal(666, message.FailoverVersion);
+                Assert.True(message.IsGlobalDomain);
+            }
+        }
     }
 }

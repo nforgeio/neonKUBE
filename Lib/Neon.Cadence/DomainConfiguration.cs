@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    UpdateDomainRequest.cs
+// FILE:	    DomainConfiguration.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -26,23 +26,27 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Holds the changes to be made to a Cadence domain.
+    /// Domain configuration options.
     /// </summary>
-    public class UpdateDomainRequest
+    public class DomainConfiguration
     {
         /// <summary>
-        /// The domain name.
+        /// The workflow history retention period in days.
         /// </summary>
-        public string Name { get; set; }
+        public int RetentionDays { get; set; }
 
         /// <summary>
-        /// The updated basic domain properties.
+        /// Enables metrics for workflows and activities running in the domain.
         /// </summary>
-        public UpdateDomainInfo DomainInfo { get; set; } = new UpdateDomainInfo();
+        public bool EmitMetrics { get; set; }
 
-        /// <summary>
-        /// The updated domain options.
-        /// </summary>
-        public DomainConfiguration Options { get; set; } = new DomainConfiguration();
+        // $todo(jeff.lill):
+        //
+        // We need to add support for these addition Cadence GOLANG properties:
+        //
+        //      BadBinaries
+        //      ArchivalStatus
+        //      HistoryArchivalUri
+        //      VisibilityArchivalUri
     }
 }

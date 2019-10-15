@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    UpdateDomainRequest.cs
+// FILE:	    ArchivalStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.Serialization;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
@@ -26,23 +27,20 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Holds the changes to be made to a Cadence domain.
+    /// Controls archival.
     /// </summary>
-    public class UpdateDomainRequest
+    public enum ArchivalStatus
     {
         /// <summary>
-        /// The domain name.
+        /// Disables archival.
         /// </summary>
-        public string Name { get; set; }
+        [EnumMember(Value = "DISABLED")]
+        Disabled,
 
         /// <summary>
-        /// The updated basic domain properties.
+        /// Enables archival.
         /// </summary>
-        public UpdateDomainInfo DomainInfo { get; set; } = new UpdateDomainInfo();
-
-        /// <summary>
-        /// The updated domain options.
-        /// </summary>
-        public DomainConfiguration Options { get; set; } = new DomainConfiguration();
+        [EnumMember(Value = "ENABLED")]
+        Enabled
     }
 }

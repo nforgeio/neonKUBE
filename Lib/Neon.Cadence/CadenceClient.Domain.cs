@@ -140,7 +140,7 @@ namespace Neon.Cadence
                     Status      = reply.DomainInfoStatus
                 },
 
-                Configuration = new DomainOptions()
+                Configuration = new DomainConfiguration()
                 {
                     EmitMetrics   = reply.ConfigurationEmitMetrics,
                     RetentionDays = reply.ConfigurationRetentionDays
@@ -178,7 +178,7 @@ namespace Neon.Cadence
                     Status      = reply.DomainInfoStatus
                 },
 
-                Configuration = new DomainOptions()
+                Configuration = new DomainConfiguration()
                 {
                     EmitMetrics   = reply.ConfigurationEmitMetrics,
                     RetentionDays = reply.ConfigurationRetentionDays
