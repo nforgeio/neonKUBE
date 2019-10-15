@@ -1296,7 +1296,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <param name="activityInterface">The activity interface type.</param>
         /// <returns>The activity stub instance.</returns>
-        /// <exception cref="ActivityTypeException">Thrown when there are problems with the <typeparamref name="TActivityInterface"/>.</exception>
+        /// <exception cref="ActivityTypeException">Thrown when there are problems with the <paramref name="activityInterface"/>.</exception>
         public static DynamicActivityStub GetActivityStub(Type activityInterface)
         {
             Covenant.Requires<ArgumentNullException>(activityInterface != null, nameof(activityInterface));

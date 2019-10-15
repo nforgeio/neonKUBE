@@ -1985,5 +1985,61 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
             }
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_DomainListRequest()
+        {
+            DomainListRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new DomainListRequest();
+
+                Assert.Equal(InternalMessageTypes.DomainListReply, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DomainListRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.RequestId);
+
+                // Round-trip
+
+                message.ClientId = 444;
+                message.RequestId = 555;
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DomainListRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+
+                // Clone()
+
+                message = (DomainListRequest)message.Clone();
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+            }
+        }
     }
 }

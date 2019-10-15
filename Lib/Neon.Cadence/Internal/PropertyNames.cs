@@ -47,6 +47,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 ChildId { get; private set; }                                   = new PropertyNameUtf8("ChildId");
         public static PropertyNameUtf8 ClientId { get; private set; }                                  = new PropertyNameUtf8("ClientId");
         public static PropertyNameUtf8 ClientTimeout { get; private set; }                             = new PropertyNameUtf8("ClientTimeout");
+        public static PropertyNameUtf8 Configuration { get; private set; }                             = new PropertyNameUtf8("Configuration");
         public static PropertyNameUtf8 ConfigurationEmitMetrics { get; private set; }                  = new PropertyNameUtf8("ConfigurationEmitMetrics");
         public static PropertyNameUtf8 ConfigurationRetentionDays { get; private set; }                = new PropertyNameUtf8("ConfigurationRetentionDays");
         public static PropertyNameUtf8 ContextId { get; private set; }                                 = new PropertyNameUtf8("ContextId");
@@ -63,6 +64,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 Description { get; private set; }                               = new PropertyNameUtf8("Description");
         public static PropertyNameUtf8 Details { get; private set; }                                   = new PropertyNameUtf8("Details");
         public static PropertyNameUtf8 Domain { get; private set; }                                    = new PropertyNameUtf8("Domain");
+        public static PropertyNameUtf8 DomainInfo { get; private set; }                                = new PropertyNameUtf8("DomainInfo");
         public static PropertyNameUtf8 DomainInfoName { get; private set; }                            = new PropertyNameUtf8("DomainInfoName");
         public static PropertyNameUtf8 DomainInfoOwnerEmail { get; private set; }                      = new PropertyNameUtf8("DomainInfoOwnerEmail");
         public static PropertyNameUtf8 DomainInfoStatus { get; private set; }                          = new PropertyNameUtf8("DomainInfoStatus");
@@ -73,14 +75,16 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 Error { get; private set; }                                     = new PropertyNameUtf8("Error");
         public static PropertyNameUtf8 Execution { get; private set; }                                 = new PropertyNameUtf8("Execution");
         public static PropertyNameUtf8 ExecutionStartToCloseTimeout { get; private set; }              = new PropertyNameUtf8("ExecutionStartToCloseTimeout");
-        public static PropertyNameUtf8 FromCadence { get; private set; }                               = new PropertyNameUtf8("FromCadence");
+        public static PropertyNameUtf8 FailoverVersion { get; private set; }                           = new PropertyNameUtf8("FailoverVersion");
         public static PropertyNameUtf8 ForceReplay { get; private set; }                               = new PropertyNameUtf8("ForceReplay");
+        public static PropertyNameUtf8 FromCadence { get; private set; }                               = new PropertyNameUtf8("FromCadence");
         public static PropertyNameUtf8 FutureOperationId { get; private set; }                         = new PropertyNameUtf8("FutureOperationId");
         public static PropertyNameUtf8 HasDetails { get; private set; }                                = new PropertyNameUtf8("HasDetails");
         public static PropertyNameUtf8 HasResult { get; private set; }                                 = new PropertyNameUtf8("HasResult");
         public static PropertyNameUtf8 Identity { get; private set; }                                  = new PropertyNameUtf8("Identity");
         public static PropertyNameUtf8 Info { get; private set; }                                      = new PropertyNameUtf8("Info");
         public static PropertyNameUtf8 IsCancellable { get; private set; }                             = new PropertyNameUtf8("IsCancellable");
+        public static PropertyNameUtf8 IsGlobalDomain { get; private set; }                            = new PropertyNameUtf8("IsGlobalDomain");
         public static PropertyNameUtf8 IsWorkflow { get; private set; }                                = new PropertyNameUtf8("IsWorkflow");
         public static PropertyNameUtf8 LibraryAddress { get; private set; }                            = new PropertyNameUtf8("LibraryAddress");
         public static PropertyNameUtf8 LibraryPort { get; private set; }                               = new PropertyNameUtf8("LibraryPort");

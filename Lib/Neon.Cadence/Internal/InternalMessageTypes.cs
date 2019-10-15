@@ -187,9 +187,19 @@ namespace Neon.Cadence.Internal
         LogRequest = 27,
 
         /// <summary>
-        ///  <b>client --> proxy:</b> Sent in response to a <see cref="LogRequest"/> message.
+        /// <b>client --> proxy:</b> Sent in response to a <see cref="LogRequest"/> message.
         /// </summary>
         LogReply = 28,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Sent to list the Cadence domains.
+        /// </summary>
+        DomainListRequest = 29,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="DomainListRequest"/> message.
+        /// </summary>
+        DomainListReply = 30,
 
         //---------------------------------------------------------------------
         // Workflow messages

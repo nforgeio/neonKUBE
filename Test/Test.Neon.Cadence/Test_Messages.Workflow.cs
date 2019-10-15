@@ -1542,7 +1542,7 @@ namespace TestCadence
                     TaskList                       = new InternalTaskList() { Name = "my-tasklist", TaskListKind = (InternalTaskListKind)TaskListKind.Sticky },
                     ExecutionStartToCloseTimeout   = 1000,
                     TaskStartToCloseTimeoutSeconds = 2000,
-                    ChildPolicy                    = InternalChildPolicy.REQUEST_CANCEL
+                    ChildPolicy                    = InternaChildClosePolicy.REQUEST_CANCEL
                 },
 
                 WorkflowExecutionInfo = new InternalWorkflowExecutionInfo()
@@ -1576,12 +1576,24 @@ namespace TestCadence
                         ActivityType           = new InternalActivityType() { Name = "my-activity" },
                         Attempt                = 10000,
                         ExpirationTimestamp    = 11000,
-                        HeartbeatDetails       = new byte[] { 0,1,2,3,4 },
+                        HeartbeatDetails       = new byte[] { 0, 1, 2, 3, 4 },
                         LastHeartbeatTimestamp = 12000,
                         LastStartedTimestamp   = 13000,
                         MaximumAttempts        = 14000,
                         ScheduledTimestamp     = 15000,
                         State                  = InternalPendingActivityState.STARTED
+                    }
+                },
+
+                PendingChildren = new List<InternalPendingChildExecutionInfo>()
+                {
+                    new InternalPendingChildExecutionInfo()
+                    {
+                        WorkflowId        = "my-workflowid",
+                        RunId             = "my-runid",
+                        WorkflowTypeName  = "my-workflow-typename",
+                        InitiatedId       = 16000,
+                        ParentClosePolicy = (int)ParentClosePolicy.RequestCancel
                     }
                 }
             };
@@ -1600,6 +1612,8 @@ namespace TestCadence
 
             Assert.NotNull(details);
 
+            //---------------------------------------------
+
             var config = details.ExecutionConfiguration;
 
             Assert.NotNull(config);
@@ -1608,6 +1622,8 @@ namespace TestCadence
             Assert.Equal(expected.ExecutionConfiguration.ExecutionStartToCloseTimeout, config.ExecutionStartToCloseTimeout);
             Assert.Equal(expected.ExecutionConfiguration.TaskStartToCloseTimeoutSeconds, config.TaskStartToCloseTimeoutSeconds);
             Assert.Equal(expected.ExecutionConfiguration.ChildPolicy, config.ChildPolicy);
+
+            //---------------------------------------------
 
             var info = details.WorkflowExecutionInfo;
 
@@ -1629,6 +1645,39 @@ namespace TestCadence
 
             Assert.Equal(expected.WorkflowExecutionInfo.ExecutionTime, info.ExecutionTime);
 
+            //---------------------------------------------
+
+            Assert.NotNull(details.PendingActivities);
+            Assert.Single(details.PendingActivities);
+
+            var pendingActivity = details.PendingActivities.First();
+
+            Assert.Equal("my-activityid", pendingActivity.ActivityID);
+            Assert.Equal("my-activity", pendingActivity.ActivityType.Name);
+            Assert.Equal(10000, pendingActivity.Attempt);
+            Assert.Equal(11000, pendingActivity.ExpirationTimestamp);
+            Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, pendingActivity.HeartbeatDetails);
+            Assert.Equal(12000, pendingActivity.LastHeartbeatTimestamp);
+            Assert.Equal(13000, pendingActivity.LastStartedTimestamp);
+            Assert.Equal(14000, pendingActivity.MaximumAttempts);
+            Assert.Equal(15000, pendingActivity.ScheduledTimestamp);
+            Assert.Equal(InternalPendingActivityState.STARTED, pendingActivity.State);
+
+            //---------------------------------------------
+
+            Assert.NotNull(details.PendingChildren);
+            Assert.Single(details.PendingChildren);
+
+            var pendingChild = details.PendingChildren.First();
+
+            Assert.Equal("my-workflowid", pendingChild.WorkflowId);
+            Assert.Equal("my-runid", pendingChild.RunId);
+            Assert.Equal("my-workflow-typename", pendingChild.WorkflowTypeName);
+            Assert.Equal(16000, pendingChild.InitiatedId);
+            Assert.Equal((int)ParentClosePolicy.RequestCancel, pendingChild.ParentClosePolicy);
+
+            //---------------------------------------------
+
             Assert.NotNull(info.Memo);
             Assert.NotNull(info.Memo.Fields);
             Assert.Equal(expected.WorkflowExecutionInfo.Memo.Fields.Count, info.Memo.Fields.Count);
@@ -1641,7 +1690,6 @@ namespace TestCadence
                 Assert.Equal(refField.Key, field.Key);
                 Assert.Equal(refField.Value, field.Value);
             }
-
         }
 
         [Fact]
@@ -2719,7 +2767,7 @@ namespace TestCadence
         {
             Assert.Equal(expected.TaskList, actual.TaskList);
             Assert.Equal(expected.Domain, actual.Domain);
-            Assert.Equal(expected.ChildPolicy, actual.ChildPolicy);
+            Assert.Equal(expected.ChildClosePolicy, actual.ChildClosePolicy);
             Assert.Equal(expected.CronSchedule, actual.CronSchedule);
             Assert.Equal(expected.WorkflowID, actual.WorkflowID);
             Assert.Equal(expected.WaitForCancellation, actual.WaitForCancellation);
@@ -2762,7 +2810,7 @@ namespace TestCadence
                 {
                     TaskList                     = "my-tasklist",
                     Domain                       = "my-domain",
-                    ChildPolicy                  = (int)InternalChildPolicy.REQUEST_CANCEL,
+                    ChildClosePolicy             = (int)InternaChildClosePolicy.REQUEST_CANCEL,
                     CronSchedule                 = "* 12 * * *",
                     WorkflowID                   = "my-workflow",
                     WaitForCancellation          = true,

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    InternalChildPolicy.cs
+// FILE:	    ParentClosePolicy.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -23,15 +23,15 @@ using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Enumerates the possible child workflow behaviors 
-    /// when the parent workflow is terminated.
+    /// Enumerates the possible child workflow behaviors when the parent
+    /// workflow is terminated.
     /// </summary>
-    public enum InternalChildPolicy
+    public enum ParentClosePolicy
     {
-        // WARNING: These definitions must match those defined for [ChildPolicy].
+        // WARNING: These definitions must match those defined for [InternalChildClosePolicy].
 
         /// <summary>
         /// <para>
@@ -41,7 +41,7 @@ namespace Neon.Cadence.Internal
         /// This policy is not implemented.
         /// </note>
         /// </summary>
-        TERMINATE = 0,
+        Terminate = 0,
 
         /// <summary>
         /// <para>
@@ -52,12 +52,12 @@ namespace Neon.Cadence.Internal
         /// This policy is not implemented.
         /// </note>
         /// </summary>
-        REQUEST_CANCEL = 1,
+        RequestCancel = 1,
 
         /// <summary>
         /// Child workflow execution will continue unaffected when parent workflow is
         /// terminated.  This is the default policy.
         /// </summary>
-        ABANDON = 2
+        Abandon = 2
     }
 }

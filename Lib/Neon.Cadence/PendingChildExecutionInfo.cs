@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowConfig.cs
+// FILE:	    PendingChildExecutionInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -20,39 +20,44 @@ using System.Collections.Generic;
 using System.ComponentModel;
 
 using Neon.Cadence;
-using Neon.Cadence.Internal;
 using Neon.Common;
 
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Describes a workflow's configuration.
+    /// Decribes the current state of a pending; child workflow.
     /// </summary>
-    public class WorkflowConfig
+    public class PendingChildExecutionInfo
     {
         /// <summary>
-        /// Identifies the task list where the workflow was scheduled.
+        /// Internal constructor.
         /// </summary>
-        public string TaskList { get; internal set; }
+        internal PendingChildExecutionInfo()
+        {
+        }
 
         /// <summary>
-        /// 
+        /// Returns the workflow ID.
         /// </summary>
-        public TaskListKind TaskListKind { get; internal set; }
+        public string WorkflowId { get; internal set; }
 
         /// <summary>
-        /// Maximum time the entire workflow may take to complete end-to-end.
+        /// Returns the workflow run ID.
         /// </summary>
-        public TimeSpan ExecutionStartToCloseTimeout { get; internal set; }
+        public string RunId { get; internal set; }
 
         /// <summary>
-        /// Maximum time a workflow task/decision may take to complete.
+        /// Returns the workflow type name.
         /// </summary>
-        public TimeSpan TaskStartToCloseTimeoutSeconds { get; internal set; }
+        public string WorkflowTypeName { get; internal set; }
 
         /// <summary>
-        /// The termination policy to apply to the child workflow when
-        /// the parent workflow is terminated.
+        /// $todo(jefflill): Don't know what this is.
+        /// </summary>
+        public long InitatedId { get; internal set; }
+
+        /// <summary>
+        /// Returns policy used to close this child when its parent is closed.
         /// </summary>
         public ParentClosePolicy ParentClosePolicy { get; internal set; }
     }

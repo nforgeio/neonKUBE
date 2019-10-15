@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowDescription.cs
+// FILE:	    DomainListRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -20,34 +20,41 @@ using System.Collections.Generic;
 using System.ComponentModel;
 
 using Neon.Cadence;
-using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Describes a workflow execution.
+    /// <b>client --> proxy:</b> Requests a list of the Cadence domains.
     /// </summary>
-    public class WorkflowDescription
+    [InternalProxyMessage(InternalMessageTypes.DomainListRequest)]
+    internal class DomainListRequest : ProxyRequest
     {
         /// <summary>
-        /// Describes the workflow's configuration.
+        /// Default constructor.
         /// </summary>
-        public WorkflowConfig Configuration { get; internal set; }
+        public DomainListRequest()
+        {
+            Type = InternalMessageTypes.DomainListRequest;
+        }
 
-        /// <summary>
-        /// Describes the workflow's execution status.
-        /// </summary>
-        public WorkflowState Execution { get; internal set; }
+        /// <inheritdoc/>
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.DomainListReply;
 
-        /// <summary>
-        /// Describes the workflow's scheduled and executing activities.
-        /// </summary>
-        public List<PendingActivityInfo> PendingActivities { get; internal set; }
+        /// <inheritdoc/>
+        internal override ProxyMessage Clone()
+        {
+            var clone = new DomainListRequest();
 
-        /// <summary>
-        /// Describes the workflow's scheduled and executing child workflows.
-        /// </summary>
-        public List<PendingChildExecutionInfo> PendingChildren { get; internal set; }
+            CopyTo(clone);
+
+            return clone;
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(ProxyMessage target)
+        {
+            base.CopyTo(target);
+        }
     }
 }
