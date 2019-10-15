@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowConfig.cs
+// FILE:	    TaskListType.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,6 +18,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.Serialization;
+
+using Newtonsoft.Json;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
@@ -26,34 +29,20 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Describes a workflow's configuration.
+    /// Used to distinguish between decisioon (AKA workflow) and activity task lists.
     /// </summary>
-    public class WorkflowConfig
+    public enum TaskListType
     {
         /// <summary>
-        /// Identifies the task list where the workflow was scheduled.
+        /// Identifies decision (AKA workflow) task lists.
         /// </summary>
-        public string TaskList { get; internal set; }
+        [EnumMember(Value = "Decision")]
+        Decision,
 
         /// <summary>
-        /// 
+        /// Identifies activity task lists.
         /// </summary>
-        public TaskListType TaskListKind { get; internal set; }
-
-        /// <summary>
-        /// Maximum time the entire workflow may take to complete end-to-end.
-        /// </summary>
-        public TimeSpan ExecutionStartToCloseTimeout { get; internal set; }
-
-        /// <summary>
-        /// Maximum time a workflow task/decision may take to complete.
-        /// </summary>
-        public TimeSpan TaskStartToCloseTimeoutSeconds { get; internal set; }
-
-        /// <summary>
-        /// The termination policy to apply to the child workflow when
-        /// the parent workflow is terminated.
-        /// </summary>
-        public ParentClosePolicy ParentClosePolicy { get; internal set; }
+        [EnumMember(Value = "Activity")]
+        Activity
     }
 }

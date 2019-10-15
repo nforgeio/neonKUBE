@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowConfig.cs
+// FILE:	    TaskListKind.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -26,34 +26,21 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Describes a workflow's configuration.
+    /// Enumerates the different kinds of task lists.
     /// </summary>
-    public class WorkflowConfig
+    public enum TaskListKind
+
     {
-        /// <summary>
-        /// Identifies the task list where the workflow was scheduled.
-        /// </summary>
-        public string TaskList { get; internal set; }
+        // WARNING: These values must match those defined by [InternalTaskListKind].
 
         /// <summary>
-        /// 
+        /// Normal.
         /// </summary>
-        public TaskListType TaskListKind { get; internal set; }
+        Normal = 0,
 
         /// <summary>
-        /// Maximum time the entire workflow may take to complete end-to-end.
+        /// Sticky.
         /// </summary>
-        public TimeSpan ExecutionStartToCloseTimeout { get; internal set; }
-
-        /// <summary>
-        /// Maximum time a workflow task/decision may take to complete.
-        /// </summary>
-        public TimeSpan TaskStartToCloseTimeoutSeconds { get; internal set; }
-
-        /// <summary>
-        /// The termination policy to apply to the child workflow when
-        /// the parent workflow is terminated.
-        /// </summary>
-        public ParentClosePolicy ParentClosePolicy { get; internal set; }
+        Sticky = 1
     }
 }

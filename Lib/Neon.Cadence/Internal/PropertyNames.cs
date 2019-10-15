@@ -93,9 +93,11 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 MinSupported { get; private set; }                              = new PropertyNameUtf8("MinSupported");
         public static PropertyNameUtf8 MaxSupported { get; private set; }                              = new PropertyNameUtf8("MaxSupported");
         public static PropertyNameUtf8 MutableId { get; private set; }                                 = new PropertyNameUtf8("MutableId");
+        public static PropertyNameUtf8 NextPageToken { get; private set; }                             = new PropertyNameUtf8("NextPageToken");
         public static PropertyNameUtf8 Name { get; private set; }                                      = new PropertyNameUtf8("Name");
         public static PropertyNameUtf8 Options { get; private set; }                                   = new PropertyNameUtf8("Options");
         public static PropertyNameUtf8 OwnerEmail { get; private set; }                                = new PropertyNameUtf8("OwnerEmail");
+        public static PropertyNameUtf8 PageSize { get; private set; }                                  = new PropertyNameUtf8("PageSize");
         public static PropertyNameUtf8 Pending { get; private set; }                                   = new PropertyNameUtf8("Pending");
         public static PropertyNameUtf8 QueryArgs { get; private set; }                                 = new PropertyNameUtf8("QueryArgs");
         public static PropertyNameUtf8 QueryName { get; private set; }                                 = new PropertyNameUtf8("QueryName");
@@ -114,6 +116,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 Size { get; private set; }                                      = new PropertyNameUtf8("Size");
         public static PropertyNameUtf8 TargetRequestId { get; private set; }                           = new PropertyNameUtf8("TargetRequestId");
         public static PropertyNameUtf8 TaskList { get; private set; }                                  = new PropertyNameUtf8("TaskList");
+        public static PropertyNameUtf8 TaskListType { get; private set; }                              = new PropertyNameUtf8("TaskListType");
         public static PropertyNameUtf8 TaskToken { get; private set; }                                 = new PropertyNameUtf8("TaskToken");
         public static PropertyNameUtf8 Time { get; private set; }                                      = new PropertyNameUtf8("Time");
         public static PropertyNameUtf8 Update { get; private set; }                                    = new PropertyNameUtf8("Update");

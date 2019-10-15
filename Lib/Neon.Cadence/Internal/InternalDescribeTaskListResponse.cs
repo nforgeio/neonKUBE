@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainConfiguration.cs
+// FILE:	    InternalDescribeTaskListResponse.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -19,34 +19,24 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
+using Newtonsoft.Json;
+
 using Neon.Cadence;
-using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Domain configuration options.
+    /// <b>INTERNAL USE ONLY:</b> Cadence task list details.
     /// </summary>
-    public class DomainConfiguration
+    internal class InternalDescribeTaskListResponse
     {
         /// <summary>
-        /// The workflow history retention period in days.
+        /// Lists the pollers that have communicated with the Cadence cluster over
+        /// the past few minutes.
         /// </summary>
-        public int RetentionDays { get; set; }
-
-        /// <summary>
-        /// Enables metrics for workflows and activities running in the domain.
-        /// </summary>
-        public bool EmitMetrics { get; set; }
-
-        // $todo(jefflill):
-        //
-        // We need to add support for these addition Cadence GOLANG properties:
-        //
-        //      BadBinaries
-        //      ArchivalStatus
-        //      HistoryArchivalUri
-        //      VisibilityArchivalUri
+        [JsonProperty(PropertyName = "pollers", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public InternalPollerInfo[] Pollers { get; set; }
     }
 }

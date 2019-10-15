@@ -201,6 +201,16 @@ namespace Neon.Cadence.Internal
         /// </summary>
         DomainListReply = 30,
 
+        /// <summary>
+        /// <b>client --> proxy:</b> Sent to obtain details for a task list.
+        /// </summary>
+        DescribeTaskListRequest = 31,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="DescribeTaskListRequest"/> message.
+        /// </summary>
+        DescribeTaskListReply = 32,
+
         //---------------------------------------------------------------------
         // Workflow messages
         //
@@ -320,14 +330,14 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// <b>RESERVED:</b> This is not currently implemented.
         /// </summary>
-        [Obsolete("RESERVED but not implemented.")]
-        WorkflowDescribeTaskListRequest = 122,
+        [Obsolete("RESERVED")]
+        Reserved0 = 122,
 
         /// <summary>
         /// <b>RESERVED:</b> This is not currently implemented.
         /// </summary>
-        [Obsolete("RESERVED but not implemented.")]
-        WorkflowDescribeTaskListReply = 123,
+        [Obsolete("RESERVED")]
+        Reserved1 = 123,
 
         /// <summary>
         /// <b>proxy --> client:</b> Commands the client client and associated .NET application

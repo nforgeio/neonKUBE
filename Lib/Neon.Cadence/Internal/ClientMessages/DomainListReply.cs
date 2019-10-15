@@ -25,7 +25,7 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="DisconnectRequest"/>.
+    /// <b>proxy --> client:</b> Answers a <see cref="DomainListRequest"/>.
     /// </summary>
     [InternalProxyMessage(InternalMessageTypes.DomainListReply)]
     internal class DomainListReply : ProxyReply
@@ -74,6 +74,17 @@ namespace Neon.Cadence.Internal
             set => SetBoolProperty(PropertyNames.IsGlobalDomain, value);
         }
 
+        /// <summary>
+        /// Returns an opaque token that can be used in a subsequent <see cref="DomainListRequest"/>
+        /// to obtain the next page of results.  This will be <c>null</c> when there are no
+        /// remaining results.  This should be considered to be an opaque value.
+        /// </summary>
+        public byte[] NextPageToken
+        {
+            get => GetBytesProperty(PropertyNames.NextPageToken);
+            set => SetBytesProperty(PropertyNames.NextPageToken, value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -95,6 +106,7 @@ namespace Neon.Cadence.Internal
             typedTarget.Configuration   = this.Configuration;
             typedTarget.FailoverVersion = this.FailoverVersion;
             typedTarget.IsGlobalDomain  = this.IsGlobalDomain;
+            typedTarget.NextPageToken   = this.NextPageToken;
         }
     }
 }

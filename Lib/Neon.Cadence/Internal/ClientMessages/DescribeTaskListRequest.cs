@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainListRequest.cs
+// FILE:	    DescribeTaskListRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -27,45 +27,42 @@ namespace Neon.Cadence.Internal
     /// <summary>
     /// <b>client --> proxy:</b> Requests a list of the Cadence domains.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.DomainListRequest)]
-    internal class DomainListRequest : ProxyRequest
+    [InternalProxyMessage(InternalMessageTypes.DescribeTaskListRequest)]
+    internal class DescribeTaskListRequest : ProxyRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public DomainListRequest()
+        public DescribeTaskListRequest()
         {
-            Type = InternalMessageTypes.DomainListRequest;
+            Type = InternalMessageTypes.DescribeTaskListRequest;
         }
 
         /// <inheritdoc/>
-        public override InternalMessageTypes ReplyType => InternalMessageTypes.DomainListReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.DescribeTaskListReply;
 
         /// <summary>
-        /// Specifies the maximum number of items to be returned in the reponse.
+        /// Identifies the task list.
         /// </summary>
-        public int PageSize
+        public string Name
         {
-            get => GetIntProperty(PropertyNames.PageSize);
-            set => SetIntProperty(PropertyNames.PageSize, value);
+            get => GetStringProperty(PropertyNames.Name);
+            set => SetStringProperty(PropertyNames.Name, value);
         }
-        
+
         /// <summary>
-        /// Optionally specifies the next page of results.  This will be <c>null</c>
-        /// for the first page of results and can be set to the the value returned
-        /// as <see cref="DomainListReply.NextPageToken"/> to retrieve the next page
-        /// of results.  This should be considered to be an opaque value.
+        /// Identifies the type of task list being requested: decision (AKA workflow) or activity.
         /// </summary>
-        public byte[] NextPageToken
+        public TaskListType TaskListType
         {
-            get => GetBytesProperty(PropertyNames.NextPageToken);
-            set => SetBytesProperty(PropertyNames.NextPageToken, value);
+            get => GetEnumProperty<TaskListType>(PropertyNames.TaskListType);
+            set => SetEnumProperty<TaskListType>(PropertyNames.TaskListType, value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new DomainListRequest();
+            var clone = new DescribeTaskListRequest();
 
             CopyTo(clone);
 
@@ -77,10 +74,10 @@ namespace Neon.Cadence.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (DomainListRequest)target;
+            var typedTarget = (DescribeTaskListRequest)target;
 
-            typedTarget.PageSize      = this.PageSize;
-            typedTarget.NextPageToken = this.NextPageToken;
+            typedTarget.Name         = this.Name;
+            typedTarget.TaskListType = this.TaskListType;
         }
     }
 }

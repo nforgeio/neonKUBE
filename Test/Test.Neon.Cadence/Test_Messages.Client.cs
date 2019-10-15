@@ -2008,14 +2008,20 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
+                Assert.Equal(0, message.PageSize);
+                Assert.Null(message.NextPageToken);
 
                 // Round-trip
 
                 message.ClientId = 444;
                 message.RequestId = 555;
+                message.PageSize = 666;
+                message.NextPageToken = new byte[] { 5, 6, 7, 8, 9 };
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.PageSize);
+                Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.NextPageToken);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -2025,6 +2031,8 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.PageSize);
+                Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.NextPageToken);
 
                 // Clone()
 
@@ -2032,6 +2040,8 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.PageSize);
+                Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.NextPageToken);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -2039,6 +2049,8 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.PageSize);
+                Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.NextPageToken);
             }
         }
 
@@ -2158,6 +2170,7 @@ namespace TestCadence
                 Assert.Null(message.Configuration);
                 Assert.Equal(0, message.FailoverVersion);
                 Assert.False(message.IsGlobalDomain);
+                Assert.Null(message.NextPageToken);
 
                 // Round-trip
 
@@ -2167,6 +2180,7 @@ namespace TestCadence
                 message.Configuration   = GetTestDomainConfiguration();
                 message.FailoverVersion = 666;
                 message.IsGlobalDomain  = true;
+                message.NextPageToken   = new byte[] { 5, 6, 7, 8, 9 };
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -2174,6 +2188,7 @@ namespace TestCadence
                 ValidateTestDomainConfiguration(message.Configuration);
                 Assert.Equal(666, message.FailoverVersion);
                 Assert.True(message.IsGlobalDomain);
+                Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -2187,6 +2202,7 @@ namespace TestCadence
                 ValidateTestDomainConfiguration(message.Configuration);
                 Assert.Equal(666, message.FailoverVersion);
                 Assert.True(message.IsGlobalDomain);
+                Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
 
                 // Clone()
 
@@ -2198,6 +2214,7 @@ namespace TestCadence
                 ValidateTestDomainConfiguration(message.Configuration);
                 Assert.Equal(666, message.FailoverVersion);
                 Assert.True(message.IsGlobalDomain);
+                Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -2209,6 +2226,164 @@ namespace TestCadence
                 ValidateTestDomainConfiguration(message.Configuration);
                 Assert.Equal(666, message.FailoverVersion);
                 Assert.True(message.IsGlobalDomain);
+                Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_DescribeTaskListRequest()
+        {
+            DescribeTaskListRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new DescribeTaskListRequest();
+
+                Assert.Equal(InternalMessageTypes.DescribeTaskListReply, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DescribeTaskListRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Name);
+                Assert.Equal(default, message.TaskListType);
+
+                // Round-trip
+
+                message.ClientId     = 444;
+                message.RequestId    = 555;
+                message.Name         = "my-tasklist";
+                message.TaskListType = TaskListType.Activity;
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-tasklist", message.Name);
+                Assert.Equal(TaskListType.Activity, message.TaskListType);
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DescribeTaskListRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-tasklist", message.Name);
+                Assert.Equal(TaskListType.Activity, message.TaskListType);
+
+                // Clone()
+
+                message = (DescribeTaskListRequest)message.Clone();
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-tasklist", message.Name);
+                Assert.Equal(TaskListType.Activity, message.TaskListType);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-tasklist", message.Name);
+                Assert.Equal(TaskListType.Activity, message.TaskListType);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_DescribeTaskListReply()
+        {
+            DescribeTaskListReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new DescribeTaskListReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DescribeTaskListReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Error);
+                Assert.Null(message.Result);
+
+                // Round-trip
+
+                message.ClientId  = 444;
+                message.RequestId = 555;
+                message.Result =
+                    new InternalDescribeTaskListResponse()
+                    {
+                        Pollers = new InternalPollerInfo[]
+                        {
+                             new InternalPollerInfo()
+                             {
+                                 Identity       = "my-poller",
+                                 LastAccessTime = 5000000000L,
+                                 RatePerSecond  = 666
+                             }
+                        }
+                    };
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.NotNull(message.Result);
+                Assert.Single(message.Result.Pollers);
+                Assert.Equal("my-poller", message.Result.Pollers.First().Identity);
+                Assert.Equal(5000000000L, message.Result.Pollers.First().LastAccessTime);
+                Assert.Equal(666, message.Result.Pollers.First().RatePerSecond);
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DescribeTaskListReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.NotNull(message.Result);
+                Assert.Single(message.Result.Pollers);
+                Assert.Equal("my-poller", message.Result.Pollers.First().Identity);
+                Assert.Equal(5000000000L, message.Result.Pollers.First().LastAccessTime);
+                Assert.Equal(666, message.Result.Pollers.First().RatePerSecond);
+
+                // Clone()
+
+                message = (DescribeTaskListReply)message.Clone();
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.NotNull(message.Result);
+                Assert.Single(message.Result.Pollers);
+                Assert.Equal("my-poller", message.Result.Pollers.First().Identity);
+                Assert.Equal(5000000000L, message.Result.Pollers.First().LastAccessTime);
+                Assert.Equal(666, message.Result.Pollers.First().RatePerSecond);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.NotNull(message.Result);
+                Assert.Single(message.Result.Pollers);
+                Assert.Equal("my-poller", message.Result.Pollers.First().Identity);
+                Assert.Equal(5000000000L, message.Result.Pollers.First().LastAccessTime);
+                Assert.Equal(666, message.Result.Pollers.First().RatePerSecond);
             }
         }
     }

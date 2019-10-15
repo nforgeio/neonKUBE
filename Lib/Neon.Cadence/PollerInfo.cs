@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TaskListKind.cs
+// FILE:	    PollerInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,28 +18,30 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-
+using System.Diagnostics.Contracts;
 using Neon.Cadence;
-using Neon.Cadence.Internal;
 using Neon.Common;
 
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Enumerates the different kinds of task lists.
+    /// Describes the status of a poller (AKA worker) listening to a task list.
     /// </summary>
-    public enum TaskListKind
+    public class PollerInfo
     {
-        // WARNING: These values must match those defined by [InternalTaskListKind].
+        /// <summary>
+        /// The last time the poller accessed Cadence (UTC).
+        /// </summary>
+        public DateTime LastAccessTime { get; set; }
 
         /// <summary>
-        /// Normal.
+        /// Identifies the poller.
         /// </summary>
-        Normal = 0,
+        public string Identity { get; set; }
 
         /// <summary>
-        /// Sticky.
+        /// Operations per second from the poller.
         /// </summary>
-        Sticky = 1
+        public double RatePerSecond { get; set; }
     }
 }
