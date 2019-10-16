@@ -215,5 +215,53 @@ namespace Neon.Cadence
 
             reply.ThrowOnError();
         }
+
+        /// <summary>
+        /// Lists the Cadence domains.
+        /// </summary>
+        /// <param name="pageSize">
+        /// The maximum number of domains to be returned.  This must be
+        /// greater than or equal to one.
+        /// </param>
+        /// <param name="nextPageToken">
+        /// Optionally specifies an opaque token that can be used to retrieve subsequent
+        /// pages of domains.
+        /// </param>
+        /// <returns>A <see cref="DomainListPage"/> with the domains.</returns>
+        /// <remarks>
+        /// This method can be used to retrieve one or more pages of domain
+        /// results.  You'll pass <paramref name="pageSize"/> as the maximum number
+        /// of domains to be returned per page.  The <see cref="DomainListPage"/>
+        /// returned will list the domains and if there are more domains waiting
+        /// to be returned, will return token that can be used in a subsequent
+        /// call to retrieve the next page pf results.
+        /// </remarks>
+        public async Task<DomainListPage> ListDomainsAsync(int pageSize, byte[] nextPageToken = null)
+        {
+            Covenant.Requires<ArgumentException>(pageSize >= 1, nameof(pageSize));
+            EnsureNotDisposed();
+
+            var reply = (DomainListReply)await CallProxyAsync(
+                new DomainListRequest()
+                {
+                     PageSize      = pageSize,
+                     NextPageToken = nextPageToken
+                });
+
+            reply.ThrowOnError();
+
+            var domains = new List<DomainDescription>(reply.Domains.Count);
+
+            foreach (var domain in reply.Domains)
+            {
+                domains.Add(domain.ToPublic());
+            }
+
+            return new DomainListPage()
+            { 
+                Domains       = domains,
+                NextPageToken = reply.NextPageToken
+            };
+        }
     }
 }

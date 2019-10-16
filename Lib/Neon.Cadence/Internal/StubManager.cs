@@ -185,7 +185,7 @@ namespace Neon.Cadence.Internal
             private static MethodInfo       getWorkflowResultAsync;                 // from: CadenceClient
             private static MethodInfo       startChildWorkflowAsync;                // from: CadenceClient
             private static MethodInfo       getChildWorkflowResultAsync;            // from: CadenceClient
-            private static MethodInfo       getWorkflowDescriptionAsync;            // from: CadenceClient
+            private static MethodInfo       describeWorkflowAsync;                  // from: CadenceClient
             private static MethodInfo       cancelWorkflowAsync;                    // from: CadenceClient
             private static MethodInfo       terminateWorkflowAsync;                 // from: CadenceClient
             private static MethodInfo       signalWorkflowAsync;                    // from: CadenceClient
@@ -212,7 +212,7 @@ namespace Neon.Cadence.Internal
                 getWorkflowResultAsync                = NeonHelper.GetMethod(clientType, ""GetWorkflowResultAsync"", typeof(WorkflowExecution), typeof(string));
                 startChildWorkflowAsync               = NeonHelper.GetMethod(clientType, ""StartChildWorkflowAsync"", typeof(Workflow), typeof(string), typeof(byte[]), typeof(ChildWorkflowOptions));
                 getChildWorkflowResultAsync           = NeonHelper.GetMethod(clientType, ""GetChildWorkflowResultAsync"", typeof(Workflow), typeof(ChildExecution));
-                getWorkflowDescriptionAsync           = NeonHelper.GetMethod(clientType, ""GetWorkflowDescriptionAsync"", typeof(WorkflowExecution), typeof(string));
+                describeWorkflowAsync                 = NeonHelper.GetMethod(clientType, ""DescribeWorkflowAsync"", typeof(WorkflowExecution), typeof(string));
                 cancelWorkflowAsync                   = NeonHelper.GetMethod(clientType, ""CancelWorkflowAsync"", typeof(WorkflowExecution), typeof(string));
                 terminateWorkflowAsync                = NeonHelper.GetMethod(clientType, ""TerminateWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
                 signalWorkflowAsync                   = NeonHelper.GetMethod(clientType, ""SignalWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
@@ -256,9 +256,9 @@ namespace Neon.Cadence.Internal
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task<WorkflowDescription> GetWorkflowDescriptionAsync(CadenceClient client, WorkflowExecution execution, string domain)
+            public static async Task<WorkflowDescription> DescribeWorkflowAsync(CadenceClient client, WorkflowExecution execution, string domain)
             {
-                return await (Task<WorkflowDescription>)getWorkflowDescriptionAsync.Invoke(client, new object[] { execution, domain });
+                return await (Task<WorkflowDescription>)describeWorkflowAsync.Invoke(client, new object[] { execution, domain });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]

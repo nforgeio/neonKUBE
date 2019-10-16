@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainDescription.cs
+// FILE:	    DomainListPage.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -26,23 +26,21 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Information returned by <see cref="CadenceClient.DescribeDomainAsync(string)"/>.
+    /// Holds a page of domain information listed from Cadence.
     /// </summary>
-    public class DomainDescription
+    public class DomainListPage
     {
         /// <summary>
-        /// The domain information.
+        /// Lists the domain information.
         /// </summary>
-        public DomainInfo DomainInfo { get; set; }
+        public List<DomainDescription> Domains { get; set; }
 
         /// <summary>
-        /// The domain configuration.
+        /// Indicates that there's at least one more page of domain information
+        /// to be returned from Cadence when this is not <c>null</c>.  Otherwise,
+        /// this is an opaque token that may be passed to <see cref="CadenceClient.ListDomainsAsync(int, byte[])"/>
+        /// to retrieve the next page of domain information.
         /// </summary>
-        public DomainConfiguration Configuration { get; set; }
-
-        /// <summary>
-        /// Indicates whether the domain is global.
-        /// </summary>
-        public bool IsGlobalDomain { get; set; }
+        public byte[] NextPageToken { get; set; }
     }
 }

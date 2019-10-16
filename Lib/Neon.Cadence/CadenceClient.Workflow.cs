@@ -606,7 +606,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        internal async Task<WorkflowDescription> DescribeWorkflowAsyncsync(WorkflowExecution execution, string domain = null)
+        internal async Task<WorkflowDescription> DescribeWorkflowAsync(WorkflowExecution execution, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
