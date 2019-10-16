@@ -39,5 +39,15 @@ namespace Neon.Cadence
         /// The domain configuration.
         /// </summary>
         public DomainConfiguration Configuration { get; set; }
+
+        /// <summary>
+        /// $todo(jefflill): Don't know what this is.
+        /// </summary>
+        public long FailoverVersion { get; set; }
+
+        /// <summary>
+        /// Indicates whether the domain is global.
+        /// </summary>
+        public bool IsGlobalDomain { get; set; }
     }
 }

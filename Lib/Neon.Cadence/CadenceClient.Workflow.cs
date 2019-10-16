@@ -393,6 +393,33 @@ namespace Neon.Cadence
             return StubManager.NewWorkflowStub<TWorkflowInterface>(this, options: options, workflowTypeName: workflowTypeName);
         }
 
+        /// <summary>
+        /// Describes a workflow execution.
+        /// </summary>
+        /// <param name="workflowId">The workflow ID.</param>
+        /// <param name="runid">Optionally specifies the run ID.</param>
+        /// <param name="domain">Optionally specifies the domain.</param>
+        /// <returns></returns>
+        public async Task<WorkflowDescription> DescribeWorkflowExecutionAsync(string workflowId, string runid = null, string domain = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+            EnsureNotDisposed();
+
+            domain = ResolveDomain(domain);
+
+            var reply = (WorkflowDescribeExecutionReply)await CallProxyAsync(
+                new WorkflowDescribeExecutionRequest()
+                {
+                    WorkflowId = workflowId,
+                    RunId      = runid ?? string.Empty,
+                    Domain     = domain
+                });
+
+            reply.ThrowOnError();
+
+            return reply.Details.ToPublic();
+        }
+
         //---------------------------------------------------------------------
         // Internal workflow related methods used by dynamically generated workflow stubs.
 

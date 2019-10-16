@@ -64,6 +64,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 Description { get; private set; }                               = new PropertyNameUtf8("Description");
         public static PropertyNameUtf8 Details { get; private set; }                                   = new PropertyNameUtf8("Details");
         public static PropertyNameUtf8 Domain { get; private set; }                                    = new PropertyNameUtf8("Domain");
+        public static PropertyNameUtf8 Domains { get; private set; }                                   = new PropertyNameUtf8("Domains");
         public static PropertyNameUtf8 DomainInfo { get; private set; }                                = new PropertyNameUtf8("DomainInfo");
         public static PropertyNameUtf8 DomainInfoName { get; private set; }                            = new PropertyNameUtf8("DomainInfoName");
         public static PropertyNameUtf8 DomainInfoOwnerEmail { get; private set; }                      = new PropertyNameUtf8("DomainInfoOwnerEmail");

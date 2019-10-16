@@ -51,6 +51,15 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
+        /// Identifies the target domain.
+        /// </summary>
+        public string Domain
+        {
+            get => GetStringProperty(PropertyNames.Domain);
+            set => SetStringProperty(PropertyNames.Domain, value); 
+        }
+
+        /// <summary>
         /// Identifies the type of task list being requested: decision (AKA workflow) or activity.
         /// </summary>
         public TaskListType TaskListType

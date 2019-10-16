@@ -24,15 +24,10 @@ using Neon.Common;
 
 using Newtonsoft.Json;
 
-// $todo(jefflill)
-//
-// Performance could be improved by maintaining output stream and buffer pools
-// rather than allocating these every time.
-
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Describes a Cadence domain configuration.
+    /// <b>INTERNAL USE ONLY:</b> Describes a Cadence domain configuration.
     /// </summary>
     internal class InternalDomainConfiguration
     {

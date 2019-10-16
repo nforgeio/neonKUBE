@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    InternalDescribeTaskListResponse.cs
+// FILE:	    TaskListDescription.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -19,43 +19,21 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
-using Newtonsoft.Json;
-
 using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Cadence
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Cadence task list details.
+    /// Describes the current status of a Cadence task list.
     /// </summary>
-    internal class InternalDescribeTaskListResponse
+    public class TaskListDescription
     {
         /// <summary>
         /// Lists the pollers (AKA workers) that have communicated with the Cadence cluster over
         /// the past few minutes.
         /// </summary>
-        [JsonProperty(PropertyName = "pollers", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public InternalPollerInfo[] Pollers { get; set; }
-
-        /// <summary>
-        /// Converts the instance into a public <see cref="TaskListDescription"/>.
-        /// </summary>
-        /// <returns>The converted <see cref="TaskListDescription"/>.</returns>
-        public TaskListDescription ToPublic()
-        {
-            var description = new TaskListDescription();
-
-            if (Pollers != null)
-            {
-                foreach (var poller in Pollers)
-                {
-                    description.Pollers.Add(poller.ToPublic());
-                }
-            }
-
-            return description;
-        }
+        public List<PollerInfo> Pollers { get; set; } = new List<PollerInfo>();
     }
 }

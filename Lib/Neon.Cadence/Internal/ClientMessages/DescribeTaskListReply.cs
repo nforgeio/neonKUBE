@@ -66,7 +66,7 @@ namespace Neon.Cadence.Internal
 
             typedTarget.Result = this.Result;
 
-            // $todo(jefflill): We're current;y ignoring [TaskListStatus].
+            // $todo(jefflill): We're currenty ignoring [TaskListStatus].
         }
     }
 }

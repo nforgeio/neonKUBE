@@ -2145,6 +2145,63 @@ namespace TestCadence
             Assert.Equal("http://visibility", config.VisibilityArchivalUri);
         }
 
+        /// <summary>
+        /// Returns a list of test domain information.
+        /// </summary>
+        private List<InternalDescribeDomainResponse> GetTestDomains()
+        {
+            var list = new List<InternalDescribeDomainResponse>();
+
+            list.Add(
+                new InternalDescribeDomainResponse()
+                {
+                    IsGlobalDomain = true,
+                    DomainConfiguration = new InternalDomainConfiguration()
+                    {
+                        EmitMetric = true,
+                        WorkflowExecutionRetentionPeriodInDays = 30
+                    },
+                    DomainInfo = new InternalDomainInfo()
+                    {
+                        Name         = "my-domain",
+                        Description  = "This is my domain",
+                        DomainStatus = DomainStatus.Deprecated,
+                        OwnerEmail   = "jeff@lilltek.com"
+
+                        // $todo(jefflill): Currently ignoring
+                        //
+                        //  Data
+                        //  Uuid
+                    }
+                });
+
+            return list;
+        }
+
+        /// <summary>
+        /// Verifies that a test domain list is valid.
+        /// </summary>
+        /// <param name="domains">The test domains.</param>
+        private void ValidateTestDomains(List<InternalDescribeDomainResponse> domains)
+        {
+            Assert.NotNull(domains);
+            Assert.Single(domains);
+
+            var domain = domains.First();
+
+            Assert.True(domain.IsGlobalDomain);
+            
+            Assert.NotNull(domain.DomainConfiguration);
+            Assert.True(domain.DomainConfiguration.EmitMetric);
+            Assert.Equal(30, domain.DomainConfiguration.WorkflowExecutionRetentionPeriodInDays);
+
+            Assert.NotNull(domain.DomainInfo);
+            Assert.Equal("my-domain", domain.DomainInfo.Name);
+            Assert.Equal("This is my domain", domain.DomainInfo.Description);
+            Assert.Equal(DomainStatus.Deprecated, domain.DomainInfo.DomainStatus);
+            Assert.Equal("jeff@lilltek.com", domain.DomainInfo.OwnerEmail);
+        }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void Test_DomainListReply()
@@ -2166,28 +2223,19 @@ namespace TestCadence
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
-                Assert.Null(message.DomainInfo);
-                Assert.Null(message.Configuration);
-                Assert.Equal(0, message.FailoverVersion);
-                Assert.False(message.IsGlobalDomain);
+                Assert.Null(message.Domains);
                 Assert.Null(message.NextPageToken);
 
                 // Round-trip
 
-                message.ClientId        = 444;
-                message.RequestId       = 555;
-                message.DomainInfo      = GetTestDomainInfo();
-                message.Configuration   = GetTestDomainConfiguration();
-                message.FailoverVersion = 666;
-                message.IsGlobalDomain  = true;
-                message.NextPageToken   = new byte[] { 5, 6, 7, 8, 9 };
+                message.ClientId      = 444;
+                message.RequestId     = 555;
+                message.NextPageToken = new byte[] { 5, 6, 7, 8, 9 };
+                message.Domains       = GetTestDomains();
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                ValidateTestDomainInfo(message.DomainInfo);
-                ValidateTestDomainConfiguration(message.Configuration);
-                Assert.Equal(666, message.FailoverVersion);
-                Assert.True(message.IsGlobalDomain);
+                ValidateTestDomains(message.Domains);
                 Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
 
                 stream.SetLength(0);
@@ -2198,10 +2246,7 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                ValidateTestDomainInfo(message.DomainInfo);
-                ValidateTestDomainConfiguration(message.Configuration);
-                Assert.Equal(666, message.FailoverVersion);
-                Assert.True(message.IsGlobalDomain);
+                ValidateTestDomains(message.Domains);
                 Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
 
                 // Clone()
@@ -2210,10 +2255,7 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                ValidateTestDomainInfo(message.DomainInfo);
-                ValidateTestDomainConfiguration(message.Configuration);
-                Assert.Equal(666, message.FailoverVersion);
-                Assert.True(message.IsGlobalDomain);
+                ValidateTestDomains(message.Domains);
                 Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
 
                 // Echo the message via the associated [cadence-proxy] and verify.
@@ -2222,10 +2264,7 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                ValidateTestDomainInfo(message.DomainInfo);
-                ValidateTestDomainConfiguration(message.Configuration);
-                Assert.Equal(666, message.FailoverVersion);
-                Assert.True(message.IsGlobalDomain);
+                ValidateTestDomains(message.Domains);
                 Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
             }
         }

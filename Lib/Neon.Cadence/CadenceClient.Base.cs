@@ -246,6 +246,40 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Returns information about pollers (AKA workers) that have communicated 
+        /// with the Cadence cluster in the last few minutes.
+        /// </summary>
+        /// <param name="taskList">Identifies the tasklist.</param>
+        /// <param name="taskListType">
+        /// Indicates whether to return information for decision (AKA workflow pollers)
+        /// or activity pollers.
+        /// </param>
+        /// <param name="domain">Optionally specifies the Cadence domain.</param>
+        /// <returns>The <see cref="TaskListDescription"/> for the pollers.</returns>
+        public async Task<TaskListDescription> DescribeTaskList(string taskList, TaskListType taskListType, string domain = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
+            EnsureNotDisposed();
+
+            domain = ResolveDomain(domain);
+
+            var reply = (DescribeTaskListReply)await CallProxyAsync(
+                new DescribeTaskListRequest()
+                {
+                    Name         = taskList,
+                    TaskListType = taskListType,
+                    Domain       = domain
+                });
+
+            reply.ThrowOnError();
+
+            return reply.Result.ToPublic();
+        }
+
+        //---------------------------------------------------------------------
+        // Internal utilities
+
+        /// <summary>
         /// Signals Cadence that it should stop invoking activities and workflows 
         /// for the specified <see cref="Worker"/> (returned by a previous call to
         /// <see cref="StartWorkerAsync(string, WorkerOptions, string)"/>).

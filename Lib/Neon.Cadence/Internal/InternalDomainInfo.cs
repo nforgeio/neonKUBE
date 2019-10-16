@@ -73,5 +73,25 @@ namespace Neon.Cadence.Internal
         [JsonProperty(PropertyName = "uuid", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string Uuid { get; set; }
+
+        /// <summary>
+        /// Converts the internal instance into a public <see cref="DomainInfo"/>.
+        /// </summary>
+        /// <returns>The converted <see cref="DomainInfo"/>.</returns>
+        public DomainInfo ToPublic()
+        {
+            // $todo(jefflill): DomainInfo doesn't currently include these properties:
+            //
+            //  Data
+            //  Uuid    
+
+            return new DomainInfo()
+            {
+                Description = this.Description,
+                Name        = this.Name,
+                OwnerEmail  = this.OwnerEmail,
+                Status      = this.DomainStatus
+            };
+        }
     }
 }

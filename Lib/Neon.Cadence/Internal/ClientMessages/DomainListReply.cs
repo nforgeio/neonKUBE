@@ -39,39 +39,12 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// The domain information.
+        /// Lists information about the Cadence domains.
         /// </summary>
-        public InternalDomainInfo DomainInfo
+        public List<InternalDescribeDomainResponse> Domains
         {
-            get => GetJsonProperty<InternalDomainInfo>(PropertyNames.DomainInfo);
-            set => SetJsonProperty<InternalDomainInfo>(PropertyNames.DomainInfo, value);
-        }
-
-        /// <summary>
-        /// The domain configuration.
-        /// </summary>
-        public InternalDomainConfiguration Configuration
-        {
-            get => GetJsonProperty<InternalDomainConfiguration>(PropertyNames.Configuration);
-            set => SetJsonProperty<InternalDomainConfiguration>(PropertyNames.Configuration, value);
-        }
-
-        /// <summary>
-        /// $todo(jefflill): Don't know what this is.
-        /// </summary>
-        public long FailoverVersion
-        {
-            get => GetLongProperty(PropertyNames.FailoverVersion);
-            set => SetLongProperty(PropertyNames.FailoverVersion, value);
-        }
-
-        /// <summary>
-        /// Indicates whether the domain is global.
-        /// </summary>
-        public bool IsGlobalDomain
-        {
-            get => GetBoolProperty(PropertyNames.IsGlobalDomain);
-            set => SetBoolProperty(PropertyNames.IsGlobalDomain, value);
+            get => GetJsonProperty<List<InternalDescribeDomainResponse>>(PropertyNames.Domains);
+            set => SetJsonProperty<List<InternalDescribeDomainResponse>>(PropertyNames.Domains, value);
         }
 
         /// <summary>
@@ -102,11 +75,8 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (DomainListReply)target;
 
-            typedTarget.DomainInfo      = this.DomainInfo;
-            typedTarget.Configuration   = this.Configuration;
-            typedTarget.FailoverVersion = this.FailoverVersion;
-            typedTarget.IsGlobalDomain  = this.IsGlobalDomain;
-            typedTarget.NextPageToken   = this.NextPageToken;
+            typedTarget.Domains       = this.Domains;
+            typedTarget.NextPageToken = this.NextPageToken;
         }
     }
 }
