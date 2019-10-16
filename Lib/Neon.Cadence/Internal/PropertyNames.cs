@@ -61,6 +61,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 ContinueAsNewTaskList { get; private set; }                     = new PropertyNameUtf8("ContinueAsNewTaskList");
         public static PropertyNameUtf8 ContinueAsNewWorkflow { get; private set; }                     = new PropertyNameUtf8("ContinueAsNewWorkflow");
         public static PropertyNameUtf8 CreateDomain { get; private set; }                              = new PropertyNameUtf8("CreateDomain");
+        public static PropertyNameUtf8 Data { get; private set; }                                      = new PropertyNameUtf8("Data");
         public static PropertyNameUtf8 Description { get; private set; }                               = new PropertyNameUtf8("Description");
         public static PropertyNameUtf8 Details { get; private set; }                                   = new PropertyNameUtf8("Details");
         public static PropertyNameUtf8 Domain { get; private set; }                                    = new PropertyNameUtf8("Domain");
@@ -87,6 +88,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 IsCancellable { get; private set; }                             = new PropertyNameUtf8("IsCancellable");
         public static PropertyNameUtf8 IsGlobalDomain { get; private set; }                            = new PropertyNameUtf8("IsGlobalDomain");
         public static PropertyNameUtf8 IsWorkflow { get; private set; }                                = new PropertyNameUtf8("IsWorkflow");
+        public static PropertyNameUtf8 Length { get; private set; }                                    = new PropertyNameUtf8("Length");
         public static PropertyNameUtf8 LibraryAddress { get; private set; }                            = new PropertyNameUtf8("LibraryAddress");
         public static PropertyNameUtf8 LibraryPort { get; private set; }                               = new PropertyNameUtf8("LibraryPort");
         public static PropertyNameUtf8 LogLevel { get; private set; }                                  = new PropertyNameUtf8("LogLevel");
@@ -102,6 +104,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 Pending { get; private set; }                                   = new PropertyNameUtf8("Pending");
         public static PropertyNameUtf8 QueryArgs { get; private set; }                                 = new PropertyNameUtf8("QueryArgs");
         public static PropertyNameUtf8 QueryName { get; private set; }                                 = new PropertyNameUtf8("QueryName");
+        public static PropertyNameUtf8 QueueId { get; private set; }                                   = new PropertyNameUtf8("QueueId");
         public static PropertyNameUtf8 Reason { get; private set; }                                    = new PropertyNameUtf8("Reason");
         public static PropertyNameUtf8 RequestId { get; private set; }                                 = new PropertyNameUtf8("RequestId");
         public static PropertyNameUtf8 Result { get; private set; }                                    = new PropertyNameUtf8("Result");
@@ -120,6 +123,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 TaskListType { get; private set; }                              = new PropertyNameUtf8("TaskListType");
         public static PropertyNameUtf8 TaskToken { get; private set; }                                 = new PropertyNameUtf8("TaskToken");
         public static PropertyNameUtf8 Time { get; private set; }                                      = new PropertyNameUtf8("Time");
+        public static PropertyNameUtf8 Timeout { get; private set; }                                   = new PropertyNameUtf8("Timeout");
         public static PropertyNameUtf8 Update { get; private set; }                                    = new PropertyNameUtf8("Update");
         public static PropertyNameUtf8 UpdatedInfoDescription { get; private set; }                    = new PropertyNameUtf8("UpdatedInfoDescription");
         public static PropertyNameUtf8 UpdatedInfoOwnerEmail { get; private set; }                     = new PropertyNameUtf8("UpdatedInfoOwnerEmail");

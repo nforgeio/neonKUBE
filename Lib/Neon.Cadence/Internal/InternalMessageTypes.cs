@@ -548,6 +548,56 @@ namespace Neon.Cadence.Internal
         /// </summary>
         WorkflowQueryInvokeReply = 161,
 
+        /// <summary>
+        /// <b>proxy --> client:</b> Creates a new workflow queue.
+        /// </summary>
+        WorkflowQueueNewRequest = 162,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowQueueNewRequest"/>.
+        /// </summary>
+        WorkflowQueueNewReply = 163,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Writes data to a queue.
+        /// </summary>
+        WorkflowQueueWriteRequest = 164,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowQueueWriteRequest"/>.
+        /// </summary>
+        WorkflowQueueWriteReply = 165,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Reads data from a queue.
+        /// </summary>
+        WorkflowQueueReadRequest = 166,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowQueueReadRequest"/>.
+        /// </summary>
+        WorkflowQueueReadReply = 167,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Returns the number if data items in a queue.
+        /// </summary>
+        WorkflowQueueLengthRequest = 168,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowQueueLengthRequest"/>.
+        /// </summary>
+        WorkflowQueueLengthReply = 169,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Closes a queue.
+        /// </summary>
+        WorkflowQueueCloseRequest = 170,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowQueueCloseRequest"/>.
+        /// </summary>
+        WorkflowQueueCloseReply = 171,
+
         //---------------------------------------------------------------------
         // Activity messages
 
