@@ -49,6 +49,7 @@ namespace Neon.Cadence
         private int         pendingOperationCount;
         private long        nextLocalActivityActionId;
         private long        nextActivityId;
+        private long        nextQueueId;
         private Random      random;
 
         /// <summary>
@@ -88,6 +89,7 @@ namespace Neon.Cadence
             this.pendingOperationCount     = 0;
             this.nextLocalActivityActionId = 0;
             this.nextActivityId            = 0;
+            this.nextQueueId               = 0;
             this.IdToLocalActivityAction   = new Dictionary<long, LocalActivityAction>();
             this.MethodMap                 = methodMap;
             this.Client                    = client;
@@ -1831,6 +1833,59 @@ namespace Neon.Cadence
             SetStackTrace();
 
             return new LocalActivityFutureStub<TActivityInterface, TActivityImplementation>(this, methodName, options);
+        }
+
+        /// <summary>
+        /// Creates a new workflow safe queue.  These are typically used by workflow signal
+        /// methods for communicating with the workflow logic.
+        /// </summary>
+        /// <typeparam name="T">Specifies the queued data type.</typeparam>
+        /// <param name="capacity">
+        /// <para>
+        /// Specifies the maximum number items the queue may hold.
+        /// </para>
+        /// <note>
+        /// This defaults to <b>2</b> and may not be less than <b>2</b>.
+        /// </note>
+        /// </param>
+        /// <returns>The new <see cref="WorkflowQueue{T}"/>.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <remarks>
+        /// <para>
+        /// You may write and read data items from the returned queue.  Writes
+        /// will block when the queue is full until an item has been read, freeing
+        /// a slot.
+        /// </para>
+        /// <note>
+        /// Items will be serialized internally using the current <see cref="IDataConverter"/> to
+        /// bytes before actually enqueuing the item.  This serialized data must be less
+        /// than 64KiB.
+        /// </note>
+        /// <para>
+        /// See <see cref="WorkflowQueue{T}"/> for more information.
+        /// </para>
+        /// </remarks>
+        public async Task<WorkflowQueue<T>> NewQueueAsync<T>(int capacity = 2)
+        {
+            Covenant.Requires<ArgumentException>(capacity >= 2, nameof(capacity), "Queue capacity cannot be less than [2].");
+            Client.EnsureNotDisposed();
+
+            var queueId = Interlocked.Increment(ref nextQueueId);
+
+            var reply = await ExecuteNonParallel(
+                async () =>
+                {
+                    return (WorkflowQueueNewReply)await Client.CallProxyAsync(
+                        new WorkflowQueueNewRequest()
+                        {
+                             QueueId  = queueId,
+                             Capacity = capacity
+                        });
+                });
+
+            reply.ThrowOnError();
+
+            return new WorkflowQueue<T>(this, queueId);
         }
         
         //---------------------------------------------------------------------

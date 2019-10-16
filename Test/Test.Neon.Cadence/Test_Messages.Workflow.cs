@@ -3899,6 +3899,7 @@ namespace TestCadence
                 Assert.Equal(0, message.RequestId);
                 Assert.Equal(0, message.ContextId);
                 Assert.Equal(0, message.QueueId);
+                Assert.Equal(0, message.Capacity);
 
                 // Round-trip
 
@@ -3906,16 +3907,17 @@ namespace TestCadence
                 message.RequestId = 555;
                 message.ContextId = 666;
                 message.QueueId = 777;
+                message.Capacity = 888;
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal(777, message.QueueId);
+                Assert.Equal(888, message.Capacity);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
-                Assert.Equal(777, message.QueueId);
 
                 message = ProxyMessage.Deserialize<WorkflowQueueNewRequest>(stream);
                 Assert.NotNull(message);
@@ -3923,6 +3925,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal(777, message.QueueId);
+                Assert.Equal(888, message.Capacity);
 
                 // Clone()
 
@@ -3932,6 +3935,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal(777, message.QueueId);
+                Assert.Equal(888, message.Capacity);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -3941,6 +3945,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal(777, message.QueueId);
+                Assert.Equal(888, message.Capacity);
             }
         }
 
@@ -4237,6 +4242,7 @@ namespace TestCadence
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
+                Assert.False(message.IsClosed);
                 Assert.Null(message.Data);
 
                 // Round-trip
@@ -4244,11 +4250,13 @@ namespace TestCadence
                 message.ClientId = 444;
                 message.RequestId = 555;
                 message.Error = new CadenceError("MyError");
+                message.IsClosed = true;
                 message.Data = new byte[] { 0, 1, 2, 3, 4 };
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.True(message.IsClosed);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Data);
 
                 stream.SetLength(0);
@@ -4259,7 +4267,9 @@ namespace TestCadence
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
+                Assert.True(message.IsClosed);
                 Assert.Equal("MyError", message.Error.String);
+
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Data);
 
                 // Clone()
@@ -4269,6 +4279,7 @@ namespace TestCadence
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.True(message.IsClosed);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Data);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
@@ -4278,6 +4289,7 @@ namespace TestCadence
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.True(message.IsClosed);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Data);
             }
         }

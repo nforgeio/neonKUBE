@@ -42,21 +42,21 @@ namespace Neon.Cadence.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowQueueNewReply;
 
         /// <summary>
-        /// Identifies the workflow by ID.
-        /// </summary>
-        public string WorkflowId
-        {
-            get => GetStringProperty(PropertyNames.WorkflowId);
-            set => SetStringProperty(PropertyNames.WorkflowId, value);
-        }
-
-        /// <summary>
         /// Identifies the queue.
         /// </summary>
         public long QueueId
         {
             get => GetLongProperty(PropertyNames.QueueId);
             set => SetLongProperty(PropertyNames.QueueId, value);
+        }
+
+        /// <summary>
+        /// Specifies the capacity of the queue.
+        /// </summary>
+        public int Capacity
+        {
+            get => GetIntProperty(PropertyNames.Capacity);
+            set => SetIntProperty(PropertyNames.Capacity, value);
         }
 
         /// <inheritdoc/>
@@ -76,8 +76,8 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowQueueNewRequest)target;
 
-            typedTarget.WorkflowId = this.WorkflowId;
-            typedTarget.QueueId    = this.QueueId;
+            typedTarget.QueueId  = this.QueueId;
+            typedTarget.Capacity = this.Capacity;
         }
     }
 }

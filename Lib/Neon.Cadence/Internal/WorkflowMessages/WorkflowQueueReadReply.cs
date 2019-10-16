@@ -37,10 +37,19 @@ namespace Neon.Cadence.Internal
         {
             Type = InternalMessageTypes.WorkflowQueueReadReply;
         }
+       
+        /// <summary>
+        /// Set to <c>true</c> when the queue has been closed.
+        /// </summary>
+        public bool IsClosed
+        {
+            get => GetBoolProperty(PropertyNames.IsClosed);
+            set => SetBoolProperty(PropertyNames.IsClosed, value);
+        }
 
         /// <summary>
         /// The data item read from the queue or <c>null</c> if the operation
-        /// timed out.
+        /// timed out or the queue has been closed.
         /// </summary>
         public byte[] Data
         {
@@ -65,7 +74,8 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowQueueReadReply)target;
 
-            typedTarget.Data = this.Data;
+            typedTarget.IsClosed = this.IsClosed;
+            typedTarget.Data     = this.Data;
         }
     }
 }

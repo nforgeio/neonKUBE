@@ -44,6 +44,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 ActivityTypeId { get; private set; }                            = new PropertyNameUtf8("ActivityTypeId");
         public static PropertyNameUtf8 Args { get; private set; }                                      = new PropertyNameUtf8("Args");
         public static PropertyNameUtf8 ChangeId { get; private set; }                                  = new PropertyNameUtf8("ChangeId");
+        public static PropertyNameUtf8 Capacity { get; private set; }                                  = new PropertyNameUtf8("Capacity");
         public static PropertyNameUtf8 ChildId { get; private set; }                                   = new PropertyNameUtf8("ChildId");
         public static PropertyNameUtf8 ClientId { get; private set; }                                  = new PropertyNameUtf8("ClientId");
         public static PropertyNameUtf8 ClientTimeout { get; private set; }                             = new PropertyNameUtf8("ClientTimeout");
@@ -86,6 +87,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 Identity { get; private set; }                                  = new PropertyNameUtf8("Identity");
         public static PropertyNameUtf8 Info { get; private set; }                                      = new PropertyNameUtf8("Info");
         public static PropertyNameUtf8 IsCancellable { get; private set; }                             = new PropertyNameUtf8("IsCancellable");
+        public static PropertyNameUtf8 IsClosed { get; private set; }                                  = new PropertyNameUtf8("IsClosed");
         public static PropertyNameUtf8 IsGlobalDomain { get; private set; }                            = new PropertyNameUtf8("IsGlobalDomain");
         public static PropertyNameUtf8 IsWorkflow { get; private set; }                                = new PropertyNameUtf8("IsWorkflow");
         public static PropertyNameUtf8 Length { get; private set; }                                    = new PropertyNameUtf8("Length");

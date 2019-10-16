@@ -42,15 +42,6 @@ namespace Neon.Cadence.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowQueueReadReply;
 
         /// <summary>
-        /// Identifies the workflow by ID.
-        /// </summary>
-        public string WorkflowId
-        {
-            get => GetStringProperty(PropertyNames.WorkflowId);
-            set => SetStringProperty(PropertyNames.WorkflowId, value);
-        }
-
-        /// <summary>
         /// Identifies the queue.
         /// </summary>
         public long QueueId
@@ -86,9 +77,8 @@ namespace Neon.Cadence.Internal
 
             var typedTarget = (WorkflowQueueReadRequest)target;
 
-            typedTarget.WorkflowId = this.WorkflowId;
-            typedTarget.QueueId    = this.QueueId;
-            typedTarget.Timeout    = this.Timeout;
+            typedTarget.QueueId = this.QueueId;
+            typedTarget.Timeout = this.Timeout;
         }
     }
 }

@@ -41,10 +41,10 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// The number of items waiting in the queue.
         /// </summary>
-        public long Length
+        public int Length
         {
-            get => GetLongProperty(PropertyNames.Length);
-            set => SetLongProperty(PropertyNames.Length, value);
+            get => GetIntProperty(PropertyNames.Length);
+            set => SetIntProperty(PropertyNames.Length, value);
         }
 
         /// <inheritdoc/>
