@@ -187,9 +187,29 @@ namespace Neon.Cadence.Internal
         LogRequest = 27,
 
         /// <summary>
-        ///  <b>client --> proxy:</b> Sent in response to a <see cref="LogRequest"/> message.
+        /// <b>client --> proxy:</b> Sent in response to a <see cref="LogRequest"/> message.
         /// </summary>
         LogReply = 28,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Sent to list the Cadence domains.
+        /// </summary>
+        DomainListRequest = 29,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="DomainListRequest"/> message.
+        /// </summary>
+        DomainListReply = 30,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Sent to obtain details for a task list.
+        /// </summary>
+        DescribeTaskListRequest = 31,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="DescribeTaskListRequest"/> message.
+        /// </summary>
+        DescribeTaskListReply = 32,
 
         //---------------------------------------------------------------------
         // Workflow messages
@@ -310,14 +330,14 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// <b>RESERVED:</b> This is not currently implemented.
         /// </summary>
-        [Obsolete("RESERVED but not implemented.")]
-        WorkflowDescribeTaskListRequest = 122,
+        [Obsolete("RESERVED")]
+        Reserved0 = 122,
 
         /// <summary>
         /// <b>RESERVED:</b> This is not currently implemented.
         /// </summary>
-        [Obsolete("RESERVED but not implemented.")]
-        WorkflowDescribeTaskListReply = 123,
+        [Obsolete("RESERVED")]
+        Reserved1 = 123,
 
         /// <summary>
         /// <b>proxy --> client:</b> Commands the client client and associated .NET application
@@ -527,6 +547,56 @@ namespace Neon.Cadence.Internal
         /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowQueryInvokeRequest"/>.
         /// </summary>
         WorkflowQueryInvokeReply = 161,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Creates a new workflow queue.
+        /// </summary>
+        WorkflowQueueNewRequest = 162,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowQueueNewRequest"/>.
+        /// </summary>
+        WorkflowQueueNewReply = 163,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Writes data to a queue.
+        /// </summary>
+        WorkflowQueueWriteRequest = 164,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowQueueWriteRequest"/>.
+        /// </summary>
+        WorkflowQueueWriteReply = 165,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Reads data from a queue.
+        /// </summary>
+        WorkflowQueueReadRequest = 166,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowQueueReadRequest"/>.
+        /// </summary>
+        WorkflowQueueReadReply = 167,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Returns the number if data items in a queue.
+        /// </summary>
+        WorkflowQueueLengthRequest = 168,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowQueueLengthRequest"/>.
+        /// </summary>
+        WorkflowQueueLengthReply = 169,
+
+        /// <summary>
+        /// <b>proxy --> client:</b> Closes a queue.
+        /// </summary>
+        WorkflowQueueCloseRequest = 170,
+
+        /// <summary>
+        /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowQueueCloseRequest"/>.
+        /// </summary>
+        WorkflowQueueCloseReply = 171,
 
         //---------------------------------------------------------------------
         // Activity messages

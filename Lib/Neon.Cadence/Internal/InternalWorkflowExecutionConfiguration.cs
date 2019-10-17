@@ -58,8 +58,8 @@ namespace Neon.Cadence.Internal
         /// the parent workflow is terminated.
         /// </summary>
         [JsonProperty(PropertyName = "ChildPolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(InternalChildPolicy.ABANDON)]
-        public InternalChildPolicy ChildPolicy { get; set; } = InternalChildPolicy.ABANDON;
+        [DefaultValue(InternaChildClosePolicy.ABANDON)]
+        public InternaChildClosePolicy ChildPolicy { get; set; } = InternaChildClosePolicy.ABANDON;
 
         /// <summary>
         /// Coverts the instance to a public <see cref="WorkflowConfig"/>.
@@ -69,10 +69,10 @@ namespace Neon.Cadence.Internal
             return new WorkflowConfig()
             {
                  TaskList                       = this.TaskList.Name,
-                 TaskListKind                   = (TaskListKind)this.TaskList.TaskListKind,
+                 TaskListKind                   = (TaskListType)this.TaskList.TaskListKind,
                  ExecutionStartToCloseTimeout   = TimeSpan.FromTicks(this.ExecutionStartToCloseTimeout/100),
                  TaskStartToCloseTimeoutSeconds = TimeSpan.FromTicks(this.TaskStartToCloseTimeoutSeconds/100),
-                 ChildPolicy                    = (ChildPolicy)this.ChildPolicy
+                 ParentClosePolicy              = (ParentClosePolicy)this.ChildPolicy
             };
         }
     }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DescribedActivityInfo.cs
+// FILE:	    PendingActivityInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,7 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-
+using System.Diagnostics.Contracts;
 using Neon.Cadence;
 using Neon.Common;
 
@@ -27,8 +27,13 @@ namespace Neon.Cadence
     /// <summary>
     /// Describes the current state of a scheduled or executing activity.
     /// </summary>
-    public class DescribedActivityInfo
+    public class PendingActivityInfo
     {
+        /// <summary>
+        /// The associated Cadence client.
+        /// </summary>
+        internal CadenceClient Client { get; set; }
+
         /// <summary>
         /// The activity ID.
         /// </summary>
@@ -48,6 +53,19 @@ namespace Neon.Cadence
         /// Details from the last activity heartbeart.
         /// </summary>
         public byte[] HeartbeatDetails { get; internal set; }
+
+        /// <summary>
+        /// Returns the <see cref="HeartbeatDetails"/> converted to <typeparamref name="TResult"/>
+        /// using the client <see cref="IDataConverter"/>.
+        /// </summary>
+        /// <typeparam name="TResult">The result type.</typeparam>
+        /// <returns>The heartbeat details as a<typeparamref name="TResult"/>.</returns>
+        public TResult GetHeartbeatDetails<TResult>()
+        {
+            Covenant.Assert(Client != null);
+
+            return Client.DataConverter.FromData<TResult>(HeartbeatDetails);
+        }
 
         /// <summary>
         /// Time when the last activity heartbeat was received.

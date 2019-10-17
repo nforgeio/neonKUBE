@@ -81,7 +81,7 @@ namespace TestCadence
             {
                 DefaultDomain   = CadenceFixture.DefaultDomain,
                 LogLevel        = CadenceTestHelper.LogLevel,
-                Debug           = true,
+                Debug           = CadenceTestHelper.Debug,
             };
 
             fixture.Start(settings, keepConnection: true);

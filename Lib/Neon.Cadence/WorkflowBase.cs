@@ -555,6 +555,8 @@ namespace Neon.Cadence
             }
             catch (CadenceException e)
             {
+                log.LogError(e);
+
                 return new WorkflowInvokeReply()
                 {
                     Error = e.ToCadenceError()
@@ -562,6 +564,8 @@ namespace Neon.Cadence
             }
             catch (Exception e)
             {
+                log.LogError(e);
+
                 return new WorkflowInvokeReply()
                 {
                     Error = new CadenceError(e)
@@ -616,6 +620,8 @@ namespace Neon.Cadence
             }
             catch (Exception e)
             {
+                log.LogError(e);
+
                 return new WorkflowSignalInvokeReply()
                 {
                     Error = new CadenceError(e)
@@ -708,6 +714,8 @@ namespace Neon.Cadence
             }
             catch (Exception e)
             {
+                log.LogError(e);
+
                 return new WorkflowQueryInvokeReply()
                 {
                     Error = new CadenceError(e)
@@ -763,6 +771,8 @@ namespace Neon.Cadence
             }
             catch (Exception e)
             {
+                log.LogError(e);
+
                 return new ActivityInvokeLocalReply()
                 {
                     Error = new CadenceError(e)

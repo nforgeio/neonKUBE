@@ -52,7 +52,7 @@ namespace TestCadence
                 DefaultDomain          = CadenceFixture.DefaultDomain,
                 LogLevel               = CadenceTestHelper.LogLevel,
                 CreateDomain           = true,
-                Debug                  = true,
+                Debug                  = CadenceTestHelper.Debug,
                 DebugPrelaunched       = CadenceTestHelper.DebugPrelaunched,
                 DebugDisableHeartbeats = CadenceTestHelper.DebugDisableHeartbeats
             };

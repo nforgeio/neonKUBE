@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainOptions.cs
+// FILE:	    PollerInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,26 +18,30 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-
+using System.Diagnostics.Contracts;
 using Neon.Cadence;
-using Neon.Cadence.Internal;
 using Neon.Common;
 
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Domain configuration options.
+    /// Describes the status of a poller (AKA worker) listening to a task list.
     /// </summary>
-    public class DomainOptions
+    public class PollerInfo
     {
         /// <summary>
-        /// The workflow history retention period in days.
+        /// The last time the poller accessed Cadence (UTC).
         /// </summary>
-        public int RetentionDays { get; set; }
+        public DateTime LastAccessTime { get; set; }
 
         /// <summary>
-        /// Enables metrics for workflows and activities running in the domain.
+        /// Identifies the poller.
         /// </summary>
-        public bool EmitMetrics { get; set; }
+        public string Identity { get; set; }
+
+        /// <summary>
+        /// Operations per second from the poller.
+        /// </summary>
+        public double RatePerSecond { get; set; }
     }
 }

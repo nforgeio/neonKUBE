@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    InternalChildPolicy.cs
+// FILE:	    InternalBadBinaryInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -20,44 +20,36 @@ using System.Collections.Generic;
 using System.ComponentModel;
 
 using Neon.Cadence;
-using Neon.Cadence.Internal;
 using Neon.Common;
+
+using Newtonsoft.Json;
 
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Enumerates the possible child workflow behaviors 
-    /// when the parent workflow is terminated.
+    /// $todo(jefflill): Don't know what this is.
     /// </summary>
-    public enum InternalChildPolicy
+    internal class InternalBadBinaryInfo
     {
-        // WARNING: These definitions must match those defined for [ChildPolicy].
+        /// <summary>
+        /// $todo(jefflill): Don't know what this is.
+        /// </summary>
+        [JsonProperty(PropertyName = "reason", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(0)]
+        public string Reason { get; set; }
 
         /// <summary>
-        /// <para>
-        /// All open child workflows will be terminated when parent workflow is terminated.
-        /// </para>
-        /// <note>
-        /// This policy is not implemented.
-        /// </note>
+        /// $todo(jefflill): Don't know what this is.
         /// </summary>
-        TERMINATE = 0,
+        [JsonProperty(PropertyName = "operator", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(0)]
+        public string Operator { get; set; }
 
         /// <summary>
-        /// <para>
-        /// Cancel requests will be sent to all open child workflows to all open child 
-        /// workflows when parent workflow is terminated.
-        /// </para>
-        /// <note>
-        /// This policy is not implemented.
-        /// </note>
+        /// $todo(jefflill): Don't know what this is.
         /// </summary>
-        REQUEST_CANCEL = 1,
-
-        /// <summary>
-        /// Child workflow execution will continue unaffected when parent workflow is
-        /// terminated.  This is the default policy.
-        /// </summary>
-        ABANDON = 2
+        [JsonProperty(PropertyName = "createdTimeNano", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(0)]
+        public long CreatedTimeNano { get; set; }
     }
 }

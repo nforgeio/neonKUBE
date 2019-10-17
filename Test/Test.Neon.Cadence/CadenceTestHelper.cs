@@ -62,9 +62,13 @@ namespace TestCadence
 
         /// <summary>
         /// Specifies the log level to use for Cadence related unit tests.
-        /// The defaults to <see cref="LogLevel.Debug"/>.
         /// </summary>
         public static readonly LogLevel LogLevel = LogLevel.Info;
+
+        /// <summary>
+        /// Specifies whether Cadence unit tests will connect to Cadence in DEBUG mode.
+        /// </summary>
+        public const bool Debug = true;
 
         /// <summary>
         /// <para>

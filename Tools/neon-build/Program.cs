@@ -147,7 +147,7 @@ ARGUMENTS:
                         }
 
 #if TODO
-                        // $todo(jeff.lill): https://github.com/nforgeio/neonKUBE/issues/689
+                        // $todo(jefflill): https://github.com/nforgeio/neonKUBE/issues/689
 
                         var packagesPath = Path.Combine(Program.RepoRootFolder, "packages");
 

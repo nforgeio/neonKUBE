@@ -38,7 +38,7 @@ namespace Neon.Cadence
         /// <summary>
         /// 
         /// </summary>
-        public TaskListKind TaskListKind { get; internal set; }
+        public TaskListType TaskListKind { get; internal set; }
 
         /// <summary>
         /// Maximum time the entire workflow may take to complete end-to-end.
@@ -54,6 +54,6 @@ namespace Neon.Cadence
         /// The termination policy to apply to the child workflow when
         /// the parent workflow is terminated.
         /// </summary>
-        public ChildPolicy ChildPolicy { get; internal set; }
+        public ParentClosePolicy ParentClosePolicy { get; internal set; }
     }
 }

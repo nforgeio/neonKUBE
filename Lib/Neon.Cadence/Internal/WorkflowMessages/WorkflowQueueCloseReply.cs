@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TaskListKind.cs
+// FILE:	    WorkflowQueueCloseReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -20,26 +20,38 @@ using System.Collections.Generic;
 using System.ComponentModel;
 
 using Neon.Cadence;
-using Neon.Cadence.Internal;
 using Neon.Common;
 
-namespace Neon.Cadence
+namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Enumerates the different kinds of task lists.
+    /// <b>proxy --> client:</b> Answers a <see cref="WorkflowQueueNewRequest"/>
     /// </summary>
-    public enum TaskListKind
+    [InternalProxyMessage(InternalMessageTypes.WorkflowQueueCloseReply)]
+    internal class WorkflowQueueCloseReply : WorkflowReply
     {
-        // WARNING: These values must match those defined by [InternalTaskListKind].
-
         /// <summary>
-        /// Normal.
+        /// Default constructor.
         /// </summary>
-        Normal = 0,
+        public WorkflowQueueCloseReply()
+        {
+            Type = InternalMessageTypes.WorkflowQueueCloseReply;
+        }
 
-        /// <summary>
-        /// Sticky.
-        /// </summary>
-        Sticky = 1
+        /// <inheritdoc/>
+        internal override ProxyMessage Clone()
+        {
+            var clone = new WorkflowQueueCloseReply();
+
+            CopyTo(clone);
+
+            return clone;
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(ProxyMessage target)
+        {
+            base.CopyTo(target);
+        }
     }
 }

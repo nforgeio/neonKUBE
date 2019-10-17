@@ -2559,7 +2559,7 @@ namespace TestCadence
                 var task           = stub.RunAsync();
                 var externalStub   = Workflow.NewExternalWorkflowStub(TestWorkflowId);
 
-                // $hack(jeff.lill): 
+                // $hack(jefflill): 
                 //
                 // Wait a bit to allow the workflow to be recorded before
                 // we wait for the result.
@@ -2584,7 +2584,7 @@ namespace TestCadence
                 var task           = stub.HelloAsync("Jeff");
                 var externalStub   = Workflow.NewExternalWorkflowStub(TestWorkflowId);
 
-                // $hack(jeff.lill): 
+                // $hack(jefflill): 
                 //
                 // Wait a bit to allow the workflow to be recorded before
                 // we wait for the result.

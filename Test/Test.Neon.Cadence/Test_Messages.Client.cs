@@ -1985,5 +1985,445 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
             }
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_DomainListRequest()
+        {
+            DomainListRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new DomainListRequest();
+
+                Assert.Equal(InternalMessageTypes.DomainListReply, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DomainListRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.RequestId);
+                Assert.Equal(0, message.PageSize);
+                Assert.Null(message.NextPageToken);
+
+                // Round-trip
+
+                message.ClientId = 444;
+                message.RequestId = 555;
+                message.PageSize = 666;
+                message.NextPageToken = new byte[] { 5, 6, 7, 8, 9 };
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.PageSize);
+                Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.NextPageToken);
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DomainListRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.PageSize);
+                Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.NextPageToken);
+
+                // Clone()
+
+                message = (DomainListRequest)message.Clone();
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.PageSize);
+                Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.NextPageToken);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.PageSize);
+                Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.NextPageToken);
+            }
+        }
+
+        /// <summary>
+        /// Returns an <see cref="InternalDomainInfo"/> instance for testing purposes.
+        /// </summary>
+        /// <returns>The test info.</returns>
+        private InternalDomainInfo GetTestDomainInfo()
+        {
+            var data = new Dictionary<string, byte[]>();
+
+            data.Add("test", new byte[] { 0, 1, 2, 3, 4 });
+
+            return new InternalDomainInfo()
+            {
+                Name         = "my-domain",
+                DomainStatus = DomainStatus.Deprecated,
+                Description  = "Test domain",
+                OwnerEmail   = "jeff@lilltek.com",
+                Data         = data,
+                Uuid         = "1111-2222-3333-4444"
+            };
+        }
+
+        /// <summary>
+        /// Validates an <see cref="InternalDomainInfo"/> instance for testing purposes.
+        /// </summary>
+        /// <param name="info">The domain info.</param>
+        private void ValidateTestDomainInfo(InternalDomainInfo info)
+        {
+            Assert.NotNull(info);
+            Assert.Equal("my-domain", info.Name);
+            Assert.Equal(DomainStatus.Deprecated, info.DomainStatus);
+            Assert.Equal("jeff@lilltek.com", info.OwnerEmail);
+            Assert.Single(info.Data);
+            Assert.Equal("test", info.Data.First().Key);
+            Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, info.Data.First().Value);
+            Assert.Equal("1111-2222-3333-4444", info.Uuid);
+        }
+
+        /// <summary>
+        /// Returns an <see cref="InternalDomainConfiguration"/> for testing purposes.
+        /// </summary>
+        /// <returns></returns>
+        private InternalDomainConfiguration GetTestDomainConfiguration()
+        {
+            var badBinariesMap = new Dictionary<string, InternalBadBinaryInfo>();
+
+            badBinariesMap.Add("bad",
+                new InternalBadBinaryInfo()
+                {
+                    Reason          = "foo",
+                    Operator        = "bar",
+                    CreatedTimeNano = 5000000000L
+                });
+
+            var badBinaries = new InternalBadBinaries()
+            {
+                Binaries = badBinariesMap
+            };
+
+            return new InternalDomainConfiguration()
+            {
+                WorkflowExecutionRetentionPeriodInDays = 30,
+                EmitMetric                             = true,
+                BadBinaries                            = badBinaries,
+                HistoryArchivalStatus                  = ArchivalStatus.Enabled,
+                HistoryArchivalUri                     = "http://history",
+                VisibilityArchivalStatus               = ArchivalStatus.Disabled,
+                VisibilityArchivalUri                  = "http://visibility"
+            };
+        }
+
+        /// <summary>
+        /// Validates a test <see cref="InternalDomainConfiguration"/>.
+        /// </summary>
+        /// <param name="config">The domain config.</param>
+        private void ValidateTestDomainConfiguration(InternalDomainConfiguration config)
+        {
+            Assert.NotNull(config);
+            Assert.Equal(30, config.WorkflowExecutionRetentionPeriodInDays);
+            Assert.True(config.EmitMetric);
+            Assert.NotNull(config.BadBinaries);
+            Assert.Single(config.BadBinaries.Binaries);
+            Assert.Equal("bad", config.BadBinaries.Binaries.First().Key);
+            Assert.Equal("foo", config.BadBinaries.Binaries.First().Value.Reason);
+            Assert.Equal("bar", config.BadBinaries.Binaries.First().Value.Operator);
+            Assert.Equal(5000000000L, config.BadBinaries.Binaries.First().Value.CreatedTimeNano);
+            Assert.Equal(ArchivalStatus.Enabled, config.HistoryArchivalStatus);
+            Assert.Equal("http://history", config.HistoryArchivalUri);
+            Assert.Equal(ArchivalStatus.Disabled, config.VisibilityArchivalStatus);
+            Assert.Equal("http://visibility", config.VisibilityArchivalUri);
+        }
+
+        /// <summary>
+        /// Returns a list of test domain information.
+        /// </summary>
+        private List<InternalDescribeDomainResponse> GetTestDomains()
+        {
+            var list = new List<InternalDescribeDomainResponse>();
+
+            list.Add(
+                new InternalDescribeDomainResponse()
+                {
+                    IsGlobalDomain = true,
+                    DomainConfiguration = new InternalDomainConfiguration()
+                    {
+                        EmitMetric = true,
+                        WorkflowExecutionRetentionPeriodInDays = 30
+                    },
+                    DomainInfo = new InternalDomainInfo()
+                    {
+                        Name         = "my-domain",
+                        Description  = "This is my domain",
+                        DomainStatus = DomainStatus.Deprecated,
+                        OwnerEmail   = "jeff@lilltek.com"
+
+                        // $todo(jefflill): Currently ignoring
+                        //
+                        //  Data
+                        //  Uuid
+                    }
+                });
+
+            return list;
+        }
+
+        /// <summary>
+        /// Verifies that a test domain list is valid.
+        /// </summary>
+        /// <param name="domains">The test domains.</param>
+        private void ValidateTestDomains(List<InternalDescribeDomainResponse> domains)
+        {
+            Assert.NotNull(domains);
+            Assert.Single(domains);
+
+            var domain = domains.First();
+
+            Assert.True(domain.IsGlobalDomain);
+            
+            Assert.NotNull(domain.DomainConfiguration);
+            Assert.True(domain.DomainConfiguration.EmitMetric);
+            Assert.Equal(30, domain.DomainConfiguration.WorkflowExecutionRetentionPeriodInDays);
+
+            Assert.NotNull(domain.DomainInfo);
+            Assert.Equal("my-domain", domain.DomainInfo.Name);
+            Assert.Equal("This is my domain", domain.DomainInfo.Description);
+            Assert.Equal(DomainStatus.Deprecated, domain.DomainInfo.DomainStatus);
+            Assert.Equal("jeff@lilltek.com", domain.DomainInfo.OwnerEmail);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_DomainListReply()
+        {
+            DomainListReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new DomainListReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DomainListReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Error);
+                Assert.Null(message.Domains);
+                Assert.Null(message.NextPageToken);
+
+                // Round-trip
+
+                message.ClientId      = 444;
+                message.RequestId     = 555;
+                message.NextPageToken = new byte[] { 5, 6, 7, 8, 9 };
+                message.Domains       = GetTestDomains();
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                ValidateTestDomains(message.Domains);
+                Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DomainListReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                ValidateTestDomains(message.Domains);
+                Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
+
+                // Clone()
+
+                message = (DomainListReply)message.Clone();
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                ValidateTestDomains(message.Domains);
+                Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                ValidateTestDomains(message.Domains);
+                Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_DescribeTaskListRequest()
+        {
+            DescribeTaskListRequest message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new DescribeTaskListRequest();
+
+                Assert.Equal(InternalMessageTypes.DescribeTaskListReply, message.ReplyType);
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DescribeTaskListRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Name);
+                Assert.Equal(default, message.TaskListType);
+
+                // Round-trip
+
+                message.ClientId     = 444;
+                message.RequestId    = 555;
+                message.Name         = "my-tasklist";
+                message.TaskListType = TaskListType.Activity;
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-tasklist", message.Name);
+                Assert.Equal(TaskListType.Activity, message.TaskListType);
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DescribeTaskListRequest>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-tasklist", message.Name);
+                Assert.Equal(TaskListType.Activity, message.TaskListType);
+
+                // Clone()
+
+                message = (DescribeTaskListRequest)message.Clone();
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-tasklist", message.Name);
+                Assert.Equal(TaskListType.Activity, message.TaskListType);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.Equal("my-tasklist", message.Name);
+                Assert.Equal(TaskListType.Activity, message.TaskListType);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Test_DescribeTaskListReply()
+        {
+            DescribeTaskListReply message;
+
+            using (var stream = new MemoryStream())
+            {
+                message = new DescribeTaskListReply();
+
+                // Empty message.
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DescribeTaskListReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.RequestId);
+                Assert.Null(message.Error);
+                Assert.Null(message.Result);
+
+                // Round-trip
+
+                message.ClientId  = 444;
+                message.RequestId = 555;
+                message.Result =
+                    new InternalDescribeTaskListResponse()
+                    {
+                        Pollers = new InternalPollerInfo[]
+                        {
+                             new InternalPollerInfo()
+                             {
+                                 Identity       = "my-poller",
+                                 LastAccessTime = 5000000000L,
+                                 RatePerSecond  = 666
+                             }
+                        }
+                    };
+
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.NotNull(message.Result);
+                Assert.Single(message.Result.Pollers);
+                Assert.Equal("my-poller", message.Result.Pollers.First().Identity);
+                Assert.Equal(5000000000L, message.Result.Pollers.First().LastAccessTime);
+                Assert.Equal(666, message.Result.Pollers.First().RatePerSecond);
+
+                stream.SetLength(0);
+                stream.Write(message.SerializeAsBytes());
+                stream.Seek(0, SeekOrigin.Begin);
+
+                message = ProxyMessage.Deserialize<DescribeTaskListReply>(stream);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.NotNull(message.Result);
+                Assert.Single(message.Result.Pollers);
+                Assert.Equal("my-poller", message.Result.Pollers.First().Identity);
+                Assert.Equal(5000000000L, message.Result.Pollers.First().LastAccessTime);
+                Assert.Equal(666, message.Result.Pollers.First().RatePerSecond);
+
+                // Clone()
+
+                message = (DescribeTaskListReply)message.Clone();
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.NotNull(message.Result);
+                Assert.Single(message.Result.Pollers);
+                Assert.Equal("my-poller", message.Result.Pollers.First().Identity);
+                Assert.Equal(5000000000L, message.Result.Pollers.First().LastAccessTime);
+                Assert.Equal(666, message.Result.Pollers.First().RatePerSecond);
+
+                // Echo the message via the associated [cadence-proxy] and verify.
+
+                message = EchoToProxy(message);
+                Assert.NotNull(message);
+                Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.RequestId);
+                Assert.NotNull(message.Result);
+                Assert.Single(message.Result.Pollers);
+                Assert.Equal("my-poller", message.Result.Pollers.First().Identity);
+                Assert.Equal(5000000000L, message.Result.Pollers.First().LastAccessTime);
+                Assert.Equal(666, message.Result.Pollers.First().RatePerSecond);
+            }
+        }
     }
 }

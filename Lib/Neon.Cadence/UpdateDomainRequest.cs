@@ -43,6 +43,6 @@ namespace Neon.Cadence
         /// <summary>
         /// The updated domain options.
         /// </summary>
-        public DomainOptions Options { get; set; } = new DomainOptions();
+        public DomainConfiguration Options { get; set; } = new DomainConfiguration();
     }
 }

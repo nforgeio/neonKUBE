@@ -34,23 +34,30 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// Execution configuration.
         /// </summary>
-        [JsonProperty(PropertyName = "ExecutionConfiguration", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "executionConfiguration", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public InternalWorkflowExecutionConfiguration ExecutionConfiguration { get; set; }
 
         /// <summary>
         /// Execution info.
         /// </summary>
-        [JsonProperty(PropertyName = "WorkflowExecutionInfo", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "workflowExecutionInfo", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public InternalWorkflowExecutionInfo WorkflowExecutionInfo { get; set; }
 
         /// <summary>
         /// Pending activities.
         /// </summary>
-        [JsonProperty(PropertyName = "PendingActivities", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "pendingActivities", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public List<InternalPendingActivityInfo> PendingActivities { get; set; }
+
+        /// <summary>
+        /// Pending child workflows.
+        /// </summary>
+        [JsonProperty(PropertyName = "pendingWorkflows", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public List<InternalPendingChildExecutionInfo> PendingChildren { get; set; }
 
         /// <summary>
         /// Converts the instance into a public <see cref="WorkflowDescription"/>.
@@ -63,13 +70,23 @@ namespace Neon.Cadence.Internal
                 Execution     = this.WorkflowExecutionInfo?.ToPublic()
             };
 
-            details.Activities = new List<DescribedActivityInfo>();
+            details.PendingActivities = new List<PendingActivityInfo>();
 
             if (this.PendingActivities != null)
             {
                 foreach (var activity in this.PendingActivities)
                 {
-                    details.Activities.Add(activity.ToPublic());
+                    details.PendingActivities.Add(activity.ToPublic());
+                }
+            }
+
+            details.PendingChildren = new List<PendingChildExecutionInfo>();
+
+            if (this.PendingChildren != null)
+            {
+                foreach (var child in this.PendingChildren)
+                {
+                    details.PendingChildren.Add(child.ToPublic());
                 }
             }
 
