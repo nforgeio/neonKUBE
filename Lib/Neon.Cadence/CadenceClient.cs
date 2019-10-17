@@ -710,19 +710,43 @@ namespace Neon.Cadence
 
             var debugOption = settings.Debug ? " --debug" : string.Empty;
             var commandLine = $"--listen {endpoint.Address}:{endpoint.Port}{debugOption} --client-id {clientId}";
-
-            if (NeonHelper.IsWindows)
+            
+            if (NeonHelper.IsWindows && settings.Debug)
             {
                 var startInfo = new ProcessStartInfo(binaryPath, commandLine)
                 {
-                    UseShellExecute = settings.Debug,
+                    UseShellExecute = true,
                 };
 
                 return Process.Start(startInfo);
             }
             else
             {
-                return Process.Start(binaryPath, commandLine);
+                var process = new Process();
+
+                process.StartInfo.UseShellExecute        = false;
+                process.StartInfo.FileName               = binaryPath;
+                process.StartInfo.Arguments              = commandLine;
+                process.StartInfo.RedirectStandardError  = true;
+                process.StartInfo.RedirectStandardOutput = true;
+
+                // These event handlers intentionally ignore the process output because
+                // we don't want it to get mixed in with the application's output
+                // streams which will often be used fo streaming application log data
+                // or for other purposes.
+                //
+                // [cadence-proxy] is already transmitting log information to the
+                // client and the client is directing that to the normal logging
+                // mechanisms.
+
+                process.ErrorDataReceived  += (s, a) => { };
+                process.OutputDataReceived += (s, a) => { };
+
+                process.Start();
+                process.BeginErrorReadLine();
+                process.BeginOutputReadLine();
+
+                return process;
             }
         }
 
