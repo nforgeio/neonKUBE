@@ -393,7 +393,7 @@ namespace Neon.Common
                     return;
                 }
 
-                Task.Delay(pollTime.Value).Wait();
+                Thread.Sleep(pollTime.Value);
 
                 if (DateTimeOffset.UtcNow >= timeLimit)
                 {
@@ -616,39 +616,6 @@ namespace Neon.Common
                 }
 
                 await Task.Delay(250);
-            }
-        }
-
-        /// <summary>
-        /// Performs zero or more actions in parallel, synchronously waiting for all of them
-        /// to completed.
-        /// </summary>
-        /// <param name="actions">The actions to be performed.</param>
-        /// <param name="timeout">The optional timeout.</param>
-        /// <param name="cancellationToken">The optional cancellation token.</param>
-        /// <exception cref="TimeoutException">Thrown if the <paramref name="timeout"/> was exceeded.</exception>
-        public static void WaitForParallel(IEnumerable<Action> actions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
-        {
-            Covenant.Requires<ArgumentNullException>(actions != null, nameof(actions));
-
-            var tasks = new List<Task>();
-
-            foreach (var action in actions)
-            {
-                if (action != null)
-                {
-                    tasks.Add(Task.Run(action));
-                }
-            }
-
-            if (tasks.Count > 0)
-            {
-                Task.Run(
-                    async () =>
-                    {
-                        await WaitAllAsync(tasks, timeout, cancellationToken);
-
-                    }).Wait();
             }
         }
 

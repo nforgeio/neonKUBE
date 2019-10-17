@@ -787,6 +787,67 @@ namespace Neon.Cadence
 
             var client = new CadenceClient(settings);
 
+            // Initilize the [cadence-proxy].
+
+            if (!settings.DebugDisableHandshakes)
+            {
+                try
+                {
+                    // Send the [InitializeRequest] to the [cadence-proxy] so it will know
+                    // where the .NET Client is listening.
+
+                    var initializeRequest =
+                        new InitializeRequest()
+                        {
+                            LibraryAddress = client.ListenUri.Host,
+                            LibraryPort    = client.ListenUri.Port,
+                            LogLevel       = client.Settings.LogLevel
+                        };
+
+                    await client.CallProxyAsync(initializeRequest);
+
+                    // Send the [ConnectRequest] to the [cadence-proxy] telling it
+                    // how to connect to the Cadence cluster.
+
+                    var sbEndpoints = new StringBuilder();
+
+                    foreach (var serverUri in settings.Servers)
+                    {
+                        var uri = new Uri(serverUri, UriKind.Absolute);
+
+                        sbEndpoints.AppendWithSeparator($"{uri.Host}:{uri.Port}", ",");
+                    }
+
+                    var connectRequest =
+                        new ConnectRequest()
+                        {
+                            Endpoints     = sbEndpoints.ToString(),
+                            Identity      = settings.ClientIdentity,
+                            ClientTimeout = TimeSpan.FromSeconds(30),
+                            Domain        = settings.DefaultDomain,
+                            CreateDomain  = settings.CreateDomain
+                        };
+
+                    client.CallProxyAsync(connectRequest).Result.ThrowOnError();
+                }
+                catch (Exception e)
+                {
+                    client.Dispose();
+                    throw new CadenceConnectException("Cannot connect to Cadence cluster.", e);
+                }
+            }
+
+            // Crank up the background threads which will handle [cadence-proxy]
+            // request timeouts.
+
+            client.heartbeatThread = new Thread(new ThreadStart(client.HeartbeatThread));
+            client.heartbeatThread.Start();
+
+            client.timeoutThread = new Thread(new ThreadStart(client.TimeoutThread));
+            client.timeoutThread.Start();
+
+            // Initialize the cache size to a known value.
+
             try
             {
                 await client.SetCacheMaximumSizeAsync(10000);
@@ -1281,71 +1342,6 @@ namespace Neon.Cadence
                 BaseAddress = new Uri($"http://{address}:{proxyPort}"),
                 Timeout     = settings.ProxyTimeout > TimeSpan.Zero ? settings.ProxyTimeout : Settings.DebugHttpTimeout
             };
-
-            // Initilize the [cadence-proxy].
-
-            if (!Settings.DebugDisableHandshakes)
-            {
-                try
-                {
-                    // Send the [InitializeRequest] to the [cadence-proxy] so it will know
-                    // where the .NET Client is listening.
-
-                    var initializeRequest =
-                        new InitializeRequest()
-                        {
-                            LibraryAddress = ListenUri.Host,
-                            LibraryPort    = ListenUri.Port,
-                            LogLevel       = Settings.LogLevel
-                        };
-
-                    CallProxyAsync(initializeRequest).Wait();
-
-                    // Send the [ConnectRequest] to the [cadence-proxy] telling it
-                    // how to connect to the Cadence cluster.
-
-                    var sbEndpoints = new StringBuilder();
-
-                    foreach (var serverUri in settings.Servers)
-                    {
-                        var uri = new Uri(serverUri, UriKind.Absolute);
-
-                        sbEndpoints.AppendWithSeparator($"{uri.Host}:{uri.Port}", ",");
-                    }
-
-                    var connectRequest = 
-                        new ConnectRequest()
-                        {
-                            Endpoints     = sbEndpoints.ToString(),
-                            Identity      = settings.ClientIdentity,
-                            ClientTimeout = TimeSpan.FromSeconds(30),
-                            Domain        = settings.DefaultDomain,
-                            CreateDomain  = settings.CreateDomain
-                        };
-
-                    CallProxyAsync(connectRequest).Result.ThrowOnError();
-                }
-                catch (Exception e)
-                {
-                    Dispose();
-                    throw new CadenceConnectException("Cannot connect to Cadence cluster.", e);
-                }
-            }
-
-            // Crank up the background threads which will handle [cadence-proxy]
-            // request timeouts.
-
-            // $todo(jefflill):
-            //
-            // Disabling this for now due to occasional heartbeat timeout errors.
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/680
-
-            heartbeatThread = new Thread(new ThreadStart(HeartbeatThread));
-            heartbeatThread.Start();
-
-            timeoutThread = new Thread(new ThreadStart(TimeoutThread));
-            timeoutThread.Start();
         }
 
         /// <summary>
@@ -1619,9 +1615,9 @@ namespace Neon.Cadence
                     request.IsCancellable = true;
 
                     cancellationToken.Register(
-                        () =>
+                        async () =>
                         {
-                            CallProxyAsync(new CancelRequest() { RequestId = requestId }).Wait();
+                            await CallProxyAsync(new CancelRequest() { RequestId = requestId });
                         });
                 }
 
