@@ -245,7 +245,7 @@ namespace Neon.DnsTools
         /// <returns>An empty result set if the lookup failed.</returns>
         public async Task<IEnumerable<IPAddress>> LookupAsync(string addressOrFQDN, bool noCache = false)
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // We can short-circuit things if the parameter is an IP address.
 

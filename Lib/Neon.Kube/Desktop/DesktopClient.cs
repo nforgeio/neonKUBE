@@ -105,7 +105,7 @@ namespace Neon.Kube
         /// </remarks>
         public async Task UpdateUIAsync()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             try
             {
@@ -130,7 +130,7 @@ namespace Neon.Kube
         /// </remarks>
         public async Task Login()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             try
             {
@@ -155,7 +155,7 @@ namespace Neon.Kube
         /// </remarks>
         public async Task Logout()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             try
             {
@@ -181,7 +181,7 @@ namespace Neon.Kube
         /// </remarks>
         public async Task StartOperationAsync(string summary)
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             var operation = new RemoteOperation()
             {
@@ -217,7 +217,7 @@ namespace Neon.Kube
         /// </remarks>
         public async Task EndOperationAsync(string completedToast = null, bool failed = false)
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             var operation = new RemoteOperation()
             {

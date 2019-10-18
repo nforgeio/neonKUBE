@@ -81,7 +81,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_WithNoResult()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can call a simple workflow that accepts a
             // parameter and results a result.
@@ -143,7 +143,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_WithResult()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can call a simple workflow that accepts a
             // parameter and results a result.
@@ -157,7 +157,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_WithMemos()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can call a simple workflow that accepts a
             // parameter and results a result.
@@ -199,7 +199,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Logger()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that logging within a workflow doesn't barf.
 
@@ -238,7 +238,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_UtcNow()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify: Workflow.UtcNow(). 
 
@@ -280,7 +280,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Sleep()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify: Workflow.SleepAsync(). 
 
@@ -314,7 +314,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_SleepUntilUtc()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             var stub = client.NewWorkflowStub<IWorkflowSleepUntil>();
 
@@ -363,7 +363,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_StubExecTwice()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that a single workflow stub instance may only be used
             // to start a workflow once.
@@ -404,7 +404,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_MultiEntrypoints()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can call multiple entry points.
 
@@ -439,7 +439,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_MultipleStubs()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we CANNOT reuse a workflow stub to make multiple calls.
 
@@ -641,7 +641,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_NextRandomDouble()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Start a workflow that will return a set of random doubles (0.0 <= value < 1.0)
             // and verify that there are only a small number of duplicates.  Then do the same
@@ -702,7 +702,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_NextRandomInt()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Start a workflow that will return a set of random integers (unconstrained)
             // and verify that there are only a small number of duplicates.  Then do the same
@@ -757,7 +757,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_NextRandomInt_Max()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Start a workflow that will return a set of random integers (<= 1 million)
             // and verify that there are only a small number of duplicates.  Then do the same
@@ -818,7 +818,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_NextRandomInt_MinMax()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Start a workflow that will return a set of random integers (1 million <= value <= 2 million)
             // and verify that there are only a small number of duplicates.  Then do the same
@@ -912,7 +912,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_NextRandomBytes()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Start a workflow that will return a set of random byte arrays and verify that there
             // are only a small number of duplicates.  Then do the same with another workflow and
@@ -996,7 +996,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Echo()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we send and receive varying sizes of content, from
             // small to pretty large (1MiB).
@@ -1048,7 +1048,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_SideEffect()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that SideEffect() and SideEffect<T>() work.
 
@@ -1090,7 +1090,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_MutableSideEffect()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that MutableSideEffect() and MutableSideEffect<T>() work.
 
@@ -1165,7 +1165,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_SignalOnce()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             WorkflowSignal.Reset();
 
@@ -1183,7 +1183,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_SignalTwice()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
             WorkflowSignal.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowSignal>();
@@ -1205,7 +1205,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_SignalBeforeStart()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we're not allowed to send a signal via a
             // stub before we started the workflow.
@@ -1299,7 +1299,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_QueryOnce()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
             WorkflowQuery.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowQuery>();
@@ -1315,7 +1315,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_QueryTwice()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
             WorkflowQuery.Reset();
 
             var stub = client.NewWorkflowStub<IWorkflowQuery>();
@@ -1337,7 +1337,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_QueryNoResult()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
             WorkflowQuery.Reset();
 
             // Verify that we can call a query method that doesn't
@@ -1356,7 +1356,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_QueryBeforeStart()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
             WorkflowQuery.Reset();
 
             // Verify that we're not allowed to submit a query via a
@@ -1389,7 +1389,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_GetVersion()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
             WorkflowQuery.Reset();
 
             // Minimally exercise the workflow GetVersion() API.
@@ -1534,7 +1534,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Complex()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can start a workflow via different entry point methods.
 
@@ -1971,7 +1971,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Child()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can call a child workflow that doesn't return a result.
 
@@ -1987,7 +1987,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ChildHello()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can call a child workflow that accepts a
             // parameter and returns a result.
@@ -2011,7 +2011,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_FutureChild_NoArgsOrResult ()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can run a child workflow via a future that 
             // accepts no args and doesn't return a result.  This also tests
@@ -2031,7 +2031,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_FutureChild_ArgsAndResult()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can run a child workflow via a future that 
             // accepts a parameter and returns a result.
@@ -2047,7 +2047,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ChildActivity()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can call a child workflow that calls an activity.
 
@@ -2063,7 +2063,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ChildSignal()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can signal a child workflow.
 
@@ -2081,7 +2081,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ChildQueryNotSupported()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that querying a child workflow is not supported.
 
@@ -2097,7 +2097,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ChildNested()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Test calling a workflow that calls a child which
             // calls another child.
@@ -2113,7 +2113,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_FutureActivity_NoArgsResult()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Test calling a workflow that uses a future to call an
             // activity with no parameters or result.
@@ -2127,7 +2127,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_FutureLocalActivity_NoArgsResult()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Test calling a workflow that uses a future to call a
             // local activity with no parameters or result.
@@ -2141,7 +2141,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_FutureActivity_ArgsResult()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Test calling a workflow that uses a future to call an
             // activity with parameters and a result.
@@ -2155,7 +2155,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_FutureLocalActivity_ArgsResult()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Test calling a workflow that uses a future to call a
             // local activity with parameters and a result.
@@ -2169,7 +2169,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ParallelActivity()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Test calling a workflow that runs two activities in parallel.
 
@@ -2182,7 +2182,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ParallelLocalActivity()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Test calling a workflow that runs two activities in parallel.
 
@@ -2213,7 +2213,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_DifferentNames()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that a workflow whose class and interface names
             // don't match works.  This ensures that the Cadence client
@@ -2249,7 +2249,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Fail()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we see an exception thrown by a workflow.
 
@@ -2285,7 +2285,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Unregistered()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we see an error when attempting to execute an
             // unregistered workflow.  In this case, there is no class
@@ -2329,7 +2329,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ComplexData()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can pass and return a complex object to/from
             // a workflow.
@@ -2410,7 +2410,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Info()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that the [Workflow.WorkflowInfo] properties are
             // set correctly for a workflow.
@@ -2542,7 +2542,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ContinueAsNew()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can continue a workflow as new without using a stub
             // and with the same options.
@@ -2556,7 +2556,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ContinueAsNew_Options()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can continue a workflow as new without using a stub
             // and with new options.
@@ -2576,7 +2576,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ContinueAsNew_Stub()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can continue a workflow as new using a stub
             // and with the same options.
@@ -2590,7 +2590,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ContinueAsNew_StubOptions()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can continue a workflow as new using a stub
             // and with new options.
@@ -2760,7 +2760,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ExternalWorkflowStub_ById_NoResult()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Call a workflow that executes a child workflow by ID using a typed 
             // stub and then creates an external stub and then waits for that as
@@ -2775,7 +2775,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ExternalWorkflowStub_ById_WithResult()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Call a workflow that executes a child workflow by ID using a typed 
             // stub and then creates an external stub and then waits for that as
@@ -2790,7 +2790,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ExternalWorkflowStub_ByExecution_NoResult()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Call a workflow that executes a child workflow by execution using a typed 
             // stub and then creates an external stub and then waits for that as
@@ -2805,7 +2805,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ExternalWorkflowStub_ByExecution_WithResult()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Call a workflow that executes a child workflow by execution using a typed 
             // stub and then creates an external stub and then waits for that as
@@ -2820,7 +2820,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ExternalWaitForLongTime()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Create an external workflow that will run for a relatively long
             // time and then pass the external ID to a child workflow that will
@@ -2996,7 +2996,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ChildGetExecution()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Call a workflow that confirms that [Workflow.GetExecutionAsync()]
             // works correctly against a child workflow.
@@ -3012,7 +3012,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ToUntyped()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can convert an external workflow stub into an
             // untyped [WorkflowStub].
@@ -3041,7 +3041,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_FutureChild_WithResult()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Call a workflow that creates a [ChildWorkflowStub] and starts a child
             // workflow, passing it a parameter, signalling it, and then verifying
@@ -3056,7 +3056,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Future_WithResult()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Call a workflow that returns a result using the future stub.
 
@@ -3070,7 +3070,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Future_WithoutResult()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Call a workflow that returns no result using the future stub.
 
@@ -3211,7 +3211,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ExternalIdNoReuse()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can have Cadence reject duplicate workflow IDs.
 
@@ -3240,7 +3240,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ExternalIdReuseViaOptions()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can reuse a workflow ID for an external
             // workflow via options.
@@ -3268,7 +3268,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ExternalIdReuseViaAttribute()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can reuse a workflow ID for an external
             // workflow via a [WorkflowMethod] attribute.
@@ -3295,7 +3295,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ChildIdNoReuse()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can have Cadence reject duplicate child workflow IDs.
 
@@ -3308,7 +3308,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_ChildIdReuseViaOptions()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can have Cadence use duplicate child workflow IDs.
 
@@ -3459,7 +3459,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_UntypedChildFuture_WithNoResult()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that a child workflow with no arguments or result can be 
             // called and signalled via an untyped future stub.
@@ -3473,7 +3473,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_UntypedChildFuture_WithResult()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that a child workflow with an argument and result can be 
             // called and signalled via an untyped future stub.

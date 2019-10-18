@@ -90,7 +90,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activity_WithNoResult()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can call a simple workflow that accepts a
             // parameter, calls a similarly simple activity and results
@@ -147,7 +147,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activity_WithResult()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can call a simple workflow that accepts a
             // parameter, calls a similarly simple activity that returns
@@ -198,7 +198,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task LocalActivity_WithResult()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can call a simple workflow that accepts a
             // parameter, calls a similarly simple local activity that
@@ -258,7 +258,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task LocalActivity_WithoutResult()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
             LocalActivityWithouthResult.Reset();
 
             // Verify that we can call a simple workflow that accepts a
@@ -312,7 +312,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activity_Logger()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that logging within an activity doesn't barf.
 
@@ -374,7 +374,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activity_MultipleStubs()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can reuse an activity stub to make multiple calls.
 
@@ -425,7 +425,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activity_DifferentNames()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that an activity whose class and interface names
             // don't match works.  This ensures that the Cadence client
@@ -582,7 +582,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activity_SendHeartbeat()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that recording heartbeats the standard way works.
 
@@ -595,7 +595,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activity_Heartbeat_WithDefaults()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that recording heartbeats the using the convenience method works.
 
@@ -608,7 +608,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activity_Heartbeat_WithDetails()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that recording heartbeats the using the convenience method works.
 
@@ -621,7 +621,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activity_Heartbeat_WithInterval()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that recording heartbeats the using the convenience method works.
 
@@ -684,7 +684,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activity_Fail()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can call a workflow that calls an activity
             // which throws an exception and that we see the error.
@@ -748,7 +748,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activity_ComplexData()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can round-trip an object to a workflow and activity
             // and then back.
@@ -824,7 +824,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activity_ExternalCompleteByToken()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can externally heartbeat and complete an activity
             // using its task token.
@@ -846,7 +846,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activity_ExternalCompleteById()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can externally heartbeat and complete an activity
             // using the workflow execution and the activity ID.
@@ -868,7 +868,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activity_ExternalErrorByToken()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can externally fail an activity
             // using its task token.
@@ -895,7 +895,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activity_ExternalErrorById()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can externally fail an activity
             // using the workflow execution and the activity ID.
@@ -922,7 +922,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task ActivityExternalCancelByToken()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can externally cancel an activity
             // using the activity token.
@@ -944,7 +944,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task ActivityExternalCancelById()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that we can externally cancel an activity
             // using the workflow execution and the activity ID.

@@ -113,7 +113,7 @@ namespace Neon.Tasks
         /// </summary>
         public async Task Run()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             while (true)
             {

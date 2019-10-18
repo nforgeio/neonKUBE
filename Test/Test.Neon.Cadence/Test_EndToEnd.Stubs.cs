@@ -141,7 +141,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task WorkflowStub_Execute()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Use an untyped workflow stub to execute a workflow.
 
@@ -162,7 +162,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task WorkflowStub_Attach()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Use an untyped workflow stub to execute a workflow.
 
@@ -192,7 +192,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task WorkflowStub_Signal()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Use an untyped workflow stub to execute a workflow and then
             // verify that we're able to send signals to it.

@@ -1444,7 +1444,7 @@ namespace Neon.ModelGen
 
                     writer.WriteLine($"        public static async Task<object> CreateFromAsync(Stream stream, Encoding encoding = null)");
                     writer.WriteLine($"        {{");
-                    writer.WriteLine($"            await SyncContext.ResetAsync;");
+                    writer.WriteLine($"            await SyncContext.ClearAsync;");
                     writer.WriteLine();
                     writer.WriteLine($"            encoding = encoding ?? Encoding.UTF8;");
                     writer.WriteLine();
@@ -2334,7 +2334,7 @@ namespace Neon.ModelGen
 
                     writer.WriteLine($"        public {virtualModifier} async Task WriteJsonToAsync(Stream stream)");
                     writer.WriteLine($"        {{");
-                    writer.WriteLine($"            await SyncContext.ResetAsync;");
+                    writer.WriteLine($"            await SyncContext.ClearAsync;");
                     writer.WriteLine($"            __Save();");
                     writer.WriteLine();
 
@@ -3095,7 +3095,7 @@ namespace Neon.ModelGen
             writer.WriteLine($"{indent}        {generatedMethodAttribute}");
             writer.WriteLine($"{indent}        public async {methodReturnType} {methodName}({sbParameters})");
             writer.WriteLine($"{indent}        {{");
-            writer.WriteLine($"{indent}            await SyncContext.ResetAsync;");
+            writer.WriteLine($"{indent}            await SyncContext.ClearAsync;");
             writer.WriteLine();
 
             if (sbArgGenerate.Length > 0)
@@ -3133,7 +3133,7 @@ namespace Neon.ModelGen
 
             writer.WriteLine($"{indent}        public async Task<JsonResponse> Unsafe{methodName}({sbParameters})");
             writer.WriteLine($"{indent}        {{");
-            writer.WriteLine($"{indent}            await SyncContext.ResetAsync;");
+            writer.WriteLine($"{indent}            await SyncContext.ClearAsync;");
             writer.WriteLine();
 
             if (sbArgGenerate.Length > 0)
