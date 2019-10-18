@@ -1945,6 +1945,13 @@ namespace TestCadence
 
             Assert.Equal("Hello Jeff!", await stub.HelloChildAsync("Jeff"));
             Assert.True(WorkflowChild.WasExecuted);
+
+            WorkflowChild.WasExecuted = false;
+
+            var stub2 = client.NewWorkflowStub<IWorkflowParent>();
+
+            Assert.Equal("Hello Jeff!", await stub2.HelloChildAsync("Jeff"));
+            Assert.True(WorkflowChild.WasExecuted);
         }
 
         [Fact]

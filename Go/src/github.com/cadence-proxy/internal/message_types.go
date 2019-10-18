@@ -181,9 +181,29 @@ const (
 	LogRequest MessageType = 27
 
 	/// <summary>
-	///  <b>client --> proxy:</b> Sent in response to a <see cref="LogRequest"/> message.
+	/// <b>client --> proxy:</b> Sent in response to a <see cref="LogRequest"/> message.
 	/// </summary>
 	LogReply MessageType = 28
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Sent to list the Cadence domains.
+	/// </summary>
+	DomainListRequest MessageType = 29
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="DomainListRequest"/> message.
+	/// </summary>
+	DomainListReply MessageType = 30
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Sent to obtain details for a task list.
+	/// </summary>
+	DescribeTaskListRequest MessageType = 31
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="DescribeTaskListRequest"/> message.
+	/// </summary>
+	DescribeTaskListReply MessageType = 32
 
 	//---------------------------------------------------------------------
 	// Workflow messages
@@ -304,12 +324,12 @@ const (
 	/// <summary>
 	/// <b>RESERVED:</b> This is not currently implemented.
 	/// </summary>
-	WorkflowDescribeTaskListRequest MessageType = 122
+	Reserved0 MessageType = 122
 
 	/// <summary>
 	/// <b>RESERVED:</b> This is not currently implemented.
 	/// </summary>
-	WorkflowDescribeTaskListReply MessageType = 123
+	Reserved1 MessageType = 123
 
 	/// <summary>
 	/// <b>proxy --> client:</b> Commands the client client and associated .NET application
@@ -520,6 +540,56 @@ const (
 	/// </summary>
 	WorkflowQueryInvokeReply MessageType = 161
 
+	/// <summary>
+	/// <b>proxy --> client:</b> Creates a new workflow queue.
+	/// </summary>
+	WorkflowQueueNewRequest MessageType = 162
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowQueueNewRequest"/>.
+	/// </summary>
+	WorkflowQueueNewReply MessageType = 163
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Writes data to a queue.
+	/// </summary>
+	WorkflowQueueWriteRequest MessageType = 164
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowQueueWriteRequest"/>.
+	/// </summary>
+	WorkflowQueueWriteReply MessageType = 165
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Reads data from a queue.
+	/// </summary>
+	WorkflowQueueReadRequest MessageType = 166
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowQueueReadRequest"/>.
+	/// </summary>
+	WorkflowQueueReadReply MessageType = 167
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Returns the number if data items in a queue.
+	/// </summary>
+	WorkflowQueueLengthRequest MessageType = 168
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowQueueLengthRequest"/>.
+	/// </summary>
+	WorkflowQueueLengthReply MessageType = 169
+
+	/// <summary>
+	/// <b>proxy --> client:</b> Closes a queue.
+	/// </summary>
+	WorkflowQueueCloseRequest MessageType = 170
+
+	/// <summary>
+	/// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowQueueCloseRequest"/>.
+	/// </summary>
+	WorkflowQueueCloseReply MessageType = 171
+
 	//---------------------------------------------------------------------
 	// Activity messages
 
@@ -690,252 +760,340 @@ const (
 // the corresponding string
 func (m MessageType) String() string {
 	switch m {
+
 	case Unspecified:
 		return "Unspecified"
+
 	case InitializeRequest:
 		return "InitializeRequest"
 	case InitializeReply:
 		return "InitializeReply"
+
 	case ConnectRequest:
 		return "ConnectRequest"
 	case ConnectReply:
 		return "ConnectReply"
+
 	case DisconnectRequest:
 		return "DisconnectRequest"
 	case DisconnectReply:
 		return "DisconnectReply"
+
 	case TerminateRequest:
 		return "TerminateRequest"
 	case TerminateReply:
 		return "TerminateReply"
+
 	case DomainRegisterRequest:
 		return "DomainRegisterRequest"
 	case DomainRegisterReply:
 		return "DomainRegisterReply"
+
 	case DomainDeprecateRequest:
 		return "DomainDeprecateRequest"
 	case DomainDeprecateReply:
 		return "DomainDeprecateReply"
+
 	case DomainDescribeRequest:
 		return "DomainDescribeRequest"
 	case DomainDescribeReply:
 		return "DomainDescribeReply"
+
 	case DomainUpdateRequest:
 		return "DomainUpdateRequest"
 	case DomainUpdateReply:
 		return "DomainUpdateReply"
+
 	case HeartbeatRequest:
 		return "HeartbeatRequest"
 	case HeartbeatReply:
 		return "HeartbeatReply"
+
 	case CancelRequest:
 		return "CancelRequest"
 	case CancelReply:
 		return "CancelReply"
+
 	case NewWorkerRequest:
 		return "NewWorkerRequest"
 	case NewWorkerReply:
 		return "NewWorkerReply"
+
 	case StopWorkerRequest:
 		return "StopWorkerRequest"
 	case StopWorkerReply:
 		return "StopWorkerReply"
+
 	case PingRequest:
 		return "PingRequest"
 	case PingReply:
 		return "PingReply"
+
 	case LogRequest:
 		return "LogRequest"
 	case LogReply:
 		return "LogReply"
+
+	case DescribeTaskListRequest:
+		return "DescribeTaskListRequest"
+	case DescribeTaskListReply:
+		return "DescribeTaskListReply"
+
 	case WorkflowRegisterRequest:
 		return "WorkflowRegisterRequest"
 	case WorkflowRegisterReply:
 		return "WorkflowRegisterReply"
+
 	case WorkflowExecuteRequest:
 		return "WorkflowExecuteRequest"
 	case WorkflowExecuteReply:
 		return "WorkflowExecuteReply"
+
 	case WorkflowSignalRequest:
 		return "WorkflowSignalRequest"
 	case WorkflowSignalReply:
 		return "WorkflowSignalReply"
+
 	case WorkflowSignalWithStartRequest:
 		return "WorkflowSignalWithStartRequest"
 	case WorkflowSignalWithStartReply:
 		return "WorkflowSignalWithStartReply"
+
 	case WorkflowCancelRequest:
 		return "WorkflowCancelRequest"
 	case WorkflowCancelReply:
 		return "WorkflowCancelReply"
+
 	case WorkflowTerminateRequest:
 		return "WorkflowTerminateRequest"
 	case WorkflowTerminateReply:
 		return "WorkflowTerminateReply"
+
 	case WorkflowGetHistoryRequest:
 		return "WorkflowGetHistoryRequest"
 	case WorkflowGetHistoryReply:
 		return "WorkflowGetHistoryReply"
+
 	case WorkflowListClosedRequest:
 		return "WorkflowListClosedRequest"
 	case WorkflowListClosedReply:
 		return "WorkflowListClosedReply"
+
 	case WorkflowListOpenExecutionsRequest:
 		return "WorkflowListOpenExecutionRequest"
 	case WorkflowListOpenExecutionsReply:
 		return "WorkflowListOpenExecutionReply"
+
 	case WorkflowQueryRequest:
 		return "WorkflowQueryRequest"
 	case WorkflowQueryReply:
 		return "WorkflowQueryReply"
+
 	case WorkflowDescribeExecutionRequest:
 		return "WorkflowDescribeExecutionRequest"
 	case WorkflowDescribeExecutionReply:
 		return "WorkflowDescribeExecutionReply"
-	case WorkflowDescribeTaskListRequest:
-		return "WorkflowDescribeTaskListRequest"
-	case WorkflowDescribeTaskListReply:
-		return "WorkflowDescribeTaskListReply"
+
 	case WorkflowInvokeRequest:
 		return "WorkflowInvokeRequest"
 	case WorkflowInvokeReply:
 		return "WorkflowInvokeReply"
+
 	case WorkflowExecuteChildRequest:
 		return "WorkflowExecuteChildRequest"
 	case WorkflowExecuteChildReply:
 		return "WorkflowExecuteChildReply"
+
 	case WorkflowSignalSubscribeRequest:
 		return "WorkflowSignalSubscribeRequest"
 	case WorkflowSignalSubscribeReply:
 		return "WorkflowSignalSubscribeReply"
+
 	case WorkflowSignalInvokeRequest:
 		return "WorkflowSignalInvokeRequest"
 	case WorkflowSignalInvokeReply:
 		return "WorkflowSignalInvokeReply"
+
 	case WorkflowMutableRequest:
 		return "WorkflowMutableRequest"
 	case WorkflowMutableReply:
 		return "WorkflowMutableReply"
+
 	case WorkflowGetVersionRequest:
 		return "WorkflowGetVersionRequest"
 	case WorkflowGetVersionReply:
 		return "WorkflowGetVersionReply"
+
 	case WorkflowSetCacheSizeRequest:
 		return "WorkflowSetCacheSizeRequest"
 	case WorkflowSetCacheSizeReply:
 		return "WorkflowSetCacheSizeReply"
+
 	case WorkflowGetResultRequest:
 		return "WorkflowGetResultRequest"
 	case WorkflowGetResultReply:
 		return "WorkflowGetResultReply"
+
 	case WorkflowHasLastResultRequest:
 		return "WorkflowHasLastResultRequest"
 	case WorkflowHasLastResultReply:
 		return "WorkflowHasLastResultReply"
+
 	case WorkflowGetLastResultRequest:
 		return "WorkflowGetLastResultRequest"
 	case WorkflowGetLastResultReply:
 		return "WorkflowGetLastResultReply"
+
 	case WorkflowDisconnectContextRequest:
 		return "WorkflowDisconnectContextRequest"
 	case WorkflowDisconnectContextReply:
 		return "WorkflowDisconnectContextReply"
+
 	case WorkflowGetTimeRequest:
 		return "WorkflowGetTimeRequest"
 	case WorkflowGetTimeReply:
 		return "WorkflowGetTimeReply"
+
 	case WorkflowSleepRequest:
 		return "WorkflowSleepRequest"
 	case WorkflowSleepReply:
 		return "WorkflowSleepReply"
+
 	case WorkflowWaitForChildRequest:
 		return "WorkflowWaitForChildRequest"
 	case WorkflowWaitForChildReply:
 		return "WorkflowWaitForChildReply"
+
 	case WorkflowSignalChildRequest:
 		return "WorkflowSignalChildRequest"
 	case WorkflowSignalChildReply:
 		return "WorkflowSignalChildReply"
+
 	case WorkflowCancelChildRequest:
 		return "WorkflowCancelChildRequest"
 	case WorkflowCancelChildReply:
 		return "WorkflowCancelChildReply"
+
 	case WorkflowFutureReadyRequest:
 		return "WorkflowFutureReadyRequest"
 	case WorkflowFutureReadyReply:
 		return "WorkflowFutureReadyReply"
+
 	case WorkflowSetQueryHandlerRequest:
 		return "WorkflowSetQueryHandlerRequest"
 	case WorkflowSetQueryHandlerReply:
 		return "WorkflowSetQueryHandlerReply"
+
 	case WorkflowQueryInvokeRequest:
 		return "WorkflowQueryInvokeRequest"
 	case WorkflowQueryInvokeReply:
 		return "WorkflowQueryInvokeReply"
+
+	case WorkflowQueueNewRequest:
+		return "WorkflowQueueNewRequest"
+	case WorkflowQueueNewReply:
+		return "WorkflowQueueNewReply"
+
+	case WorkflowQueueWriteRequest:
+		return "WorkflowQueueWriteRequest"
+	case WorkflowQueueWriteReply:
+		return "WorkflowQueueWriteReply"
+
+	case WorkflowQueueReadRequest:
+		return "WorkflowQueueReadRequest"
+	case WorkflowQueueReadReply:
+		return "WorkflowQueueReadReply"
+
+	case WorkflowQueueLengthRequest:
+		return "WorkflowQueueLengthRequest"
+	case WorkflowQueueLengthReply:
+		return "WorkflowQueueLengthReply"
+
+	case WorkflowQueueCloseRequest:
+		return "WorkflowQueueCloseRequest"
+	case WorkflowQueueCloseReply:
+		return "WorkflowQueueCloseReply"
+
 	case ActivityExecuteRequest:
 		return "ActivityExecuteRequest"
 	case ActivityExecuteReply:
 		return "ActivityExecuteReply"
+
 	case ActivityInvokeRequest:
 		return "ActivityInvokeRequest"
 	case ActivityInvokeReply:
 		return "ActivityInvokeReply"
+
 	case ActivityGetHeartbeatDetailsRequest:
 		return "ActivityGetHeartbeatDetailsRequest"
 	case ActivityGetHeartbeatDetailsReply:
 		return "ActivityGetHeartbeatDetailsReply"
+
 	case ActivityLogRequest:
 		return "ActivityLogRequest"
 	case ActivityLogReply:
 		return "ActivityLogReply"
+
 	case ActivityRecordHeartbeatRequest:
 		return "ActivityRecordHeartbeatRequest"
 	case ActivityRecordHeartbeatReply:
 		return "ActivityRecordHeartbeatReply"
+
 	case ActivityHasHeartbeatDetailsRequest:
 		return "ActivityHasHeartbeatDetailsRequest"
 	case ActivityHasHeartbeatDetailsReply:
 		return "ActivityHasHeartbeatDetailsReply"
+
 	case ActivityStoppingRequest:
 		return "ActivityStoppingRequest"
 	case ActivityStoppingReply:
 		return "ActivityStoppingReply"
+
 	case ActivityExecuteLocalRequest:
 		return "ActivityExecuteLocalRequest"
 	case ActivityExecuteLocalReply:
 		return "ActivityExecuteLocalReply"
+
 	case ActivityInvokeLocalRequest:
 		return "ActivityInvokeLocalRequest"
 	case ActivityInvokeLocalReply:
 		return "ActivityInvokeLocalReply"
+
 	case ActivityRegisterRequest:
 		return "ActivityRegisterRequest"
 	case ActivityRegisterReply:
 		return "ActivityRegisterReply"
+
 	case ActivityGetInfoRequest:
 		return "ActivityGetInfoRequest"
 	case ActivityGetInfoReply:
 		return "ActivityGetInfoReply"
+
 	case ActivityCompleteRequest:
 		return "ActivityCompleteRequest"
 	case ActivityCompleteReply:
 		return "ActivityCompleteReply"
+
 	case ActivityStartRequest:
 		return "ActivityStartRequest"
 	case ActivityStartReply:
 		return "ActivityStartReply"
+
 	case ActivityGetResultRequest:
 		return "ActivityGetResultRequest"
 	case ActivityGetResultReply:
 		return "ActivityGetResultReply"
+
 	case ActivityStartLocalRequest:
 		return "ActivityStartLocalRequest"
 	case ActivityStartLocalReply:
 		return "ActivityStartLocalReply"
+
 	case ActivityGetLocalResultRequest:
 		return "ActivityGetLocalResultRequest"
 	case ActivityGetLocalResultReply:
 		return "ActivityGetLocalResultReply"
+
 	default:
 		return ""
 	}
