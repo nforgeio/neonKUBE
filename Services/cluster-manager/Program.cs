@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.Kube;
+using Neon.Service;
 
 using k8s;
 using k8s.Models;

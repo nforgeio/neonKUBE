@@ -65,6 +65,8 @@ namespace Neon.Cadence
             /// <inheritdoc/>
             public async Task GetAsync()
             {
+                await TaskContext.ResetAsync;
+
                 var client = parentWorkflow.Client;
 
                 if (completed)
@@ -110,6 +112,8 @@ namespace Neon.Cadence
             /// <inheritdoc/>
             public async Task<TResult> GetAsync()
             {
+                await TaskContext.ResetAsync;
+
                 var client = parentWorkflow.Client;
 
                 if (completed)
@@ -224,6 +228,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<IAsyncFuture<TResult>> StartAsync<TResult>(params object[] args)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             parentWorkflow.SetStackTrace();
 
@@ -311,6 +316,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<IAsyncFuture> StartAsync(params object[] args)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             parentWorkflow.SetStackTrace();
 

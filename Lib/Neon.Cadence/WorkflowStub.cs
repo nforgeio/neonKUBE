@@ -25,6 +25,7 @@ using System.Threading.Tasks;
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Tasks;
 
 namespace Neon.Cadence
 {
@@ -269,6 +270,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task CancelAsync()
         {
+            await TaskContext.ResetAsync;
             EnsureStarted();
 
             if (Execution == null)
@@ -286,6 +288,7 @@ namespace Neon.Cadence
         /// <returns>The result.</returns>
         public async Task<TResult> GetResultAsync<TResult>()
         {
+            await TaskContext.ResetAsync;
             EnsureStarted();
 
             if (Execution == null)
@@ -304,6 +307,7 @@ namespace Neon.Cadence
         /// <returns>The result as a <c>dynamic</c>.</returns>
         public async Task<object> GetResultAsync(Type resultType)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(resultType != null, nameof(resultType));
             EnsureStarted();
 
@@ -324,6 +328,7 @@ namespace Neon.Cadence
         /// <returns>The query result.</returns>
         public async Task<TResult> QueryAsync<TResult>(string queryType, params object[] args)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryType), nameof(queryType));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
             EnsureStarted();
@@ -348,6 +353,7 @@ namespace Neon.Cadence
         /// <returns>The query result as a <c>dynamic</c>.</returns>
         public async Task<object> QueryAsync(Type resultType, string queryType, params object[] args)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryType), nameof(queryType));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
             EnsureStarted();
@@ -370,6 +376,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task SignalAsync(string signalName, params object[] args)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
             EnsureStarted();
@@ -393,6 +400,7 @@ namespace Neon.Cadence
         /// <returns></returns>
         public async Task<WorkflowExecution> SignalWithStartAsync(string signalName, object[] signalArgs, object[] startArgs)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
             Covenant.Requires<ArgumentNullException>(signalArgs != null, nameof(signalArgs));
             Covenant.Requires<ArgumentNullException>(startArgs != null, nameof(startArgs));
@@ -410,6 +418,7 @@ namespace Neon.Cadence
         /// <returns>The <see cref="WorkflowExecution"/>.</returns>
         public async Task<WorkflowExecution> StartAsync(params object[] args)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
             EnsureNotStarted();
 

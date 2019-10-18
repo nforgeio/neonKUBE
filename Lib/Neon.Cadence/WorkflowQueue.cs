@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Tasks;
 using Neon.Time;
 
 namespace Neon.Cadence
@@ -102,6 +103,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task EnqueueAsync(T item)
         {
+            await TaskContext.ResetAsync;
             client.EnsureNotDisposed();
 
             if (isClosed)
@@ -151,6 +153,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<DequeuedItem<T>> DequeueAsync(TimeSpan timeout = default)
         {
+            await TaskContext.ResetAsync;
             client.EnsureNotDisposed();
 
             if (isClosed)
@@ -191,6 +194,7 @@ namespace Neon.Cadence
         /// <exception cref="ObjectDisposedException">Thrown if the associated workflow client is disposed.</exception>
         public async Task<int> GetLengthAsync()
         {
+            await TaskContext.ResetAsync;
             client.EnsureNotDisposed();
 
             if (isClosed)
@@ -226,6 +230,7 @@ namespace Neon.Cadence
         /// <exception cref="ObjectDisposedException">Thrown if the associated workflow client is disposed.</exception>
         public async Task CloseAsync()
         {
+            await TaskContext.ResetAsync;
             client.EnsureNotDisposed();
 
             if (isClosed)

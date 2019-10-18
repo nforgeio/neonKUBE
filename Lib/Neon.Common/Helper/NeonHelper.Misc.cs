@@ -35,6 +35,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using Neon.Data;
+using Neon.Tasks;
 
 namespace Neon.Common
 {
@@ -415,6 +416,8 @@ namespace Neon.Common
         /// </remarks>
         public static async Task WaitForAsync(Func<Task<bool>> action, TimeSpan timeout, TimeSpan? pollTime = null)
         {
+            await TaskContext.ResetAsync;
+
             var timeLimit = DateTimeOffset.UtcNow + timeout;
 
             if (!pollTime.HasValue)
@@ -547,6 +550,8 @@ namespace Neon.Common
         /// <param name="tasks">The tasks to wait on.</param>
         public static async Task WaitAllAsync(IEnumerable<Task> tasks)
         {
+            await TaskContext.ResetAsync;
+
             foreach (var task in tasks)
             {
                 await task;
@@ -559,6 +564,8 @@ namespace Neon.Common
         /// <param name="tasks">The tasks to wait on.</param>
         public static async Task WaitAllAsync(params Task[] tasks)
         {
+            await TaskContext.ResetAsync;
+
             foreach (var task in tasks)
             {
                 await task;
@@ -574,6 +581,8 @@ namespace Neon.Common
         /// <exception cref="TimeoutException">Thrown if the <paramref name="timeout"/> was exceeded.</exception>
         public static async Task WaitAllAsync(IEnumerable<Task> tasks, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
         {
+            await TaskContext.ResetAsync;
+
             // There isn't a super clean way to implement this other than polling.
 
             if (!timeout.HasValue)

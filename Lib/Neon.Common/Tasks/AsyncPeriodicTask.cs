@@ -113,6 +113,8 @@ namespace Neon.Tasks
         /// </summary>
         public async Task Run()
         {
+            await TaskContext.ResetAsync;
+
             while (true)
             {
                 // Proactively test for cancellation.

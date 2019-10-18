@@ -27,6 +27,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Tasks;
 
 // $todo(jefflill):
 //
@@ -139,6 +140,8 @@ namespace Neon.Net
         /// <returns>A <see cref="PingReply"/>.</returns>
         public async Task<PingReply> SendPingAsync(IPAddress address, int timeoutMilliseconds = 2000)
         {
+            await TaskContext.ResetAsync;
+
             Ping ping;
 
             lock (syncLock)
@@ -186,6 +189,8 @@ namespace Neon.Net
         /// <returns>A <see cref="PingReply"/>.</returns>
         public async Task<PingReply> SendPingAsync(string address, int timeoutMilliseconds = 2000)
         {
+            await TaskContext.ResetAsync;
+
             return await SendPingAsync(IPAddress.Parse(address), timeoutMilliseconds);
         }
     }

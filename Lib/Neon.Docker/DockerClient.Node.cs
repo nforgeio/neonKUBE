@@ -32,6 +32,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
+using Neon.Tasks;
 
 namespace Neon.Docker
 {
@@ -47,6 +48,8 @@ namespace Neon.Docker
         /// <returns>The node list.</returns>
         public async Task<List<DockerNode>> NodeListAsync(CancellationToken cancellationToken = default)
         {
+            await TaskContext.ResetAsync;
+
             var response  = await JsonClient.GetAsync(GetUri("nodes"), cancellationToken: cancellationToken);
             var nodes     = new List<DockerNode>();
             var nodeArray = response.As<JArray>();

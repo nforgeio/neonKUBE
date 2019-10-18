@@ -30,6 +30,7 @@ using Neon.Common;
 using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Net;
+using Neon.Tasks;
 
 namespace NATS.Client
 {
@@ -149,12 +150,16 @@ namespace NATS.Client
         /// <inheritdoc/>
         public async Task DrainAsync()
         {
+            await TaskContext.ResetAsync;
+
             await subscription.DrainAsync();
         }
 
         /// <inheritdoc/>
         public async Task DrainAsync(int timeout)
         {
+            await TaskContext.ResetAsync;
+
             await subscription.DrainAsync(timeout);
         }
 

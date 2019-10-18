@@ -33,6 +33,7 @@ using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Data;
 using Neon.IO;
+using Neon.Tasks;
 using Neon.Xunit;
 using Neon.Xunit.Cadence;
 
@@ -47,6 +48,8 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Ping()
         {
+            await TaskContext.ResetAsync;
+
             // Verify that Ping works and optionally measure simple transaction throughput.
 
             await client.PingAsync();
@@ -120,6 +123,8 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Domain()
         {
+            await TaskContext.ResetAsync;
+
             // Exercise the Cadence domain operations.
 
             //-----------------------------------------------------------------

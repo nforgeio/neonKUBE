@@ -25,6 +25,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Net.Http.Client;
@@ -34,7 +35,7 @@ using Newtonsoft.Json.Linq;
 using Neon.Common;
 using Neon.Net;
 using Neon.Retry;
-using System.Threading;
+using Neon.Tasks;
 
 namespace Neon.Docker
 {
@@ -191,6 +192,8 @@ namespace Neon.Docker
         /// </remarks>
         public async Task<bool> PingAsync(CancellationToken cancellationToken = default)
         {
+            await TaskContext.ResetAsync;
+
             try
             {
                 var httpResponse = await JsonClient.HttpClient.GetAsync(GetUri("_ping"), cancellationToken);
@@ -224,6 +227,7 @@ namespace Neon.Docker
         /// </remarks>
         public async Task WaitUntilReadyAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentException>(timeout == null || timeout >= TimeSpan.Zero, nameof(timeout));
 
             // Create a transient detector that extends [TransientDetector.Network] to

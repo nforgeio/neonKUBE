@@ -29,6 +29,7 @@ using System.Threading.Tasks;
 
 using Neon.Diagnostics;
 using Neon.Collections;
+using Neon.Tasks;
 
 namespace System.Net.Http
 {
@@ -65,6 +66,8 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default, 
             LogActivity             activity          = default)
         {
+            await TaskContext.ResetAsync;
+
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
             if (!string.IsNullOrEmpty(activity.Id))
@@ -105,6 +108,8 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default, 
             LogActivity             activity          = default)
         {
+            await TaskContext.ResetAsync;
+
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
             if (!string.IsNullOrEmpty(activity.Id))
@@ -138,6 +143,8 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
+            await TaskContext.ResetAsync;
+
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
             if (!string.IsNullOrEmpty(activity.Id))
@@ -173,6 +180,8 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
+            await TaskContext.ResetAsync;
+
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
             if (!string.IsNullOrEmpty(activity.Id))
@@ -208,6 +217,8 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
+            await TaskContext.ResetAsync;
+
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
             if (!string.IsNullOrEmpty(activity.Id))
@@ -243,6 +254,8 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
+            await TaskContext.ResetAsync;
+
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
             if (!string.IsNullOrEmpty(activity.Id))
@@ -278,6 +291,8 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
+            await TaskContext.ResetAsync;
+
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
             if (!string.IsNullOrEmpty(activity.Id))
@@ -313,6 +328,8 @@ namespace System.Net.Http
             ArgDictionary           headers  = null,
             LogActivity             activity = default)
         {
+            await TaskContext.ResetAsync;
+
             var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
             if (!string.IsNullOrEmpty(activity.Id))
@@ -357,6 +374,8 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
+            await TaskContext.ResetAsync;
+
             var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
 
             request.Content = content;
@@ -401,6 +420,8 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default, 
             LogActivity             activity          = default)
         {
+            await TaskContext.ResetAsync;
+
             var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
 
             request.Content = content;
@@ -445,6 +466,8 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
+            await TaskContext.ResetAsync;
+
             var request = new HttpRequestMessage(HttpMethod.Put, requestUri);
 
             request.Content = content;
@@ -489,6 +512,8 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
+            await TaskContext.ResetAsync;
+
             var request = new HttpRequestMessage(HttpMethod.Put, requestUri);
 
             request.Content = content;
@@ -534,6 +559,8 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
+            await TaskContext.ResetAsync;
+
             var request = new HttpRequestMessage(deleteMethod, requestUri);
 
             if (content != null)
@@ -581,6 +608,8 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
+            await TaskContext.ResetAsync;
+
             var request = new HttpRequestMessage(deleteMethod, requestUri);
 
             if (content != null)
@@ -628,6 +657,8 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
+            await TaskContext.ResetAsync;
+
             var request = new HttpRequestMessage(patchMethod, requestUri);
 
             request.Content = content;
@@ -672,6 +703,8 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
+            await TaskContext.ResetAsync;
+
             var request = new HttpRequestMessage(patchMethod, requestUri);
 
             request.Content = content;
@@ -716,6 +749,8 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
+            await TaskContext.ResetAsync;
+
             var request = new HttpRequestMessage(optionsMethod, requestUri);
 
             if (content != null)
@@ -763,6 +798,8 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default, 
             LogActivity             activity          = default)
         {
+            await TaskContext.ResetAsync;
+
             var request = new HttpRequestMessage(optionsMethod, requestUri);
 
             if (content != null)
@@ -810,6 +847,8 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default, 
             LogActivity             activity          = default)
         {
+            await TaskContext.ResetAsync;
+
             var request = new HttpRequestMessage(headMethod, requestUri);
 
             if (content == null)
@@ -857,6 +896,8 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
+            await TaskContext.ResetAsync;
+
             var request = new HttpRequestMessage(headMethod, requestUri);
 
             if (content != null)
@@ -903,6 +944,8 @@ namespace System.Net.Http
             CancellationToken       cancellationToken = default,
             LogActivity             activity          = default)
         {
+            await TaskContext.ResetAsync;
+
             if (!string.IsNullOrEmpty(activity.Id))
             {
                 request.Headers.Add(LogActivity.HttpHeader, activity.Id);
