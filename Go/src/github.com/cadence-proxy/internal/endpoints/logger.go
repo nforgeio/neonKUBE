@@ -121,7 +121,7 @@ func sendLogRequest(ctx context.Context, entry zapcore.Entry) error {
 		logRequest.SetFromCadence(true)
 	}
 
-	op := messages.NewOperation(requestID, logRequest)
+	op := NewOperation(requestID, logRequest)
 	op.SetChannel(make(chan interface{}))
 	Operations.Add(requestID, op)
 

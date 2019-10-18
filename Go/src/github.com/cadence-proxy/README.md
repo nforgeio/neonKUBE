@@ -267,6 +267,7 @@ cadence-proxy/
             echo.go
             logger.go
             message.go
+            operation.go
             reply_builders.go
             reply_handlers.go
             request_handlers.go
@@ -285,7 +286,6 @@ cadence-proxy/
             * (all inheriting message types)
             *
             message_factory.go
-            operation.go
         server/
             instance.go
         message_types.go
