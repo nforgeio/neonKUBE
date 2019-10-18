@@ -57,7 +57,7 @@ namespace System.IO
         /// <param name="bytes">The byte array.</param>
         public static async Task WriteAsync(this Stream stream, byte[] bytes)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(stream != null, nameof(stream));
             Covenant.Requires<ArgumentNullException>(bytes != null, nameof(bytes));
 
@@ -126,7 +126,7 @@ namespace System.IO
         /// <returns>The byte array.</returns>
         public static async Task<byte[]> ReadToEndAsync(this Stream stream)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(stream != null, nameof(stream));
 
             var buffer = new byte[16 * 1024];

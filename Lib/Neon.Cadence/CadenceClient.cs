@@ -260,7 +260,7 @@ namespace Neon.Cadence
             {
                 app.Run(async context =>
                 {
-                    await TaskContext.ResetAsync;
+                    await SyncContext.ClearAsync;
                     await OnKestralRequestAsync(context);
                 });
             }
@@ -543,7 +543,7 @@ namespace Neon.Cadence
                                 _ = Task.Factory.StartNew(
                                     async (object arg) =>
                                     {
-                                        await TaskContext.ResetAsync;
+                                        await SyncContext.ClearAsync;
 
                                         using (var context = (RequestContext)arg)
                                         {
@@ -785,7 +785,7 @@ namespace Neon.Cadence
         /// </remarks>
         public static async Task<CadenceClient> ConnectAsync(CadenceSettings settings)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), nameof(settings), "You must specifiy a non-empty default Cadence domain.");
 

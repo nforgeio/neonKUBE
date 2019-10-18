@@ -1444,7 +1444,7 @@ namespace Neon.ModelGen
 
                     writer.WriteLine($"        public static async Task<object> CreateFromAsync(Stream stream, Encoding encoding = null)");
                     writer.WriteLine($"        {{");
-                    writer.WriteLine($"            await TaskContext.ResetAsync;");
+                    writer.WriteLine($"            await SyncContext.ClearAsync;");
                     writer.WriteLine();
                     writer.WriteLine($"            encoding = encoding ?? Encoding.UTF8;");
                     writer.WriteLine();
@@ -1607,10 +1607,12 @@ namespace Neon.ModelGen
                     {
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
-                        writer.WriteLine($"        /// The backing <see cref=\"JObject\"/> used to hold the serialized data.");
-                        writer.WriteLine($"        /// This was made public for advanced unit testing but its use should generally");
-                        writer.WriteLine($"        /// be avoided for other purposes.  Use <see cref=\"ToJObject()\"/> instead.");
+                        writer.WriteLine($"        /// <b>INTERNAL USE ONLY:</b> This is the <see cref=\"JObject\"/> is used to back");
+                        writer.WriteLine($"        /// all serialized round-trip.  This was made public for advanced unit testing but");
+                        writer.WriteLine($"        /// its use should generallybe avoided for other purposes.  Use <see cref=\"ToJObject()\"/>.");
+                        writer.WriteLine($"        /// instead.  \"__O\" is short for \"object\".");
                         writer.WriteLine($"        /// </summary>");
+                        writer.WriteLine($"        [JsonIgnore]");
                         writer.WriteLine($"        public JObject __O {{ get; set; }}");
                     }
                 }
@@ -2224,7 +2226,7 @@ namespace Neon.ModelGen
 
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
-                        writer.WriteLine($"        /// Identifies the persisted type.");
+                        writer.WriteLine($"        /// Identifies the persisted object type.  \"__T\" is short for \"type\".");
                         writer.WriteLine($"        /// </summary>");
                         writer.WriteLine($"        public string __T");
                         writer.WriteLine($"        {{");
@@ -2332,7 +2334,7 @@ namespace Neon.ModelGen
 
                     writer.WriteLine($"        public {virtualModifier} async Task WriteJsonToAsync(Stream stream)");
                     writer.WriteLine($"        {{");
-                    writer.WriteLine($"            await TaskContext.ResetAsync;");
+                    writer.WriteLine($"            await SyncContext.ClearAsync;");
                     writer.WriteLine($"            __Save();");
                     writer.WriteLine();
 
@@ -2444,19 +2446,21 @@ namespace Neon.ModelGen
 
             if (hasNonRootClientGroups)
             {
-                // Generate local [class] definitions for any non-root service
-                // methods here.
+                // Recursively generate local [class] definitions for any grouped
+                // service methods here.
 
                 foreach (var clientGroup in nonRootClientGroups)
                 {
                     writer.WriteLine($"        [GeneratedClient(\"{clientGroup.Value.RouteTemplate}\")]");
                     writer.WriteLine($"        public partial class __{clientGroup.Key} : IGeneratedServiceClient");
                     writer.WriteLine($"        {{");
-                    writer.WriteLine($"            private JsonClient client;");
+                    writer.WriteLine($"            private JsonClient       client;");
+                    writer.WriteLine($"            private IRetryPolicy     retryPolicy;");
                     writer.WriteLine();
-                    writer.WriteLine($"            internal __{clientGroup.Key}(JsonClient client)");
+                    writer.WriteLine($"            internal __{clientGroup.Key}(JsonClient client, IRetryPolicy retryPolicy = null)");
                     writer.WriteLine($"            {{");
                     writer.WriteLine($"                this.client = client;");
+                    writer.WriteLine($"                this.retryPolicy = retryPolicy;");
                     writer.WriteLine($"            }}");
                     writer.WriteLine();
                     writer.WriteLine($"            /// <inheritdoc/>");
@@ -2472,26 +2476,30 @@ namespace Neon.ModelGen
                 }
             }
 
-            writer.WriteLine($"        private JsonClient   client;");
-            writer.WriteLine($"        private bool         isDisposed = false;");
+            writer.WriteLine($"        private JsonClient       client;");
+            writer.WriteLine($"        private bool             isDisposed = false;");
+            writer.WriteLine($"        private IRetryPolicy     retryPolicy;");
             writer.WriteLine();
 
             // Generate the typical constructor.
 
             writer.WriteLine($"        /// <summary>");
-            writer.WriteLine($"        /// Used to construct a client for most situations, optionally specifying a custom <see cref=\"HttpMessageHandler\"/>.");
+            writer.WriteLine($"        /// Used to construct a client for most situations, optionally specifying a custom <see cref=\"HttpMessageHandler\"/> and/or");
+            writer.WriteLine($"        /// <see cref=\"IRetryPolicy\"/>.");
             writer.WriteLine($"        /// </summary>");
             writer.WriteLine($"        /// <param name=\"handler\">An optional message handler.  This defaults to a reasonable handler with compression enabled.</param>");
             writer.WriteLine($"        /// <param name=\"disposeHandler\">Indicates whether the handler passed will be disposed automatically (defaults to <c>false</c>).</param>");
+            writer.WriteLine($"        /// <param name=\"retryPolicy\">Optionally specifies a default retry policy (defaults to <see cref\"NoRetryPolicy\">).</param>");
 
             if (!Settings.AllowDebuggerStepInto)
             {
                 writer.WriteLine($"        [DebuggerStepThrough]");
             }
 
-            writer.WriteLine($"        public {clientTypeName}(HttpMessageHandler handler = null, bool disposeHandler = false)");
+            writer.WriteLine($"        public {clientTypeName}(HttpMessageHandler handler = null, bool disposeHandler = false, IRetryPolicy retryPolicy = null)");
             writer.WriteLine($"        {{");
             writer.WriteLine($"            this.client = new JsonClient(handler, disposeHandler);");
+            writer.WriteLine($"            this.retryPolicy = retryPolicy ?? NoRetryPolicy.Instance;");
 
             if (hasNonRootClientGroups)
             {
@@ -2514,17 +2522,19 @@ namespace Neon.ModelGen
             writer.WriteLine($"        /// to be created and provided.");
             writer.WriteLine($"        /// </summary>");
             writer.WriteLine($"        /// <param name=\"httpClient\">The special <see cref=\"HttpClient\"/> instance to be wrapped.</param>");
+            writer.WriteLine($"        /// <param name=\"retryPolicy\">Optionally specifies a default retry policy (defaults to <see cref\"NoRetryPolicy\">).</param>");
 
             if (!Settings.AllowDebuggerStepInto)
             {
                 writer.WriteLine($"        [DebuggerStepThrough]");
             }
 
-            writer.WriteLine($"        public {clientTypeName}(HttpClient httpClient)");
+            writer.WriteLine($"        public {clientTypeName}(HttpClient httpClient, IRetryPolicy retryPolicy = null)");
             writer.WriteLine($"        {{");
             writer.WriteLine($"            Covenant.Requires<ArgumentNullException>(httpClient != null, nameof(httpClient));");
             writer.WriteLine();
             writer.WriteLine($"            this.client = new JsonClient(httpClient);");
+            writer.WriteLine($"            this.retryPolicy = retryPolicy ?? NoRetryPolicy.Instance;");
 
             if (hasNonRootClientGroups)
             {
@@ -2532,7 +2542,7 @@ namespace Neon.ModelGen
 
                 foreach (var nonRootGroup in nonRootClientGroups)
                 {
-                    writer.WriteLine($"            this.{nonRootGroup.Key} = new __{nonRootGroup.Key}(this.client);");
+                    writer.WriteLine($"            this.{nonRootGroup.Key} = new __{nonRootGroup.Key}(this.client, this.retryPolicy);");
                 }
             }
 
@@ -2946,7 +2956,7 @@ namespace Neon.ModelGen
                 }
             }
 
-            sbArguments.AppendWithSeparator("_retryPolicy ?? NoRetryPolicy.Instance", argSeparator);
+            sbArguments.AppendWithSeparator("_retryPolicy ?? this.retryPolicy", argSeparator);
             sbArguments.AppendWithSeparator(endpointUriLiteral, argSeparator);
 
             if (bodyParameter != null)
@@ -3093,8 +3103,7 @@ namespace Neon.ModelGen
             writer.WriteLine($"{indent}        {generatedMethodAttribute}");
             writer.WriteLine($"{indent}        public async {methodReturnType} {methodName}({sbParameters})");
             writer.WriteLine($"{indent}        {{");
-            writer.WriteLine($"{indent}            await TaskContext.ResetAsync;");
-            writer.WriteLine();
+            writer.WriteLine($"{indent}            await SyncContext.ClearAsync;");
 
             if (sbArgGenerate.Length > 0)
             {
@@ -3131,8 +3140,7 @@ namespace Neon.ModelGen
 
             writer.WriteLine($"{indent}        public async Task<JsonResponse> Unsafe{methodName}({sbParameters})");
             writer.WriteLine($"{indent}        {{");
-            writer.WriteLine($"{indent}            await TaskContext.ResetAsync;");
-            writer.WriteLine();
+            writer.WriteLine($"{indent}            await SyncContext.ClearAsync;");
 
             if (sbArgGenerate.Length > 0)
             {
