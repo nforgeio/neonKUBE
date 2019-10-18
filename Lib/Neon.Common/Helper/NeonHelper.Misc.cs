@@ -35,6 +35,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using Neon.Data;
+using Neon.Tasks;
 
 namespace Neon.Common
 {
@@ -393,7 +394,7 @@ namespace Neon.Common
                     return;
                 }
 
-                Task.Delay(pollTime.Value).Wait();
+                Thread.Sleep(pollTime.Value);
 
                 if (DateTimeOffset.UtcNow >= timeLimit)
                 {
@@ -415,6 +416,8 @@ namespace Neon.Common
         /// </remarks>
         public static async Task WaitForAsync(Func<Task<bool>> action, TimeSpan timeout, TimeSpan? pollTime = null)
         {
+            await SyncContext.ResetAsync;
+
             var timeLimit = DateTimeOffset.UtcNow + timeout;
 
             if (!pollTime.HasValue)
@@ -547,6 +550,8 @@ namespace Neon.Common
         /// <param name="tasks">The tasks to wait on.</param>
         public static async Task WaitAllAsync(IEnumerable<Task> tasks)
         {
+            await SyncContext.ResetAsync;
+
             foreach (var task in tasks)
             {
                 await task;
@@ -559,6 +564,8 @@ namespace Neon.Common
         /// <param name="tasks">The tasks to wait on.</param>
         public static async Task WaitAllAsync(params Task[] tasks)
         {
+            await SyncContext.ResetAsync;
+
             foreach (var task in tasks)
             {
                 await task;
@@ -574,6 +581,8 @@ namespace Neon.Common
         /// <exception cref="TimeoutException">Thrown if the <paramref name="timeout"/> was exceeded.</exception>
         public static async Task WaitAllAsync(IEnumerable<Task> tasks, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
         {
+            await SyncContext.ResetAsync;
+
             // There isn't a super clean way to implement this other than polling.
 
             if (!timeout.HasValue)
@@ -616,39 +625,6 @@ namespace Neon.Common
                 }
 
                 await Task.Delay(250);
-            }
-        }
-
-        /// <summary>
-        /// Performs zero or more actions in parallel, synchronously waiting for all of them
-        /// to completed.
-        /// </summary>
-        /// <param name="actions">The actions to be performed.</param>
-        /// <param name="timeout">The optional timeout.</param>
-        /// <param name="cancellationToken">The optional cancellation token.</param>
-        /// <exception cref="TimeoutException">Thrown if the <paramref name="timeout"/> was exceeded.</exception>
-        public static void WaitForParallel(IEnumerable<Action> actions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
-        {
-            Covenant.Requires<ArgumentNullException>(actions != null, nameof(actions));
-
-            var tasks = new List<Task>();
-
-            foreach (var action in actions)
-            {
-                if (action != null)
-                {
-                    tasks.Add(Task.Run(action));
-                }
-            }
-
-            if (tasks.Count > 0)
-            {
-                Task.Run(
-                    async () =>
-                    {
-                        await WaitAllAsync(tasks, timeout, cancellationToken);
-
-                    }).Wait();
             }
         }
 

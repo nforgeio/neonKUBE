@@ -181,6 +181,7 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 		// handle the messages individually
 		// based on their message type
 		ctx := context.Background()
+
 		switch request.GetType() {
 
 		// -------------------------------------------------------------------------
@@ -523,6 +524,7 @@ func handleIProxyReply(reply messages.IProxyReply) (err error) {
 
 	// check to make sure that the operation exists
 	op := Operations.Get(reply.GetRequestID())
+
 	if op == nil {
 		err = internal.ErrEntityNotExist
 	} else {

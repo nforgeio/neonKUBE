@@ -23,7 +23,9 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.IO.Compression;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -35,8 +37,7 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Time;
-using System.IO.Compression;
-using System.Text.RegularExpressions;
+using Neon.Tasks;
 
 namespace Neon.Kube
 {
@@ -171,6 +172,7 @@ namespace Neon.Kube
         /// <returns>A <see cref="KubeSetupInfo"/> with the information.</returns>
         public async Task<KubeSetupInfo> GetSetupInfoAsync(ClusterDefinition clusterDefinition)
         {
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
             var kubeVersion = Version.Parse(defaultKubeVersion);
@@ -311,7 +313,7 @@ namespace Neon.Kube
         /// <returns>A <see cref="KubeClientInfo"/>.</returns>
         public async Task<KubeClientInfo> GetClientInfoAsync()
         {
-            await Task.CompletedTask;
+            await SyncContext.ResetAsync;
 
             return new KubeClientInfo()
             {
@@ -331,6 +333,8 @@ namespace Neon.Kube
         /// <returns></returns>
         public async Task<byte[]> GetHelmChartZipAsync(string chartName, string branch = "master")
         {
+            await SyncContext.ResetAsync;
+
             using (var memoryStream = new MemoryStream())
             {
                 using (var zip = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
@@ -371,6 +375,8 @@ namespace Neon.Kube
         /// <returns>A zip </returns>
         public async Task<ZipArchive> AddGitFilesToZipAsync(ZipArchive zip, string directory, string baseDirectory)
         {
+            await SyncContext.ResetAsync;
+
             var dirListing = await gitHubClient.GetAsync<dynamic>(directory);
 
             foreach (var file in dirListing)

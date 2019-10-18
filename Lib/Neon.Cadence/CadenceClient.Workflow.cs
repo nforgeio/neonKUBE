@@ -60,6 +60,7 @@ namespace Neon.Cadence
         public async Task RegisterWorkflowAsync<TWorkflow>(string workflowTypeName = null, string domain = null)
             where TWorkflow : WorkflowBase
         {
+            await SyncContext.ResetAsync;
             CadenceHelper.ValidateWorkflowImplementation(typeof(TWorkflow));
             CadenceHelper.ValidateWorkflowTypeName(workflowTypeName);
             EnsureNotDisposed();
@@ -109,6 +110,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task RegisterAssemblyWorkflowsAsync(Assembly assembly, string domain = null)
         {
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(assembly != null, nameof(assembly));
             EnsureNotDisposed();
 
@@ -146,6 +148,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task SetCacheMaximumSizeAsync(int cacheMaximumSize)
         {
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(cacheMaximumSize >= 0, nameof(cacheMaximumSize));
             EnsureNotDisposed();
 
@@ -167,6 +170,7 @@ namespace Neon.Cadence
         /// <returns>The maximum number of cached workflows.</returns>
         public async Task<int> GetWorkflowCacheSizeAsync()
         {
+            await SyncContext.ResetAsync;
             EnsureNotDisposed();
 
             return await Task.FromResult(workflowCacheSize);
@@ -402,6 +406,7 @@ namespace Neon.Cadence
         /// <returns></returns>
         public async Task<WorkflowDescription> DescribeWorkflowExecutionAsync(string workflowId, string runid = null, string domain = null)
         {
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
             EnsureNotDisposed();
 

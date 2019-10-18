@@ -730,7 +730,8 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine();
                 sbSource.AppendLine($"        public async {resultTaskType} {details.Method.Name}({sbParams})");
                 sbSource.AppendLine($"        {{");
-
+                sbSource.AppendLine($"            await SyncContext.ResetAsync;");
+                sbSource.AppendLine();
                 sbSource.AppendLine($"            if (this.continueAsNew)");
                 sbSource.AppendLine($"            {{");
                 sbSource.AppendLine($"                var ___args = new List<object>();");
@@ -953,6 +954,8 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine();
                 sbSource.AppendLine($"        public async Task {details.Method.Name}({sbParams})");
                 sbSource.AppendLine($"        {{");
+                sbSource.AppendLine($"            await SyncContext.ResetAsync;");
+                sbSource.AppendLine();
 
                 if (isChild)
                 {
@@ -1001,6 +1004,8 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine();
                 sbSource.AppendLine($"        public async {resultTaskType} {details.Method.Name}({sbParams})");
                 sbSource.AppendLine($"        {{");
+                sbSource.AppendLine($"            await SyncContext.ResetAsync;");
+                sbSource.AppendLine();
 
                 if (isChild)
                 {
@@ -1468,6 +1473,8 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine();
                 sbSource.AppendLine($"        public async {resultTaskType} {details.Method.Name}({sbParams})");
                 sbSource.AppendLine($"        {{");
+                sbSource.AppendLine($"            await SyncContext.ResetAsync;");
+                sbSource.AppendLine();
                 sbSource.AppendLine($"            byte[]    ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
                 sbSource.AppendLine($"            byte[]    ___resultBytes;");
                 sbSource.AppendLine();

@@ -59,6 +59,8 @@ namespace Neon.Cadence
         /// <inheritdoc/>
         public async Task GetAsync()
         {
+            await SyncContext.ResetAsync;
+
             if (completed)
             {
                 throw new InvalidOperationException($"[{nameof(IAsyncFuture<object>)}.GetAsync()] may only be called once per stub instance.");
@@ -99,6 +101,8 @@ namespace Neon.Cadence
         /// <inheritdoc/>
         public async Task<TResult> GetAsync()
         {
+            await SyncContext.ResetAsync;
+
             if (completed)
             {
                 throw new InvalidOperationException($"[{nameof(IAsyncFuture<object>)}.GetAsync()] may only be called once per stub instance.");

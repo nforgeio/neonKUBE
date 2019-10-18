@@ -29,6 +29,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Tasks;
 
 namespace Neon.Docker
 {
@@ -45,6 +46,7 @@ namespace Neon.Docker
         /// <returns>A <see cref="NetworkCreateResponse"/>.</returns>
         public async Task<NetworkCreateResponse> NetworkCreateAsync(DockerNetwork network, CancellationToken cancellationToken = default)
         {
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(network != null, nameof(network));
 
             // $todo(jefflill):
@@ -62,6 +64,8 @@ namespace Neon.Docker
         /// <returns>A list of <see cref="DockerNetwork"/> instances.</returns>
         public async Task<List<DockerNetwork>> NetworkListAsync(CancellationToken cancellationToken = default)
         {
+            await SyncContext.ResetAsync;
+
             var response = await JsonClient.GetAsync(GetUri("networks"), cancellationToken: cancellationToken);
             var networks = new List<DockerNetwork>();
 
@@ -81,6 +85,7 @@ namespace Neon.Docker
         /// <returns>A <see cref="DockerNetwork"/> instance.</returns>
         public async Task<DockerNetwork> NetworkInspect(string nameOrId, CancellationToken cancellationToken = default)
         {
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nameOrId), nameof(nameOrId));
 
             var response = await JsonClient.GetAsync(GetUri("networks", nameOrId), cancellationToken: cancellationToken);
@@ -96,6 +101,7 @@ namespace Neon.Docker
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task NetworkRemove(string nameOrId, CancellationToken cancellationToken = default)
         {
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nameOrId), nameof(nameOrId));
 
             await JsonClient.DeleteAsync(GetUri("networks", nameOrId), cancellationToken: cancellationToken);

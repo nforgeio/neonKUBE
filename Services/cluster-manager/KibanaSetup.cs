@@ -18,10 +18,11 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
+using Neon.Kube.Service;
 using Neon.Net;
 using Neon.Retry;
+using Neon.Service;
 using Neon.Tasks;
-using Neon.Kube.Service;
 
 using k8s;
 

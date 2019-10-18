@@ -48,11 +48,13 @@ type (
 	// This struct is used as an intermediate for storing worklfow information
 	// and state while registering and executing cadence workflows
 	WorkflowContext struct {
+		sync.Mutex
 		workflowName  *string
 		ctx           workflow.Context
 		cancelFunc    workflow.CancelFunc
 		childContexts *ChildContextsMap
 		activities    *proxyactivity.ActivityFuturesMap
+		childID       int64
 	}
 )
 
@@ -230,6 +232,23 @@ func (wectx *WorkflowContext) RemoveActivityFuture(id int64) int64 {
 // returns workflow.Future -> the workflow future of the specified activity.
 func (wectx *WorkflowContext) GetActivityFuture(id int64) workflow.Future {
 	return wectx.activities.Get(id)
+}
+
+// NextChildID increments the variable
+// childID by 1 and is protected by a mutex lock
+func (wectx *WorkflowContext) NextChildID() int64 {
+	wectx.Lock()
+	wectx.childID = wectx.childID + 1
+	defer wectx.Unlock()
+	return wectx.childID
+}
+
+// GetChildID gets the value of the variable
+// childID and is protected by a mutex lock
+func (wectx *WorkflowContext) GetChildID() int64 {
+	wectx.Lock()
+	defer wectx.Unlock()
+	return wectx.childID
 }
 
 //----------------------------------------------------------------------------

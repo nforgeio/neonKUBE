@@ -23,14 +23,6 @@ import (
 	"go.uber.org/cadence/workflow"
 )
 
-var (
-
-	// childID is incremented (protected by a mutex) every
-	// time a new cadence workflow.Context is created by a
-	// child workflow
-	childID int64
-)
-
 type (
 
 	// ChildContextsMap holds a thread-safe map[interface{}]interface{} of
@@ -47,26 +39,6 @@ type (
 		cancelFunc workflow.CancelFunc
 	}
 )
-
-//----------------------------------------------------------------------------
-// childID methods
-
-// NextChildID increments the global variable
-// childID by 1 and is protected by a mutex lock
-func NextChildID() int64 {
-	mu.Lock()
-	childID = childID + 1
-	defer mu.Unlock()
-	return childID
-}
-
-// GetChildID gets the value of the global variable
-// childID and is protected by a mutex Read lock
-func GetChildID() int64 {
-	mu.RLock()
-	defer mu.RUnlock()
-	return childID
-}
 
 //----------------------------------------------------------------------------
 // ChildContext instance methods

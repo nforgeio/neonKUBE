@@ -32,6 +32,7 @@ using Neon.Common;
 using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Net;
+using Neon.Tasks;
 
 namespace STAN.Client
 {
@@ -158,6 +159,7 @@ namespace STAN.Client
         public static async Task<string> PublishAsync<TMessage>(this IStanConnection connection, string subject, TMessage data)
             where TMessage : class, IRoundtripData, new()
         {
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(data != null, nameof(data));
 
             return await connection.PublishAsync(subject, data.ToBytes());

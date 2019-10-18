@@ -32,6 +32,7 @@ using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Data;
 using Neon.IO;
+using Neon.Tasks;
 using Neon.Xunit;
 using Neon.Xunit.Cadence;
 
@@ -140,9 +141,11 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task WorkflowStub_Execute()
         {
-            TestWorkflowStub_Execute.Reset();
+            await SyncContext.ResetAsync;
 
             // Use an untyped workflow stub to execute a workflow.
+
+            TestWorkflowStub_Execute.Reset();
 
             var stub = client.NewUntypedWorkflowStub(nameof(TestWorkflowStub_Execute), new WorkflowOptions() { TaskList = CadenceTestHelper.TaskList });
             var execution = await stub.StartAsync("Jeff");
@@ -159,9 +162,11 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task WorkflowStub_Attach()
         {
-            TestWorkflowStub_Execute.Reset();
+            await SyncContext.ResetAsync;
 
             // Use an untyped workflow stub to execute a workflow.
+
+            TestWorkflowStub_Execute.Reset();
 
             var stub      = client.NewUntypedWorkflowStub(nameof(TestWorkflowStub_Execute), new WorkflowOptions() { TaskList = CadenceTestHelper.TaskList });
             var execution = await stub.StartAsync("Jeff");
@@ -187,10 +192,12 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task WorkflowStub_Signal()
         {
-            TestWorkflowStub_Execute.Reset();
+            await SyncContext.ResetAsync;
 
             // Use an untyped workflow stub to execute a workflow and then
             // verify that we're able to send signals to it.
+
+            TestWorkflowStub_Execute.Reset();
 
             var stub = client.NewUntypedWorkflowStub($"{nameof(TestWorkflowStub_Execute)}::wait-for-signals", new WorkflowOptions() { TaskList = CadenceTestHelper.TaskList });
 

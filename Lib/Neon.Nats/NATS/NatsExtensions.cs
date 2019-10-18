@@ -30,6 +30,7 @@ using Neon.Common;
 using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Net;
+using Neon.Tasks;
 
 namespace NATS.Client
 {
@@ -191,6 +192,7 @@ namespace NATS.Client
             where TRequest : class, IRoundtripData, new()
             where TResponse : class, IRoundtripData, new()
         {
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(data != null, nameof(data));
 
             Msg response;

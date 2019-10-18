@@ -25,7 +25,7 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Creates a new workflow queue.
+    /// <b>proxy --> client:</b> Gets the length of a workflow queue.
     /// </summary>
     [InternalProxyMessage(InternalMessageTypes.WorkflowQueueLengthRequest)]
     internal class WorkflowQueueLengthRequest : WorkflowRequest

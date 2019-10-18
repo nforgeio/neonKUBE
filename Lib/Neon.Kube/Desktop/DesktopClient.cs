@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
@@ -36,7 +37,7 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Time;
-using System.Net.Http.Headers;
+using Neon.Tasks;
 
 namespace Neon.Kube
 {
@@ -104,6 +105,8 @@ namespace Neon.Kube
         /// </remarks>
         public async Task UpdateUIAsync()
         {
+            await SyncContext.ResetAsync;
+
             try
             {
                 await client.PostAsync("update-ui", true);
@@ -127,6 +130,8 @@ namespace Neon.Kube
         /// </remarks>
         public async Task Login()
         {
+            await SyncContext.ResetAsync;
+
             try
             {
                 await client.PostAsync(NoRetryPolicy.Instance, "login", true);
@@ -150,6 +155,8 @@ namespace Neon.Kube
         /// </remarks>
         public async Task Logout()
         {
+            await SyncContext.ResetAsync;
+
             try
             {
                 await client.PostAsync(NoRetryPolicy.Instance, "logout", true);
@@ -174,6 +181,8 @@ namespace Neon.Kube
         /// </remarks>
         public async Task StartOperationAsync(string summary)
         {
+            await SyncContext.ResetAsync;
+
             var operation = new RemoteOperation()
             {
                 Summary   = summary,
@@ -208,6 +217,8 @@ namespace Neon.Kube
         /// </remarks>
         public async Task EndOperationAsync(string completedToast = null, bool failed = false)
         {
+            await SyncContext.ResetAsync;
+
             var operation = new RemoteOperation()
             {
                 ProcessId      = Process.GetCurrentProcess().Id,

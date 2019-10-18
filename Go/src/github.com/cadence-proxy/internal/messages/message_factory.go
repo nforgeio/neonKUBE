@@ -282,6 +282,36 @@ func CreateNewTypedMessage(messageType internal.MessageType) IProxyMessage {
 	case internal.WorkflowFutureReadyRequest:
 		message = NewWorkflowFutureReadyRequest()
 
+	// WorkflowQueueNew
+	case internal.WorkflowQueueNewReply:
+		message = NewWorkflowQueueNewReply()
+	case internal.WorkflowQueueNewRequest:
+		message = NewWorkflowQueueNewRequest()
+
+	// WorkflowQueueWrite
+	case internal.WorkflowQueueWriteReply:
+		message = NewWorkflowQueueWriteReply()
+	case internal.WorkflowQueueWriteRequest:
+		message = NewWorkflowQueueWriteRequest()
+
+	// WorkflowQueueRead
+	case internal.WorkflowQueueReadReply:
+		message = NewWorkflowQueueReadReply()
+	case internal.WorkflowQueueReadRequest:
+		message = NewWorkflowQueueReadRequest()
+
+	// WorkflowQueueLength
+	case internal.WorkflowQueueLengthReply:
+		message = NewWorkflowQueueLengthReply()
+	case internal.WorkflowQueueLengthRequest:
+		message = NewWorkflowQueueLengthRequest()
+
+	// WorkflowQueueClose
+	case internal.WorkflowQueueCloseReply:
+		message = NewWorkflowQueueCloseReply()
+	case internal.WorkflowQueueCloseRequest:
+		message = NewWorkflowQueueCloseRequest()
+
 	// --------------------------------------------------------------------------
 	// Activity messages
 

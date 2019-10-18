@@ -11,6 +11,8 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
+using Neon.Tasks;
+
 namespace Neon.Time
 {
     /// <summary>
@@ -318,6 +320,8 @@ namespace Neon.Time
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task WaitAsync(TimeSpan pollInterval = default)
         {
+            await SyncContext.ResetAsync;
+
             if (pollInterval <= TimeSpan.Zero)
             {
                 pollInterval = TimeSpan.FromSeconds(15);

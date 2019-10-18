@@ -31,6 +31,7 @@ using Couchbase.N1QL;
 using Neon.Common;
 using Neon.Data;
 using Neon.Retry;
+using Neon.Tasks;
 using Neon.Time;
 
 namespace Couchbase
@@ -274,6 +275,8 @@ namespace Couchbase
         /// <exception cref="CouchbaseResponseException">Thrown if the bucket is not ready.</exception>
         public static async Task CheckAsync(this IBucket bucket)
         {
+            await SyncContext.ResetAsync;
+
             // Note that it doesn't matter if this key actually exists 
             // in the database.  We're just verifying that the database
             // is ready to handle the operation.
@@ -290,6 +293,8 @@ namespace Couchbase
         /// <exception cref="TimeoutException">Thrown if the operation timed out.</exception>
         public static async Task WaitUntilReadyAsync(this IBucket bucket, TimeSpan timeout = default)
         {
+            await SyncContext.ResetAsync;
+
             if (timeout == TimeSpan.Zero)
             {
                 timeout = TimeSpan.FromSeconds(60);
@@ -380,6 +385,8 @@ namespace Couchbase
         /// <param name="bucket">The bucket.</param>
         public static async Task WaitForIndexerAsync(this IBucket bucket)
         {
+            await SyncContext.ResetAsync;
+
             var queryRequest = QueryRequest.Create($"select * from `{bucket.Name}` limit 1")
                 .ScanConsistency(ScanConsistency.RequestPlus);
 
@@ -395,6 +402,8 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult<byte[]>> AppendSafeAsync(this IBucket bucket, string key, byte[] value)
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.AppendAsync(key, value);
 
             VerifySuccess<byte[]>(result, replicateOrPersist: false);
@@ -411,6 +420,8 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult<string>> AppendAsync(this IBucket bucket, string key, string value)
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.AppendAsync(key, value);
 
             VerifySuccess<string>(result, replicateOrPersist: false);
@@ -431,6 +442,8 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult<ulong>> DecrementSafeAsync(this IBucket bucket, string key, ulong delta = 1, ulong initial = 1, TimeSpan expiration = default)
         {
+            await SyncContext.ResetAsync;
+
             IOperationResult<ulong> result;
 
             if (expiration > TimeSpan.Zero)
@@ -455,6 +468,8 @@ namespace Couchbase
         /// <returns><c>true</c> if the key exists.</returns>
         public static async Task<bool> ExistsSafeAsync(IBucket bucket, string key)
         {
+            await SyncContext.ResetAsync;
+
             // This doesn't actually return a testable result but we'll still
             // implement the "safe" version to be consistent.
 
@@ -472,6 +487,8 @@ namespace Couchbase
         public static async Task<T> FindSafeAsync<T>(this IBucket bucket, string key)
             where T : class
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.GetAsync<T>(key);
 
             if (result.Exception is DocumentDoesNotExistException)
@@ -495,6 +512,8 @@ namespace Couchbase
         public static async Task<IDocument<T>> FindDocumentSafeAsync<T>(this IBucket bucket, string key)
             where T : class
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.GetDocumentAsync<T>(key);
 
             if (result.Exception is DocumentDoesNotExistException)
@@ -517,6 +536,8 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult<T>> GetAndLockSafeAsync<T>(this IBucket bucket, string key, TimeSpan expiration = default)
         {
+            await SyncContext.ResetAsync;
+
             if (expiration <= TimeSpan.Zero)
             {
                 expiration = TimeSpan.FromSeconds(15);
@@ -539,6 +560,8 @@ namespace Couchbase
         /// <returns>The value.</returns>
         public static async Task<T> GetAndTouchSafeAsync<T>(this IBucket bucket, string key, TimeSpan expiration)
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.GetAndTouchAsync<T>(key, expiration);
 
             VerifySuccess<T>(result, replicateOrPersist: false);
@@ -556,6 +579,8 @@ namespace Couchbase
         /// <returns>The document.</returns>
         public static async Task<Document<T>> GetAndTouchDocumentSafeAsync<T>(this IBucket bucket, string key, TimeSpan expiration)
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.GetAndTouchDocumentAsync<T>(key, expiration);
 
             VerifySuccess<T>(result, replicateOrPersist: false);
@@ -573,6 +598,8 @@ namespace Couchbase
         /// <returns>The value.</returns>
         public static async Task<T> GetSafeAsync<T>(this IBucket bucket, string key)
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.GetAsync<T>(key);
 
             VerifySuccess<T>(result, replicateOrPersist: false);
@@ -591,6 +618,8 @@ namespace Couchbase
         /// <returns>The document.</returns>
         public static async Task<Document<T>> GetDocumentSafeAsync<T>(this IBucket bucket, string keys, TimeSpan expiration)
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.GetDocumentAsync<T>(keys);
 
             VerifySuccess<T>(result, replicateOrPersist: false);
@@ -608,6 +637,8 @@ namespace Couchbase
         /// <returns>The documents.</returns>
         public static async Task<IDocument<T>[]> GetDocumentSafeAsync<T>(this IBucket bucket, IEnumerable<string> keys)
         {
+            await SyncContext.ResetAsync;
+
             var results = await bucket.GetDocumentsAsync<T>(keys);
 
             foreach (var result in results)
@@ -635,6 +666,8 @@ namespace Couchbase
         /// <returns>The value.</returns>
         public static async Task<T> GetFromReplicaSafeAsync<T>(this IBucket bucket, string key)
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.GetFromReplicaAsync<T>(key);
 
             VerifySuccess<T>(result, replicateOrPersist: false);
@@ -654,6 +687,8 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult<ulong>> IncrementSafeAsync(this IBucket bucket, string key, ulong delta = 1, ulong initial = 1, TimeSpan expiration = default)
         {
+            await SyncContext.ResetAsync;
+
             IOperationResult<ulong> result;
 
             if (expiration > TimeSpan.Zero)
@@ -683,6 +718,8 @@ namespace Couchbase
         /// <returns>The operation result</returns>
         public static async Task<IOperationResult<T>> InsertSafeAsync<T>(this IBucket bucket, string key, T value, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.InsertAsync<T>(key, value, replicateTo, persistTo);
 
             VerifySuccess<T>(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
@@ -704,6 +741,8 @@ namespace Couchbase
         /// <returns>The operation result</returns>
         public static async Task<IOperationResult<T>> InsertSafeAsync<T>(this IBucket bucket, string key, T value, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.InsertAsync<T>(key, value, expiration, replicateTo, persistTo);
 
             VerifySuccess<T>(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
@@ -722,6 +761,8 @@ namespace Couchbase
         /// <returns>The operation result</returns>
         public static async Task<IDocumentResult<T>> InsertSafeAsync<T>(this IBucket bucket, IDocument<T> document, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.InsertAsync<T>(document, replicateTo, persistTo);
 
             VerifySuccess<T>(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
@@ -740,6 +781,8 @@ namespace Couchbase
         /// <returns>The operation results.</returns>
         public static async Task<IDocumentResult<T>[]> InsertSafeAsync<T>(this IBucket bucket, List<IDocument<T>> documents, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
+            await SyncContext.ResetAsync;
+
             var results = await bucket.InsertAsync<T>(documents, replicateTo, persistTo);
 
             foreach (var result in results)
@@ -763,6 +806,8 @@ namespace Couchbase
         public static async Task<IOperationResult<T>> InsertSafeAsync<T>(this IBucket bucket, T persistable, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
             where T: class, IPersistableType
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.InsertAsync<T>(persistable.GetKey(), persistable, replicateTo, persistTo);
 
             VerifySuccess<T>(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
@@ -784,6 +829,8 @@ namespace Couchbase
         public static async Task<IOperationResult<T>> InsertSafeAsync<T>(this IBucket bucket, T persistable, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
             where T: class, IPersistableType
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.InsertAsync<T>(persistable.GetKey(), persistable, expiration, replicateTo, persistTo);
 
             VerifySuccess<T>(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
@@ -800,6 +847,7 @@ namespace Couchbase
         /// <returns>The list of results.</returns>
         public static async Task<List<T>> QuerySafeAsync<T>(this IBucket bucket, IQueryRequest queryRequest, CancellationToken cancellationToken = default)
         {
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(queryRequest != null, nameof(queryRequest));
 
             // $todo(jefflill): This is a horrible hack!
@@ -859,6 +907,7 @@ namespace Couchbase
         /// <returns>The list of results.</returns>
         public static async Task<List<T>> QuerySafeAsync<T>(this IBucket bucket, string query, CancellationToken cancellationToken = default)
         {
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(query), nameof(query));
 
             return await QuerySafeAsync<T>(bucket, new QueryRequest(query), cancellationToken);
@@ -880,6 +929,7 @@ namespace Couchbase
         /// <returns>The list of results.</returns>
         public static async Task<List<T>> QuerySafeAsync<T>(this IBucket bucket, IQueryRequest queryRequest, MutationState mutationState, CancellationToken cancellationToken = default)
         {
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(queryRequest != null, nameof(queryRequest));
             Covenant.Requires<ArgumentNullException>(mutationState != null, nameof(mutationState));
 
@@ -948,6 +998,7 @@ namespace Couchbase
         /// <returns>The list of results.</returns>
         public static async Task<List<T>> QuerySafeAsync<T>(this IBucket bucket, string query, MutationState mutationState, CancellationToken cancellationToken = default)
         {
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(query), nameof(query));
 
             return await QuerySafeAsync<T>(bucket, new QueryRequest(query), mutationState, cancellationToken);
@@ -963,6 +1014,8 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult> RemoveSafeAsync(this IBucket bucket, IDocument<Task> document, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.RemoveAsync(document, replicateTo, persistTo);
 
             VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
@@ -979,6 +1032,8 @@ namespace Couchbase
         /// <returns>The operation results.</returns>
         public static async Task<IOperationResult[]> RemoveSafeAsync(this IBucket bucket, List<IDocument<Task>> documents, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
+            await SyncContext.ResetAsync;
+
             var results = await bucket.RemoveAsync(documents, replicateTo, persistTo);
 
             foreach (var result in results)
@@ -999,6 +1054,8 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult> RemoveSafeAsync(this IBucket bucket, string key, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.RemoveAsync(key, replicateTo, persistTo);
 
             VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
@@ -1015,6 +1072,7 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult> RemoveSafeAsync(this IBucket bucket, IPersistableType persistable, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(persistable != null, nameof(persistable));
 
             var result = await bucket.RemoveAsync(persistable.GetKey(), replicateTo, persistTo);
@@ -1034,6 +1092,8 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IDocumentResult<T>> ReplaceSafeAsync<T>(this IBucket bucket, IDocument<T> document, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.ReplaceAsync<T>(document, replicateTo, persistTo);
 
             VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
@@ -1051,6 +1111,8 @@ namespace Couchbase
         /// <returns>The operation results.</returns>
         public static async Task<IDocumentResult<T>[]> ReplaceSafeAsync<T>(this IBucket bucket, List<IDocument<T>> documents, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
+            await SyncContext.ResetAsync;
+
             var results            = await bucket.ReplaceAsync<T>(documents, replicateTo, persistTo);
             var replicateOrPersist = replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero;
 
@@ -1074,6 +1136,8 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult<T>> ReplaceSafeAsync<T>(this IBucket bucket, string key, T value, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.ReplaceAsync<T>(key, value, replicateTo, persistTo);
 
             VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
@@ -1095,6 +1159,8 @@ namespace Couchbase
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task ReplaceSafeAsync<T>(this IBucket bucket, string key, T value, ulong? cas = null, TimeSpan? expiration = null, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
+            await SyncContext.ResetAsync;
+
             IOperationResult<T> result;
             var                 replicateOrPersist = replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero;
 
@@ -1144,6 +1210,7 @@ namespace Couchbase
         public static async Task<IOperationResult<T>> ReplaceSafeAsync<T>(this IBucket bucket, T persistable, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
             where T : class, IPersistableType
         {
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(persistable != null, nameof(persistable));
 
             var result = await bucket.ReplaceAsync<T>(persistable.GetKey(), persistable, replicateTo, persistTo);
@@ -1167,6 +1234,7 @@ namespace Couchbase
         public static async Task ReplaceSafeAsync<T>(this IBucket bucket, T persistable, ulong? cas = null, TimeSpan? expiration = null, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
             where T : class, IPersistableType
         {
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(persistable != null, nameof(persistable));
 
             IOperationResult<T> result;
@@ -1217,6 +1285,8 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult> TouchSafeAsync(this IBucket bucket, string key, TimeSpan expiration)
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.TouchAsync(key, expiration);
 
             VerifySuccess(result, replicateOrPersist: false);
@@ -1232,6 +1302,7 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult> TouchSafeAsync(this IBucket bucket, IPersistableType persistable, TimeSpan expiration)
         {
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(persistable != null, nameof(persistable));
 
             var result = await bucket.TouchAsync(persistable.GetKey(), expiration);
@@ -1249,6 +1320,8 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult> UnlockSafeAsync(this IBucket bucket, string key, ulong cas)
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.UnlockAsync(key, cas);
 
             VerifySuccess(result, replicateOrPersist: false);
@@ -1264,6 +1337,7 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult> UnlockSafeAsync(this IBucket bucket, IPersistableType persistable, ulong cas)
         {
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(persistable != null, nameof(persistable));
 
             var result = await bucket.UnlockAsync(persistable.GetKey(), cas);
@@ -1283,6 +1357,8 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IDocumentResult<T>> UpsertSafeAsync<T>(this IBucket bucket, IDocument<T> document, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.UpsertAsync<T>(document, replicateTo, persistTo);
 
             VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
@@ -1301,6 +1377,8 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult<T>> UpsertSafeAsync<T>(this IBucket bucket, string key, T value, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.UpsertAsync<T>(key, value, replicateTo, persistTo);
 
             VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
@@ -1319,6 +1397,7 @@ namespace Couchbase
         public static async Task<IOperationResult<T>> UpsertSafeAsync<T>(this IBucket bucket, T persistable, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
             where T: class, IPersistableType
         {
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(persistable != null, nameof(persistable));
 
             var result = await bucket.UpsertAsync<T>(persistable.GetKey(), persistable, replicateTo, persistTo);
@@ -1340,6 +1419,8 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult<T>> UpsertSafeAsync<T>(this IBucket bucket, string key, T value, ulong cas, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.UpsertAsync<T>(key, value, cas, uint.MaxValue, replicateTo, persistTo);
 
             VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
@@ -1359,6 +1440,8 @@ namespace Couchbase
         public static async Task<IOperationResult<T>> UpsertSafeAsync<T>(this IBucket bucket, T persistable, ulong cas, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
             where T : class, IPersistableType
         {
+            await SyncContext.ResetAsync;
+
             // $todo(jefflill):
             //
             // Not so sure about setting [uint.MaxValue] as the expiration here.
@@ -1382,6 +1465,8 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult<T>> UpsertSafeAsync<T>(this IBucket bucket, string key, T value, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
+            await SyncContext.ResetAsync;
+
             // $todo(jefflill):
             //
             // Not so sure about setting [uint.MaxValue] as the expiration here.
@@ -1405,6 +1490,7 @@ namespace Couchbase
         public static async Task<IOperationResult<T>> UpsertSafeAsync<T>(this IBucket bucket, T persistable, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
             where T : class, IPersistableType
         {
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(persistable != null, nameof(persistable));
 
             // $todo(jefflill):
@@ -1431,6 +1517,8 @@ namespace Couchbase
         /// <returns>The operation result.</returns>
         public static async Task<IOperationResult<T>> UpsertSafeAsync<T>(this IBucket bucket, string key, T value, ulong cas, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.UpsertAsync<T>(key, value, cas, expiration, replicateTo, persistTo);
 
             VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
@@ -1451,6 +1539,8 @@ namespace Couchbase
         public static async Task<IOperationResult<T>> UpsertSafeAsync<T>(this IBucket bucket, T persistable, ulong cas, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
             where T : class, IPersistableType
         {
+            await SyncContext.ResetAsync;
+
             var result = await bucket.UpsertAsync<T>(persistable.GetKey(), persistable, cas, expiration, replicateTo, persistTo);
 
             VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
@@ -1464,6 +1554,8 @@ namespace Couchbase
         /// <returns>The list of index information.</returns>
         public static async Task<List<CouchbaseIndex>> ListIndexesAsync(this IBucket bucket)
         {
+            await SyncContext.ResetAsync;
+
             var list    = new List<CouchbaseIndex>();
             var indexes = await bucket.QuerySafeAsync<dynamic>(new QueryRequest($"select * from system:indexes where keyspace_id={CouchbaseHelper.Literal(bucket.Name)}"));
 
@@ -1486,6 +1578,8 @@ namespace Couchbase
         /// </returns>
         public static async Task<CouchbaseIndex> GetIndexAsync(this IBucket bucket, string name)
         {
+            await SyncContext.ResetAsync;
+
             var indexes = await ListIndexesAsync(bucket);
 
             return indexes.SingleOrDefault(index => index.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
@@ -1499,6 +1593,8 @@ namespace Couchbase
         /// <param name="state">Optionally specifies the desire state (defaults to <b>online</b>).</param>
         public static async Task WaitForIndexAsync(this IBucket bucket, string name, string state = "online")
         {
+            await SyncContext.ResetAsync;
+
             await NeonHelper.WaitForAsync(
                 async () =>
                 {
