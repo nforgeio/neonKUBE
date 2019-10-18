@@ -2517,7 +2517,7 @@ namespace Neon.ModelGen
             writer.WriteLine($"        /// to be created and provided.");
             writer.WriteLine($"        /// </summary>");
             writer.WriteLine($"        /// <param name=\"httpClient\">The special <see cref=\"HttpClient\"/> instance to be wrapped.</param>");
-            writer.WriteLine($"        /// <param name=\"retryPolicy\">Optionally specifies a default retry policy (defaults to <see cref\"NoRetryPolicy\">).</param>");
+            writer.WriteLine($"        /// <param name=\"retryPolicy\">Optionally specifies a default retry policy (defaults to <see cref\"NoRetryPolicy\"/>).</param>");
 
             if (!Settings.AllowDebuggerStepInto)
             {
