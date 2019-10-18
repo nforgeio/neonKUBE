@@ -39,7 +39,7 @@ using Neon.Data;
 
 // $todo(jefflill):
 //
-// At somepoint in the future it would be nice to read any
+// At some point in the future it would be nice to read any
 // XML code documentation and include this in the generated
 // source code as well.
 //
