@@ -48,7 +48,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Ping()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Verify that Ping works and optionally measure simple transaction throughput.
 
@@ -123,7 +123,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Domain()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // Exercise the Cadence domain operations.
 

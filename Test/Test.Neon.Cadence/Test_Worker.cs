@@ -79,7 +79,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Worker()
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
 

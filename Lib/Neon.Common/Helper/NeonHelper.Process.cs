@@ -414,7 +414,7 @@ namespace Neon.Common
         /// </remarks>
         public static async Task<int> ExecuteAsync(string path, object[] args, TimeSpan? timeout = null, Process process = null)
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             return await ExecuteAsync(path, NormalizeExecArgs(args), timeout, process);
         }
@@ -443,7 +443,7 @@ namespace Neon.Common
         /// </remarks>
         public static async Task<int> ExecuteAsync(string path, string args, TimeSpan? timeout = null, Process process = null)
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             return await Task.Run(() => Execute(path, args, timeout, process));
         }
@@ -698,7 +698,7 @@ namespace Neon.Common
         public static async Task<ExecuteResponse> ExecuteCaptureAsync(string path, object[] args,
                                                                     TimeSpan? timeout = null, Process process = null)
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             return await ExecuteCaptureAsync(path, NormalizeExecArgs(args), timeout, process);
         }
@@ -732,7 +732,7 @@ namespace Neon.Common
         public static async Task<ExecuteResponse> ExecuteCaptureAsync(string path, string args, 
                                                                     TimeSpan? timeout = null, Process process = null)
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             return await Task.Run(() => ExecuteCapture(path, args, timeout, process));
         }

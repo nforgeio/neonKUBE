@@ -416,7 +416,7 @@ namespace Neon.Common
         /// </remarks>
         public static async Task WaitForAsync(Func<Task<bool>> action, TimeSpan timeout, TimeSpan? pollTime = null)
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             var timeLimit = DateTimeOffset.UtcNow + timeout;
 
@@ -550,7 +550,7 @@ namespace Neon.Common
         /// <param name="tasks">The tasks to wait on.</param>
         public static async Task WaitAllAsync(IEnumerable<Task> tasks)
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             foreach (var task in tasks)
             {
@@ -564,7 +564,7 @@ namespace Neon.Common
         /// <param name="tasks">The tasks to wait on.</param>
         public static async Task WaitAllAsync(params Task[] tasks)
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             foreach (var task in tasks)
             {
@@ -581,7 +581,7 @@ namespace Neon.Common
         /// <exception cref="TimeoutException">Thrown if the <paramref name="timeout"/> was exceeded.</exception>
         public static async Task WaitAllAsync(IEnumerable<Task> tasks, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             // There isn't a super clean way to implement this other than polling.
 
