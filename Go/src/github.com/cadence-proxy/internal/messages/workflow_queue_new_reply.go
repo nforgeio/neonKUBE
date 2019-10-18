@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		workflow_describe_tasklist_reply.go
+// FILE:		workflow_queue_new_reply.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -23,23 +23,23 @@ import (
 
 type (
 
-	// WorkflowDescribeTaskListReply is a WorkflowReply of MessageType
-	// WorkflowDescribeTaskListReply.  It holds a reference to a WorkflowReply in memory
-	// and is the reply type to a WorkflowDescribeTaskListRequest
-	WorkflowDescribeTaskListReply struct {
+	// WorkflowQueueNewReply is a WorkflowReply of MessageType
+	// WorkflowQueueNewReply.  It holds a reference to a WorkflowReply
+	// and is the reply type to a WorkflowQueueNewRequest.
+	WorkflowQueueNewReply struct {
 		*WorkflowReply
 	}
 )
 
-// NewWorkflowDescribeTaskListReply is the default constructor for
-// a WorkflowDescribeTaskListReply
+// NewWorkflowQueueNewReply is the default constructor for
+// a WorkflowQueueNewReply
 //
-// returns *WorkflowDescribeTaskListReply -> a pointer to a newly initialized
-// WorkflowDescribeTaskListReply in memory
-func NewWorkflowDescribeTaskListReply() *WorkflowDescribeTaskListReply {
-	reply := new(WorkflowDescribeTaskListReply)
+// returns *WorkflowQueueNewReply -> a pointer to a newly initialized
+// WorkflowQueueNewReply.
+func NewWorkflowQueueNewReply() *WorkflowQueueNewReply {
+	reply := new(WorkflowQueueNewReply)
 	reply.WorkflowReply = NewWorkflowReply()
-	reply.SetType(internal.WorkflowDescribeTaskListReply)
+	reply.SetType(internal.WorkflowQueueNewReply)
 
 	return reply
 }
@@ -48,15 +48,15 @@ func NewWorkflowDescribeTaskListReply() *WorkflowDescribeTaskListReply {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Clone inherits docs from WorkflowReply.Clone()
-func (reply *WorkflowDescribeTaskListReply) Clone() IProxyMessage {
-	workflowDescribeTaskListReply := NewWorkflowDescribeTaskListReply()
-	var messageClone IProxyMessage = workflowDescribeTaskListReply
+func (reply *WorkflowQueueNewReply) Clone() IProxyMessage {
+	workflowQueueNewReply := NewWorkflowQueueNewReply()
+	var messageClone IProxyMessage = workflowQueueNewReply
 	reply.CopyTo(messageClone)
 
 	return messageClone
 }
 
 // CopyTo inherits docs from WorkflowReply.CopyTo()
-func (reply *WorkflowDescribeTaskListReply) CopyTo(target IProxyMessage) {
+func (reply *WorkflowQueueNewReply) CopyTo(target IProxyMessage) {
 	reply.WorkflowReply.CopyTo(target)
 }
