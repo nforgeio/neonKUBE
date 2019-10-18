@@ -2484,7 +2484,7 @@ namespace Neon.ModelGen
             writer.WriteLine($"        /// </summary>");
             writer.WriteLine($"        /// <param name=\"handler\">An optional message handler.  This defaults to a reasonable handler with compression enabled.</param>");
             writer.WriteLine($"        /// <param name=\"disposeHandler\">Indicates whether the handler passed will be disposed automatically (defaults to <c>false</c>).</param>");
-            writer.WriteLine($"        /// <param name=\"retryPolicy\">Optionally specifies a default retry policy (defaults to <see cref\"NoRetryPolicy\"/>).</param>");
+            writer.WriteLine($"        /// <param name=\"retryPolicy\">Optionally specifies a default retry policy (defaults to <see cref=\"NoRetryPolicy\"/>).</param>");
 
             if (!Settings.AllowDebuggerStepInto)
             {
@@ -2517,7 +2517,7 @@ namespace Neon.ModelGen
             writer.WriteLine($"        /// to be created and provided.");
             writer.WriteLine($"        /// </summary>");
             writer.WriteLine($"        /// <param name=\"httpClient\">The special <see cref=\"HttpClient\"/> instance to be wrapped.</param>");
-            writer.WriteLine($"        /// <param name=\"retryPolicy\">Optionally specifies a default retry policy (defaults to <see cref\"NoRetryPolicy\"/>).</param>");
+            writer.WriteLine($"        /// <param name=\"retryPolicy\">Optionally specifies a default retry policy (defaults to <see cref=\"NoRetryPolicy\"/>).</param>");
 
             if (!Settings.AllowDebuggerStepInto)
             {
