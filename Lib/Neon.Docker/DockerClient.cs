@@ -192,7 +192,7 @@ namespace Neon.Docker
         /// </remarks>
         public async Task<bool> PingAsync(CancellationToken cancellationToken = default)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
 
             try
             {
@@ -227,7 +227,7 @@ namespace Neon.Docker
         /// </remarks>
         public async Task WaitUntilReadyAsync(TimeSpan? timeout = null, CancellationToken cancellationToken = default)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentException>(timeout == null || timeout >= TimeSpan.Zero, nameof(timeout));
 
             // Create a transient detector that extends [TransientDetector.Network] to

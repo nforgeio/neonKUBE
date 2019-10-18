@@ -350,7 +350,7 @@ namespace Neon.Time
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task WaitAsync(TimeSpan pollInterval = default)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
 
             if (pollInterval <= TimeSpan.Zero)
             {

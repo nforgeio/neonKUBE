@@ -40,7 +40,7 @@ namespace Microsoft.Net.Http.Client
 
         public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
 
             try
             {

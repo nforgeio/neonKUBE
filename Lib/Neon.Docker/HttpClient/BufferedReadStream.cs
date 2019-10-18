@@ -172,7 +172,7 @@ namespace Microsoft.Net.Http.Client
         // TODO: Line length limits?
         public async Task<string> ReadLineAsync(CancellationToken cancel)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
 
             ThrowIfDisposed();
             StringBuilder builder = new StringBuilder();

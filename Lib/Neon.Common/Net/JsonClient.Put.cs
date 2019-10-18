@@ -63,7 +63,7 @@ namespace Neon.Net
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity = default)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
 
             return await safeRetryPolicy.InvokeAsync(
@@ -115,7 +115,7 @@ namespace Neon.Net
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity = default)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
 
             var result = await safeRetryPolicy.InvokeAsync(
@@ -171,7 +171,7 @@ namespace Neon.Net
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity = default)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
 
             retryPolicy = retryPolicy ?? NoRetryPolicy.Instance;
@@ -223,7 +223,7 @@ namespace Neon.Net
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity = default)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
 
             return await unsafeRetryPolicy.InvokeAsync(
@@ -273,7 +273,7 @@ namespace Neon.Net
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity = default)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
 
             retryPolicy = retryPolicy ?? NoRetryPolicy.Instance;

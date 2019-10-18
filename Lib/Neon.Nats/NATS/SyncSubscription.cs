@@ -170,7 +170,7 @@ namespace NATS.Client
         /// <inheritdoc/>
         public async Task DrainAsync()
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
 
             await subscription.DrainAsync();
         }
@@ -178,7 +178,7 @@ namespace NATS.Client
         /// <inheritdoc/>
         public async Task DrainAsync(int timeout)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
 
             await subscription.DrainAsync(timeout);
         }

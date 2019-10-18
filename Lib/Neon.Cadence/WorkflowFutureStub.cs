@@ -104,7 +104,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<ExternalWorkflowFuture> StartAsync(params object[] args)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
             if (execution != null)
@@ -135,7 +135,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<ExternalWorkflowFuture<TResult>> StartAsync<TResult>(params object[] args)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
             if (execution != null)
@@ -165,7 +165,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task SignalAsync(string signalName, params object[] args)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
@@ -202,7 +202,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<TQueryResult> QueryAsync<TQueryResult>(string queryName, params object[] args)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryName), nameof(queryName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 

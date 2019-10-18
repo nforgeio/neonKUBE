@@ -211,7 +211,7 @@ namespace Neon.Xunit
         /// <param name="bytes">The bytes.</param>
         public static async Task WritAsynce(this Response response, byte[] bytes)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
 
             await response.Body.WriteAsync(bytes, 0, bytes.Length);
         }
@@ -225,7 +225,7 @@ namespace Neon.Xunit
         /// <param name="count">The number of bytes to be written.</param>
         public static async Task WriteAsync(this Response response, byte[] bytes, int offset, int count)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
 
             await response.Body.WriteAsync(bytes, offset, count);
         }
@@ -237,7 +237,7 @@ namespace Neon.Xunit
         /// <param name="text">The text to be written.</param>
         public static async Task WriteAsync(this Response response, string text)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
 
             if (string.IsNullOrEmpty(text))
             {

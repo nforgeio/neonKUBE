@@ -141,7 +141,7 @@ namespace Neon.Data
         /// <returns>The new instance as an <see cref="object"/>.</returns>
         public static async Task<object> CreateFromAsync(Type resultType, Stream stream, Encoding encoding = null)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(resultType != null, nameof(resultType));
             Covenant.Requires<ArgumentNullException>(stream != null, nameof(stream));
 
@@ -184,7 +184,7 @@ namespace Neon.Data
         /// </returns>
         public static async Task<Tuple<bool, object>> TryCreateFromAsync(Type resultType, Stream stream, Encoding encoding )
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(resultType != null, nameof(resultType));
             Covenant.Requires<ArgumentNullException>(stream != null, nameof(stream));
 

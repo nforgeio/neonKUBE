@@ -149,7 +149,7 @@ namespace Neon.Cadence
         /// </summary>
         public async Task CancelAsync()
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
 
             if (parentWorkflow != null)
             {
@@ -171,7 +171,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task SignalAsync(string signalName, params object[] args)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
@@ -193,7 +193,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task GetResultAsync()
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
 
             if (parentWorkflow != null)
             {
@@ -214,7 +214,7 @@ namespace Neon.Cadence
         /// <returns>The workflow result.</returns>
         public async Task<TResult> GetResultAsync<TResult>()
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
 
             if (parentWorkflow != null)
             {

@@ -120,7 +120,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task SendHeartbeatAsync(byte[] details = null)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
             Client.EnsureNotDisposed();
             parent.EnsureNotLocal();
 
@@ -147,7 +147,7 @@ namespace Neon.Cadence
         /// <exception cref="InvalidOperationException">Thrown for local activity executions.</exception>
         public async Task<bool> HasLastHeartbeatDetailsAsync()
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
             Client.EnsureNotDisposed();
             parent.EnsureNotLocal();
 
@@ -175,7 +175,7 @@ namespace Neon.Cadence
         /// <exception cref="InvalidOperationException">Thrown for local activity executions.</exception>
         public async Task<byte[]> GetLastHeartbeatDetailsAsync()
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
             Client.EnsureNotDisposed();
             parent.EnsureNotLocal();
 
@@ -237,7 +237,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<bool> HeartbeatAsync(Func<byte[]> detailsFunc = null, TimeSpan? interval = null)
         {
-            await TaskContext.ResetAsync;
+            await SyncContext.ResetAsync;
 
             var nextInterval = interval.HasValue ? interval.Value : TimeSpan.FromTicks(Task.HeartbeatTimeout.Ticks / 2);
 
