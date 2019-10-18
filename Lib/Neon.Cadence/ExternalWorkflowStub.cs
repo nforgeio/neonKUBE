@@ -25,6 +25,7 @@ using System.Threading.Tasks;
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Tasks;
 
 namespace Neon.Cadence
 {
@@ -148,6 +149,8 @@ namespace Neon.Cadence
         /// </summary>
         public async Task CancelAsync()
         {
+            await TaskContext.ResetAsync;
+
             if (parentWorkflow != null)
             {
                 var stub = parentWorkflow.NewLocalActivityStub<ILocalOperations, LocalOperations>();
@@ -168,6 +171,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task SignalAsync(string signalName, params object[] args)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
@@ -189,6 +193,8 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task GetResultAsync()
         {
+            await TaskContext.ResetAsync;
+
             if (parentWorkflow != null)
             {
                 var stub = parentWorkflow.NewLocalActivityStub<ILocalOperations, LocalOperations>();
@@ -208,6 +214,8 @@ namespace Neon.Cadence
         /// <returns>The workflow result.</returns>
         public async Task<TResult> GetResultAsync<TResult>()
         {
+            await TaskContext.ResetAsync;
+
             if (parentWorkflow != null)
             {
                 var stub  = parentWorkflow.NewLocalActivityStub<ILocalOperations, LocalOperations>();

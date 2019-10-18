@@ -33,6 +33,7 @@ using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Data;
 using Neon.IO;
+using Neon.Tasks;
 using Neon.Xunit;
 using Neon.Xunit.Cadence;
 
@@ -78,6 +79,8 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Worker()
         {
+            await TaskContext.ResetAsync;
+
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
 
             // Verify that creating workers with the same attributes actually

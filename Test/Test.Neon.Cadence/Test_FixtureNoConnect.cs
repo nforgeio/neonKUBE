@@ -33,6 +33,7 @@ using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Data;
 using Neon.IO;
+using Neon.Tasks;
 using Neon.Xunit;
 using Neon.Xunit.Cadence;
 
@@ -108,6 +109,8 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_WithResult1()
         {
+            await TaskContext.ResetAsync;
+            
             // Verify that we can call a simple workflow that accepts a
             // parameter and results a result.
 
@@ -120,6 +123,8 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_WithResult2()
         {
+            await TaskContext.ResetAsync;
+
             // Verify that we can call a simple workflow that accepts a
             // parameter and results a result.
 

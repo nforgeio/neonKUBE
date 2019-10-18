@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Tasks;
 
 namespace Neon.Cadence
 {
@@ -81,6 +82,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         public async Task RegisterDomainAsync(string name, string description = null, string ownerEmail = null, int retentionDays = 7, bool ignoreDuplicates = false)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentException>(retentionDays > 0, nameof(retentionDays));
             EnsureNotDisposed();
@@ -117,6 +119,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         public async Task<DomainDescription> DescribeDomainAsync(string name)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             EnsureNotDisposed();
 
@@ -155,6 +158,7 @@ namespace Neon.Cadence
         /// <returns>The <see cref="DomainDescription"/>.</returns>
         public async Task<DomainDescription> DescribeDomainByIdAsync(string uuid)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uuid), nameof(uuid));
             EnsureNotDisposed();
 
@@ -194,6 +198,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task UpdateDomainAsync(string name, UpdateDomainRequest request)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
             Covenant.Requires<ArgumentNullException>(request.Options != null, nameof(request));
@@ -238,6 +243,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<DomainListPage> ListDomainsAsync(int pageSize, byte[] nextPageToken = null)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentException>(pageSize >= 1, nameof(pageSize));
             EnsureNotDisposed();
 

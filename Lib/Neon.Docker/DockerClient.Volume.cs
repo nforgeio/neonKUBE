@@ -29,6 +29,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Tasks;
 
 namespace Neon.Docker
 {
@@ -44,6 +45,8 @@ namespace Neon.Docker
         /// <returns>A <see cref="VolumeListResponse"/></returns>
         public async Task<VolumeListResponse> VolumeListAsync(CancellationToken cancellationToken = default)
         {
+            await TaskContext.ResetAsync;
+
             return new VolumeListResponse(await JsonClient.GetAsync(GetUri("volumes"), cancellationToken: cancellationToken));
         }
 
@@ -57,6 +60,8 @@ namespace Neon.Docker
         /// <returns></returns>
         public async Task<DockerVolume> VolumeCreate(string name = null, string driver = null, CancellationToken cancellationToken = default, params KeyValuePair<string, string>[] driverOpts)
         {
+            await TaskContext.ResetAsync;
+
             dynamic args = new ExpandoObject();
 
             if (!string.IsNullOrEmpty(name))
@@ -87,6 +92,7 @@ namespace Neon.Docker
         /// <returns>The <see cref="DockerVolume"/>.</returns>
         public async Task<DockerVolume> VolumeInspect(string nameOrId, CancellationToken cancellationToken = default)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nameOrId), nameof(nameOrId));
 
             var response = await JsonClient.GetAsync(GetUri("volumes", nameOrId), cancellationToken: cancellationToken);
@@ -102,6 +108,7 @@ namespace Neon.Docker
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task VolumeRemove(string nameOrId, CancellationToken cancellationToken = default)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nameOrId), nameof(nameOrId));
 
             await JsonClient.DeleteAsync(GetUri("volumes", nameOrId), cancellationToken: cancellationToken);

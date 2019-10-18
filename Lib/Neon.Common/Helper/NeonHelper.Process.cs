@@ -26,6 +26,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Neon.Tasks;
+
 namespace Neon.Common
 {
     public static partial class NeonHelper
@@ -412,6 +414,8 @@ namespace Neon.Common
         /// </remarks>
         public static async Task<int> ExecuteAsync(string path, object[] args, TimeSpan? timeout = null, Process process = null)
         {
+            await TaskContext.ResetAsync;
+
             return await ExecuteAsync(path, NormalizeExecArgs(args), timeout, process);
         }
 
@@ -439,6 +443,8 @@ namespace Neon.Common
         /// </remarks>
         public static async Task<int> ExecuteAsync(string path, string args, TimeSpan? timeout = null, Process process = null)
         {
+            await TaskContext.ResetAsync;
+
             return await Task.Run(() => Execute(path, args, timeout, process));
         }
 
@@ -692,6 +698,8 @@ namespace Neon.Common
         public static async Task<ExecuteResponse> ExecuteCaptureAsync(string path, object[] args,
                                                                     TimeSpan? timeout = null, Process process = null)
         {
+            await TaskContext.ResetAsync;
+
             return await ExecuteCaptureAsync(path, NormalizeExecArgs(args), timeout, process);
         }
 
@@ -724,6 +732,8 @@ namespace Neon.Common
         public static async Task<ExecuteResponse> ExecuteCaptureAsync(string path, string args, 
                                                                     TimeSpan? timeout = null, Process process = null)
         {
+            await TaskContext.ResetAsync;
+
             return await Task.Run(() => ExecuteCapture(path, args, timeout, process));
         }
 

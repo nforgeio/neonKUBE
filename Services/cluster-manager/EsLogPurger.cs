@@ -19,6 +19,7 @@ using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Kube.Service;
 using Neon.Net;
+using Neon.Service;
 using Neon.Tasks;
 
 using ICSharpCode.SharpZipLib.Zip;

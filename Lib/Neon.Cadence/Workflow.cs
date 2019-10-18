@@ -259,6 +259,7 @@ namespace Neon.Cadence
         /// </summary>
         public async Task<DateTime> UtcNowAsync()
         {
+            await TaskContext.ResetAsync;
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -289,6 +290,7 @@ namespace Neon.Cadence
             // like to keep the method signature async just in case this changes
             // in the future.
 
+            await TaskContext.ResetAsync;
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -316,6 +318,8 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task ContinueAsNewAsync(ContinueAsNewOptions options, params object[] args)
         {
+            await TaskContext.ResetAsync;
+
             // This method doesn't currently do any async operations but I'd
             // like to keep the method signature async just in case this changes
             // in the future.
@@ -509,6 +513,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<int> GetVersionAsync(string changeId, int minSupported, int maxSupported)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(changeId), nameof(changeId));
             Covenant.Requires<ArgumentException>(minSupported <= maxSupported, nameof(minSupported));
             Client.EnsureNotDisposed();
@@ -543,6 +548,7 @@ namespace Neon.Cadence
         /// <exception cref="InvalidOperationException">Thrown if the stub has not been started.</exception>
         public async Task<WorkflowExecution> GetWorkflowExecutionAsync(object stub)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(stub != null, nameof(stub));
             Covenant.Requires<ArgumentException>(stub is ITypedWorkflowStub, nameof(stub), "The parameter is not a workflow stub.");
             Client.EnsureNotDisposed();
@@ -596,6 +602,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<T> MutableSideEffectAsync<T>(string id, Func<T> function)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id), nameof(id));
             Client.EnsureNotDisposed();
             SetStackTrace();
@@ -679,6 +686,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<object> MutableSideEffectAsync(Type resultType, string id, Func<dynamic> function)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id), nameof(id));
             Covenant.Requires<ArgumentNullException>(resultType != null, nameof(resultType));
             Covenant.Requires<ArgumentNullException>(function != null, nameof(function));
@@ -726,6 +734,7 @@ namespace Neon.Cadence
         /// <returns>The new <see cref="Guid"/>.</returns>
         public async Task<Guid> NewGuidAsync()
         {
+            await TaskContext.ResetAsync;
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -751,6 +760,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<double> NextRandomDoubleAsync()
         {
+            await TaskContext.ResetAsync;
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -775,6 +785,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<int> NextRandomAsync()
         {
+            await TaskContext.ResetAsync;
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -800,6 +811,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<int> NextRandomAsync(int maxValue)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(maxValue > 0, nameof(maxValue));
             Client.EnsureNotDisposed();
             SetStackTrace();
@@ -828,6 +840,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<int> NextRandomAsync(int minValue, int maxValue)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(minValue < maxValue, nameof(minValue));
             Client.EnsureNotDisposed();
             SetStackTrace();
@@ -854,6 +867,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<byte[]> NextRandomBytesAsync(int size)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(size > 0, nameof(size));
             Client.EnsureNotDisposed();
             SetStackTrace();
@@ -907,6 +921,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<T> SideEffectAsync<T>(Func<T> function)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(function != null, nameof(function));
             Client.EnsureNotDisposed();
             SetStackTrace();
@@ -978,6 +993,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<object> SideEffectAsync(Type resultType, Func<object> function)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentNullException>(resultType != null, nameof(resultType));
             Covenant.Requires<ArgumentNullException>(function != null, nameof(function));
             Client.EnsureNotDisposed();
@@ -1032,6 +1048,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task SleepAsync(TimeSpan duration)
         {
+            await TaskContext.ResetAsync;
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -1065,6 +1082,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task SleepUntilUtcAsync(DateTime time)
         {
+            await TaskContext.ResetAsync;
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -1083,6 +1101,7 @@ namespace Neon.Cadence
         /// <returns><c>true</c> if the a previous CRON workflow run returned a result.</returns>
         public async Task<bool> IsSetLastCompletionResultAsync()
         {
+            await TaskContext.ResetAsync;
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -1111,6 +1130,7 @@ namespace Neon.Cadence
         /// <returns>The previous run result as bytes or <c>null</c>.</returns>
         public async Task<TResult> GetLastCompletionResultAsync<TResult>()
         {
+            await TaskContext.ResetAsync;
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -1867,6 +1887,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<WorkflowQueue<T>> NewQueueAsync<T>(int capacity = 2)
         {
+            await TaskContext.ResetAsync;
             Covenant.Requires<ArgumentException>(capacity >= 2, nameof(capacity), "Queue capacity cannot be less than [2].");
             Client.EnsureNotDisposed();
 

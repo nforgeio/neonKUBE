@@ -991,6 +991,7 @@ namespace Neon.ModelGen
             writer.WriteLine($"using Neon.Diagnostics;");
             writer.WriteLine($"using Neon.Net;");
             writer.WriteLine($"using Neon.Retry;");
+            writer.WriteLine($"using Neon.Tasks;");
             writer.WriteLine();
 
             if (Settings.RoundTrip)
@@ -1443,6 +1444,8 @@ namespace Neon.ModelGen
 
                     writer.WriteLine($"        public static async Task<object> CreateFromAsync(Stream stream, Encoding encoding = null)");
                     writer.WriteLine($"        {{");
+                    writer.WriteLine($"            await TaskContext.ResetAsync;");
+                    writer.WriteLine();
                     writer.WriteLine($"            encoding = encoding ?? Encoding.UTF8;");
                     writer.WriteLine();
                     writer.WriteLine($"            if (stream == null)");
@@ -2329,6 +2332,7 @@ namespace Neon.ModelGen
 
                     writer.WriteLine($"        public {virtualModifier} async Task WriteJsonToAsync(Stream stream)");
                     writer.WriteLine($"        {{");
+                    writer.WriteLine($"            await TaskContext.ResetAsync;");
                     writer.WriteLine($"            __Save();");
                     writer.WriteLine();
 
@@ -3089,6 +3093,8 @@ namespace Neon.ModelGen
             writer.WriteLine($"{indent}        {generatedMethodAttribute}");
             writer.WriteLine($"{indent}        public async {methodReturnType} {methodName}({sbParameters})");
             writer.WriteLine($"{indent}        {{");
+            writer.WriteLine($"{indent}            await TaskContext.ResetAsync;");
+            writer.WriteLine();
 
             if (sbArgGenerate.Length > 0)
             {
@@ -3125,6 +3131,8 @@ namespace Neon.ModelGen
 
             writer.WriteLine($"{indent}        public async Task<JsonResponse> Unsafe{methodName}({sbParameters})");
             writer.WriteLine($"{indent}        {{");
+            writer.WriteLine($"{indent}            await TaskContext.ResetAsync;");
+            writer.WriteLine();
 
             if (sbArgGenerate.Length > 0)
             {

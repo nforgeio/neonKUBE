@@ -29,6 +29,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
+using Neon.Tasks;
 using Neon.Xunit;
 
 using Xunit;
@@ -207,6 +208,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> DeleteAsync(Uri requestUri, CancellationToken cancellationToken)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -228,6 +231,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> DeleteAsync(string requestUri, CancellationToken cancellationToken)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -248,6 +253,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> DeleteAsync(Uri requestUri)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -268,6 +275,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> DeleteAsync(string requestUri)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -288,6 +297,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> GetAsync(string requestUri)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -309,6 +320,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> GetAsync(string requestUri, HttpCompletionOption completionOption)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -331,6 +344,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> GetAsync(string requestUri, HttpCompletionOption completionOption, CancellationToken cancellationToken)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -352,6 +367,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> GetAsync(string requestUri, CancellationToken cancellationToken)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -372,6 +389,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> GetAsync(Uri requestUri)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -393,6 +412,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> GetAsync(Uri requestUri, HttpCompletionOption completionOption)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -415,6 +436,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> GetAsync(Uri requestUri, HttpCompletionOption completionOption, CancellationToken cancellationToken)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -436,6 +459,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> GetAsync(Uri requestUri, CancellationToken cancellationToken)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -456,6 +481,8 @@ namespace Neon.Xunit
         /// <returns>The content bytes.</returns>
         public async Task<byte[]> GetByteArrayAsync(string requestUri)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -476,6 +503,8 @@ namespace Neon.Xunit
         /// <returns>The content bytes.</returns>
         public async Task<byte[]> GetByteArrayAsync(Uri requestUri)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -496,6 +525,8 @@ namespace Neon.Xunit
         /// <returns>The response stream..</returns>
         public async Task<Stream> GetStreamAsync(string requestUri)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -516,6 +547,8 @@ namespace Neon.Xunit
         /// <returns>The response stream..</returns>
         public async Task<Stream> GetStreamAsync(Uri requestUri)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -536,6 +569,8 @@ namespace Neon.Xunit
         /// <returns>The response string..</returns>
         public async Task<string> GetStringAsync(string requestUri)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -556,6 +591,8 @@ namespace Neon.Xunit
         /// <returns>The response string..</returns>
         public async Task<string> GetStringAsync(Uri requestUri)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -577,6 +614,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> PostAsync(string requestUri, HttpContent content)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -599,6 +638,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> PostAsync(string requestUri, HttpContent content, CancellationToken cancellationToken)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -620,6 +661,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> PostAsync(Uri requestUri, HttpContent content)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -642,6 +685,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> PostAsync(Uri requestUri, HttpContent content, CancellationToken cancellationToken)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -663,6 +708,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> PutAsync(string requestUri, HttpContent content)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -685,6 +732,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> PutAsync(string requestUri, HttpContent content, CancellationToken cancellationToken)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -706,6 +755,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> PutAsync(Uri requestUri, HttpContent content)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -728,6 +779,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> PutAsync(Uri requestUri, HttpContent content, CancellationToken cancellationToken)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -748,6 +801,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -769,6 +824,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, HttpCompletionOption completionOption)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -791,6 +848,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationToken cancellationToken)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
@@ -812,6 +871,8 @@ namespace Neon.Xunit
         /// <returns>The response.</returns>
         public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            await TaskContext.ResetAsync;
+
             if (disableConnectionReuse)
             {
                 using (var client = GetSingleUseClient())
