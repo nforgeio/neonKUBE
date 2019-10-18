@@ -1318,7 +1318,7 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 	// ChildContexts map in the parent workflow's entry
 	// in the WorkflowContexts map
 	cctx := proxyworkflow.NewChildContext(childFuture, cancel)
-	childID := wectx.AddChildContext(proxyworkflow.NextChildID(), cctx)
+	childID := wectx.AddChildContext(wectx.NextChildID(), cctx)
 
 	// get the child workflow execution
 	childWE := new(workflow.Execution)
