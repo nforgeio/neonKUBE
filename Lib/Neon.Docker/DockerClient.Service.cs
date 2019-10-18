@@ -45,7 +45,7 @@ namespace Neon.Docker
         /// <returns>A <see cref="ServiceListResponse"/></returns>
         public async Task<ServiceListResponse> ServiceListAsync(CancellationToken cancellationToken = default)
         {
-            await SyncContext.ResetAsync;
+            await SyncContext.ClearAsync;
 
             return new ServiceListResponse(await JsonClient.GetAsync(GetUri("services"), cancellationToken: cancellationToken));
         }

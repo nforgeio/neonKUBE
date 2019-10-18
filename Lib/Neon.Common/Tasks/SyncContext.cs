@@ -74,17 +74,17 @@ namespace Neon.Tasks
     /// </para>
     /// <para>
     /// This <c>struct</c> implements a custom awaiter that saves the current synchronization context and then
-    /// clears it for the rest of the current method execution.  This means that every subsequent <c>await</c> 
-    /// performed in the method will simply fetch a pool thread to continue execution, rather than to the
-    /// original context thread.  To accomplish this, you'll simply await <see cref="SyncContext.ResetAsync"/>
-    /// at or near the top of your method:
+    /// clears it for the rest of the current method execution and then restores the original context when
+    /// when the method returns.  This means that every subsequent <c>await</c>  performed in the method will 
+    /// simply fetch a pool thread to continue execution, rather than to the original context thread.  To
+    /// accomplish this, you'll simply await <see cref="SyncContext.ClearAsync"/> at or near the top of your method:
     /// </para>
     /// <code language="C#">
     /// using Neon.Task;
     /// 
     /// public async Task&lt;string&gt; HelloAsync()
     /// {
-    ///     await SyncContext.ResetAsync;
+    ///     await SyncContext.ClearAsync;
     ///     
     ///     await DoSomthingAsync();
     ///     await DoSomethingElseAsync();
@@ -93,7 +93,7 @@ namespace Neon.Tasks
     /// }
     /// </code>
     /// <note>
-    /// <see cref="ResetAsync"/> is not a method so you don't
+    /// <see cref="ClearAsync"/> is not a method so you don't
     /// need to pass any parameters.
     /// </note>
     /// <para>
@@ -123,7 +123,7 @@ namespace Neon.Tasks
         /// 
         /// public async Task&lt;string&gt; HelloAsync()
         /// {
-        ///     await SyncContext.ResetAsync;
+        ///     await SyncContext.ClearAsync;
         ///     
         ///     await DoSomthingAsync();
         ///     await DoSomethingElseAsync();
@@ -132,7 +132,7 @@ namespace Neon.Tasks
         /// }
         /// </code>
         /// <note>
-        /// <see cref="ResetAsync"/> is not a method so you don't
+        /// <see cref="ClearAsync"/> is not a method so you don't
         /// need to pass any parameters.
         /// </note>
         /// <para>
@@ -143,14 +143,14 @@ namespace Neon.Tasks
         /// <c>HelloAsync()</c> method returns.
         /// </para>
         /// </remarks>
-        public static SyncContext ResetAsync { get; private set; }
+        public static SyncContext ClearAsync { get; private set; }
 
         /// <summary>
         /// <para>
         /// Optionally disables context resetting globally.  This provides an
         /// escape hatch for situations where an application needs to revert
         /// back to the default synchronization context behavior.  This turns
-        /// <c>await SyncContext.ResetAsync</c> calls into a NOP.
+        /// <c>await SyncContext.ClearAsync</c> calls into a NOP.
         /// </para>
         /// <note>
         /// Most applications should never need to set this.
@@ -163,7 +163,7 @@ namespace Neon.Tasks
         /// </summary>
         static SyncContext()
         {
-            ResetAsync = new SyncContext(0);
+            ClearAsync = new SyncContext(0);
         }
 
         //---------------------------------------------------------------------
