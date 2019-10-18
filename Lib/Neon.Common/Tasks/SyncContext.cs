@@ -111,7 +111,8 @@ namespace Neon.Tasks
 
         /// <summary>
         /// <c>await</c> this singleton to clear the current synchronization
-        /// context for the scope of the current method.
+        /// context for the scope of the current method.  The original context
+        /// will be restored when the method returns.
         /// </summary>
         /// <remarks>
         /// <para>
