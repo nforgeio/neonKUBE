@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package messages
+package endpoints
 
 import (
 	"errors"
@@ -23,6 +23,7 @@ import (
 
 	"github.com/cadence-proxy/internal"
 	proxyerror "github.com/cadence-proxy/internal/cadence/error"
+	"github.com/cadence-proxy/internal/messages"
 )
 
 var (
@@ -46,7 +47,7 @@ type (
 	Operation struct {
 		requestID   int64
 		contextID   int64
-		request     IProxyRequest
+		request     messages.IProxyRequest
 		isCancelled bool
 		channel     chan interface{}
 	}
@@ -76,7 +77,7 @@ func GetRequestID() int64 {
 // Operation instance methods
 
 // NewOperation is the default constructor for an Operation
-func NewOperation(requestID int64, request IProxyRequest) *Operation {
+func NewOperation(requestID int64, request messages.IProxyRequest) *Operation {
 	op := new(Operation)
 	op.isCancelled = false
 	op.request = request
@@ -115,12 +116,12 @@ func (op *Operation) SetContextID(value int64) {
 }
 
 // GetRequest gets the request
-func (op *Operation) GetRequest() IProxyRequest {
+func (op *Operation) GetRequest() messages.IProxyRequest {
 	return op.request
 }
 
 // SetRequest sets the request
-func (op *Operation) SetRequest(value IProxyRequest) {
+func (op *Operation) SetRequest(value messages.IProxyRequest) {
 	op.request = value
 }
 
@@ -148,6 +149,7 @@ func (op *Operation) SendChannel(result interface{}, cadenceError *proxyerror.Ca
 	}
 
 	defer close(op.channel)
+
 	if cadenceError != nil {
 		op.channel <- errors.New(cadenceError.ToString())
 	} else {

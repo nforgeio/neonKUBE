@@ -79,6 +79,7 @@ func ReadAndDeserialize(body io.Reader) (messages.IProxyMessage, error) {
 	return message, nil
 }
 
+// putToNeonCadenceClient sends an IProxyMessage to the .NET client.
 func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, error) {
 	proxyMessage := message.GetProxyMessage()
 
@@ -110,6 +111,8 @@ func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, err
 	return resp, nil
 }
 
+// setReplayStatus checks a workflow context to see if it is replaying.
+// Sets the replay status of specified invoke messages to the .NET client.
 func setReplayStatus(ctx workflow.Context, message messages.IProxyMessage) {
 	isReplaying := workflow.IsReplaying(ctx)
 	switch s := message.(type) {
@@ -153,7 +156,9 @@ func sendMessage(message messages.IProxyMessage) {
 	}()
 }
 
-func sendFutureACK(contextID, operationID, clientID int64) *messages.Operation {
+// sendFutureACK sends an acknowledgement of a workflow future being created
+// to the .NET client.
+func sendFutureACK(contextID, operationID, clientID int64) *Operation {
 
 	// create the WorkflowFutureReadyRequest
 	requestID := NextRequestID()
@@ -164,7 +169,7 @@ func sendFutureACK(contextID, operationID, clientID int64) *messages.Operation {
 	workflowFutureReadyRequest.SetClientID(clientID)
 
 	// create the Operation for this request and add it to the operations map
-	op := messages.NewOperation(requestID, workflowFutureReadyRequest)
+	op := NewOperation(requestID, workflowFutureReadyRequest)
 	op.SetChannel(make(chan interface{}))
 	op.SetContextID(contextID)
 	Operations.Add(requestID, op)
@@ -175,6 +180,8 @@ func sendFutureACK(contextID, operationID, clientID int64) *messages.Operation {
 	return op
 }
 
+// isCanceledError checks a golang error or a
+// CadenceError to see if it is a canceledError.
 func isCanceledErr(err interface{}) bool {
 	var errStr string
 	if v, ok := err.(*proxyerror.CadenceError); ok {
@@ -187,10 +194,14 @@ func isCanceledErr(err interface{}) bool {
 	return strings.Contains(errStr, "CanceledError")
 }
 
+// isForceReplayError checks if an error is
+// a force replay error.
 func isForceReplayErr(err error) bool {
 	return strings.Contains(err.Error(), "force-replay")
 }
 
+// verifyClientHelper verifies the existence of a ClientHelper for specified
+// IProxyRequests before sending them down to the request handlers.
 func verifyClientHelper(request messages.IProxyRequest, helper *proxyclient.ClientHelper) error {
 	switch request.GetType() {
 	case internal.InitializeRequest,
@@ -210,18 +221,20 @@ func verifyClientHelper(request messages.IProxyRequest, helper *proxyclient.Clie
 	return nil
 }
 
-func NextRequestID() int64 {
-	return messages.NextRequestID()
-}
-
+// NextContextID calls proxyworkflow.NextContextID().
+// Iterates workflow contextID.
 func NextContextID() int64 {
 	return proxyworkflow.NextContextID()
 }
 
+// NextActivityContextID calls proxyactivity.NextContextID().
+// Iterates activity contextID.
 func NextActivityContextID() int64 {
 	return proxyactivity.NextContextID()
 }
 
+// NextWorkerID calls proxyworker.NextWorkerID().
+// Iterates workerID.
 func NextWorkerID() int64 {
 	return proxyworker.NextWorkerID()
 }

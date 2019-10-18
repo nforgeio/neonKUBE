@@ -34,14 +34,14 @@ import (
 // -------------------------------------------------------------------------
 // client message types
 
-func handleLogReply(reply *messages.LogReply, op *messages.Operation) error {
+func handleLogReply(reply *messages.LogReply, op *Operation) error {
 	return op.SendChannel(true, reply.GetError())
 }
 
 // -------------------------------------------------------------------------
 // Workflow message types
 
-func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *messages.Operation) error {
+func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *Operation) error {
 	defer WorkflowContexts.Remove(op.GetContextID())
 
 	requestID := reply.GetRequestID()
@@ -111,7 +111,7 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *messages
 	return op.SendChannel(result, cadenceError)
 }
 
-func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply, op *messages.Operation) error {
+func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply, op *Operation) error {
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
 	Logger.Debug("Settling Signal",
@@ -129,7 +129,7 @@ func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply, 
 	return op.SendChannel(true, reply.GetError())
 }
 
-func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply, op *messages.Operation) error {
+func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply, op *Operation) error {
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
 	Logger.Debug("Settling Query",
@@ -147,7 +147,7 @@ func handleWorkflowQueryInvokeReply(reply *messages.WorkflowQueryInvokeReply, op
 	return op.SendChannel(reply.GetResult(), reply.GetError())
 }
 
-func handleWorkflowFutureReadyReply(reply *messages.WorkflowFutureReadyReply, op *messages.Operation) error {
+func handleWorkflowFutureReadyReply(reply *messages.WorkflowFutureReadyReply, op *Operation) error {
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
 	Logger.Debug("Settling Future ACK",
@@ -163,10 +163,8 @@ func handleWorkflowFutureReadyReply(reply *messages.WorkflowFutureReadyReply, op
 // -------------------------------------------------------------------------
 // Activity message types
 
-func handleActivityInvokeReply(reply *messages.ActivityInvokeReply, op *messages.Operation) error {
-	defer func() {
-		_ = ActivityContexts.Remove(op.GetContextID())
-	}()
+func handleActivityInvokeReply(reply *messages.ActivityInvokeReply, op *Operation) error {
+	defer ActivityContexts.Remove(op.GetContextID())
 
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
@@ -194,7 +192,7 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply, op *messages
 	return op.SendChannel(result, reply.GetError())
 }
 
-func handleActivityStoppingReply(reply *messages.ActivityStoppingReply, op *messages.Operation) error {
+func handleActivityStoppingReply(reply *messages.ActivityStoppingReply, op *Operation) error {
 	requestID := reply.GetRequestID()
 	contextID := op.GetContextID()
 	Logger.Debug("Settling Activity Stopping",
@@ -212,7 +210,7 @@ func handleActivityStoppingReply(reply *messages.ActivityStoppingReply, op *mess
 	return op.SendChannel(true, reply.GetError())
 }
 
-func handleActivityInvokeLocalReply(reply *messages.ActivityInvokeLocalReply, op *messages.Operation) error {
+func handleActivityInvokeLocalReply(reply *messages.ActivityInvokeLocalReply, op *Operation) error {
 	defer ActivityContexts.Remove(op.GetContextID())
 
 	requestID := reply.GetRequestID()

@@ -529,7 +529,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 		setReplayStatus(ctx, workflowInvokeRequest)
 
 		// create the Operation for this request and add it to the operations map
-		op := messages.NewOperation(requestID, workflowInvokeRequest)
+		op := NewOperation(requestID, workflowInvokeRequest)
 		op.SetChannel(make(chan interface{}))
 		op.SetContextID(contextID)
 		Operations.Add(requestID, op)
@@ -822,25 +822,19 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 			if _v, _ok := b.(*proxyerror.CadenceError); _ok {
 				if v.GetType() == _v.GetType() &&
 					v.ToString() == _v.ToString() {
-
 					return true
 				}
-
 				return false
 			}
-
 			return false
 		}
 
 		if v, ok := a.([]byte); ok {
 			if _v, _ok := b.([]byte); _ok {
-
 				return bytes.Equal(v, _v)
 			}
-
 			return false
 		}
-
 		return false
 	}
 
@@ -1002,7 +996,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 		setReplayStatus(ctx, workflowSignalInvokeRequest)
 
 		// create the Operation for this request and add it to the operations map
-		op := messages.NewOperation(requestID, workflowSignalInvokeRequest)
+		op := NewOperation(requestID, workflowSignalInvokeRequest)
 		op.SetChannel(make(chan interface{}))
 		op.SetContextID(contextID)
 		Operations.Add(requestID, op)
@@ -1522,7 +1516,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 		setReplayStatus(ctx, workflowQueryInvokeRequest)
 
 		// create the Operation for this request and add it to the operations map
-		op := messages.NewOperation(requestID, workflowQueryInvokeRequest)
+		op := NewOperation(requestID, workflowQueryInvokeRequest)
 		op.SetContextID(contextID)
 		op.SetChannel(make(chan interface{}))
 		Operations.Add(requestID, op)
@@ -1719,7 +1713,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 		activityInvokeRequest.SetClientID(clientID)
 
 		// create the Operation for this request and add it to the operations map
-		op := messages.NewOperation(requestID, activityInvokeRequest)
+		op := NewOperation(requestID, activityInvokeRequest)
 		op.SetChannel(make(chan interface{}))
 		op.SetContextID(contextID)
 		Operations.Add(requestID, op)
@@ -1747,7 +1741,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 
 			// create the Operation for this request and add it to the operations map
 			stoppingReplyChan := make(chan interface{})
-			op := messages.NewOperation(requestID, activityStoppingRequest)
+			op := NewOperation(requestID, activityStoppingRequest)
 			op.SetChannel(stoppingReplyChan)
 			op.SetContextID(contextID)
 			Operations.Add(requestID, op)
@@ -2189,7 +2183,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 		activityInvokeLocalRequest.SetClientID(clientID)
 
 		// create the Operation for this request and add it to the operations map
-		op := messages.NewOperation(requestID, activityInvokeLocalRequest)
+		op := NewOperation(requestID, activityInvokeLocalRequest)
 		op.SetChannel(make(chan interface{}))
 		op.SetContextID(activityContextID)
 		Operations.Add(requestID, op)
@@ -2314,7 +2308,7 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 		activityInvokeLocalRequest.SetClientID(clientID)
 
 		// create the Operation for this request and add it to the operations map
-		op := messages.NewOperation(requestID, activityInvokeLocalRequest)
+		op := NewOperation(requestID, activityInvokeLocalRequest)
 		op.SetChannel(make(chan interface{}))
 		op.SetContextID(activityContextID)
 		Operations.Add(requestID, op)
