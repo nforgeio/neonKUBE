@@ -125,7 +125,7 @@ namespace Neon.ModelGen
             // all as resources within the [Netstandard] project folder.
             //
             // We'll need to replace this when/if we upgrade the 
-            // library to a new version of NetStandard.
+            // library to a new version of NETStandard.
 
             if (cachedNetStandard == null)
             {
@@ -1609,7 +1609,7 @@ namespace Neon.ModelGen
                         writer.WriteLine($"        /// <summary>");
                         writer.WriteLine($"        /// <b>INTERNAL USE ONLY:</b> This is the <see cref=\"JObject\"/> is used to back");
                         writer.WriteLine($"        /// all serialized round-trip.  This was made public for advanced unit testing but");
-                        writer.WriteLine($"        /// its use should generallybe avoided for other purposes.  Use <see cref=\"ToJObject()\"/>.");
+                        writer.WriteLine($"        /// its use should generally be avoided for other purposes.  Use <see cref=\"ToJObject()\"/>.");
                         writer.WriteLine($"        /// instead.  \"__O\" is short for \"object\".");
                         writer.WriteLine($"        /// </summary>");
                         writer.WriteLine($"        [JsonIgnore]");
@@ -2059,12 +2059,7 @@ namespace Neon.ModelGen
                         writer.WriteLine($"        public JObject ToJObject()");
                         writer.WriteLine($"        {{");
                         writer.WriteLine($"            __Save();");
-                        writer.WriteLine();
-                        writer.WriteLine($"            var clone = RoundtripDataHelper.DeepClone(__O);");
-                        writer.WriteLine();
-                        writer.WriteLine($"            clone[\"__O\"] = __O;");
-                        writer.WriteLine();
-                        writer.WriteLine($"            return clone;");
+                        writer.WriteLine($"            return RoundtripDataHelper.DeepClone(__O);");
                         writer.WriteLine($"        }}");
                     }
 
