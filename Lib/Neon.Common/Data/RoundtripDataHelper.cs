@@ -160,7 +160,7 @@ namespace Neon.Data
         }
 
         /// <summary>
-        /// Generates an database key for a persisted entity.
+        /// Generates an database key for a persisted entity from one or more arguments.
         /// </summary>
         /// <param name="persistedType">The entity type string.</param>
         /// <param name="args">Arguments identifying the entity.</param>
