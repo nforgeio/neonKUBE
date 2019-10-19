@@ -15,14 +15,14 @@ require (
 	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/gogo/googleapis v1.3.0 // indirect
 	github.com/gogo/status v1.1.0 // indirect
-	github.com/golang/mock v1.3.1-0.20190508161146-9fa652df1129
+	github.com/golang/mock v1.3.1-0.20190508161146-9fa652df1129 // indirect
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/jessevdk/go-flags v1.4.0 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/opentracing/opentracing-go v1.1.0 // indirect
 	github.com/pborman/uuid v0.0.0-20180906182336-adf5a7427709
-	github.com/pkg/errors v0.8.1
+	github.com/pkg/errors v0.8.1 // indirect
 	github.com/prashantv/protectmem v0.0.0-20171002184600-e20412882b3a // indirect
 	github.com/prometheus/common v0.6.0 // indirect
 	github.com/prometheus/procfs v0.0.3 // indirect
@@ -55,5 +55,5 @@ require (
 	golang.org/x/tools v0.0.0-20190712213246-8b927904ee0d // indirect
 	google.golang.org/grpc v1.23.1 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
-	gopkg.in/yaml.v2 v2.2.2
+	gopkg.in/yaml.v2 v2.2.2 // indirect
 )

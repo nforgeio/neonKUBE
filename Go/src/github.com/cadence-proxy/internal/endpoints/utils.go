@@ -112,7 +112,7 @@ func putToNeonCadenceClient(message messages.IProxyMessage) (*http.Response, err
 }
 
 // setReplayStatus checks a workflow context to see if it is replaying.
-// Sets the replay status of specified invoke messages to the .NET client.
+// Sets the replay status of specified invoke and reply messages to the .NET client.
 func setReplayStatus(ctx workflow.Context, message messages.IProxyMessage) {
 	isReplaying := workflow.IsReplaying(ctx)
 	switch s := message.(type) {
@@ -122,18 +122,21 @@ func setReplayStatus(ctx workflow.Context, message messages.IProxyMessage) {
 		} else {
 			s.SetReplayStatus(proxyworkflow.ReplayStatusNotReplaying)
 		}
+
 	case *messages.WorkflowInvokeRequest:
 		if isReplaying {
 			s.SetReplayStatus(proxyworkflow.ReplayStatusReplaying)
 		} else {
 			s.SetReplayStatus(proxyworkflow.ReplayStatusNotReplaying)
 		}
+
 	case *messages.WorkflowQueryInvokeRequest:
 		if isReplaying {
 			s.SetReplayStatus(proxyworkflow.ReplayStatusReplaying)
 		} else {
 			s.SetReplayStatus(proxyworkflow.ReplayStatusNotReplaying)
 		}
+
 	case *messages.WorkflowSignalInvokeRequest:
 		if isReplaying {
 			s.SetReplayStatus(proxyworkflow.ReplayStatusReplaying)
@@ -158,27 +161,27 @@ func sendMessage(message messages.IProxyMessage) {
 
 // sendFutureACK sends an acknowledgement of a workflow future being created
 // to the .NET client.
-func sendFutureACK(contextID, operationID, clientID int64) *Operation {
+// func sendFutureACK(contextID, operationID, clientID int64) *Operation {
 
-	// create the WorkflowFutureReadyRequest
-	requestID := NextRequestID()
-	workflowFutureReadyRequest := messages.NewWorkflowFutureReadyRequest()
-	workflowFutureReadyRequest.SetRequestID(requestID)
-	workflowFutureReadyRequest.SetContextID(contextID)
-	workflowFutureReadyRequest.SetFutureOperationID(operationID)
-	workflowFutureReadyRequest.SetClientID(clientID)
+// 	// create the WorkflowFutureReadyRequest
+// 	requestID := NextRequestID()
+// 	workflowFutureReadyRequest := messages.NewWorkflowFutureReadyRequest()
+// 	workflowFutureReadyRequest.SetRequestID(requestID)
+// 	workflowFutureReadyRequest.SetContextID(contextID)
+// 	workflowFutureReadyRequest.SetFutureOperationID(operationID)
+// 	workflowFutureReadyRequest.SetClientID(clientID)
 
-	// create the Operation for this request and add it to the operations map
-	op := NewOperation(requestID, workflowFutureReadyRequest)
-	op.SetChannel(make(chan interface{}))
-	op.SetContextID(contextID)
-	Operations.Add(requestID, op)
+// 	// create the Operation for this request and add it to the operations map
+// 	op := NewOperation(requestID, workflowFutureReadyRequest)
+// 	op.SetChannel(make(chan interface{}))
+// 	op.SetContextID(contextID)
+// 	Operations.Add(requestID, op)
 
-	// send the request
-	go sendMessage(workflowFutureReadyRequest)
+// 	// send the request
+// 	go sendMessage(workflowFutureReadyRequest)
 
-	return op
-}
+// 	return op
+// }
 
 // isCanceledError checks a golang error or a
 // CadenceError to see if it is a canceledError.
