@@ -17,13 +17,13 @@
 
 5. Build and publish all of the Docker images: `neon-publish-images -all`
 
-6. Rebuild the RELEASE version via:
+6. Publish the nuget packages: `neon-nuget-public`
+
+7. Rebuild the RELEASE version via:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neon-builder -release -installer`
 
-7. Verify that the new release installer works.
-
-8. Publish the nuget packages: `neon-nuget-public`
+8. Verify that the new release installer works.
 
 9. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: v0.6.4-alpha**
 

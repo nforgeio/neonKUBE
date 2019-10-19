@@ -39,7 +39,7 @@ using Neon.Data;
 
 // $todo(jefflill):
 //
-// At somepoint in the future it would be nice to read any
+// At some point in the future it would be nice to read any
 // XML code documentation and include this in the generated
 // source code as well.
 //
@@ -125,7 +125,7 @@ namespace Neon.ModelGen
             // all as resources within the [Netstandard] project folder.
             //
             // We'll need to replace this when/if we upgrade the 
-            // library to a new version of NetStandard.
+            // library to a new version of NETStandard.
 
             if (cachedNetStandard == null)
             {
@@ -1609,7 +1609,7 @@ namespace Neon.ModelGen
                         writer.WriteLine($"        /// <summary>");
                         writer.WriteLine($"        /// <b>INTERNAL USE ONLY:</b> This is the <see cref=\"JObject\"/> is used to back");
                         writer.WriteLine($"        /// all serialized round-trip.  This was made public for advanced unit testing but");
-                        writer.WriteLine($"        /// its use should generallybe avoided for other purposes.  Use <see cref=\"ToJObject()\"/>.");
+                        writer.WriteLine($"        /// its use should generally be avoided for other purposes.  Use <see cref=\"ToJObject()\"/>.");
                         writer.WriteLine($"        /// instead.  \"__O\" is short for \"object\".");
                         writer.WriteLine($"        /// </summary>");
                         writer.WriteLine($"        [JsonIgnore]");
@@ -2059,12 +2059,7 @@ namespace Neon.ModelGen
                         writer.WriteLine($"        public JObject ToJObject()");
                         writer.WriteLine($"        {{");
                         writer.WriteLine($"            __Save();");
-                        writer.WriteLine();
-                        writer.WriteLine($"            var clone = RoundtripDataHelper.DeepClone(__O);");
-                        writer.WriteLine();
-                        writer.WriteLine($"            clone[\"__O\"] = __O;");
-                        writer.WriteLine();
-                        writer.WriteLine($"            return clone;");
+                        writer.WriteLine($"            return RoundtripDataHelper.DeepClone(__O);");
                         writer.WriteLine($"        }}");
                     }
 
@@ -2489,7 +2484,7 @@ namespace Neon.ModelGen
             writer.WriteLine($"        /// </summary>");
             writer.WriteLine($"        /// <param name=\"handler\">An optional message handler.  This defaults to a reasonable handler with compression enabled.</param>");
             writer.WriteLine($"        /// <param name=\"disposeHandler\">Indicates whether the handler passed will be disposed automatically (defaults to <c>false</c>).</param>");
-            writer.WriteLine($"        /// <param name=\"retryPolicy\">Optionally specifies a default retry policy (defaults to <see cref\"NoRetryPolicy\">).</param>");
+            writer.WriteLine($"        /// <param name=\"retryPolicy\">Optionally specifies a default retry policy (defaults to <see cref=\"NoRetryPolicy\"/>).</param>");
 
             if (!Settings.AllowDebuggerStepInto)
             {
@@ -2522,7 +2517,7 @@ namespace Neon.ModelGen
             writer.WriteLine($"        /// to be created and provided.");
             writer.WriteLine($"        /// </summary>");
             writer.WriteLine($"        /// <param name=\"httpClient\">The special <see cref=\"HttpClient\"/> instance to be wrapped.</param>");
-            writer.WriteLine($"        /// <param name=\"retryPolicy\">Optionally specifies a default retry policy (defaults to <see cref\"NoRetryPolicy\">).</param>");
+            writer.WriteLine($"        /// <param name=\"retryPolicy\">Optionally specifies a default retry policy (defaults to <see cref=\"NoRetryPolicy\"/>).</param>");
 
             if (!Settings.AllowDebuggerStepInto)
             {
