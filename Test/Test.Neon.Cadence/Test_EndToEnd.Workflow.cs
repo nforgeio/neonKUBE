@@ -3488,8 +3488,11 @@ namespace TestCadence
         [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowQueueTest : IWorkflow
         {
-            [WorkflowMethod(Name = "QueueToSelf")]
-            Task<string> QueueToSelf_Basic();
+            [WorkflowMethod(Name = "QueueToSelf_Single")]
+            Task<string> QueueToSelf_Single();
+
+            [WorkflowMethod(Name = "QueueToSelf_Multiple")]
+            Task<string> QueueToSelf_Multiple(int capacity);
 
             [WorkflowMethod(Name = "QueueToSelf_Timeout")]
             Task<string> QueueToSelf_Timeout();
@@ -3512,7 +3515,7 @@ namespace TestCadence
         {
             private WorkflowQueue<string>   signalQueue;
 
-            public async Task<string> QueueToSelf_Basic()
+            public async Task<string> QueueToSelf_Single()
             {
                 // Tests basic queuing by creating a queue, enqueueing a string and then
                 // dequeuing it locally.  This return NULL if the test passed otherwise
@@ -3520,36 +3523,145 @@ namespace TestCadence
 
                 using (var queue = await Workflow.NewQueueAsync<string>())
                 {
+                    if (queue.Capacity != WorkflowQueue<TargetException>.DefaultCapacity)
+                    {
+                        return $"1: Expected capacity: length == {WorkflowQueue<TargetException>.DefaultCapacity}";
+                    }
+
                     if (await queue.GetLengthAsync() != 0)
                     {
-                        return "1: Expected queue: length == 0";
+                        return "2: Expected queue: length == 0";
                     }
 
                     await queue.EnqueueAsync("Hello World!");
 
                     if (await queue.GetLengthAsync() != 1)
                     {
-                        return "2: Expected queue: length == 1";
+                        return "3: Expected queue: length == 1";
                     }
 
                     var dequeued = await queue.DequeueAsync();
 
-                    if (dequeued.IsClosed)
+                    if (dequeued != "Hello World!")
                     {
-                        return "3: Expected queue to be open";
-                    }
-
-                    if (dequeued.TimedOut)
-                    {
-                        return "4: Expected dequeue not to timeout";
-                    }
-
-                    if (dequeued.Item != "Hello World!")
-                    {
-                        return "5: Unpexected item";
+                        return $"4: Unpexected item: {dequeued}";
                     }
 
                     return null;
+                }
+            }
+
+            public async Task<string> QueueToSelf_Multiple(int capacity = 0)
+            {
+                // Tests basic queuing by creating a queue, enqueueing multiple strings
+                // and then dequeuing them locally.  This return NULL if the test passed
+                // otherwise an error message.
+
+                if (capacity == 0)
+                {
+                    // Verify that we're able to process a few items with a default
+                    // capacity queue.
+
+                    using (var queue = await Workflow.NewQueueAsync<string>())
+                    {
+                        if (queue.Capacity != WorkflowQueue<TargetException>.DefaultCapacity)
+                        {
+                            return $"1: Expected capacity: length == {WorkflowQueue<TargetException>.DefaultCapacity}";
+                        }
+
+                        if (await queue.GetLengthAsync() != 0)
+                        {
+                            return "2: Expected queue: length == 0";
+                        }
+
+                        await queue.EnqueueAsync("signal 1");
+
+                        if (await queue.GetLengthAsync() != 1)
+                        {
+                            return "3: Expected queue: length == 1";
+                        }
+
+                        await queue.EnqueueAsync("signal 2");
+
+                        if (await queue.GetLengthAsync() != 2)
+                        {
+                            return "4: Expected queue: length == 2";
+                        }
+
+                        var item = await queue.DequeueAsync();
+
+                        if (item != "signal 1")
+                        {
+                            return $"5: Unpexected item: {item}";
+                        }
+
+                        item = await queue.DequeueAsync();
+
+                        if (item != "signal 2")
+                        {
+                            return $"6: Unpexected item: {item}";
+                        }
+
+                        return null;
+                    }
+                }
+                else
+                {
+                    // Verify that we can use a non default capacity and
+                    // that we can fill the queue to capacity, read all
+                    // of the items, and then fill and read again once more.
+                    //
+                    // The second pass ensures that nothing weird happens
+                    // after we fill and then drain a queue.
+
+                    using (var queue = await Workflow.NewQueueAsync<string>(capacity: capacity))
+                    {
+                        if (queue.Capacity != capacity)
+                        {
+                            return $"1: Expected capacity: length == {capacity}";
+                        }
+
+                        for (int pass = 1; pass <= 2; pass++)
+                        {
+                            if (await queue.GetLengthAsync() != 0)
+                            {
+                                return "2: Expected queue: length == 0";
+                            }
+
+                            // Do the writes.
+
+                            for (int i = 0; i < capacity; i++)
+                            {
+                                await queue.EnqueueAsync($"signal {i}");
+
+                                if (await queue.GetLengthAsync() != i + 1)
+                                {
+                                    return $"3: Expected queue: length == {i + 1}";
+                                }
+                            }
+
+                            // Do the reads.
+
+                            for (int i = 0; i < capacity; i++)
+                            {
+                                var item = await queue.DequeueAsync();
+
+                                if (item != $"signal {i}")
+                                {
+                                    return $"4: Unpexected item: {item}";
+                                }
+
+                                var expectedCount = capacity - (i + 1);
+
+                                if (await queue.GetLengthAsync() != expectedCount)
+                                {
+                                    return $"5: Expected queue: length == {expectedCount}";
+                                }
+                            }
+                        }
+
+                        return null;
+                    }
                 }
             }
 
@@ -3559,19 +3671,19 @@ namespace TestCadence
 
                 using (var queue = await Workflow.NewQueueAsync<string>())
                 {
-                    var dequeued = await queue.DequeueAsync(TimeSpan.FromSeconds(1));
-
-                    if (dequeued.IsClosed)
+                    try
                     {
-                        return "1: Expected queue to be open";
+                        await queue.DequeueAsync(TimeSpan.FromSeconds(1));
+                        return "1: Expected dequeue to timeout";
                     }
-
-                    if (!dequeued.TimedOut)
+                    catch (CadenceTimeoutException)
                     {
-                        return "2: Expected dequeue to timeout";
+                        return null;    // Expecting this
                     }
-
-                    return null;
+                    catch (Exception e)
+                    {
+                        return $"2: Unexpected exception: {e.GetType().FullName}: {e.Message}";
+                    }
                 }
             }
 
@@ -3586,12 +3698,7 @@ namespace TestCadence
 
                 for (int i = 0; i < expectedSignals; i++)
                 {
-                    var dequeued = await signalQueue.DequeueAsync(TimeSpan.FromSeconds(maxWaitSeconds));
-
-                    Covenant.Assert(!dequeued.IsClosed);
-                    Covenant.Assert(!dequeued.TimedOut);
-
-                    signals.Add(dequeued.Item);
+                    signals.Add(await signalQueue.DequeueAsync(TimeSpan.FromSeconds(maxWaitSeconds)));
                 }
 
                 return signals;
@@ -3607,16 +3714,46 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_QueueLocal_Basic()
+        public async Task Workflow_QueueLocal_Single()
         {
             await SyncContext.ClearAsync;
 
             // Verify the simple case where a workflow creates a queue and then
-            // can enqueue/dequeue is locally within the workflow method.
+            // can enqueue/dequeue a single item locally within the workflow method.
 
             var stub = client.NewWorkflowStub<IWorkflowQueueTest>();
 
-            Assert.Null(await stub.QueueToSelf_Basic());
+            Assert.Null(await stub.QueueToSelf_Single());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_QueueLocal_Multiple()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify the simple case where a workflow creates a queue and then
+            // can enqueue/dequeue multiple items locally within the workflow method.
+            // This test creates a queue with the default capacity.
+
+            var stub = client.NewWorkflowStub<IWorkflowQueueTest>();
+
+            Assert.Null(await stub.QueueToSelf_Multiple(0));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_QueueLocal_Multiple_200()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify the simple case where a workflow creates a queue and then
+            // can enqueue/dequeue multiple items locally within the workflow method.
+            // This test creates a queue with a 200 item capacity.
+
+            var stub = client.NewWorkflowStub<IWorkflowQueueTest>();
+
+            Assert.Null(await stub.QueueToSelf_Multiple(200));
         }
 
         [Fact]
@@ -3634,7 +3771,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_QueueReceiveViaSingleSignal()
+        public async Task Workflow_QueueSignal_Single()
         {
             await SyncContext.ClearAsync;
 
@@ -3643,6 +3780,8 @@ namespace TestCadence
 
             var stub   = client.NewWorkflowFutureStub<IWorkflowQueueTest>("WaitForSignals");
             var future = await stub.StartAsync<List<string>>(1);
+
+            await Task.Delay(1000);     // $todo(jefflill): DELETE THIS!
 
             await stub.SignalAsync("signal", "signal: 0");
 
@@ -3654,7 +3793,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_QueueReceiveViaMultipleSignal()
+        public async Task Workflow_QueueSignal_Multiple()
         {
             await SyncContext.ClearAsync;
 
@@ -3663,9 +3802,11 @@ namespace TestCadence
 
             const int signalCount = 5;
 
-            var stub = client.NewWorkflowFutureStub<IWorkflowQueueTest>("WaitForMessages");
+            var stub   = client.NewWorkflowFutureStub<IWorkflowQueueTest>("WaitForMessages");
             var future = await stub.StartAsync<List<string>>(signalCount);
-            var sent = new List<string>();
+            var sent   = new List<string>();
+
+            await Task.Delay(1000);     // $todo(jefflill): DELETE THIS!
 
             for (int i = 0; i < signalCount; i++)
             {

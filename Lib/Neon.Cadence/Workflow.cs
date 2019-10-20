@@ -1865,7 +1865,7 @@ namespace Neon.Cadence
         /// Specifies the maximum number items the queue may hold.
         /// </para>
         /// <note>
-        /// This defaults to <b>2</b> and may not be less than <b>2</b>.
+        /// This defaults to <see cref="WorkflowQueue{T}.DefaultCapacity"/>.
         /// </note>
         /// </param>
         /// <returns>The new <see cref="WorkflowQueue{T}"/>.</returns>
@@ -1885,7 +1885,7 @@ namespace Neon.Cadence
         /// See <see cref="WorkflowQueue{T}"/> for more information.
         /// </para>
         /// </remarks>
-        public async Task<WorkflowQueue<T>> NewQueueAsync<T>(int capacity = 2)
+        public async Task<WorkflowQueue<T>> NewQueueAsync<T>(int capacity = WorkflowQueue<T>.DefaultCapacity)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentException>(capacity >= 2, nameof(capacity), "Queue capacity cannot be less than [2].");
@@ -1907,7 +1907,7 @@ namespace Neon.Cadence
 
             reply.ThrowOnError();
 
-            return new WorkflowQueue<T>(this, queueId);
+            return new WorkflowQueue<T>(this, queueId, capacity);
         }
         
         //---------------------------------------------------------------------

@@ -38,8 +38,8 @@ namespace Neon.Cadence
     /// <para>
     /// You can construct workflow queue instances in your workflows via
     /// <see cref="Workflow.NewQueueAsync{T}(int)"/>, optionally specifying 
-    /// the maximum capacity of the queue.  This defaults to 2 and cannot be
-    /// less that 2 items.
+    /// the maximum capacity of the queue.  This defaults to <see cref="DefaultCapacity"/>
+    /// and may not be less that 2 queued items.
     /// </para>
     /// <para>
     /// Items are added to the queue via <see cref="EnqueueAsync(T)"/>.  This
@@ -52,9 +52,7 @@ namespace Neon.Cadence
     /// </note>
     /// <para>
     /// Use <see cref="DequeueAsync(TimeSpan)"/> to read from the queue using
-    /// an optional timeout.  This returns a <see cref="DequeuedItem{T}"/> which
-    /// will hold the item read on success or indicate that the operation timed
-    /// out or the queue is closed.
+    /// an optional timeout.
     /// </para>
     /// <para>
     /// <see cref="GetLengthAsync"/> returns the number of items currently residing
@@ -63,6 +61,11 @@ namespace Neon.Cadence
     /// </remarks>
     public class WorkflowQueue<T> : IDisposable
     {
+        /// <summary>
+        /// The default number of items allowed in a queue.
+        /// </summary>
+        public const int DefaultCapacity = 100;
+
         private Workflow        parentWorkflow;
         private CadenceClient   client;
         private long            queueId;
@@ -73,25 +76,34 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="parentWorkflow">The parent workflow.</param>
         /// <param name="queueId">The queue ID.</param>
-        internal WorkflowQueue(Workflow parentWorkflow, long queueId)
+        /// <param name="capacity">The maximum number of items allowed in the queue.</param>
+        internal WorkflowQueue(Workflow parentWorkflow, long queueId, int capacity)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             Covenant.Requires<ArgumentException>(queueId > 0, nameof(queueId));
+            Covenant.Requires<ArgumentException>(capacity >= 2, nameof(capacity));
 
             this.parentWorkflow = parentWorkflow;
             this.client         = parentWorkflow.Client;
+            this.Capacity       = capacity;
             this.queueId        = queueId;
             this.isClosed       = false;
         }
+
+        /// <summary>
+        /// Returns the maximum number of items allowed in the queue at any given moment.
+        /// This may not be less than 2.
+        /// </summary>
+        public int Capacity { get; private set; }
 
         /// <summary>
         /// Adds an item to the queue.
         /// </summary>
         /// <param name="item">The item.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if the queue is closed.</exception>
         /// <exception cref="NotSupportedException">Thrown if the serialized size of <paramref name="item"/> is not less than 64KiB.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if the associated workflow client is disposed.</exception>
+        /// <exception cref="CadenceQueueClosedException">Thrown if the associated queue has been closed.</exception>
         /// <remarks>
         /// <para>
         /// This method returns immediately if the queue is full, otherwise
@@ -108,7 +120,7 @@ namespace Neon.Cadence
 
             if (isClosed)
             {
-                throw new InvalidOperationException($"[{nameof(WorkflowQueue<T>)}] is closed.");
+                throw new CadenceQueueClosedException($"[{nameof(WorkflowQueue<T>)}] is closed.");
             }
 
             var bytes = client.DataConverter.ToData(item);
@@ -152,28 +164,18 @@ namespace Neon.Cadence
         /// Attempts to dequeue an item from the queue with an optional timeout.
         /// </summary>
         /// <param name="timeout">The optional timeout.</param>
-        /// <returns>A <see cref="DequeuedItem{T}"/>.</returns>
+        /// <returns>The next item from the queue.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the associated workflow client is disposed.</exception>
-        /// <remarks>
-        /// <para>
-        /// By default, this method will wait until an item can be read from the queue
-        /// or the queue is closed.  You may specify a timeout and when this is greater
-        /// than <see cref="TimeSpan.Zero"/>, the method will return after that time if
-        /// no item is waiting.
-        /// </para>
-        /// <para>
-        /// The <see cref="DequeuedItem{T}"/> return holds the item if one was read or
-        /// indicates whether the operation timed out or the queue is closed.
-        /// </para>
-        /// </remarks>
-        public async Task<DequeuedItem<T>> DequeueAsync(TimeSpan timeout = default)
+        /// <exception cref="CadenceTimeoutException">Thrown if the timeout was reached before a value could be returned.</exception>
+        /// <exception cref="CadenceQueueClosedException">Thrown if the the queue is closed.</exception>
+        public async Task<T> DequeueAsync(TimeSpan timeout = default)
         {
             await SyncContext.ClearAsync;
             client.EnsureNotDisposed();
 
             if (isClosed)
             {
-                return new DequeuedItem<T>(isClosed: true);
+                throw new CadenceQueueClosedException("Queue is closed.");
             }
 
             var reply = (WorkflowQueueReadReply)await client.CallProxyAsync(
@@ -181,27 +183,29 @@ namespace Neon.Cadence
                 {
                     ContextId = parentWorkflow.ContextId,
                     QueueId   = queueId,
+                    Timeout   = timeout
                 });
 
             reply.ThrowOnError();
 
             if (reply.IsClosed)
             {
-                return new DequeuedItem<T>(isClosed: true);
-            }
-            else if (reply.Data == null)
-            {
-                return new DequeuedItem<T>(timedOut: true);
+                throw new CadenceQueueClosedException("Queue is closed.");
             }
 
-            return new DequeuedItem<T>(client.DataConverter.FromData<T>(reply.Data));
+            if (reply.Data == null)
+            {
+                throw new CadenceTimeoutException("Dequeue operation timed out.");
+            }
+
+            return client.DataConverter.FromData<T>(reply.Data);
         }
 
         /// <summary>
         /// Returns the number of items currently waiting in the queue.
         /// </summary>
         /// <returns>The item count.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if the queue is closed.</exception>
+        /// <exception cref="CadenceQueueClosedException">Thrown if the queue is closed.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if the associated workflow client is disposed.</exception>
         public async Task<int> GetLengthAsync()
         {
@@ -210,7 +214,7 @@ namespace Neon.Cadence
 
             if (isClosed)
             {
-                throw new InvalidOperationException($"[{nameof(WorkflowQueue<T>)}] is closed.");
+                throw new CadenceQueueClosedException($"[{nameof(WorkflowQueue<T>)}] is closed.");
             }
 
             var reply =  (WorkflowQueueLengthReply)await client.CallProxyAsync(
