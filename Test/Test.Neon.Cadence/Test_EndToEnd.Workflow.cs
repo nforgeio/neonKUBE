@@ -3482,5 +3482,209 @@ namespace TestCadence
 
             Assert.True(await stub.WithResult() && !WorkflowUntypedChildFuture.Error);
         }
+
+        //---------------------------------------------------------------------
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IWorkflowQueueTest : IWorkflow
+        {
+            [WorkflowMethod(Name = "QueueToSelf")]
+            Task<string> QueueToSelf_Basic();
+
+            [WorkflowMethod(Name = "QueueToSelf_Timeout")]
+            Task<string> QueueToSelf_Timeout();
+
+            [WorkflowMethod(Name = "WaitForSignals")]
+            Task<List<string>> WaitForSignals(int expectedSignals);
+
+            [SignalMethod("signal")]
+            Task SignalAsync(string message);
+        }
+
+        /// <summary>
+        /// This workflow tests basic signal reception by waiting for some number of signals
+        /// and then returning the received signal messages.  The workflow will timeout
+        /// if the signals aren't received in time.  Note that we've hacked workflow start
+        /// detection using a static field.
+        /// </summary>
+        [Workflow(AutoRegister = true)]
+        public class WorkflowQueueTest : WorkflowBase, IWorkflowQueueTest
+        {
+            private WorkflowQueue<string>   signalQueue;
+
+            public async Task<string> QueueToSelf_Basic()
+            {
+                // Tests basic queuing by creating a queue, enqueueing a string and then
+                // dequeuing it locally.  This return NULL if the test passed otherwise
+                // an error message.
+
+                using (var queue = await Workflow.NewQueueAsync<string>())
+                {
+                    if (await queue.GetLengthAsync() != 0)
+                    {
+                        return "1: Expected queue: length == 0";
+                    }
+
+                    await queue.EnqueueAsync("Hello World!");
+
+                    if (await queue.GetLengthAsync() != 1)
+                    {
+                        return "2: Expected queue: length == 1";
+                    }
+
+                    var dequeued = await queue.DequeueAsync();
+
+                    if (dequeued.IsClosed)
+                    {
+                        return "3: Expected queue to be open";
+                    }
+
+                    if (dequeued.TimedOut)
+                    {
+                        return "4: Expected dequeue not to timeout";
+                    }
+
+                    if (dequeued.Item != "Hello World!")
+                    {
+                        return "5: Unpexected item";
+                    }
+
+                    return null;
+                }
+            }
+
+            public async Task<string> QueueToSelf_Timeout()
+            {
+                // Verifies that [cadence-proxy] honors dequeuing timeouts.
+
+                using (var queue = await Workflow.NewQueueAsync<string>())
+                {
+                    var dequeued = await queue.DequeueAsync(TimeSpan.FromSeconds(1));
+
+                    if (dequeued.IsClosed)
+                    {
+                        return "1: Expected queue to be open";
+                    }
+
+                    if (!dequeued.TimedOut)
+                    {
+                        return "2: Expected dequeue to timeout";
+                    }
+
+                    return null;
+                }
+            }
+
+            public async Task<List<string>> WaitForSignals(int expectedSignals)
+            {
+                // Creates a queue and then waits for the requested number of signals
+                // to be received and be delivered to the workflow via the queue.
+
+                signalQueue = await Workflow.NewQueueAsync<string>();
+
+                var signals = new List<string>();
+
+                for (int i = 0; i < expectedSignals; i++)
+                {
+                    var dequeued = await signalQueue.DequeueAsync(TimeSpan.FromSeconds(maxWaitSeconds));
+
+                    Covenant.Assert(!dequeued.IsClosed);
+                    Covenant.Assert(!dequeued.TimedOut);
+
+                    signals.Add(dequeued.Item);
+                }
+
+                return signals;
+            }
+
+            public async Task SignalAsync(string message)
+            {
+                Covenant.Assert(signalQueue != null);
+
+                await signalQueue.EnqueueAsync(message);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_QueueLocal_Basic()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify the simple case where a workflow creates a queue and then
+            // can enqueue/dequeue is locally within the workflow method.
+
+            var stub = client.NewWorkflowStub<IWorkflowQueueTest>();
+
+            Assert.Null(await stub.QueueToSelf_Basic());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_QueueLocal_Timeout()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that [cadence-proxy] honor dequeue timeouts.
+
+            var stub = client.NewWorkflowStub<IWorkflowQueueTest>();
+
+            Assert.Null(await stub.QueueToSelf_Timeout());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_QueueReceiveViaSingleSignal()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that a workflow can process data received via a signal
+            // when is then fed to the workflow via a queue.
+
+            var stub   = client.NewWorkflowFutureStub<IWorkflowQueueTest>("WaitForSignals");
+            var future = await stub.StartAsync<List<string>>(1);
+
+            await stub.SignalAsync("signal", "signal: 0");
+
+            var received = await future.GetAsync();
+
+            Assert.Single(received);
+            Assert.Contains(received, v => v == "signal: 0");
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_QueueReceiveViaMultipleSignal()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that a workflow can process data received via multiple signals
+            // when are then fed to the workflow via a queue.
+
+            const int signalCount = 5;
+
+            var stub = client.NewWorkflowFutureStub<IWorkflowQueueTest>("WaitForMessages");
+            var future = await stub.StartAsync<List<string>>(signalCount);
+            var sent = new List<string>();
+
+            for (int i = 0; i < signalCount; i++)
+            {
+                sent.Add($"signal: {i}");
+            }
+
+            foreach (var signal in sent)
+            {
+                await stub.SignalAsync("signal", signal);
+            }
+
+            var received = await future.GetAsync();
+
+            Assert.Equal(signalCount, received.Count);
+
+            foreach (var signal in sent)
+            {
+                Assert.Contains(received, v => v == signal);
+            }
+        }
     }
 }

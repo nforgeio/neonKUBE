@@ -1899,8 +1899,9 @@ namespace Neon.Cadence
                     return (WorkflowQueueNewReply)await Client.CallProxyAsync(
                         new WorkflowQueueNewRequest()
                         {
-                             QueueId  = queueId,
-                             Capacity = capacity
+                            ContextId = this.ContextId,
+                            QueueId   = queueId,
+                            Capacity  = capacity
                         });
                 });
 

@@ -61,7 +61,7 @@ namespace Neon.Cadence
     /// in the queue and <see cref="CloseAsync"/> closes the queue.
     /// </para>
     /// </remarks>
-    public class WorkflowQueue<T>
+    public class WorkflowQueue<T> : IDisposable
     {
         private Workflow        parentWorkflow;
         private CadenceClient   client;
@@ -118,19 +118,34 @@ namespace Neon.Cadence
                 throw new NotSupportedException($"Serialized items enqueued to a [{nameof(WorkflowQueue<T>)}] must be less than 64 KiB.");
             }
 
-            var reply = await parentWorkflow.ExecuteNonParallel(
-                async () =>
+            var reply = (WorkflowQueueWriteReply)await client.CallProxyAsync(
+                new WorkflowQueueWriteRequest()
                 {
-                    return (WorkflowQueueWriteReply)await client.CallProxyAsync(
-                        new WorkflowQueueWriteRequest()
-                        {
-                            ContextId = parentWorkflow.ContextId,
-                            QueueId   = queueId,
-                            Data      = bytes
-                        });
+                    ContextId = parentWorkflow.ContextId,
+                    QueueId   = queueId,
+                    Data      = bytes
                 });
 
             reply.ThrowOnError();
+        }
+
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        /// <summary>
+        /// Releases all associated resources.
+        /// </summary>
+        /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing && !isClosed)
+            {
+                CloseAsync().Wait();
+            }
         }
 
         /// <summary>
@@ -161,15 +176,11 @@ namespace Neon.Cadence
                 return new DequeuedItem<T>(isClosed: true);
             }
 
-            var reply = await parentWorkflow.ExecuteNonParallel(
-                async () =>
+            var reply = (WorkflowQueueReadReply)await client.CallProxyAsync(
+                new WorkflowQueueReadRequest()
                 {
-                    return (WorkflowQueueReadReply)await client.CallProxyAsync(
-                        new WorkflowQueueReadRequest()
-                        {
-                            ContextId = parentWorkflow.ContextId,
-                            QueueId   = queueId,
-                        });
+                    ContextId = parentWorkflow.ContextId,
+                    QueueId   = queueId,
                 });
 
             reply.ThrowOnError();
@@ -202,15 +213,11 @@ namespace Neon.Cadence
                 throw new InvalidOperationException($"[{nameof(WorkflowQueue<T>)}] is closed.");
             }
 
-            var reply = await parentWorkflow.ExecuteNonParallel(
-                async () =>
+            var reply =  (WorkflowQueueLengthReply)await client.CallProxyAsync(
+                new WorkflowQueueLengthRequest()
                 {
-                    return (WorkflowQueueLengthReply)await client.CallProxyAsync(
-                        new WorkflowQueueLengthRequest()
-                        {
-                            ContextId = parentWorkflow.ContextId,
-                            QueueId   = queueId,
-                        });
+                    ContextId = parentWorkflow.ContextId,
+                    QueueId   = queueId,
                 });
 
             reply.ThrowOnError();
@@ -238,15 +245,11 @@ namespace Neon.Cadence
                 return;
             }
 
-            var reply = await parentWorkflow.ExecuteNonParallel(
-                async () =>
+            var reply = (WorkflowQueueCloseReply)await client.CallProxyAsync(
+                new WorkflowQueueCloseRequest()
                 {
-                    return (WorkflowQueueCloseReply)await client.CallProxyAsync(
-                        new WorkflowQueueCloseRequest()
-                        {
-                            ContextId = parentWorkflow.ContextId,
-                            QueueId   = queueId,
-                        });
+                    ContextId = parentWorkflow.ContextId,
+                    QueueId   = queueId,
                 });
 
             reply.ThrowOnError();
