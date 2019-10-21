@@ -3698,7 +3698,7 @@ namespace TestCadence
 
                 for (int i = 0; i < expectedSignals; i++)
                 {
-                    signals.Add(await signalQueue.DequeueAsync(TimeSpan.FromSeconds(maxWaitSeconds)));
+                    signals.Add(await signalQueue.DequeueAsync(TimeSpan.FromSeconds(maxWaitSeconds * 1000)));
                 }
 
                 return signals;
@@ -3762,7 +3762,7 @@ namespace TestCadence
         {
             await SyncContext.ClearAsync;
 
-            // Verify that [cadence-proxy] honor dequeue timeouts.
+            // Verify that [cadence-proxy] honors dequeue timeouts.
 
             var stub = client.NewWorkflowStub<IWorkflowQueueTest>();
 
@@ -3780,8 +3780,6 @@ namespace TestCadence
 
             var stub   = client.NewWorkflowFutureStub<IWorkflowQueueTest>("WaitForSignals");
             var future = await stub.StartAsync<List<string>>(1);
-
-            await Task.Delay(1000);     // $todo(jefflill): DELETE THIS!
 
             await stub.SignalAsync("signal", "signal: 0");
 
