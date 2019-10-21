@@ -165,14 +165,32 @@ data:
 
   functions.lua: |-
     function dedot(tag, timestamp, record)
-        if record["kubernetes"] == nil then
-            return 0, 0, 0
+        if lookup(record, 'kubernetes', 'annotations') then
+            pcall(dedot_keys,record["kubernetes"]["annotations"])
         end
-        dedot_keys(record["kubernetes"]["annotations"])
-        dedot_keys(record["kubernetes"]["labels"])
-        dedot_keys(record["cluster"])
+        if lookup(record, 'kubernetes', 'labels') then
+            pcall(dedot_keys,record["kubernetes"]["labels"])
+        end
+        if lookup(record, 'kube', 'var', 'log', 'containers') then
+            pcall(dedot_keys,record["kube"]["var"]["log"]["containers"])
+        end
+        if lookup(record, 'cluster') then
+            pcall(dedot_keys,record["cluster"])
+        end
+        
         return 1, timestamp, record
     end
+
+    function lookup(t, ...)
+        for _, k in ipairs{...} do
+            t = t[k]
+            if not t then
+                return false
+            end
+        end
+        return true
+    end
+
 
     function dedot_keys(map)
         if map == nil then
