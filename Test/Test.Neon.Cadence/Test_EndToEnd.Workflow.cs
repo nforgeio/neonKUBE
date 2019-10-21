@@ -3698,7 +3698,7 @@ namespace TestCadence
 
                 for (int i = 0; i < expectedSignals; i++)
                 {
-                    signals.Add(await signalQueue.DequeueAsync(TimeSpan.FromSeconds(maxWaitSeconds * 1000)));
+                    signals.Add(await signalQueue.DequeueAsync(TimeSpan.FromSeconds(maxWaitSeconds)));
                 }
 
                 return signals;
