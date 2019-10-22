@@ -307,6 +307,90 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Attempts to add an item to the queue.  Unlike <see cref="EnqueueAsync(T)"/>, this method
+        /// does not block when the queue is full and returns <c>false</c> instead.
+        /// </summary>
+        /// <param name="item">The item.</param>
+        /// <returns><c>true</c> if the item was written or <c>false</c> if the queue is full and the item was not written.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the queue is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown if the serialized size of <paramref name="item"/> is not less than 64KiB.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated workflow client is disposed.</exception>
+        /// <exception cref="CadenceQueueClosedException">Thrown if the associated queue has been closed.</exception>
+        /// <remarks>
+        /// <para>
+        /// This method returns immediately if the queue is not full, otherwise
+        /// it will block until there's enough space to append the new item.
+        /// </para>
+        /// <note>
+        /// Item data after being serialized must be less than 64 KiB.
+        /// </note>
+        /// </remarks>
+        /// <remarks>
+        /// <note>
+        /// Items may be added to queues only within workflow entrypoint or signal methods or
+        /// from normal or local activities.
+        /// </note>
+        /// </remarks>
+        public async Task<bool> TryEnqueueAsync(T item)
+        {
+            await SyncContext.ClearAsync;
+            client.EnsureNotDisposed();
+            CheckDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true, allowActivity: true);
+
+            if (isClosed)
+            {
+                throw new CadenceQueueClosedException($"[{nameof(WorkflowQueue<T>)}] is closed.");
+            }
+
+            var encodedItem = client.DataConverter.ToData(item);
+
+            if (encodedItem.Length >= 64 * ByteUnits.KibiBytes)
+            {
+                throw new NotSupportedException($"Serialized items enqueued to a [{nameof(WorkflowQueue<T>)}] must be less than 64 KiB.");
+            }
+
+            if (WorkflowBase.CallContext.Value == WorkflowBase.WorkflowCallContext.Entrypoint)
+            {
+                var stream = MemoryStreamPool.Alloc();
+
+                try
+                {
+                    var replyBytes = await activityStub.TryEnqueueAsync(contextId, queueId, encodedItem);
+
+                    stream.Position = 0;
+                    stream.Write(replyBytes, 0, replyBytes.Length);
+                    stream.Position = 0;
+
+                    var reply = ProxyMessage.Deserialize<WorkflowQueueWriteReply>(stream);
+
+                    reply.ThrowOnError();
+
+                    return !reply.IsFull;
+                }
+                finally
+                {
+                    MemoryStreamPool.Free(stream);
+                }
+            }
+            else
+            {
+                var reply = (WorkflowQueueWriteReply)await client.CallProxyAsync(
+                    new WorkflowQueueWriteRequest()
+                    {
+                        ContextId = contextId,
+                        QueueId   = queueId,
+                        NoBlock   = true,
+                        Data      = encodedItem
+                    });
+
+                reply.ThrowOnError();
+
+                return !reply.IsFull;
+            }
+        }
+
+        /// <summary>
         /// Attempts to dequeue an item from the queue with an optional timeout.
         /// </summary>
         /// <param name="timeout">The optional timeout.</param>
@@ -593,7 +677,16 @@ namespace Neon.Cadence.Internal
         /// <inheritdoc/>
         public async Task<byte[]> TryEnqueueAsync(long contextId, long queueId, byte[] encodedItem)
         {
-            throw new NotImplementedException();
+            var reply = (WorkflowQueueWriteReply)await Activity.Client.CallProxyAsync(
+                new WorkflowQueueWriteRequest()
+                {
+                    ContextId = contextId,
+                    QueueId   = queueId,
+                    NoBlock   = true,
+                    Data      = encodedItem
+                });
+
+            return reply.SerializeAsBytes();
         }
 
         /// <inheritdoc/>
