@@ -226,7 +226,7 @@ affinity: {}
 
 service:
   flush: 1
-  logLevel: debug
+  logLevel: info
 
 input:
   tail:
