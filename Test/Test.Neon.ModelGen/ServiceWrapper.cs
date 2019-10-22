@@ -59,12 +59,12 @@ namespace TestModelGen
         /// <param name="type">The target type.</param>
         /// <param name="baseAddress">The base URI for the target service.</param>
         /// <param name="context">The parent assembly context.</param>
-        public ServiceWrapper(Type type, string baseAddress, AssemblyContext context)
+        public ServiceWrapper(Type type, string baseAddress, AssemblyContext context, IRetryPolicy retryPolicy = null)
         {
             Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(baseAddress), nameof(baseAddress));
 
-            instance     = Activator.CreateInstance(type, new object[] { null, false });
+            instance     = Activator.CreateInstance(type, new object[] { null, false, retryPolicy });
             instanceType = type;
 
             if (instance == null)

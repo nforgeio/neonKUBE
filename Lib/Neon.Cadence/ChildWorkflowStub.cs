@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
@@ -30,245 +32,184 @@ using Neon.Tasks;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// <para>
-    /// Manages starting and signalling a child workflow instance based on
-    /// its workflow type name and arguments.  This is useful when the child
-    /// workflow type is not known at compile time as well provinding a way
-    /// to call child workflows written in another language.
-    /// </para>
-    /// <para>
-    /// Use this version for workflows that don't return a result.
-    /// </para>
+    /// Used to execute a child workflow in parallel with other child workflows or activities.
+    /// Instances are created via <see cref="Workflow.NewChildWorkflowFutureStub{TWorkflowInterface}(string, ChildWorkflowOptions)"/>.
     /// </summary>
-    public class ChildWorkflowStub
+    /// <typeparam name="TWorkflowInterface">Specifies the workflow interface.</typeparam>
+    public class ChildWorkflowStub<TWorkflowInterface>
+        where TWorkflowInterface : class
     {
-        private Workflow            parentWorkflow;
-        private CadenceClient       client;
-        private ChildExecution      childExecution;
+        private Workflow                parentWorkflow;
+        private MethodInfo              targetMethod;
+        private ChildWorkflowOptions    options;
+        private string                  workflowTypeName;
+        private bool                    hasStarted;
 
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        /// <param name="parentWorkflow">The parent workflow.</param>
-        /// <param name="workflowTypeName">The workflow type name.</param>
-        /// <param name="options">Optional child workflow options.</param>
-        internal ChildWorkflowStub(Workflow parentWorkflow, string workflowTypeName, ChildWorkflowOptions options = null)
+        /// <param name="parentWorkflow">The associated parent workflow.</param>
+        /// <param name="methodName">Identifies the target workflow method or <c>null</c> or empty.</param>
+        /// <param name="options">The child workflow options or <c>null</c>.</param>
+        internal ChildWorkflowStub(Workflow parentWorkflow, string methodName, ChildWorkflowOptions options)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
+
+            var workflowInterface = typeof(TWorkflowInterface);
+
+            CadenceHelper.ValidateWorkflowInterface(workflowInterface);
 
             this.parentWorkflow   = parentWorkflow;
-            this.client           = parentWorkflow.Client;
-            this.WorkflowTypeName = workflowTypeName;
-            this.Options          = ChildWorkflowOptions.Normalize(client, options);
+            this.options          = ChildWorkflowOptions.Normalize(parentWorkflow.Client, options);
+            this.hasStarted       = false;
 
-            if (string.IsNullOrEmpty(options.Domain))
-            {
-                options.Domain = parentWorkflow.WorkflowInfo.Domain;
-            }
+            var workflowTarget    = CadenceHelper.GetWorkflowTarget(workflowInterface, methodName);
+
+            this.workflowTypeName = workflowTarget.WorkflowTypeName;
+            this.targetMethod     = workflowTarget.TargetMethod;
         }
 
         /// <summary>
-        /// Returns the child workflow options.
+        /// Starts the target workflow that returns <typeparamref name="TResult"/>, passing any specified arguments.
         /// </summary>
-        public ChildWorkflowOptions Options { get; private set; }
-
-        /// <summary>
-        /// Returns the workflow type name.
-        /// </summary>
-        public string WorkflowTypeName { get; private set; }
-
-        /// <summary>
-        /// Returns the child workflow <see cref="WorkflowExecution"/>.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown when the workflow has not been started.</exception>
-        public WorkflowExecution Execution
+        /// <typeparam name="TResult">The workflow result type.</typeparam>
+        /// <param name="args">The arguments to be passed to the workflow.</param>
+        /// <returns>The <see cref="ChildWorkflowFuture{T}"/> with the <see cref="ChildWorkflowFuture{T}.GetAsync"/> than can be used to retrieve the workfow result.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when attempting to start a stub more than once.</exception>
+        /// <remarks>
+        /// <para>
+        /// You must take care to pass parameters that are compatible with the target workflow parameters.
+        /// These are checked at runtime but not while compiling.
+        /// </para>
+        /// <note>
+        /// Any given <see cref="ChildWorkflowStub{TWorkflowInterface}"/> may only be executed once.
+        /// </note>
+        /// </remarks>
+        public async Task<ChildWorkflowFuture<TResult>> StartAsync<TResult>(params object[] args)
         {
-            get
+            await SyncContext.ClearAsync;
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
+            parentWorkflow.SetStackTrace();
+
+            if (hasStarted)
             {
-                if (this.childExecution != null)
-                {
-                    throw new InvalidOperationException($"Workflow[{ WorkflowTypeName }] has not been started.");
-                }
-
-                return childExecution.Execution;
-            }
-        }
-
-        /// <summary>
-        /// Starts the child workflow.
-        /// </summary>
-        /// <param name="args">The workflow arguments.</param>
-        /// <returns>An <see cref="IAsyncFuture"/> that can be used to retrieve the workflow result as an <c>object</c>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if the child workflow has already been started.</exception>
-        public async Task<IAsyncFuture> ExecuteAsync(params object[] args)
-        {
-            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
-
-            if (Execution != null)
-            {
-                throw new InvalidOperationException("Cannot start a stub more than once.");
+                throw new InvalidOperationException("Cannot start a future stub more than once.");
             }
 
-            childExecution = await client.StartChildWorkflowAsync(parentWorkflow, WorkflowTypeName, client.DataConverter.ToData(args), Options);
+            var parameters = targetMethod.GetParameters();
+
+            if (parameters.Length != args.Length)
+            {
+                throw new ArgumentException($"Invalid number of parameters: [{parameters.Length}] expected but [{args.Length}] were passed.", nameof(parameters));
+            }
+
+            hasStarted = true;
+
+            // Cast the input parameters to the target types so that developers won't need to expicitly
+            // cast things like integers into longs, floats into doubles, etc.
+
+            for (int i = 0; i < args.Length; i++)
+            {
+                args[i] = TypeDescriptor.GetConverter(parameters[i].ParameterType).ConvertTo(args[i], parameters[i].ParameterType);
+            }
+
+            // Start the child workflow and then construct and return the future.
+
+            var client    = parentWorkflow.Client;
+            var execution = await client.StartChildWorkflowAsync(parentWorkflow, workflowTypeName, client.DataConverter.ToData(args), options);
+
+            // Initialize the type-safe stub property such that developers can call
+            // any query or signal methods.
+
+            Stub = StubManager.NewChildWorkflowStub<TWorkflowInterface>(client, parentWorkflow, workflowTypeName, execution);
 
             // Create and return the future.
 
-            return new AsyncChildFuture(parentWorkflow, childExecution);
-        }
+            var resultType = targetMethod.ReturnType;
 
-        /// <summary>
-        /// Signals the workflow.
-        /// </summary>
-        /// <param name="signalName">The signal name.</param>
-        /// <param name="args">The signal arguments.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if the child workflow has not been started.</exception>
-        public async Task SignalAsync(string signalName, params object[] args)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
-            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
-
-            if (Execution == null)
+            if (resultType == typeof(Task))
             {
-                throw new InvalidOperationException("The stub must be started first.");
+                throw new ArgumentException($"Workflow method [{nameof(TWorkflowInterface)}.{targetMethod.Name}()] does not return [void].", nameof(TWorkflowInterface));
+            }
+            
+            resultType = resultType.GenericTypeArguments.First();
+            
+            if (!resultType.IsAssignableFrom(typeof(TResult)))
+            {
+                throw new ArgumentException($"Workflow method [{nameof(TWorkflowInterface)}.{targetMethod.Name}()] returns [{resultType.FullName}] which is not compatible with [{nameof(TResult)}].", nameof(TWorkflowInterface));
             }
 
-            var reply = await parentWorkflow.ExecuteNonParallel(
-                async () =>
-                {
-                    return (WorkflowSignalChildReply) await client.CallProxyAsync(
-                        new WorkflowSignalChildRequest()
-                        {
-                             ChildId    = childExecution.ChildId,
-                             SignalName = signalName,
-                             SignalArgs = client.DataConverter.ToData(args)
-                        });
-                });
-
-            reply.ThrowOnError();
+            return new ChildWorkflowFuture<TResult>(parentWorkflow, execution);
         }
-    }
-
-    /// <summary>
-    /// <para>
-    /// Manages starting and signalling a child workflow instance based on
-    /// its workflow type name and arguments.  This is useful when the child
-    /// workflow type is not known at compile time as well provinding a way
-    /// to call child workflows written in another language.
-    /// </para>
-    /// <para>
-    /// Use this version for workflows that return a result.
-    /// </para>
-    /// </summary>
-    /// <typeparam name="TResult">Specifies the workflow result type.</typeparam>
-    public class ChildWorkflowStub<TResult>
-    {
-        private Workflow            parentWorkflow;
-        private CadenceClient       client;
-        private ChildExecution      childExecution;
 
         /// <summary>
-        /// Internal constructor.
+        /// Starts the target workflow that returns <c>void</c>, passing any specified arguments.
         /// </summary>
-        /// <param name="parentWorkflow">The parent workflow.</param>
-        /// <param name="workflowTypeName">The workflow type name.</param>
-        /// <param name="options">Optional child workflow options.</param>
-        internal ChildWorkflowStub(Workflow parentWorkflow, string workflowTypeName, ChildWorkflowOptions options = null)
+        /// <param name="args">The arguments to be passed to the workflow.</param>
+        /// <returns>The <see cref="ChildWorkflowFuture{T}"/> with the <see cref="ChildWorkflowFuture{T}.GetAsync"/> than can be used to retrieve the workfow result.</returns>
+        /// <exception cref="InvalidOperationException">Thrown when attempting to start a stub more than once.</exception>
+        /// <remarks>
+        /// <para>
+        /// You must take care to pass parameters that are compatible with the target workflow parameters.
+        /// These are checked at runtime but not while compiling.
+        /// </para>
+        /// <note>
+        /// Any given <see cref="ChildWorkflowStub{TWorkflowInterface}"/> may only be executed once.
+        /// </note>
+        /// </remarks>
+        public async Task<ChildWorkflowFuture> StartAsync(params object[] args)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
+            parentWorkflow.SetStackTrace();
 
-            this.parentWorkflow   = parentWorkflow;
-            this.client           = parentWorkflow.Client;
-            this.WorkflowTypeName = workflowTypeName;
-            this.Options          = ChildWorkflowOptions.Normalize(client, options);
-
-            if (string.IsNullOrEmpty(Options.Domain))
+            if (hasStarted)
             {
-                Options.Domain = parentWorkflow.WorkflowInfo.Domain;
-            }
-        }
-
-        /// <summary>
-        /// Returns the child workflow options.
-        /// </summary>
-        public ChildWorkflowOptions Options { get; private set; }
-
-        /// <summary>
-        /// Returns the workflow type name.
-        /// </summary>
-        public string WorkflowTypeName { get; private set; }
-
-        /// <summary>
-        /// Returns the child workflow <see cref="WorkflowExecution"/>.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown when the workflow has not been started.</exception>
-        public WorkflowExecution Execution
-        {
-            get
-            {
-                if (childExecution == null)
-                {
-                    throw new InvalidOperationException($"Workflow[{ WorkflowTypeName }] has not been started.");
-                }
-
-                return childExecution.Execution;
-            }
-        }
-
-        /// <summary>
-        /// Starts the child workflow.
-        /// </summary>
-        /// <param name="args">The workflow arguments.</param>
-        /// <returns>An <see cref="IAsyncFuture{T}"/> that can be used to retrieve the workflow result.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if the child workflow has already been started.</exception>
-        public async Task<IAsyncFuture<TResult>> ExecuteAsync(params object[] args)
-        {
-            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
-
-            if (childExecution != null)
-            {
-                throw new InvalidOperationException("Cannot start a stub more than once.");
+                throw new InvalidOperationException("Cannot start a future stub more than once.");
             }
 
-            childExecution = await client.StartChildWorkflowAsync(parentWorkflow, WorkflowTypeName, client.DataConverter.ToData(args), Options);
+            var parameters = targetMethod.GetParameters();
+
+            if (parameters.Length != args.Length)
+            {
+                throw new ArgumentException($"Invalid number of parameters: [{parameters.Length}] expected but [{args.Length}] were passed.", nameof(parameters));
+            }
+
+            hasStarted = true;
+
+            // Cast the input parameters to the target types so that developers won't need to expicitly
+            // cast things like integers into longs, floats into doubles, etc.
+
+            for (int i = 0; i < args.Length; i++)
+            {
+                args[i] = TypeDescriptor.GetConverter(parameters[i].ParameterType).ConvertTo(args[i], parameters[i].ParameterType);
+            }
+
+            // Start the child workflow and then construct the future.
+
+            var client    = parentWorkflow.Client;
+            var execution = await client.StartChildWorkflowAsync(parentWorkflow, workflowTypeName, client.DataConverter.ToData(args), options);
+
+            // Initialize the type-safe stub property such that developers can call
+            // any query or signal methods.
+
+            Stub = StubManager.NewChildWorkflowStub<TWorkflowInterface>(client, parentWorkflow, workflowTypeName, execution);
 
             // Create and return the future.
 
-            return new AsyncChildFuture<TResult>(parentWorkflow, childExecution, typeof(TResult));
+            return new ChildWorkflowFuture(parentWorkflow, execution);
         }
 
         /// <summary>
-        /// Signals the workflow.
+        /// <para>
+        /// Returns the underlying <typeparamref name="TWorkflowInterface"/> stub for the child workflow.
+        /// This includes all the workflow entrypoint, query and signal methods.
+        /// </para>
+        /// <note>
+        /// The entrypoint methods won't work because the workflow will already be running but you can
+        /// interact with the child workflow using any query and signal methods.       
+        /// </note>
         /// </summary>
-        /// <param name="signalName">The signal name.</param>
-        /// <param name="args">The signal arguments.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if the child workflow has not been started.</exception>
-        public async Task SignalAsync(string signalName, params object[] args)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
-            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
-
-            if (Execution == null)
-            {
-                throw new InvalidOperationException("The stub must be started first.");
-            }
-
-            var reply = await parentWorkflow.ExecuteNonParallel(
-                async () =>
-                {
-                    return (WorkflowSignalChildReply) await client.CallProxyAsync(
-                        new WorkflowSignalChildRequest()
-                        {
-                             ChildId    = childExecution.ChildId,
-                             SignalName = signalName,
-                             SignalArgs = client.DataConverter.ToData(args)
-                        });
-                });
-
-            reply.ThrowOnError();
-        }
+        public TWorkflowInterface Stub { get; private set; }
     }
 }

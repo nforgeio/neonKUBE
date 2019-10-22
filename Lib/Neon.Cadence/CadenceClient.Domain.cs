@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Tasks;
 
 namespace Neon.Cadence
 {
@@ -81,6 +82,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         public async Task RegisterDomainAsync(string name, string description = null, string ownerEmail = null, int retentionDays = 7, bool ignoreDuplicates = false)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentException>(retentionDays > 0, nameof(retentionDays));
             EnsureNotDisposed();
@@ -117,6 +119,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
         public async Task<DomainDescription> DescribeDomainAsync(string name)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             EnsureNotDisposed();
 
@@ -140,7 +143,7 @@ namespace Neon.Cadence
                     Status      = reply.DomainInfoStatus
                 },
 
-                Configuration = new DomainOptions()
+                Configuration = new DomainConfiguration()
                 {
                     EmitMetrics   = reply.ConfigurationEmitMetrics,
                     RetentionDays = reply.ConfigurationRetentionDays
@@ -155,6 +158,7 @@ namespace Neon.Cadence
         /// <returns>The <see cref="DomainDescription"/>.</returns>
         public async Task<DomainDescription> DescribeDomainByIdAsync(string uuid)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uuid), nameof(uuid));
             EnsureNotDisposed();
 
@@ -178,7 +182,7 @@ namespace Neon.Cadence
                     Status      = reply.DomainInfoStatus
                 },
 
-                Configuration = new DomainOptions()
+                Configuration = new DomainConfiguration()
                 {
                     EmitMetrics   = reply.ConfigurationEmitMetrics,
                     RetentionDays = reply.ConfigurationRetentionDays
@@ -194,6 +198,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task UpdateDomainAsync(string name, UpdateDomainRequest request)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
             Covenant.Requires<ArgumentNullException>(request.Options != null, nameof(request));
@@ -214,6 +219,55 @@ namespace Neon.Cadence
             var reply = await CallProxyAsync(domainUpdateRequest);
 
             reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Lists the Cadence domains.
+        /// </summary>
+        /// <param name="pageSize">
+        /// The maximum number of domains to be returned.  This must be
+        /// greater than or equal to one.
+        /// </param>
+        /// <param name="nextPageToken">
+        /// Optionally specifies an opaque token that can be used to retrieve subsequent
+        /// pages of domains.
+        /// </param>
+        /// <returns>A <see cref="DomainListPage"/> with the domains.</returns>
+        /// <remarks>
+        /// This method can be used to retrieve one or more pages of domain
+        /// results.  You'll pass <paramref name="pageSize"/> as the maximum number
+        /// of domains to be returned per page.  The <see cref="DomainListPage"/>
+        /// returned will list the domains and if there are more domains waiting
+        /// to be returned, will return token that can be used in a subsequent
+        /// call to retrieve the next page pf results.
+        /// </remarks>
+        public async Task<DomainListPage> ListDomainsAsync(int pageSize, byte[] nextPageToken = null)
+        {
+            await SyncContext.ClearAsync;
+            Covenant.Requires<ArgumentException>(pageSize >= 1, nameof(pageSize));
+            EnsureNotDisposed();
+
+            var reply = (DomainListReply)await CallProxyAsync(
+                new DomainListRequest()
+                {
+                     PageSize      = pageSize,
+                     NextPageToken = nextPageToken
+                });
+
+            reply.ThrowOnError();
+
+            var domains = new List<DomainDescription>(reply.Domains.Count);
+
+            foreach (var domain in reply.Domains)
+            {
+                domains.Add(domain.ToPublic());
+            }
+
+            return new DomainListPage()
+            { 
+                Domains       = domains,
+                NextPageToken = reply.NextPageToken
+            };
         }
     }
 }

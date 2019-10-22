@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -43,8 +43,8 @@ type (
 func NewWorkflowGetTimeRequest() *WorkflowGetTimeRequest {
 	request := new(WorkflowGetTimeRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
-	request.SetType(messagetypes.WorkflowGetTimeRequest)
-	request.SetReplyType(messagetypes.WorkflowGetTimeReply)
+	request.SetType(internal.WorkflowGetTimeRequest)
+	request.SetReplyType(internal.WorkflowGetTimeReply)
 
 	return request
 }

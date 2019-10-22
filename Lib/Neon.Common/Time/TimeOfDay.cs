@@ -149,7 +149,7 @@ namespace Neon.Time
 
             if (!TryParse(value, out parsed))
             {
-                throw new ArgumentException(string.Format("Error parsing TimeOfDay value [{0}].", value ?? "null"));
+                throw new ArgumentException(string.Format("Error parsing TimeOfDay value [{0}].", value ?? "null"), nameof(value));
             }
 
             this.offset = parsed.offset;
@@ -174,7 +174,7 @@ namespace Neon.Time
         {
             if (offset < TimeSpan.Zero || offset.TotalHours >= 24)
             {
-                throw new ArgumentException("TimeOfDay offset cannot be negative or greater than or equal to 24 hours.", "offset");
+                throw new ArgumentException("TimeOfDay offset cannot be negative or greater than or equal to 24 hours.", nameof(offset));
             }
         }
 

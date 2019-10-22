@@ -87,8 +87,8 @@ namespace Neon.Cadence.Internal
         /// Optional: default to use ChildWorkflowPolicyAbandon. We currently only support this policy.
         /// </summary>
         [JsonProperty(PropertyName = "ChildPolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue((int)Cadence.ChildPolicy.Abandon)]
-        public int ChildPolicy { get; set; } = (int)Cadence.ChildPolicy.Abandon;
+        [DefaultValue((int)Cadence.ParentClosePolicy.Abandon)]
+        public int ChildClosePolicy { get; set; } = (int)Cadence.ParentClosePolicy.Abandon;
 
         /// <summary>
         /// WaitForCancellation - Whether to wait for cancelled child workflow to be ended (child workflow can be ended

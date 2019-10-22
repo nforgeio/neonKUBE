@@ -35,24 +35,25 @@ var (
 
 type (
 
-	// WorkflowContextsMap holds a thread-safe map[interface{}]interface{} of
-	// cadence WorkflowContextsMap with their contextID's
+	// WorkflowContextsMap is a global map of int64 contextID to
+	// running cadence workflow instances (as *WorkflowContext)
 	WorkflowContextsMap struct {
 		sync.Mutex
 		contexts map[int64]*WorkflowContext
 	}
 
-	// WorkflowContext holds a Cadence workflow
-	// context, the registered workflow function, a context cancel function,
-	// and a map of ChildID's to ChildContext.
-	// This struct is used as an intermediate for storing worklfow information
-	// and state while registering and executing cadence workflows
+	// WorkflowContext represents a running cadence
+	// workflow instance
 	WorkflowContext struct {
-		workflowName  *string
-		ctx           workflow.Context
-		cancelFunc    workflow.CancelFunc
-		childContexts *ChildContextsMap
-		activities    *proxyactivity.ActivityFuturesMap
+		sync.Mutex                                      // allows us to safely iterate ID iterator
+		workflowName  *string                           // string name of the workflow
+		ctx           workflow.Context                  // the cadence workflow context
+		cancelFunc    workflow.CancelFunc               // cadence workflow context cancel function
+		childContexts *ChildContextsMap                 // maps child workflow instances to childID
+		activities    *proxyactivity.ActivityFuturesMap // maps activity futures launched by the workflow instance to activityID
+		queues        *QueueMap                         // map of workflow queues (queueID to chan []byte queue)
+		childID       int64                             // childID iterator
+		queueID       int64                             // queueID iterator
 	}
 )
 
@@ -88,6 +89,7 @@ func NewWorkflowContext(ctx workflow.Context) *WorkflowContext {
 	wectx := new(WorkflowContext)
 	wectx.childContexts = NewChildContextsMap()
 	wectx.activities = proxyactivity.NewActivityFuturesMap()
+	wectx.queues = NewQueueMap()
 	wectx.SetContext(ctx)
 	return wectx
 }
@@ -152,8 +154,7 @@ func (wectx *WorkflowContext) SetChildContexts(value *ChildContextsMap) {
 // AddChildContext adds a new cadence context and its corresponding ContextId into
 // the WorkflowContext's childContexts map.  This method is thread-safe.
 //
-// param id int64 -> the long id passed to Cadence
-// workflow functions.  This will be the mapped key
+// param id int64 -> the long childId. This will be the mapped key
 //
 // param cctx *ChildContext -> pointer to the new WorkflowContex used to
 // execute workflow functions. This will be the mapped value
@@ -167,8 +168,7 @@ func (wectx *WorkflowContext) AddChildContext(id int64, cctx *ChildContext) int6
 // childContexts map at the specified
 // ContextId.  This is a thread-safe method.
 //
-// param id int64 -> the long id passed to Cadence
-// workflow functions.  This will be the mapped key
+// param id int64 -> the long childId.
 //
 // returns int64 -> long id of the ChildContext removed from the map
 func (wectx *WorkflowContext) RemoveChildContext(id int64) int64 {
@@ -179,8 +179,7 @@ func (wectx *WorkflowContext) RemoveChildContext(id int64) int64 {
 // ChildContextsMap at the specified ContextID.
 // This method is thread-safe.
 //
-// param id int64 -> the long id passed to Cadence
-// workflow functions. This will be the mapped key
+// param id int64 -> the long childId. This will be the mapped key
 //
 // returns *WorkflowContext -> pointer to ChildContext with the specified id
 func (wectx *WorkflowContext) GetChildContext(id int64) *ChildContext {
@@ -203,7 +202,7 @@ func (wectx *WorkflowContext) SetActivityFutures(value *proxyactivity.ActivityFu
 
 // AddActivityFuture adds a new future to the ActivityFuturesMap
 //
-// param id int64 -> activity id.
+// param id int64 -> the long activity id.
 //
 // param future workflow.Future -> the future for the executing activity.
 //
@@ -215,7 +214,7 @@ func (wectx *WorkflowContext) AddActivityFuture(id int64, future workflow.Future
 // RemoveActivityFuture removes key/value entry from the WorkflowContext's
 // activities map at the specified id.  This is a thread-safe method.
 //
-// param id int64 -> activity id.
+// param id int64 -> the long activity id.
 //
 // returns int64 -> activity id of removed future.
 func (wectx *WorkflowContext) RemoveActivityFuture(id int64) int64 {
@@ -225,11 +224,91 @@ func (wectx *WorkflowContext) RemoveActivityFuture(id int64) int64 {
 // GetActivityFuture gets the future of an executing workflow activity at
 // the specified activity id.
 //
-// param id int64 -> activity id.
+// param id int64 -> the long activity id.
 //
 // returns workflow.Future -> the workflow future of the specified activity.
 func (wectx *WorkflowContext) GetActivityFuture(id int64) workflow.Future {
 	return wectx.activities.Get(id)
+}
+
+// GetQueues gets a WorkflowContext's QueueMap
+//
+// returns *QueueMap -> a map of workflow queues (queueID to a chan []byte queue).
+func (wectx *WorkflowContext) GetQueues() *QueueMap {
+	return wectx.queues
+}
+
+// SetQueues sets a WorkflowContext's QueueMap
+//
+// param value *QueueMap -> a map of workflow queues (queueID to a chan []byte queue).
+func (wectx *WorkflowContext) SetQueues(value *QueueMap) {
+	wectx.queues = value
+}
+
+// AddQueue adds a new queue to the WorkflowContext. This method is thread-safe.
+//
+// param id int64 -> the long queueID. This will be the mapped key.
+//
+// param b chan []byte -> the chan []byte workflow queue. This will be the mapped value.
+//
+// returns int64 -> long queueID of the newly added queue.
+func (wectx *WorkflowContext) AddQueue(id int64, b chan []byte) int64 {
+	return wectx.queues.Add(id, b)
+}
+
+// RemoveQueue removes key/value entry from the WorkflowContext's
+// queues map at the specified queueID.  This is a thread-safe method.
+//
+// param id int64 -> the long queueID.
+//
+// returns int64 -> the long queueID of the Queue to be removed from the map.
+func (wectx *WorkflowContext) RemoveQueue(id int64) int64 {
+	return wectx.queues.Remove(id)
+}
+
+// GetQueue gets a chan []byte workflow queue from the WorkflowContext's
+// QueueMap at the specified queueID. This method is thread-safe.
+//
+// param id int64 -> the long queueID.
+//
+// returns chan []byte -> the chan []byte workflow queue at the specified
+// queueID.
+func (wectx *WorkflowContext) GetQueue(id int64) chan []byte {
+	return wectx.queues.Get(id)
+}
+
+// NextChildID increments the variable
+// childID by 1 and is protected by a mutex lock
+func (wectx *WorkflowContext) NextChildID() int64 {
+	wectx.Lock()
+	wectx.childID = wectx.childID + 1
+	defer wectx.Unlock()
+	return wectx.childID
+}
+
+// GetChildID gets the value of the variable
+// childID and is protected by a mutex lock
+func (wectx *WorkflowContext) GetChildID() int64 {
+	wectx.Lock()
+	defer wectx.Unlock()
+	return wectx.childID
+}
+
+// NextQueueID increments the variable
+// childID by 1 and is protected by a mutex lock
+func (wectx *WorkflowContext) NextQueueID() int64 {
+	wectx.Lock()
+	wectx.queueID = wectx.queueID + 1
+	defer wectx.Unlock()
+	return wectx.queueID
+}
+
+// GetQueueID gets the value of the variable
+// queueID and is protected by a mutex lock
+func (wectx *WorkflowContext) GetQueueID() int64 {
+	wectx.Lock()
+	defer wectx.Unlock()
+	return wectx.queueID
 }
 
 //----------------------------------------------------------------------------

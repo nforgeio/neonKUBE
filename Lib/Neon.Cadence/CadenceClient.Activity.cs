@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Tasks;
 
 namespace Neon.Cadence
 {
@@ -58,6 +59,7 @@ namespace Neon.Cadence
         public async Task RegisterActivityAsync<TActivity>(string activityTypeName = null, string domain = null)
             where TActivity : ActivityBase
         {
+            await SyncContext.ClearAsync;
             CadenceHelper.ValidateActivityImplementation(typeof(TActivity));
             CadenceHelper.ValidateActivityTypeName(activityTypeName);
             EnsureNotDisposed();
@@ -75,6 +77,11 @@ namespace Neon.Cadence
             }
 
             await ActivityBase.RegisterAsync(this, activityType, activityTypeName, ResolveDomain(domain));
+
+            lock (registeredActivityTypes)
+            {
+                registeredActivityTypes.Add(CadenceHelper.GetActivityInterface(typeof(TActivity)));
+            }
         }
 
         /// <summary>
@@ -101,6 +108,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task RegisterAssemblyActivitiesAsync(Assembly assembly, string domain = null)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(assembly != null, nameof(assembly));
             EnsureNotDisposed();
 
@@ -118,6 +126,11 @@ namespace Neon.Cadence
                     var activityTypeName = CadenceHelper.GetActivityTypeName(type, activityAttribute);
 
                     await ActivityBase.RegisterAsync(this, type, activityTypeName, ResolveDomain(domain));
+
+                    lock (registeredActivityTypes)
+                    {
+                        registeredActivityTypes.Add(CadenceHelper.GetActivityInterface(type));
+                    }
                 }
             }
         }
@@ -131,6 +144,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task ActivityHeartbeatByTokenAsync(string taskToken, object details = null, string domain = null)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken), nameof(taskToken));
             EnsureNotDisposed();
 
@@ -155,6 +169,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task ActivityHeartbeatByIdAsync(WorkflowExecution execution, string activityId, object details = null, string domain = null)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId), nameof(activityId));
             EnsureNotDisposed();
@@ -182,6 +197,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
         public async Task ActivityCompleteByTokenAsync(string taskToken, object result = null, string domain = null)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken), nameof(taskToken));
             EnsureNotDisposed();
 
@@ -207,6 +223,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
         public async Task ActivityCompleteByIdAsync(WorkflowExecution execution, string activityId, object result = null, string domain = null)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId), nameof(activityId));
             EnsureNotDisposed();
@@ -233,6 +250,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
         public async Task ActivityCancelByTokenAsync(string taskToken, string domain = null)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken), nameof(taskToken));
             EnsureNotDisposed();
 
@@ -257,6 +275,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
         public async Task ActivityCancelByIdAsync(WorkflowExecution execution, string activityId, string domain = null)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId), nameof(activityId));
             EnsureNotDisposed();
@@ -284,6 +303,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
         public async Task ActivityErrorByTokenAsync(string taskToken, Exception error, string domain = null)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken), nameof(taskToken));
             Covenant.Requires<ArgumentNullException>(error != null, nameof(error));
             EnsureNotDisposed();
@@ -310,6 +330,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
         public async Task ActivityErrorByIdAsync(WorkflowExecution execution, string activityId, Exception error, string domain = null)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId), nameof(activityId));
             Covenant.Requires<ArgumentNullException>(error != null, nameof(error));

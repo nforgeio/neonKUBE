@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -41,8 +41,8 @@ type (
 func NewDisconnectRequest() *DisconnectRequest {
 	request := new(DisconnectRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.SetType(messagetypes.DisconnectRequest)
-	request.SetReplyType(messagetypes.DisconnectReply)
+	request.SetType(internal.DisconnectRequest)
+	request.SetReplyType(internal.DisconnectReply)
 
 	return request
 }

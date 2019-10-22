@@ -22,14 +22,12 @@ using Neon.Service;
 using Neon.Data;
 using Neon.Net;
 
+using Helm.Helm;
 using Newtonsoft.Json;
-
 using YamlDotNet.RepresentationModel;
 
 using k8s;
 using k8s.Models;
-
-using Helm.Helm;
 
 using Couchbase;
 using Couchbase.Linq;
@@ -50,18 +48,19 @@ namespace ClusterManager
         {
         }
 
-
-
         /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
-
         }
 
         /// <inheritdoc/>
         protected async override Task<int> OnRunAsync()
         {
+            // Let KubeService know that we're running.
+
+            SetRunning();
+            
             await SetupClusterAsync();
 
             logPurgerInterval = TimeSpan.FromSeconds(int.Parse(GetEnvironmentVariable("LOG_PURGE_INTERVAL") ?? "3600"));
@@ -80,7 +79,7 @@ namespace ClusterManager
             // that are older than the number of retention days.
 
             tasks.Add(LogPurgerAsync(logPurgerInterval, retentionDays));
-            
+
             // Wait for all tasks to exit cleanly for a normal shutdown.
 
             await NeonHelper.WaitAllAsync(tasks);

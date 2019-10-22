@@ -1518,7 +1518,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
 
             LogLine($"*** Downloading: {source}");
 
-            var downloadPath = $"{DownloadFolderPath}/{LinuxPath.GetFileName(source)}-{Guid.NewGuid().ToString("D")}";
+            var downloadPath = $"{DownloadFolderPath}/{LinuxPath.GetFileName(source)}-{Guid.NewGuid().ToString("d")}";
 
             // We're not able to download some files directly due to permission issues 
             // so we'll make a temporary copy of the target file within the user's
@@ -1650,7 +1650,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
 
             LogLine($"*** Uploading: {target}");
 
-            var uploadPath = $"{UploadFolderPath}/{LinuxPath.GetFileName(target)}-{Guid.NewGuid().ToString("D")}";
+            var uploadPath = $"{UploadFolderPath}/{LinuxPath.GetFileName(target)}-{Guid.NewGuid().ToString("d")}";
 
             try
             {
@@ -2079,7 +2079,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
 
                 // Upload the ZIP file to a temporary folder.
 
-                var bundleFolder = $"{KubeHostFolders.Exec(Username)}/{Guid.NewGuid().ToString("D")}";
+                var bundleFolder = $"{KubeHostFolders.Exec(Username)}/{Guid.NewGuid().ToString("d")}";
                 var zipPath      = LinuxPath.Combine(bundleFolder, "__bundle.zip");
 
                 SudoCommand($"mkdir -p", RunOptions.LogOnErrorOnly, bundleFolder);
@@ -2309,7 +2309,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
             // Create the command folder.
 
             var execFolder = $"{KubeHostFolders.Exec(Username)}/cmd";
-            var cmdFolder  = LinuxPath.Combine(execFolder, Guid.NewGuid().ToString("D"));
+            var cmdFolder  = LinuxPath.Combine(execFolder, Guid.NewGuid().ToString("d"));
 
             SafeSshOperation("create folder", () => sshClient.RunCommand($"mkdir -p {cmdFolder} && chmod 770 {cmdFolder}"));
 
@@ -3082,7 +3082,7 @@ echo $? > {cmdFolder}/exit
 
             if (string.IsNullOrEmpty(hostname))
             {
-                throw new ArgumentException($"No hostname is specified for the [{name}] certificate test.");
+                throw new ArgumentException($"No hostname is specified for the [{name}] certificate test.", nameof(name));
             }
 
             // Verify that the private key looks reasonable.
@@ -3096,7 +3096,7 @@ echo $? > {cmdFolder}/exit
 
             if (!certificate.CertPem.StartsWith("-----BEGIN CERTIFICATE-----"))
             {
-                throw new ArgumentException($"The [{name}] certificate is not PEM encoded.");
+                throw new ArgumentException($"The [{name}] certificate is not PEM encoded.", nameof(name));
             }
 
             // We're going to split the certificate into two files, the issued

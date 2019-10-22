@@ -491,6 +491,8 @@ namespace Neon.Cadence
             }
             catch (CadenceException e)
             {
+                log.LogError(e);
+
                 return new ActivityInvokeReply()
                 {
                     Error = e.ToCadenceError()
@@ -505,6 +507,8 @@ namespace Neon.Cadence
             }
             catch (Exception e)
             {
+                log.LogError(e);
+
                 return new ActivityInvokeReply()
                 {
                     Error = new CadenceError(e)

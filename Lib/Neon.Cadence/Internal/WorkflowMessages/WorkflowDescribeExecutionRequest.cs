@@ -61,7 +61,7 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Identifies the target domain.
+        /// Optionally identifies the target domain when <see cref="RunId"/> isn't passed.
         /// </summary>
         public string Domain
         {

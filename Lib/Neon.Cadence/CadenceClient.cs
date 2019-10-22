@@ -35,8 +35,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -262,6 +260,7 @@ namespace Neon.Cadence
             {
                 app.Run(async context =>
                 {
+                    await SyncContext.ClearAsync;
                     await OnKestralRequestAsync(context);
                 });
             }
@@ -544,6 +543,8 @@ namespace Neon.Cadence
                                 _ = Task.Factory.StartNew(
                                     async (object arg) =>
                                     {
+                                        await SyncContext.ClearAsync;
+
                                         using (var context = (RequestContext)arg)
                                         {
                                             await OnListenerRequestAsync(context);
@@ -573,7 +574,6 @@ namespace Neon.Cadence
         private static bool                             proxyWritten  = false;
         private static long                             nextClientId  = 0;
         private static Dictionary<long, CadenceClient>  idToClient    = new Dictionary<long, CadenceClient>();
-        private static bool                             compilerReady = false;
         private static long                             nextRequestId = 0;
         private static Dictionary<long, Operation>      operations    = new Dictionary<long, Operation>();
         private static INeonLogger                      cadenceLogger;
@@ -713,19 +713,43 @@ namespace Neon.Cadence
 
             var debugOption = settings.Debug ? " --debug" : string.Empty;
             var commandLine = $"--listen {endpoint.Address}:{endpoint.Port}{debugOption} --client-id {clientId}";
-
-            if (NeonHelper.IsWindows)
+            
+            if (NeonHelper.IsWindows && settings.Debug)
             {
                 var startInfo = new ProcessStartInfo(binaryPath, commandLine)
                 {
-                    UseShellExecute = settings.Debug,
+                    UseShellExecute = true,
                 };
 
                 return Process.Start(startInfo);
             }
             else
             {
-                return Process.Start(binaryPath, commandLine);
+                var process = new Process();
+
+                process.StartInfo.UseShellExecute        = false;
+                process.StartInfo.FileName               = binaryPath;
+                process.StartInfo.Arguments              = commandLine;
+                process.StartInfo.RedirectStandardError  = true;
+                process.StartInfo.RedirectStandardOutput = true;
+
+                // These event handlers intentionally ignore the process output because
+                // we don't want it to get mixed in with the application's output
+                // streams which will often be used fo streaming application log data
+                // or for other purposes.
+                //
+                // [cadence-proxy] is already transmitting log information to the
+                // client and the client is directing that to the normal logging
+                // mechanisms.
+
+                process.ErrorDataReceived  += (s, a) => { };
+                process.OutputDataReceived += (s, a) => { };
+
+                process.Start();
+                process.BeginErrorReadLine();
+                process.BeginOutputReadLine();
+
+                return process;
             }
         }
 
@@ -761,12 +785,72 @@ namespace Neon.Cadence
         /// </remarks>
         public static async Task<CadenceClient> ConnectAsync(CadenceSettings settings)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), nameof(settings), "You must specifiy a non-empty default Cadence domain.");
 
-            InitializeCompiler();
-
             var client = new CadenceClient(settings);
+
+            // Initilize the [cadence-proxy].
+
+            if (!settings.DebugDisableHandshakes)
+            {
+                try
+                {
+                    // Send the [InitializeRequest] to the [cadence-proxy] so it will know
+                    // where the .NET Client is listening.
+
+                    var initializeRequest =
+                        new InitializeRequest()
+                        {
+                            LibraryAddress = client.ListenUri.Host,
+                            LibraryPort    = client.ListenUri.Port,
+                            LogLevel       = client.Settings.LogLevel
+                        };
+
+                    await client.CallProxyAsync(initializeRequest);
+
+                    // Send the [ConnectRequest] to the [cadence-proxy] telling it
+                    // how to connect to the Cadence cluster.
+
+                    var sbEndpoints = new StringBuilder();
+
+                    foreach (var serverUri in settings.Servers)
+                    {
+                        var uri = new Uri(serverUri, UriKind.Absolute);
+
+                        sbEndpoints.AppendWithSeparator($"{uri.Host}:{uri.Port}", ",");
+                    }
+
+                    var connectRequest =
+                        new ConnectRequest()
+                        {
+                            Endpoints     = sbEndpoints.ToString(),
+                            Identity      = settings.ClientIdentity,
+                            ClientTimeout = TimeSpan.FromSeconds(30),
+                            Domain        = settings.DefaultDomain,
+                            CreateDomain  = settings.CreateDomain
+                        };
+
+                    client.CallProxyAsync(connectRequest).Result.ThrowOnError();
+                }
+                catch (Exception e)
+                {
+                    client.Dispose();
+                    throw new CadenceConnectException("Cannot connect to Cadence cluster.", e);
+                }
+            }
+
+            // Crank up the background threads which will handle [cadence-proxy]
+            // request timeouts.
+
+            client.heartbeatThread = new Thread(new ThreadStart(client.HeartbeatThread));
+            client.heartbeatThread.Start();
+
+            client.timeoutThread = new Thread(new ThreadStart(client.TimeoutThread));
+            client.timeoutThread.Start();
+
+            // Initialize the cache size to a known value.
 
             try
             {
@@ -1143,113 +1227,17 @@ namespace Neon.Cadence
             await client.ProxyReplyAsync(request, new LogReply());
         }
 
-        /// <summary>
-        /// Ensures that the Microsoft C# compiler libraries are preloaded and ready
-        /// so that subsequent complations won't take excessive time.
-        /// </summary>
-        private static void InitializeCompiler()
-        {
-            lock (syncLock)
-            {
-                // The .NET client dynamically generates code at runtime to implement
-                // workflow stubs.  The Microsoft C# compiler classes take about 1.8
-                // seconds to load and compile code for the first time.  Subsequent
-                // compiles take about 200ms.
-                //
-                // The problem with this is that 1.8 seconds is quite long and is
-                // roughly 1/5th of the default decision task timeout of 10 seconds.
-                // So it's conceivable that this additional delay could push a
-                // workflow to timeout.
-
-                // $todo(jefflill):
-                //
-                // A potentially better approach would be to have the registrationd
-                // methods prebuild (and cache) all of the stubs and/or implement
-                // more specific stub generation methods.
-                //
-                //      https://github.com/nforgeio/neonKUBE/issues/615
-
-                const string source =
-@"
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-
-using Neon.Cadence;
-using Neon.Cadence.Internal;
-using Neon.Common;
-
-namespace Neon.Cadence.WorkflowStub
-{
-    internal class __CompilerInitialized
-    {
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public async Task<int> DoNothingAsync()
-        {
-            // Call a few things so the the C# compiler will need to load some assemblies.
-
-            await CadenceClient.ConnectAsync(new CadenceSettings());
-            return await Task.FromResult(0);
-        }
-    }
-}
-";
-                if (compilerReady)
-                {
-                    return;
-                }
-
-                var syntaxTree = CSharpSyntaxTree.ParseText(source);
-                var references = new List<MetadataReference>();
-
-                // Reference these required assemblies.
-
-                references.Add(MetadataReference.CreateFromFile(typeof(NeonHelper).Assembly.Location));
-
-                // Reference all loaded assemblies.
-
-                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()
-                    .Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.Location)))
-                {
-                    references.Add(MetadataReference.CreateFromFile(assembly.Location));
-                }
-
-                var assemblyName    = "Neon-Cadence-WorkflowStub-Initialize";
-                var compilerOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, optimizationLevel: OptimizationLevel.Release);
-                var compilation     = CSharpCompilation.Create(assemblyName, new[] { syntaxTree }, references, compilerOptions);
-                var assemblyStream  = new MemoryStream();
-
-                using (var pdbStream = new MemoryStream())
-                {
-                    var emitted = compilation.Emit(assemblyStream, pdbStream);
-
-                    if (!emitted.Success)
-                    {
-                        throw new CompilerErrorException(emitted.Diagnostics);
-                    }
-                }
-
-                assemblyStream.Position = 0;
-                CadenceHelper.LoadAssembly(assemblyStream);
-
-                compilerReady = true;
-            }
-        }
-
         //---------------------------------------------------------------------
         // Instance members
 
-        private IPAddress                       address       = IPAddress.Parse("127.0.0.2");    // Using a non-default loopback to avoid port conflicts
-        private Process                         proxyProcess  = null;
-        private int                             proxyPort     = 0;
-        private Dictionary<long, Worker>        workers       = new Dictionary<long, Worker>();
-        private Dictionary<string, Type>        activityTypes = new Dictionary<string, Type>();
-        private bool                            isDisposed    = false;
+        private IPAddress                       address                 = IPAddress.Parse("127.0.0.2");    // Using a non-default loopback to avoid port conflicts
+        private Process                         proxyProcess            = null;
+        private int                             proxyPort               = 0;
+        private Dictionary<long, Worker>        workers                 = new Dictionary<long, Worker>();
+        private Dictionary<string, Type>        activityTypes           = new Dictionary<string, Type>();
+        private bool                            isDisposed              = false;
+        private List<Type>                      registeredActivityTypes = new List<Type>();
+        private List<Type>                      registeredWorkflowTypes = new List<Type>();
         private HttpClient                      proxyClient;
         private HttpServer                      httpServer;
         private Exception                       pendingException;
@@ -1358,71 +1346,6 @@ namespace Neon.Cadence.WorkflowStub
                 BaseAddress = new Uri($"http://{address}:{proxyPort}"),
                 Timeout     = settings.ProxyTimeout > TimeSpan.Zero ? settings.ProxyTimeout : Settings.DebugHttpTimeout
             };
-
-            // Initilize the [cadence-proxy].
-
-            if (!Settings.DebugDisableHandshakes)
-            {
-                try
-                {
-                    // Send the [InitializeRequest] to the [cadence-proxy] so it will know
-                    // where the .NET Client is listening.
-
-                    var initializeRequest =
-                        new InitializeRequest()
-                        {
-                            LibraryAddress = ListenUri.Host,
-                            LibraryPort    = ListenUri.Port,
-                            LogLevel       = Settings.LogLevel
-                        };
-
-                    CallProxyAsync(initializeRequest).Wait();
-
-                    // Send the [ConnectRequest] to the [cadence-proxy] telling it
-                    // how to connect to the Cadence cluster.
-
-                    var sbEndpoints = new StringBuilder();
-
-                    foreach (var serverUri in settings.Servers)
-                    {
-                        var uri = new Uri(serverUri, UriKind.Absolute);
-
-                        sbEndpoints.AppendWithSeparator($"{uri.Host}:{uri.Port}", ",");
-                    }
-
-                    var connectRequest = 
-                        new ConnectRequest()
-                        {
-                            Endpoints     = sbEndpoints.ToString(),
-                            Identity      = settings.ClientIdentity,
-                            ClientTimeout = TimeSpan.FromSeconds(30),
-                            Domain        = settings.DefaultDomain,
-                            CreateDomain  = settings.CreateDomain
-                        };
-
-                    CallProxyAsync(connectRequest).Result.ThrowOnError();
-                }
-                catch (Exception e)
-                {
-                    Dispose();
-                    throw new CadenceConnectException("Cannot connect to Cadence cluster.", e);
-                }
-            }
-
-            // Crank up the background threads which will handle [cadence-proxy]
-            // request timeouts.
-
-            // $todo(jefflill):
-            //
-            // Disabling this for now due to occasional heartbeat timeout errors.
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/680
-
-            //heartbeatThread = new Thread(new ThreadStart(HeartbeatThread));
-            //heartbeatThread.Start();
-
-            timeoutThread = new Thread(new ThreadStart(TimeoutThread));
-            timeoutThread.Start();
         }
 
         /// <summary>
@@ -1696,9 +1619,9 @@ namespace Neon.Cadence.WorkflowStub
                     request.IsCancellable = true;
 
                     cancellationToken.Register(
-                        () =>
+                        async () =>
                         {
-                            CallProxyAsync(new CancelRequest() { RequestId = requestId }).Wait();
+                            await CallProxyAsync(new CancelRequest() { RequestId = requestId });
                         });
                 }
 

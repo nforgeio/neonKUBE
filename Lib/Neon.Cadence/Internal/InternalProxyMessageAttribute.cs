@@ -22,11 +22,6 @@ using System.ComponentModel;
 using Neon.Cadence;
 using Neon.Common;
 
-// $todo(jefflill)
-//
-// Performance could be improved by maintaining output stream and buffer pools
-// rather than allocating these every time.
-
 namespace Neon.Cadence.Internal
 {
     /// <summary>

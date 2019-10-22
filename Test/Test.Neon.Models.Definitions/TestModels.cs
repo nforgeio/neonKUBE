@@ -220,6 +220,10 @@ namespace Test.Neon.Models.Definitions
         [Route("GetOptionalEnumViaQuery")]
         MyEnum GetOptionalEnumViaQuery([FromQuery] MyEnum value = MyEnum.Three);
 
+        [HttpPut]
+        [Route("GetOptionalEnumViaBody")]
+        MyEnum GetOptionalEnumViaBody([FromBody] MyEnum value = MyEnum.Three);
+
         [HttpGet]
         [Route("GetOptionalDoubleViaHeader")]
         double GetOptionalDoubleViaHeader([FromHeader(Name = "X-Test")] double value = 1.234);

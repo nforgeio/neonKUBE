@@ -152,9 +152,9 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Optionally specifies what happens to the child workflow when the parent is terminated.
-        /// This defaults to <see cref="ChildPolicy.Abandon"/>.
+        /// This defaults to <see cref="ParentClosePolicy.Abandon"/>.
         /// </summary>
-        public ChildPolicy ChildPolicy { get; set; } = ChildPolicy.Abandon;
+        public ParentClosePolicy ChildPolicy { get; set; } = ParentClosePolicy.Abandon;
 
         /// <summary>
         /// Optionally specifies whether to wait for the child workflow to finish for any
@@ -246,7 +246,7 @@ namespace Neon.Cadence
             return new InternalChildWorkflowOptions()
             {
                 Domain                       = this.Domain,
-                ChildPolicy                  = (int)this.ChildPolicy,
+                ChildClosePolicy                  = (int)this.ChildPolicy,
                 CronSchedule                 = this.CronSchedule,
                 ExecutionStartToCloseTimeout = CadenceHelper.ToCadence(this.ScheduleToCloseTimeout.Value),
                 RetryPolicy                  = this.RetryOptions?.ToInternal(),
@@ -277,6 +277,27 @@ namespace Neon.Cadence
                 WaitUntilFinished            = this.WaitUntilFinished,
                 WorkflowId                   = this.WorkflowId,
                 WorkflowIdReusePolicy        = this.WorkflowIdReusePolicy
+            };
+        }
+
+        /// <summary>
+        /// Used internally within generated workflow stubs to convert a <see cref="ChildWorkflowOptions"/>
+        /// instance into an equivalent <see cref="WorkflowOptions"/> as a bit of a hack.
+        /// </summary>
+        /// <returns>The converted <see cref="WorkflowOptions"/>.</returns>
+        internal WorkflowOptions ToWorkflowOptions()
+        {
+            return new WorkflowOptions()
+            {
+                Domain                  = this.Domain,
+                Memo                    = null,
+                RetryOptions            = this.RetryOptions,
+                ScheduleToCloseTimeout  = this.ScheduleToCloseTimeout,
+                ScheduleToStartTimeout  = this.ScheduleToStartTimeout,
+                TaskList                = this.TaskList,
+                TaskStartToCloseTimeout = this.TaskStartToCloseTimeout,
+                WorkflowId              = this.WorkflowId,
+                WorkflowIdReusePolicy   = this.WorkflowIdReusePolicy
             };
         }
     }

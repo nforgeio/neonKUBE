@@ -46,6 +46,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task PingAsync()
         {
+            await SyncContext.ClearAsync;
             EnsureNotDisposed();
 
             await CallProxyAsync(new PingRequest());
@@ -81,6 +82,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task RegisterAssemblyAsync(Assembly assembly, string domain = null)
         {
+            await SyncContext.ClearAsync;
             EnsureNotDisposed();
             
             await RegisterAssemblyWorkflowsAsync(assembly, domain);
@@ -130,6 +132,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<Worker> StartWorkerAsync(string taskList, WorkerOptions options = null, string domain = null)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList), nameof(taskList), "Workers must be started with a non-empty workflow.");
             EnsureNotDisposed();
 
@@ -214,8 +217,71 @@ namespace Neon.Cadence
                 }
             }
 
+            // Fetch the stub for each registered workflow and activity type so that
+            // they'll be precompiled so compilation won't impact workflow and activity
+            // performance including potentially intruducing enough delay to cause
+            // decision tasks or activity heartbeats to fail (in very rare situations).
+            //
+            // Note that the compiled stubs are cached, so we don't need to worry
+            // about compiling stubs for types more than once causing a problem.
+
+            lock (registeredWorkflowTypes)
+            {
+                foreach (var workflowInterface in registeredWorkflowTypes)
+                {
+                    // Workflows, we're going to compile both the external and child
+                    // versions of the stubs.
+
+                    StubManager.GetWorkflowStub(workflowInterface, isChild: false);
+                    StubManager.GetWorkflowStub(workflowInterface, isChild: true);
+                }
+            }
+
+            lock (registeredActivityTypes)
+            {
+                foreach (var activityInterface in registeredActivityTypes)
+                {
+                    StubManager.GetActivityStub(activityInterface);
+                }
+            }
+
             return worker;
         }
+
+        /// <summary>
+        /// Returns information about pollers (AKA workers) that have communicated 
+        /// with the Cadence cluster in the last few minutes.
+        /// </summary>
+        /// <param name="taskList">Identifies the tasklist.</param>
+        /// <param name="taskListType">
+        /// Indicates whether to return information for decision (AKA workflow pollers)
+        /// or activity pollers.
+        /// </param>
+        /// <param name="domain">Optionally specifies the Cadence domain.</param>
+        /// <returns>The <see cref="TaskListDescription"/> for the pollers.</returns>
+        public async Task<TaskListDescription> DescribeTaskList(string taskList, TaskListType taskListType, string domain = null)
+        {
+            await SyncContext.ClearAsync;
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
+            EnsureNotDisposed();
+
+            domain = ResolveDomain(domain);
+
+            var reply = (DescribeTaskListReply)await CallProxyAsync(
+                new DescribeTaskListRequest()
+                {
+                    Name         = taskList,
+                    TaskListType = taskListType,
+                    Domain       = domain
+                });
+
+            reply.ThrowOnError();
+
+            return reply.Result.ToPublic();
+        }
+
+        //---------------------------------------------------------------------
+        // Internal utilities
 
         /// <summary>
         /// Signals Cadence that it should stop invoking activities and workflows 

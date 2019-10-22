@@ -59,7 +59,7 @@ namespace Neon.ModelGen
 
             if (!string.IsNullOrEmpty(group) && string.IsNullOrEmpty(name))
             {
-                throw new ArgumentException($"[{nameof(name)}] cannot be empty when [{nameof(group)}] is specified.");
+                throw new ArgumentException($"[{nameof(name)}] cannot be empty when [{nameof(group)}] is specified.", nameof(name));
             }
         }
 

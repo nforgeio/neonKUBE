@@ -135,7 +135,7 @@ namespace Neon.Kube
 
                         if (clusterDefinition == null)
                         {
-                            throw new ArgumentException($"Invalid cluster definition in [{path}].");
+                            throw new ArgumentException($"Invalid cluster definition in [{path}].", nameof(path));
                         }
 
                         // Populate the [node.Name] properties from the dictionary name.

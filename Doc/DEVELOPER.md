@@ -216,4 +216,4 @@ Each important class library and application should have its own **xunit** based
 
 The C# namespace for each test project should be the same as the project name (e.g. **Test.Neon.Common**) and each test class name should be prefixed by **Test_** to avoid namespace conflicts with the classes you need to test against.
 
-Test methods should ne organized into categories using the xunit **[Trait(...)]** attribute.
+Test methods should be organized into categories using the xunit **[Trait(...)]** attribute.

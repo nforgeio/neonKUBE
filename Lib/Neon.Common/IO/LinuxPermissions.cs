@@ -143,7 +143,7 @@ namespace Neon.IO
 
             if (!TryParse(input, out var permissions))
             {
-                throw new ArgumentException($"Invalid Linux permissions [{input}].");
+                throw new ArgumentException($"Invalid Linux permissions [{input}].", nameof(input));
             }
 
             this.OwnerRead    = permissions.OwnerRead;

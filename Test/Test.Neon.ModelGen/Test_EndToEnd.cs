@@ -201,6 +201,13 @@ namespace TestModelGen.AspNet
             return value;
         }
 
+        [HttpPut]
+        [Route("GetOptionalEnumViaBody")]
+        public MyEnum GetOptionalEnumViaBody([FromBody] MyEnum value = MyEnum.Three)
+        {
+            return value;
+        }
+
         [HttpGet]
         [Route("GetOptionalDoubleViaHeader")]
         public double GetOptionalDoubleViaHeader([FromHeader(Name = "X-Test")] double value = 1.234)
@@ -446,6 +453,16 @@ namespace TestModelGen.AspNet
             Assert.Equal(MyEnum.Two, await client.GetOptionalEnumViaHeaderAsync(MyEnum.Two));
             Assert.Equal(MyEnum.Three, (await client.UnsafeGetOptionalEnumViaHeaderAsync()).As<MyEnum>());
             Assert.Equal(MyEnum.Two, (await client.UnsafeGetOptionalEnumViaHeaderAsync(MyEnum.Two)).As<MyEnum>());
+
+            Assert.Equal(MyEnum.Three, await client.GetOptionalEnumViaQueryAsync());
+            Assert.Equal(MyEnum.Two, await client.GetOptionalEnumViaQueryAsync(MyEnum.Two));
+            Assert.Equal(MyEnum.Three, (await client.UnsafeGetOptionalEnumViaQueryAsync()).As<MyEnum>());
+            Assert.Equal(MyEnum.Two, (await client.UnsafeGetOptionalEnumViaQueryAsync(MyEnum.Two)).As<MyEnum>());
+
+            Assert.Equal(MyEnum.Three, await client.GetOptionalEnumViaBodyAsync());
+            Assert.Equal(MyEnum.Two, await client.GetOptionalEnumViaBodyAsync(MyEnum.Two));
+            Assert.Equal(MyEnum.Three, (await client.UnsafeGetOptionalEnumViaBodyAsync()).As<MyEnum>());
+            Assert.Equal(MyEnum.Two, (await client.UnsafeGetOptionalEnumViaBodyAsync(MyEnum.Two)).As<MyEnum>());
 
             Assert.Equal(1.234, await client.GetOptionalDoubleViaHeaderAsync());
             Assert.Equal(2.345, await client.GetOptionalDoubleViaHeaderAsync(2.345));

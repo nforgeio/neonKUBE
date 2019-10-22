@@ -26,7 +26,6 @@ import (
 	proxyclient "github.com/cadence-proxy/internal/cadence/client"
 	proxyworker "github.com/cadence-proxy/internal/cadence/worker"
 	proxyworkflow "github.com/cadence-proxy/internal/cadence/workflow"
-	"github.com/cadence-proxy/internal/messages"
 	"github.com/cadence-proxy/internal/server"
 )
 
@@ -76,7 +75,7 @@ var (
 
 	// Operations is a map of operations used to track pending
 	// cadence-client operations
-	Operations = messages.NewOperationsMap()
+	Operations = NewOperationsMap()
 
 	// Clients is a map of ClientHelpers to ClientID used to
 	// store ClientHelpers to support multiple clients

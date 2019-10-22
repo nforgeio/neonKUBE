@@ -31,6 +31,7 @@ using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Data;
 using Neon.IO;
+using Neon.Tasks;
 using Neon.Xunit;
 using Neon.Xunit.Cadence;
 
@@ -50,7 +51,7 @@ namespace TestCadence
                 DefaultDomain          = CadenceFixture.DefaultDomain,
                 LogLevel               = CadenceTestHelper.LogLevel,
                 CreateDomain           = true,
-                Debug                  = true,
+                Debug                  = CadenceTestHelper.Debug,
                 DebugPrelaunched       = CadenceTestHelper.DebugPrelaunched,
                 DebugDisableHeartbeats = CadenceTestHelper.DebugDisableHeartbeats
             };
@@ -130,6 +131,8 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Simultaneous()
         {
+            await SyncContext.ClearAsync;
+
             // We're going to establish two simultaneous client connections, 
             // register a workflow on each, and then verify that these workflows work.
 
@@ -156,6 +159,8 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Connect_Twice()
         {
+            await SyncContext.ClearAsync;
+
             // We're going to establish two successive client connections
             // and verify that these work.
 
@@ -347,6 +352,8 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Multiple_TaskLists()
         {
+            await SyncContext.ClearAsync;
+
             // Test the scenario where there multiple clients without
             // workers that will be used to simulate apps that make calls
             // on workflows and then create multiple clients that register

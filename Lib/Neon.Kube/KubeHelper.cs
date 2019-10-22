@@ -974,7 +974,7 @@ namespace Neon.Kube
 
                 if (newContext == null)
                 {
-                    throw new ArgumentException($"Kubernetes [context={contextName}] does not exist.");
+                    throw new ArgumentException($"Kubernetes [context={contextName}] does not exist.", nameof(contextName));
                 }
 
                 cachedContext         = newContext;

@@ -252,7 +252,7 @@ namespace Neon.Xunit
         /// <summary>
         /// The GUID used to mark this fixture instance's entries in the hosts file.
         /// </summary>
-        private readonly string fixtureId = Guid.NewGuid().ToString("D");
+        private readonly string fixtureId = Guid.NewGuid().ToString("d");
 
         /// <summary>
         /// The DNS records.

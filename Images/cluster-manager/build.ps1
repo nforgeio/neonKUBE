@@ -1,9 +1,9 @@
 ﻿#------------------------------------------------------------------------------
 # FILE:         build.ps1
 # CONTRIBUTOR:  Marcus Bowyer
-# COPYRIGHT:    Copyright (c) 2017-2018 by Loopie, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds the Loopie [cluster-manager] image.
+# Builds the Neon [cluster-manager] image.
 #
 # Usage: powershell -file build.ps1 REGISTRY VERSION TAG
 

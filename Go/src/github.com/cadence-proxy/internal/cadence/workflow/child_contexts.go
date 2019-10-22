@@ -23,50 +23,22 @@ import (
 	"go.uber.org/cadence/workflow"
 )
 
-var (
-
-	// childID is incremented (protected by a mutex) every
-	// time a new cadence workflow.Context is created by a
-	// child workflow
-	childID int64
-)
-
 type (
 
-	// ChildContextsMap holds a thread-safe map[interface{}]interface{} of
-	// cadence childContextsMap with their contextID's
+	// ChildContextsMap thread-safe map of
+	// ChildContexts to their contextID's
 	ChildContextsMap struct {
-		sync.Mutex
-		contexts map[int64]*ChildContext
+		sync.Mutex                         // protects read and writes to the map
+		contexts   map[int64]*ChildContext // map of childID to ChildContext
 	}
 
-	// ChildContext maps a child workflow contexts to a ChildID.
+	// ChildContext represents a cadence child workflow execution.
 	// It holds a workflow Future and cancellation function
 	ChildContext struct {
-		future     workflow.ChildWorkflowFuture
-		cancelFunc workflow.CancelFunc
+		future     workflow.ChildWorkflowFuture // cadence ChildWorkflowFuture
+		cancelFunc workflow.CancelFunc          // cadence workflow CancelFunc for canceling the child
 	}
 )
-
-//----------------------------------------------------------------------------
-// childID methods
-
-// NextChildID increments the global variable
-// childID by 1 and is protected by a mutex lock
-func NextChildID() int64 {
-	mu.Lock()
-	childID = childID + 1
-	defer mu.Unlock()
-	return childID
-}
-
-// GetChildID gets the value of the global variable
-// childID and is protected by a mutex Read lock
-func GetChildID() int64 {
-	mu.RLock()
-	defer mu.RUnlock()
-	return childID
-}
 
 //----------------------------------------------------------------------------
 // ChildContext instance methods
@@ -130,13 +102,12 @@ func NewChildContextsMap() *ChildContextsMap {
 // Add adds a new cadence context and its corresponding ContextId into
 // the ChildContextsMap map.  This method is thread-safe.
 //
-// param childID int64 -> the long id passed to Cadence
-// child workflow function.  This will be the mapped key
+// param childID int64 -> the long childID. This will be the mapped key.
 //
 // param cctx *ChildContext -> pointer to the new ChildContex used to
 // execute child workflow function. This will be the mapped value
 //
-// returns int64 -> long id of the new cadence ChildContext added to the map
+// returns int64 -> the long childID of the newly added ChildContext.
 func (c *ChildContextsMap) Add(childID int64, cctx *ChildContext) int64 {
 	c.Lock()
 	defer c.Unlock()
@@ -147,10 +118,9 @@ func (c *ChildContextsMap) Add(childID int64, cctx *ChildContext) int64 {
 // Remove removes key/value entry from the ChildContextsMap map at the specified
 // ContextId.  This is a thread-safe method.
 //
-// param childID int64 -> the long id passed to Cadence
-// child workflow function.  This will be the mapped key
+// param childID int64 -> the long childID. This will be the mapped key.
 //
-// returns int64 -> long id of the ChildContext removed from the map
+// returns int64 -> the long childID of the removed ChildContext.
 func (c *ChildContextsMap) Remove(childID int64) int64 {
 	c.Lock()
 	defer c.Unlock()
@@ -161,10 +131,9 @@ func (c *ChildContextsMap) Remove(childID int64) int64 {
 // Get gets a ChildContext from the ChildContextsMap at the specified
 // ContextID.  This method is thread-safe.
 //
-// param childID int64 -> the long id passed to Cadence
-// child workflow function.  This will be the mapped key
+// param childID int64 -> the long childID. This will be the mapped key.
 //
-// returns *ChildContext -> pointer to ChildContext with the specified id
+// returns *ChildContext -> ChildContext at the specified childID.
 func (c *ChildContextsMap) Get(childID int64) *ChildContext {
 	c.Lock()
 	defer c.Unlock()

@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using System.Buffers;
 #endif
 
+using Neon.Tasks;
+
 namespace Microsoft.Net.Http.Client
 {
     internal class BufferedReadStream : WriteClosableStream
@@ -170,6 +172,8 @@ namespace Microsoft.Net.Http.Client
         // TODO: Line length limits?
         public async Task<string> ReadLineAsync(CancellationToken cancel)
         {
+            await SyncContext.ClearAsync;
+
             ThrowIfDisposed();
             StringBuilder builder = new StringBuilder();
             bool foundCR = false, foundCRLF = false;

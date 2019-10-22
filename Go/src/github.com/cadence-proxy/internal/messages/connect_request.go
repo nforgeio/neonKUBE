@@ -20,7 +20,7 @@ package messages
 import (
 	"time"
 
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -43,8 +43,8 @@ type (
 func NewConnectRequest() *ConnectRequest {
 	request := new(ConnectRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.SetType(messagetypes.ConnectRequest)
-	request.SetReplyType(messagetypes.ConnectReply)
+	request.SetType(internal.ConnectRequest)
+	request.SetReplyType(internal.ConnectReply)
 
 	return request
 }

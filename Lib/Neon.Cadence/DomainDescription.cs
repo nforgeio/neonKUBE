@@ -38,6 +38,11 @@ namespace Neon.Cadence
         /// <summary>
         /// The domain configuration.
         /// </summary>
-        public DomainOptions Configuration { get; set; }
+        public DomainConfiguration Configuration { get; set; }
+
+        /// <summary>
+        /// Indicates whether the domain is global.
+        /// </summary>
+        public bool IsGlobalDomain { get; set; }
     }
 }

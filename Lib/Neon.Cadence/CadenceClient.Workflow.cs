@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Tasks;
 using Neon.Time;
 
 namespace Neon.Cadence
@@ -59,6 +60,7 @@ namespace Neon.Cadence
         public async Task RegisterWorkflowAsync<TWorkflow>(string workflowTypeName = null, string domain = null)
             where TWorkflow : WorkflowBase
         {
+            await SyncContext.ClearAsync;
             CadenceHelper.ValidateWorkflowImplementation(typeof(TWorkflow));
             CadenceHelper.ValidateWorkflowTypeName(workflowTypeName);
             EnsureNotDisposed();
@@ -76,6 +78,11 @@ namespace Neon.Cadence
             }
 
             await WorkflowBase.RegisterAsync(this, workflowType, workflowTypeName, ResolveDomain(domain));
+
+            lock (registeredWorkflowTypes)
+            {
+                registeredWorkflowTypes.Add(CadenceHelper.GetWorkflowInterface(typeof(TWorkflow)));
+            }
         }
 
         /// <summary>
@@ -103,6 +110,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task RegisterAssemblyWorkflowsAsync(Assembly assembly, string domain = null)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(assembly != null, nameof(assembly));
             EnsureNotDisposed();
 
@@ -115,6 +123,11 @@ namespace Neon.Cadence
                     var workflowTypeName = CadenceHelper.GetWorkflowTypeName(type, workflowAttribute);
 
                     await WorkflowBase.RegisterAsync(this, type, workflowTypeName, ResolveDomain(domain));
+
+                    lock (registeredWorkflowTypes)
+                    {
+                        registeredWorkflowTypes.Add(CadenceHelper.GetWorkflowInterface(type));
+                    }
                 }
             }
         }
@@ -135,6 +148,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task SetCacheMaximumSizeAsync(int cacheMaximumSize)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(cacheMaximumSize >= 0, nameof(cacheMaximumSize));
             EnsureNotDisposed();
 
@@ -156,6 +170,7 @@ namespace Neon.Cadence
         /// <returns>The maximum number of cached workflows.</returns>
         public async Task<int> GetWorkflowCacheSizeAsync()
         {
+            await SyncContext.ClearAsync;
             EnsureNotDisposed();
 
             return await Task.FromResult(workflowCacheSize);
@@ -246,6 +261,29 @@ namespace Neon.Cadence
             {
                 Execution = execution
             };
+        }
+
+        /// <summary>
+        /// Creates a stub suitable for starting an external workflow and then waiting
+        /// for the result as separate operations.
+        /// </summary>
+        /// <typeparam name="TWorkflowInterface">The target workflow interface.</typeparam>
+        /// <param name="methodName">
+        /// Optionally identifies the target workflow method.  This is the name specified in
+        /// <c>[WorkflowMethod]</c> attribute for the workflow method or <c>null</c>/empty for
+        /// the default workflow method.
+        /// </param>
+        /// <param name="options">Optionally specifies custom <see cref="WorkflowOptions"/>.</param>
+        /// <returns>A <see cref="ChildWorkflowStub{TWorkflowInterface}"/> instance.</returns>
+        public WorkflowFutureStub<TWorkflowInterface> NewWorkflowFutureStub<TWorkflowInterface>(string methodName = null, WorkflowOptions options = null)
+            where TWorkflowInterface : class
+        {
+            CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
+            EnsureNotDisposed();
+
+            options = WorkflowOptions.Normalize(this, options, typeof(TWorkflowInterface));
+
+            return new WorkflowFutureStub<TWorkflowInterface>(this, methodName, options);
         }
 
         /// <summary>
@@ -360,27 +398,31 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// <para>
-        /// Converts an already started typed workflow stub to an untyped <see cref="WorkflowStub"/>.
-        /// </para>
-        /// <note>
-        /// The stub must have already been started for this to work and child stubs may not converted.
-        /// </note>
+        /// Describes a workflow execution.
         /// </summary>
-        /// <param name="stub">The typed stub.</param>
-        /// <returns>The converted <see cref="WorkflowStub"/>.</returns>
-        /// <exception cref="ArgumentException">Thrown if the stub passed is not external (e.g. it's a child stub).</exception>
-        /// <exception cref="InvalidOperationException">Thrown if the stubbed workflow has not been started yet.</exception>
-        /// <remarks>
-        /// This is handy for obtaining the <see cref="WorkflowExecution"/> or result for the workflow as
-        /// well cancelling it.
-        /// </remarks>
-        public WorkflowStub ToUntyped(object stub)
+        /// <param name="workflowId">The workflow ID.</param>
+        /// <param name="runid">Optionally specifies the run ID.</param>
+        /// <param name="domain">Optionally specifies the domain.</param>
+        /// <returns></returns>
+        public async Task<WorkflowDescription> DescribeWorkflowExecutionAsync(string workflowId, string runid = null, string domain = null)
         {
-            Covenant.Requires<ArgumentNullException>(stub != null, nameof(stub));
-            Covenant.Requires<ArgumentException>(stub is ITypedWorkflowStub, nameof(stub), $"[{nameof(stub)}] is not a workflow stub.");
+            await SyncContext.ClearAsync;
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+            EnsureNotDisposed();
 
-            return ((ITypedWorkflowStub)stub).ToUntyped();
+            domain = ResolveDomain(domain);
+
+            var reply = (WorkflowDescribeExecutionReply)await CallProxyAsync(
+                new WorkflowDescribeExecutionRequest()
+                {
+                    WorkflowId = workflowId,
+                    RunId      = runid ?? string.Empty,
+                    Domain     = domain
+                });
+
+            reply.ThrowOnError();
+
+            return reply.Details.ToPublic();
         }
 
         //---------------------------------------------------------------------
@@ -569,7 +611,7 @@ namespace Neon.Cadence
         /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        internal async Task<WorkflowDescription> GetWorkflowDescriptionAsync(WorkflowExecution execution, string domain = null)
+        internal async Task<WorkflowDescription> DescribeWorkflowAsync(WorkflowExecution execution, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();

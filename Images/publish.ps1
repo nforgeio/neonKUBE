@@ -136,8 +136,8 @@ if ($dotnetBase)
 if ($other)
 {
 	Publish "$image_root\\golang"
-  Publish "$image_root\\nats"
-  Publish "$image_root\\nats-streaming"
+    Publish "$image_root\\nats"
+    Publish "$image_root\\nats-streaming"
 	Publish "$image_root\\cadence-test"
 	Publish "$image_root\\couchbase-test"
 	Publish "$image_root\\test"
@@ -146,4 +146,5 @@ if ($other)
 if ($services)
 {
 	Publish "$image_root\\cluster-manager"
+	Publish "$image_root\\test-cadence"
 }

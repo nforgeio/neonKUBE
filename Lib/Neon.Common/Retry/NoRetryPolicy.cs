@@ -22,6 +22,8 @@ using System.Diagnostics.Contracts;
 using System.Text;
 using System.Threading.Tasks;
 
+using Neon.Tasks;
+
 namespace Neon.Retry
 {
     /// <summary>
@@ -61,12 +63,14 @@ namespace Neon.Retry
         /// <inheritdoc/>
         public async Task InvokeAsync(Func<Task> action)
         {
+            await SyncContext.ClearAsync;
             await action();
         }
 
         /// <inheritdoc/>
         public async Task<TResult> InvokeAsync<TResult>(Func<Task<TResult>> action)
         {
+            await SyncContext.ClearAsync;
             return await action();
         }
     }

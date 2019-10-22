@@ -128,17 +128,17 @@ namespace Neon.Net
 
             if (slashPos <= 0)
             {
-                throw new ArgumentException($"Invalid CIDR [{input}].");
+                throw new ArgumentException($"Invalid CIDR [{input}].", nameof(input));
             }
 
             if (!IPAddress.TryParse(input.Substring(0, slashPos), out var address))
             {
-                throw new ArgumentException($"Invalid CIDR [{input}].");
+                throw new ArgumentException($"Invalid CIDR [{input}].", nameof(input));
             }
 
             if (!int.TryParse(input.Substring(slashPos + 1), out var prefixLength) || prefixLength < 0 || prefixLength > 32)
             {
-                throw new ArgumentException($"Invalid CIDR [{input}].");
+                throw new ArgumentException($"Invalid CIDR [{input}].", nameof(input));
             }
 
             var cidr = new NetworkCidr();

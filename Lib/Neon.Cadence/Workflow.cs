@@ -49,6 +49,7 @@ namespace Neon.Cadence
         private int         pendingOperationCount;
         private long        nextLocalActivityActionId;
         private long        nextActivityId;
+        private long        nextQueueId;
         private Random      random;
 
         /// <summary>
@@ -88,6 +89,7 @@ namespace Neon.Cadence
             this.pendingOperationCount     = 0;
             this.nextLocalActivityActionId = 0;
             this.nextActivityId            = 0;
+            this.nextQueueId               = 0;
             this.IdToLocalActivityAction   = new Dictionary<long, LocalActivityAction>();
             this.MethodMap                 = methodMap;
             this.Client                    = client;
@@ -257,6 +259,7 @@ namespace Neon.Cadence
         /// </summary>
         public async Task<DateTime> UtcNowAsync()
         {
+            await SyncContext.ClearAsync;
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -287,6 +290,7 @@ namespace Neon.Cadence
             // like to keep the method signature async just in case this changes
             // in the future.
 
+            await SyncContext.ClearAsync;
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -314,6 +318,8 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task ContinueAsNewAsync(ContinueAsNewOptions options, params object[] args)
         {
+            await SyncContext.ClearAsync;
+
             // This method doesn't currently do any async operations but I'd
             // like to keep the method signature async just in case this changes
             // in the future.
@@ -507,6 +513,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<int> GetVersionAsync(string changeId, int minSupported, int maxSupported)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(changeId), nameof(changeId));
             Covenant.Requires<ArgumentException>(minSupported <= maxSupported, nameof(minSupported));
             Client.EnsureNotDisposed();
@@ -541,6 +548,7 @@ namespace Neon.Cadence
         /// <exception cref="InvalidOperationException">Thrown if the stub has not been started.</exception>
         public async Task<WorkflowExecution> GetWorkflowExecutionAsync(object stub)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(stub != null, nameof(stub));
             Covenant.Requires<ArgumentException>(stub is ITypedWorkflowStub, nameof(stub), "The parameter is not a workflow stub.");
             Client.EnsureNotDisposed();
@@ -594,6 +602,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<T> MutableSideEffectAsync<T>(string id, Func<T> function)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id), nameof(id));
             Client.EnsureNotDisposed();
             SetStackTrace();
@@ -677,6 +686,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<object> MutableSideEffectAsync(Type resultType, string id, Func<dynamic> function)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id), nameof(id));
             Covenant.Requires<ArgumentNullException>(resultType != null, nameof(resultType));
             Covenant.Requires<ArgumentNullException>(function != null, nameof(function));
@@ -724,6 +734,7 @@ namespace Neon.Cadence
         /// <returns>The new <see cref="Guid"/>.</returns>
         public async Task<Guid> NewGuidAsync()
         {
+            await SyncContext.ClearAsync;
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -749,6 +760,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<double> NextRandomDoubleAsync()
         {
+            await SyncContext.ClearAsync;
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -773,6 +785,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<int> NextRandomAsync()
         {
+            await SyncContext.ClearAsync;
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -798,6 +811,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<int> NextRandomAsync(int maxValue)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(maxValue > 0, nameof(maxValue));
             Client.EnsureNotDisposed();
             SetStackTrace();
@@ -826,6 +840,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<int> NextRandomAsync(int minValue, int maxValue)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(minValue < maxValue, nameof(minValue));
             Client.EnsureNotDisposed();
             SetStackTrace();
@@ -852,6 +867,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<byte[]> NextRandomBytesAsync(int size)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(size > 0, nameof(size));
             Client.EnsureNotDisposed();
             SetStackTrace();
@@ -905,6 +921,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<T> SideEffectAsync<T>(Func<T> function)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(function != null, nameof(function));
             Client.EnsureNotDisposed();
             SetStackTrace();
@@ -976,6 +993,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task<object> SideEffectAsync(Type resultType, Func<object> function)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(resultType != null, nameof(resultType));
             Covenant.Requires<ArgumentNullException>(function != null, nameof(function));
             Client.EnsureNotDisposed();
@@ -1030,6 +1048,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task SleepAsync(TimeSpan duration)
         {
+            await SyncContext.ClearAsync;
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -1063,6 +1082,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task SleepUntilUtcAsync(DateTime time)
         {
+            await SyncContext.ClearAsync;
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -1081,6 +1101,7 @@ namespace Neon.Cadence
         /// <returns><c>true</c> if the a previous CRON workflow run returned a result.</returns>
         public async Task<bool> IsSetLastCompletionResultAsync()
         {
+            await SyncContext.ClearAsync;
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -1109,6 +1130,7 @@ namespace Neon.Cadence
         /// <returns>The previous run result as bytes or <c>null</c>.</returns>
         public async Task<TResult> GetLastCompletionResultAsync<TResult>()
         {
+            await SyncContext.ClearAsync;
             Client.EnsureNotDisposed();
             SetStackTrace();
 
@@ -1317,124 +1339,6 @@ namespace Neon.Cadence
 #endif
 
         /// <summary>
-        /// Creates an untyped child workflow stub that can be used to start, signal, and wait
-        /// for the child workflow completion.  Use this version for child workflows that
-        /// don't return a value.
-        /// </summary>
-        /// <param name="workflowTypeName">The workflow type name (see the remarks).</param>
-        /// <param name="options">Optionally specifies the child workflow options.</param>
-        /// <returns></returns>
-        /// <remarks>
-        /// <para>
-        /// Unlike activity stubs, a workflow stub may only be used to launch a single
-        /// workflow.  You'll need to create a new stub for each workflow you wish to
-        /// invoke and then the first method called on a workflow stub must be
-        /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
-        /// </para>
-        /// <para>
-        /// <paramref name="workflowTypeName"/> specifies the target workflow implementation type name and optionally,
-        /// the specific workflow method to be called for workflow interfaces that have multiple methods.  For
-        /// workflow methods tagged by <c>[WorkflowMethod]</c> with specifying a name, the workflow type name will default
-        /// to the fully qualified interface type name or the custom type name specified by <see cref="WorkflowAttribute.Name"/>.
-        /// </para>
-        /// <para>
-        /// For workflow methods with <see cref="WorkflowMethodAttribute.Name"/> specified, the workflow type will
-        /// look like:
-        /// </para>
-        /// <code>
-        /// WORKFLOW-TYPE-NAME::METHOD-NAME
-        /// </code>
-        /// <para>
-        /// You'll need to use this format when calling workflows using external untyped stubs or 
-        /// from other languages.  The Java Cadence client works the same way.
-        /// </para>
-        /// </remarks>
-        public ChildWorkflowStub NewUntypedChildWorkflowStub(string workflowTypeName, ChildWorkflowOptions options = null)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
-
-            Client.EnsureNotDisposed();
-            SetStackTrace();
-
-            return new ChildWorkflowStub(this, workflowTypeName, options);
-        }
-
-        /// <summary>
-        /// Creates an untyped child workflow stub that can be used to start, signal, and wait
-        /// for the child workflow completion.  Use this version for child workflows that
-        /// return a value.
-        /// </summary>
-        /// <typeparam name="TResult">Specifies the child workflow result type.</typeparam>
-        /// <param name="workflowTypeName">The workflow type name (see the remarks).</param>
-        /// <param name="options">Optionally specifies the child workflow options.</param>
-        /// <returns></returns>
-        /// <remarks>
-        /// <para>
-        /// Unlike activity stubs, a workflow stub may only be used to launch a single
-        /// workflow.  You'll need to create a new stub for each workflow you wish to
-        /// invoke and then the first method called on a workflow stub must be
-        /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
-        /// </para>
-        /// <para>
-        /// <paramref name="workflowTypeName"/> specifies the target workflow implementation type name and optionally,
-        /// the specific workflow method to be called for workflow interfaces that have multiple methods.  For
-        /// workflow methods tagged by <c>[WorkflowMethod]</c> with specifying a name, the workflow type name will default
-        /// to the fully qualified interface type name or the custom type name specified by <see cref="WorkflowAttribute.Name"/>.
-        /// </para>
-        /// <para>
-        /// For workflow methods with <see cref="WorkflowMethodAttribute.Name"/> specified, the workflow type will
-        /// look like:
-        /// </para>
-        /// <code>
-        /// WORKFLOW-TYPE-NAME::METHOD-NAME
-        /// </code>
-        /// <para>
-        /// You'll need to use this format when calling workflows using external untyped stubs or 
-        /// from other languages.  The Java Cadence client works the same way.
-        /// </para>
-        /// </remarks>
-        public ChildWorkflowStub<TResult> NewUntypedChildWorkflowStub<TResult>(string workflowTypeName, ChildWorkflowOptions options = null)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
-
-            Client.EnsureNotDisposed();
-            SetStackTrace();
-
-            return new ChildWorkflowStub<TResult>(this, workflowTypeName, options);
-        }
-
-        /// <summary>
-        /// Creates an untyped stub that can be used to signal or cancel a child
-        /// workflow identified by its <see cref="WorkflowExecution"/>.
-        /// </summary>
-        /// <param name="execution">The target <see cref="WorkflowExecution"/>.</param>
-        /// <param name="domain">Optionally specifies the target domain.  This defaults to the parent workflow's domain.</param>
-        /// <returns>The <see cref="ExternalWorkflowStub"/>.</returns>
-        public ExternalWorkflowStub NewUntypedExternalWorkflowStub(WorkflowExecution execution, string domain = null)
-        {
-            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
-            Client.EnsureNotDisposed();
-            SetStackTrace();
-
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Creates an untyped stub that can be used to signal or cancel a child
-        /// workflow identified by its workflow ID.
-        /// </summary>
-        /// <param name="workflowId">The target workflow ID.</param>
-        /// <param name="domain">Optionally specifies the target domain.  This defaults to the parent workflow's domain.</param>
-        /// <returns>The <see cref="ExternalWorkflowStub"/>.</returns>
-        public ExternalWorkflowStub NewUntypedExternalWorkflowStub(string workflowId, string domain = null)
-        {
-            Client.EnsureNotDisposed();
-            SetStackTrace();
-
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
         /// Creates a specialized stub suitable for starting and running a child workflow in parallel
         /// with other workflow operations such as child workflows or activities.
         /// </summary>
@@ -1445,7 +1349,7 @@ namespace Neon.Cadence
         /// the default workflow method.
         /// </param>
         /// <param name="options">Optionally specifies custom <see cref="ChildWorkflowOptions"/>.</param>
-        /// <returns>A <see cref="StartChildWorkflowStub{TWorkflowInterface}"/> instance.</returns>
+        /// <returns>A <see cref="ChildWorkflowStub{TWorkflowInterface}"/> instance.</returns>
         /// <remarks>
         /// <para>
         /// Sometimes workflows need to run child workflows in parallel with other child workflows or
@@ -1511,7 +1415,7 @@ namespace Neon.Cadence
         /// {
         ///     public Task MainAsync()
         ///     {
-        ///         var stub1  = Workflow.NewStartChildWorkflowStub&lt;IMyWorkflow&gt;("child");
+        ///         var stub1  = Workflow.NewChildWorkflowFutureStub&lt;IMyWorkflow&gt;("child");
         ///         var future = await stub1.StartAsync("FOO");         // Starting the child with param: "FOO"
         ///         var stub2  = Workflow.NewChildWorkflowStub&lt;IMyWorkflow&gt;();
         ///         var value2 = await stub2.DoChildWorkflow("BAR");    // This returns: "BAR"
@@ -1525,10 +1429,10 @@ namespace Neon.Cadence
         /// }
         /// </code>
         /// <para>
-        /// Here we call <see cref="NewStartChildWorkflowStub{TWorkflowInterface}(string, ChildWorkflowOptions)"/> specifying
+        /// Here we call <see cref="NewChildWorkflowFutureStub{TWorkflowInterface}(string, ChildWorkflowOptions)"/> specifying
         /// <b>"child"</b> as the workflow method name.  This matches the <c>[WorkflowMethod(Name = "child")]</c>
         /// attribute decorating the <c>ChildAsync()</c> workflow interface method.  Then we start the child workflow by awaiting 
-        /// <see cref="StartChildWorkflowStub{TWorkflowInterface}.StartAsync(object[])"/>. This returns an <see cref="IAsyncFuture{T}"/> whose 
+        /// <see cref="ChildWorkflowStub{TWorkflowInterface}.StartAsync(object[])"/>. This returns an <see cref="ChildWorkflowFuture{T}"/> whose 
         /// <see cref="IAsyncFuture.GetAsync"/> method returns the workflow result.  The code above calls this to retrieve the 
         /// result from the first child after executing the second child in parallel.
         /// </para>
@@ -1544,7 +1448,7 @@ namespace Neon.Cadence
         /// </para>
         /// </note>
         /// </remarks>
-        public StartChildWorkflowStub<TWorkflowInterface> NewStartChildWorkflowStub<TWorkflowInterface>(string methodName = null, ChildWorkflowOptions options = null)
+        public ChildWorkflowStub<TWorkflowInterface> NewChildWorkflowFutureStub<TWorkflowInterface>(string methodName = null, ChildWorkflowOptions options = null)
             where TWorkflowInterface : class
         {
             Client.EnsureNotDisposed();
@@ -1552,7 +1456,125 @@ namespace Neon.Cadence
 
             options = ChildWorkflowOptions.Normalize(Client, options, typeof(TWorkflowInterface));
 
-            return new StartChildWorkflowStub<TWorkflowInterface>(this, methodName, options);
+            return new ChildWorkflowStub<TWorkflowInterface>(this, methodName, options);
+        }
+
+        /// <summary>
+        /// Creates an untyped child workflow stub that can be used to start, signal, and wait
+        /// for the child workflow completion.  Use this version for child workflows that
+        /// don't return a value.
+        /// </summary>
+        /// <param name="workflowTypeName">The workflow type name (see the remarks).</param>
+        /// <param name="options">Optionally specifies the child workflow options.</param>
+        /// <returns>The <see cref="ChildWorkflowFutureStub"/>.</returns>
+        /// <remarks>
+        /// <para>
+        /// Unlike activity stubs, a workflow stub may only be used to launch a single
+        /// workflow.  You'll need to create a new stub for each workflow you wish to
+        /// invoke and then the first method called on a workflow stub must be
+        /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
+        /// </para>
+        /// <para>
+        /// <paramref name="workflowTypeName"/> specifies the target workflow implementation type name and optionally,
+        /// the specific workflow method to be called for workflow interfaces that have multiple methods.  For
+        /// workflow methods tagged by <c>[WorkflowMethod]</c> with specifying a name, the workflow type name will default
+        /// to the fully qualified interface type name or the custom type name specified by <see cref="WorkflowAttribute.Name"/>.
+        /// </para>
+        /// <para>
+        /// For workflow methods with <see cref="WorkflowMethodAttribute.Name"/> specified, the workflow type will
+        /// look like:
+        /// </para>
+        /// <code>
+        /// WORKFLOW-TYPE-NAME::METHOD-NAME
+        /// </code>
+        /// <para>
+        /// You'll need to use this format when calling workflows using external untyped stubs or 
+        /// from other languages.  The Java Cadence client works the same way.
+        /// </para>
+        /// </remarks>
+        public ChildWorkflowFutureStub NewUntypedChildWorkflowFutureStub(string workflowTypeName, ChildWorkflowOptions options = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
+
+            Client.EnsureNotDisposed();
+            SetStackTrace();
+
+            return new ChildWorkflowFutureStub(this, workflowTypeName, options);
+        }
+
+        /// <summary>
+        /// Creates an untyped child workflow stub that can be used to start, signal, and wait
+        /// for the child workflow completion.  Use this version for child workflows that
+        /// return a value.
+        /// </summary>
+        /// <typeparam name="TResult">Specifies the child workflow result type.</typeparam>
+        /// <param name="workflowTypeName">The workflow type name (see the remarks).</param>
+        /// <param name="options">Optionally specifies the child workflow options.</param>
+        /// <returns>The <see cref="ChildWorkflowFutureStub"/>.</returns>
+        /// <remarks>
+        /// <para>
+        /// Unlike activity stubs, a workflow stub may only be used to launch a single
+        /// workflow.  You'll need to create a new stub for each workflow you wish to
+        /// invoke and then the first method called on a workflow stub must be
+        /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
+        /// </para>
+        /// <para>
+        /// <paramref name="workflowTypeName"/> specifies the target workflow implementation type name and optionally,
+        /// the specific workflow method to be called for workflow interfaces that have multiple methods.  For
+        /// workflow methods tagged by <c>[WorkflowMethod]</c> with specifying a name, the workflow type name will default
+        /// to the fully qualified interface type name or the custom type name specified by <see cref="WorkflowAttribute.Name"/>.
+        /// </para>
+        /// <para>
+        /// For workflow methods with <see cref="WorkflowMethodAttribute.Name"/> specified, the workflow type will
+        /// look like:
+        /// </para>
+        /// <code>
+        /// WORKFLOW-TYPE-NAME::METHOD-NAME
+        /// </code>
+        /// <para>
+        /// You'll need to use this format when calling workflows using external untyped stubs or 
+        /// from other languages.  The Java Cadence client works the same way.
+        /// </para>
+        /// </remarks>
+        public UntypedChildWorkflowFutureStub<TResult> NewUntypedChildWorkflowFutureStub<TResult>(string workflowTypeName, ChildWorkflowOptions options = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
+
+            Client.EnsureNotDisposed();
+            SetStackTrace();
+
+            return new UntypedChildWorkflowFutureStub<TResult>(this, workflowTypeName, options);
+        }
+
+        /// <summary>
+        /// Creates an untyped stub that can be used to signal or cancel a child
+        /// workflow identified by its <see cref="WorkflowExecution"/>.
+        /// </summary>
+        /// <param name="execution">The target <see cref="WorkflowExecution"/>.</param>
+        /// <param name="domain">Optionally specifies the target domain.  This defaults to the parent workflow's domain.</param>
+        /// <returns>The <see cref="ExternalWorkflowStub"/>.</returns>
+        public ExternalWorkflowStub NewUntypedExternalWorkflowStub(WorkflowExecution execution, string domain = null)
+        {
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
+            Client.EnsureNotDisposed();
+            SetStackTrace();
+
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Creates an untyped stub that can be used to signal or cancel a child
+        /// workflow identified by its workflow ID.
+        /// </summary>
+        /// <param name="workflowId">The target workflow ID.</param>
+        /// <param name="domain">Optionally specifies the target domain.  This defaults to the parent workflow's domain.</param>
+        /// <returns>The <see cref="ExternalWorkflowStub"/>.</returns>
+        public ExternalWorkflowStub NewUntypedExternalWorkflowStub(string workflowId, string domain = null)
+        {
+            Client.EnsureNotDisposed();
+            SetStackTrace();
+
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -1566,7 +1588,7 @@ namespace Neon.Cadence
         /// the default activity method.
         /// </param>
         /// <param name="options">Optionally specifies the activity options.</param>
-        /// <returns>The new <see cref="StartActivityStub{TActivityInterface}"/>.</returns>
+        /// <returns>The new <see cref="ActivityFutureStub{TActivityInterface}"/>.</returns>
         /// <remarks>
         /// <para>
         /// Sometimes workflows need to run activities in parallel with other child workflows or
@@ -1654,7 +1676,7 @@ namespace Neon.Cadence
         ///     [WorkflowMethod]
         ///     public Task MainAsync()
         ///     {
-        ///         var fooStub  = Workflow.NewStartActivityStub("foo");
+        ///         var fooStub  = Workflow.NewActivityFutureStub("foo");
         ///         var future   = fooStub.StartAsync("FOO");
         ///         var barStub  = Workflow.NewActivityStub&lt;IMyActivity&gt;();
         ///         var barValue = await barStub.BarAsync("BAR");   // Returns: "BAR"
@@ -1663,10 +1685,10 @@ namespace Neon.Cadence
         /// }
         /// </code>
         /// <para>
-        /// Here we call <see cref="NewStartActivityStub{TActivityInterface}(string, ActivityOptions)"/> specifying
+        /// Here we call <see cref="NewActivityFutureStub{TActivityInterface}(string, ActivityOptions)"/> specifying
         /// <b>"foo"</b> as the workflow method name.  This matches the <c>[ActivityMethod(Name = "foo")]</c> decorating
         /// the <c>FooAsync()</c> activity interface method.  Then we start the first activity by awaiting 
-        /// <see cref="StartActivityStub{TActivityInterface}"/>.  This returns an <see cref="IAsyncFuture{T}"/> whose 
+        /// <see cref="ActivityFutureStub{TActivityInterface}"/>.  This returns an <see cref="IAsyncFuture{T}"/> whose 
         /// <see cref="IAsyncFuture.GetAsync"/> method returns the activity result.  The code above calls this to
         /// retrieve the result from the first activity after executing the second activity in parallel.
         /// </para>
@@ -1682,7 +1704,7 @@ namespace Neon.Cadence
         /// </para>
         /// </note>
         /// </remarks>
-        public StartActivityStub<TActivityInterface> NewStartActivityStub<TActivityInterface>(string methodName = null, ActivityOptions options = null)
+        public ActivityFutureStub<TActivityInterface> NewActivityFutureStub<TActivityInterface>(string methodName = null, ActivityOptions options = null)
             where TActivityInterface : class
         {
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
@@ -1691,7 +1713,7 @@ namespace Neon.Cadence
 
             options = ActivityOptions.Normalize(Client, options, typeof(TActivityInterface));
 
-            return new StartActivityStub<TActivityInterface>(this, methodName, options);
+            return new ActivityFutureStub<TActivityInterface>(this, methodName, options);
         }
 
         /// <summary>
@@ -1803,10 +1825,10 @@ namespace Neon.Cadence
         /// }
         /// </code>
         /// <para>
-        /// Here we call <see cref="NewStartActivityStub{TActivityInterface}(string, ActivityOptions)"/> specifying
+        /// Here we call <see cref="NewActivityFutureStub{TActivityInterface}(string, ActivityOptions)"/> specifying
         /// <b>"foo"</b> as the workflow method name.  This matches the <c>[ActivityMethod(Name = "foo")]</c> decorating
         /// the <c>FooAsync()</c> activity interface method.  Then we start the first activity by awaiting 
-        /// <see cref="StartActivityStub{TActivityInterface}"/>.  This returns an <see cref="IAsyncFuture{T}"/> whose 
+        /// <see cref="ActivityFutureStub{TActivityInterface}"/>.  This returns an <see cref="IAsyncFuture{T}"/> whose 
         /// <see cref="IAsyncFuture.GetAsync"/> method returns the activity result.  The code above calls this to
         /// retrieve the result from the first activity after executing the second activity in parallel.
         /// </para>
@@ -1822,7 +1844,7 @@ namespace Neon.Cadence
         /// </para>
         /// </note>
         /// </remarks>
-        public StartLocalActivityStub<TActivityInterface, TActivityImplementation> NewStartLocalActivityStub<TActivityInterface, TActivityImplementation>(string methodName = null, LocalActivityOptions options = null)
+        public LocalActivityFutureStub<TActivityInterface, TActivityImplementation> NewStartLocalActivityStub<TActivityInterface, TActivityImplementation>(string methodName = null, LocalActivityOptions options = null)
             where TActivityInterface : class
             where TActivityImplementation : TActivityInterface
         {
@@ -1830,7 +1852,61 @@ namespace Neon.Cadence
             Client.EnsureNotDisposed();
             SetStackTrace();
 
-            return new StartLocalActivityStub<TActivityInterface, TActivityImplementation>(this, methodName, options);
+            return new LocalActivityFutureStub<TActivityInterface, TActivityImplementation>(this, methodName, options);
+        }
+
+        /// <summary>
+        /// Creates a new workflow safe queue.  These are typically used by workflow signal
+        /// methods for communicating with the workflow logic.
+        /// </summary>
+        /// <typeparam name="T">Specifies the queued data type.</typeparam>
+        /// <param name="capacity">
+        /// <para>
+        /// Specifies the maximum number items the queue may hold.
+        /// </para>
+        /// <note>
+        /// This defaults to <b>2</b> and may not be less than <b>2</b>.
+        /// </note>
+        /// </param>
+        /// <returns>The new <see cref="WorkflowQueue{T}"/>.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <remarks>
+        /// <para>
+        /// You may write and read data items from the returned queue.  Writes
+        /// will block when the queue is full until an item has been read, freeing
+        /// a slot.
+        /// </para>
+        /// <note>
+        /// Items will be serialized internally using the current <see cref="IDataConverter"/> to
+        /// bytes before actually enqueuing the item.  This serialized data must be less
+        /// than 64KiB.
+        /// </note>
+        /// <para>
+        /// See <see cref="WorkflowQueue{T}"/> for more information.
+        /// </para>
+        /// </remarks>
+        public async Task<WorkflowQueue<T>> NewQueueAsync<T>(int capacity = 2)
+        {
+            await SyncContext.ClearAsync;
+            Covenant.Requires<ArgumentException>(capacity >= 2, nameof(capacity), "Queue capacity cannot be less than [2].");
+            Client.EnsureNotDisposed();
+
+            var queueId = Interlocked.Increment(ref nextQueueId);
+
+            var reply = await ExecuteNonParallel(
+                async () =>
+                {
+                    return (WorkflowQueueNewReply)await Client.CallProxyAsync(
+                        new WorkflowQueueNewRequest()
+                        {
+                             QueueId  = queueId,
+                             Capacity = capacity
+                        });
+                });
+
+            reply.ThrowOnError();
+
+            return new WorkflowQueue<T>(this, queueId);
         }
         
         //---------------------------------------------------------------------

@@ -25,6 +25,7 @@ using System.Threading.Tasks;
 using Microsoft.Net.Http.Server;
 
 using Neon.Common;
+using Neon.Tasks;
 
 namespace Neon.Xunit
 {
@@ -210,6 +211,8 @@ namespace Neon.Xunit
         /// <param name="bytes">The bytes.</param>
         public static async Task WritAsynce(this Response response, byte[] bytes)
         {
+            await SyncContext.ClearAsync;
+
             await response.Body.WriteAsync(bytes, 0, bytes.Length);
         }
 
@@ -222,6 +225,8 @@ namespace Neon.Xunit
         /// <param name="count">The number of bytes to be written.</param>
         public static async Task WriteAsync(this Response response, byte[] bytes, int offset, int count)
         {
+            await SyncContext.ClearAsync;
+
             await response.Body.WriteAsync(bytes, offset, count);
         }
 
@@ -232,6 +237,8 @@ namespace Neon.Xunit
         /// <param name="text">The text to be written.</param>
         public static async Task WriteAsync(this Response response, string text)
         {
+            await SyncContext.ClearAsync;
+
             if (string.IsNullOrEmpty(text))
             {
                 return;

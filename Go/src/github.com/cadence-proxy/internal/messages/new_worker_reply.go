@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -38,7 +38,7 @@ type (
 func NewNewWorkerReply() *NewWorkerReply {
 	reply := new(NewWorkerReply)
 	reply.ProxyReply = NewProxyReply()
-	reply.SetType(messagetypes.NewWorkerReply)
+	reply.SetType(internal.NewWorkerReply)
 
 	return reply
 }

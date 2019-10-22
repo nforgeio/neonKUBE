@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 	"go.uber.org/cadence/activity"
 )
 
@@ -40,7 +40,7 @@ type (
 func NewActivityGetInfoReply() *ActivityGetInfoReply {
 	reply := new(ActivityGetInfoReply)
 	reply.ActivityReply = NewActivityReply()
-	reply.SetType(messagetypes.ActivityGetInfoReply)
+	reply.SetType(internal.ActivityGetInfoReply)
 
 	return reply
 }

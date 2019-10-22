@@ -37,6 +37,7 @@ using Neon.Common;
 using Neon.Collections;
 using Neon.Diagnostics;
 using Neon.Retry;
+using Neon.Tasks;
 
 namespace Neon.Net
 {
@@ -62,6 +63,7 @@ namespace Neon.Net
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity       = default)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
 
             return await safeRetryPolicy.InvokeAsync(
@@ -113,6 +115,7 @@ namespace Neon.Net
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity       = default)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
 
             var result = await safeRetryPolicy.InvokeAsync(
@@ -168,6 +171,7 @@ namespace Neon.Net
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity       = default)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
 
             retryPolicy = retryPolicy ?? NoRetryPolicy.Instance;
@@ -219,6 +223,7 @@ namespace Neon.Net
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity       = default)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
 
             return await unsafeRetryPolicy.InvokeAsync(
@@ -268,6 +273,7 @@ namespace Neon.Net
             CancellationToken   cancellationToken = default, 
             LogActivity         logActivity       = default)
         {
+            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri), nameof(uri));
 
             retryPolicy = retryPolicy ?? NoRetryPolicy.Instance;

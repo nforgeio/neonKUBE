@@ -26,8 +26,8 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"github.com/cadence-proxy/internal"
+	dotnetlogger "github.com/cadence-proxy/internal/dotnet-logger"
 	"github.com/cadence-proxy/internal/messages"
-	dotnetlogger "github.com/cadence-proxy/internal/messages/dotnet-logger"
 )
 
 type (
@@ -121,7 +121,7 @@ func sendLogRequest(ctx context.Context, entry zapcore.Entry) error {
 		logRequest.SetFromCadence(true)
 	}
 
-	op := messages.NewOperation(requestID, logRequest)
+	op := NewOperation(requestID, logRequest)
 	op.SetChannel(make(chan interface{}))
 	Operations.Add(requestID, op)
 

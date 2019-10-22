@@ -18,7 +18,7 @@
 package messages
 
 import (
-	messagetypes "github.com/cadence-proxy/internal/messages/types"
+	internal "github.com/cadence-proxy/internal"
 )
 
 type (
@@ -39,7 +39,7 @@ type (
 func NewWorkflowDisconnectContextReply() *WorkflowDisconnectContextReply {
 	reply := new(WorkflowDisconnectContextReply)
 	reply.WorkflowReply = NewWorkflowReply()
-	reply.SetType(messagetypes.WorkflowDisconnectContextReply)
+	reply.SetType(internal.WorkflowDisconnectContextReply)
 
 	return reply
 }
