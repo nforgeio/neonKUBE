@@ -77,7 +77,13 @@ namespace Neon.Cadence
             /// The current task is executing within the context of a
             /// workflow query method.
             /// </summary>
-            Query
+            Query,
+
+            /// <summary>
+            /// The current task is executing within the context of a
+            /// normal or local activity.
+            /// </summary>
+            Activity
         }
 
         /// <summary>
@@ -197,11 +203,16 @@ namespace Neon.Cadence
         /// indicating which contexts are allowed.  This is used ensure that only workflow operations
         /// that are valid for a context are allowed.
         /// </summary>
-        /// <param name="allowWorkflow">Optionally indicates that workflow entry point contexts are allowed.</param>
-        /// <param name="allowQuery">Optionally indicates that workflow query contexts are allowed.</param>
-        /// <param name="allowSignal">Optionally indicates that workflow signal contexts are allowed.</param>
+        /// <param name="allowWorkflow">Optionally indicates that calls from workflow entry point contexts are allowed.</param>
+        /// <param name="allowQuery">Optionally indicates that calls from workflow query contexts are allowed.</param>
+        /// <param name="allowSignal">Optionally indicates that calls from workflow signal contexts are allowed.</param>
+        /// <param name="allowActivity">Optionally indicates that calls from activity contexts are allowed.</param>
         /// <exception cref="NotSupportedException">Thrown when the operation is not supported in the current context.</exception>
-        internal static void CheckCallContext(bool allowWorkflow = false, bool allowQuery = false, bool allowSignal = false)
+        internal static void CheckCallContext(
+            bool allowWorkflow = false, 
+            bool allowQuery    = false, 
+            bool allowSignal   = false, 
+            bool allowActivity = false)
         {
             switch (CallContext.Value)
             {
@@ -230,6 +241,14 @@ namespace Neon.Cadence
                     if (!allowSignal)
                     {
                         throw new NotSupportedException("This operation cannot be performed within a workflow signal method.");
+                    }
+                    break;
+
+                case WorkflowCallContext.Activity:
+
+                    if (!allowActivity)
+                    {
+                        throw new NotSupportedException("This operation cannot be performed within an activity method.");
                     }
                     break;
             }
@@ -589,6 +608,8 @@ namespace Neon.Cadence
 
             try
             {
+                WorkflowBase.CallContext.Value = WorkflowCallContext.Entrypoint;
+
                 var workflowMethod   = registration.WorkflowMethod;
                 var resultType       = workflowMethod.ReturnType;
                 var args             = client.DataConverter.FromDataArray(request.Args, registration.WorkflowMethodParameterTypes);
@@ -654,6 +675,10 @@ namespace Neon.Cadence
                     Error = new CadenceError(e)
                 };
             }
+            finally
+            {
+                WorkflowBase.CallContext.Value = WorkflowCallContext.None;
+            }
         }
 
         /// <summary>
@@ -669,6 +694,8 @@ namespace Neon.Cadence
 
             try
             {
+                WorkflowBase.CallContext.Value = WorkflowCallContext.Signal;
+
                 var workflow = GetWorkflow(client, request.ContextId);
 
                 if (workflow != null)
@@ -710,6 +737,10 @@ namespace Neon.Cadence
                     Error = new CadenceError(e)
                 };
             }
+            finally
+            {
+                WorkflowBase.CallContext.Value = WorkflowCallContext.None;
+            }
         }
 
         /// <summary>
@@ -725,6 +756,8 @@ namespace Neon.Cadence
 
             try
             {
+                WorkflowBase.CallContext.Value = WorkflowCallContext.Query;
+
                 var workflow = GetWorkflow(client, request.ContextId);
 
                 if (workflow != null)
@@ -804,6 +837,10 @@ namespace Neon.Cadence
                     Error = new CadenceError(e)
                 };
             }
+            finally
+            {
+                WorkflowBase.CallContext.Value = WorkflowCallContext.None;
+            }
         }
 
         /// <summary>
@@ -818,6 +855,8 @@ namespace Neon.Cadence
 
             try
             {
+                WorkflowBase.CallContext.Value = WorkflowCallContext.Activity;
+
                 var workflow = GetWorkflow(client, request.ContextId);
 
                 if (workflow != null)
@@ -860,6 +899,10 @@ namespace Neon.Cadence
                 {
                     Error = new CadenceError(e)
                 };
+            }
+            finally
+            {
+                WorkflowBase.CallContext.Value = WorkflowCallContext.None;
             }
         }
 

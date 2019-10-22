@@ -88,6 +88,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 Info { get; private set; }                                      = new PropertyNameUtf8("Info");
         public static PropertyNameUtf8 IsCancellable { get; private set; }                             = new PropertyNameUtf8("IsCancellable");
         public static PropertyNameUtf8 IsClosed { get; private set; }                                  = new PropertyNameUtf8("IsClosed");
+        public static PropertyNameUtf8 IsFull { get; private set; }                                    = new PropertyNameUtf8("IsFull");
         public static PropertyNameUtf8 IsGlobalDomain { get; private set; }                            = new PropertyNameUtf8("IsGlobalDomain");
         public static PropertyNameUtf8 IsWorkflow { get; private set; }                                = new PropertyNameUtf8("IsWorkflow");
         public static PropertyNameUtf8 Length { get; private set; }                                    = new PropertyNameUtf8("Length");
@@ -100,6 +101,7 @@ namespace Neon.Cadence.Internal
         public static PropertyNameUtf8 MutableId { get; private set; }                                 = new PropertyNameUtf8("MutableId");
         public static PropertyNameUtf8 NextPageToken { get; private set; }                             = new PropertyNameUtf8("NextPageToken");
         public static PropertyNameUtf8 Name { get; private set; }                                      = new PropertyNameUtf8("Name");
+        public static PropertyNameUtf8 NoBlock { get; private set; }                                   = new PropertyNameUtf8("NoBlock");
         public static PropertyNameUtf8 Options { get; private set; }                                   = new PropertyNameUtf8("Options");
         public static PropertyNameUtf8 OwnerEmail { get; private set; }                                = new PropertyNameUtf8("OwnerEmail");
         public static PropertyNameUtf8 PageSize { get; private set; }                                  = new PropertyNameUtf8("PageSize");

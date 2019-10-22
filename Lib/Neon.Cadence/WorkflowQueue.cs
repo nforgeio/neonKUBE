@@ -77,20 +77,44 @@ namespace Neon.Cadence
     ///     queues including closing, writing, and fetching the length.  Signals 
     ///     cannot create or read from queues.
     ///     </item>
+    ///     <item>
+    ///     <b>Workflow Activity:</b> Workflow activities methods have partial access to
+    ///     queues including closing, reading writing, and fetching the length.  Activities 
+    ///     cannot create queues.
+    ///     </item>
     ///     </list>
     /// </note>
     /// </remarks>
     public class WorkflowQueue<T> : IDisposable
     {
+        // IMPLEMENTATION NOTE:
+        //
+        // The implementation is a bit tricky.  The method implementations vary depending
+        // on whether the call context is from a workflow entry point method or another
+        // context (like query, signal, or activity).
+        //
+        // Calls from a workflow entry point need to be routed through a local activity
+        // Calls from other contexts will be implemented directly.
+
+        //---------------------------------------------------------------------
+        // Static members
+
         /// <summary>
-        /// The default number of items allowed in a queue.
+        /// The default maximum number of items allowed in a queue.
         /// </summary>
         public const int DefaultCapacity = 100;
 
-        private Workflow        parentWorkflow;
-        private CadenceClient   client;
-        private long            queueId;
-        private bool            isClosed;
+        //---------------------------------------------------------------------
+        // Instance members
+
+        private Workflow            parentWorkflow;
+        private CadenceClient       client;
+        private long                contextId;
+        private long                queueId;
+        private int                 capacity;
+        private bool                isClosed;
+        private bool                isDisposed;
+        private IQueueActivities    activityStub;
 
         /// <summary>
         /// Internal constructor.
@@ -99,6 +123,12 @@ namespace Neon.Cadence
         /// <param name="queueId">The queue ID.</param>
         /// <param name="capacity">The maximum number of items allowed in the queue.</param>
         /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
+        /// <remarks>
+        /// <note>
+        /// <see cref="WorkflowQueue{T}"/> instances may only be created within 
+        /// workflow entry point methods.
+        /// </note>
+        /// </remarks>
         internal WorkflowQueue(Workflow parentWorkflow, long queueId, int capacity)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
@@ -108,12 +138,22 @@ namespace Neon.Cadence
 
             this.parentWorkflow = parentWorkflow;
             this.client         = parentWorkflow.Client;
+            this.contextId      = parentWorkflow.ContextId;
             this.Capacity       = capacity;
             this.queueId        = queueId;
             this.isClosed       = false;
+            this.activityStub   = parentWorkflow.NewLocalActivityStub<IQueueActivities, QueueActivities>();
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Closes the queue if it's not already closed.
+        /// </summary>
+        /// <remarks>
+        /// <note>
+        /// Queues may be disposed only from within workflow entrypoint or signal methods or
+        /// from normal or local activities.
+        /// </note>
+        /// </remarks>
         public void Dispose()
         {
             Dispose(true);
@@ -125,42 +165,99 @@ namespace Neon.Cadence
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected virtual void Dispose(bool disposing)
         {
-            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true);
+            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true, allowActivity: true);
 
             if (disposing && !isClosed)
             {
-                CloseAsync().Wait();
+                isDisposed = true;
+
+                if (WorkflowBase.CallContext.Value == WorkflowBase.WorkflowCallContext.Entrypoint)
+                {
+                    var stream = MemoryStreamPool.Alloc();
+
+                    try
+                    {
+                        var replyBytes = activityStub.CloseAsync(contextId, queueId).Result;
+
+                        stream.Position = 0;
+                        stream.Write(replyBytes, 0, replyBytes.Length);
+                        stream.Position = 0;
+
+                        var reply = ProxyMessage.Deserialize<WorkflowQueueWriteReply>(stream);
+
+                        reply.ThrowOnError();
+                    }
+                    finally
+                    {
+                        MemoryStreamPool.Free(stream);
+                    }
+                }
+                else
+                {
+                    CloseAsync().Wait();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Ensures that the instance is not disposed.
+        /// </summary>
+        /// <exception cref="ObjectDisposedException">Thrown if the queue is disposed.</exception>
+        private void CheckDisposed()
+        {
+            if (isDisposed)
+            {
+                throw new ObjectDisposedException(nameof(WorkflowQueue<T>));
             }
         }
 
         /// <summary>
         /// Returns the maximum number of items allowed in the queue at any given moment.
-        /// This may not be less than 2.
+        /// This may not be set to a value less than 2.
         /// </summary>
-        public int Capacity { get; private set; }
+        /// <exception cref="ObjectDisposedException">Thrown if the queue is disposed.</exception>
+        public int Capacity
+        {
+            get
+            {
+                CheckDisposed();
+
+                return capacity;
+            }
+
+            set => capacity = value;
+        }
 
         /// <summary>
         /// Adds an item to the queue.
         /// </summary>
         /// <param name="item">The item.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the queue is disposed.</exception>
         /// <exception cref="NotSupportedException">Thrown if the serialized size of <paramref name="item"/> is not less than 64KiB.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if the associated workflow client is disposed.</exception>
         /// <exception cref="CadenceQueueClosedException">Thrown if the associated queue has been closed.</exception>
         /// <remarks>
         /// <para>
-        /// This method returns immediately if the queue is full, otherwise
+        /// This method returns immediately if the queue is not full, otherwise
         /// it will block until there's enough space to append the new item.
         /// </para>
         /// <note>
-        /// Serialized item sizes must be less than 64 KiB.
+        /// Item data after being serialized must be less than 64 KiB.
+        /// </note>
+        /// </remarks>
+        /// <remarks>
+        /// <note>
+        /// Items may be added to queues only within workflow entrypoint or signal methods or
+        /// from normal or local activities.
         /// </note>
         /// </remarks>
         public async Task EnqueueAsync(T item)
         {
             await SyncContext.ClearAsync;
             client.EnsureNotDisposed();
-            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true);
+            CheckDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true, allowActivity: true);
 
             if (isClosed)
             {
@@ -174,24 +271,38 @@ namespace Neon.Cadence
                 throw new NotSupportedException($"Serialized items enqueued to a [{nameof(WorkflowQueue<T>)}] must be less than 64 KiB.");
             }
 
-            var stub   = parentWorkflow.NewLocalActivityStub<IQueueActivities, QueueActivities>();
-            var stream = MemoryStreamPool.Alloc();
-
-            try
+            if (WorkflowBase.CallContext.Value == WorkflowBase.WorkflowCallContext.Entrypoint)
             {
-                var replyBytes = await stub.EnqueueAsync(parentWorkflow.ContextId, queueId, encodedItem);
+                var stream = MemoryStreamPool.Alloc();
 
-                stream.Position = 0;
-                stream.Write(replyBytes, 0, replyBytes.Length);
-                stream.Position = 0;
+                try
+                {
+                    var replyBytes = await activityStub.EnqueueAsync(contextId, queueId, encodedItem);
 
-                var reply = ProxyMessage.Deserialize<WorkflowQueueWriteReply>(stream);
+                    stream.Position = 0;
+                    stream.Write(replyBytes, 0, replyBytes.Length);
+                    stream.Position = 0;
+
+                    var reply = ProxyMessage.Deserialize<WorkflowQueueWriteReply>(stream);
+
+                    reply.ThrowOnError();
+                }
+                finally
+                {
+                    MemoryStreamPool.Free(stream);
+                }
+            }
+            else
+            {
+                var reply = (WorkflowQueueWriteReply)await client.CallProxyAsync(
+                    new WorkflowQueueWriteRequest()
+                    {
+                        ContextId = contextId,
+                        QueueId   = queueId,
+                        Data      = encodedItem
+                    });
 
                 reply.ThrowOnError();
-            }
-            finally
-            {
-                MemoryStreamPool.Free(stream);
             }
         }
 
@@ -201,49 +312,71 @@ namespace Neon.Cadence
         /// <param name="timeout">The optional timeout.</param>
         /// <returns>The next item from the queue.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the associated workflow client is disposed.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the queue is disposed.</exception>
         /// <exception cref="CadenceTimeoutException">Thrown if the timeout was reached before a value could be returned.</exception>
         /// <exception cref="CadenceQueueClosedException">Thrown if the the queue is closed.</exception>
+        /// <remarks>
+        /// <note>
+        /// Items may be read from queues only from within workflow entrypoint methods or
+        /// from normal or local activities.
+        /// </note>
+        /// </remarks>
         public async Task<T> DequeueAsync(TimeSpan timeout = default)
         {
             await SyncContext.ClearAsync;
             client.EnsureNotDisposed();
-            WorkflowBase.CheckCallContext(allowWorkflow: true);
+            CheckDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true, allowActivity: true);
 
             if (isClosed)
             {
                 throw new CadenceQueueClosedException("Queue is closed.");
             }
 
-            var stub   = parentWorkflow.NewLocalActivityStub<IQueueActivities, QueueActivities>();
-            var stream = MemoryStreamPool.Alloc();
-
-            try
+            if (WorkflowBase.CallContext.Value == WorkflowBase.WorkflowCallContext.Entrypoint)
             {
-                var replyBytes = await stub.DequeueAsync(parentWorkflow.ContextId, queueId, timeout);
+                var stream = MemoryStreamPool.Alloc();
 
-                stream.Position = 0;
-                stream.Write(replyBytes, 0, replyBytes.Length);
-                stream.Position = 0;
-
-                var reply = ProxyMessage.Deserialize<WorkflowQueueReadReply>(stream);
-
-                reply.ThrowOnError();
-
-                if (reply.IsClosed)
+                try
                 {
-                    throw new CadenceQueueClosedException("Queue is closed.");
-                }
+                    var replyBytes = await activityStub.DequeueAsync(contextId, queueId, timeout);
 
-                if (reply.Data == null)
-                {
-                    throw new CadenceTimeoutException("Dequeue operation timed out.");
+                    stream.Position = 0;
+                    stream.Write(replyBytes, 0, replyBytes.Length);
+                    stream.Position = 0;
+
+                    var reply = ProxyMessage.Deserialize<WorkflowQueueReadReply>(stream);
+
+                    reply.ThrowOnError();
+
+                    if (reply.IsClosed)
+                    {
+                        throw new CadenceQueueClosedException("Queue is closed.");
+                    }
+
+                    if (reply.Data == null)
+                    {
+                        throw new CadenceTimeoutException("Dequeue operation timed out.");
+                    }
+
+                    return client.DataConverter.FromData<T>(reply.Data);
                 }
+                finally
+                {
+                    MemoryStreamPool.Free(stream);
+                }
+            }
+            else
+            {
+                var reply = (WorkflowQueueReadReply)await client.CallProxyAsync(
+                    new WorkflowQueueReadRequest()
+                    {
+                        ContextId = contextId,
+                        QueueId   = queueId,
+                        Timeout   = timeout
+                    });
 
                 return client.DataConverter.FromData<T>(reply.Data);
-            }
-            finally
-            {
-                MemoryStreamPool.Free(stream);
             }
         }
 
@@ -253,37 +386,60 @@ namespace Neon.Cadence
         /// <returns>The item count.</returns>
         /// <exception cref="CadenceQueueClosedException">Thrown if the queue is closed.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if the associated workflow client is disposed.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the queue is disposed.</exception>
+        /// <remarks>
+        /// <note>
+        /// The queue length may be obtained only from within workflow entrypoint, query or signal methods or
+        /// from normal or local activities.
+        /// </note>
+        /// </remarks>
         public async Task<int> GetLengthAsync()
         {
             await SyncContext.ClearAsync;
             client.EnsureNotDisposed();
-            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true, allowQuery: true);
+            CheckDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true, allowQuery: true, allowActivity: true);
 
             if (isClosed)
             {
                 throw new CadenceQueueClosedException($"[{nameof(WorkflowQueue<T>)}] is closed.");
             }
 
-            var stub   = parentWorkflow.NewLocalActivityStub<IQueueActivities, QueueActivities>();
-            var stream = MemoryStreamPool.Alloc();
-
-            try
+            if (WorkflowBase.CallContext.Value == WorkflowBase.WorkflowCallContext.Entrypoint)
             {
-                var replyBytes = await stub.GetLengthAsync(parentWorkflow.ContextId, queueId);
+                var stream = MemoryStreamPool.Alloc();
 
-                stream.Position = 0;
-                stream.Write(replyBytes, 0, replyBytes.Length);
-                stream.Position = 0;
+                try
+                {
+                    var replyBytes = await activityStub.GetLengthAsync(contextId, queueId);
 
-                var reply = ProxyMessage.Deserialize<WorkflowQueueLengthReply>(stream);
+                    stream.Position = 0;
+                    stream.Write(replyBytes, 0, replyBytes.Length);
+                    stream.Position = 0;
+
+                    var reply = ProxyMessage.Deserialize<WorkflowQueueLengthReply>(stream);
+
+                    reply.ThrowOnError();
+
+                    return reply.Length;
+                }
+                finally
+                {
+                    MemoryStreamPool.Free(stream);
+                }
+            }
+            else
+            {
+                var reply = (WorkflowQueueLengthReply)await client.CallProxyAsync(
+                    new WorkflowQueueLengthRequest()
+                    {
+                        ContextId = contextId,
+                        QueueId   = queueId,
+                    });
 
                 reply.ThrowOnError();
 
                 return reply.Length;
-            }
-            finally
-            {
-                MemoryStreamPool.Free(stream);
             }
         }
 
@@ -297,35 +453,56 @@ namespace Neon.Cadence
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the associated workflow client is disposed.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the queue is disposed.</exception>
+        /// <remarks>
+        /// <note>
+        /// Queues may be closed only from within workflow entrypoint or signal methods or
+        /// from normal or local activities.
+        /// </note>
+        /// </remarks>
         public async Task CloseAsync()
         {
             await SyncContext.ClearAsync;
             client.EnsureNotDisposed();
-            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true);
+            CheckDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true, allowActivity: true);
 
             if (isClosed)
             {
                 return;
             }
 
-            var stub = parentWorkflow.NewLocalActivityStub < IQueueActivities, QueueActivities>();
-            var stream = MemoryStreamPool.Alloc();
-
-            try
+            if (WorkflowBase.CallContext.Value == WorkflowBase.WorkflowCallContext.Entrypoint)
             {
-                var replyBytes = await stub.CloseAsync(parentWorkflow.ContextId, queueId);
+                var stream = MemoryStreamPool.Alloc();
 
-                stream.Position = 0;
-                stream.Write(replyBytes, 0, replyBytes.Length);
-                stream.Position = 0;
+                try
+                {
+                    var replyBytes = await activityStub.CloseAsync(contextId, queueId);
 
-                var reply = ProxyMessage.Deserialize<WorkflowQueueCloseReply>(stream);
+                    stream.Position = 0;
+                    stream.Write(replyBytes, 0, replyBytes.Length);
+                    stream.Position = 0;
+
+                    var reply = ProxyMessage.Deserialize<WorkflowQueueCloseReply>(stream);
+
+                    reply.ThrowOnError();
+                }
+                finally
+                {
+                    MemoryStreamPool.Free(stream);
+                }
+            }
+            else
+            {
+                var reply = (WorkflowQueueCloseReply)await client.CallProxyAsync(
+                    new WorkflowQueueCloseRequest()
+                    {
+                        ContextId = contextId,
+                        QueueId   = queueId,
+                    });
 
                 reply.ThrowOnError();
-            }
-            finally
-            {
-                MemoryStreamPool.Free(stream);
             }
 
             isClosed = true;
@@ -412,7 +589,7 @@ namespace Neon.Cadence.Internal
 
             return reply.SerializeAsBytes();
         }
-
+        
         /// <inheritdoc/>
         public async Task<byte[]> TryEnqueueAsync(long contextId, long queueId, byte[] encodedItem)
         {
