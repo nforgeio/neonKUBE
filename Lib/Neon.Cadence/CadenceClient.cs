@@ -844,8 +844,14 @@ namespace Neon.Cadence
             // Crank up the background threads which will handle [cadence-proxy]
             // request timeouts.
 
-            client.heartbeatThread = new Thread(new ThreadStart(client.HeartbeatThread));
-            client.heartbeatThread.Start();
+            // $todo(jefflill):
+            //
+            // Temporarily disabling heartbeats due to:
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/706
+
+            //client.heartbeatThread = new Thread(new ThreadStart(client.HeartbeatThread));
+            //client.heartbeatThread.Start();
 
             client.timeoutThread = new Thread(new ThreadStart(client.TimeoutThread));
             client.timeoutThread.Start();
