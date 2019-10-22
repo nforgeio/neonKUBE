@@ -38,6 +38,15 @@ namespace Neon.Cadence.Internal
             Type = InternalMessageTypes.WorkflowQueueWriteReply;
         }
 
+        /// <summary>
+        /// Indicates when the queue is full and the item could not be written.
+        /// </summary>
+        public bool IsFull
+        {
+            get => GetBoolProperty(PropertyNames.IsFull);
+            set => SetBoolProperty(PropertyNames.IsFull, value);
+        }
+
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -52,6 +61,10 @@ namespace Neon.Cadence.Internal
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
+
+            var typedTarget = (WorkflowQueueWriteReply)target;
+
+            typedTarget.IsFull = this.IsFull;
         }
     }
 }

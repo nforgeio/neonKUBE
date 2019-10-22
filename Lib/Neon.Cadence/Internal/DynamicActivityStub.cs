@@ -66,7 +66,7 @@ namespace Neon.Cadence.Internal
 
             this.stubType          = assembly.GetType(className);
             this.normalConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(string), typeof(ActivityOptions), typeof(System.Type));
-            this.localConstructor  = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(Type), typeof(LocalActivityOptions));
+            this.localConstructor  = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(Type), typeof(LocalActivityOptions), typeof(System.Type));
         }
 
         /// <summary>
@@ -99,7 +99,7 @@ namespace Neon.Cadence.Internal
         /// <returns>The activity stub as an <see cref="object"/>.</returns>
         public object CreateLocal(CadenceClient client, Workflow workflow, Type activityType, LocalActivityOptions options)
         {
-            return localConstructor.Invoke(new object[] { client, client.DataConverter, workflow, activityType, options });
+            return localConstructor.Invoke(new object[] { client, client.DataConverter, workflow, activityType, options, CadenceHelper.GetActivityInterface(activityType) });
         }
     }
 }

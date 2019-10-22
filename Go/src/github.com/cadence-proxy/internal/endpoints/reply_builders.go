@@ -26,10 +26,10 @@ import (
 	"go.uber.org/cadence/activity"
 	"go.uber.org/cadence/workflow"
 
+	internal "github.com/cadence-proxy/internal"
 	proxyclient "github.com/cadence-proxy/internal/cadence/client"
 	proxyerror "github.com/cadence-proxy/internal/cadence/error"
 	"github.com/cadence-proxy/internal/messages"
-	internal "github.com/cadence-proxy/internal"
 )
 
 func buildReply(reply messages.IProxyReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
@@ -257,6 +257,36 @@ func buildReply(reply messages.IProxyReply, cadenceError *proxyerror.CadenceErro
 	case internal.WorkflowGetVersionReply:
 		if v, ok := reply.(*messages.WorkflowGetVersionReply); ok {
 			buildWorkflowGetVersionReply(v, cadenceError, value)
+		}
+
+	// WorkflowQueueNewReply
+	case internal.WorkflowQueueNewReply:
+		if v, ok := reply.(*messages.WorkflowQueueNewReply); ok {
+			buildWorkflowQueueNewReply(v, cadenceError)
+		}
+
+	// WorkflowQueueWriteReply
+	case internal.WorkflowQueueWriteReply:
+		if v, ok := reply.(*messages.WorkflowQueueWriteReply); ok {
+			buildWorkflowQueueWriteReply(v, cadenceError)
+		}
+
+	// WorkflowQueueReadReply
+	case internal.WorkflowQueueReadReply:
+		if v, ok := reply.(*messages.WorkflowQueueReadReply); ok {
+			buildWorkflowQueueReadReply(v, cadenceError, value)
+		}
+
+	// WorkflowQueueLengthReply
+	case internal.WorkflowQueueLengthReply:
+		if v, ok := reply.(*messages.WorkflowQueueLengthReply); ok {
+			buildWorkflowQueueLengthReply(v, cadenceError, value)
+		}
+
+	// WorkflowQueueCloseReply
+	case internal.WorkflowQueueCloseReply:
+		if v, ok := reply.(*messages.WorkflowQueueCloseReply); ok {
+			buildWorkflowQueueCloseReply(v, cadenceError)
 		}
 
 	// -------------------------------------------------------------------------
@@ -594,6 +624,41 @@ func buildWorkflowGetVersionReply(reply *messages.WorkflowGetVersionReply, caden
 }
 
 func buildWorkflowSetQueryHandlerReply(reply *messages.WorkflowSetQueryHandlerReply, cadenceError *proxyerror.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
+func buildWorkflowQueueNewReply(reply *messages.WorkflowQueueNewReply, cadenceError *proxyerror.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
+func buildWorkflowQueueWriteReply(reply *messages.WorkflowQueueWriteReply, cadenceError *proxyerror.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
+func buildWorkflowQueueReadReply(reply *messages.WorkflowQueueReadReply, cadenceError *proxyerror.CadenceError, values ...interface{}) {
+	reply.SetError(cadenceError)
+	if len(values) > 0 {
+		if v, ok := values[0].([]interface{}); ok {
+			if _v, _ok := v[0].([]byte); _ok {
+				reply.SetData(_v)
+			}
+			if _v, _ok := v[1].(bool); _ok {
+				reply.SetIsClosed(_v)
+			}
+		}
+	}
+}
+
+func buildWorkflowQueueLengthReply(reply *messages.WorkflowQueueLengthReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
+	reply.SetError(cadenceError)
+	if len(result) > 0 {
+		if v, ok := result[0].(int32); ok {
+			reply.SetLength(v)
+		}
+	}
+}
+
+func buildWorkflowQueueCloseReply(reply *messages.WorkflowQueueCloseReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
 }
 

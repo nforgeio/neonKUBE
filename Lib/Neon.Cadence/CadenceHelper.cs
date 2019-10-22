@@ -240,7 +240,7 @@ namespace Neon.Cadence.Internal
 
             if (workflowInterface.IsGenericType)
             {
-                throw new WorkflowTypeException($"[{workflowInterface.FullName}] has generic type parameters.  Workflow interfaces may not be generic.");
+                throw new WorkflowTypeException($"[{workflowInterface.FullName}] has generic type parameters.  Workflow interfaces cannot be generic.");
             }
 
             if (!workflowInterface.IsPublic && !workflowInterface.IsNestedPublic)
@@ -369,7 +369,7 @@ namespace Neon.Cadence.Internal
 
             if (workflowType.IsGenericType)
             {
-                throw new WorkflowTypeException($"[{workflowType.FullName}] has generic type parameters.  Workflow implementations may not be generic.");
+                throw new WorkflowTypeException($"[{workflowType.FullName}] has generic type parameters.  Workflow implementations cannot be generic.");
             }
 
             if (workflowType.BaseType != typeof(WorkflowBase))
@@ -475,7 +475,7 @@ namespace Neon.Cadence.Internal
 
             if (activityInterface.IsGenericType)
             {
-                throw new ActivityTypeException($"[{activityInterface.FullName}] has generic type parameters.  Activity interfaces may not be generic.");
+                throw new ActivityTypeException($"[{activityInterface.FullName}] has generic type parameters.  Activity interfaces cannot be generic.");
             }
 
             if (!activityInterface.IsPublic && !activityInterface.IsNestedPublic)
@@ -548,7 +548,7 @@ namespace Neon.Cadence.Internal
 
             if (activityType.IsGenericType)
             {
-                throw new ActivityTypeException($"[{activityType.FullName}] has generic type parameters.  Activity implementations may not be generic.");
+                throw new ActivityTypeException($"[{activityType.FullName}] has generic type parameters.  Activity implementations cannot be generic.");
             }
 
             if (activityType.BaseType != typeof(ActivityBase))

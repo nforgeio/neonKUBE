@@ -84,5 +84,4 @@ func cloneForEcho(message messages.IProxyMessage) (b []byte, e error) {
 	}
 
 	return serializedMessageCopy, nil
-
 }

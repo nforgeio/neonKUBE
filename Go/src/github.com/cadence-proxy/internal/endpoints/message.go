@@ -181,7 +181,6 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 		// handle the messages individually
 		// based on their message type
 		ctx := context.Background()
-
 		switch request.GetType() {
 
 		// -------------------------------------------------------------------------
@@ -398,6 +397,36 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 		case internal.WorkflowGetVersionRequest:
 			if v, ok := request.(*messages.WorkflowGetVersionRequest); ok {
 				reply = handleWorkflowGetVersionRequest(ctx, v)
+			}
+
+		// WorkflowQueueNewRequest
+		case internal.WorkflowQueueNewRequest:
+			if v, ok := request.(*messages.WorkflowQueueNewRequest); ok {
+				reply = handleWorkflowQueueNewRequest(ctx, v)
+			}
+
+		// WorkflowQueueWriteRequest
+		case internal.WorkflowQueueWriteRequest:
+			if v, ok := request.(*messages.WorkflowQueueWriteRequest); ok {
+				reply = handleWorkflowQueueWriteRequest(ctx, v)
+			}
+
+		// WorkflowQueueReadRequest
+		case internal.WorkflowQueueReadRequest:
+			if v, ok := request.(*messages.WorkflowQueueReadRequest); ok {
+				reply = handleWorkflowQueueReadRequest(ctx, v)
+			}
+
+		// WorkflowQueueLengthRequest
+		case internal.WorkflowQueueLengthRequest:
+			if v, ok := request.(*messages.WorkflowQueueLengthRequest); ok {
+				reply = handleWorkflowQueueLengthRequest(ctx, v)
+			}
+
+		// WorkflowQueueCloseRequest
+		case internal.WorkflowQueueCloseRequest:
+			if v, ok := request.(*messages.WorkflowQueueCloseRequest); ok {
+				reply = handleWorkflowQueueCloseRequest(ctx, v)
 			}
 
 		// -------------------------------------------------------------------------

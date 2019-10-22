@@ -4033,6 +4033,7 @@ namespace TestCadence
                 Assert.Equal(0, message.RequestId);
                 Assert.Equal(0, message.ContextId);
                 Assert.Equal(0, message.QueueId);
+                Assert.False(message.NoBlock);
                 Assert.Null(message.Data);
 
                 // Round-trip
@@ -4041,18 +4042,21 @@ namespace TestCadence
                 message.RequestId = 555;
                 message.ContextId = 666;
                 message.QueueId   = 777;
+                message.NoBlock   = true;
                 message.Data      = new byte[] { 0, 1, 2, 3, 4 };
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal(777, message.QueueId);
+                Assert.True(message.NoBlock);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Data);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
                 Assert.Equal(777, message.QueueId);
+                Assert.True(message.NoBlock);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Data);
 
                 message = ProxyMessage.Deserialize<WorkflowQueueWriteRequest>(stream);
@@ -4071,6 +4075,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal(777, message.QueueId);
+                Assert.True(message.NoBlock);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Data);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
@@ -4081,6 +4086,7 @@ namespace TestCadence
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal(777, message.QueueId);
+                Assert.True(message.NoBlock);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Data);
             }
         }
@@ -4106,16 +4112,19 @@ namespace TestCadence
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
+                Assert.False(message.IsFull);
 
                 // Round-trip
 
-                message.ClientId = 444;
+                message.ClientId  = 444;
                 message.RequestId = 555;
-                message.Error = new CadenceError("MyError");
+                message.Error     = new CadenceError("MyError");
+                message.IsFull    = true;
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.True(message.IsFull);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -4126,6 +4135,7 @@ namespace TestCadence
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.True(message.IsFull);
 
                 // Clone()
 
@@ -4134,6 +4144,7 @@ namespace TestCadence
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.True(message.IsFull);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
 
@@ -4142,6 +4153,7 @@ namespace TestCadence
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
+                Assert.True(message.IsFull);
             }
         }
 
