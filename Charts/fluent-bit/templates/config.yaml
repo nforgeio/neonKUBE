@@ -9,7 +9,7 @@ metadata:
     heritage: {{ .Release.Service }}
     release: {{ .Release.Name }}
 data:
-  fluent-bit-service.conf: |-
+  fluent-bit-service.conf: |
     [SERVICE]
         Flush        {{ .Values.service.flush }}
         Daemon       Off
@@ -24,7 +24,7 @@ data:
         HTTP_Port    2020
 {{- end }}
 
-  fluent-bit-input.conf: |-
+  fluent-bit-input.conf: |
     [INPUT]
         Name             tail
         Path             {{ .Values.input.tail.path }}
@@ -49,7 +49,7 @@ data:
 {{- end }}
 {{ .Values.extraEntries.input | indent 8 }}
 
-  fluent-bit-filter.conf: |-
+  fluent-bit-filter.conf: |
     [FILTER]
         Name                kubernetes
         Match               {{ .Values.filter.kubeTag }}.*
@@ -78,7 +78,7 @@ data:
         script  /fluent-bit/etc/functions.lua
         call    dedot
 
-  fluent-bit-output.conf: |-
+  fluent-bit-output.conf: |
 {{ if eq .Values.backend.type "test" }}
     [OUTPUT]
         Name  file
@@ -160,10 +160,10 @@ data:
 {{ .Values.extraEntries.output | indent 8 }}
 
 
-  fluent-bit.conf: |-
+  fluent-bit.conf: |
 {{ .Values.rawConfig | indent 4 }}
 
-  functions.lua: |-
+  functions.lua: |
     function dedot(tag, timestamp, record)
         if lookup(record, 'kubernetes', 'annotations') then
             pcall(dedot_keys,record["kubernetes"]["annotations"])
@@ -205,7 +205,7 @@ data:
         end
     end
 
-  parsers.conf: |-
+  parsers.conf: |
 {{- if .Values.parsers.regex }}
 {{- range .Values.parsers.regex }}
     [PARSER]
