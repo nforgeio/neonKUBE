@@ -196,7 +196,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task LocalActivity_WithResult()
+        public async Task ActivityLocal_WithResult()
         {
             await SyncContext.ClearAsync;
 
@@ -256,7 +256,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task LocalActivity_WithoutResult()
+        public async Task ActivityLocal_WithoutResult()
         {
             await SyncContext.ClearAsync;
             LocalActivityWithouthResult.Reset();
@@ -326,17 +326,20 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task LocalActivity_WithMultipleMethods()
+        public async Task ActivityLocal_WithMultipleMethods()
         {
             await SyncContext.ClearAsync;
             LocalActivityWithouthResult.Reset();
 
             // Verify that we can call different methods of a local activity.
 
-            var stub = client.NewWorkflowStub<ILocalActivityWorkflowMultipleMethods>();
+            var stub1 = client.NewWorkflowStub<ILocalActivityWorkflowMultipleMethods>();
 
-            Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
-            Assert.Equal("Goodbye Jeff!", await stub.GoodbyeAsync("Jeff"));
+            Assert.Equal("Hello Jeff!", await stub1.HelloAsync("Jeff"));
+
+            var stub2 = client.NewWorkflowStub<ILocalActivityWorkflowMultipleMethods>();
+
+            Assert.Equal("Goodbye Jeff!", await stub2.GoodbyeAsync("Jeff"));
         }
 
         //---------------------------------------------------------------------
@@ -401,10 +404,13 @@ namespace TestCadence
 
             // Verify that we can call different methods of a regular activity.
 
-            var stub = client.NewWorkflowStub<IActivityWorkflowMultipleMethods>();
+            var stub1 = client.NewWorkflowStub<IActivityWorkflowMultipleMethods>();
 
-            Assert.Equal("Hello Jeff!", await stub.HelloAsync("Jeff"));
-            Assert.Equal("Goodbye Jeff!", await stub.GoodbyeAsync("Jeff"));
+            Assert.Equal("Hello Jeff!", await stub1.HelloAsync("Jeff"));
+            
+            var stub2 = client.NewWorkflowStub<IActivityWorkflowMultipleMethods>();
+
+            Assert.Equal("Goodbye Jeff!", await stub2.GoodbyeAsync("Jeff"));
         }
 
         //---------------------------------------------------------------------

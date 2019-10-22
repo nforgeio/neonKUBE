@@ -48,6 +48,39 @@ namespace Neon.Cadence
         // Private types
 
         /// <summary>
+        /// Enumerates the possible contexts workflow code may be executing within.
+        /// This is used to limit what code can do (i.e. query methods shouldn't be
+        /// allowed to execute activities).  This is also used in some situations to
+        /// modify how workflow code behaves.
+        /// </summary>
+        internal enum WorkflowCallContext
+        {
+            /// <summary>
+            /// The current task is not executing within the context
+            /// of any workflow method.
+            /// </summary>
+            None = 0,
+
+            /// <summary>
+            /// The current task is executing within the context of
+            /// a workflow entrypoint.
+            /// </summary>
+            Entrypoint,
+
+            /// <summary>
+            /// The current task is executing within the context of a
+            /// workflow signal method.
+            /// </summary>
+            Signal,
+
+            /// <summary>
+            /// The current task is executing within the context of a
+            /// workflow query method.
+            /// </summary>
+            Query
+        }
+
+        /// <summary>
         /// Used to map a Cadence client ID and workflow context ID into a
         /// key that can be used to dereference <see cref="idToWorkflow"/>.
         /// </summary>
@@ -142,6 +175,12 @@ namespace Neon.Cadence
         private static Dictionary<string, WorkflowRegistration> nameToRegistration = new Dictionary<string, WorkflowRegistration>();
 
         /// <summary>
+        /// Holds ambient task state indicatring whether the current task executing
+        /// in the context of a workflow entry point, signal, or query.
+        /// </summary>
+        internal static AsyncLocal<WorkflowCallContext> CallContext { get; private set; } = new AsyncLocal<WorkflowCallContext>();
+
+        /// <summary>
         /// Restores the class to its initial state.
         /// </summary>
         internal static void Reset()
@@ -149,6 +188,50 @@ namespace Neon.Cadence
             lock (syncLock)
             {
                 idToWorkflow.Clear();
+            }
+        }
+
+        /// <summary>
+        /// Ensures that the current <see cref="Task"/> is running within the context of a workflow 
+        /// entry point, signal, or query method and also that the context matches one of the parameters
+        /// indicating which contexts are allowed.  This is used ensure that only workflow operations
+        /// that are valid for a context are allowed.
+        /// </summary>
+        /// <param name="allowWorkflow">Optionally indicates that workflow entry point contexts are allowed.</param>
+        /// <param name="allowQuery">Optionally indicates that workflow query contexts are allowed.</param>
+        /// <param name="allowSignal">Optionally indicates that workflow signal contexts are allowed.</param>
+        /// <exception cref="NotSupportedException">Thrown when the operation is not supported in the current context.</exception>
+        internal static void CheckCallContext(bool allowWorkflow = false, bool allowQuery = false, bool allowSignal = false)
+        {
+            switch (CallContext.Value)
+            {
+                case WorkflowCallContext.None:
+
+                    throw new NotSupportedException("This operation cannot be performed outside of a workflow.");
+
+                case WorkflowCallContext.Entrypoint:
+
+                    if (!allowWorkflow)
+                    {
+                        throw new NotSupportedException("This operation cannot be performed within a workflow entry point method.");
+                    }
+                    break;
+
+                case WorkflowCallContext.Query:
+
+                    if (!allowQuery)
+                    {
+                        throw new NotSupportedException("This operation cannot be performed within a workflow query method.");
+                    }
+                    break;
+
+                case WorkflowCallContext.Signal:
+
+                    if (!allowSignal)
+                    {
+                        throw new NotSupportedException("This operation cannot be performed within a workflow signal method.");
+                    }
+                    break;
             }
         }
 

@@ -58,6 +58,27 @@ namespace Neon.Cadence
     /// <see cref="GetLengthAsync"/> returns the number of items currently residing
     /// in the queue and <see cref="CloseAsync"/> closes the queue.
     /// </para>
+    /// <note>
+    /// <para>
+    /// The <see cref="WorkflowQueue{T}"/> class is intended only for three scenarios
+    /// within an executing workflow:
+    /// </para>
+    /// <list type="number">
+    ///     <item>
+    ///     <b>Workflow Entry Point:</b> Workflow entry points have full access queues 
+    ///     including creating, closing, reading, writing, and fetching the length.
+    ///     </item>
+    ///     <item>
+    ///     <b>Workflow Query:</b> Workflow query methods may only get the length
+    ///     of a queue.
+    ///     </item>
+    ///     <item>
+    ///     <b>Workflow Signal:</b> Workflow signal methods have partial access to
+    ///     queues including closing, writing, and fetching the length.  Signals 
+    ///     cannot create or read from queues.
+    ///     </item>
+    ///     </list>
+    /// </note>
     /// </remarks>
     public class WorkflowQueue<T> : IDisposable
     {
@@ -77,11 +98,13 @@ namespace Neon.Cadence
         /// <param name="parentWorkflow">The parent workflow.</param>
         /// <param name="queueId">The queue ID.</param>
         /// <param name="capacity">The maximum number of items allowed in the queue.</param>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         internal WorkflowQueue(Workflow parentWorkflow, long queueId, int capacity)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             Covenant.Requires<ArgumentException>(queueId > 0, nameof(queueId));
             Covenant.Requires<ArgumentException>(capacity >= 2, nameof(capacity));
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
 
             this.parentWorkflow = parentWorkflow;
             this.client         = parentWorkflow.Client;
@@ -102,6 +125,8 @@ namespace Neon.Cadence
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected virtual void Dispose(bool disposing)
         {
+            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true);
+
             if (disposing && !isClosed)
             {
                 CloseAsync().Wait();
@@ -135,6 +160,7 @@ namespace Neon.Cadence
         {
             await SyncContext.ClearAsync;
             client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true);
 
             if (isClosed)
             {
@@ -181,6 +207,7 @@ namespace Neon.Cadence
         {
             await SyncContext.ClearAsync;
             client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
 
             if (isClosed)
             {
@@ -230,6 +257,7 @@ namespace Neon.Cadence
         {
             await SyncContext.ClearAsync;
             client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true, allowQuery: true);
 
             if (isClosed)
             {
@@ -273,6 +301,7 @@ namespace Neon.Cadence
         {
             await SyncContext.ClearAsync;
             client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true);
 
             if (isClosed)
             {
@@ -301,24 +330,6 @@ namespace Neon.Cadence
 
             isClosed = true;
         }
-    }
-
-    /// <summary>
-    /// Holds the result of a low-level dequeuing operation.
-    /// </summary>
-    internal struct DequeueResult
-    {
-        /// <summary>
-        /// Returns as <c>true</c> if the queue was closed before an item
-        /// could be read.
-        /// </summary>
-        public bool IsClosed { get; set; }
-
-        /// <summary>
-        /// Holds the encoded item read or <c>null</c> if the queue is closed
-        /// or the read timed out.
-        /// </summary>
-        public byte[] EncodedItem { get; set; }
     }
 }
 

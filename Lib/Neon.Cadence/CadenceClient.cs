@@ -1735,7 +1735,7 @@ namespace Neon.Cadence
                                 {
                                     var heartbeatReply = await CallProxyAsync(new HeartbeatRequest(), timeout: Settings.HeartbeatTimeout);
 
-                                    if (heartbeatReply.Error != null)
+                                    if (heartbeatReply.Error != null && !closingConnection)
                                     {
                                         throw new Exception($"[cadence-proxy]: Heartbeat returns [{heartbeatReply.Error}].");
                                     }
