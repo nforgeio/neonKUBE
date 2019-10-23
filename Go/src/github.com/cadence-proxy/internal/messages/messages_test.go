@@ -4974,6 +4974,7 @@ func (s *UnitTestSuite) TestWorkflowQueueWriteRequest() {
 		s.Equal(int64(0), v.GetContextID())
 		s.Equal(int64(0), v.GetClientID())
 		s.Equal(int64(0), v.GetQueueID())
+		s.False(v.GetNoBlock())
 		s.Nil(v.GetData())
 
 		// Round-trip
@@ -4992,6 +4993,9 @@ func (s *UnitTestSuite) TestWorkflowQueueWriteRequest() {
 
 		v.SetData([]byte{0, 1, 2, 3, 4})
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetData())
+
+		v.SetNoBlock(true)
+		s.True(v.GetNoBlock())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -5008,6 +5012,7 @@ func (s *UnitTestSuite) TestWorkflowQueueWriteRequest() {
 		s.Equal(int64(555), v.GetClientID())
 		s.Equal(int64(777), v.GetQueueID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetData())
+		s.True(v.GetNoBlock())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -5020,6 +5025,7 @@ func (s *UnitTestSuite) TestWorkflowQueueWriteRequest() {
 		s.Equal(int64(555), v.GetClientID())
 		s.Equal(int64(777), v.GetQueueID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetData())
+		s.True(v.GetNoBlock())
 	}
 }
 
@@ -5037,11 +5043,15 @@ func (s *UnitTestSuite) TestWorkflowQueueWriteReply() {
 	if v, ok := message.(*messages.WorkflowQueueWriteReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
+		s.False(v.GetIsFull())
 
 		// Round-trip
 
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetIsFull(true)
+		s.True(v.GetIsFull())
 
 		v.SetError(proxyerror.NewCadenceError(errors.New("foo")))
 		s.Equal(proxyerror.NewCadenceError(errors.New("foo"), proxyerror.Custom), v.GetError())
@@ -5057,6 +5067,7 @@ func (s *UnitTestSuite) TestWorkflowQueueWriteReply() {
 
 	if v, ok := message.(*messages.WorkflowQueueWriteReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
+		s.True(v.GetIsFull())
 		s.Equal(proxyerror.NewCadenceError(errors.New("foo"), proxyerror.Custom), v.GetError())
 	}
 
@@ -5066,6 +5077,7 @@ func (s *UnitTestSuite) TestWorkflowQueueWriteReply() {
 
 	if v, ok := message.(*messages.WorkflowQueueWriteReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
+		s.True(v.GetIsFull())
 		s.Equal(proxyerror.NewCadenceError(errors.New("foo"), proxyerror.Custom), v.GetError())
 	}
 }

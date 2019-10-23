@@ -66,7 +66,7 @@ func (request *WorkflowQueueWriteRequest) SetQueueID(value int64) {
 }
 
 // GetData gets a WorkflowQueueWriteRequest's Data value
-// from its properties map. The data to be written to the queue.
+// from its properties map, the data to be written to the queue.
 //
 // returns []byte -> []byte queue Data.
 func (request *WorkflowQueueWriteRequest) GetData() []byte {
@@ -74,11 +74,29 @@ func (request *WorkflowQueueWriteRequest) GetData() []byte {
 }
 
 // SetData sets a WorkflowQueueWriteRequest's Data value
-// in its properties map. The data to be written to the queue.
+// in its properties map, the data to be written to the queue.
 //
 // param value []byte -> []byte queue Data.
 func (request *WorkflowQueueWriteRequest) SetData(value []byte) {
 	request.SetBytesProperty("Data", value)
+}
+
+// GetNoBlock gets a WorkflowQueueWriteRequest's NoBlock value
+// from its properties map, indicates whether the write operation should not block when
+// the queue is full.
+//
+// returns bool -> bool queue NoBlock.
+func (request *WorkflowQueueWriteRequest) GetNoBlock() bool {
+	return request.GetBoolProperty("NoBlock")
+}
+
+// SetNoBlock sets a WorkflowQueueWriteRequest's NoBlock value
+// in its properties map, indicates whether the write operation should not block when
+// the queue is full.
+//
+// param value bool -> bool queue NoBlock.
+func (request *WorkflowQueueWriteRequest) SetNoBlock(value bool) {
+	request.SetBoolProperty("NoBlock", value)
 }
 
 // -------------------------------------------------------------------------
@@ -99,5 +117,6 @@ func (request *WorkflowQueueWriteRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*WorkflowQueueWriteRequest); ok {
 		v.SetQueueID(request.GetQueueID())
 		v.SetData(request.GetData())
+		v.SetNoBlock(request.GetNoBlock())
 	}
 }

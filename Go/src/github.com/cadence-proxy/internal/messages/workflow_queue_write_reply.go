@@ -44,6 +44,24 @@ func NewWorkflowQueueWriteReply() *WorkflowQueueWriteReply {
 	return reply
 }
 
+// GetIsFull gets a WorkflowQueueWriteReply's IsFull value
+// from its properties map, indicates when the queue is full
+// and the item could not be written.
+//
+// returns bool -> bool queue is full.
+func (reply *WorkflowQueueWriteReply) GetIsFull() bool {
+	return reply.GetBoolProperty("IsFull")
+}
+
+// SetIsFull sets a WorkflowQueueWriteReply's IsFull value
+// in its properties map, indicates when the queue is full
+// and the item could not be written.
+//
+// param value bool -> bool queue is full.
+func (reply *WorkflowQueueWriteReply) SetIsFull(value bool) {
+	reply.SetBoolProperty("IsFull", value)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -59,4 +77,7 @@ func (reply *WorkflowQueueWriteReply) Clone() IProxyMessage {
 // CopyTo inherits docs from WorkflowReply.CopyTo()
 func (reply *WorkflowQueueWriteReply) CopyTo(target IProxyMessage) {
 	reply.WorkflowReply.CopyTo(target)
+	if v, ok := target.(*WorkflowQueueWriteReply); ok {
+		v.SetIsFull(reply.GetIsFull())
+	}
 }

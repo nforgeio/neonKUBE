@@ -32,12 +32,12 @@ import (
 	"github.com/cadence-proxy/internal/messages"
 )
 
-func buildReply(reply messages.IProxyReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
+func buildReply(reply messages.IProxyReply, cadenceError *proxyerror.CadenceError, values ...interface{}) {
 
-	// check if there is anything in result
+	// check if there is anything in values
 	var value interface{}
-	if len(result) > 0 {
-		value = result[0]
+	if len(values) > 0 {
+		value = values[0]
 	}
 
 	// handle the messages individually based on their message type
@@ -268,7 +268,7 @@ func buildReply(reply messages.IProxyReply, cadenceError *proxyerror.CadenceErro
 	// WorkflowQueueWriteReply
 	case internal.WorkflowQueueWriteReply:
 		if v, ok := reply.(*messages.WorkflowQueueWriteReply); ok {
-			buildWorkflowQueueWriteReply(v, cadenceError)
+			buildWorkflowQueueWriteReply(v, cadenceError, value)
 		}
 
 	// WorkflowQueueReadReply
@@ -631,8 +631,13 @@ func buildWorkflowQueueNewReply(reply *messages.WorkflowQueueNewReply, cadenceEr
 	reply.SetError(cadenceError)
 }
 
-func buildWorkflowQueueWriteReply(reply *messages.WorkflowQueueWriteReply, cadenceError *proxyerror.CadenceError) {
+func buildWorkflowQueueWriteReply(reply *messages.WorkflowQueueWriteReply, cadenceError *proxyerror.CadenceError, isFull ...interface{}) {
 	reply.SetError(cadenceError)
+	if len(isFull) > 0 {
+		if v, ok := isFull[0].(bool); ok {
+			reply.SetIsFull(v)
+		}
+	}
 }
 
 func buildWorkflowQueueReadReply(reply *messages.WorkflowQueueReadReply, cadenceError *proxyerror.CadenceError, values ...interface{}) {
@@ -649,10 +654,10 @@ func buildWorkflowQueueReadReply(reply *messages.WorkflowQueueReadReply, cadence
 	}
 }
 
-func buildWorkflowQueueLengthReply(reply *messages.WorkflowQueueLengthReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
+func buildWorkflowQueueLengthReply(reply *messages.WorkflowQueueLengthReply, cadenceError *proxyerror.CadenceError, length ...interface{}) {
 	reply.SetError(cadenceError)
-	if len(result) > 0 {
-		if v, ok := result[0].(int32); ok {
+	if len(length) > 0 {
+		if v, ok := length[0].(int32); ok {
 			reply.SetLength(v)
 		}
 	}

@@ -189,6 +189,7 @@ func handleHeartbeatRequest(requestCtx context.Context, request *messages.Heartb
 
 	// new HeartbeatReply
 	reply := createReplyMessage(request)
+
 	buildReply(reply, nil)
 
 	return reply
@@ -1743,8 +1744,23 @@ func handleWorkflowQueueWriteRequest(requestCtx context.Context, request *messag
 		return reply
 	}
 
-	// send data to queue
-	queue <- data
+	// check if we should block and wait to enqueue
+	// or just try to enqueue without blocking.
+	if request.GetNoBlock() {
+		select {
+		case queue <- data:
+			// indicates that the value was successfully added to the queue
+			// and is not full.
+			buildReply(reply, nil, false)
+		default:
+			// indicates that the queue is full and the value was not added
+			// successfully to the queue.
+			buildReply(reply, nil, true)
+		}
+	} else {
+		// send data to queue
+		queue <- data
+	}
 
 	Logger.Info("Successfully Added to Queue",
 		zap.Int64("QueueId", queueID),
