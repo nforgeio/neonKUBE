@@ -36,7 +36,7 @@
   f. Add the release setup binary named like: **neonKUBE-setup-0.6.4-alpha.exe**
   g. Edit the release notes including adding the SHA512 for the setup from:
 
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`$NF_BUILD%\neonKUBE-setup.sha512.txt`
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`%NF_BUILD%\neonKUBE-setup.sha512.txt`
 
   h. Publish the release
 
