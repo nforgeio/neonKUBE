@@ -34,20 +34,20 @@ type (
 	}
 )
 
-// NewCadenceErrorEmpty is the default constructor for a CadenceError
+// NewCadenceErrorEmpty is the default constructor for a CadenceError.
 //
 // returns *CadenceError -> pointer to a newly initialized CadenceError
-// in memory
+// in memory.
 func NewCadenceErrorEmpty() *CadenceError {
 	return new(CadenceError)
 }
 
 // NewCadenceError is the constructor for a CadenceError
-// when supplied parameters
+// when supplied parameters.
 //
-// param err error -> error to set
+// param err error -> error to set.
 //
-// param errorType ...interface{} -> the cadence error type
+// param errorType ...interface{} -> the cadence error type.
 func NewCadenceError(err error, errType ...CadenceErrorType) *CadenceError {
 	cadenceError := NewCadenceErrorEmpty()
 	if err == nil {
@@ -80,7 +80,7 @@ func NewCadenceError(err error, errType ...CadenceErrorType) *CadenceError {
 }
 
 // GetType gets the CadenceErrorType from a CadenceError
-// instance
+// instance.
 //
 // returns CadenceErrorType -> the corresponding error type to the
 // string representing the error type in a CadenceError instance
