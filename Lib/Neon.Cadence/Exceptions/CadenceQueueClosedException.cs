@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceDomainAlreadyExistsException.cs
+// FILE:	    CadenceQueueClosedException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,22 +22,20 @@ using Neon.Cadence.Internal;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Thrown when a Cadence domain already exists.
+    /// Indicates that a Cadence <see cref="WorkflowQueue.DequeueAsync(TimeSpan)"/> operation
+    /// timed out.
     /// </summary>
-    public class CadenceDomainAlreadyExistsException : CadenceException
+    public class CadenceQueueClosedException : CadenceException
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="message">Optionally specifies a message.</param>
-        /// <param name="innerException">Optional inner exception.</param>
-        public CadenceDomainAlreadyExistsException(string message = null, Exception innerException = null)
+        /// <param name="innerException">Optionally specifies the inner exception.</param>
+        public CadenceQueueClosedException(string message = null, Exception innerException = null)
             : base(message, innerException)
         {
         }
-
-        /// <inheritdoc/>
-        internal override string CadenceError => "DomainAlreadyExistsError";
 
         /// <inheritdoc/>
         internal override CadenceErrorTypes CadenceErrorType => CadenceErrorTypes.Custom;

@@ -51,6 +51,16 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
+        /// Indicates whether the write operation should not block when
+        /// the queue is full.
+        /// </summary>
+        public bool NoBlock
+        {
+            get => GetBoolProperty(PropertyNames.NoBlock);
+            set => SetBoolProperty(PropertyNames.NoBlock, value);
+        }
+
+        /// <summary>
         /// The data to be written to the queue.
         /// </summary>
         public byte[] Data
@@ -77,6 +87,7 @@ namespace Neon.Cadence.Internal
             var typedTarget = (WorkflowQueueWriteRequest)target;
 
             typedTarget.QueueId = this.QueueId;
+            typedTarget.NoBlock = this.NoBlock;
             typedTarget.Data    = this.Data;
         }
     }

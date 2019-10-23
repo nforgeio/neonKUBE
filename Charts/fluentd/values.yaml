@@ -14,8 +14,8 @@ output:
   port: 9200
   scheme: http
   sslVersion: TLSv1
-  buffer_chunk_limit: 8M
-  buffer_queue_limit: 32
+  buffer_chunk_limit: 64MB
+  buffer_queue_limit: 4GB
 
 env: {}
 
@@ -125,7 +125,7 @@ configMaps:
     <match **>
       @id elasticsearch
       @type elasticsearch
-      @log_level info
+      @log_level debug
       include_tag_key true
       # Replace with the host/port to your Elasticsearch cluster.
       host "#{ENV['OUTPUT_HOST']}"
@@ -140,13 +140,13 @@ configMaps:
       <buffer>
         @type file
         path /var/log/fluentd-buffers/kubernetes.system.buffer
-        flush_mode interval
-        flush_interval 5s
+        flush_mode immediate
         flush_thread_count 4
         chunk_full_threshold 0.9
         # retry_forever
         retry_type exponential_backoff
-        retry_timeout 1m
+        retry_timeout 1s
+        retry_max_times 5
         retry_max_interval 30
         chunk_limit_size "#{ENV['OUTPUT_BUFFER_CHUNK_LIMIT']}"
         queue_limit_length "#{ENV['OUTPUT_BUFFER_QUEUE_LIMIT']}"
@@ -195,8 +195,8 @@ serviceAccount:
 # Enable autoscaling using HorizontalPodAutoscaler
 autoscaling:
   enabled: true
-  minReplicas: 2
-  maxReplicas: 5
+  minReplicas: 4
+  maxReplicas: 10
   metrics:
     - type: Resource
       resource:

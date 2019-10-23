@@ -844,6 +844,12 @@ namespace Neon.Cadence
             // Crank up the background threads which will handle [cadence-proxy]
             // request timeouts.
 
+            // $todo(jefflill):
+            //
+            // Temporarily disabling heartbeats due to:
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/706
+
             client.heartbeatThread = new Thread(new ThreadStart(client.HeartbeatThread));
             client.heartbeatThread.Start();
 
@@ -1504,12 +1510,16 @@ namespace Neon.Cadence
         /// <summary>
         /// Ensures that that client instance is not disposed.
         /// </summary>
-        /// <exception cref="ObjectDisposedException">Thrown if the client is disposed.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the client is disposed or is no longer connected to <b>cadence-proxy</b>.</exception>
         internal void EnsureNotDisposed()
         {
             if (isDisposed)
             {
                 throw new ObjectDisposedException(nameof(CadenceClient));
+            }
+            else if (closingConnection)
+            {
+                throw new ObjectDisposedException(nameof(CadenceClient), "Client is not connected to [cadence-proxy].");
             }
         }
 
@@ -1526,10 +1536,6 @@ namespace Neon.Cadence
             {
                 raiseConnectionClosed  = !connectionClosedRaised;
                 connectionClosedRaised = true;
-            }
-
-            if (!raiseConnectionClosed)
-            {
             }
 
             if (raiseConnectionClosed)
@@ -1728,14 +1734,14 @@ namespace Neon.Cadence
 
                             if (!Settings.DebugDisableHeartbeats)
                             {
-                                // Verify [cadence-proxy] health via by sending a heartbeat
+                                // Verify [cadence-proxy] health by sending a heartbeat
                                 // and waiting a bit for a reply.
 
                                 try
                                 {
                                     var heartbeatReply = await CallProxyAsync(new HeartbeatRequest(), timeout: Settings.HeartbeatTimeout);
 
-                                    if (heartbeatReply.Error != null)
+                                    if (heartbeatReply.Error != null && !closingConnection)
                                     {
                                         throw new Exception($"[cadence-proxy]: Heartbeat returns [{heartbeatReply.Error}].");
                                     }
@@ -1743,7 +1749,8 @@ namespace Neon.Cadence
                                 catch (Exception e)
                                 {
                                     log.LogError("Heartbeat check failed.  Closing Cadence connection.", e);
-                                    exception = new CadenceTimeoutException("Heartbeat check failed.", e);
+
+                                    exception = new CadenceTimeoutException("[cadence-proxy] heartbeat failure.", e);
 
                                     // Break out of the while loop so we'll signal the application that
                                     // the connection has closed and then exit the thread below.

@@ -835,7 +835,8 @@ namespace Neon.Cadence.Internal
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            this.hasStarted     = true;");
                     sbSource.AppendLine($"            this.childExecution = await ___StubHelper.StartChildWorkflowAsync(this.client, this.parentWorkflow, ___workflowTypeName, ___argBytes, ___options);");
-                    sbSource.AppendLine($"            ___resultBytes      = await ___StubHelper.GetChildWorkflowResultAsync(this.client, this.parentWorkflow, this.childExecution);");                    sbSource.AppendLine();
+                    sbSource.AppendLine($"            ___resultBytes      = await ___StubHelper.GetChildWorkflowResultAsync(this.client, this.parentWorkflow, this.childExecution);");
+                    sbSource.AppendLine();
 
                     if (!details.IsVoid)
                     {
@@ -1323,6 +1324,11 @@ namespace Neon.Cadence.Internal
                 }
             }
 
+            //-----------------------------------------
+            // $todo(jefflill): DELETE THIS!
+            var interfaceName = activityInterface.Name;
+            //-----------------------------------------
+
             //-----------------------------------------------------------------
             // We need to generate the stub class.
 
@@ -1404,6 +1410,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"        private string                            activityTypeName;");
             sbSource.AppendLine($"        private ActivityOptions                   options;");
             sbSource.AppendLine($"        private string                            domain;");
+            sbSource.AppendLine($"        private Type                              activityInterface;");
             sbSource.AppendLine($"        private Type                              activityType;");
             sbSource.AppendLine($"        private ConstructorInfo                   activityConstructor;");
             sbSource.AppendLine($"        private LocalActivityOptions              localOptions;");
@@ -1412,26 +1419,28 @@ namespace Neon.Cadence.Internal
             // Generate the constructor for regular (non-local) activity stubs.
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, Workflow workflow, string activityTypeName, ActivityOptions options, System.Type interfaceType = null)");
+            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, Workflow workflow, string activityTypeName, ActivityOptions options, System.Type interfaceType)");
             sbSource.AppendLine($"        {{");
-            sbSource.AppendLine($"            this.client           = client;");
-            sbSource.AppendLine($"            this.dataConverter    = dataConverter;");
-            sbSource.AppendLine($"            this.workflow         = workflow;");
-            sbSource.AppendLine($"            this.isLocal          = false;");
-            sbSource.AppendLine($"            this.activityTypeName = activityTypeName;");
-            sbSource.AppendLine($"            this.options          = ___StubHelper.NormalizeOptions(client, options, interfaceType);");
-            sbSource.AppendLine($"            this.domain           = options.Domain;");
+            sbSource.AppendLine($"            this.client            = client;");
+            sbSource.AppendLine($"            this.dataConverter     = dataConverter;");
+            sbSource.AppendLine($"            this.workflow          = workflow;");
+            sbSource.AppendLine($"            this.isLocal           = false;");
+            sbSource.AppendLine($"            this.activityInterface = interfaceType;");
+            sbSource.AppendLine($"            this.activityTypeName  = activityTypeName;");
+            sbSource.AppendLine($"            this.options           = ___StubHelper.NormalizeOptions(client, options, interfaceType);");
+            sbSource.AppendLine($"            this.domain            = options.Domain;");
             sbSource.AppendLine($"        }}");
 
             // Generate the constructor for local activity stubs.
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, Workflow workflow, Type activityType, LocalActivityOptions localOptions)");
+            sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, Workflow workflow, Type activityType, LocalActivityOptions localOptions, System.Type interfaceType)");
             sbSource.AppendLine($"        {{");
             sbSource.AppendLine($"            this.client              = client;");
             sbSource.AppendLine($"            this.dataConverter       = dataConverter;");
             sbSource.AppendLine($"            this.workflow            = workflow;");
             sbSource.AppendLine($"            this.isLocal             = true;");
+            sbSource.AppendLine($"            this.activityInterface   = interfaceType;");
             sbSource.AppendLine($"            this.activityType        = activityType;");
             sbSource.AppendLine($"            this.activityConstructor = activityType.GetConstructor(Type.EmptyTypes);");
             sbSource.AppendLine($"            this.localOptions        = ___StubHelper.NormalizeOptions(client, localOptions);");
@@ -1443,7 +1452,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"            this.nameToMethod = new Dictionary<string, MethodInfo>();");
             sbSource.AppendLine();
-            sbSource.AppendLine($"            foreach (var ___method in activityType.GetMethods(BindingFlags.Public | BindingFlags.Instance))");
+            sbSource.AppendLine($"            foreach (var ___method in activityInterface.GetMethods(BindingFlags.Public | BindingFlags.Instance))");
             sbSource.AppendLine($"            {{");
             sbSource.AppendLine($"                var ___activityMethodAttribute = ___method.GetCustomAttribute<ActivityMethodAttribute>();");
             sbSource.AppendLine();
