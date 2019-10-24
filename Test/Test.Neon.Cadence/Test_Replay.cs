@@ -534,32 +534,11 @@ namespace TestCadence
 
                     case ReplayTest.Activity:
 
-                        var localActivityStub = Workflow.NewLocalActivityStub<IReplayActivity, ReplayActivity>();
-
-                        if (firstPass)
-                        {
-                            firstPass     = false;
-                            originalValue = await localActivityStub.RunAsync("Hello World!");
-
-                            await DecisionAsync();
-                            await Workflow.ForceReplayAsync();
-                        }
-                        else
-                        {
-                            success = originalValue.Equals(await localActivityStub.RunAsync("Hello World!"));
-                            success = success && Workflow.IsReplaying;
-
-                            await DecisionAsync();
-                        }
-                        break;
-
-                    case ReplayTest.LocalActivity:
-
                         var activityStub = Workflow.NewActivityStub<IReplayActivity>();
 
                         if (firstPass)
                         {
-                            firstPass = false;
+                            firstPass     = false;
                             originalValue = await activityStub.RunAsync("Hello World!");
 
                             await DecisionAsync();
@@ -568,6 +547,27 @@ namespace TestCadence
                         else
                         {
                             success = originalValue.Equals(await activityStub.RunAsync("Hello World!"));
+                            success = success && Workflow.IsReplaying;
+
+                            await DecisionAsync();
+                        }
+                        break;
+
+                    case ReplayTest.LocalActivity:
+
+                        var localActivityStub = Workflow.NewLocalActivityStub<IReplayActivity, ReplayActivity>();
+
+                        if (firstPass)
+                        {
+                            firstPass = false;
+                            originalValue = await localActivityStub.RunAsync("Hello World!");
+
+                            await DecisionAsync();
+                            await Workflow.ForceReplayAsync();
+                        }
+                        else
+                        {
+                            success = originalValue.Equals(await localActivityStub.RunAsync("Hello World!"));
                             success = success && Workflow.IsReplaying;
 
                             await DecisionAsync();

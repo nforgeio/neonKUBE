@@ -23,7 +23,7 @@ namespace Neon.Cadence
 {
     /// <summary>
     /// Indicates that a Cadence <see cref="WorkflowQueue.DequeueAsync(TimeSpan)"/> operation
-    /// timed out.
+    /// failed because the queue has been closed.
     /// </summary>
     public class CadenceQueueClosedException : CadenceException
     {
