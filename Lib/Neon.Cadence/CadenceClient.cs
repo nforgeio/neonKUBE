@@ -1374,8 +1374,6 @@ namespace Neon.Cadence
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected virtual void Dispose(bool disposing)
         {
-            RaiseConnectionClosed();
-
             closingConnection = true;
 
             if (Settings != null && !Settings.DebugDisableHandshakes)
@@ -1466,6 +1464,8 @@ namespace Neon.Cadence
             {
                 GC.SuppressFinalize(this);
             }
+
+            RaiseConnectionClosed();
         }
 
         /// <summary>
