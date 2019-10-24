@@ -117,6 +117,12 @@ func CreateNewTypedMessage(messageType internal.MessageType) IProxyMessage {
 	case internal.LogRequest:
 		message = NewLogRequest()
 
+	// DescribeTaskList
+	case internal.DescribeTaskListReply:
+		message = NewDescribeTaskListReply()
+	case internal.DescribeTaskListRequest:
+		message = NewDescribeTaskListRequest()
+
 	// --------------------------------------------------------------------------
 	// Workflow messages
 

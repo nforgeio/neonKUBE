@@ -19,6 +19,7 @@ package messages
 
 import (
 	internal "github.com/cadence-proxy/internal"
+	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 )
 
 type (
@@ -44,6 +45,30 @@ func NewDescribeTaskListReply() *DescribeTaskListReply {
 	return reply
 }
 
+// GetResult gets the DescribeTaskListReply's Result property from its
+// properties map, describes the task list details.
+//
+// returns *cadenceshared.DescribeTaskListResponse -> the response to the cadence
+// describe task list request.
+func (reply *DescribeTaskListReply) GetResult() *cadenceshared.DescribeTaskListResponse {
+	resp := new(cadenceshared.DescribeTaskListResponse)
+	err := reply.GetJSONProperty("Result", resp)
+	if err != nil {
+		return nil
+	}
+
+	return resp
+}
+
+// SetResult sets the DescribeTaskListReply's Result property in its
+// properties map, describes the task list details.
+//
+// param value cadenceshared*.DescribeTaskListResponse -> the response to the cadence
+// describe task list request.
+func (reply *DescribeTaskListReply) SetResult(value *cadenceshared.DescribeTaskListResponse) {
+	reply.SetJSONProperty("Result", value)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -59,4 +84,7 @@ func (reply *DescribeTaskListReply) Clone() IProxyMessage {
 // CopyTo inherits docs from ProxyReply.CopyTo()
 func (reply *DescribeTaskListReply) CopyTo(target IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
+	if v, ok := target.(*DescribeTaskListReply); ok {
+		v.SetResult(reply.GetResult())
+	}
 }

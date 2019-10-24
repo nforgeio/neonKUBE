@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TaskListKind.cs
+// FILE:	    TaskListType.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,6 +18,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.Serialization;
+
+using Newtonsoft.Json;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
@@ -26,21 +29,20 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Enumerates the different kinds of task lists.
+    /// Used to distinguish between decision (AKA workflow) and activity task lists.
     /// </summary>
-    public enum TaskListKind
-
+    public enum TaskListType
     {
-        // WARNING: These values must match those defined by [InternalTaskListKind].
+        /// <summary>
+        /// Identifies decision (AKA workflow) task lists.
+        /// </summary>
+        [EnumMember(Value = "Decision")]
+        Decision,
 
         /// <summary>
-        /// Normal.
+        /// Identifies activity task lists.
         /// </summary>
-        Normal = 0,
-
-        /// <summary>
-        /// Sticky.
-        /// </summary>
-        Sticky = 1
+        [EnumMember(Value = "Activity")]
+        Activity
     }
 }

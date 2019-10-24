@@ -118,6 +118,12 @@ func buildReply(reply messages.IProxyReply, cadenceError *proxyerror.CadenceErro
 			buildPingReply(v, cadenceError)
 		}
 
+	// DescribeTaskListReply
+	case internal.DescribeTaskListReply:
+		if v, ok := reply.(*messages.DescribeTaskListReply); ok {
+			buildDescribeTaskListReply(v, cadenceError, value)
+		}
+
 	// -------------------------------------------------------------------------
 	// workflow message types
 
@@ -460,6 +466,15 @@ func buildStopWorkerReply(reply *messages.StopWorkerReply, cadenceError *proxyer
 
 func buildPingReply(reply *messages.PingReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
+}
+
+func buildDescribeTaskListReply(reply *messages.DescribeTaskListReply, cadenceError *proxyerror.CadenceError, response ...interface{}) {
+	reply.SetError(cadenceError)
+	if len(response) > 0 {
+		if v, ok := response[0].(*cadenceshared.DescribeTaskListResponse); ok {
+			reply.SetResult(v)
+		}
+	}
 }
 
 // -------------------------------------------------------------------------

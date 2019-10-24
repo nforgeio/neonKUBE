@@ -18,8 +18,8 @@
 package messages
 
 import (
-	proxyclient "github.com/cadence-proxy/internal/cadence/client"
 	internal "github.com/cadence-proxy/internal"
+	proxyclient "github.com/cadence-proxy/internal/cadence/client"
 )
 
 type (
@@ -88,6 +88,7 @@ func (reply *DomainDescribeReply) GetDomainInfoStatus() proxyclient.DomainStatus
 	if domainInfoStatusPtr == nil {
 		return proxyclient.DomainStatusUnspecified
 	}
+
 	domainStatus := proxyclient.StringToDomainStatus(*domainInfoStatusPtr)
 
 	return domainStatus
