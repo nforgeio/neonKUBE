@@ -295,7 +295,7 @@ namespace Neon.Cadence
         internal async Task StopWorkerAsync(Worker worker)
         {
             Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
-            EnsureNotDisposed();
+            EnsureNotDisposed(noClosingCheck: true);
 
             using (await workerRegistrationMutex.AcquireAsync())
             {
