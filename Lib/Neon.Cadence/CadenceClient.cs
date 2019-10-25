@@ -844,12 +844,6 @@ namespace Neon.Cadence
             // Crank up the background threads which will handle [cadence-proxy]
             // request timeouts.
 
-            // $todo(jefflill):
-            //
-            // Temporarily disabling heartbeats due to:
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/706
-
             client.heartbeatThread = new Thread(new ThreadStart(client.HeartbeatThread));
             client.heartbeatThread.Start();
 
@@ -1374,8 +1368,6 @@ namespace Neon.Cadence
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected virtual void Dispose(bool disposing)
         {
-            RaiseConnectionClosed();
-
             closingConnection = true;
 
             if (Settings != null && !Settings.DebugDisableHandshakes)
@@ -1466,6 +1458,8 @@ namespace Neon.Cadence
             {
                 GC.SuppressFinalize(this);
             }
+
+            RaiseConnectionClosed();
         }
 
         /// <summary>
@@ -1510,14 +1504,15 @@ namespace Neon.Cadence
         /// <summary>
         /// Ensures that that client instance is not disposed.
         /// </summary>
+        /// <param name="noClosingCheck">Optionally skip check that the connection is in the process of closing.</param>
         /// <exception cref="ObjectDisposedException">Thrown if the client is disposed or is no longer connected to <b>cadence-proxy</b>.</exception>
-        internal void EnsureNotDisposed()
+        internal void EnsureNotDisposed(bool noClosingCheck = false)
         {
             if (isDisposed)
             {
                 throw new ObjectDisposedException(nameof(CadenceClient));
             }
-            else if (closingConnection)
+            else if (!noClosingCheck && closingConnection)
             {
                 throw new ObjectDisposedException(nameof(CadenceClient), "Client is not connected to [cadence-proxy].");
             }
