@@ -95,7 +95,7 @@ deployment:
   resources: {}
   config:
     logging:
-      level: debug
+      level: info
     metricbeat.config:
       modules:
         path: ${path.config}/modules.d/*.yml
