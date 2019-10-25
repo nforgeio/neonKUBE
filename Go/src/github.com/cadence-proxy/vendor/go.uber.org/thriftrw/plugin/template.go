@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,7 @@ import (
 	"go/format"
 	"go/parser"
 	"go/token"
+	"path/filepath"
 	"sort"
 	"text/template"
 
@@ -82,8 +83,11 @@ type goFileGenerator struct {
 	// Names of known globals. All global variables share this namespace.
 	globals map[string]struct{}
 
-	// import path -> import name
+	// import path -> empty string or import name for named imports
 	imports map[string]string
+
+	// import path -> package name or import name for named imports
+	importedNames map[string]string
 }
 
 func newGoFileGenerator(opts []TemplateOption) *goFileGenerator {
@@ -91,6 +95,7 @@ func newGoFileGenerator(opts []TemplateOption) *goFileGenerator {
 		templateFuncs: make(template.FuncMap),
 		globals:       make(map[string]struct{}),
 		imports:       make(map[string]string),
+		importedNames: make(map[string]string),
 	}
 	for _, opt := range opts {
 		opt.apply(&t)
@@ -105,7 +110,7 @@ func (g *goFileGenerator) isGlobalTaken(name string) bool {
 
 // Import the given import path and return the imported name for this package.
 func (g *goFileGenerator) Import(path string) string {
-	if name, ok := g.imports[path]; ok {
+	if name, ok := g.importedNames[path]; ok {
 		return name
 	}
 
@@ -120,7 +125,14 @@ func (g *goFileGenerator) Import(path string) string {
 		importedName = fmt.Sprintf("%s%d", name, i)
 	}
 
-	g.imports[path] = importedName
+	if importedName == name && name == filepath.Base(path) {
+		// Package name is available and matches the base name, so we won't do
+		// a named import. We'll use named imports for all other cases.
+		g.imports[path] = ""
+	} else {
+		g.imports[path] = importedName
+	}
+	g.importedNames[path] = importedName
 	g.globals[importedName] = struct{}{}
 	return importedName
 }

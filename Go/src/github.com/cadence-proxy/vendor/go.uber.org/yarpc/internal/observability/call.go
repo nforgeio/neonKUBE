@@ -113,13 +113,8 @@ func (c call) endStats(elapsed time.Duration, err error, isApplicationError bool
 		c.edge.latencies.Observe(elapsed)
 		return
 	}
-
-	isStatus := yarpcerrors.IsStatus(err)
-
-	// If the error is not a yarpcerrors.Status, we cannot determine a code or
-	// fault. Assume that these application errors are the caller's fault and emit
-	// a generic error tag.
-	if isApplicationError && !isStatus {
+	// For now, assume that all application errors are the caller's fault.
+	if isApplicationError {
 		c.edge.callerErrLatencies.Observe(elapsed)
 		if counter, err := c.edge.callerFailures.Get(_error, "application_error"); err == nil {
 			counter.Inc()
@@ -127,7 +122,7 @@ func (c call) endStats(elapsed time.Duration, err error, isApplicationError bool
 		return
 	}
 
-	if !isStatus {
+	if !yarpcerrors.IsStatus(err) {
 		c.edge.serverErrLatencies.Observe(elapsed)
 		if counter, err := c.edge.serverFailures.Get(_error, "unknown_internal_yarpc"); err == nil {
 			counter.Inc()
@@ -135,7 +130,6 @@ func (c call) endStats(elapsed time.Duration, err error, isApplicationError bool
 		return
 	}
 
-	// Emit finer grained metrics since the error is a yarpcerrors.Status.
 	errCode := yarpcerrors.FromError(err).Code()
 	switch errCode {
 	case yarpcerrors.CodeCancelled,

@@ -3,8 +3,7 @@ export GO15VENDOREXPERIMENT=1
 BENCH_FLAGS ?= -cpuprofile=cpu.pprof -memprofile=mem.pprof -benchmem
 PKGS ?= $(shell glide novendor)
 PKG_FILES ?= *.go example/*.go m3
-LINT_IGNORE = m3/thrift\|thirdparty
-LICENSE_IGNORE = thirdparty
+LINT_IGNORE = m3/thrift
 
 .PHONY: all
 all: lint test
@@ -24,15 +23,17 @@ dependencies:
 lint:
 	@rm -rf lint.log
 	@echo "Checking formatting..."
-	@gofmt -d -s $(PKG_FILES) 2>&1 | grep -v '$(LINT_IGNORE)' | tee lint.log
+	@gofmt -d -s $(PKG_FILES) 2>&1 | grep -v $(LINT_IGNORE) | tee lint.log
 	@echo "Installing test dependencies for vet..."
 	@go test -i $(PKGS)
+	@echo "Checking vet..."
+	@$(foreach dir,$(PKG_FILES),go tool vet $(dir) 2>&1 | grep -v $(LINT_IGNORE) | tee -a lint.log;)
 	@echo "Checking lint..."
-	@$(foreach dir,$(PKGS),golint $(dir) 2>&1 | grep -v '$(LINT_IGNORE)' | tee -a lint.log;)
+	@$(foreach dir,$(PKGS),golint $(dir) 2>&1 | grep -v $(LINT_IGNORE) | tee -a lint.log;)
 	@echo "Checking for unresolved FIXMEs..."
-	@git grep -i fixme | grep -v -e vendor -e Makefile | grep -v '$(LINT_IGNORE)' | tee -a lint.log
+	@git grep -i fixme | grep -v -e vendor -e Makefile | grep -v $(LINT_IGNORE) | tee -a lint.log
 	@echo "Checking for license headers..."
-	@./check_license.sh | grep -v '$(LICENSE_IGNORE)' | tee -a lint.log
+	@./check_license.sh | tee -a lint.log
 	@[ ! -s lint.log ]
 
 .PHONY: test

@@ -169,6 +169,7 @@ func (b *WorkflowClientBuilder) build() error {
 	return nil
 }
 
+// destroys a cadence client <--> server connection.
 func (b *WorkflowClientBuilder) destroy() error {
 	if b.dispatcher == nil {
 		return globals.ErrEntityNotExist

@@ -32,16 +32,10 @@ namespace Neon.Cadence
     public enum DomainStatus
     {
         /// <summary>
-        /// The status cannot be determined.
-        /// </summary>
-        [EnumMember(Value = "UNSPECIFIED")]
-        Unspecified = 0,
-
-        /// <summary>
         /// The domain is registered and active.
         /// </summary>
         [EnumMember(Value = "REGISTERED")]
-        Registered,
+        Registered = 0,
 
         /// <summary>
         /// The domain is closed for new workflows but will remain

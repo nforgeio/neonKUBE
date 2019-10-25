@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -158,26 +158,23 @@ func constantMap(g Generator, v compile.ConstantMap, t compile.TypeSpec) (string
 }
 
 func constantSet(g Generator, v compile.ConstantSet, t compile.TypeSpec) (string, error) {
-	rootSpec := compile.RootTypeSpec(t).(*compile.SetSpec)
-	valueSpec := rootSpec.ValueSpec
+	valueSpec := compile.RootTypeSpec(t).(*compile.SetSpec).ValueSpec
 	return g.TextTemplate(
 		`
-		<- $rootSpec := .RootSpec ->
 		<- $valueType := .ValueSpec ->
 		<- typeReference .Spec>{
 			<range .Value>
-				<- if setUsesMap $rootSpec ->
+				<- if isHashable $valueType ->
 					<constantValue . $valueType>: struct{}{},
 				<- else ->
 					<constantValue . $valueType>,
 				<- end>
 			<end>
 		}`, struct {
-			RootSpec  *compile.SetSpec
 			Spec      compile.TypeSpec
 			ValueSpec compile.TypeSpec
 			Value     compile.ConstantSet
-		}{RootSpec: rootSpec, Spec: t, ValueSpec: valueSpec, Value: v},
+		}{Spec: t, ValueSpec: valueSpec, Value: v},
 		TemplateFunc("constantValue", ConstantValue))
 }
 

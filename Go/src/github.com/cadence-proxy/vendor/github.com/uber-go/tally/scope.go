@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,8 @@ import (
 	"io"
 	"sync"
 	"time"
+
+	"github.com/facebookgo/clock"
 )
 
 var (
@@ -33,7 +35,7 @@ var (
 	// DefaultSeparator is the default separator used to join nested scopes
 	DefaultSeparator = "."
 
-	globalNow = time.Now
+	globalClock = clock.New()
 
 	defaultScopeBuckets = DurationBuckets{
 		0 * time.Millisecond,

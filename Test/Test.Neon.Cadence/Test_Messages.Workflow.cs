@@ -1592,8 +1592,7 @@ namespace TestCadence
                         WorkflowId        = "my-workflowid",
                         RunId             = "my-runid",
                         WorkflowTypeName  = "my-workflow-typename",
-                        InitiatedId       = 16000,
-                        ParentClosePolicy = (int)ParentClosePolicy.RequestCancel
+                        InitiatedId       = 16000
                     }
                 }
             };
@@ -1674,7 +1673,6 @@ namespace TestCadence
             Assert.Equal("my-runid", pendingChild.RunId);
             Assert.Equal("my-workflow-typename", pendingChild.WorkflowTypeName);
             Assert.Equal(16000, pendingChild.InitiatedId);
-            Assert.Equal((int)ParentClosePolicy.RequestCancel, pendingChild.ParentClosePolicy);
 
             //---------------------------------------------
 

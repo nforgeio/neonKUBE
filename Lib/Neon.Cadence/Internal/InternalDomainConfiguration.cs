@@ -57,7 +57,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         [JsonProperty(PropertyName = "historyArchivalStatus", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public ArchivalStatus HistoryArchivalStatus { get; set; }
+        public ArchivalStatus? HistoryArchivalStatus { get; set; }
 
         /// <summary>
         /// $todo(jefflill): Don't know what this is.
@@ -71,7 +71,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         [JsonProperty(PropertyName = "visibilityArchivalStatus", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public ArchivalStatus VisibilityArchivalStatus { get; set; }
+        public ArchivalStatus? VisibilityArchivalStatus { get; set; }
 
         /// <summary>
         /// $todo(jefflill): Don't know what this is.

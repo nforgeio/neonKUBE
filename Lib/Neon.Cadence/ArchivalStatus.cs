@@ -35,7 +35,7 @@ namespace Neon.Cadence
         /// Disables archival.
         /// </summary>
         [EnumMember(Value = "DISABLED")]
-        Disabled,
+        Disabled = 0,
 
         /// <summary>
         /// Enables archival.

@@ -37,7 +37,6 @@ import (
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
 	"go.uber.org/cadence/.gen/go/cadence/workflowservicetest"
 	"go.uber.org/cadence/.gen/go/shared"
-	"go.uber.org/cadence/encoded"
 	"go.uber.org/cadence/internal/common"
 	"go.uber.org/zap"
 )
@@ -186,7 +185,7 @@ type (
 
 		// Optional: Sets DataConverter to customize serialization/deserialization of arguments in Cadence
 		// default: defaultDataConverter, an combination of thriftEncoder and jsonEncoder
-		DataConverter encoded.DataConverter
+		DataConverter DataConverter
 
 		// Optional: worker graceful shutdown timeout
 		// default: 0s
@@ -301,7 +300,16 @@ func ReplayWorkflowHistory(logger *zap.Logger, history *shared.History) error {
 // The logger is an optional parameter. Defaults to the noop logger.
 func ReplayWorkflowHistoryFromJSONFile(logger *zap.Logger, jsonfileName string) error {
 
-	history, err := extractHistoryFromFile(jsonfileName)
+	return ReplayPartialWorkflowHistoryFromJSONFile(logger, jsonfileName, 0)
+}
+
+// ReplayWorkflowHistoryFromJSONFile executes a single decision task for the given json history file upto provided
+// lastEventID(inclusive).
+// Use for testing the backwards compatibility of code changes and troubleshooting workflows in a debugger.
+// The logger is an optional parameter. Defaults to the noop logger.
+func ReplayPartialWorkflowHistoryFromJSONFile(logger *zap.Logger, jsonfileName string, lastEventID int64) error {
+
+	history, err := extractHistoryFromFile(jsonfileName, lastEventID)
 
 	if err != nil {
 		return err
@@ -410,7 +418,7 @@ func replayWorkflowHistory(logger *zap.Logger, service workflowserviceclient.Int
 	return err
 }
 
-func extractHistoryFromFile(jsonfileName string) (*shared.History, error) {
+func extractHistoryFromFile(jsonfileName string, lastEventID int64) (*shared.History, error) {
 	raw, err := ioutil.ReadFile(jsonfileName)
 	if err != nil {
 		return nil, err
@@ -422,7 +430,21 @@ func extractHistoryFromFile(jsonfileName string) (*shared.History, error) {
 	if err != nil {
 		return nil, err
 	}
-	history := &shared.History{Events: deserializedEvents}
+
+	if lastEventID <= 0 {
+		return &shared.History{Events: deserializedEvents}, nil
+	}
+
+	// Caller is potentially asking for subset of history instead of all history events
+	events := []*shared.HistoryEvent{}
+	for _, event := range deserializedEvents {
+		events = append(events, event)
+		if event.GetEventId() == lastEventID {
+			// Copy history upto last event (inclusive)
+			break
+		}
+	}
+	history := &shared.History{Events: events}
 
 	return history, nil
 }

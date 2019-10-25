@@ -35,7 +35,6 @@ import (
 	"github.com/pborman/uuid"
 	"github.com/uber-go/tally"
 	s "go.uber.org/cadence/.gen/go/shared"
-	"go.uber.org/cadence/encoded"
 	"go.uber.org/cadence/internal/common"
 	"go.uber.org/cadence/internal/common/metrics"
 	"go.uber.org/yarpc"
@@ -165,7 +164,7 @@ func workflowTypePtr(t WorkflowType) *s.WorkflowType {
 }
 
 // getErrorDetails gets reason and details.
-func getErrorDetails(err error, dataConverter encoded.DataConverter) (string, []byte) {
+func getErrorDetails(err error, dataConverter DataConverter) (string, []byte) {
 	switch err := err.(type) {
 	case *CustomError:
 		var data []byte
@@ -225,10 +224,17 @@ func getErrorDetails(err error, dataConverter encoded.DataConverter) (string, []
 }
 
 // constructError construct error from reason and details sending down from server.
-func constructError(reason string, details []byte, dataConverter encoded.DataConverter) error {
+func constructError(reason string, details []byte, dataConverter DataConverter) error {
 	if strings.HasPrefix(reason, errReasonTimeout) {
-		timeoutType := getTimeoutTypeFromErrReason(reason)
 		details := newEncodedValues(details, dataConverter)
+		timeoutType, err := getTimeoutTypeFromErrReason(reason)
+		if err != nil {
+			// prior client version uses details to indicate timeoutType
+			if err := details.Get(&timeoutType); err != nil {
+				panic(err)
+			}
+			return NewTimeoutError(timeoutType)
+		}
 		return NewTimeoutError(timeoutType, details)
 	}
 
@@ -287,12 +293,12 @@ func getMetricsScopeForLocalActivity(ts *metrics.TaggedScope, workflowType, loca
 	return ts.GetTaggedScope(tagWorkflowType, workflowType, tagLocalActivityType, localActivityType)
 }
 
-func getTimeoutTypeFromErrReason(reason string) s.TimeoutType {
+func getTimeoutTypeFromErrReason(reason string) (s.TimeoutType, error) {
 	timeoutTypeStr := reason[strings.Index(reason, " ")+1:]
 	var timeoutType s.TimeoutType
 	if err := timeoutType.UnmarshalText([]byte(timeoutTypeStr)); err != nil {
-		// this should never happen
-		panic(err)
+		// this happens when the timeout error reason is constructed by an prior constructed by prior client version
+		return 0, err
 	}
-	return timeoutType
+	return timeoutType, nil
 }

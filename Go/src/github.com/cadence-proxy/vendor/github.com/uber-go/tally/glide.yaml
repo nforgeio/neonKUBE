@@ -5,18 +5,18 @@ import:
   version: ~3.1.0
   subpackages:
   - statsd
-- package: github.com/m3db/prometheus_client_golang
-  version: ^0.8.1
+- package: github.com/facebookgo/clock
+  version: 600d898af40aa09a7a93ecb9265d87b0504b6f03
+- package: github.com/prometheus/client_golang
+  version: ^0.8.0
   subpackages:
   - prometheus
-- package: github.com/m3db/prometheus_client_model
-  version: ^0.1.0
-- package: github.com/m3db/prometheus_common
-  version: ^0.1.0
-- package: github.com/m3db/prometheus_procfs
-  version: ^0.8.1
-- package: go.uber.org/atomic
-  version: ^1
+- package: github.com/apache/thrift
+  version: 9549b25c77587b29be4e0b5c258221a4ed85d37a
+  subpackages:
+  - lib/go/thrift
+- package: github.com/uber-go/atomic
+  version: e682c1008ac17bf26d2e4b5ad6cdd08520ed0b22
 testImport:
 - package: github.com/axw/gocov
   version: 54b98cfcac0c63fb3f9bd8e7ad241b724d4e985b

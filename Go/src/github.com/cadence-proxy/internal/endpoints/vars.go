@@ -41,7 +41,7 @@ var (
 	// to the Neon.Cadence client
 	HttpClient http.Client
 
-	// LoggerCLientID is the int64 id used to send LogRequests
+	// LoggerClientID is the int64 id used to send LogRequests
 	// to the Neon.Cadence client
 	LoggerClientID int64
 

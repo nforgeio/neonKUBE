@@ -6,15 +6,20 @@ go_import_path: go.uber.org/thriftrw
 
 matrix:
   include:
-    - go: '1.10'
-    - go: '1.11'
-      env: LINT=1 COVER=1
+    - go: 1.7
+    - go: 1.8
+    - go: 1.9
+      env: LINT=1
+
+env:
+    global:
+        - GO15VENDOREXPERIMENT=1
 
 install:
     - make install_ci
 
 script:
-    - if [[ "$LINT" -eq 1 ]]; then make lint_ci; fi
+    - test "$LINT" -eq 1 && make lint_ci || echo "Skipping lint"
     - make test_ci
-    - if [[ "$COVER" -eq 1 ]]; then travis_retry goveralls -coverprofile=cover.out -service=travis-ci; fi
+    - travis_retry goveralls -coverprofile=cover.out -service=travis-ci
     - rm -rf vendor/*

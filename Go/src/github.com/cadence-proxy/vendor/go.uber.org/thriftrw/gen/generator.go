@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -128,10 +128,8 @@ type generator struct {
 
 	w              WireGenerator
 	e              equalsGenerator
-	z              zapGenerator
-	noZap          bool
 	decls          []ast.Decl
-	thriftImporter ThriftPackageImporter
+	thriftImporter thriftPackageImporter
 	mangler        *mangler
 
 	counter int
@@ -140,37 +138,19 @@ type generator struct {
 	// TODO use something to group related decls together
 }
 
-// GeneratorOptions controls a generator's behavior
-type GeneratorOptions struct {
-	Importer    ThriftPackageImporter
-	ImportPath  string
-	PackageName string
-
-	NoZap bool
-}
-
 // NewGenerator sets up a new generator for Go code.
-func NewGenerator(o *GeneratorOptions) Generator {
+func NewGenerator(timport thriftPackageImporter, importPath string, packageName string) Generator {
 	// TODO(abg): Determine package name from `namespace go` directive.
 	namespace := NewNamespace()
 	return &generator{
-		PackageName:    o.PackageName,
-		ImportPath:     o.ImportPath,
+		PackageName:    packageName,
+		ImportPath:     importPath,
 		Namespace:      namespace,
 		importer:       newImporter(namespace.Child()),
 		mangler:        newMangler(),
-		thriftImporter: o.Importer,
+		thriftImporter: timport,
 		fset:           token.NewFileSet(),
-		noZap:          o.NoZap,
 	}
-}
-
-// checkNoZap returns whether the NoZap flag is passed.
-func checkNoZap(g Generator) bool {
-	if gen, ok := g.(*generator); ok {
-		return gen.noZap
-	}
-	return false
 }
 
 func (g *generator) MangleType(t compile.TypeSpec) string {
@@ -221,7 +201,6 @@ func (g *generator) TextTemplate(s string, data interface{}, opts ...TemplateOpt
 		"goName":           goName,
 		"import":           g.Import,
 		"isHashable":       isHashable,
-		"setUsesMap":       setUsesMap,
 		"isPrimitiveType":  isPrimitiveType,
 		"isStructType":     isStructType,
 		"newNamespace":     g.Namespace.Child,
@@ -236,11 +215,6 @@ func (g *generator) TextTemplate(s string, data interface{}, opts ...TemplateOpt
 		"typeCode":         curryGenerator(TypeCode, g),
 		"equals":           curryGenerator(g.e.Equals, g),
 		"equalsPtr":        curryGenerator(g.e.EqualsPtr, g),
-		"zapEncodeBegin":   curryGenerator(g.z.zapEncodeBegin, g),
-		"zapEncodeEnd":     g.z.zapEncodeEnd,
-		"zapEncoder":       curryGenerator(g.z.zapEncoder, g),
-		"zapMarshaler":     curryGenerator(g.z.zapMarshaler, g),
-		"zapMarshalerPtr":  curryGenerator(g.z.zapMarshalerPtr, g),
 	}
 
 	tmpl := template.New("thriftrw").Delims("<", ">").Funcs(templateFuncs)

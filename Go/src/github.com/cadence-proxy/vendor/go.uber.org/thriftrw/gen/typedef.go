@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -64,14 +64,6 @@ func typedef(g Generator, spec *compile.TypedefSpec) error {
 
 		<$v := newVar "v">
 		<$x := newVar "x">
-
-		<- if isPrimitiveType .>
-		// <typeName .>Ptr returns a pointer to a <$typedefType>
-		func (<$v> <typeName .>) Ptr() *<$typedefType>{
-			return &<$v>
-		}
-		<- end>
-
 		// ToWire translates <typeName .> into a Thrift-level intermediate
 		// representation. This intermediate representation may be serialized
 		// into bytes using a ThriftRW protocol implementation.
@@ -105,34 +97,14 @@ func typedef(g Generator, spec *compile.TypedefSpec) error {
 		// Equals returns true if this <typeName .> is equal to the provided
 		// <typeName .>.
 		func (<$lhs> <$typedefType>) Equals(<$rhs> <$typedefType>) bool {
-			<- $lhsCast := printf "(%v)(%v)" (typeReference .Target) $lhs ->
-			<- $rhsCast := printf "(%v)(%v)" (typeReference .Target) $rhs ->
-			return <equals .Target $lhsCast $rhsCast>
+			<if isStructType . ->
+				return (<typeReference .Target>)(<$lhs>).Equals((<typeReference .Target>)(<$rhs>))
+			<- else ->
+				return <equals .Target $lhs $rhs>
+			<- end>
 		}
-
-		<if not (checkNoZap) ->
-		</* We want the behavior of the underlying type for typedefs: in the case that
-				they are objects or arrays, we need to cast to the underlying object or array;
-				else, zapMarshaler in zap.go will take care of it. */>
-		<if (eq (zapEncoder .Target) "Object") ->
-			<$zapcore := import "go.uber.org/zap/zapcore">
-			<$enc := newVar "enc">
-			func (<$v> <$typedefType>) MarshalLogObject(<$enc> <$zapcore>.ObjectEncoder) error {
-				return (<zapMarshaler . $v>).MarshalLogObject(<$enc>)
-			}
-		<- end>
-
-		<if (eq (zapEncoder .Target) "Array") ->
-			<$zapcore := import "go.uber.org/zap/zapcore">
-			<$enc := newVar "enc">
-			func (<$v> <$typedefType>) MarshalLogArray(<$enc> <$zapcore>.ArrayEncoder) error {
-				return (<zapMarshaler . $v>).MarshalLogArray(<$enc>)
-			}
-		<- end>
-		<- end>
 		`,
 		spec,
-		TemplateFunc("checkNoZap", checkNoZap),
 	)
 	return wrapGenerateError(spec.Name, err)
 }

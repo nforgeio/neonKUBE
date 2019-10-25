@@ -32,7 +32,6 @@ import (
 	"github.com/uber-go/tally"
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
 	s "go.uber.org/cadence/.gen/go/shared"
-	"go.uber.org/cadence/encoded"
 	"go.uber.org/cadence/internal/common"
 	"go.uber.org/cadence/internal/common/backoff"
 	"go.uber.org/cadence/internal/common/metrics"
@@ -116,7 +115,7 @@ type (
 		userContext        context.Context
 		metricsScope       *metrics.TaggedScope
 		logger             *zap.Logger
-		dataConverter      encoded.DataConverter
+		dataConverter      DataConverter
 		contextPropagators []ContextPropagator
 		tracer             opentracing.Tracer
 	}
@@ -242,7 +241,7 @@ func (wtp *workflowTaskPoller) ProcessTask(task interface{}) error {
 
 func (wtp *workflowTaskPoller) processWorkflowTask(task *workflowTask) error {
 	if task.task == nil {
-		// We didn't have task, poll might have time out.
+		// We didn't have task, poll might have timeout.
 		traceLog(func() {
 			wtp.logger.Debug("Workflow task unavailable")
 		})
@@ -650,8 +649,8 @@ func (wtp *workflowTaskPoller) poll(ctx context.Context) (interface{}, error) {
 	wtp.metricsScope.Counter(metrics.DecisionPollSucceedCounter).Inc(1)
 	wtp.metricsScope.Timer(metrics.DecisionPollLatency).Record(time.Now().Sub(startTime))
 
-	scheduledTime := time.Unix(0, response.GetScheduledTimestamp())
-	wtp.metricsScope.Timer(metrics.DecisionScheduledToStartLatency).Record(time.Now().Sub(scheduledTime))
+	scheduledToStartLatency := time.Duration(response.GetStartedTimestamp() - response.GetScheduledTimestamp())
+	wtp.metricsScope.Timer(metrics.DecisionScheduledToStartLatency).Record(scheduledToStartLatency)
 	return task, nil
 }
 
@@ -794,8 +793,8 @@ func (atp *activityTaskPoller) poll(ctx context.Context) (interface{}, error) {
 	atp.metricsScope.Counter(metrics.ActivityPollSucceedCounter).Inc(1)
 	atp.metricsScope.Timer(metrics.ActivityPollLatency).Record(time.Now().Sub(startTime))
 
-	scheduledTime := time.Unix(0, response.GetScheduledTimestampOfThisAttempt())
-	atp.metricsScope.Timer(metrics.ActivityScheduledToStartLatency).Record(time.Now().Sub(scheduledTime))
+	scheduledToStartLatency := time.Duration(response.GetStartedTimestamp() - response.GetScheduledTimestampOfThisAttempt())
+	atp.metricsScope.Timer(metrics.ActivityScheduledToStartLatency).Record(scheduledToStartLatency)
 
 	return &activityTask{task: response, pollStartTime: startTime}, nil
 }
@@ -818,7 +817,7 @@ func (atp *activityTaskPoller) ProcessTask(task interface{}) error {
 
 	activityTask := task.(*activityTask)
 	if activityTask.task == nil {
-		// We didn't have task, poll might have time out.
+		// We didn't have task, poll might have timeout.
 		traceLog(func() {
 			atp.logger.Debug("Activity task unavailable")
 		})
@@ -957,7 +956,7 @@ func reportActivityCompleteByID(ctx context.Context, service workflowserviceclie
 }
 
 func convertActivityResultToRespondRequest(identity string, taskToken, result []byte, err error,
-	dataConverter encoded.DataConverter) interface{} {
+	dataConverter DataConverter) interface{} {
 	if err == ErrActivityResultPending {
 		// activity result is pending and will be completed asynchronously.
 		// nothing to report at this point
@@ -987,7 +986,7 @@ func convertActivityResultToRespondRequest(identity string, taskToken, result []
 }
 
 func convertActivityResultToRespondRequestByID(identity, domain, workflowID, runID, activityID string,
-	result []byte, err error, dataConverter encoded.DataConverter) interface{} {
+	result []byte, err error, dataConverter DataConverter) interface{} {
 	if err == ErrActivityResultPending {
 		// activity result is pending and will be completed asynchronously.
 		// nothing to report at this point

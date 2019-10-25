@@ -418,7 +418,7 @@ namespace TestCadence
                 Assert.Equal(0, message.ConfigurationRetentionDays);
                 Assert.Null(message.DomainInfoName);
                 Assert.Null(message.DomainInfoDescription);
-                Assert.Equal(DomainStatus.Unspecified, message.DomainInfoStatus);
+                Assert.Equal(DomainStatus.Registered, message.DomainInfoStatus);
                 Assert.Null(message.DomainInfoOwnerEmail);
 
                 // Round-trip

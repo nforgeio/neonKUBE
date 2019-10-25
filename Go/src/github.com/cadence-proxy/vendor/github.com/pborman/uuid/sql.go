@@ -5,7 +5,6 @@
 package uuid
 
 import (
-	"database/sql/driver"
 	"errors"
 	"fmt"
 )
@@ -40,9 +39,7 @@ func (uuid *UUID) Scan(src interface{}) error {
 		// assumes a simple slice of bytes if 16 bytes
 		// otherwise attempts to parse
 		if len(b) == 16 {
-			parsed := make([]byte, 16)
-			copy(parsed, b)
-			*uuid = UUID(parsed)
+			*uuid = UUID(b)
 		} else {
 			u := Parse(string(b))
 
@@ -58,11 +55,4 @@ func (uuid *UUID) Scan(src interface{}) error {
 	}
 
 	return nil
-}
-
-// Value implements sql.Valuer so that UUIDs can be written to databases
-// transparently. Currently, UUIDs map to strings. Please consult
-// database-specific driver documentation for matching types.
-func (uuid UUID) Value() (driver.Value, error) {
-	return uuid.String(), nil
 }

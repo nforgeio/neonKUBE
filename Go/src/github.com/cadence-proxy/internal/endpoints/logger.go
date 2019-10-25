@@ -31,6 +31,8 @@ import (
 )
 
 type (
+	// Core is a struct used for custom logging
+	// that implements the zap.Core interface.
 	Core struct {
 		zapcore.LevelEnabler
 		enc zapcore.Encoder
@@ -39,6 +41,7 @@ type (
 	}
 )
 
+// NewCore creates a new Core.
 func NewCore(
 	enc zapcore.Encoder,
 	ws zapcore.WriteSyncer,
@@ -52,6 +55,7 @@ func NewCore(
 	}
 }
 
+// With adds structured context to the Core.
 func (c Core) With(fields []zapcore.Field) zapcore.Core {
 	clone := c.clone()
 	for i := range fields {
@@ -60,6 +64,12 @@ func (c Core) With(fields []zapcore.Field) zapcore.Core {
 	return clone
 }
 
+// Check determines whether the supplied Entry should be logged (using the
+// embedded LevelEnabler and possibly some extra logic). If the entry
+// should be logged, the Core adds itself to the CheckedEntry and returns
+// the result.
+//
+// Callers must use Check before calling Write.
 func (c Core) Check(entry zapcore.Entry, checkedEntry *zapcore.CheckedEntry) *zapcore.CheckedEntry {
 	if c.Enabled(entry.Level) {
 		return checkedEntry.AddCore(entry, c)
@@ -67,6 +77,11 @@ func (c Core) Check(entry zapcore.Entry, checkedEntry *zapcore.CheckedEntry) *za
 	return checkedEntry
 }
 
+// Write serializes the Entry and any Fields supplied at the log site and
+// writes them to their destination.
+//
+// If called, Write should always log the Entry and Fields; it should not
+// replicate the logic of Check.
 func (c Core) Write(entry zapcore.Entry, fields []zapcore.Field) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
@@ -90,10 +105,12 @@ func (c Core) Write(entry zapcore.Entry, fields []zapcore.Field) error {
 	return sendLogRequest(ctx, entry)
 }
 
+// Sync flushes buffered logs (if any).
 func (c Core) Sync() error {
 	return c.out.Sync()
 }
 
+// clone clones a core.
 func (c Core) clone() *Core {
 	return &Core{
 		LevelEnabler: c.LevelEnabler,
@@ -103,6 +120,7 @@ func (c Core) clone() *Core {
 	}
 }
 
+// sendLogRequest sends a log request to the .NET client.
 func sendLogRequest(ctx context.Context, entry zapcore.Entry) error {
 	requestID := NextRequestID()
 	logRequest := messages.NewLogRequest()

@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -35,7 +35,7 @@ import (
 	"go.uber.org/thriftrw/internal/plugin/builtin/pluginapigen"
 	"go.uber.org/thriftrw/version"
 
-	flags "github.com/jessevdk/go-flags"
+	"github.com/jessevdk/go-flags"
 	"go.uber.org/multierr"
 )
 
@@ -52,14 +52,12 @@ type genOptions struct {
 	NoRecurse bool         `long:"no-recurse" description:"Don't generate code for included Thrift files."`
 	Plugins   plugin.Flags `long:"plugin" short:"p" value-name:"PLUGIN" description:"Code generation plugin for ThriftRW. This option may be provided multiple times to apply multiple plugins."`
 
-	GeneratePluginAPI bool   `long:"generate-plugin-api" hidden:"true" description:"Generates code for the plugin API"`
-	NoVersionCheck    bool   `long:"no-version-check" hidden:"true" description:"Does not add library version checks to generated code."`
-	NoTypes           bool   `long:"no-types" description:"Do not generate code for types, implies --no-service-helpers."`
-	NoConstants       bool   `long:"no-constants" description:"Do not generate code for const declarations."`
-	NoServiceHelpers  bool   `long:"no-service-helpers" description:"Do not generate service helpers."`
-	NoEmbedIDL        bool   `long:"no-embed-idl" description:"Do not embed IDLs into the generated code."`
-	NoZap             bool   `long:"no-zap" description:"Do not generate code for Zap logging."`
-	OutputFile        string `long:"output-file" value-name:"FILENAME" description:"Generates a single .go file as an output. Specifying an OutputFile prevents code generation for included Thrift Files."`
+	GeneratePluginAPI bool `long:"generate-plugin-api" hidden:"true" description:"Generates code for the plugin API"`
+	NoVersionCheck    bool `long:"no-version-check" hidden:"true" description:"Does not add library version checks to generated code."`
+	NoTypes           bool `long:"no-types" description:"Do not generate code for types, implies --no-service-helpers."`
+	NoConstants       bool `long:"no-constants" description:"Do not generate code for const declarations."`
+	NoServiceHelpers  bool `long:"no-service-helpers" description:"Do not generate service helpers."`
+	NoEmbedIDL        bool `long:"no-embed-idl" description:"Do not embed IDLs into the generated code."`
 
 	// TODO(abg): Detailed help with examples of --thrift-root, --pkg-prefix,
 	// and --plugin
@@ -156,10 +154,6 @@ func do() (err error) {
 		}
 	}
 
-	if len(gopts.OutputFile) > 0 && filepath.Ext(gopts.OutputFile) != ".go" {
-		return fmt.Errorf("output-file value: %q invalid. A {FILENAME}.go name must be provided", gopts.OutputFile)
-	}
-
 	pluginHandle, err := gopts.Plugins.Handle()
 	if err != nil {
 		return fmt.Errorf("Failed to initialize plugins: %+v", err)
@@ -184,8 +178,6 @@ func do() (err error) {
 		NoConstants:      gopts.NoConstants,
 		NoServiceHelpers: gopts.NoServiceHelpers || gopts.NoTypes,
 		NoEmbedIDL:       gopts.NoEmbedIDL,
-		NoZap:            gopts.NoZap,
-		OutputFile:       gopts.OutputFile,
 	}
 	if err := gen.Generate(module, &generatorOptions); err != nil {
 		return fmt.Errorf("Failed to generate code: %+v", err)

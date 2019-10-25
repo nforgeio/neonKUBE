@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -27,14 +27,28 @@ import (
 
 	"go.uber.org/thriftrw/internal/envelope"
 	"go.uber.org/thriftrw/internal/multiplex"
+	"go.uber.org/thriftrw/internal/semver"
 	"go.uber.org/thriftrw/plugin/api"
 	"go.uber.org/thriftrw/protocol"
+	"go.uber.org/thriftrw/version"
 
 	"go.uber.org/atomic"
 	"go.uber.org/multierr"
 )
 
-var _proto = protocol.Binary
+var (
+	_proto      = protocol.Binary
+	compatRange = computeCompatibleRange()
+)
+
+func computeCompatibleRange() semver.Range {
+	v, err := semver.Parse(version.Version)
+	if err != nil {
+		panic(err)
+	}
+
+	return semver.CompatibleRange(v)
+}
 
 // transportHandle is a Handle to a plugin which is behind an envelope.Transport.
 type transportHandle struct {
@@ -71,6 +85,30 @@ func NewTransportHandle(name string, t envelope.Transport) (Handle, error) {
 		return nil, errHandshakeFailed{
 			Name:   name,
 			Reason: errAPIVersionMismatch{Want: api.APIVersion, Got: handshake.APIVersion},
+		}
+	}
+
+	// If we got here, the API version matches so the plugin must have
+	// provided the Version
+	if handshake.LibraryVersion == nil {
+		return nil, errHandshakeFailed{
+			Name:   name,
+			Reason: errVersionIsRequired,
+		}
+	}
+
+	version, err := semver.Parse(*handshake.LibraryVersion)
+	if err != nil {
+		return nil, errHandshakeFailed{Name: name, Reason: err}
+	}
+
+	if !compatRange.Contains(version) {
+		return nil, errHandshakeFailed{
+			Name: name,
+			Reason: errVersionMismatch{
+				Want: compatRange,
+				Got:  *handshake.LibraryVersion,
+			},
 		}
 	}
 
