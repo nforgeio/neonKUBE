@@ -3,7 +3,6 @@ node_modules
 /thriftrw
 /cover
 cover.out
-cover.full.out
 cover.html
 .idea/
 

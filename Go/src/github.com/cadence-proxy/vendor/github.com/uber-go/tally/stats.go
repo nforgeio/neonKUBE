@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -181,11 +181,11 @@ func (t *timer) Record(interval time.Duration) {
 }
 
 func (t *timer) Start() Stopwatch {
-	return NewStopwatch(globalNow(), t)
+	return NewStopwatch(globalClock.Now(), t)
 }
 
 func (t *timer) RecordStopwatch(stopwatchStart time.Time) {
-	d := globalNow().Sub(stopwatchStart)
+	d := globalClock.Now().Sub(stopwatchStart)
 	t.Record(d)
 }
 
@@ -367,11 +367,11 @@ func (h *histogram) RecordDuration(value time.Duration) {
 }
 
 func (h *histogram) Start() Stopwatch {
-	return NewStopwatch(globalNow(), h)
+	return NewStopwatch(globalClock.Now(), h)
 }
 
 func (h *histogram) RecordStopwatch(stopwatchStart time.Time) {
-	d := globalNow().Sub(stopwatchStart)
+	d := globalClock.Now().Sub(stopwatchStart)
 	h.RecordDuration(d)
 }
 

@@ -420,18 +420,14 @@ func handleDomainRegisterRequest(requestCtx context.Context, request *messages.D
 	return reply
 }
 
-func handleDescribeTaskListRequest(requestCtx context.Context, request *messages.DescribeTaskListRequest) messages.IProxyReply {
-	name := *request.GetName()
-	domain := *request.GetDomain()
+func handleDomainListRequest(requestCtx context.Context, request *messages.DomainListRequest) messages.IProxyReply {
 	clientID := request.GetClientID()
-	Logger.Debug("DescribeTaskListRequest Received",
-		zap.String("TaskList", name),
-		zap.String("Domain", domain),
+	Logger.Debug("DomainListRequest Received",
 		zap.Int64("ClientId", clientID),
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int("ProcessId", os.Getpid()))
 
-	// new DescribeTaskListReply
+	// new DomainListReply
 	reply := createReplyMessage(request)
 
 	clientHelper := Clients.Get(clientID)
@@ -444,26 +440,19 @@ func handleDescribeTaskListRequest(requestCtx context.Context, request *messages
 	ctx, cancel := context.WithTimeout(requestCtx, clientHelper.GetClientTimeout())
 	defer cancel()
 
-	includeStatus := false
-	taskList := cadenceshared.TaskList{
-		Name: &name,
-		Kind: request.GetTaskListKind(),
+	pageSize := request.GetPageSize()
+	listRequest := cadenceshared.ListDomainsRequest{
+		PageSize:      &pageSize,
+		NextPageToken: request.GetNextPageToken(),
 	}
 
-	describeRequest := cadenceshared.DescribeTaskListRequest{
-		Domain:                &domain,
-		TaskList:              &taskList,
-		TaskListType:          request.GetTaskListType(),
-		IncludeTaskListStatus: &includeStatus,
-	}
-
-	describeResponse, err := clientHelper.Service.DescribeTaskList(ctx, &describeRequest)
+	response, err := clientHelper.ListDomains(ctx, &listRequest)
 	if err != nil {
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
 
-	buildReply(reply, nil, describeResponse)
+	buildReply(reply, nil, response)
 
 	return reply
 }
@@ -519,6 +508,54 @@ func handleDomainUpdateRequest(requestCtx context.Context, request *messages.Dom
 	}
 
 	buildReply(reply, nil)
+
+	return reply
+}
+
+func handleDescribeTaskListRequest(requestCtx context.Context, request *messages.DescribeTaskListRequest) messages.IProxyReply {
+	name := *request.GetName()
+	domain := *request.GetDomain()
+	clientID := request.GetClientID()
+	Logger.Debug("DescribeTaskListRequest Received",
+		zap.String("TaskList", name),
+		zap.String("Domain", domain),
+		zap.Int64("ClientId", clientID),
+		zap.Int64("RequestId", request.GetRequestID()),
+		zap.Int("ProcessId", os.Getpid()))
+
+	// new DescribeTaskListReply
+	reply := createReplyMessage(request)
+
+	clientHelper := Clients.Get(clientID)
+	if clientHelper == nil {
+		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
+		return reply
+	}
+
+	// create context with timeout
+	ctx, cancel := context.WithTimeout(requestCtx, clientHelper.GetClientTimeout())
+	defer cancel()
+
+	includeStatus := false
+	taskList := cadenceshared.TaskList{
+		Name: &name,
+		Kind: request.GetTaskListKind(),
+	}
+
+	describeRequest := cadenceshared.DescribeTaskListRequest{
+		Domain:                &domain,
+		TaskList:              &taskList,
+		TaskListType:          request.GetTaskListType(),
+		IncludeTaskListStatus: &includeStatus,
+	}
+
+	describeResponse, err := clientHelper.DescribeTaskList(ctx, &describeRequest)
+	if err != nil {
+		buildReply(reply, proxyerror.NewCadenceError(err))
+		return reply
+	}
+
+	buildReply(reply, nil, describeResponse)
 
 	return reply
 }

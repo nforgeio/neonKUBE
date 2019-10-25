@@ -43,7 +43,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cadence-proxy/internal"
-	proxyclient "github.com/cadence-proxy/internal/cadence/client"
 	proxyerror "github.com/cadence-proxy/internal/cadence/error"
 	proxyworkflow "github.com/cadence-proxy/internal/cadence/workflow"
 	dotnetlogger "github.com/cadence-proxy/internal/dotnet-logger"
@@ -562,7 +561,7 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 		s.Nil(v.GetDomainInfoName())
 		s.Nil(v.GetDomainInfoDescription())
 		s.Nil(v.GetDomainInfoOwnerEmail())
-		s.Equal(proxyclient.DomainStatusUnspecified, v.GetDomainInfoStatus())
+		s.Nil(v.GetDomainInfoStatus())
 
 		// Round-trip
 
@@ -586,8 +585,8 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 		v.SetDomainInfoDescription(&domainInfoDescriptionStr)
 		s.Equal("my-description", *v.GetDomainInfoDescription())
 
-		v.SetDomainInfoStatus(proxyclient.DomainStatusDeprecated)
-		s.Equal(proxyclient.DomainStatusDeprecated, v.GetDomainInfoStatus())
+		v.SetDomainInfoStatus(cadenceshared.DomainStatusDeprecated.Ptr())
+		s.Equal(cadenceshared.DomainStatusDeprecated, *v.GetDomainInfoStatus())
 
 		domainInfoOwnerEmailStr := "joe@bloe.com"
 		v.SetDomainInfoOwnerEmail(&domainInfoOwnerEmailStr)
@@ -607,7 +606,7 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 		s.Equal(proxyerror.NewCadenceError(errors.New("foo"), proxyerror.Custom), v.GetError())
 		s.Equal("my-name", *v.GetDomainInfoName())
 		s.Equal("my-description", *v.GetDomainInfoDescription())
-		s.Equal(proxyclient.DomainStatusDeprecated, v.GetDomainInfoStatus())
+		s.Equal(cadenceshared.DomainStatusDeprecated, *v.GetDomainInfoStatus())
 		s.Equal("joe@bloe.com", *v.GetDomainInfoOwnerEmail())
 		s.Equal(int32(7), v.GetConfigurationRetentionDays())
 		s.True(v.GetConfigurationEmitMetrics())
@@ -622,10 +621,227 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 		s.Equal(proxyerror.NewCadenceError(errors.New("foo"), proxyerror.Custom), v.GetError())
 		s.Equal("my-name", *v.GetDomainInfoName())
 		s.Equal("my-description", *v.GetDomainInfoDescription())
-		s.Equal(proxyclient.DomainStatusDeprecated, v.GetDomainInfoStatus())
+		s.Equal(cadenceshared.DomainStatusDeprecated, *v.GetDomainInfoStatus())
 		s.Equal("joe@bloe.com", *v.GetDomainInfoOwnerEmail())
 		s.Equal(int32(7), v.GetConfigurationRetentionDays())
 		s.True(v.GetConfigurationEmitMetrics())
+	}
+}
+
+func (s *UnitTestSuite) TestDomainListRequest() {
+
+	var message messages.IProxyMessage = messages.NewDomainListRequest()
+	if v, ok := message.(*messages.DomainListRequest); ok {
+		s.Equal(internal.DomainListReply, v.GetReplyType())
+	}
+
+	proxyMessage := message.GetProxyMessage()
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DomainListRequest); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Equal(int64(0), v.GetClientID())
+		s.Equal(int32(0), v.GetPageSize())
+		s.Nil(v.GetNextPageToken())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetClientID(int64(666))
+		s.Equal(int64(666), v.GetClientID())
+
+		v.SetPageSize(int32(777))
+		s.Equal(int32(777), v.GetPageSize())
+
+		v.SetNextPageToken([]byte{1, 2, 3, 4})
+		s.Equal([]byte{1, 2, 3, 4}, v.GetNextPageToken())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DomainListRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(int64(666), v.GetClientID())
+		s.Equal(int32(777), v.GetPageSize())
+		s.Equal([]byte{1, 2, 3, 4}, v.GetNextPageToken())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DomainListRequest); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal(int64(666), v.GetClientID())
+		s.Equal(int32(777), v.GetPageSize())
+		s.Equal([]byte{1, 2, 3, 4}, v.GetNextPageToken())
+	}
+}
+
+func (s *UnitTestSuite) TestDomainListReply() {
+	var domains []*cadenceshared.DescribeDomainResponse
+	var message messages.IProxyMessage = messages.NewDomainListReply()
+
+	proxyMessage := message.GetProxyMessage()
+
+	serializedMessage, err := proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DomainListReply); ok {
+		s.Equal(int64(0), v.GetRequestID())
+		s.Nil(v.GetError())
+		s.Nil(v.GetDomains())
+		s.Nil(v.GetNextPageToken())
+
+		// Round-trip
+
+		v.SetRequestID(int64(555))
+		s.Equal(int64(555), v.GetRequestID())
+
+		v.SetNextPageToken([]byte{1, 2, 3, 4})
+		s.Equal([]byte{1, 2, 3, 4}, v.GetNextPageToken())
+
+		name1 := "my-name1"
+		desc := "my-description"
+		email := "my-email"
+		uuid1 := "uuid1"
+		domainInfo1 := cadenceshared.DomainInfo{
+			Name:        &name1,
+			Status:      cadenceshared.DomainStatusDeleted.Ptr(),
+			Description: &desc,
+			OwnerEmail:  &email,
+			Data:        map[string]string{"1": "first", "2": "second"},
+			UUID:        &uuid1,
+		}
+
+		name2 := "my-name2"
+		uuid2 := "uuid2"
+		domainInfo2 := cadenceshared.DomainInfo{
+			Name:        &name2,
+			Status:      cadenceshared.DomainStatusDeprecated.Ptr(),
+			Description: &desc,
+			OwnerEmail:  &email,
+			Data:        map[string]string{"3": "third", "4": "fourth"},
+			UUID:        &uuid2,
+		}
+
+		reason := "my-reason"
+		operator := "my-operator"
+		ctn1 := int64(44)
+		bbi1 := cadenceshared.BadBinaryInfo{
+			Reason:          &reason,
+			Operator:        &operator,
+			CreatedTimeNano: &ctn1,
+		}
+
+		ctn2 := int64(55)
+		bbi2 := cadenceshared.BadBinaryInfo{
+			Reason:          &reason,
+			Operator:        &operator,
+			CreatedTimeNano: &ctn2,
+		}
+
+		badBinaries := cadenceshared.BadBinaries{
+			Binaries: map[string]*cadenceshared.BadBinaryInfo{"1": &bbi1, "2": &bbi2},
+		}
+
+		werpd := int32(7)
+		em := true
+		abn := "my-bucket"
+		domainConfiguration := cadenceshared.DomainConfiguration{
+			WorkflowExecutionRetentionPeriodInDays: &werpd,
+			EmitMetric:                             &em,
+			ArchivalBucketName:                     &abn,
+			ArchivalStatus:                         cadenceshared.ArchivalStatusEnabled.Ptr(),
+			BadBinaries:                            &badBinaries,
+		}
+
+		cn1 := "cluster-name1"
+		crc1 := cadenceshared.ClusterReplicationConfiguration{
+			ClusterName: &cn1,
+		}
+
+		cn2 := "cluster-name2"
+		crc2 := cadenceshared.ClusterReplicationConfiguration{
+			ClusterName: &cn2,
+		}
+
+		acn := "my-cluster"
+		domainRC := cadenceshared.DomainReplicationConfiguration{
+			ActiveClusterName: &acn,
+			Clusters:          []*cadenceshared.ClusterReplicationConfiguration{&crc1, &crc2},
+		}
+
+		fv1 := int64(3)
+		igd1 := true
+		ddr1 := cadenceshared.DescribeDomainResponse{
+			DomainInfo:               &domainInfo1,
+			Configuration:            &domainConfiguration,
+			ReplicationConfiguration: &domainRC,
+			FailoverVersion:          &fv1,
+			IsGlobalDomain:           &igd1,
+		}
+
+		fv2 := int64(10)
+		igd2 := false
+		ddr2 := cadenceshared.DescribeDomainResponse{
+			DomainInfo:               &domainInfo2,
+			Configuration:            &domainConfiguration,
+			ReplicationConfiguration: &domainRC,
+			FailoverVersion:          &fv2,
+			IsGlobalDomain:           &igd2,
+		}
+
+		domains = []*cadenceshared.DescribeDomainResponse{&ddr1, &ddr2}
+
+		v.SetDomains(domains)
+		s.Equal(domains, v.GetDomains())
+
+		v.SetError(proxyerror.NewCadenceError(errors.New("foo")))
+		s.Equal(proxyerror.NewCadenceError(errors.New("foo"), proxyerror.Custom), v.GetError())
+	}
+
+	proxyMessage = message.GetProxyMessage()
+	serializedMessage, err = proxyMessage.Serialize(false)
+	s.NoError(err)
+
+	message, err = messages.Deserialize(bytes.NewBuffer(serializedMessage), false)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DomainListReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal([]byte{1, 2, 3, 4}, v.GetNextPageToken())
+		s.Equal(proxyerror.NewCadenceError(errors.New("foo"), proxyerror.Custom), v.GetError())
+		s.Equal(domains, v.GetDomains())
+	}
+
+	message, err = s.echoToConnection(message)
+	s.NoError(err)
+	s.NotNil(message)
+
+	if v, ok := message.(*messages.DomainListReply); ok {
+		s.Equal(int64(555), v.GetRequestID())
+		s.Equal([]byte{1, 2, 3, 4}, v.GetNextPageToken())
+		s.Equal(proxyerror.NewCadenceError(errors.New("foo"), proxyerror.Custom), v.GetError())
+		s.Equal(domains, v.GetDomains())
 	}
 }
 
@@ -3336,7 +3552,9 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionRequest() {
 }
 
 func (s *UnitTestSuite) TestWorkflowDescribeExecutionReply() {
+	var details cadenceshared.DescribeWorkflowExecutionResponse
 	var message messages.IProxyMessage = messages.NewWorkflowDescribeExecutionReply()
+
 	proxyMessage := message.GetProxyMessage()
 
 	serializedMessage, err := proxyMessage.Serialize(false)
@@ -3356,9 +3574,124 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		details := cadenceshared.DescribeWorkflowExecutionResponse{}
+		tlName := "my-list"
+		tl := cadenceshared.TaskList{
+			Name: &tlName,
+			Kind: cadenceshared.TaskListKindSticky.Ptr(),
+		}
+
+		esct := int32(44)
+		tsct := int32(55)
+		wec := cadenceshared.WorkflowExecutionConfiguration{
+			TaskList:                            &tl,
+			ExecutionStartToCloseTimeoutSeconds: &esct,
+			TaskStartToCloseTimeoutSeconds:      &tsct,
+			ChildPolicy:                         cadenceshared.ChildPolicyAbandon.Ptr(),
+		}
+
+		wid := "my-workflow"
+		rid := "my-run"
+		we := cadenceshared.WorkflowExecution{
+			WorkflowId: &wid,
+			RunId:      &rid,
+		}
+
+		pwid := "parent-workflow"
+		prid := "parent-run"
+		pwe := cadenceshared.WorkflowExecution{
+			WorkflowId: &pwid,
+			RunId:      &prid,
+		}
+
+		name := "my-name"
+		wt := cadenceshared.WorkflowType{
+			Name: &name,
+		}
+
+		bc := "my-checksum"
+		fdci := int64(44)
+		ctn := int64(55)
+		etn := int64(66)
+		rese := true
+		rpi := cadenceshared.ResetPointInfo{
+			BinaryChecksum:           &bc,
+			RunId:                    &rid,
+			FirstDecisionCompletedId: &fdci,
+			CreatedTimeNano:          &ctn,
+			ExpiringTimeNano:         &etn,
+			Resettable:               &rese,
+		}
+
+		arp := cadenceshared.ResetPoints{
+			Points: []*cadenceshared.ResetPointInfo{&rpi},
+		}
+
+		st := int64(44)
+		ct := int64(55)
+		hl := int64(66)
+		pd := "parent-domain"
+		et := int64(77)
+		memo := cadenceshared.Memo{Fields: map[string][]byte{"first": []byte{1, 2, 3, 4, 5}}}
+		sa := cadenceshared.SearchAttributes{IndexedFields: map[string][]byte{"second": []byte{6, 7, 8, 9, 10}}}
+		wei := cadenceshared.WorkflowExecutionInfo{
+			Execution:        &we,
+			Type:             &wt,
+			StartTime:        &st,
+			CloseTime:        &ct,
+			CloseStatus:      cadenceshared.WorkflowExecutionCloseStatusCanceled.Ptr(),
+			HistoryLength:    &hl,
+			ParentDomainId:   &pd,
+			ParentExecution:  &pwe,
+			ExecutionTime:    &et,
+			Memo:             &memo,
+			SearchAttributes: &sa,
+			AutoResetPoints:  &arp,
+		}
+
+		at := cadenceshared.ActivityType{
+			Name: &name,
+		}
+
+		aid := "my-activity"
+		lht := int64(44)
+		lst := int64(55)
+		atp := int32(66)
+		ma := int32(77)
+		lfr := "my-reason"
+		lwi := "my-identity"
+		pai := cadenceshared.PendingActivityInfo{
+			ActivityID:             &aid,
+			ActivityType:           &at,
+			State:                  cadenceshared.PendingActivityStateStarted.Ptr(),
+			HeartbeatDetails:       []byte{0, 1, 2, 3, 4},
+			LastHeartbeatTimestamp: &lht,
+			LastStartedTimestamp:   &lst,
+			Attempt:                &atp,
+			MaximumAttempts:        &ma,
+			ScheduledTimestamp:     &st,
+			ExpirationTimestamp:    &et,
+			LastFailureReason:      &lfr,
+			LastWorkerIdentity:     &lwi,
+		}
+
+		wn := "my-workflow"
+		iid := int64(44)
+		pcei := cadenceshared.PendingChildExecutionInfo{
+			WorkflowID:      &wid,
+			RunID:           &rid,
+			WorkflowTypName: &wn,
+			InitiatedID:     &iid,
+		}
+
+		details = cadenceshared.DescribeWorkflowExecutionResponse{
+			ExecutionConfiguration: &wec,
+			WorkflowExecutionInfo:  &wei,
+			PendingActivities:      []*cadenceshared.PendingActivityInfo{&pai},
+			PendingChildren:        []*cadenceshared.PendingChildExecutionInfo{&pcei},
+		}
+
 		v.SetDetails(&details)
-		s.Equal(cadenceshared.DescribeWorkflowExecutionResponse{}, *v.GetDetails())
+		s.Equal(details, *v.GetDetails())
 
 		v.SetError(proxyerror.NewCadenceError(errors.New("foo")))
 		s.Equal(proxyerror.NewCadenceError(errors.New("foo"), proxyerror.Custom), v.GetError())
@@ -3374,7 +3707,7 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionReply() {
 
 	if v, ok := message.(*messages.WorkflowDescribeExecutionReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceshared.DescribeWorkflowExecutionResponse{}, *v.GetDetails())
+		s.Equal(details, *v.GetDetails())
 		s.Equal(proxyerror.NewCadenceError(errors.New("foo"), proxyerror.Custom), v.GetError())
 	}
 
@@ -3384,7 +3717,7 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionReply() {
 
 	if v, ok := message.(*messages.WorkflowDescribeExecutionReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(cadenceshared.DescribeWorkflowExecutionResponse{}, *v.GetDetails())
+		s.Equal(details, *v.GetDetails())
 		s.Equal(proxyerror.NewCadenceError(errors.New("foo"), proxyerror.Custom), v.GetError())
 	}
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -51,11 +51,9 @@ type generateServiceBuilder struct {
 func newGenerateServiceBuilder(i thriftPackageImporter) *generateServiceBuilder {
 	return &generateServiceBuilder{
 		GenerateServiceRequest: api.GenerateServiceRequest{
-			RootServices:  make([]api.ServiceID, 0, 10),
-			Services:      make(map[api.ServiceID]*api.Service),
-			Modules:       make(map[api.ModuleID]*api.Module),
-			ThriftRoot:    i.ThriftRoot,
-			PackagePrefix: i.ImportPrefix,
+			RootServices: make([]api.ServiceID, 0, 10),
+			Services:     make(map[api.ServiceID]*api.Service),
+			Modules:      make(map[api.ModuleID]*api.Module),
 		},
 		importer:      i,
 		nextModuleID:  1,
@@ -85,8 +83,8 @@ func (g *generateServiceBuilder) AddRootService(spec *compile.ServiceSpec) (api.
 	return id, err
 }
 
-// AddModule adds the module for the given Thrift file to the request.
-func (g *generateServiceBuilder) AddModule(thriftPath string) (api.ModuleID, error) {
+// addModule adds the module for the given Thrift file to the request.
+func (g *generateServiceBuilder) addModule(thriftPath string) (api.ModuleID, error) {
 	if id, ok := g.moduleIDs[thriftPath]; ok {
 		return id, nil
 	}
@@ -106,9 +104,8 @@ func (g *generateServiceBuilder) AddModule(thriftPath string) (api.ModuleID, err
 	}
 
 	g.Modules[id] = &api.Module{
-		ImportPath:     importPath,
-		Directory:      dir,
-		ThriftFilePath: thriftPath,
+		ImportPath: importPath,
+		Directory:  dir,
 	}
 	return id, nil
 }
@@ -135,10 +132,9 @@ func (g *generateServiceBuilder) addService(spec *compile.ServiceSpec) (api.Serv
 	g.nextServiceID++
 	g.serviceIDs[spec.ThriftFile()][serviceName(spec.Name)] = serviceID
 
-	// Modules must already be populated.
-	moduleID, ok := g.moduleIDs[spec.ThriftFile()]
-	if !ok {
-		return 0, fmt.Errorf("unable to lookup module ID for Thrift file: %q", spec.ThriftFile())
+	moduleID, err := g.addModule(spec.ThriftFile())
+	if err != nil {
+		return 0, err
 	}
 
 	functions := make([]*api.Function, 0, len(spec.Functions))
@@ -347,8 +343,7 @@ func (g *generateServiceBuilder) buildType(spec compile.TypeSpec, required bool)
 			},
 		}
 
-		if (!required && !isReferenceType(spec)) ||
-			isStructType(spec) {
+		if !required && !isReferenceType(spec) {
 			t = &api.Type{PointerType: t}
 		}
 

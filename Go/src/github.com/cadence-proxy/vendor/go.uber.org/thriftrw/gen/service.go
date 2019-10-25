@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -56,24 +56,6 @@ func Service(g Generator, s *compile.ServiceSpec) (map[string]*bytes.Buffer, err
 	}
 
 	return files, nil
-}
-
-// Services generates code for all services into a single file and stores the code
-// in the generator to be written.
-func Services(g Generator, services map[string]*compile.ServiceSpec) error {
-	for _, serviceName := range sortStringKeys(services) {
-		s := services[serviceName]
-		for _, functionName := range sortStringKeys(s.Functions) {
-			function := s.Functions[functionName]
-			if err := ServiceFunction(g, s, function); err != nil {
-				return fmt.Errorf(
-					"could not generate types for %s.%s: %v",
-					s.Name, functionName, err)
-			}
-		}
-	}
-
-	return nil
 }
 
 // ServiceFunction generates code for the given function of the given service.

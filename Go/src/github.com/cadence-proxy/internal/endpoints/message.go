@@ -234,6 +234,12 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 				reply = handleDomainUpdateRequest(ctx, v)
 			}
 
+		// DomainListRequest
+		case internal.DomainListRequest:
+			if v, ok := request.(*messages.DomainListRequest); ok {
+				reply = handleDomainListRequest(ctx, v)
+			}
+
 		// TerminateRequest
 		case internal.TerminateRequest:
 			if v, ok := request.(*messages.TerminateRequest); ok {

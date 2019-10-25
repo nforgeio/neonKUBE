@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -209,17 +209,6 @@ type fieldIDConflictError struct {
 
 func (e fieldIDConflictError) Error() string {
 	return fmt.Sprintf("field %q has already used ID %d", e.Name, e.ID)
-}
-
-type fieldIDOutOfBoundsError struct {
-	ID   int
-	Name string
-}
-
-func (e fieldIDOutOfBoundsError) Error() string {
-	return fmt.Sprintf(
-		"field ID %v of %q is out of bounds: "+
-			"field IDs must be in the range [1, 32767]", e.ID, e.Name)
 }
 
 type oneWayCannotReturnError struct {

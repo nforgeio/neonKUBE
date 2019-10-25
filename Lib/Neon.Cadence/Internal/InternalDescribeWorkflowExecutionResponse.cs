@@ -55,7 +55,7 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// Pending child workflows.
         /// </summary>
-        [JsonProperty(PropertyName = "pendingWorkflows", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "pendingChildren", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public List<InternalPendingChildExecutionInfo> PendingChildren { get; set; }
 

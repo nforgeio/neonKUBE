@@ -1,12 +1,14 @@
-hash: 946ae5b5fdb50f6ea94d02c6f16bed9a78894b04ecf036dfd46ea857fc2dd05c
-updated: 2019-03-21T17:27:38.503773991-07:00
+hash: 71009677ef9a1b5cd311d9f5bca9962e36e46b48c12251821cab08142db3028a
+updated: 2017-12-07T20:56:46.115138961-08:00
 imports:
 - name: github.com/beorn7/perks
-  version: 3a771d992973f24aa725d07868b467d1ddfceafb
+  version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
   subpackages:
   - quantile
+- name: github.com/facebookgo/clock
+  version: 600d898af40aa09a7a93ecb9265d87b0504b6f03
 - name: github.com/golang/protobuf
-  version: 927b65914520a8b7d44f5c9057611cfec6b2e2d0
+  version: 1e59b77b52bf8e4b449a57e6f79f21226d571845
   subpackages:
   - proto
 - name: github.com/matttproud/golang_protobuf_extensions
@@ -14,42 +16,39 @@ imports:
   subpackages:
   - pbutil
 - name: github.com/prometheus/client_golang
-  version: 505eaef017263e299324067d40ca2c48f6a2cf50
+  version: c5b7fccd204277076155f10851dad72b76a49317
   subpackages:
   - prometheus
-  - prometheus/internal
   - prometheus/promhttp
 - name: github.com/prometheus/client_model
   version: 99fa1f4be8e564e8a6b613da7fa6f46c9edafc6c
   subpackages:
   - go
 - name: github.com/prometheus/common
-  version: d811d2e9bf898806ecfb6ef6296774b13ffc314c
+  version: 2e54d0b93cba2fd133edc32211dcc32c06ef72ca
   subpackages:
   - expfmt
   - internal/bitbucket.org/ww/goautoneg
   - model
 - name: github.com/prometheus/procfs
-  version: 8b1c2da0d56deffdbb9e48d4414b4e674bd8083e
+  version: a6e9df898b1336106c743392c48ee0b71f5c4efa
   subpackages:
-  - internal/util
-  - nfs
   - xfs
 - name: github.com/uber-go/tally
-  version: e9a67ec1839e1f6e5133dbcca2f57bec12fdeda2
+  version: 6c4631652c6aab57c64f65c2e0aaec2e9aae3a64
 - name: go.uber.org/atomic
-  version: 1ea20fb1cbb1cc08cbd0d913a96dead89aa18289
+  version: 8474b86a5a6f79c443ce4b2992817ff32cf208b8
 testImports:
 - name: github.com/davecgh/go-spew
-  version: 8991bc29aa16c548c550c7ff78260e27b9ab7c73
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
   subpackages:
   - spew
 - name: github.com/pmezard/go-difflib
-  version: 792786c7400a136282c1664665ae0a8db921c6c2
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
   - difflib
 - name: github.com/stretchr/testify
-  version: ffdc059bfe9ce6a4e144ba849dbedead332c6053
+  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
   subpackages:
   - assert
   - require

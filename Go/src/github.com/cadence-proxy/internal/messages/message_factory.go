@@ -75,6 +75,12 @@ func CreateNewTypedMessage(messageType internal.MessageType) IProxyMessage {
 	case internal.DomainDeprecateRequest:
 		message = NewDomainDeprecateRequest()
 
+	// DomainList
+	case internal.DomainListReply:
+		message = NewDomainListReply()
+	case internal.DomainListRequest:
+		message = NewDomainListRequest()
+
 	// Heartbeat
 	case internal.HeartbeatReply:
 		message = NewHeartbeatReply()

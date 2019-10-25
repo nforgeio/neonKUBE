@@ -27,7 +27,6 @@ import (
 	"go.uber.org/cadence/workflow"
 
 	internal "github.com/cadence-proxy/internal"
-	proxyclient "github.com/cadence-proxy/internal/cadence/client"
 	proxyerror "github.com/cadence-proxy/internal/cadence/error"
 	"github.com/cadence-proxy/internal/messages"
 )
@@ -92,6 +91,12 @@ func buildReply(reply messages.IProxyReply, cadenceError *proxyerror.CadenceErro
 	case internal.DomainUpdateReply:
 		if v, ok := reply.(*messages.DomainUpdateReply); ok {
 			buildDomainUpdateReply(v, cadenceError)
+		}
+
+	// DomainListReply
+	case internal.DomainListReply:
+		if v, ok := reply.(*messages.DomainListReply); ok {
+			buildDomainListReply(v, cadenceError, value)
 		}
 
 	// TerminateReply
@@ -389,6 +394,7 @@ func createReplyMessage(request messages.IProxyRequest) messages.IProxyReply {
 
 	reply.SetRequestID(request.GetRequestID())
 	reply.SetClientID(request.GetClientID())
+
 	if v, ok := reply.(messages.IProxyReply); ok {
 		return v
 	}
@@ -423,7 +429,7 @@ func buildDomainDescribeReply(reply *messages.DomainDescribeReply, cadenceError 
 		if v, ok := describeDomainResponse[0].(*cadenceshared.DescribeDomainResponse); ok {
 			reply.SetDomainInfoName(v.DomainInfo.Name)
 			reply.SetDomainInfoDescription(v.DomainInfo.Description)
-			reply.SetDomainInfoStatus(proxyclient.StringToDomainStatus(v.DomainInfo.Status.String()))
+			reply.SetDomainInfoStatus(v.DomainInfo.Status)
 			reply.SetConfigurationEmitMetrics(*v.Configuration.EmitMetric)
 			reply.SetConfigurationRetentionDays(*v.Configuration.WorkflowExecutionRetentionPeriodInDays)
 			reply.SetDomainInfoOwnerEmail(v.DomainInfo.OwnerEmail)
@@ -437,6 +443,16 @@ func buildDomainRegisterReply(reply *messages.DomainRegisterReply, cadenceError 
 
 func buildDomainUpdateReply(reply *messages.DomainUpdateReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
+}
+
+func buildDomainListReply(reply *messages.DomainListReply, cadenceError *proxyerror.CadenceError, listDomainsResponse ...interface{}) {
+	reply.SetError(cadenceError)
+	if len(listDomainsResponse) > 0 {
+		if v, ok := listDomainsResponse[0].(*cadenceshared.ListDomainsResponse); ok {
+			reply.SetDomains(v.Domains)
+			reply.SetNextPageToken(v.NextPageToken)
+		}
+	}
 }
 
 func buildHeartbeatReply(reply *messages.HeartbeatReply, cadenceError *proxyerror.CadenceError) {

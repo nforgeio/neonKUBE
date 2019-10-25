@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Uber Technologies, Inc.
+// Copyright (c) 2018 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -71,10 +71,6 @@ func (f fieldGroupGenerator) checkReservedIdentifier(name string) error {
 }
 
 func (f fieldGroupGenerator) Generate(g Generator) error {
-	if err := verifyUniqueFieldLabels(f.Fields); err != nil {
-		return err
-	}
-
 	if err := f.DefineStruct(g); err != nil {
 		return err
 	}
@@ -95,13 +91,7 @@ func (f fieldGroupGenerator) Generate(g Generator) error {
 		return err
 	}
 
-	if !checkNoZap(g) {
-		if err := f.Zap(g); err != nil {
-			return err
-		}
-	}
-
-	return f.Accessors(g)
+	return f.PrimitiveAccessors(g)
 }
 
 func (f fieldGroupGenerator) DefineStruct(g Generator) error {
@@ -128,14 +118,11 @@ func generateTags(f *compile.FieldSpec) (string, error) {
 		return "", fmt.Errorf("failed to parse tag: %v", err)
 	}
 
-	// Default to the field name or label as the name used in the JSON
-	// representation.
-	if err := tags.Set(compileJSONTag(f, entityLabel(f))); err != nil {
+	if err := tags.Set(compileJSONTag(f, f.Name)); err != nil {
 		return "", fmt.Errorf("failed to set tag: %v", err)
 	}
 
-	// Process go.tags and overwrite JSON tag if specified in Thrift
-	// annotation.
+	// process go tags and overwrite json tag if specified in thrift annotation
 	if goAnnotation := f.Annotations[goTagKey]; goAnnotation != "" {
 		goTags, err := structtag.Parse(goAnnotation)
 		if err != nil {
@@ -454,11 +441,6 @@ func (f fieldGroupGenerator) Equals(g Generator) error {
 		//
 		// This function performs a deep comparison.
 		func (<$v> *<.Name>) Equals(<$rhs> *<.Name>) bool {
-			if <$v> == nil {
-				return <$rhs> == nil
-			} else if <$rhs> == nil {
-				return false
-			}
 			<range .Fields>
 				<- $fname := goName . ->
 				<- $lhsField := printf "%s.%s" $v $fname ->
@@ -479,47 +461,8 @@ func (f fieldGroupGenerator) Equals(g Generator) error {
 		`, f)
 }
 
-func (f fieldGroupGenerator) Zap(g Generator) error {
-	return g.DeclareFromTemplate(
-		`
-		<$zapcore := import "go.uber.org/zap/zapcore">
-		<$v := newVar "v">
-		<$enc := newVar "enc">
-
-		// MarshalLogObject implements zapcore.ObjectMarshaler, enabling
-		// fast logging of <.Name>.
-		func (<$v> *<.Name>) MarshalLogObject(<$enc> <$zapcore>.ObjectEncoder) (err error) {
-			if <$v> == nil {
-				return nil
-			}
-			<range .Fields>
-				<- if not (zapOptOut .) ->
-					<- $fval := printf "%s.%s" $v (goName .) ->
-					<- if .Required ->
-						<zapEncodeBegin .Type ->
-							<$enc>.Add<zapEncoder .Type>("<fieldLabel .>", <zapMarshaler .Type $fval>)
-						<- zapEncodeEnd .Type>
-					<- else ->
-						if <$fval> != nil {
-							<zapEncodeBegin .Type ->
-								<$enc>.Add<zapEncoder .Type>("<fieldLabel .>", <zapMarshalerPtr .Type $fval>)
-							<- zapEncodeEnd .Type>
-						}
-					<- end>
-				<- end>
-			<end ->
-			return err
-		}
-		`, f,
-		TemplateFunc("zapOptOut", zapOptOut),
-		TemplateFunc("fieldLabel", entityLabel),
-	)
-}
-
-func (f fieldGroupGenerator) Accessors(g Generator) error {
-	// Namespace to ensure that field names don't conflict with method names.
-	fieldsAndMethods := NewNamespace()
-
+func (f fieldGroupGenerator) PrimitiveAccessors(g Generator) error {
+	fieldsAndAccessors := NewNamespace()
 	return g.DeclareFromTemplate(
 		`
 		<$v := newVar "v">
@@ -529,62 +472,25 @@ func (f fieldGroupGenerator) Accessors(g Generator) error {
 		<range .Fields>
 			<$fname := goName .>
 			<reserveFieldOrMethod $fname>
-
 			<reserveFieldOrMethod (printf "Get%v" $fname)>
+			<if and (not .Required) (isPrimitiveType .Type)>
 			// Get<$fname> returns the value of <$fname> if it is set or its
-			// <if .Default>default<else>zero<end> value if it is unset.
+			// zero value if it is unset.
 			func (<$v> *<$name>) Get<$fname>() (<$o> <typeReference .Type>) {
-				<- if .Required ->
-				  if <$v> != nil {
-				    <$o> = <$v>.<$fname>
-				  }
-				  return
-				<- else ->
-				  if <$v> != nil && <$v>.<$fname> != nil {
-					<- if and (not .Required) (isPrimitiveType .Type) ->
-					  return *<$v>.<$fname>
-					<- else ->
-					  return <$v>.<$fname>
-					<- end ->
-				  }
-				  <if .Default><$o> = <constantValue .Default .Type><end>
-				  return
-				<- end ->
-			}
-
-			<if shouldGenerateIsSet .>
-				<reserveFieldOrMethod (printf "IsSet%v" $fname)>
-				// IsSet<$fname> returns true if <$fname> is not nil.
-				func (<$v> *<$name>) IsSet<$fname>() bool {
-					return <$v> != nil && <$v>.<$fname> != nil
+				if <$v>.<$fname> != nil {
+					return *<$v>.<$fname>
 				}
+				<if .Default><$o> = <constantValue .Default .Type><end>
+				return
+			}
 			<end>
 		<end>
 		`, f,
 		TemplateFunc("constantValue", ConstantValue),
-		TemplateFunc("shouldGenerateIsSet", func(f *compile.FieldSpec) bool {
-			// Generate IsSet functions for a field only if the field is
-			// optional or the field value itself is nillable.
-			return !f.Required || isReferenceType(f.Type) || isStructType(f.Type)
-		}),
 		TemplateFunc("reserveFieldOrMethod", func(name string) (string, error) {
 			// we return an empty string for the sake of the templating system
-			err := fieldsAndMethods.Reserve(name)
+			err := fieldsAndAccessors.Reserve(name)
 			return "", err
 		}),
 	)
-}
-
-func verifyUniqueFieldLabels(fs compile.FieldGroup) error {
-	used := make(map[string]*compile.FieldSpec, len(fs))
-	for _, f := range fs {
-		label := entityLabel(f)
-		if conflict, isUsed := used[label]; isUsed {
-			return fmt.Errorf(
-				"field %q with label %q conflicts with field %q",
-				f.Name, label, conflict.Name)
-		}
-		used[label] = f
-	}
-	return nil
 }

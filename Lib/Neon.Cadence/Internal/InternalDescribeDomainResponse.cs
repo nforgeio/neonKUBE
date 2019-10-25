@@ -41,7 +41,7 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// The domain configuration.
         /// </summary>
-        [JsonProperty(PropertyName = "domainConfiguration", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "configuration", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public InternalDomainConfiguration DomainConfiguration { get; set; }
 
