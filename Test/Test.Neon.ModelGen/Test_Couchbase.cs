@@ -315,9 +315,14 @@ namespace TestModelGen.Couchbase
             Assert.False(CustomPerson.SameTypeAs(null));
         }
 
-        [Fact]
+        public class PeopleList
+        {
+            public List<Person> List { get; set; } = new List<Person>();
+        }
+
+        [Fact(Skip = "TODO: https://github.com/nforgeio/neonKUBE/issues/704")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
-        public async Task RoundTrip()
+        public async Task RoundTrip_Array()
         {
             // Ensure that the database starts out empty.
 
@@ -325,6 +330,74 @@ namespace TestModelGen.Couchbase
 
             // Ensure that object properties that ARE NOT defined in the data model
             // interface are retained when persisted and then read from the database.
+
+            var jack = new Person()
+            {
+                Id     = 0,
+                Name   = "Jack",
+                Age    = 10,
+                Gender = Gender.Male,
+                Data   = new byte[] { 0, 1, 2, 3, 4 }
+            };
+
+            jack.__O["Height"] = 182;
+
+            var jill = new Person()
+            {
+                Id     = 1,
+                Name   = "Jill",
+                Age    = 11,
+                Gender = Gender.Female,
+                Data   = new byte[] { 5, 6, 7, 8, 9 }
+            };
+
+            jill.__O["Height"] = 185;
+
+            var people = new PeopleList();
+
+            people.List.Add(jack);
+            people.List.Add(jill);
+
+            await bucket.UpsertSafeAsync("test-people", people, persistTo: PersistTo.One);
+
+            var peopleRead = await bucket.GetSafeAsync<PeopleList>("test-people");
+
+            Assert.NotNull(peopleRead);
+            Assert.NotNull(peopleRead.List);
+            Assert.Equal(2, peopleRead.List.Count);
+
+            var jackRead = peopleRead.List[0];
+
+            Assert.Equal(jack.Id, jackRead.Id);
+            Assert.Equal(jack.Name, jackRead.Name);
+            Assert.Equal(jack.Age, jackRead.Age);
+            Assert.Equal(jack.Gender, jackRead.Gender);
+            Assert.Equal(jack.Data, jackRead.Data);
+            Assert.Equal(182, (int)jackRead.__O["Height"]);
+            Assert.Equal(jack, jackRead);
+
+            var jillRead = peopleRead.List[0];
+
+            Assert.Equal(jill.Id, jillRead.Id);
+            Assert.Equal(jill.Name, jillRead.Name);
+            Assert.Equal(jill.Age, jillRead.Age);
+            Assert.Equal(jill.Gender, jillRead.Gender);
+            Assert.Equal(jill.Data, jillRead.Data);
+            Assert.Equal(185, (int)jillRead.__O["Height"]);
+            Assert.Equal(jill, jillRead);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
+        public async Task RoundTrip_Object()
+        {
+            // Ensure that the database starts out empty.
+
+            Assert.Empty(from doc in context.Query<object>() select doc);
+
+            // Ensure that objects in an array with properties that ARE NOT defined in
+            // the data model interface are retained when persisted and then read from
+            // the database.
 
             var jack = new Person()
             {
@@ -587,7 +660,7 @@ namespace TestModelGen.Couchbase
             Assert.True(gotJohn);
         }
 
-        [Fact(Skip = "TODO")]
+        [Fact(Skip = "TODO: https://github.com/nforgeio/neonKUBE/issues/704")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonModelGen)]
         public async Task Dont_Persist_O()
         {
