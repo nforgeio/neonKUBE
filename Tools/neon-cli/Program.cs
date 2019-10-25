@@ -449,6 +449,7 @@ You can disable the use of this encrypted folder by specifying
             catch (Exception e)
             {
                 Console.Error.WriteLine($"*** ERROR: {NeonHelper.ExceptionError(e)}");
+                Console.Error.WriteLine(e.StackTrace);
                 Console.Error.WriteLine(string.Empty);
                 return 1;
             }

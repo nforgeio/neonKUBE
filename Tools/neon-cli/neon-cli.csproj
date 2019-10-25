@@ -6,7 +6,7 @@
     <RootNamespace>Neon.Cli</RootNamespace>
     <AssemblyName>neon</AssemblyName>
     <LangVersion>latest</LangVersion>
-    <RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>win10-x64;osx-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <ItemGroup>
