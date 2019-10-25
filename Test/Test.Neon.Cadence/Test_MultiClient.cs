@@ -139,15 +139,25 @@ namespace TestCadence
             using (var client1 = await CadenceClient.ConnectAsync(fixture.Settings))
             {
                 await client1.RegisterWorkflowAsync<WorkflowWithResult1>();
-                await client1.StartWorkerAsync("tasklist-1");
+                await client1.StartWorkerAsync("tasklist-number-1");
 
                 using (var client2 = await CadenceClient.ConnectAsync(fixture.Settings))
                 {
                     await client2.RegisterWorkflowAsync<WorkflowWithResult2>();
-                    await client2.StartWorkerAsync("tasklist-2");
+                    await client2.StartWorkerAsync("tasklist-number-2");
 
-                    var stub1 = client1.NewWorkflowStub<IWorkflowWithResult1>();
-                    var stub2 = client2.NewWorkflowStub<IWorkflowWithResult2>();
+                    var options1 = new WorkflowOptions()
+                    {
+                        TaskList = "tasklist-number-1"
+                    };
+
+                    var options2 = new WorkflowOptions()
+                    {
+                        TaskList = "tasklist-number-2"
+                    };
+
+                    var stub1 = client1.NewWorkflowStub<IWorkflowWithResult1>(options: options1);
+                    var stub2 = client2.NewWorkflowStub<IWorkflowWithResult2>(options: options2);
 
                     Assert.Equal("WF1 says: Hello Jeff!", await stub1.HelloAsync("Jeff"));
                     Assert.Equal("WF2 says: Hello Jeff!", await stub2.HelloAsync("Jeff"));

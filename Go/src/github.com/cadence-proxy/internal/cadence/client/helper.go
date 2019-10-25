@@ -345,8 +345,7 @@ func (helper *ClientHelper) StopWorker(worker worker.Worker) {
 // request to cadence.
 // param domain string -> the domain you want to query.
 //
-// returns *cadenceshared.DescribeDomainResponse -> response to the describe domain.
-// request
+// returns *cadenceshared.DescribeDomainResponse -> response to the describe domain request.
 // returns error -> error if one is thrown, nil if the method executed with no errors.
 func (helper *ClientHelper) DescribeDomain(ctx context.Context, domain string) (*cadenceshared.DescribeDomainResponse, error) {
 	resp, err := helper.DomainClient.Describe(ctx, domain)
@@ -412,7 +411,6 @@ func (helper *ClientHelper) UpdateDomain(ctx context.Context, updateDomainReques
 // param opts ...yarpc.CallOptions -> optional yarpc.CallOption.
 //
 // returns *cadenceshared.ListDomainsResponse -> response to the describe task list request.
-// request
 // returns error -> error if one is thrown, nil if the method executed with no errors.
 func (helper *ClientHelper) ListDomains(
 	ctx context.Context,
