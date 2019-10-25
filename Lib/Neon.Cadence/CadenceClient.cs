@@ -1514,13 +1514,13 @@ namespace Neon.Cadence
             }
             else if (!noClosingCheck && closingConnection)
             {
-                throw new ObjectDisposedException(nameof(CadenceClient), "Client is not connected to [cadence-proxy].");
+                throw new ObjectDisposedException(nameof(CadenceClient), "Connection to [cadence-proxy] is closing.");
             }
         }
 
         /// <summary>
-        /// Raises the <see cref="ConnectionClosed"/> event if it hasn't already
-        /// been raised.
+        /// Raises the <see cref="ConnectionClosed"/> event if it hasn't been
+        /// raised already.
         /// </summary>
         /// <param name="exception">Optional exception to be included in the event.</param>
         private void RaiseConnectionClosed(Exception exception = null)
