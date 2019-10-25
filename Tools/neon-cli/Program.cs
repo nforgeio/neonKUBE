@@ -163,7 +163,9 @@ You can disable the use of this encrypted folder by specifying
                 }
                 else if (NeonHelper.IsOSX)
                 {
-                    throw new NotImplementedException("$todo(jefflill): Implement OSX elevated permissions check.");
+                    // $todo(jefflill): Do we really need this?
+
+                    // throw new NotImplementedException("$todo(jefflill): Implement OSX elevated permissions check.");
                 }
             }
 
