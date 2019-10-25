@@ -1782,13 +1782,13 @@ func handleWorkflowQueueNewRequest(requestCtx context.Context, request *messages
 	// set ReplayStatus
 	setReplayStatus(ctx, reply)
 
-	capacity := request.GetCapacity()
-	queue := make(chan []byte, capacity)
+	capacity := int(request.GetCapacity())
+	queue := workflow.NewBufferedChannel(ctx, capacity)
 	queueID = wectx.AddQueue(queueID, queue)
 
 	Logger.Info("Queue successfully added",
 		zap.Int64("QueueId", queueID),
-		zap.Int32("Capacity", capacity),
+		zap.Int("Capacity", capacity),
 		zap.Int64("ContextId", contextID))
 
 	buildReply(reply, nil)
@@ -1831,19 +1831,23 @@ func handleWorkflowQueueWriteRequest(requestCtx context.Context, request *messag
 	// check if we should block and wait to enqueue
 	// or just try to enqueue without blocking.
 	if request.GetNoBlock() {
-		select {
-		case queue <- data:
-			// indicates that the value was successfully added to the queue
-			// and is not full.
+		s := workflow.NewSelector(ctx)
+
+		// indicates that the value was successfully added to the queue
+		// and is not full.
+		s.AddSend(queue, data, func() {
 			buildReply(reply, nil, false)
-		default:
-			// indicates that the queue is full and the value was not added
-			// successfully to the queue.
+		})
+
+		// indicates that the queue is full and the value was not added
+		// to the queue.
+		s.AddDefault(func() {
 			buildReply(reply, nil, true)
-		}
+		})
+		s.Select(ctx)
 	} else {
 		// send data to queue
-		queue <- data
+		queue.Send(ctx, data)
 	}
 
 	Logger.Info("Successfully Added to Queue",
@@ -1888,75 +1892,30 @@ func handleWorkflowQueueReadRequest(requestCtx context.Context, request *message
 		return reply
 	}
 
+	var timer workflow.Future
 	timeout := request.GetTimeout()
-	readCtx, cancel := context.WithCancel(context.Background())
 
 	if timeout > time.Duration(0) {
-		readCtx, cancel = context.WithTimeout(context.Background(), timeout)
+		timer = workflow.NewTimer(ctx, timeout)
 	}
-
-	defer cancel()
 
 	var data []byte
 	var isClosed bool
 
 	// read value from queue
-	select {
-	case <-readCtx.Done():
+	s := workflow.NewSelector(ctx)
+	s.AddFuture(timer, func(f workflow.Future) {
 		data = nil
-	case d := <-queue:
-		data = d
-
+	})
+	s.AddReceive(queue, func(c workflow.Channel, more bool) {
+		c.Receive(ctx, &data)
 		if data == nil {
 			isClosed = true
 		}
-	}
+	})
+	s.Select(ctx)
 
 	buildReply(reply, nil, append(make([]interface{}, 0), data, isClosed))
-
-	return reply
-}
-
-func handleWorkflowQueueLengthRequest(requestCtx context.Context, request *messages.WorkflowQueueLengthRequest) messages.IProxyReply {
-	contextID := request.GetContextID()
-	queueID := request.GetQueueID()
-	Logger.Debug("WorkflowQueueLengthRequest Received",
-		zap.Int64("QueueId", queueID),
-		zap.Int64("ClientId", request.GetClientID()),
-		zap.Int64("ContextId", contextID),
-		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()))
-
-	// new WorkflowQueueLengthReply
-	reply := createReplyMessage(request)
-
-	// get the child context from the parent workflow context
-	wectx := WorkflowContexts.Get(contextID)
-	if wectx == nil {
-		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
-		return reply
-	}
-
-	ctx := wectx.GetContext()
-
-	// set ReplayStatus
-	setReplayStatus(ctx, reply)
-
-	queue := wectx.GetQueue(queueID)
-	if queue == nil {
-		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
-		return reply
-	}
-
-	// get the length of the queue
-	length := int32(len(queue))
-
-	Logger.Info("Queue length",
-		zap.Int64("QueueId", queueID),
-		zap.Int32("Length", length),
-		zap.Int64("ContextId", contextID))
-
-	buildReply(reply, nil, length)
 
 	return reply
 }
@@ -1993,7 +1952,7 @@ func handleWorkflowQueueCloseRequest(requestCtx context.Context, request *messag
 	}
 
 	// close the queue
-	close(queue)
+	queue.Close()
 
 	Logger.Info("Successfully closed Queue",
 		zap.Int64("QueueId", queueID),

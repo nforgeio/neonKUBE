@@ -19,15 +19,17 @@ package workflow
 
 import (
 	"sync"
+
+	"go.uber.org/cadence/workflow"
 )
 
 type (
 
 	// QueueMap thread-safe map of
-	// chan []byte to their QueueID's
+	// workflow.Channel to their QueueID's
 	QueueMap struct {
-		sync.Mutex                       // protects read and writes to the map
-		queues     map[int64]chan []byte // map of QueueID to chan []byte
+		sync.Mutex                            // protects read and writes to the map
+		queues     map[int64]workflow.Channel // map of QueueID to workflow.Channel
 	}
 )
 
@@ -37,7 +39,7 @@ type (
 // NewQueueMap is the constructor for a QueueMap
 func NewQueueMap() *QueueMap {
 	q := new(QueueMap)
-	q.queues = make(map[int64]chan []byte)
+	q.queues = make(map[int64]workflow.Channel)
 	return q
 }
 
@@ -46,10 +48,10 @@ func NewQueueMap() *QueueMap {
 //
 // param queueID int64 -> the long queueID. This will be the mapped key.
 //
-// param b chan []byte -> A chan []byte. This will be the mapped value
+// param b workflow.Channel -> A workflow.Channel. This will be the mapped value
 //
 // returns int64 -> long queueID of the newly added queue.
-func (q *QueueMap) Add(queueID int64, b chan []byte) int64 {
+func (q *QueueMap) Add(queueID int64, b workflow.Channel) int64 {
 	q.Lock()
 	defer q.Unlock()
 	q.queues[queueID] = b
@@ -74,8 +76,8 @@ func (q *QueueMap) Remove(queueID int64) int64 {
 //
 // param queueID int64 -> the long queueID. This will be the mapped key.
 //
-// returns chan []byte -> a chan []byte representing the queue.
-func (q *QueueMap) Get(queueID int64) chan []byte {
+// returns workflow.Channel -> a workflow.Channel representing the queue.
+func (q *QueueMap) Get(queueID int64) workflow.Channel {
 	q.Lock()
 	defer q.Unlock()
 	return q.queues[queueID]

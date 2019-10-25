@@ -288,12 +288,6 @@ func buildReply(reply messages.IProxyReply, cadenceError *proxyerror.CadenceErro
 			buildWorkflowQueueReadReply(v, cadenceError, value)
 		}
 
-	// WorkflowQueueLengthReply
-	case internal.WorkflowQueueLengthReply:
-		if v, ok := reply.(*messages.WorkflowQueueLengthReply); ok {
-			buildWorkflowQueueLengthReply(v, cadenceError, value)
-		}
-
 	// WorkflowQueueCloseReply
 	case internal.WorkflowQueueCloseReply:
 		if v, ok := reply.(*messages.WorkflowQueueCloseReply); ok {
@@ -681,15 +675,6 @@ func buildWorkflowQueueReadReply(reply *messages.WorkflowQueueReadReply, cadence
 			if _v, _ok := v[1].(bool); _ok {
 				reply.SetIsClosed(_v)
 			}
-		}
-	}
-}
-
-func buildWorkflowQueueLengthReply(reply *messages.WorkflowQueueLengthReply, cadenceError *proxyerror.CadenceError, length ...interface{}) {
-	reply.SetError(cadenceError)
-	if len(length) > 0 {
-		if v, ok := length[0].(int32); ok {
-			reply.SetLength(v)
 		}
 	}
 }
