@@ -312,12 +312,6 @@ func CreateNewTypedMessage(messageType internal.MessageType) IProxyMessage {
 	case internal.WorkflowQueueReadRequest:
 		message = NewWorkflowQueueReadRequest()
 
-	// WorkflowQueueLength
-	case internal.WorkflowQueueLengthReply:
-		message = NewWorkflowQueueLengthReply()
-	case internal.WorkflowQueueLengthRequest:
-		message = NewWorkflowQueueLengthRequest()
-
 	// WorkflowQueueClose
 	case internal.WorkflowQueueCloseReply:
 		message = NewWorkflowQueueCloseReply()

@@ -429,12 +429,6 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 				reply = handleWorkflowQueueReadRequest(ctx, v)
 			}
 
-		// WorkflowQueueLengthRequest
-		case internal.WorkflowQueueLengthRequest:
-			if v, ok := request.(*messages.WorkflowQueueLengthRequest); ok {
-				reply = handleWorkflowQueueLengthRequest(ctx, v)
-			}
-
 		// WorkflowQueueCloseRequest
 		case internal.WorkflowQueueCloseRequest:
 			if v, ok := request.(*messages.WorkflowQueueCloseRequest); ok {

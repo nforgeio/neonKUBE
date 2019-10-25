@@ -35,23 +35,23 @@ var (
 
 type (
 
-	// WorkflowContextsMap is a global map of int64 contextID to
+	// ContextsMap is a global map of int64 contextID to
 	// running cadence workflow instances (as *WorkflowContext)
-	WorkflowContextsMap struct {
+	ContextsMap struct {
 		sync.Mutex
-		contexts map[int64]*WorkflowContext
+		contexts map[int64]*Context
 	}
 
-	// WorkflowContext represents a running cadence
+	// Context represents a running cadence
 	// workflow instance
-	WorkflowContext struct {
+	Context struct {
 		sync.Mutex                                      // allows us to safely iterate ID iterator
 		workflowName  *string                           // string name of the workflow
 		ctx           workflow.Context                  // the cadence workflow context
 		cancelFunc    workflow.CancelFunc               // cadence workflow context cancel function
 		childContexts *ChildContextsMap                 // maps child workflow instances to childID
 		activities    *proxyactivity.ActivityFuturesMap // maps activity futures launched by the workflow instance to activityID
-		queues        *QueueMap                         // map of workflow queues (queueID to chan []byte queue)
+		queues        *QueueMap                         // map of workflow queues (queueID to workflow.Channel queue)
 		childID       int64                             // childID iterator
 		queueID       int64                             // queueID iterator
 	}
@@ -85,8 +85,8 @@ func GetContextID() int64 {
 //
 // returns *WorkflowContext -> pointer to a newly initialized
 // workflow ExecutionContext in memory
-func NewWorkflowContext(ctx workflow.Context) *WorkflowContext {
-	wectx := new(WorkflowContext)
+func NewWorkflowContext(ctx workflow.Context) *Context {
+	wectx := new(Context)
 	wectx.childContexts = NewChildContextsMap()
 	wectx.activities = proxyactivity.NewActivityFuturesMap()
 	wectx.queues = NewQueueMap()
@@ -97,7 +97,7 @@ func NewWorkflowContext(ctx workflow.Context) *WorkflowContext {
 // GetContext gets a WorkflowContext's workflow.Context
 //
 // returns workflow.Context -> a cadence workflow context
-func (wectx *WorkflowContext) GetContext() workflow.Context {
+func (wectx *Context) GetContext() workflow.Context {
 	return wectx.ctx
 }
 
@@ -105,49 +105,49 @@ func (wectx *WorkflowContext) GetContext() workflow.Context {
 //
 // param value workflow.Context -> a cadence workflow context to be
 // set as a WorkflowContext's cadence workflow.Context
-func (wectx *WorkflowContext) SetContext(value workflow.Context) {
+func (wectx *Context) SetContext(value workflow.Context) {
 	wectx.ctx = value
 }
 
 // GetWorkflowName gets a WorkflowContext's workflow function name
 //
 // returns *string -> a cadence workflow function name
-func (wectx *WorkflowContext) GetWorkflowName() *string {
+func (wectx *Context) GetWorkflowName() *string {
 	return wectx.workflowName
 }
 
 // SetWorkflowName sets a WorkflowContext's workflow function name
 //
 // param value *string -> a cadence workflow function name
-func (wectx *WorkflowContext) SetWorkflowName(value *string) {
+func (wectx *Context) SetWorkflowName(value *string) {
 	wectx.workflowName = value
 }
 
 // GetCancelFunction gets a WorkflowContext's context cancel function
 //
 // returns workflow.CancelFunc -> a cadence workflow context cancel function
-func (wectx *WorkflowContext) GetCancelFunction() workflow.CancelFunc {
+func (wectx *Context) GetCancelFunction() workflow.CancelFunc {
 	return wectx.cancelFunc
 }
 
 // SetCancelFunction sets a WorkflowContext's cancel function
 //
 // param value workflow.CancelFunc -> a cadence workflow context cancel function
-func (wectx *WorkflowContext) SetCancelFunction(value workflow.CancelFunc) {
+func (wectx *Context) SetCancelFunction(value workflow.CancelFunc) {
 	wectx.cancelFunc = value
 }
 
 // GetChildContexts gets a WorkflowContext's child contexts map
 //
 // returns *ChildContextsMap -> a cadence workflow child contexts map
-func (wectx *WorkflowContext) GetChildContexts() *ChildContextsMap {
+func (wectx *Context) GetChildContexts() *ChildContextsMap {
 	return wectx.childContexts
 }
 
 // SetChildContexts sets a WorkflowContext's child contexts map
 //
 // param value *ChildContextsMap -> a cadence workflow child contexts map
-func (wectx *WorkflowContext) SetChildContexts(value *ChildContextsMap) {
+func (wectx *Context) SetChildContexts(value *ChildContextsMap) {
 	wectx.childContexts = value
 }
 
@@ -160,7 +160,7 @@ func (wectx *WorkflowContext) SetChildContexts(value *ChildContextsMap) {
 // execute workflow functions. This will be the mapped value
 //
 // returns int64 -> long id of the new ChildContext added to the map
-func (wectx *WorkflowContext) AddChildContext(id int64, cctx *ChildContext) int64 {
+func (wectx *Context) AddChildContext(id int64, cctx *ChildContext) int64 {
 	return wectx.childContexts.Add(id, cctx)
 }
 
@@ -171,7 +171,7 @@ func (wectx *WorkflowContext) AddChildContext(id int64, cctx *ChildContext) int6
 // param id int64 -> the long childId.
 //
 // returns int64 -> long id of the ChildContext removed from the map
-func (wectx *WorkflowContext) RemoveChildContext(id int64) int64 {
+func (wectx *Context) RemoveChildContext(id int64) int64 {
 	return wectx.childContexts.Remove(id)
 }
 
@@ -182,21 +182,21 @@ func (wectx *WorkflowContext) RemoveChildContext(id int64) int64 {
 // param id int64 -> the long childId. This will be the mapped key
 //
 // returns *WorkflowContext -> pointer to ChildContext with the specified id
-func (wectx *WorkflowContext) GetChildContext(id int64) *ChildContext {
+func (wectx *Context) GetChildContext(id int64) *ChildContext {
 	return wectx.childContexts.Get(id)
 }
 
 // GetActivityFutures gets a WorkflowContext's activity futures map
 //
 // returns *ActivityFuturesMap -> map of an executing workflow's activities.
-func (wectx *WorkflowContext) GetActivityFutures() *proxyactivity.ActivityFuturesMap {
+func (wectx *Context) GetActivityFutures() *proxyactivity.ActivityFuturesMap {
 	return wectx.activities
 }
 
 // SetActivityFutures sets a WorkflowContext's activity futures.
 //
 // param value *ActivityFuturesMap -> a cadence workflow activity futures map
-func (wectx *WorkflowContext) SetActivityFutures(value *proxyactivity.ActivityFuturesMap) {
+func (wectx *Context) SetActivityFutures(value *proxyactivity.ActivityFuturesMap) {
 	wectx.activities = value
 }
 
@@ -207,7 +207,7 @@ func (wectx *WorkflowContext) SetActivityFutures(value *proxyactivity.ActivityFu
 // param future workflow.Future -> the future for the executing activity.
 //
 // returns int64 -> activity id.
-func (wectx *WorkflowContext) AddActivityFuture(id int64, future workflow.Future) int64 {
+func (wectx *Context) AddActivityFuture(id int64, future workflow.Future) int64 {
 	return wectx.activities.Add(id, future)
 }
 
@@ -217,7 +217,7 @@ func (wectx *WorkflowContext) AddActivityFuture(id int64, future workflow.Future
 // param id int64 -> the long activity id.
 //
 // returns int64 -> activity id of removed future.
-func (wectx *WorkflowContext) RemoveActivityFuture(id int64) int64 {
+func (wectx *Context) RemoveActivityFuture(id int64) int64 {
 	return wectx.activities.Remove(id)
 }
 
@@ -227,21 +227,21 @@ func (wectx *WorkflowContext) RemoveActivityFuture(id int64) int64 {
 // param id int64 -> the long activity id.
 //
 // returns workflow.Future -> the workflow future of the specified activity.
-func (wectx *WorkflowContext) GetActivityFuture(id int64) workflow.Future {
+func (wectx *Context) GetActivityFuture(id int64) workflow.Future {
 	return wectx.activities.Get(id)
 }
 
 // GetQueues gets a WorkflowContext's QueueMap
 //
 // returns *QueueMap -> a map of workflow queues (queueID to a chan []byte queue).
-func (wectx *WorkflowContext) GetQueues() *QueueMap {
+func (wectx *Context) GetQueues() *QueueMap {
 	return wectx.queues
 }
 
 // SetQueues sets a WorkflowContext's QueueMap
 //
 // param value *QueueMap -> a map of workflow queues (queueID to a chan []byte queue).
-func (wectx *WorkflowContext) SetQueues(value *QueueMap) {
+func (wectx *Context) SetQueues(value *QueueMap) {
 	wectx.queues = value
 }
 
@@ -249,10 +249,10 @@ func (wectx *WorkflowContext) SetQueues(value *QueueMap) {
 //
 // param id int64 -> the long queueID. This will be the mapped key.
 //
-// param b chan []byte -> the chan []byte workflow queue. This will be the mapped value.
+// param b workflow.Channel -> the workflow.Channel workflow queue. This will be the mapped value.
 //
 // returns int64 -> long queueID of the newly added queue.
-func (wectx *WorkflowContext) AddQueue(id int64, b chan []byte) int64 {
+func (wectx *Context) AddQueue(id int64, b workflow.Channel) int64 {
 	return wectx.queues.Add(id, b)
 }
 
@@ -262,24 +262,24 @@ func (wectx *WorkflowContext) AddQueue(id int64, b chan []byte) int64 {
 // param id int64 -> the long queueID.
 //
 // returns int64 -> the long queueID of the Queue to be removed from the map.
-func (wectx *WorkflowContext) RemoveQueue(id int64) int64 {
+func (wectx *Context) RemoveQueue(id int64) int64 {
 	return wectx.queues.Remove(id)
 }
 
-// GetQueue gets a chan []byte workflow queue from the WorkflowContext's
+// GetQueue gets a workflow.Channel workflow queue from the WorkflowContext's
 // QueueMap at the specified queueID. This method is thread-safe.
 //
 // param id int64 -> the long queueID.
 //
-// returns chan []byte -> the chan []byte workflow queue at the specified
+// returns workflow.Channel -> the workflow.Channel workflow queue at the specified
 // queueID.
-func (wectx *WorkflowContext) GetQueue(id int64) chan []byte {
+func (wectx *Context) GetQueue(id int64) workflow.Channel {
 	return wectx.queues.Get(id)
 }
 
 // NextChildID increments the variable
 // childID by 1 and is protected by a mutex lock
-func (wectx *WorkflowContext) NextChildID() int64 {
+func (wectx *Context) NextChildID() int64 {
 	wectx.Lock()
 	wectx.childID = wectx.childID + 1
 	defer wectx.Unlock()
@@ -288,7 +288,7 @@ func (wectx *WorkflowContext) NextChildID() int64 {
 
 // GetChildID gets the value of the variable
 // childID and is protected by a mutex lock
-func (wectx *WorkflowContext) GetChildID() int64 {
+func (wectx *Context) GetChildID() int64 {
 	wectx.Lock()
 	defer wectx.Unlock()
 	return wectx.childID
@@ -296,7 +296,7 @@ func (wectx *WorkflowContext) GetChildID() int64 {
 
 // NextQueueID increments the variable
 // childID by 1 and is protected by a mutex lock
-func (wectx *WorkflowContext) NextQueueID() int64 {
+func (wectx *Context) NextQueueID() int64 {
 	wectx.Lock()
 	wectx.queueID = wectx.queueID + 1
 	defer wectx.Unlock()
@@ -305,7 +305,7 @@ func (wectx *WorkflowContext) NextQueueID() int64 {
 
 // GetQueueID gets the value of the variable
 // queueID and is protected by a mutex lock
-func (wectx *WorkflowContext) GetQueueID() int64 {
+func (wectx *Context) GetQueueID() int64 {
 	wectx.Lock()
 	defer wectx.Unlock()
 	return wectx.queueID
@@ -315,9 +315,9 @@ func (wectx *WorkflowContext) GetQueueID() int64 {
 // WorkflowContextsMap instance methods
 
 // NewWorkflowContextsMap is the constructor for an WorkflowContextsMap
-func NewWorkflowContextsMap() *WorkflowContextsMap {
-	o := new(WorkflowContextsMap)
-	o.contexts = make(map[int64]*WorkflowContext)
+func NewWorkflowContextsMap() *ContextsMap {
+	o := new(ContextsMap)
+	o.contexts = make(map[int64]*Context)
 	return o
 }
 
@@ -331,7 +331,7 @@ func NewWorkflowContextsMap() *WorkflowContextsMap {
 // execute workflow functions. This will be the mapped value
 //
 // returns int64 -> long id of the new cadence WorkflowContext added to the map
-func (w *WorkflowContextsMap) Add(contextID int64, wectx *WorkflowContext) int64 {
+func (w *ContextsMap) Add(contextID int64, wectx *Context) int64 {
 	w.Lock()
 	defer w.Unlock()
 	w.contexts[contextID] = wectx
@@ -345,7 +345,7 @@ func (w *WorkflowContextsMap) Add(contextID int64, wectx *WorkflowContext) int64
 // cadence workflow.
 //
 // returns int64 -> long id of the WorkflowContext removed from the map
-func (w *WorkflowContextsMap) Remove(contextID int64) int64 {
+func (w *ContextsMap) Remove(contextID int64) int64 {
 	w.Lock()
 	defer w.Unlock()
 	delete(w.contexts, contextID)
@@ -359,7 +359,7 @@ func (w *WorkflowContextsMap) Remove(contextID int64) int64 {
 // cadence workflow.
 //
 // returns *WorkflowContext -> pointer to WorkflowContext with the specified id
-func (w *WorkflowContextsMap) Get(contextID int64) *WorkflowContext {
+func (w *ContextsMap) Get(contextID int64) *Context {
 	w.Lock()
 	defer w.Unlock()
 	return w.contexts[contextID]
