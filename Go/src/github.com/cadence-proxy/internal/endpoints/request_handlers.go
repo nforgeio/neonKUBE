@@ -1908,7 +1908,7 @@ func handleWorkflowQueueReadRequest(requestCtx context.Context, request *message
 		data = nil
 	})
 	s.AddReceive(queue, func(c workflow.Channel, more bool) {
-		c.Receive(ctx, data)
+		c.Receive(ctx, &data)
 		if data == nil {
 			isClosed = true
 		}
