@@ -38,8 +38,9 @@ param
 
 $msbuild    = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
 $nfRoot     = "$env:NF_ROOT"
-$nfBuild    = "$env:NF_BUILD"
 $nfSolution = "$nfRoot\neonKUBE.sln"
+$nfBuild    = "$env:NF_BUILD"
+$nfTools    = "$nfRoot\Tools"
 $env:PATH  += ";$nfBuild"
 $version    = Get-Content "$env:NF_ROOT\product-version.txt" -First 1
 
@@ -160,17 +161,17 @@ PublishCore "Tools\unix-text\unix-text.csproj"  "unix-text"
 "**********************************************************"
 ""
 
-cd "$nfRoot\Tools\neon-cli"
+cd "$nfTools\neon-cli"
 dotnet publish -r osx-x64 -c Release /p:PublishSingleFile=true
 & mkdir "$nfBuild\osx"
-& cp "$nfRoot\Tools\neon-cli\bin\Release\netcoreapp3.0\osx-x64\neon" "$nfBuild\osx"
+& cp "$nfTools\neon-cli\bin\Release\netcoreapp3.0\osx-x64\publish\neon" "$nfBuild\osx\neon-osx"
 cd $nfRoot
 
 ""
 "Generating OS/X neon-cli sha512..."
 ""
 
-& cat "$nfBuild\osx\neon" | openssl dgst -sha512 -hex > "$nfBuild\osx\neon-$version.sha512.txt"
+& cat "$nfBuild\osx\neon-osx" | openssl dgst -sha512 -hex > "$nfBuild\osx\neon-osx-$version.sha512.txt"
 
 if (-not $?)
 {

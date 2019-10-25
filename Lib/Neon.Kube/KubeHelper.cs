@@ -357,7 +357,7 @@ namespace Neon.Kube
             {
                 // $todo(jefflill): Implement this for OS/X
 
-                throw new NotImplementedException();
+                // throw new NotImplementedException();
             }
         }
 
