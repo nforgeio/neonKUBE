@@ -25,20 +25,22 @@
 
 8. Verify that the new release installer works.
 
-9. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: v0.6.4-alpha**
+9. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: v0.7.1-alpha**
 
 10. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
 
   a. Create the release if it doesn't already exist
-  b. Set **Tag** to the version with a leading "v" (like **v0.6.4-alpha**)
+  b. Set **Tag** to the version with a leading "v" (like **v0.7.1-alpha**)
   c. Set **Target** to the `release-VERSION` branch
   e: Check **This is a pre-release** as required
-  f. Add the release setup binary named like: **neonKUBE-setup-0.6.4-alpha.exe**
-  g. Edit the release notes including adding the SHA512 for the setup from:
+  f. Add the release setup binary named like: **neonKUBE-setup-0.7.1-alpha.sha512.txt**
+  g. Add the OS/X neon-cli binary from **osx** folder as: **neon**
+  h. Edit the release notes including adding the SHA512s for:
 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`%NF_BUILD%\neonKUBE-setup.sha512.txt`
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`%NF_BUILD%\osx\neon-0.7.1-alpha.sha512.txt`
 
-  h. Publish the release
+  i. Publish the release
 
 ## Post Release
 

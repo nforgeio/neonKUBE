@@ -41,6 +41,7 @@ $nfRoot     = "$env:NF_ROOT"
 $nfBuild    = "$env:NF_BUILD"
 $nfSolution = "$nfRoot\neonKUBE.sln"
 $env:PATH  += ";$nfBuild"
+$version    = Get-Content "$env:NF_ROOT\product-version.txt" -First 1
 
 if (-not $debug -and -not $release)
 {
@@ -146,11 +147,39 @@ if (-not $nobuild)
     }
 }
 
-# Publish the .NET Core binaries to the build folder.
+# Publish the Windows .NET Core binaries to the build folder.
 
 PublishCore "Tools\neon-cli\neon-cli.csproj"    "neon"
 PublishCore "Tools\unix-text\unix-text.csproj"  "unix-text"
 
+# Hack to publish OS/X version of [neon-cli] to the build folder.
+
+""
+"**********************************************************"
+"***                   OS/X neon-cli                    ***"
+"**********************************************************"
+""
+
+cd "$nfRoot\Tools\neon-cli"
+dotnet publish -r osx-x64 -c Release /p:PublishSingleFile=true
+& mkdir "$nfBuild\osx"
+& cp "$nfRoot\Tools\neon-cli\bin\Release\netcoreapp3.0\osx-x64\neon" "$nfBuild\osx"
+cd $nfRoot
+
+""
+"Generating OS/X neon-cli sha512..."
+""
+
+& cat "$nfBuild\osx\neon" | openssl dgst -sha512 -hex > "$nfBuild\osx\neon-$version.sha512.txt"
+
+if (-not $?)
+{
+	""
+	"*** OS/X neon-cli: SHA512 failed ***"
+	""
+	exit 1
+}
+	
 # Publish the WinDesktop binaries to the build folder.
 
  md -Force "$nfBuild\win-desktop"
@@ -166,8 +195,6 @@ if ($installer)
     "**********************************************************"
     ""
 
-    $version = Get-Content "$env:NF_ROOT\product-version.txt" -First 1
-
     & neon-build installer windows
 
     if (-not $?)
@@ -178,13 +205,16 @@ if ($installer)
         exit 1
     }
 
+    ""
     "Generating windows installer sha512..."
-    & cat "$nfBuild\neonKUBE-setup-$version.exe" | openssl dgst -sha512 > "$nfBuild\neonKUBE-setup-$version.sha512.txt"
+	""
+	
+    & cat "$nfBuild\neonKUBE-setup-$version.exe" | openssl dgst -sha512 -hex > "$nfBuild\neonKUBE-setup-$version.sha512.txt"
 
     if (-not $?)
     {
         ""
-        "*** Windows Installer: Build SHA512 failed ***"
+        "*** Windows Installer: SHA512 failed ***"
         ""
         exit 1
     }
