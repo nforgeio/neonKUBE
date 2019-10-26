@@ -319,6 +319,8 @@ namespace Neon.Cadence
                     Timeout   = timeout
                 });
 
+            reply.ThrowOnError();
+
             return client.DataConverter.FromData<T>(reply.Data);
         }
 
