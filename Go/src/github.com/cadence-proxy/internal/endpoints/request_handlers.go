@@ -1892,11 +1892,13 @@ func handleWorkflowQueueReadRequest(requestCtx context.Context, request *message
 		return reply
 	}
 
-	var timer workflow.Future
+	// $TODO: Make sure that this .Chain is 
+	// doing what it should be doing. This is a patch for right now.
 	timeout := request.GetTimeout()
+	future, settable := workflow.NewFuture(ctx)
 
 	if timeout > time.Duration(0) {
-		timer = workflow.NewTimer(ctx, timeout)
+		settable.Chain(workflow.NewTimer(ctx, timeout))
 	}
 
 	var data []byte
@@ -1904,9 +1906,10 @@ func handleWorkflowQueueReadRequest(requestCtx context.Context, request *message
 
 	// read value from queue
 	s := workflow.NewSelector(ctx)
-	s.AddFuture(timer, func(f workflow.Future) {
+	s.AddFuture(future, func(f workflow.Future) {
 		data = nil
 	})
+
 	s.AddReceive(queue, func(c workflow.Channel, more bool) {
 		c.Receive(ctx, &data)
 		if data == nil {
