@@ -172,48 +172,23 @@ Follow the steps below to configure a development or test workstation:
 
 28. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
-29. *Optional*: Developers who will be publishing **nuget packages** will need to:
+29. *Optional*: Developers who will be publishing releases will need to:
 
-    * Download the latest recommended **nuget.exe** from [here](https://www.nuget.org/downloads) and put this somewhere in your `PATH`
+    * **Download:** the latest recommended **nuget.exe** from [here](https://www.nuget.org/downloads) and put this somewhere in your `PATH`
     * Obtain a nuget API key from a senior developer and install the key on their workstation via:
       ```
       nuget SetApiKey APIKEY
       ```
+    * **Close:** all Visual Studio instances.
+    * **Install:** the HTML Help Compiler by running `$/External/htmlhelp.exe` with the default options.  You can ignore any message about a newer version already being installed.
+    * **UnZIP:** `$/External/SHFBInstaller_v2019.9.15.0.zip` to a temporary folder and run `SandcastleInstaller.exe`, then:
+      * Click **Next** until you get to the **Sandcastle Help File Builder and Tools** page.
+      * Click **Install SHFB**
+      * Go through the wizard, accepting the licence and use the default options.
+      * Click **Finish** to close the SHFB installer.
+      * Click **Next** in the guided installation and then **Install Package** to install the Visual Studio package.
+      * Click **Next** and click **Install Schemas**
+      * **Optional:** **Install Snippets** (I typically don't install these)
+      * Click **Next** and **Finish**.  Don't install the Visual Studio spelling dictionary.
 
 30. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
-
-## Git Branches
-
-neonKUBE conventions for GitHub branches:
-
-* **master:**
-
-  Includes the most recent relatively stable commits.  Developers will merge any changes here after confirming that the changes appear to work.  The **master** branch should always build and pass unit tests and will generally act as the candidate for test, staging, and production releases.
-
-* **product-version:**
-
-  These are used to track released software.  Release branches should generally not be modified after the release has been made.  When minor changes are required, a new release branch (incrementing the PATCH version) should be created from the current release branch and the new release should be built and published.
-
-* **developer:**
-
-  Developers will generally have one or more branches prefixed by their first name (lowercase), like: **jeff**, **jeff-experimental**,...
-  
-* **feature:**
-
-  When developers need to colloborate on a feature over an extended period of time, we'll create feature branches named like **feature-coolstuff**.  Most development work will happen in a developer or feature branch.
-
-## Coding Conventions
-
-We'll be generally following the [Microsoft C# Coding Conventions](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/inside-a-program/coding-conventions).
-
-## Code Comments
-
-In general, all public types, methods, and properties should have reasonable code comments describing the basic functionality.  Please use the C# `<see>`, `<paramref>`, `<typeparam>`, `<para>`, `<b>`, `<i>`, `<c>` markup elements so that the generated web pages will look nice.  This is especially true for REST APIs so that Swagger can generate nice documentation for developers looking at the API.
-
-## Unit Tests
-
-Each important class library and application should have its own **xunit** based unit test project.  This should be named like **Test.PROJECT** where **PROJECT** is the name of the component being test.  For example we'd create a test project named **Test.Loopie.Common** for the **Loopie.Common** library.
-
-The C# namespace for each test project should be the same as the project name (e.g. **Test.Neon.Common**) and each test class name should be prefixed by **Test_** to avoid namespace conflicts with the classes you need to test against.
-
-Test methods should be organized into categories using the xunit **[Trait(...)]** attribute.
