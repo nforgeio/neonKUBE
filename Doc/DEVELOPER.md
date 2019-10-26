@@ -189,6 +189,6 @@ Follow the steps below to configure a development or test workstation:
       * Click **Next** in the guided installation and then **Install Package** to install the Visual Studio package.
       * Click **Next** and click **Install Schemas**
       * **Optional:** Install Snippets (I typically don't install these)
-      * Click **Next** and **Finish**.  Don't install the Visual Studio spelling dictionary.
+      * Click **Next** and **Finish**.  Don't install the Visual Studio Spell Checker.
 
 30. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
