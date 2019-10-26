@@ -3761,8 +3761,6 @@ namespace TestCadence
             var future = await stub.StartAsync<List<string>>(signalCount);
             var sent   = new List<string>();
 
-            await Task.Delay(1000);     // $todo(jefflill): DELETE THIS!
-
             for (int i = 0; i < signalCount; i++)
             {
                 sent.Add($"signal: {i}");
