@@ -3671,7 +3671,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_QueueLocal_Single()
+        public async Task Workflow_Queue_Single()
         {
             await SyncContext.ClearAsync;
 
@@ -3685,7 +3685,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_QueueLocal_Multiple()
+        public async Task Workflow_Queue_Multiple()
         {
             await SyncContext.ClearAsync;
 
@@ -3700,7 +3700,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_QueueLocal_Multiple_200()
+        public async Task Workflow_Queue_Multiple_200()
         {
             await SyncContext.ClearAsync;
 
@@ -3715,7 +3715,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_QueueLocal_Timeout()
+        public async Task Workflow_Queue_Timeout()
         {
             await SyncContext.ClearAsync;
 
@@ -3728,7 +3728,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_QueueSignal_Single()
+        public async Task Workflow_Queue_FromSignal_Single()
         {
             await SyncContext.ClearAsync;
 
@@ -3748,7 +3748,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_QueueSignal_Multiple()
+        public async Task Workflow_Queue_FromSignal_Multiple()
         {
             await SyncContext.ClearAsync;
 
@@ -3757,7 +3757,7 @@ namespace TestCadence
 
             const int signalCount = 5;
 
-            var stub   = client.NewWorkflowFutureStub<IWorkflowQueueTest>("WaitForMessages");
+            var stub   = client.NewWorkflowFutureStub<IWorkflowQueueTest>("WaitForSignals");
             var future = await stub.StartAsync<List<string>>(signalCount);
             var sent   = new List<string>();
 
