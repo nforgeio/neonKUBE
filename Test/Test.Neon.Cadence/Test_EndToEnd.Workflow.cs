@@ -3525,26 +3525,16 @@ namespace TestCadence
                 {
                     if (queue.Capacity != WorkflowQueue<TargetException>.DefaultCapacity)
                     {
-                        return $"1: Expected capacity: length == {WorkflowQueue<TargetException>.DefaultCapacity}";
-                    }
-
-                    if (await queue.GetLengthAsync() != 0)
-                    {
-                        return "2: Expected queue: length == 0";
+                        return $"1: Expected: capacity == {WorkflowQueue<TargetException>.DefaultCapacity}";
                     }
 
                     await queue.EnqueueAsync("Hello World!");
-
-                    if (await queue.GetLengthAsync() != 1)
-                    {
-                        return "3: Expected queue: length == 1";
-                    }
 
                     var dequeued = await queue.DequeueAsync();
 
                     if (dequeued != "Hello World!")
                     {
-                        return $"4: Unpexected item: {dequeued}";
+                        return $"2: Unpexected item: {dequeued}";
                     }
 
                     return null;
@@ -3566,40 +3556,24 @@ namespace TestCadence
                     {
                         if (queue.Capacity != WorkflowQueue<TargetException>.DefaultCapacity)
                         {
-                            return $"1: Expected capacity: length == {WorkflowQueue<TargetException>.DefaultCapacity}";
-                        }
-
-                        if (await queue.GetLengthAsync() != 0)
-                        {
-                            return "2: Expected queue: length == 0";
+                            return $"1: Expected: capacity == {WorkflowQueue<TargetException>.DefaultCapacity}";
                         }
 
                         await queue.EnqueueAsync("signal 1");
-
-                        if (await queue.GetLengthAsync() != 1)
-                        {
-                            return "3: Expected queue: length == 1";
-                        }
-
                         await queue.EnqueueAsync("signal 2");
-
-                        if (await queue.GetLengthAsync() != 2)
-                        {
-                            return "4: Expected queue: length == 2";
-                        }
 
                         var item = await queue.DequeueAsync();
 
                         if (item != "signal 1")
                         {
-                            return $"5: Unpexected item: {item}";
+                            return $"2: Unpexected item: {item}";
                         }
 
                         item = await queue.DequeueAsync();
 
                         if (item != "signal 2")
                         {
-                            return $"6: Unpexected item: {item}";
+                            return $"3: Unpexected item: {item}";
                         }
 
                         return null;
@@ -3618,26 +3592,16 @@ namespace TestCadence
                     {
                         if (queue.Capacity != capacity)
                         {
-                            return $"1: Expected capacity: length == {capacity}";
+                            return $"1: Expected: capacity == {capacity}";
                         }
 
                         for (int pass = 1; pass <= 2; pass++)
                         {
-                            if (await queue.GetLengthAsync() != 0)
-                            {
-                                return "2: Expected queue: length == 0";
-                            }
-
                             // Do the writes.
 
                             for (int i = 0; i < capacity; i++)
                             {
                                 await queue.EnqueueAsync($"signal {i}");
-
-                                if (await queue.GetLengthAsync() != i + 1)
-                                {
-                                    return $"3: Expected queue: length == {i + 1}";
-                                }
                             }
 
                             // Do the reads.
@@ -3648,14 +3612,7 @@ namespace TestCadence
 
                                 if (item != $"signal {i}")
                                 {
-                                    return $"4: Unpexected item: {item}";
-                                }
-
-                                var expectedCount = capacity - (i + 1);
-
-                                if (await queue.GetLengthAsync() != expectedCount)
-                                {
-                                    return $"5: Expected queue: length == {expectedCount}";
+                                    return $"2: Unpexected item: {item}";
                                 }
                             }
                         }

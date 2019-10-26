@@ -31,7 +31,7 @@ namespace Neon.Cadence
 {
     /// <summary>
     /// Implements a workflow-safe first-in-first-out (FIFO) queue that can be used by
-    /// workflow signal methods to communicate with the running workflow.
+    /// workflow signal methods to communicate with the running workflow logic.
     /// </summary>
     /// <typeparam name="T">Specifies the type of the queued items.</typeparam>
     /// <remarks>
@@ -54,13 +54,9 @@ namespace Neon.Cadence
     /// Use <see cref="DequeueAsync(TimeSpan)"/> to read from the queue using
     /// an optional timeout.
     /// </para>
-    /// <para>
-    /// <see cref="GetLengthAsync"/> returns the number of items currently residing
-    /// in the queue and <see cref="CloseAsync"/> closes the queue.
-    /// </para>
     /// <note>
     /// <para>
-    /// The <see cref="WorkflowQueue{T}"/> class is intended only for three scenarios
+    /// The <see cref="WorkflowQueue{T}"/> class is intended only for two scenarios
     /// within an executing workflow:
     /// </para>
     /// <list type="number">
@@ -69,52 +65,26 @@ namespace Neon.Cadence
     ///     including creating, closing, reading, writing, and fetching the length.
     ///     </item>
     ///     <item>
-    ///     <b>Workflow Query:</b> Workflow query methods may only get the length
-    ///     of a queue.
-    ///     </item>
-    ///     <item>
     ///     <b>Workflow Signal:</b> Workflow signal methods have partial access to
     ///     queues including closing, writing, and fetching the length.  Signals 
     ///     cannot create or read from queues.
-    ///     </item>
-    ///     <item>
-    ///     <b>Workflow Activity:</b> Workflow activities methods have partial access to
-    ///     queues including closing, reading writing, and fetching the length.  Activities 
-    ///     cannot create queues.
     ///     </item>
     ///     </list>
     /// </note>
     /// </remarks>
     public class WorkflowQueue<T> : IDisposable
     {
-        // IMPLEMENTATION NOTE:
-        //
-        // The implementation is a bit tricky.  The method implementations vary depending
-        // on whether the call context is from a workflow entry point method or another
-        // context (like query, signal, or activity).
-        //
-        // Calls from a workflow entry point need to be routed through a local activity
-        // Calls from other contexts will be implemented directly.
-
-        //---------------------------------------------------------------------
-        // Static members
-
         /// <summary>
         /// The default maximum number of items allowed in a queue.
         /// </summary>
         public const int DefaultCapacity = 100;
 
-        //---------------------------------------------------------------------
-        // Instance members
-
-        private Workflow            parentWorkflow;
         private CadenceClient       client;
         private long                contextId;
         private long                queueId;
         private int                 capacity;
         private bool                isClosed;
         private bool                isDisposed;
-        private IQueueActivities    activityStub;
 
         /// <summary>
         /// Internal constructor.
@@ -136,13 +106,11 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentException>(capacity >= 2, nameof(capacity));
             WorkflowBase.CheckCallContext(allowWorkflow: true);
 
-            this.parentWorkflow = parentWorkflow;
-            this.client         = parentWorkflow.Client;
-            this.contextId      = parentWorkflow.ContextId;
-            this.Capacity       = capacity;
-            this.queueId        = queueId;
-            this.isClosed       = false;
-            this.activityStub   = parentWorkflow.NewLocalActivityStub<IQueueActivities, QueueActivities>();
+            this.client    = parentWorkflow.Client;
+            this.contextId = parentWorkflow.ContextId;
+            this.Capacity  = capacity;
+            this.queueId   = queueId;
+            this.isClosed  = false;
         }
 
         /// <summary>
@@ -165,37 +133,13 @@ namespace Neon.Cadence
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected virtual void Dispose(bool disposing)
         {
-            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true, allowActivity: true);
+            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true);
 
             if (disposing && !isClosed)
             {
+                CloseAsync().Wait();
+
                 isDisposed = true;
-
-                if (WorkflowBase.CallContext.Value == WorkflowBase.WorkflowCallContext.Entrypoint)
-                {
-                    var stream = MemoryStreamPool.Alloc();
-
-                    try
-                    {
-                        var replyBytes = activityStub.CloseAsync(contextId, queueId).Result;
-
-                        stream.Position = 0;
-                        stream.Write(replyBytes, 0, replyBytes.Length);
-                        stream.Position = 0;
-
-                        var reply = ProxyMessage.Deserialize<WorkflowQueueWriteReply>(stream);
-
-                        reply.ThrowOnError();
-                    }
-                    finally
-                    {
-                        MemoryStreamPool.Free(stream);
-                    }
-                }
-                else
-                {
-                    CloseAsync().Wait();
-                }
             }
         }
 
@@ -257,7 +201,7 @@ namespace Neon.Cadence
             await SyncContext.ClearAsync;
             client.EnsureNotDisposed();
             CheckDisposed();
-            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true, allowActivity: true);
+            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true);
 
             if (isClosed)
             {
@@ -271,39 +215,15 @@ namespace Neon.Cadence
                 throw new NotSupportedException($"Serialized items enqueued to a [{nameof(WorkflowQueue<T>)}] must be less than 64 KiB.");
             }
 
-            if (WorkflowBase.CallContext.Value == WorkflowBase.WorkflowCallContext.Entrypoint)
-            {
-                var stream = MemoryStreamPool.Alloc();
-
-                try
+            var reply = (WorkflowQueueWriteReply)await client.CallProxyAsync(
+                new WorkflowQueueWriteRequest()
                 {
-                    var replyBytes = await activityStub.EnqueueAsync(contextId, queueId, encodedItem);
+                    ContextId = contextId,
+                    QueueId   = queueId,
+                    Data      = encodedItem
+                });
 
-                    stream.Position = 0;
-                    stream.Write(replyBytes, 0, replyBytes.Length);
-                    stream.Position = 0;
-
-                    var reply = ProxyMessage.Deserialize<WorkflowQueueWriteReply>(stream);
-
-                    reply.ThrowOnError();
-                }
-                finally
-                {
-                    MemoryStreamPool.Free(stream);
-                }
-            }
-            else
-            {
-                var reply = (WorkflowQueueWriteReply)await client.CallProxyAsync(
-                    new WorkflowQueueWriteRequest()
-                    {
-                        ContextId = contextId,
-                        QueueId   = queueId,
-                        Data      = encodedItem
-                    });
-
-                reply.ThrowOnError();
-            }
+            reply.ThrowOnError();
         }
 
         /// <summary>
@@ -336,7 +256,7 @@ namespace Neon.Cadence
             await SyncContext.ClearAsync;
             client.EnsureNotDisposed();
             CheckDisposed();
-            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true, allowActivity: true);
+            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true);
 
             if (isClosed)
             {
@@ -350,44 +270,18 @@ namespace Neon.Cadence
                 throw new NotSupportedException($"Serialized items enqueued to a [{nameof(WorkflowQueue<T>)}] must be less than 64 KiB.");
             }
 
-            if (WorkflowBase.CallContext.Value == WorkflowBase.WorkflowCallContext.Entrypoint)
-            {
-                var stream = MemoryStreamPool.Alloc();
-
-                try
+            var reply = (WorkflowQueueWriteReply)await client.CallProxyAsync(
+                new WorkflowQueueWriteRequest()
                 {
-                    var replyBytes = await activityStub.TryEnqueueAsync(contextId, queueId, encodedItem);
+                    ContextId = contextId,
+                    QueueId   = queueId,
+                    NoBlock   = true,
+                    Data      = encodedItem
+                });
 
-                    stream.Position = 0;
-                    stream.Write(replyBytes, 0, replyBytes.Length);
-                    stream.Position = 0;
+            reply.ThrowOnError();
 
-                    var reply = ProxyMessage.Deserialize<WorkflowQueueWriteReply>(stream);
-
-                    reply.ThrowOnError();
-
-                    return !reply.IsFull;
-                }
-                finally
-                {
-                    MemoryStreamPool.Free(stream);
-                }
-            }
-            else
-            {
-                var reply = (WorkflowQueueWriteReply)await client.CallProxyAsync(
-                    new WorkflowQueueWriteRequest()
-                    {
-                        ContextId = contextId,
-                        QueueId   = queueId,
-                        NoBlock   = true,
-                        Data      = encodedItem
-                    });
-
-                reply.ThrowOnError();
-
-                return !reply.IsFull;
-            }
+            return !reply.IsFull;
         }
 
         /// <summary>
@@ -410,121 +304,22 @@ namespace Neon.Cadence
             await SyncContext.ClearAsync;
             client.EnsureNotDisposed();
             CheckDisposed();
-            WorkflowBase.CheckCallContext(allowWorkflow: true, allowActivity: true);
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
 
             if (isClosed)
             {
                 throw new CadenceQueueClosedException("Queue is closed.");
             }
 
-            if (WorkflowBase.CallContext.Value == WorkflowBase.WorkflowCallContext.Entrypoint)
-            {
-                var stream = MemoryStreamPool.Alloc();
-
-                try
+            var reply = (WorkflowQueueReadReply)await client.CallProxyAsync(
+                new WorkflowQueueReadRequest()
                 {
-                    var replyBytes = await activityStub.DequeueAsync(contextId, queueId, timeout);
+                    ContextId = contextId,
+                    QueueId   = queueId,
+                    Timeout   = timeout
+                });
 
-                    stream.Position = 0;
-                    stream.Write(replyBytes, 0, replyBytes.Length);
-                    stream.Position = 0;
-
-                    var reply = ProxyMessage.Deserialize<WorkflowQueueReadReply>(stream);
-
-                    reply.ThrowOnError();
-
-                    if (reply.IsClosed)
-                    {
-                        throw new CadenceQueueClosedException("Queue is closed.");
-                    }
-
-                    if (reply.Data == null)
-                    {
-                        throw new CadenceTimeoutException("Dequeue operation timed out.");
-                    }
-
-                    return client.DataConverter.FromData<T>(reply.Data);
-                }
-                finally
-                {
-                    MemoryStreamPool.Free(stream);
-                }
-            }
-            else
-            {
-                var reply = (WorkflowQueueReadReply)await client.CallProxyAsync(
-                    new WorkflowQueueReadRequest()
-                    {
-                        ContextId = contextId,
-                        QueueId   = queueId,
-                        Timeout   = timeout
-                    });
-
-                return client.DataConverter.FromData<T>(reply.Data);
-            }
-        }
-
-        /// <summary>
-        /// Returns the number of items currently waiting in the queue.
-        /// </summary>
-        /// <returns>The item count.</returns>
-        /// <exception cref="CadenceQueueClosedException">Thrown if the queue is closed.</exception>
-        /// <exception cref="ObjectDisposedException">Thrown if the associated workflow client is disposed.</exception>
-        /// <exception cref="ObjectDisposedException">Thrown if the queue is disposed.</exception>
-        /// <remarks>
-        /// <note>
-        /// The queue length may be obtained only from within workflow entrypoint, query or signal methods or
-        /// from normal or local activities.
-        /// </note>
-        /// </remarks>
-        public async Task<int> GetLengthAsync()
-        {
-            await SyncContext.ClearAsync;
-            client.EnsureNotDisposed();
-            CheckDisposed();
-            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true, allowQuery: true, allowActivity: true);
-
-            if (isClosed)
-            {
-                throw new CadenceQueueClosedException($"[{nameof(WorkflowQueue<T>)}] is closed.");
-            }
-
-            if (WorkflowBase.CallContext.Value == WorkflowBase.WorkflowCallContext.Entrypoint)
-            {
-                var stream = MemoryStreamPool.Alloc();
-
-                try
-                {
-                    var replyBytes = await activityStub.GetLengthAsync(contextId, queueId);
-
-                    stream.Position = 0;
-                    stream.Write(replyBytes, 0, replyBytes.Length);
-                    stream.Position = 0;
-
-                    var reply = ProxyMessage.Deserialize<WorkflowQueueLengthReply>(stream);
-
-                    reply.ThrowOnError();
-
-                    return reply.Length;
-                }
-                finally
-                {
-                    MemoryStreamPool.Free(stream);
-                }
-            }
-            else
-            {
-                var reply = (WorkflowQueueLengthReply)await client.CallProxyAsync(
-                    new WorkflowQueueLengthRequest()
-                    {
-                        ContextId = contextId,
-                        QueueId   = queueId,
-                    });
-
-                reply.ThrowOnError();
-
-                return reply.Length;
-            }
+            return client.DataConverter.FromData<T>(reply.Data);
         }
 
         /// <summary>
@@ -549,184 +344,23 @@ namespace Neon.Cadence
             await SyncContext.ClearAsync;
             client.EnsureNotDisposed();
             CheckDisposed();
-            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true, allowActivity: true);
+            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true);
 
             if (isClosed)
             {
                 return;
             }
 
-            if (WorkflowBase.CallContext.Value == WorkflowBase.WorkflowCallContext.Entrypoint)
-            {
-                var stream = MemoryStreamPool.Alloc();
-
-                try
-                {
-                    var replyBytes = await activityStub.CloseAsync(contextId, queueId);
-
-                    stream.Position = 0;
-                    stream.Write(replyBytes, 0, replyBytes.Length);
-                    stream.Position = 0;
-
-                    var reply = ProxyMessage.Deserialize<WorkflowQueueCloseReply>(stream);
-
-                    reply.ThrowOnError();
-                }
-                finally
-                {
-                    MemoryStreamPool.Free(stream);
-                }
-            }
-            else
-            {
-                var reply = (WorkflowQueueCloseReply)await client.CallProxyAsync(
-                    new WorkflowQueueCloseRequest()
-                    {
-                        ContextId = contextId,
-                        QueueId   = queueId,
-                    });
-
-                reply.ThrowOnError();
-            }
-
-            isClosed = true;
-        }
-    }
-}
-
-// These types are internal but need to be public for stub generation but we don't 
-// want them in the public Neon.Cadence namespace.
-
-namespace Neon.Cadence.Internal
-{
-    /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Queue operations need to be executed as a 
-    /// local activity so that they can be replayed from history when a workflow
-    /// needs to be rehydrated.  This defines that local activity interface.
-    /// </summary>
-    [ActivityInterface]
-    public interface IQueueActivities : IActivity
-    {
-        /// <summary>
-        /// Writes an item to the queue.
-        /// </summary>
-        /// <param name="contextId">The workflow context ID.</param>
-        /// <param name="queueId">The queue ID.</param>
-        /// <param name="encodedItem">The encoded data bytes.</param>
-        /// <returns>The low-level operation <see cref="WorkflowQueueWriteReply"/> encoded as bytes.</returns>
-        [ActivityMethod(Name = "enqueue")]
-        Task<byte[]> EnqueueAsync(long contextId, long queueId, byte[] encodedItem);
-
-        /// <summary>
-        /// Attempts to write an item to the queue but doesn't block for
-        /// queues that are already filled to capacity.
-        /// </summary>
-        /// <param name="contextId">The workflow context ID.</param>
-        /// <param name="queueId">The queue ID.</param>
-        /// <param name="encodedItem">The encoded data bytes.</param>
-        /// <returns>The low-level operation <see cref="WorkflowQueueWriteReply"/> encoded as bytes.</returns>
-        [ActivityMethod(Name = "try-enqueue")]
-        Task<byte[]> TryEnqueueAsync(long contextId, long queueId, byte[] encodedItem);
-
-        /// <summary>
-        /// Reads an item from the queue.
-        /// </summary>
-        /// <param name="contextId">The workflow context ID.</param>
-        /// <param name="queueId">The queue ID.</param>
-        /// <param name="timeout">The maximum time to wait or <see cref="TimeSpan.Zero"/> to wait indefinitely.</param>
-        /// <returns>The low-level operation <see cref="WorkflowQueueReadReply"/> encoded as bytes.</returns>
-        [ActivityMethod(Name = "dequeue")]
-        Task<byte[]> DequeueAsync(long contextId, long queueId, TimeSpan timeout);
-
-        /// <summary>
-        /// Returns the current number of items in the queue.
-        /// </summary>
-        /// <param name="contextId">The workflow context ID.</param>
-        /// <param name="queueId">The queue ID.</param>
-        /// <returns>The low-level operation <see cref="WorkflowQueueLengthReply"/> encoded as bytes.</returns>
-        [ActivityMethod(Name = "get-length")]
-        Task<byte[]> GetLengthAsync(long contextId, long queueId);
-
-        /// <summary>
-        /// Closes the queue.
-        /// </summary>
-        /// <param name="contextId">The workflow context ID.</param>
-        /// <param name="queueId">The queue ID.</param>
-        /// <returns>The low-level operation <see cref="WorkflowQueueCloseReply"/> encoded as bytes.</returns>
-        [ActivityMethod(Name = "close")]
-        Task<byte[]> CloseAsync(long contextId, long queueId);
-    }
-
-    /// <inheritdoc/>
-    public class QueueActivities : ActivityBase, IQueueActivities
-    {
-        /// <inheritdoc/>
-        public async Task<byte[]> EnqueueAsync(long contextId, long queueId, byte[] encodedItem)
-        {
-            var reply = (WorkflowQueueWriteReply)await Activity.Client.CallProxyAsync(
-                new WorkflowQueueWriteRequest()
-                {
-                    ContextId = contextId,
-                    QueueId   = queueId,
-                    Data      = encodedItem
-                });
-
-            return reply.SerializeAsBytes();
-        }
-        
-        /// <inheritdoc/>
-        public async Task<byte[]> TryEnqueueAsync(long contextId, long queueId, byte[] encodedItem)
-        {
-            var reply = (WorkflowQueueWriteReply)await Activity.Client.CallProxyAsync(
-                new WorkflowQueueWriteRequest()
-                {
-                    ContextId = contextId,
-                    QueueId   = queueId,
-                    NoBlock   = true,
-                    Data      = encodedItem
-                });
-
-            return reply.SerializeAsBytes();
-        }
-
-        /// <inheritdoc/>
-        public async Task<byte[]> DequeueAsync(long contextId, long queueId, TimeSpan timeout)
-        {
-            var reply = (WorkflowQueueReadReply)await Activity.Client.CallProxyAsync(
-                new WorkflowQueueReadRequest()
-                {
-                    ContextId = contextId,
-                    QueueId   = queueId,
-                    Timeout   = timeout
-                });
-
-            return reply.SerializeAsBytes();
-        }
-
-        /// <inheritdoc/>
-        public async Task<byte[]> GetLengthAsync(long contextId, long queueId)
-        {
-            var reply =  (WorkflowQueueLengthReply)await Activity.Client.CallProxyAsync(
-                new WorkflowQueueLengthRequest()
-                {
-                    ContextId = contextId,
-                    QueueId   = queueId,
-                });
-
-            return reply.SerializeAsBytes();
-        }
-
-        /// <inheritdoc/>
-        public async Task<byte[]> CloseAsync(long contextId, long queueId)
-        {
-            var reply = (WorkflowQueueCloseReply)await Activity.Client.CallProxyAsync(
+            var reply = (WorkflowQueueCloseReply)await client.CallProxyAsync(
                 new WorkflowQueueCloseRequest()
                 {
                     ContextId = contextId,
                     QueueId   = queueId,
                 });
 
-            return reply.SerializeAsBytes();
+            reply.ThrowOnError();
+
+            isClosed = true;
         }
     }
 }
