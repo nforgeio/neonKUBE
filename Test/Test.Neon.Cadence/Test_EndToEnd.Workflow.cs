@@ -3494,11 +3494,20 @@ namespace TestCadence
             [WorkflowMethod(Name = "QueueToSelf_Multiple")]
             Task<string> QueueToSelf_Multiple(int capacity);
 
+            [WorkflowMethod(Name = "QueueToSelf_WithClose")]
+            Task<string> QueueToSelf_WithClose();
+
             [WorkflowMethod(Name = "QueueToSelf_Timeout")]
             Task<string> QueueToSelf_Timeout();
 
             [WorkflowMethod(Name = "WaitForSignals")]
             Task<List<string>> WaitForSignals(int expectedSignals);
+
+            [WorkflowMethod(Name = "WaitForSignalsAndClose")]
+            Task<List<string>> WaitForSignalAndClose(int expectedSignals);
+
+            [WorkflowMethod(Name = "QueueToSelf_Bytes")]
+            Task<string> QueueToSelf_Bytes(int byteCount);
 
             [SignalMethod("signal")]
             Task SignalAsync(string message);
@@ -3644,6 +3653,83 @@ namespace TestCadence
                 }
             }
 
+            public async Task<string> QueueToSelf_WithClose()
+            {
+                // Tests basic queuing by creating a queue, enqueueing a string and then closing
+                // the queue locally and then verifying that the we can dequeue the string and
+                // then see a [WorkflowQueueClosedExcetion] on the next read.
+                //
+                // This return NULL if the test passed otherwise an error message.
+
+                using (var queue = await Workflow.NewQueueAsync<string>())
+                {
+                    if (queue.Capacity != WorkflowQueue<TargetException>.DefaultCapacity)
+                    {
+                        return $"1: Expected: capacity == {WorkflowQueue<TargetException>.DefaultCapacity}";
+                    }
+
+                    await queue.EnqueueAsync("Hello World!");
+                    await queue.CloseAsync();
+
+                    var dequeued = await queue.DequeueAsync();
+
+                    if (dequeued != "Hello World!")
+                    {
+                        return $"2: Unpexected item: {dequeued}";
+                    }
+
+                    try
+                    {
+                        await queue.DequeueAsync(TimeSpan.FromSeconds(maxWaitSeconds));
+
+                        return $"3: ERROR: {nameof(WorkflowQueueClosedException)} expected.";
+                    }
+                    catch (WorkflowQueueClosedException)
+                    {
+                    }
+                    catch
+                    {
+                        return $"4: ERROR: {nameof(WorkflowQueueClosedException)} expected.";
+                    }
+
+                    return null;
+                }
+            }
+
+            public async Task<string> QueueToSelf_Bytes(int byteCount)
+            {
+                // Tests the maximum queued message size limit by writing a message
+                // of the specified sized to the queue and then returning NULL if
+                // the operation worked or the full name of the exception thrown if
+                // it failed.
+                //
+                // The unit test will call this twice, once with a byte count that's
+                // just less than or equal to the limit and then again with a count
+                // that's just over the limit.  The first call should succeed and 
+                // the second should fail, with the expected exception.
+
+                using (var queue = await Workflow.NewQueueAsync<byte[]>())
+                {
+                    var bytes = new byte[byteCount];
+
+                    for (int i = 0; i < byteCount; i++)
+                    {
+                        bytes[i] = (byte)i;
+                    }
+
+                    try
+                    {
+                        await queue.EnqueueAsync(bytes);
+                    }
+                    catch (Exception e)
+                    {
+                        return e.GetType().FullName;
+                    }
+
+                    return null;
+                }
+            }
+
             public async Task<List<string>> WaitForSignals(int expectedSignals)
             {
                 // Creates a queue and then waits for the requested number of signals
@@ -3661,11 +3747,50 @@ namespace TestCadence
                 return signals;
             }
 
+            public async Task<List<string>> WaitForSignalAndClose(int expectedSignals)
+            {
+                // Creates a queue and then waits for the requested number of signals
+                // to be received and be delivered to the workflow via the queue and
+                // then performs one more read, expecting a [WorkflowQueueClosedExce[tion].
+
+                signalQueue = await Workflow.NewQueueAsync<string>();
+
+                var signals = new List<string>();
+
+                for (int i = 0; i < expectedSignals; i++)
+                {
+                    signals.Add(await signalQueue.DequeueAsync(TimeSpan.FromSeconds(maxWaitSeconds)));
+                }
+
+                try
+                {
+                    await signalQueue.DequeueAsync(TimeSpan.FromSeconds(maxWaitSeconds));
+
+                    signals.Add($"ERROR: {nameof(WorkflowQueueClosedException)} expected.");
+                }
+                catch (WorkflowQueueClosedException)
+                {
+                }
+                catch
+                {
+                    signals.Add($"ERROR: {nameof(WorkflowQueueClosedException)} expected.");
+                }
+
+                return signals;
+            }
+
             public async Task SignalAsync(string message)
             {
                 Covenant.Assert(signalQueue != null);
 
-                await signalQueue.EnqueueAsync(message);
+                if (message == "close")
+                {
+                    await signalQueue.CloseAsync();
+                }
+                else
+                {
+                    await signalQueue.EnqueueAsync(message);
+                }
             }
         }
 
@@ -3728,6 +3853,20 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Queue_Close()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify the simple case where a workflow creates a queue and then
+            // can enqueue/dequeue a single item locally within the workflow method.
+
+            var stub = client.NewWorkflowStub<IWorkflowQueueTest>();
+
+            Assert.Null(await stub.QueueToSelf_WithClose());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Queue_FromSignal_Single()
         {
             await SyncContext.ClearAsync;
@@ -3779,6 +3918,91 @@ namespace TestCadence
             {
                 Assert.Contains(received, v => v == signal);
             }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Queue_CloseViaSignal()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that a queue closed via a signal throws a [WorkflowQueueClosedException]
+            // when dequeued in the workflow.
+
+            const int signalCount = 5;
+
+            var stub   = client.NewWorkflowFutureStub<IWorkflowQueueTest>("WaitForSignalsAndClose");
+            var future = await stub.StartAsync<List<string>>(signalCount);
+            var sent   = new List<string>();
+
+            for (int i = 0; i < signalCount; i++)
+            {
+                sent.Add($"signal: {i}");
+            }
+
+            foreach (var signal in sent)
+            {
+                await stub.SignalAsync("signal", signal);
+            }
+
+            await stub.SignalAsync("signal", "close");
+
+            var received = await future.GetAsync();
+
+            Assert.Equal(signalCount, received.Count);
+
+            foreach (var signal in sent)
+            {
+                Assert.Contains(received, v => v == signal);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Queue_ItemLimit()
+        {
+            await SyncContext.ClearAsync;
+
+            // The maximim size allowed for an encoded item is 64MiB-1.  This
+            // test verifies that we proactively check for this by creating 
+            // an encoded item just under the limit and another just over the
+            // limit and then verifying that the first item can be written
+            // and the second can't.
+
+            // Determine the limits:
+
+            byte[]  item;
+            int     maxGood = 0;
+            int     minBad  = 0;
+
+            for (int count = 0; count <= ushort.MaxValue; count++)
+            {
+                item = new byte[count];
+
+                var encoded = client.DataConverter.ToData(item);
+
+                if (encoded.Length <= ushort.MaxValue)
+                {
+                    maxGood = count;
+                }
+                else
+                {
+                    minBad = count;
+                    break;
+                }
+            }
+
+            // First call with an item under the limit.
+
+            var stub = client.NewWorkflowStub<IWorkflowQueueTest>();
+
+            Assert.Null(await stub.QueueToSelf_Bytes(maxGood));
+
+            // Second call with an item over the limit.
+
+            stub = client.NewWorkflowStub<IWorkflowQueueTest>();
+
+            Assert.Equal("System.NotSupportedException", await stub.QueueToSelf_Bytes(minBad));
         }
     }
 }

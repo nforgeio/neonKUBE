@@ -138,9 +138,9 @@ namespace Neon.Cadence
             if (disposing && !isClosed)
             {
                 CloseAsync().Wait();
-
-                isDisposed = true;
             }
+
+            isDisposed = true;
         }
 
         /// <summary>
@@ -180,7 +180,7 @@ namespace Neon.Cadence
         /// <exception cref="ObjectDisposedException">Thrown if the queue is disposed.</exception>
         /// <exception cref="NotSupportedException">Thrown if the serialized size of <paramref name="item"/> is not less than 64KiB.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if the associated workflow client is disposed.</exception>
-        /// <exception cref="CadenceQueueClosedException">Thrown if the associated queue has been closed.</exception>
+        /// <exception cref="WorkflowQueueClosedException">Thrown if the associated queue has been closed.</exception>
         /// <remarks>
         /// <para>
         /// This method returns immediately if the queue is not full, otherwise
@@ -205,7 +205,7 @@ namespace Neon.Cadence
 
             if (isClosed)
             {
-                throw new CadenceQueueClosedException($"[{nameof(WorkflowQueue<T>)}] is closed.");
+                throw new WorkflowQueueClosedException($"[{nameof(WorkflowQueue<T>)}] is closed.");
             }
 
             var encodedItem = client.DataConverter.ToData(item);
@@ -235,7 +235,7 @@ namespace Neon.Cadence
         /// <exception cref="ObjectDisposedException">Thrown if the queue is disposed.</exception>
         /// <exception cref="NotSupportedException">Thrown if the serialized size of <paramref name="item"/> is not less than 64KiB.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if the associated workflow client is disposed.</exception>
-        /// <exception cref="CadenceQueueClosedException">Thrown if the associated queue has been closed.</exception>
+        /// <exception cref="WorkflowQueueClosedException">Thrown if the associated queue has been closed.</exception>
         /// <remarks>
         /// <para>
         /// This method returns immediately if the queue is not full, otherwise
@@ -257,11 +257,6 @@ namespace Neon.Cadence
             client.EnsureNotDisposed();
             CheckDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true);
-
-            if (isClosed)
-            {
-                throw new CadenceQueueClosedException($"[{nameof(WorkflowQueue<T>)}] is closed.");
-            }
 
             var encodedItem = client.DataConverter.ToData(item);
 
@@ -292,7 +287,7 @@ namespace Neon.Cadence
         /// <exception cref="ObjectDisposedException">Thrown if the associated workflow client is disposed.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if the queue is disposed.</exception>
         /// <exception cref="CadenceTimeoutException">Thrown if the timeout was reached before a value could be returned.</exception>
-        /// <exception cref="CadenceQueueClosedException">Thrown if the the queue is closed.</exception>
+        /// <exception cref="WorkflowQueueClosedException">Thrown if the the queue is closed.</exception>
         /// <remarks>
         /// <note>
         /// Items may be read from queues only from within workflow entrypoint methods or
@@ -306,11 +301,6 @@ namespace Neon.Cadence
             CheckDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true);
 
-            if (isClosed)
-            {
-                throw new CadenceQueueClosedException("Queue is closed.");
-            }
-
             var reply = (WorkflowQueueReadReply)await client.CallProxyAsync(
                 new WorkflowQueueReadRequest()
                 {
@@ -320,6 +310,11 @@ namespace Neon.Cadence
                 });
 
             reply.ThrowOnError();
+
+            if (reply.IsClosed)
+            {
+                throw new WorkflowQueueClosedException();
+            }
 
             return client.DataConverter.FromData<T>(reply.Data);
         }

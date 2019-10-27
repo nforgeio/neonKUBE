@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceQueueClosedException.cs
+// FILE:	    WorkflowQueueClosedException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,17 +22,17 @@ using Neon.Cadence.Internal;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Indicates that a Cadence <see cref="WorkflowQueue.DequeueAsync(TimeSpan)"/> operation
+    /// Indicates that a Cadence <see cref="WorkflowQueue{T}.DequeueAsync(TimeSpan)"/> operation
     /// failed because the queue has been closed.
     /// </summary>
-    public class CadenceQueueClosedException : CadenceException
+    public class WorkflowQueueClosedException : CadenceException
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="message">Optionally specifies a message.</param>
         /// <param name="innerException">Optionally specifies the inner exception.</param>
-        public CadenceQueueClosedException(string message = null, Exception innerException = null)
+        public WorkflowQueueClosedException(string message = null, Exception innerException = null)
             : base(message, innerException)
         {
         }
