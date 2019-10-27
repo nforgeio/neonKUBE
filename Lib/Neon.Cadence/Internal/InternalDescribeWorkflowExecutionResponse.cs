@@ -67,7 +67,7 @@ namespace Neon.Cadence.Internal
             var details = new WorkflowDescription()
             {
                 Configuration = this.ExecutionConfiguration?.ToPublic(),
-                Execution     = this.WorkflowExecutionInfo?.ToPublic()
+                Status     = this.WorkflowExecutionInfo?.ToPublic()
             };
 
             details.PendingActivities = new List<PendingActivityInfo>();

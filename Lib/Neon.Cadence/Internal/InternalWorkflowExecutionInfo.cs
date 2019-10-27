@@ -102,11 +102,11 @@ namespace Neon.Cadence.Internal
         public InternalMemo Memo { get; set; }
 
         /// <summary>
-        /// Converts the instance into a public <see cref="WorkflowState"/>.
+        /// Converts the instance into a public <see cref="WorkflowStatus"/>.
         /// </summary>
-        public WorkflowState ToPublic()
+        public WorkflowStatus ToPublic()
         {
-            var executionState = new WorkflowState()
+            var executionState = new WorkflowStatus()
             {
                 Execution                 = this.Execution.ToPublic(),
                 TypeName                = this.WorkflowType.Name,

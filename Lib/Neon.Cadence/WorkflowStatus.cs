@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowState.cs
+// FILE:	    WorkflowStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -29,7 +29,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Describes the current state of a workflow.
     /// </summary>
-    public class WorkflowState
+    public class WorkflowStatus
     {
         /// <summary>
         /// Describes the workflow execution.

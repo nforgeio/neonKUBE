@@ -234,12 +234,18 @@ namespace Neon.Cadence
         /// </param>
         /// <returns>A <see cref="DomainListPage"/> with the domains.</returns>
         /// <remarks>
+        /// <para>
         /// This method can be used to retrieve one or more pages of domain
         /// results.  You'll pass <paramref name="pageSize"/> as the maximum number
         /// of domains to be returned per page.  The <see cref="DomainListPage"/>
         /// returned will list the domains and if there are more domains waiting
         /// to be returned, will return token that can be used in a subsequent
-        /// call to retrieve the next page pf results.
+        /// call to retrieve the next page of results.
+        /// </para>
+        /// <note>
+        /// <see cref="DomainListPage.NextPageToken"/> will be set to <c>null</c>
+        /// when there are no more result pages remaining.
+        /// </note>
         /// </remarks>
         public async Task<DomainListPage> ListDomainsAsync(int pageSize, byte[] nextPageToken = null)
         {
@@ -263,10 +269,17 @@ namespace Neon.Cadence
                 domains.Add(domain.ToPublic());
             }
 
+            nextPageToken = reply.NextPageToken;
+
+            if (nextPageToken != null && nextPageToken.Length == 0)
+            {
+                nextPageToken = null;
+            }
+
             return new DomainListPage()
             { 
                 Domains       = domains,
-                NextPageToken = reply.NextPageToken
+                NextPageToken = nextPageToken
             };
         }
     }

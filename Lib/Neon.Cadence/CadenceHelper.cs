@@ -700,13 +700,13 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// Converts UNIX nano time (UTC) to a <see cref="DateTime"/>.
         /// </summary>
-        /// <param name="nanoseconds">Nano seconds from midnight  1/1/0001</param>
+        /// <param name="nanoseconds">Nano seconds from midnight 1-1-1970 (UTC)</param>
         /// <returns>The corresponding <see cref="DateTime"/>.</returns>
         internal static DateTime UnixNanoToDateTimeUtc(long nanoseconds)
         {
             var ticks = nanoseconds / 100;
 
-            return new DateTime(ticks, DateTimeKind.Utc);
+            return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc) + TimeSpan.FromTicks(ticks);
         }
 
         /// <summary>

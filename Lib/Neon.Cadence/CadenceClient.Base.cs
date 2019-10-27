@@ -259,7 +259,7 @@ namespace Neon.Cadence
         /// </param>
         /// <param name="domain">Optionally specifies the Cadence domain.</param>
         /// <returns>The <see cref="TaskListDescription"/> for the pollers.</returns>
-        public async Task<TaskListDescription> DescribeTaskList(string taskList, TaskListType taskListType, string domain = null)
+        public async Task<TaskListDescription> DescribeTaskListAsync(string taskList, TaskListType taskListType, string domain = null)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));

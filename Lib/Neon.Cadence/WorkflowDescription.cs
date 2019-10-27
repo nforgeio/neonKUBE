@@ -38,7 +38,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Describes the workflow's execution status.
         /// </summary>
-        public WorkflowState Execution { get; internal set; }
+        public WorkflowStatus Status { get; internal set; }
 
         /// <summary>
         /// Describes the workflow's scheduled and executing activities.
