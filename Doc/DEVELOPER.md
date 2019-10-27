@@ -114,11 +114,7 @@ Follow the steps below to configure a development or test workstation:
 
 16. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from [here](http://www.7-zip.org/download.html)
 
-17. Install **MinGW (Minimalist GNU for Windows):**
-
-    * Install MinGW from [here](https://sourceforge.net/projects/mingw-w64/) and follow these [instructions](https://code.visualstudio.com/docs/cpp/config-mingw)
-    * You only need to follow instruction through the "Prerequisites" section.
-    * Make sure that when you install, you install for your specific architecture (i.e. x86_64).  
+17. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
 
 18. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
 
