@@ -38,7 +38,9 @@ namespace Test.Neon.Models.Cadence
         /// </summary>
         /// <param name="iterations">Number of iterations.</param>
         /// <param name="sleepInterval">The sleep interval.</param>
+        /// <param name="message">The message string to be returned.</param>
+        /// <returns>The <paramref name="message"/> passed.</returns>
         [WorkflowMethod]
-        Task DoIt(int iterations, TimeSpan sleepInterval);
+        Task<string> DoItAsync(int iterations, TimeSpan sleepInterval, string message);
     }
 }

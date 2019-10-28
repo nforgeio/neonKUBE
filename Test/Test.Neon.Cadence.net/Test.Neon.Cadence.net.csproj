@@ -366,6 +366,10 @@
       <Project>{8d3bd5ba-aaf6-4233-879f-69a63eb6cda1}</Project>
       <Name>Neon.Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj">
+      <Project>{c23307a1-4e5a-4b83-a8eb-90de334868c6}</Project>
+      <Name>Neon.Kube</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Lib\Neon.Xunit.Cadence\Neon.Xunit.Cadence.csproj">
       <Project>{b95e2a73-4711-4601-b792-17d8ca8edf61}</Project>
       <Name>Neon.Xunit.Cadence</Name>
@@ -373,6 +377,10 @@
     <ProjectReference Include="..\..\Lib\Neon.Xunit\Neon.Xunit.csproj">
       <Project>{468e440f-2284-483d-a54a-ec540c85f76e}</Project>
       <Name>Neon.Xunit</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Test.Neon.Models.Cadence\Test.Neon.Models.Cadence.csproj">
+      <Project>{f19ff67a-660d-4b3f-8590-01de5f14744d}</Project>
+      <Name>Test.Neon.Models.Cadence</Name>
     </ProjectReference>
     <ProjectReference Include="..\Test.Neon.Models\Test.Neon.Models.csproj">
       <Project>{df8a6f39-7a8d-477f-8a19-8b467671b542}</Project>

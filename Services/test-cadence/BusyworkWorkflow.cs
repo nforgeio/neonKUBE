@@ -24,12 +24,14 @@ namespace CadenceTester
     public class BusyworkWorkflow : WorkflowBase, IBusyworkWorkflow
     {
         /// <inheritdoc/>
-        public async Task DoIt(int iterations, TimeSpan sleepInterval)
+        public async Task<string> DoItAsync(int iterations, TimeSpan sleepInterval, string message)
         {
             for (int i = 0; i < iterations; i++)
             {
                 await Workflow.SleepAsync(sleepInterval);
             }
+
+            return message;
         }
     }
 }

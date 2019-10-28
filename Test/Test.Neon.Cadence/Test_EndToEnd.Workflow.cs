@@ -33,9 +33,13 @@ using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Data;
 using Neon.IO;
+using Neon.Kube;
+using Neon.Net;
 using Neon.Tasks;
 using Neon.Xunit;
 using Neon.Xunit.Cadence;
+
+using Test.Neon.Models.Cadence;
 
 using Newtonsoft.Json;
 using Xunit;
@@ -4045,6 +4049,122 @@ namespace TestCadence
 
             Assert.Single(received);
             Assert.Contains(received, v => v == "signal: 0");
+        }
+
+        //---------------------------------------------------------------------
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Container()
+        {
+            await SyncContext.ClearAsync;
+
+            // Start the [nkubeio/test-cadence:latest] Docker image locally, having it
+            // connect to the local Cadence cluster and then start a bunch of workflows that
+            // will be executed by the container and verify that they completed.
+
+            // We need a routable IP address for the current machine so we can use it to
+            // generate the Cadence URI we'll pass to the [test-cadence] container so it
+            // will be able to connect to the Cadence server running locally.
+
+            var ipAddress = NetHelper.GetRoutableIpAddress();
+
+            if (ipAddress == null)
+            {
+                Assert.True(false, "Cannot complete test without a routable IP address.");
+                return;
+            }
+
+            // Start the [test-cadence] container and give it a chance to connect to Cadence
+            // and register its workflows and activities.  We'll remove any existing container
+            // first and then remove the container after we're done.
+
+            var testCadenceImage = $"{KubeConst.NeonBranchRegistry}/test-cadence:latest";
+
+            testCadenceImage = "nkubedev/test-cadence:cadence-latest";
+
+            NeonHelper.Execute("docker",
+                new object[]
+                {
+                    "rm", "--force", "test-cadence"
+                });
+
+            // Make sure we have the latest image first.
+
+            var exitCode = NeonHelper.Execute("docker",
+                new object[]
+                {
+                    "pull",
+                    testCadenceImage
+                });
+
+            if (exitCode != 0)
+            {
+                Assert.True(false, $"Cannot pull the [{testCadenceImage}] Docker image.");
+            }
+
+            // Start the test workflow service.
+
+            exitCode = NeonHelper.Execute("docker",
+                new object[]
+                {
+                    "run",
+                    "--detach", 
+                    "--name", "test-cadence",
+                    "--env", $"CADENCE_SERVERS=cadence://{ipAddress}:7933",
+                    "--env", $"CADENCE_DOMAIN={CadenceFixture.DefaultDomain}",
+                    "--env", $"CADENCE_TASKLIST={CadenceTestHelper.TaskList}",
+                    testCadenceImage
+                });
+
+            if (exitCode != 0)
+            {
+                Assert.True(false, $"Cannot run the [{testCadenceImage}] Docker image.");
+            }
+
+            try
+            {
+                // Start a decent number of workflows that will run in parallel for a while
+                // and then verify that they all complete successfully.
+
+                const int workflowCount      = 500;
+                const int workflowIterations = 5;
+
+                var sleepTime = TimeSpan.FromSeconds(1);
+                var pending   = new List<Task<string>>();
+
+                for (int i = 0; i < workflowCount; i++)
+                {
+                    var stub = client.NewWorkflowStub<IBusyworkWorkflow>(
+                        new WorkflowOptions()
+                        {
+                            WorkflowId = $"busywork-{Guid.NewGuid().ToString("d")}",
+                            TaskList   = CadenceTestHelper.TaskList
+                        });
+
+                    pending.Add(stub.DoItAsync(workflowIterations, sleepTime, $"workflow-{i}"));
+                }
+
+                for (int i = 0; i < workflowCount; i++)
+                {
+                    Assert.Equal($"workflow-{i}", await pending[i]);
+                }
+            }
+            finally
+            {
+                // Kill the [test-cadence] container.
+
+                exitCode = NeonHelper.Execute("docker",
+                    new object[]
+                    {
+                        "rm", "--force", "test-cadence",
+                    });
+
+                if (exitCode != 0)
+                {
+                    Assert.True(false, $"Cannot remove the [{testCadenceImage}] Docker container.");
+                }
+            }
         }
     }
 }

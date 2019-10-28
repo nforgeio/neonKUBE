@@ -37,8 +37,10 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Lib\Neon.Cadence\Neon.Cadence.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Xunit.Cadence\Neon.Xunit.Cadence.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Xunit\Neon.Xunit.csproj" />
+    <ProjectReference Include="..\Test.Neon.Models.Cadence\Test.Neon.Models.Cadence.csproj" />
     <ProjectReference Include="..\Test.Neon.Models\Test.Neon.Models.csproj" />
   </ItemGroup>
 
