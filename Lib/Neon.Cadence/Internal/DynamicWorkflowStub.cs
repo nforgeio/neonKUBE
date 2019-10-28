@@ -47,6 +47,7 @@ namespace Neon.Cadence.Internal
         private string              className;
         private Assembly            assembly;
         private Type                stubType;
+        private ConstructorInfo     externalStartConstructor;
         private ConstructorInfo     externalConstructor;
         private ConstructorInfo     childConstructor;
         private ConstructorInfo     childExecutedConstructor;
@@ -70,7 +71,8 @@ namespace Neon.Cadence.Internal
             // Fetch the stub type and reflect the required constructors and methods.
 
             this.stubType                   = assembly.GetType(className);
-            this.externalConstructor        = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(string), typeof(WorkflowOptions), typeof(System.Type));
+            this.externalStartConstructor   = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(string), typeof(WorkflowOptions), typeof(System.Type));
+            this.externalConstructor        = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(string), typeof(string), typeof(string));
             this.childConstructor           = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(string), typeof(ChildWorkflowOptions), typeof(System.Type));
             this.childExecutedConstructor   = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(string), typeof(ChildExecution));
             this.childExternalConstructor   = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(WorkflowExecution));
@@ -96,7 +98,25 @@ namespace Neon.Cadence.Internal
             Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
             Covenant.Requires<ArgumentNullException>(workflowInterface != null, nameof(workflowInterface));
 
-            return externalConstructor.Invoke(new object[] { client, dataConverter, workflowTypeName, options, workflowInterface });
+            return externalStartConstructor.Invoke(new object[] { client, dataConverter, workflowTypeName, options, workflowInterface });
+        }
+
+        /// <summary>
+        /// Creates a workflow stub instance suitable for connecting to an existing external workflow.
+        /// </summary>
+        /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
+        /// <param name="dataConverter">The data converter.</param>
+        /// <param name="workflowId">Specifies the workflow ID.</param>
+        /// <param name="domain">Optionally specifies the workflow run ID.</param>
+        /// <param name="runId">Optionally specifies the domain.</param>
+        /// <returns>The workflow stub as an <see cref="object"/>.</returns>
+        public object Create(CadenceClient client, IDataConverter dataConverter, string workflowId, string runId = null, string domain = null)
+        {
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(dataConverter != null, nameof(dataConverter));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
+
+            return externalConstructor.Invoke(new object[] { client, dataConverter, workflowId, runId, domain });
         }
 
         /// <summary>

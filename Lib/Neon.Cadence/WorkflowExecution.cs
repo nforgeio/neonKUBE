@@ -48,7 +48,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="workflowId">The original ID for the workflow.</param>
         /// <param name="runId">Optionally specifies the current run ID for the workflow.</param>
-        internal WorkflowExecution(string workflowId, string runId = null)
+        public WorkflowExecution(string workflowId, string runId = null)
         {
             this.WorkflowId = workflowId;
             this.RunId      = runId;

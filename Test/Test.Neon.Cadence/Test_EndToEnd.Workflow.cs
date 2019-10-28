@@ -3959,7 +3959,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_Queue_ItemLimit()
+        public async Task Workflow_Queue_ItemMax()
         {
             await SyncContext.ClearAsync;
 
@@ -4003,6 +4003,48 @@ namespace TestCadence
             stub = client.NewWorkflowStub<IWorkflowQueueTest>();
 
             Assert.Equal("System.NotSupportedException", await stub.QueueToSelf_Bytes(minBad));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Queue_ViaExternalStub_ByExecution()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that we can create a typed stub using an execution for an existing workflow
+            // and use that to send a signal.
+
+            var stub      = client.NewWorkflowFutureStub<IWorkflowQueueTest>("WaitForSignals");
+            var future    = await stub.StartAsync<List<string>>(1);
+            var typedStub = client.NewWorkflowStub<IWorkflowQueueTest>(future.Execution);
+
+            await typedStub.SignalAsync("signal: 0");
+
+            var received = await future.GetAsync();
+
+            Assert.Single(received);
+            Assert.Contains(received, v => v == "signal: 0");
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Queue_ViaExternalStub_ByIDs()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that we can create a typed stub using IDs for an existing workflow
+            // and use that to send a signal.
+
+            var stub      = client.NewWorkflowFutureStub<IWorkflowQueueTest>("WaitForSignals");
+            var future    = await stub.StartAsync<List<string>>(1);
+            var typedStub = client.NewWorkflowStub<IWorkflowQueueTest>(future.Execution.WorkflowId, future.Execution.RunId);
+
+            await typedStub.SignalAsync("signal: 0");
+
+            var received = await future.GetAsync();
+
+            Assert.Single(received);
+            Assert.Contains(received, v => v == "signal: 0");
         }
     }
 }

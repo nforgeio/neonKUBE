@@ -287,9 +287,9 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Creates a typed workflow stub connected to a known workflow execution.
-        /// This can be used to signal and query the workflow via the type-safe
-        /// interface methods.
+        /// Creates a typed workflow stub connected to a known workflow execution
+        /// using IDs.  This can be used to signal and query the workflow via the 
+        /// type-safe interface methods.
         /// </summary>
         /// <typeparam name="TWorkflowInterface">Identifies the workflow interface.</typeparam>
         /// <param name="workflowId">Specifies the workflow ID.</param>
@@ -309,7 +309,33 @@ namespace Neon.Cadence
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             EnsureNotDisposed();
 
-            throw new NotImplementedException();
+            return StubManager.NewWorkflowStub<TWorkflowInterface>(this, workflowId, runId, domain);
+        }
+
+        /// <summary>
+        /// Creates a typed workflow stub connected to a known workflow execution
+        /// using a <see cref="WorkflowExecution"/>.  This can be used to signal and
+        /// query the workflow via the type-safe interface methods.
+        /// </summary>
+        /// <typeparam name="TWorkflowInterface">Identifies the workflow interface.</typeparam>
+        /// <param name="execution">Specifies the <see cref="WorkflowExecution"/>.</param>
+        /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflowInterface"/>.</returns>
+        /// <remarks>
+        /// Unlike activity stubs, a workflow stub may only be used to launch a single
+        /// workflow.  You'll need to create a new stub for each workflow you wish to
+        /// invoke and then the first method called on a workflow stub must be
+        /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
+        /// </remarks>
+        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(WorkflowExecution execution)
+            where TWorkflowInterface : class
+        {
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(execution.WorkflowId), nameof(execution.WorkflowId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(execution.RunId), nameof(execution.RunId));
+            CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
+            EnsureNotDisposed();
+
+            return StubManager.NewWorkflowStub<TWorkflowInterface>(this, execution.WorkflowId, execution.RunId);
         }
 
         /// <summary>
