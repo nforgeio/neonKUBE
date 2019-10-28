@@ -29,14 +29,14 @@ using Xunit;
 namespace Neon.Xunit.Cadence
 {
     /// <summary>
-    /// Used to run the Docker <b>nkubeio.cadence-local</b> container on 
+    /// Used to run the Docker <b>nkubeio.cadence-dev</b> container on 
     /// the current machine as a test fixture while tests are being performed 
     /// and then deletes the container when the fixture is disposed.
     /// </summary>
     /// <remarks>
     /// <para>
     /// This fixture assumes that Cadence is not currently running on the
-    /// local workstation or as a container named <b>cadence-local</b>.
+    /// local workstation or as a container named <b>cadence-dev</b>.
     /// You may see port conflict errors if either of these conditions
     /// are not true.
     /// </para>
@@ -80,8 +80,8 @@ namespace Neon.Xunit.Cadence
         /// </note>
         /// </summary>
         /// <param name="settings">Optional Cadence settings.</param>
-        /// <param name="image">Optionally specifies the Cadence container image (defaults to <b>nkubeio/couchbase-local:latest</b>).</param>
-        /// <param name="name">Optionally specifies the Cadence container name (defaults to <c>cadence-local</c>).</param>
+        /// <param name="image">Optionally specifies the Cadence container image (defaults to <b>nkubeio/cadence-dev:latest</b>).</param>
+        /// <param name="name">Optionally specifies the Cadence container name (defaults to <c>cadence-dev</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="defaultDomain">Optionally specifies the default domain for the fixture's client.  This defaults to <b>test-domain</b>.</param>
         /// <param name="logLevel">Specifies the Cadence log level.  This defaults to <see cref="LogLevel.None"/>.</param>
@@ -132,8 +132,8 @@ namespace Neon.Xunit.Cadence
         /// </remarks>
         public TestFixtureStatus Start(
             CadenceSettings     settings        = null,
-            string              image           = "nkubeio/cadence-local:latest",
-            string              name            = "cadence-local",
+            string              image           = "nkubeio/cadence-dev:latest",
+            string              name            = "cadence-dev",
             string[]            env             = null,
             string              defaultDomain   = DefaultDomain,
             LogLevel            logLevel        = LogLevel.None,
@@ -168,7 +168,7 @@ namespace Neon.Xunit.Cadence
         /// Used to start the fixture within a <see cref="ComposedFixture"/>.
         /// </summary>
         /// <param name="settings">Optional Cadence settings.</param>
-        /// <param name="image">Optionally specifies the Cadence container image (defaults to <b>nkubeio/cadence-local:latest</b>).</param>
+        /// <param name="image">Optionally specifies the Cadence container image (defaults to <b>nkubeio/cadence-dev:latest</b>).</param>
         /// <param name="name">Optionally specifies the Cadence container name (defaults to <c>cb-test</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="defaultDomain">Optionally specifies the default domain for the fixture's client.  This defaults to <b>test-domain</b>.</param>
@@ -209,8 +209,8 @@ namespace Neon.Xunit.Cadence
         /// </remarks>
         public void StartAsComposed(
             CadenceSettings     settings        = null,
-            string              image           = "nkubeio/cadence-local:latest",
-            string              name            = "cadence-local",
+            string              image           = "nkubeio/cadence-dev:latest",
+            string              name            = "cadence-dev",
             string[]            env             = null,
             string              defaultDomain   = DefaultDomain,
             LogLevel            logLevel        = LogLevel.None,

@@ -28,7 +28,7 @@ param
 
 "   "
 "======================================="
-"* COUCHBASE-LOCAL:" + $tag
+"* COUCHBASE-DEV:" + $tag
 "======================================="
 
 # Copy the common scripts.

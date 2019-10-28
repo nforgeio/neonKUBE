@@ -138,8 +138,8 @@ if ($other)
 	Publish "$image_root\\golang"
     Publish "$image_root\\nats"
     Publish "$image_root\\nats-streaming"
-	Publish "$image_root\\cadence-local"
-	Publish "$image_root\\couchbase-local"
+	Publish "$image_root\\cadence-dev"
+	Publish "$image_root\\couchbase-dev"
 	Publish "$image_root\\test"
 }
 

@@ -30,7 +30,7 @@ using Neon.Net;
 namespace Neon.Xunit.Couchbase
 {
     /// <summary>
-    /// Used to run the Docker <b>couchbase-local</b> container on the current 
+    /// Used to run the Docker <b>couchbase-dev</b> container on the current 
     /// machine as a test fixture while tests are being performed and then 
     /// deletes the container when the fixture is disposed.
     /// </summary>
@@ -85,7 +85,7 @@ namespace Neon.Xunit.Couchbase
         /// <param name="settings">Optional Couchbase settings.</param>
         /// <param name="image">
         /// Optionally specifies the Couchbase container image.  This defaults to 
-        /// <b>nkubeio/couchbase-local:latest</b> or <b>nkubedev/couchbase-local:latest</b>
+        /// <b>nkubeio/couchbase-dev:latest</b> or <b>nkubedev/couchbase-dev:latest</b>
         /// depending on whether the assembly was built from a git release branch or not.
         /// </param>
         /// <param name="name">Optionally specifies the Couchbase container name (defaults to <c>cb-test</c>).</param>
@@ -176,7 +176,7 @@ namespace Neon.Xunit.Couchbase
         /// <param name="settings">Optional Couchbase settings.</param>
         /// <param name="image">
         /// Optionally specifies the Couchbase container image.  This defaults to 
-        /// <b>nkubeio/couchbase-local:latest</b> or <b>nkubedev/couchbase-local:latest</b>
+        /// <b>nkubeio/couchbase-dev:latest</b> or <b>nkubedev/couchbase-dev:latest</b>
         /// depending on whether the assembly was built from a git release branch or not.
         /// </param>
         /// <param name="name">Optionally specifies the Couchbase container name (defaults to <c>cb-test</c>).</param>
@@ -199,7 +199,7 @@ namespace Neon.Xunit.Couchbase
             bool                noPrimary     = false,
             string              hostInterface = null)
         {
-            image = image ?? $"{KubeConst.NeonBranchRegistry}/couchbase-local:latest";
+            image = image ?? $"{KubeConst.NeonBranchRegistry}/couchbase-dev:latest";
 
             base.CheckWithinAction();
 

@@ -1,5 +1,3 @@
-# Cadence-Local
-
 **WARNING: THIS IMAGE IS NOT INTENDED FOR PRODUCTION USE**
 
 This image is intended to be run locally on a developer workstation or build/test machine for testing and development purposes.
