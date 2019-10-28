@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:        Workflows.cs
+// FILE:        Interfaces.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -17,27 +17,28 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
+using Neon.Common;
 
-using Newtonsoft.Json;
-
-namespace Test.Neon.Workflows
+namespace Test.Neon.Models.Cadence
 {
-    // NOTE: These are test workflow definitions implemented by the [test-cadence] service.
-
-    [WorkflowInterface]
-    public interface IHelloWorkflow : IWorkflow
+    /// <summary>
+    /// Defines a workflow that performs various activities intended for
+    /// testing Neon Cadence support via the <b>test-cadence</b> Docker
+    /// image.
+    /// </summary>
+    public interface IBusyworkWorkflow : IWorkflow
     {
         /// <summary>
-        /// Returns a string like <b>"Hello NAME!"</b> where <i>NAME</i>
-        /// is the parameter passed.
+        /// This workflow loops the specified number of times specified, sleeping
+        /// for the period specified for each iteration.
         /// </summary>
-        /// <param name="name">The input name.</param>
-        /// <returns>The hello string.</returns>
-        Task<string> HelloAsync(string name);
+        /// <param name="iterations">Number of iterations.</param>
+        /// <param name="sleepInterval">The sleep interval.</param>
+        [WorkflowMethod]
+        Task DoIt(int iterations, TimeSpan sleepInterval);
     }
 }

@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Lib\Neon.Cadence\Neon.Cadence.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
+  </ItemGroup>
+
+</Project>

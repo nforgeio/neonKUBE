@@ -13,5 +13,5 @@ This image combines Uber Cadence and its backing Cassendra database and is inten
 ## Notes
 
 **Exposed Ports**: 
-* Cadence Ports: `7933`,`7934`,`7935`,`7939`
+* Cadence Ports: `7933-7939`,`8088`
 * Cassandra Ports: `9042`

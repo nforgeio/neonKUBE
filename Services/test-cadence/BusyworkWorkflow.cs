@@ -1,5 +1,5 @@
 ﻿//------------------------------------------------------------------------------
-// FILE:         HelloWorkflow.cs
+// FILE:         BusyworkWorkflow.cs
 // CONTRIBUTOR:  Marcus Bowyer
 // COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 
@@ -16,16 +16,20 @@ using Neon.Diagnostics;
 using Neon.Kube.Service;
 using Neon.Service;
 
-using Test.Neon.Workflows;
+using Test.Neon.Models.Cadence;
 
 namespace CadenceTester
 {
     [Workflow(AutoRegister = true)]
-    public class HelloWorkflow : WorkflowBase, IHelloWorkflow
+    public class BusyworkWorkflow : WorkflowBase, IBusyworkWorkflow
     {
-        public async Task<string> HelloAsync(string name)
+        /// <inheritdoc/>
+        public async Task DoIt(int iterations, TimeSpan sleepInterval)
         {
-            return await Task.FromResult($"Hello {name}!");
+            for (int i = 0; i < iterations; i++)
+            {
+                await Workflow.SleepAsync(sleepInterval);
+            }
         }
     }
 }

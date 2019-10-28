@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
@@ -46,6 +47,10 @@ namespace CadenceTester
             var domain   = GetEnvironmentVariable("CADENCE_DOMAIN");
             var taskList = GetEnvironmentVariable("CADENCE_TASKLIST");
             var error    = false;
+
+            Log.LogInfo(() => $"CADENCE_SERVERS:  {servers}");
+            Log.LogInfo(() => $"CADENCE_DOMAIN:   {domain}");
+            Log.LogInfo(() => $"CADENCE_TASKLIST: {taskList}");
 
             if (string.IsNullOrEmpty(servers))
             {
@@ -87,13 +92,33 @@ namespace CadenceTester
 
             // Connect to Cadence and register the workflows and activities.
 
+            Log.LogInfo("Connecting to Cadence.");
+
+            settings.DefaultDomain = domain;
+
             using (var client = await CadenceClient.ConnectAsync(settings))
             {
+                // Register the workflows.
+
+                Log.LogInfo("Registering workflows.");
+                await client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly());
+
+                // Start the worker.
+
+                Log.LogInfo("Starting worker.");
+
+                using (var worker = client.StartWorkerAsync(taskList))
+                {
+                    // Let KubeService know that we're running.
+
+                    Log.LogInfo("Ready for work.");
+                    SetRunning();
+
+                    // Wait for the process terminator to signal that the service is stopping.
+
+                    await Terminator.StopEvent.WaitAsync();
+                }
             }
-
-            // Let KubeService know that we're running.
-
-            SetRunning();
 
             return 0;
         }
