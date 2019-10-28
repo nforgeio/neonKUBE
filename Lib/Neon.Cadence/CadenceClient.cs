@@ -1097,6 +1097,7 @@ namespace Neon.Cadence
                 lock (syncLock)
                 {
                     operations.TryGetValue(reply.RequestId, out operation);
+                    operations.Remove(reply.RequestId);
                 }
 
                 if (operation != null)
@@ -1844,6 +1845,12 @@ namespace Neon.Cadence
 
                             log.LogWarn(() => $" Request Timeout: [request={operation.Request.GetType().Name}, started={operation.StartTimeUtc.ToString(NeonHelper.DateFormat100NsTZ)}, timeout={operation.Timeout}].");
 
+                            // $todo(jeff.lill):
+                            //
+                            // We're not supporting cancellation so I'm going to comment
+                            // this out.  We should probably remove this if we decide never
+                            // to support this.
+#if TODO
                             var notAwaitingThis = Task.Run(
                                 async () =>
                                 {
@@ -1854,6 +1861,7 @@ namespace Neon.Cadence
 
                                     operation.SetCanceled();
                                 });
+#endif
                         }
                     }
                 }
