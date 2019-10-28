@@ -45,15 +45,15 @@ type (
 	// Context represents a running cadence
 	// workflow instance
 	Context struct {
-		sync.Mutex                                      // allows us to safely iterate ID iterator
-		workflowName  *string                           // string name of the workflow
-		ctx           workflow.Context                  // the cadence workflow context
-		cancelFunc    workflow.CancelFunc               // cadence workflow context cancel function
-		childContexts *ChildContextsMap                 // maps child workflow instances to childID
-		activities    *proxyactivity.ActivityFuturesMap // maps activity futures launched by the workflow instance to activityID
-		queues        *QueueMap                         // map of workflow queues (queueID to workflow.Channel queue)
-		childID       int64                             // childID iterator
-		queueID       int64                             // queueID iterator
+		sync.Mutex                              // allows us to safely iterate ID iterator
+		workflowName  *string                   // string name of the workflow
+		ctx           workflow.Context          // the cadence workflow context
+		cancelFunc    workflow.CancelFunc       // cadence workflow context cancel function
+		childContexts *ChildContextsMap         // maps child workflow instances to childID
+		activities    *proxyactivity.FuturesMap // maps activity futures launched by the workflow instance to activityID
+		queues        *QueueMap                 // map of workflow queues (queueID to workflow.Channel queue)
+		childID       int64                     // childID iterator
+		queueID       int64                     // queueID iterator
 	}
 )
 
@@ -188,15 +188,15 @@ func (wectx *Context) GetChildContext(id int64) *ChildContext {
 
 // GetActivityFutures gets a WorkflowContext's activity futures map
 //
-// returns *ActivityFuturesMap -> map of an executing workflow's activities.
-func (wectx *Context) GetActivityFutures() *proxyactivity.ActivityFuturesMap {
+// returns *proxyactivity.FuturesMap -> map of an executing workflow's activities.
+func (wectx *Context) GetActivityFutures() *proxyactivity.FuturesMap {
 	return wectx.activities
 }
 
 // SetActivityFutures sets a WorkflowContext's activity futures.
 //
-// param value *ActivityFuturesMap -> a cadence workflow activity futures map
-func (wectx *Context) SetActivityFutures(value *proxyactivity.ActivityFuturesMap) {
+// param value *proxyactivity.FuturesMap -> a cadence workflow activity futures map
+func (wectx *Context) SetActivityFutures(value *proxyactivity.FuturesMap) {
 	wectx.activities = value
 }
 

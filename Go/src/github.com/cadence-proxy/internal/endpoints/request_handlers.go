@@ -1892,24 +1892,34 @@ func handleWorkflowQueueReadRequest(requestCtx context.Context, request *message
 		return reply
 	}
 
-	// $TODO: Make sure that this .Chain is 
-	// doing what it should be doing. This is a patch for right now.
 	timeout := request.GetTimeout()
-	future, settable := workflow.NewFuture(ctx)
+	timeoutChannel := workflow.NewChannel(ctx)
+	defer timeoutChannel.Close()
 
 	if timeout > time.Duration(0) {
-		settable.Chain(workflow.NewTimer(ctx, timeout))
+		workflow.Go(ctx, func(c workflow.Context) {
+			isReady := false
+			timer := workflow.NewTimer(c, timeout)
+			e := timer.Get(c, &isReady)
+			timeoutChannel.Send(c, e)
+		})
 	}
 
 	var data []byte
 	var isClosed bool
+	var cadenceError *proxyerror.CadenceError
 
 	// read value from queue
 	s := workflow.NewSelector(ctx)
-	s.AddFuture(future, func(f workflow.Future) {
-		data = nil
+	s.AddReceive(timeoutChannel, func(c workflow.Channel, more bool) {
+		var err error
+		c.Receive(ctx, err)
+		if err != nil {
+			cadenceError = proxyerror.NewCadenceError(err, proxyerror.Cancelled)
+		} else {
+			cadenceError = proxyerror.NewCadenceError(fmt.Errorf("Timeout reading from workflow queue: %d", queueID), proxyerror.Timeout)
+		}
 	})
-
 	s.AddReceive(queue, func(c workflow.Channel, more bool) {
 		c.Receive(ctx, &data)
 		if data == nil {
@@ -1918,7 +1928,7 @@ func handleWorkflowQueueReadRequest(requestCtx context.Context, request *message
 	})
 	s.Select(ctx)
 
-	buildReply(reply, nil, append(make([]interface{}, 0), data, isClosed))
+	buildReply(reply, cadenceError, append(make([]interface{}, 0), data, isClosed))
 
 	return reply
 }
