@@ -2,13 +2,13 @@
 
 The most recent **Couchbase Community Edition** build will be tagged as `latest`.  Couchbase **Enterprise** and other Community builds are also available.
 
-Images are tagged with the Git branch, image build date, and Git commit and an optional `-dirty` suffix if the image was built from a branch with uncommitted changes or untracked files.
+These images are tagged with the Git branch, image build date, and Git commit.
 
 # Description
 
 **DO NOT USE FOR PRODUCTION**
 
-This image is intended for development and testing purposes.  It provisions a single empty bucket.  Here are the default settings:
+This image is intended for development and testing purposes only.  It provisions a single empty bucket.  Here are the default settings:
 
 Admin Username: **Administrator**
 Admin Password: **password**
@@ -50,6 +50,6 @@ docker run --detach \
     -p 11209-11211:11209-11211 \
     -p 18091-18096:18091-18096 \
     -p 21100-21299:21100-21299 \
-    nkubeio/couchbase-test
+    nkubeio/couchbase-local
 ````
 &nbsp;

@@ -1,6 +1,6 @@
-﻿#------------------------------------------------------------------------------
+﻿ #------------------------------------------------------------------------------
 # FILE:         publish.ps1
-# CONTRIBUTOR:  Jeff Lill
+# CONTRIBUTOR:  John C Burns
 # COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the Couchbase test images and pushes them to Docker Hub.
+# Builds the Cadence test images with Cassandra and Cadence server 
+# and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -38,17 +39,19 @@ function Build
 	param
 	(
 		[parameter(Mandatory=$true, Position=1)][string] $version,
+		[parameter(Mandatory=$true, Position=2)][string] $goVersion,
+		[parameter(Mandatory=$true, Position=3)][string] $uiVersion,
 		[switch]$latest = $false
 	)
 
-	$registry = GetRegistry "couchbase-test"
+	$registry = GetRegistry "cadence-local"
 	$date     = UtcDate
 	$branch   = GitBranch
 	$tag      = "$branch-$version"
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -version $version -tag $tag
+	. ./build.ps1 -registry $registry -version $version -goVersion $goVersion -uiVersion $uiVersion -tag $tag
     PushImage "${registry}:$tag"
 
 	if (IsRelease)
@@ -77,6 +80,7 @@ $noImagePush = $nopush
 
 if ($allVersions)
 {
+    Build v0.5.9 -goVersion 1.12.6 -uiVersion 3.3.1 -latest
 }
 
-Build community-6.0.0 -latest
+Build v0.6.1 -goVersion 1.12.7 -uiVersion 3.3.1 -latest

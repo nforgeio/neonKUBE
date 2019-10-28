@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the cluster cadence-test base images.
+# Builds the cluster cadence-local base images.
 #
 # Usage: powershell -file build.ps1 REGISTRY VERSION GO-VERSION TAG 
 
@@ -30,7 +30,7 @@ param
 
 "   "
 "======================================="
-"* CADENCE-TEST:" + $tag
+"* CADENCE-LOCAL:" + $tag
 "* GO_VERSION:" + $goVersion
 "* CADENCE_VERSION:" + $version
 "* CADENCE_UI_VERSION:" + $uiVersion

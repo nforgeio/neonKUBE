@@ -107,4 +107,4 @@ Follow the Hyper-V and XenServer template instructions in the `$/Doc` folder.
   neon-cadence BRANCH
   ```
 
-3. Update **$/Images/cadence-test/publish.ps1** and build the image(s).
+3. Update **$/Images/cadence-local/publish.ps1** and build the image(s).
