@@ -4053,7 +4053,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        [Fact]
+        [SlowFact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Container()
         {
