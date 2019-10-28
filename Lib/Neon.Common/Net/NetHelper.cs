@@ -840,6 +840,51 @@ namespace Neon.Net
                 throw new NetworkException($"Cannot obtain a free port for [{address}].", e);
             }
         }
+
+        /// <summary>
+        /// Returns a routable (non-loopback) IPv4 address for the current machine.
+        /// </summary>
+        /// <returns>The IP address or <c>null</c> if there doesn't appear to be a connected network interface.</returns>
+        public static IPAddress GetRoutableIpAddress()
+        {
+            // Look for an active non-loopback interface with the best speed
+            // that also has IPv4 addresses assigned.
+
+            var activeInterface = NetworkInterface.GetAllNetworkInterfaces()
+                .OrderByDescending(i => i.Speed)
+                .FirstOrDefault(
+                    netInterface =>
+                    {
+                        // Filter out loopback interfaces, Hyper-V virtual switches and interfaces that aren't up.
+
+                        if (netInterface.NetworkInterfaceType == NetworkInterfaceType.Loopback || 
+                            netInterface.Description.Contains("Hyper-V") ||
+                            netInterface.OperationalStatus != OperationalStatus.Up)
+                        {
+                            return false;
+                        }
+
+                        // Make sure that the interface has IPv4 addresses assigned.
+
+                        var ipProperties = netInterface.GetIPProperties();
+
+                        if (ipProperties == null)
+                        {
+                            return false;
+                        }
+
+                        return ipProperties.UnicastAddresses.Any(address => address.Address.AddressFamily == AddressFamily.InterNetwork);
+                    });
+
+            if (activeInterface == null)
+            {
+                return null;
+            }
+
+            return activeInterface.GetIPProperties().UnicastAddresses
+                .First(address => address.Address.AddressFamily == AddressFamily.InterNetwork)
+                .Address;
+        }
     }
 }
 
