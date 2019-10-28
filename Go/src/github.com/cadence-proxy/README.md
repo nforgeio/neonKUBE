@@ -247,11 +247,12 @@ cadence-proxy/
         cadence/
             activity/
                 contexts.go
+                futures.go
             client/
                 clients.go
-                domain_status.go
                 factory.go
-                helper.go 
+                helper.go
+                types.go 
             error/
                 errors.go
                 types.go
@@ -261,8 +262,9 @@ cadence-proxy/
                 child_contexts.go
                 contexts.go
                 replay_status.go
-            dotnet-logger/
-                log_level.go 
+                queue.go
+        dotnet-logger/
+            log_level.go 
         endpoints/
             echo.go
             logger.go
@@ -299,6 +301,10 @@ cadence-proxy/
             * (test coverprofiles organized by package)
             *
             test.logs
+    vendor/
+        *
+        *
+        *
     go.mod
     go.sum
     Makefile
