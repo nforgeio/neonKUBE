@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceEntityNotExistsException.cs
+// FILE:	    ConnectException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,22 +22,19 @@ using Neon.Cadence.Internal;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Thrown when a Cadence request references an entity that doesn't exist.
+    /// Thrown when a Cadence connection could not be established.
     /// </summary>
-    public class CadenceEntityNotExistsException : CadenceException
+    public class ConnectException : CadenceException
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="message">Optionally specifies a message.</param>
-        /// <param name="innerException">Optional inner exception.</param>
-        public CadenceEntityNotExistsException(string message = null, Exception innerException = null)
+        /// <param name="innerException">Optionally specifies the inner exception.</param>
+        public ConnectException(string message = null, Exception innerException = null)
             : base(message, innerException)
         {
         }
-
-        /// <inheritdoc/>
-        internal override string CadenceError => "EntityNotExistsError";
 
         /// <inheritdoc/>
         internal override CadenceErrorTypes CadenceErrorType => CadenceErrorTypes.Custom;

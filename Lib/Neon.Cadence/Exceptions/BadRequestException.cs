@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceWorkflowWorkerStartedException.cs
+// FILE:	    BadRequestException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,29 +22,22 @@ using Neon.Cadence.Internal;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Thrown when an attempt is made to register a workflow implementation after an
-    /// workflow worker has been started on a client.  You must register all implementations
-    /// before starting a worker.
+    /// Thrown when a Cadence receives an invalid request.
     /// </summary>
-    public class CadenceWorkflowWorkerStartedException : CadenceException
+    public class BadRequestException : CadenceException
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        internal CadenceWorkflowWorkerStartedException()
-            : base("Cannot register a workflow implementation after a workflow worker has been started.")
-        {
-        }
-
-        /// <summary>
-        /// Constructor.
-        /// </summary>
         /// <param name="message">Optionally specifies a message.</param>
-        /// <param name="innerException">Optionally specifies the inner exception.</param>
-        public CadenceWorkflowWorkerStartedException(string message = null, Exception innerException = null)
+        /// <param name="innerException">Optional inner exception.</param>
+        public BadRequestException(string message = null, Exception innerException = null)
             : base(message, innerException)
         {
         }
+
+        /// <inheritdoc/>
+        internal override string CadenceError => "BadRequestError";
 
         /// <inheritdoc/>
         internal override CadenceErrorTypes CadenceErrorType => CadenceErrorTypes.Custom;

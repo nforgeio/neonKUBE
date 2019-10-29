@@ -1088,7 +1088,7 @@ namespace Neon.Cadence.Internal
 
                 if (!emitted.Success)
                 {
-                    throw new CompilerErrorException(emitted.Diagnostics);
+                    throw new StubCompilerException(emitted.Diagnostics);
                 }
             }
 
@@ -1665,7 +1665,7 @@ namespace Neon.Cadence.Internal
 
                 if (!emitted.Success)
                 {
-                    throw new CompilerErrorException(emitted.Diagnostics);
+                    throw new StubCompilerException(emitted.Diagnostics);
                 }
             }
 

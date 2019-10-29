@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceWorkflowRunningException.cs
+// FILE:	    DomainAlreadyExistsException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,23 +22,22 @@ using Neon.Cadence.Internal;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Thrown when a workflow cannot be started because another workflow with
-    /// the same ID is already running.
+    /// Thrown when a Cadence domain already exists.
     /// </summary>
-    public class CadenceWorkflowRunningException : CadenceException
+    public class DomainAlreadyExistsException : CadenceException
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="message">Optionally specifies a message.</param>
         /// <param name="innerException">Optional inner exception.</param>
-        public CadenceWorkflowRunningException(string message = null, Exception innerException = null)
+        public DomainAlreadyExistsException(string message = null, Exception innerException = null)
             : base(message, innerException)
         {
         }
 
         /// <inheritdoc/>
-        internal override string CadenceError => "WorkflowExecutionAlreadyStartedError";
+        internal override string CadenceError => "DomainAlreadyExistsError";
 
         /// <inheritdoc/>
         internal override CadenceErrorTypes CadenceErrorType => CadenceErrorTypes.Custom;

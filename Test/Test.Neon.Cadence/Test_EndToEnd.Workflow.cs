@@ -3151,7 +3151,7 @@ namespace TestCadence
                     await stub.HelloAsync("Jill");
                     return false;   // We're expecting an exception.
                 }
-                catch (CadenceWorkflowRunningException)
+                catch (WorkflowRunningException)
                 {
                     return true;    // Expecting this.
                 }

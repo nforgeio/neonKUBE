@@ -1453,7 +1453,7 @@ namespace TestCadence
                 message.Domain = "my-domain";
                 message.RunId = "my-run-id";
                 message.ActivityId = "my-activity-id";
-                message.Error = new CadenceError(new CadenceEntityNotExistsException("my-error"));
+                message.Error = new CadenceError(new EntityNotExistsException("my-error"));
                 message.Result = new byte[] { 5, 6, 7, 8, 9 };
 
                 Assert.Equal(555, message.RequestId);
