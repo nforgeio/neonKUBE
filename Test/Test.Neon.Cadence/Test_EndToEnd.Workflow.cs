@@ -4053,7 +4053,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        [SlowFact]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Container()
         {
@@ -4081,7 +4081,12 @@ namespace TestCadence
 
             var testCadenceImage = $"{KubeConst.NeonBranchRegistry}/test-cadence:latest";
 
-            testCadenceImage = "nkubedev/test-cadence:cadence-latest";
+            // $debug(jefflill): 
+            //
+            // It might be useful to uncomment/modify this line while
+            // debugging changes to the [test-cadence] Docker image.
+
+            // testCadenceImage = "nkubedev/test-cadence:cadence-latest";
 
             NeonHelper.Execute("docker",
                 new object[]
