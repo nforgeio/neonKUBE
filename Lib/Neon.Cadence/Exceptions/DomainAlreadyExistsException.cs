@@ -30,7 +30,7 @@ namespace Neon.Cadence
         /// Constructor.
         /// </summary>
         /// <param name="message">Optionally specifies a message.</param>
-        /// <param name="innerException">Optional inner exception.</param>
+        /// <param name="innerException">Optionally specifies an inner exception.</param>
         public DomainAlreadyExistsException(string message = null, Exception innerException = null)
             : base(message, innerException)
         {

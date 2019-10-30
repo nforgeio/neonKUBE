@@ -2038,7 +2038,7 @@ namespace Neon.Cadence
         /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
         /// <exception cref="EntityNotExistsException">Thrown if the named domain does not exist.</exception>
         /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
         internal async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args = null, ActivityOptions options = null)
         {
@@ -2136,7 +2136,7 @@ namespace Neon.Cadence
         /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
         /// <exception cref="EntityNotExistsException">Thrown if the named domain does not exist.</exception>
         /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
         internal async Task<byte[]> ExecuteLocalActivityAsync(Type activityType, ConstructorInfo activityConstructor, MethodInfo activityMethod, byte[] args = null, LocalActivityOptions options = null)
         {
@@ -2185,7 +2185,7 @@ namespace Neon.Cadence
         {
             await Task.CompletedTask;
 
-            throw new CadenceForceReplayException();
+            throw new ForceReplayException();
         }
     }
 }

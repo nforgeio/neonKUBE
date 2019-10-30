@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    EntityNotExistsException.cs
+// FILE:	    WorkflowStartToCloseTimeoutException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,22 +22,22 @@ using Neon.Cadence.Internal;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Thrown when a Cadence request references an entity that doesn't exist.
+    /// Thrown when a workflow did not complete within the required time.
     /// </summary>
-    public class EntityNotExistsException : CadenceException
+    public class WorkflowStartToCloseTimeoutException : CadenceException
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="message">Optionally specifies a message.</param>
         /// <param name="innerException">Optionally specifies an inner exception.</param>
-        public EntityNotExistsException(string message = null, Exception innerException = null)
+        public WorkflowStartToCloseTimeoutException(string message = null, Exception innerException = null)
             : base(message, innerException)
         {
         }
 
         /// <inheritdoc/>
-        internal override string CadenceError => "EntityNotExistsError";
+        internal override string CadenceError => "WorkflowStartToCloseTimeoutError";
 
         /// <inheritdoc/>
         internal override CadenceErrorTypes CadenceErrorType => CadenceErrorTypes.Custom;

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceCancelledException.cs
+// FILE:	    DomainNotActiveException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,19 +22,22 @@ using Neon.Cadence.Internal;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Thrown when a Cadence operation is cancelled.
+    /// Thrown when a Cadence domain has been deprecated.
     /// </summary>
-    public class CadenceCancelledException : CadenceException
+    public class DomainNotActiveException : CadenceException
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="message">Optionally specifies a message.</param>
-        /// <param name="innerException">Optional inner exception.</param>
-        public CadenceCancelledException(string message = null, Exception innerException = null)
+        /// <param name="innerException">Optionally specifies an inner exception.</param>
+        public DomainNotActiveException(string message = null, Exception innerException = null)
             : base(message, innerException)
         {
         }
+
+        /// <inheritdoc/>
+        internal override string CadenceError => "DomainNotActiveError";
 
         /// <inheritdoc/>
         internal override CadenceErrorTypes CadenceErrorType => CadenceErrorTypes.Custom;

@@ -27,7 +27,7 @@ using Neon.Common;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Thrown internall by <see cref="Workflow.ForceReplayAsync()"/> to be handled internally by
+    /// Thrown internally by <see cref="Workflow.ForceReplayAsync()"/> to be handled internally by
     /// <see cref="WorkflowBase"/>.
     /// a workflow.
     /// </summary>
@@ -60,7 +60,7 @@ namespace Neon.Cadence
     /// }
     /// </code>
     /// </remarks>
-    internal class CadenceForceReplayException : Exception
+    internal class ForceReplayException : Exception
     {
     }
 }

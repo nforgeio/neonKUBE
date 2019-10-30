@@ -271,9 +271,13 @@ namespace TestCadence
             Assert.NotNull(description);
             Assert.Single(description.Pollers);
 
-            var poller = description.Pollers.Single();
+            var poller = description.Pollers.First();
 
-            Assert.True(poller.LastAccessTime >= DateTime.UtcNow - TimeSpan.FromMinutes(5));
+            // We're just going to verify that the poller last access time
+            // looks reasonable.  This was way off earlier due to not deserializing
+            // the time relative to the Unix epoch.
+
+            Assert.True(poller.LastAccessTime >= DateTime.UtcNow - TimeSpan.FromMinutes(30));
         }
 
         //---------------------------------------------------------------------

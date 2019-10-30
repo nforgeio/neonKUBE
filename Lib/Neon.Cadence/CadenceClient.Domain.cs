@@ -40,7 +40,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="DomainAlreadyExistsException">Thrown if the domain already exists.</exception>
         /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
         private async Task RegisterDomainAsync(InternalRegisterDomainRequest request)
         {
@@ -78,7 +78,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="DomainAlreadyExistsException">Thrown if the domain already exists.</exception>
         /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
         public async Task RegisterDomainAsync(string name, string description = null, string ownerEmail = null, int retentionDays = 7, bool ignoreDuplicates = false)
         {
@@ -115,7 +115,7 @@ namespace Neon.Cadence
         /// <returns>The <see cref="DomainDescription"/>.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the named domain does not exist.</exception>
         /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
         public async Task<DomainDescription> DescribeDomainAsync(string name)
         {

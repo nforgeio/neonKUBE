@@ -770,7 +770,7 @@ namespace Neon.Cadence.Internal
 
                     sbSource.AppendLine($"            if (this.hasStarted)");
                     sbSource.AppendLine($"            {{");
-                    sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has already been started.\");");
+                    sbSource.AppendLine($"                throw new WorkflowExecutionAlreadyStartedException(\"Workflow stub for [{workflowInterface.FullName}] has already been started.\");");
                     sbSource.AppendLine($"            }}");
                     sbSource.AppendLine();
 
@@ -863,7 +863,7 @@ namespace Neon.Cadence.Internal
 
                     sbSource.AppendLine($"            if (this.hasStarted)");
                     sbSource.AppendLine($"            {{");
-                    sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has already been started.\");");
+                    sbSource.AppendLine($"                throw new WorkflowExecutionAlreadyStartedException(\"Workflow stub for [{workflowInterface.FullName}] has already been started.\");");
                     sbSource.AppendLine($"            }}");
                     sbSource.AppendLine();
 
@@ -976,7 +976,7 @@ namespace Neon.Cadence.Internal
 
                     sbSource.AppendLine($"            if (!this.hasStarted)");
                     sbSource.AppendLine($"            {{");
-                    sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] cannot be signalled because a workflow method needs to be called first.\");");
+                    sbSource.AppendLine($"                throw new WorkflowExecutionAlreadyStartedException(\"Workflow stub for [{workflowInterface.FullName}] cannot be signalled because a workflow method needs to be called first.\");");
                     sbSource.AppendLine($"            }}");
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
@@ -989,7 +989,7 @@ namespace Neon.Cadence.Internal
 
                     sbSource.AppendLine($"            if (!this.hasStarted)");
                     sbSource.AppendLine($"            {{");
-                    sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] cannot be signalled because a workflow method needs to be called first.\");");
+                    sbSource.AppendLine($"                throw new WorkflowExecutionAlreadyStartedException(\"Workflow stub for [{workflowInterface.FullName}] cannot be signalled because a workflow method needs to be called first.\");");
                     sbSource.AppendLine($"            }}");
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");

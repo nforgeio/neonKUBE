@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceInternalServiceException.cs
+// FILE:	    InternalServiceException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -24,14 +24,14 @@ namespace Neon.Cadence
     /// <summary>
     /// Thrown when a Cadence experienced an internal error.
     /// </summary>
-    public class CadenceInternalServiceException : CadenceException
+    public class InternalServiceException : CadenceException
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="message">Optionally specifies a message.</param>
-        /// <param name="innerException">Optional inner exception.</param>
-        public CadenceInternalServiceException(string message = null, Exception innerException = null)
+        /// <param name="innerException">Optionally specifies an inner exception.</param>
+        public InternalServiceException(string message = null, Exception innerException = null)
             : base(message, innerException)
         {
         }

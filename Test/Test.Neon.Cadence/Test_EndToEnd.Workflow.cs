@@ -375,7 +375,7 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IWorkflowStubExecTwice>();
 
             await stub.RunAsync();
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await stub.RunAsync());
+            await Assert.ThrowsAsync<WorkflowExecutionAlreadyStartedException>(async () => await stub.RunAsync());
         }
 
         //---------------------------------------------------------------------
@@ -449,8 +449,8 @@ namespace TestCadence
 
             var stub = client.NewWorkflowStub<IWorkflowMultipleStubCalls>();
 
-            await stub.RunAsync();                                                                      // This call should work.
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await stub.RunAsync());     // This call should fail.
+            await stub.RunAsync();                                                                                  // This call should work.
+            await Assert.ThrowsAsync<WorkflowExecutionAlreadyStartedException>(async () => await stub.RunAsync());  // This call should fail.
         }
 
         //---------------------------------------------------------------------
@@ -1218,7 +1218,7 @@ namespace TestCadence
 
             var stub = client.NewWorkflowStub<IWorkflowSignal>();
 
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await stub.SignalAsync("my-signal"));
+            await Assert.ThrowsAsync<WorkflowExecutionAlreadyStartedException>(async () => await stub.SignalAsync("my-signal"));
         }
 
         //---------------------------------------------------------------------
@@ -3151,7 +3151,7 @@ namespace TestCadence
                     await stub.HelloAsync("Jill");
                     return false;   // We're expecting an exception.
                 }
-                catch (WorkflowRunningException)
+                catch (WorkflowExecutionAlreadyStartedException)
                 {
                     return true;    // Expecting this.
                 }

@@ -50,7 +50,7 @@ namespace Neon.Cadence.Internal
             //
             //      CadenceException(string message, Exception innerException)
             //
-            // Note that we need to actually construct an instance of each exception
+            // Note that we need to actually construct a temporary instance of each exception
             // type so that we can retrieve the corresponding GOLANG error string.
 
             goErrorToConstructor = new Dictionary<string, ConstructorInfo>();
@@ -248,7 +248,7 @@ namespace Neon.Cadence.Internal
             {
                 case CadenceErrorTypes.Cancelled:
 
-                    return new CadenceCancelledException(message);
+                    return new CancelledException(message);
 
                 case CadenceErrorTypes.Custom:
 

@@ -502,7 +502,7 @@ namespace Neon.Cadence
             {
                 return new ActivityInvokeReply()
                 {
-                    Error = new CadenceCancelledException(e.Message).ToCadenceError()
+                    Error = new CancelledException(e.Message).ToCadenceError()
                 };
             }
             catch (Exception e)

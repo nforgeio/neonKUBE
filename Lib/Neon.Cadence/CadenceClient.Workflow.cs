@@ -506,7 +506,7 @@ namespace Neon.Cadence
         /// <returns>The workflow result encoded as bytes or <c>null</c>.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task<byte[]> GetWorkflowResultAsync(WorkflowExecution execution, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
@@ -604,7 +604,7 @@ namespace Neon.Cadence
         /// <returns>The workflow result encoded as bytes or <c>null</c>.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task<byte[]> GetChildWorkflowResultAsync(Workflow parentWorkflow, ChildExecution execution)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
@@ -636,7 +636,7 @@ namespace Neon.Cadence
         /// <returns>A <see cref="WorkflowDescription"/>.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task<WorkflowDescription> DescribeWorkflowAsync(WorkflowExecution execution, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
@@ -663,7 +663,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task CancelWorkflowAsync(WorkflowExecution execution, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
@@ -690,7 +690,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task TerminateWorkflowAsync(WorkflowExecution execution, string reason = null, byte[] details = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
@@ -719,7 +719,7 @@ namespace Neon.Cadence
         /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task SignalWorkflowAsync(WorkflowExecution execution, string signalName, byte[] signalArgs = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
@@ -750,7 +750,7 @@ namespace Neon.Cadence
         /// <returns>The <see cref="WorkflowExecution"/>.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the domain does not exist.</exception>
         /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task<WorkflowExecution> SignalWorkflowWithStartAsync(string workflowTypeName, string signalName, byte[] signalArgs, byte[] startArgs, WorkflowOptions options)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
@@ -786,7 +786,7 @@ namespace Neon.Cadence
         /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
         /// <returns>The query result encoded as a byte array.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task<byte[]> QueryWorkflowAsync(WorkflowExecution execution, string queryType, byte[] queryArgs = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
@@ -825,7 +825,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the named domain does not exist.</exception>
         /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
         internal async Task SignalChildWorkflowAsync(Workflow parentWorkflow, ChildExecution execution, string signalName, byte[] signalArgs)
         {

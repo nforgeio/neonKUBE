@@ -81,7 +81,7 @@ namespace Neon.Cadence
             {
                 if (this.execution == null)
                 {
-                    throw new InvalidOperationException("Cannot start a future stub more than once.");
+                    throw new InvalidOperationException("Workflow has not been started.");
                 }
 
                 return execution;

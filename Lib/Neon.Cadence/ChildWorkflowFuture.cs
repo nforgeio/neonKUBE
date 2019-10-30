@@ -63,7 +63,7 @@ namespace Neon.Cadence
 
             if (completed)
             {
-                throw new InvalidOperationException($"[{nameof(IAsyncFuture<object>)}.GetAsync()] may only be called once per stub instance.");
+                throw new InvalidOperationException($"[{nameof(IAsyncFuture<object>)}.GetAsync()] may only be called once per future stub instance.");
             }
 
             completed = true;
@@ -105,7 +105,7 @@ namespace Neon.Cadence
 
             if (completed)
             {
-                throw new InvalidOperationException($"[{nameof(IAsyncFuture<object>)}.GetAsync()] may only be called once per stub instance.");
+                throw new InvalidOperationException($"[{nameof(IAsyncFuture<object>)}.GetAsync()] may only be called once per future stub instance.");
             }
 
             completed = true;

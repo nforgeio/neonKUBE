@@ -216,7 +216,7 @@ namespace Neon.Cadence
         /// <typeparam name="TResult">The activity result type.</typeparam>
         /// <param name="args">The arguments to be passed to the activity.</param>
         /// <returns>The <see cref="IAsyncFuture{T}"/> with the <see cref="IAsyncFuture{T}.GetAsync"/> than can be used to retrieve the workfow result.</returns>
-        /// <exception cref="InvalidOperationException">Thrown when attempting to start a stub more than once.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when attempting to start a future stub more than once.</exception>
         /// <remarks>
         /// <para>
         /// You must take care to pass parameters that are compatible with the target activity parameters.
@@ -304,7 +304,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="args">The arguments to be passed to the activity.</param>
         /// <returns>The <see cref="IAsyncFuture{T}"/> with the <see cref="IAsyncFuture{T}.GetAsync"/> than can be used to retrieve the workfow result.</returns>
-        /// <exception cref="InvalidOperationException">Thrown when attempting to start a stub more than once.</exception>
+        /// <exception cref="InvalidOperationException">Thrown when attempting to start a future stub more than once.</exception>
         /// <remarks>
         /// <para>
         /// You must take care to pass parameters that are compatible with the target activity parameters.

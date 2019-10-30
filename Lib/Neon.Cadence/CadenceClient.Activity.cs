@@ -259,7 +259,7 @@ namespace Neon.Cadence
                 {
                     Domain    = ResolveDomain(domain),
                     TaskToken = Convert.FromBase64String(taskToken),
-                    Error     = new CadenceError(new CadenceCancelledException("Cancelled"))
+                    Error     = new CadenceError(new CancelledException("Cancelled"))
                 });
 
             reply.ThrowOnError();
@@ -287,7 +287,7 @@ namespace Neon.Cadence
                     WorkflowId = execution.WorkflowId,
                     RunId      = execution.RunId,
                     ActivityId = activityId,
-                    Error      = new CadenceError(new CadenceCancelledException("Cancelled"))
+                    Error      = new CadenceError(new CancelledException("Cancelled"))
                 });
 
             reply.ThrowOnError();
