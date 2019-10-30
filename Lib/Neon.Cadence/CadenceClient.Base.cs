@@ -67,11 +67,11 @@ namespace Neon.Cadence
         /// that are now derived from <see cref="ActivityBase"/>.
         /// </exception>
         /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
-        /// <exception cref="CadenceActivityWorkerStartedException">
+        /// <exception cref="ActivityWorkerStartedException">
         /// Thrown if an activity worker has already been started for the client.  You must
         /// register activity implementations before starting workers.
         /// </exception>
-        /// <exception cref="CadenceWorkflowWorkerStartedException">
+        /// <exception cref="WorkflowWorkerStartedException">
         /// Thrown if a workflow worker has already been started for the client.  You must
         /// register workflow implementations before starting workers.
         /// </exception>

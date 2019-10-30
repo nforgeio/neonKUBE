@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceActivityWorkerStartedException.cs
+// FILE:	    WorkflowWorkerStartedException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,17 +22,17 @@ using Neon.Cadence.Internal;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Thrown when an attempt is made to register an activity implementation after an
-    /// activity worker has been started on a client.  You must register all implementations
+    /// Thrown when an attempt is made to register a workflow implementation after an
+    /// workflow worker has been started on a client.  You must register all implementations
     /// before starting a worker.
     /// </summary>
-    public class CadenceActivityWorkerStartedException : CadenceException
+    public class WorkflowWorkerStartedException : CadenceException
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        internal CadenceActivityWorkerStartedException()
-            : base("Cannot register an activity implementation after an activity worker has been started.")
+        internal WorkflowWorkerStartedException()
+            : base("Cannot register a workflow implementation after a workflow worker has been started.")
         {
         }
 
@@ -41,7 +41,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="message">Optionally specifies a message.</param>
         /// <param name="innerException">Optionally specifies the inner exception.</param>
-        public CadenceActivityWorkerStartedException(string message = null, Exception innerException = null)
+        public WorkflowWorkerStartedException(string message = null, Exception innerException = null)
             : base(message, innerException)
         {
         }

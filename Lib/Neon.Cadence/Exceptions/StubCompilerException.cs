@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DataAttributes.cs
+// FILE:	    StubCompilerException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -28,9 +28,9 @@ using Microsoft.CodeAnalysis.Text;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Thrown for a compiler error.
+    /// Thrown when there's a problem compiling a workflow or activity stub.
     /// </summary>
-    public class CompilerErrorException : Exception
+    public class StubCompilerException : Exception
     {
         //---------------------------------------------------------------------
         // Static members
@@ -62,7 +62,7 @@ namespace Neon.Cadence
         /// Constructor.
         /// </summary>
         /// <param name="diagnostics">The compiler diagnostics.</param>
-        public CompilerErrorException(IEnumerable<Diagnostic> diagnostics)
+        public StubCompilerException(IEnumerable<Diagnostic> diagnostics)
             : base(GetMessage(diagnostics))
         {
         }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceBadRequestException.cs
+// FILE:	    EntityNotExistsException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,22 +22,22 @@ using Neon.Cadence.Internal;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Thrown when a Cadence receives an invalid request.
+    /// Thrown when a Cadence request references an entity that doesn't exist.
     /// </summary>
-    public class CadenceBadRequestException : CadenceException
+    public class EntityNotExistsException : CadenceException
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="message">Optionally specifies a message.</param>
         /// <param name="innerException">Optional inner exception.</param>
-        public CadenceBadRequestException(string message = null, Exception innerException = null)
+        public EntityNotExistsException(string message = null, Exception innerException = null)
             : base(message, innerException)
         {
         }
 
         /// <inheritdoc/>
-        internal override string CadenceError => "BadRequestError";
+        internal override string CadenceError => "EntityNotExistsError";
 
         /// <inheritdoc/>
         internal override CadenceErrorTypes CadenceErrorType => CadenceErrorTypes.Custom;

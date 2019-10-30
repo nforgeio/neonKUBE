@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceConnectException.cs
+// FILE:	    TerminatedException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,16 +22,16 @@ using Neon.Cadence.Internal;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Thrown when a Cadence connection could not be established.
+    /// Thrown when a Cadence <b>terminated</b> error is encountered.
     /// </summary>
-    public class CadenceConnectException : CadenceException
+    public class TerminatedException : CadenceException
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="message">Optionally specifies a message.</param>
-        /// <param name="innerException">Optionally specifies the inner exception.</param>
-        public CadenceConnectException(string message = null, Exception innerException = null)
+        /// <param name="innerException">Optional inner exception.</param>
+        public TerminatedException(string message = null, Exception innerException = null)
             : base(message, innerException)
         {
         }

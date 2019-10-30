@@ -642,7 +642,7 @@ namespace Neon.Cadence
                     ForceReplay = true
                 };
             }
-            catch (CadenceContinueAsNewException e)
+            catch (ContinueAsNewException e)
             {
                 return new WorkflowInvokeReply()
                 {
@@ -715,7 +715,7 @@ namespace Neon.Cadence
                     {
                         return new WorkflowSignalInvokeReply()
                         {
-                            Error = new CadenceEntityNotExistsException($"Workflow type [{workflow.GetType().FullName}] does not define a signal handler for [signalName={request.SignalName}].").ToCadenceError()
+                            Error = new EntityNotExistsException($"Workflow type [{workflow.GetType().FullName}] does not define a signal handler for [signalName={request.SignalName}].").ToCadenceError()
                         };
                     }
                 }
@@ -816,7 +816,7 @@ namespace Neon.Cadence
                     {
                         return new WorkflowQueryInvokeReply()
                         {
-                            Error = new CadenceEntityNotExistsException($"Workflow type [{workflow.GetType().FullName}] does not define a query handler for [queryType={request.QueryName}].").ToCadenceError()
+                            Error = new EntityNotExistsException($"Workflow type [{workflow.GetType().FullName}] does not define a query handler for [queryType={request.QueryName}].").ToCadenceError()
                         };
                     }
                 }
@@ -824,7 +824,7 @@ namespace Neon.Cadence
                 {
                     return new WorkflowQueryInvokeReply()
                     {
-                        Error = new CadenceEntityNotExistsException($"Workflow with [contextID={request.ContextId}] does not exist.").ToCadenceError()
+                        Error = new EntityNotExistsException($"Workflow with [contextID={request.ContextId}] does not exist.").ToCadenceError()
                     };
                 }
             }
@@ -869,7 +869,7 @@ namespace Neon.Cadence
                         {
                             return new ActivityInvokeLocalReply()
                             {
-                                Error = new CadenceEntityNotExistsException($"Activity type does not exist for [activityTypeId={request.ActivityTypeId}].").ToCadenceError()
+                                Error = new EntityNotExistsException($"Activity type does not exist for [activityTypeId={request.ActivityTypeId}].").ToCadenceError()
                             };
                         }
                     }
@@ -887,7 +887,7 @@ namespace Neon.Cadence
                 {
                     return new ActivityInvokeLocalReply()
                     {
-                        Error = new CadenceEntityNotExistsException($"Workflow with [contextID={request.ContextId}] does not exist.").ToCadenceError()
+                        Error = new EntityNotExistsException($"Workflow with [contextID={request.ContextId}] does not exist.").ToCadenceError()
                     };
                 }
             }

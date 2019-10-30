@@ -118,8 +118,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <remarks>
         /// <note>
-        /// Queues may be disposed only from within workflow entrypoint or signal methods or
-        /// from normal or local activities.
+        /// Queues may be disposed only from within workflow entrypoint or signal methods.
         /// </note>
         /// </remarks>
         public void Dispose()
@@ -192,8 +191,7 @@ namespace Neon.Cadence
         /// </remarks>
         /// <remarks>
         /// <note>
-        /// Items may be added to queues only within workflow entrypoint or signal methods or
-        /// from normal or local activities.
+        /// Items may be added to queues only within workflow entrypoint or signal methods.
         /// </note>
         /// </remarks>
         public async Task EnqueueAsync(T item)
@@ -237,18 +235,13 @@ namespace Neon.Cadence
         /// <exception cref="ObjectDisposedException">Thrown if the associated workflow client is disposed.</exception>
         /// <exception cref="WorkflowQueueClosedException">Thrown if the associated queue has been closed.</exception>
         /// <remarks>
-        /// <para>
-        /// This method returns immediately if the queue is not full, otherwise
-        /// it will block until there's enough space to append the new item.
-        /// </para>
         /// <note>
         /// Item data after being serialized must be less than 64 KiB.
         /// </note>
         /// </remarks>
         /// <remarks>
         /// <note>
-        /// Items may be added to queues only within workflow entrypoint or signal methods or
-        /// from normal or local activities.
+        /// Items may be added to queues only within workflow entrypoint or signal methods.
         /// </note>
         /// </remarks>
         public async Task<bool> TryEnqueueAsync(T item)
@@ -290,8 +283,7 @@ namespace Neon.Cadence
         /// <exception cref="WorkflowQueueClosedException">Thrown if the the queue is closed.</exception>
         /// <remarks>
         /// <note>
-        /// Items may be read from queues only from within workflow entrypoint methods or
-        /// from normal or local activities.
+        /// Items may be read from queues only from within workflow entrypoint methods.
         /// </note>
         /// </remarks>
         public async Task<T> DequeueAsync(TimeSpan timeout = default)
@@ -332,8 +324,7 @@ namespace Neon.Cadence
         /// <exception cref="ObjectDisposedException">Thrown if the queue is disposed.</exception>
         /// <remarks>
         /// <note>
-        /// Queues may be closed only from within workflow entrypoint or signal methods or
-        /// from normal or local activities.
+        /// Queues may be closed only from within workflow entrypoint or signal methods.
         /// </note>
         /// </remarks>
         public async Task CloseAsync()

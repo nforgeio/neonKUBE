@@ -350,7 +350,7 @@ namespace Neon.Cadence
             // that the cadence-proxy will be able to signal Cadence to continue
             // the workflow with a clean history.
 
-            throw new CadenceContinueAsNewException(
+            throw new ContinueAsNewException(
                 args:       Client.DataConverter.ToData(args),
                 workflow:   WorkflowInfo.WorkflowType,
                 domain:     WorkflowInfo.Domain,
@@ -386,7 +386,7 @@ namespace Neon.Cadence
             // that the cadence-proxy will be able to signal Cadence to continue
             // the workflow with a clean history.
 
-            throw new CadenceContinueAsNewException(
+            throw new ContinueAsNewException(
                 args:                       Client.DataConverter.ToData(args),
                 domain:                     options.Domain ?? WorkflowInfo.Domain,
                 taskList:                   options.TaskList ?? WorkflowInfo.TaskList,
@@ -2036,10 +2036,10 @@ namespace Neon.Cadence
         /// if the child workflow did not complete successfully.
         /// </exception>
         /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
-        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
-        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
+        /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
         internal async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args = null, ActivityOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName), nameof(activityTypeName));
@@ -2134,10 +2134,10 @@ namespace Neon.Cadence
         /// <paramref name="activityMethod"/> method.
         /// </remarks>
         /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
-        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
-        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
+        /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
         internal async Task<byte[]> ExecuteLocalActivityAsync(Type activityType, ConstructorInfo activityConstructor, MethodInfo activityMethod, byte[] args = null, LocalActivityOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));

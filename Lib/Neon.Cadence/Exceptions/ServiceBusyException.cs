@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceServiceBusyException.cs
+// FILE:	    ServiceBusyException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -24,14 +24,14 @@ namespace Neon.Cadence
     /// <summary>
     /// Thrown when the Cadence cluster is too busy to perform an operation.
     /// </summary>
-    public class CadenceServiceBusyException : CadenceException
+    public class ServiceBusyException : CadenceException
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="message">Optionally specifies a message.</param>
         /// <param name="innerException">Optional inner exception.</param>
-        public CadenceServiceBusyException(string message = null, Exception innerException = null)
+        public ServiceBusyException(string message = null, Exception innerException = null)
             : base(message, innerException)
         {
         }

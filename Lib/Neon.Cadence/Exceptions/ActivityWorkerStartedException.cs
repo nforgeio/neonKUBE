@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceTerminatedException.cs
+// FILE:	    ActivityWorkerStartedException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,16 +22,26 @@ using Neon.Cadence.Internal;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Thrown when a Cadence <b>terminated</b> error is encountered.
+    /// Thrown when an attempt is made to register an activity implementation after an
+    /// activity worker has been started on a client.  You must register all implementations
+    /// before starting a worker.
     /// </summary>
-    public class CadenceTerminatedException : CadenceException
+    public class ActivityWorkerStartedException : CadenceException
     {
         /// <summary>
         /// Constructor.
         /// </summary>
+        internal ActivityWorkerStartedException()
+            : base("Cannot register an activity implementation after an activity worker has been started.")
+        {
+        }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         /// <param name="message">Optionally specifies a message.</param>
-        /// <param name="innerException">Optional inner exception.</param>
-        public CadenceTerminatedException(string message = null, Exception innerException = null)
+        /// <param name="innerException">Optionally specifies the inner exception.</param>
+        public ActivityWorkerStartedException(string message = null, Exception innerException = null)
             : base(message, innerException)
         {
         }

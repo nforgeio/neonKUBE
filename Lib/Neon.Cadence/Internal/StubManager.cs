@@ -759,7 +759,7 @@ namespace Neon.Cadence.Internal
                 }
 
                 sbSource.AppendLine();
-                sbSource.AppendLine($"                throw new CadenceContinueAsNewException(this.dataConverter.ToData(___args), this.continueAsNewOptions);");
+                sbSource.AppendLine($"                throw new ContinueAsNewException(this.dataConverter.ToData(___args), this.continueAsNewOptions);");
                 sbSource.AppendLine($"            }}");
                 sbSource.AppendLine();
 
@@ -1088,7 +1088,7 @@ namespace Neon.Cadence.Internal
 
                 if (!emitted.Success)
                 {
-                    throw new CompilerErrorException(emitted.Diagnostics);
+                    throw new StubCompilerException(emitted.Diagnostics);
                 }
             }
 
@@ -1665,7 +1665,7 @@ namespace Neon.Cadence.Internal
 
                 if (!emitted.Success)
                 {
-                    throw new CompilerErrorException(emitted.Diagnostics);
+                    throw new StubCompilerException(emitted.Diagnostics);
                 }
             }
 

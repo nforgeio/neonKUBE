@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceContinueAsNewException.cs
+// FILE:	    ContinueAsNewException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -60,7 +60,7 @@ namespace Neon.Cadence
     /// }
     /// </code>
     /// </remarks>
-    public class CadenceContinueAsNewException : CadenceInternalException
+    public class ContinueAsNewException : CadenceInternalException
     {
         /// <summary>
         /// Constructs an instance using explicit arguments.
@@ -74,7 +74,7 @@ namespace Neon.Cadence
         /// <param name="scheduleToStartTimeout">Optional schedule to start timeout for the new execution.</param>
         /// <param name="taskStartToCloseTimeout">Optional decision task start to close timeout for the new execution.</param>
         /// <param name="retryOptions">Optional retry options for the new execution.</param>
-        public CadenceContinueAsNewException(
+        public ContinueAsNewException(
             byte[]          args                    = null,
             string          workflow                = null,
             string          domain                  = null,
@@ -103,7 +103,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="args">Arguments for the new execution (this may be <c>null)</c>).</param>
         /// <param name="options">Options for the new execution  (this may be <c>null</c>).</param>
-        public CadenceContinueAsNewException(byte[] args, ContinueAsNewOptions options)
+        public ContinueAsNewException(byte[] args, ContinueAsNewOptions options)
         {
             this.Args = args;
 

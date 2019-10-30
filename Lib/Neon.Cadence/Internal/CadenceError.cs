@@ -264,7 +264,7 @@ namespace Neon.Cadence.Internal
 
                 case CadenceErrorTypes.Terminated:
 
-                    return new CadenceTerminatedException(message);
+                    return new TerminatedException(message);
 
                 case CadenceErrorTypes.Timeout:
 

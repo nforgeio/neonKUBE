@@ -837,7 +837,7 @@ namespace Neon.Cadence
                 catch (Exception e)
                 {
                     client.Dispose();
-                    throw new CadenceConnectException("Cannot connect to Cadence cluster.", e);
+                    throw new ConnectException("Cannot connect to Cadence cluster.", e);
                 }
             }
 
@@ -1271,7 +1271,7 @@ namespace Neon.Cadence
 
             if (settings.Servers == null || settings.Servers.Count == 0)
             {
-                throw new CadenceConnectException("No Cadence servers were specified.");
+                throw new ConnectException("No Cadence servers were specified.");
             }
 
             foreach (var server in settings.Servers)
@@ -1285,7 +1285,7 @@ namespace Neon.Cadence
                 }
                 catch
                 {
-                    throw new CadenceConnectException($"Invalid Cadence server URI: {server}");
+                    throw new ConnectException($"Invalid Cadence server URI: {server}");
                 }
             }
 
