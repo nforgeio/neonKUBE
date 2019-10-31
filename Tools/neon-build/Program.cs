@@ -108,8 +108,8 @@ project local [prerelease.txt] file as specified here:
         /// <param name="args">The command line arguments.</param>
         public static void Main(string[] args)
         {
-            string              platform;
-            KubeSetupHelper     helper;
+            string platform;
+            KubeSetupHelper helper;
 
             commandLine = new CommandLine(args);
 
@@ -344,10 +344,10 @@ project local [prerelease.txt] file as specified here:
 
                         {
                             var productVersionPath = Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "product-version.txt");
-                            var buildCsPath        = Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "Lib", "Neon.Common", "Build.cs");
-                            var version            = File.ReadLines(productVersionPath, Encoding.UTF8).First();
+                            var buildCsPath = Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "Lib", "Neon.Common", "Build.cs");
+                            var version = File.ReadLines(productVersionPath, Encoding.UTF8).First();
 
-                            if (string.IsNullOrEmpty(version) )
+                            if (string.IsNullOrEmpty(version))
                             {
                                 Console.Error.WriteLine($"[{productVersionPath}] specifies an empty version.");
                                 Program.Exit(1);
@@ -369,7 +369,7 @@ project local [prerelease.txt] file as specified here:
                             // being on a single line (which is has been for at least 14 years).
 
                             var buildCsLines = File.ReadAllLines(buildCsPath);
-                            var sbOutput     = new StringBuilder();
+                            var sbOutput = new StringBuilder();
 
                             foreach (var line in buildCsLines)
                             {
@@ -482,8 +482,8 @@ project local [prerelease.txt] file as specified here:
             }
 
             var solutionVersionPath = Environment.ExpandEnvironmentVariables(commandLine.Arguments[0]);
-            var csprojPath          = Environment.ExpandEnvironmentVariables(commandLine.Arguments[1]);
-            var localVersionPath    = Path.Combine(Path.GetDirectoryName(csprojPath), "prerelease.txt");
+            var csprojPath = Environment.ExpandEnvironmentVariables(commandLine.Arguments[1]);
+            var localVersionPath = Path.Combine(Path.GetDirectoryName(csprojPath), "prerelease.txt");
 
             var rawSolutionVersion = File.ReadAllLines(solutionVersionPath).FirstOrDefault();
 
@@ -514,14 +514,16 @@ project local [prerelease.txt] file as specified here:
                 {
                     localPrerelease = null;
                 }
+
+                localPrerelease = localPrerelease.ToLowerInvariant();
             }
 
             string version = null;
 
-            if (solutionVersion.Prerelease != null)
+            if (solutionVersion.Prerelease != null && (string.IsNullOrEmpty(localPrerelease) || solutionVersion.Prerelease.ToLowerInvariant().CompareTo(localPrerelease) < 0))
             {
-                // The solution version specifies a pre-release identifier which overrides
-                // any local version
+                // The solution version specifies a pre-release identifier which is less than
+                // the local version or there is no local version.
 
                 version = solutionVersion.ToString();
             }
