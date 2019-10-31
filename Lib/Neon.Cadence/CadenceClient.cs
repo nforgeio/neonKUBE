@@ -586,7 +586,7 @@ namespace Neon.Cadence
         /// </summary>
         internal static void Reset()
         {
-            foreach (var client in idToClient.Values)
+            foreach (var client in idToClient.Values.ToArray())
             {
                 client.Dispose();
             }
@@ -1746,7 +1746,7 @@ namespace Neon.Cadence
                                 {
                                     log.LogError("Heartbeat check failed.  Closing Cadence connection.", e);
 
-                                    exception = new CadenceTimeoutException("[cadence-proxy] heartbeat failure.", e);
+                                    exception = new TimeoutException("[cadence-proxy] heartbeat failure.", e);
 
                                     // Break out of the while loop so we'll signal the application that
                                     // the connection has closed and then exit the thread below.

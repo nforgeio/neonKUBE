@@ -1154,7 +1154,7 @@ namespace TestCadence
                     await Workflow.SleepAsync(TimeSpan.FromSeconds(1));
                 }
 
-                throw new CadenceTimeoutException("Timeout waiting for signal(s).");
+                throw new TimeoutException("Timeout waiting for signal(s).");
             }
 
             public async Task SignalAsync(string message)
@@ -4049,6 +4049,45 @@ namespace TestCadence
 
             Assert.Single(received);
             Assert.Contains(received, v => v == "signal: 0");
+        }
+
+        //---------------------------------------------------------------------
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IWorkflowTimeout : IWorkflow
+        {
+            [WorkflowMethod]
+            Task RunAsync(TimeSpan sleepTime);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowTimeout : WorkflowBase, IWorkflowTimeout
+        {
+            public async Task RunAsync(TimeSpan sleepTime)
+            {
+                await Workflow.SleepAsync(sleepTime);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_StartToCloseTimeout()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that we get the expected exception when a workflow doesn't
+            // complete within a START_TO_CLOSE_TIMEOUT
+
+            var timeout   = TimeSpan.FromSeconds(2);
+            var sleepTime = TimeSpan.FromTicks(timeout.Ticks * 2);
+
+            var stub = client.NewWorkflowStub<IWorkflowTimeout>(
+                new WorkflowOptions()
+                {
+                    ScheduleToCloseTimeout = timeout
+                }); ;
+
+            await Assert.ThrowsAsync<WorkflowStartToCloseTimeoutException>(async () => await stub.RunAsync(sleepTime));
         }
 
         //---------------------------------------------------------------------

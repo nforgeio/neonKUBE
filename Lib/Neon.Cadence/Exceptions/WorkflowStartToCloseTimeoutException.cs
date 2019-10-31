@@ -24,7 +24,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Thrown when a workflow did not complete within the required time.
     /// </summary>
-    public class WorkflowStartToCloseTimeoutException : CadenceException
+    public class WorkflowStartToCloseTimeoutException : CadenceTimeoutException
     {
         /// <summary>
         /// Constructor.
@@ -38,8 +38,5 @@ namespace Neon.Cadence
 
         /// <inheritdoc/>
         internal override string CadenceError => "WorkflowStartToCloseTimeoutError";
-
-        /// <inheritdoc/>
-        internal override CadenceErrorTypes CadenceErrorType => CadenceErrorTypes.Custom;
     }
 }

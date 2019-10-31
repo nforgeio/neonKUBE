@@ -24,7 +24,7 @@ namespace Neon.Cadence
     /// <summary>
     /// Thrown when an activity did not send a timely heartbeat to Cadence.
     /// </summary>
-    public class ActivityHeartbeatTimeoutException : CadenceException
+    public class ActivityHeartbeatTimeoutException : CadenceTimeoutException
     {
         /// <summary>
         /// Constructor.
@@ -38,8 +38,5 @@ namespace Neon.Cadence
 
         /// <inheritdoc/>
         internal override string CadenceError => "ActivityHeartbeatTimeoutError";
-
-        /// <inheritdoc/>
-        internal override CadenceErrorTypes CadenceErrorType => CadenceErrorTypes.Custom;
     }
 }
