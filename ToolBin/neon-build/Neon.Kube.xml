@@ -7408,22 +7408,22 @@
             <summary>IsDirtyString: true</summary>
         </member>
         <member name="F:ThisAssembly.Git.Branch">
-            <summary>Branch: release-0.6.7-alpha</summary>
+            <summary>Branch: jeff</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: 22b560972</summary>
+            <summary>Commit: fc0a4710b</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: 22b5609726b4c13228acf58b88a1a7b35f491f62</summary>
+            <summary>Sha: fc0a4710b23220d2a1d4e8ffd4b795ffc4711dd0</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 47</summary>
+            <summary>Commits on top of base version: 80</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: v0.6.6-alpha-47-g22b560972</summary>
+            <summary>Tag: v0.7.0-alpha-80-gfc0a4710b</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
-            <summary>Base tag: v0.6.6-alpha</summary>
+            <summary>Base tag: v0.7.0-alpha</summary>
         </member>
         <member name="T:ThisAssembly.Git.BaseVersion">
             <summary>Provides access to the base version information used to determine the <see cref="T:ThisAssembly.Git.SemVer" />.</summary>      
@@ -7432,10 +7432,10 @@
             <summary>Major: 0</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Minor">
-            <summary>Minor: 6</summary>
+            <summary>Minor: 7</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Patch">
-            <summary>Patch: 6</summary>
+            <summary>Patch: 0</summary>
         </member>
         <member name="T:ThisAssembly.Git.SemVer">
             <summary>Provides access to SemVer information for the current assembly.</summary>
@@ -7444,10 +7444,10 @@
             <summary>Major: 0</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Minor">
-            <summary>Minor: 6</summary>
+            <summary>Minor: 7</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 53</summary>
+            <summary>Patch: 80</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: alpha</summary>

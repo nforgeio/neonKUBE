@@ -11,23 +11,21 @@
 2. Update `$/product-version.txt` (or `GitHub/product-version.txt` in the solution) with the 
    new package version as required.
 
-3. Update the product version here too: `$/Lib/Neon.Common/Build.cs`
+3. Run all unit tests in **RELEASE** mode
 
-4. Run all unit tests in **RELEASE** mode
+4. Build and publish all of the Docker images: `neon-publish-images -all`
 
-5. Build and publish all of the Docker images: `neon-publish-images -all`
+5. Publish the nuget packages: `neon-nuget-public`
 
-6. Publish the nuget packages: `neon-nuget-public`
-
-7. Rebuild the RELEASE version via:
+6. Rebuild the RELEASE version via:
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neon-builder -release -installer`
 
-8. Verify that the new release installer works.
+7. Verify that the new release installer works.
 
-9. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: v0.7.1-alpha**
+8. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: v0.7.1-alpha**
 
-10. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
+9. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
 
   a. Create the release if it doesn't already exist
   b. Set **Tag** to the version with a leading "v" (like **v0.7.1-alpha**)

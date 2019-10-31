@@ -78,11 +78,6 @@ namespace Text
                         ReplaceVar(commandLine);
                         break;
 
-                    case "pack-version":
-
-                        PackVersion(commandLine);
-                        break;
-
                     default:
 
                         PrintUsage();
@@ -110,7 +105,6 @@ Neon Text File Utility: text [v{Version}]
 
 usage: text replace     -TEXT=VALUE... FILE
        text replace-var -VAR=VALUE... FILE
-       pack-version     VERSION-FILE CSPROJ-FILE
        text help   
     
     --help              Print usage
@@ -183,58 +177,6 @@ usage: text replace     -TEXT=VALUE... FILE
             {
                 writer.Write(sb);
             }
-        }
-
-        /// <summary>
-        /// Reads a Nuget package version string from the first line of a text file and
-        /// then updates the version section in a CSPROJ file or NUSPEC with the version.  
-        /// This is useful for batch publishing multiple libraries.
-        /// </summary>
-        /// <param name="commandLine">The command line.</param>
-        private static void PackVersion(CommandLine commandLine)
-        {
-            commandLine = commandLine.Shift(1);
-
-            if (commandLine.Arguments.Length != 2)
-            {
-                PrintUsage();
-                Program.Exit(1);
-            }
-
-            var versionPath = Environment.ExpandEnvironmentVariables(commandLine.Arguments[0]);
-            var csprojPath  = Environment.ExpandEnvironmentVariables(commandLine.Arguments[1]);
-
-            var lines = File.ReadAllLines(versionPath);
-
-            if (lines.Length == 0 || string.IsNullOrWhiteSpace(lines[0]))
-            {
-                Console.Error.WriteLine($"*** ERROR: [{versionPath}] file is empty.");
-                Program.Exit(1);
-            }
-
-            var version = lines[0].Trim();
-            var csproj  = File.ReadAllText(csprojPath);
-            var pos     = csproj.IndexOf("<Version>", StringComparison.OrdinalIgnoreCase);
-
-            pos += "<Version>".Length;
-
-            if (pos == -1)
-            {
-                Console.Error.WriteLine($"*** ERROR: [{csprojPath}] does not have: <version>...</version>");
-                Program.Exit(1);
-            }
-
-            var posEnd = csproj.IndexOf("</Version>", pos, StringComparison.OrdinalIgnoreCase);
-
-            if (posEnd == -1)
-            {
-                Console.Error.WriteLine($"*** ERROR: [{csprojPath}] does not have: <version>...</version>");
-                Program.Exit(1);
-            }
-
-            csproj = csproj.Substring(0, pos) + version + csproj.Substring(posEnd);
-
-            File.WriteAllText(csprojPath, csproj);
         }
     }
 }

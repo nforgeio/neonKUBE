@@ -103,6 +103,10 @@ function PublishCore
 $originalDir = $pwd
 cd $nfRoot
 
+# Copy the version from [$/product-version] into [$/Lib/Neon/Common/Build.cs]
+
+& neon-build build-version
+
 if (-not $nobuild)
 {
     # Clear the NF_BUILD folder and delete any [bin] or [obj] folders

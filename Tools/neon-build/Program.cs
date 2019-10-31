@@ -18,6 +18,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 using Neon.Common;
 
@@ -83,6 +84,20 @@ ARGUMENTS:
 
     SOURCE          - path to the (uncompressed) source file.
     TARGET          - path to the (compressed) target file.
+
+neon-build build-version
+----------------------------------------------
+Used to insert the first line of the [$/product-version] text file
+into the `[$/Lib/Neon.Common/Build.cs`] file, replacing the value of the
+[ProductVersion] constant.
+
+pack-version VERSION-FILE CSPROJ-FILE
+-------------------------------------
+Updates the specified library CSPROJ file version to a combination of
+the global VERSION-FILE (typically [$/product-version.txt] and an optional
+project local [prerelease.txt] file as specified here:
+
+    https://github.com/nforgeio/neonKUBE/issues/715
 
 ";
         private static CommandLine commandLine;
@@ -325,6 +340,81 @@ ARGUMENTS:
                         }
                         break;
 
+                    case "build-version":
+
+                        {
+                            var productVersionPath = Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "product-version.txt");
+                            var buildCsPath        = Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "Lib", "Neon.Common", "Build.cs");
+                            var version            = File.ReadLines(productVersionPath, Encoding.UTF8).First();
+
+                            if (string.IsNullOrEmpty(version) )
+                            {
+                                Console.Error.WriteLine($"[{productVersionPath}] specifies an empty version.");
+                                Program.Exit(1);
+                            }
+
+                            version = version.Trim();
+
+                            if (!SemanticVersion.TryParse(version, out var v))
+                            {
+                                Console.Error.WriteLine($"[{productVersionPath}] specifies an invalid semantic version: [{version}].");
+                                Program.Exit(1);
+                            }
+
+                            // Process the lines from the [$/Lib/Neon/Common/Build.cs] file, looking for the one
+                            // with the [ProductVersion] constant definition.  We're going to replace the string
+                            // with the product version we retrieved above and the rewrite the source file.
+                            //
+                            // Note that this is somewhat fragile because we're depending on the constant definition
+                            // being on a single line (which is has been for at least 14 years).
+
+                            var buildCsLines = File.ReadAllLines(buildCsPath);
+                            var sbOutput     = new StringBuilder();
+
+                            foreach (var line in buildCsLines)
+                            {
+                                if (!line.Contains("public const string ProductVersion"))
+                                {
+                                    sbOutput.AppendLine(line);
+                                    continue;
+                                }
+
+                                int pStartQuote;
+                                int pEndQuote;
+
+                                pStartQuote = line.IndexOf('"');
+
+                                if (pStartQuote == -1)
+                                {
+                                    Console.Error.WriteLine($"[{buildCsPath}] unexpected [ProductVersion] definition format.");
+                                    Program.Exit(1);
+                                }
+
+                                pEndQuote = line.IndexOf('"', pStartQuote + 1);
+
+                                if (pStartQuote == -1)
+                                {
+                                    Console.Error.WriteLine($"[{buildCsPath}] unexpected [ProductVersion] definition format.");
+                                    Program.Exit(1);
+                                }
+
+                                var oldLiteral = line.Substring(pStartQuote, pEndQuote - pStartQuote + 1);
+                                var newLiteral = $"\"{version}\"";
+
+                                var newLine = line.Replace(oldLiteral, newLiteral);
+
+                                sbOutput.AppendLine(newLine);
+                            }
+
+                            File.WriteAllText(buildCsPath, sbOutput.ToString());
+                        }
+                        break;
+
+                    case "pack-version":
+
+                        PackVersion(commandLine);
+                        break;
+
                     default:
 
                         Console.Error.WriteLine($"*** ERROR: Unexpected command [{command}].");
@@ -372,6 +462,111 @@ ARGUMENTS:
         public static void Exit(int exitCode)
         {
             Environment.Exit(exitCode);
+        }
+
+
+        /// <summary>
+        /// Reads a Nuget package version string from the first line of a text file and
+        /// then updates the version section in a CSPROJ file or NUSPEC with the version.  
+        /// This is useful for batch publishing multiple libraries.
+        /// </summary>
+        /// <param name="commandLine">The command line.</param>
+        private static void PackVersion(CommandLine commandLine)
+        {
+            commandLine = commandLine.Shift(1);
+
+            if (commandLine.Arguments.Length != 2)
+            {
+                Console.WriteLine(usage);
+                Program.Exit(1);
+            }
+
+            var solutionVersionPath = Environment.ExpandEnvironmentVariables(commandLine.Arguments[0]);
+            var csprojPath          = Environment.ExpandEnvironmentVariables(commandLine.Arguments[1]);
+            var localVersionPath    = Path.Combine(Path.GetDirectoryName(csprojPath), "prerelease.txt");
+
+            var rawSolutionVersion = File.ReadAllLines(solutionVersionPath).FirstOrDefault();
+
+            if (string.IsNullOrWhiteSpace(rawSolutionVersion))
+            {
+                Console.Error.WriteLine($"*** ERROR: [{solutionVersionPath}] does not specify a version.");
+                Program.Exit(1);
+            }
+
+            var solutionVersion = SemanticVersion.Parse(rawSolutionVersion.Trim());
+            var localPrerelease = (string)null;
+
+            if (File.Exists(localVersionPath))
+            {
+                localPrerelease = File.ReadAllLines(localVersionPath).FirstOrDefault();
+
+                if (!string.IsNullOrEmpty(localPrerelease))
+                {
+                    localPrerelease.Trim();
+                }
+
+                if (localPrerelease.StartsWith("-"))
+                {
+                    localPrerelease = localPrerelease.Substring(1);
+                }
+
+                if (string.IsNullOrEmpty(localPrerelease))
+                {
+                    localPrerelease = null;
+                }
+            }
+
+            string version = null;
+
+            if (solutionVersion.Prerelease != null)
+            {
+                // The solution version specifies a pre-release identifier which overrides
+                // any local version
+
+                version = solutionVersion.ToString();
+            }
+            else if (!string.IsNullOrEmpty(localPrerelease))
+            {
+                // This project has a local [prerelease.txt] file so we'll append the
+                // contents as the release identifier to the solution version for this
+                // project.
+
+                version = $"{solutionVersion}-{localPrerelease}";
+            }
+            else
+            {
+                // There is no local pre-release version, so we'll use the
+                // solution version.
+
+                version = solutionVersion.ToString();
+            }
+
+            // Ensure that the local version is valid.
+
+            SemanticVersion.Parse(version);
+
+            var csproj = File.ReadAllText(csprojPath);
+            var pos    = csproj.IndexOf("<Version>", StringComparison.OrdinalIgnoreCase);
+
+            pos += "<Version>".Length;
+
+            if (pos == -1)
+            {
+                Console.Error.WriteLine($"*** ERROR: [{csprojPath}] does not have: <version>...</version>");
+                Program.Exit(1);
+            }
+
+            var posEnd = csproj.IndexOf("</Version>", pos, StringComparison.OrdinalIgnoreCase);
+
+            if (posEnd == -1)
+            {
+                Console.Error.WriteLine($"*** ERROR: [{csprojPath}] does not have: <version>...</version>");
+                Program.Exit(1);
+            }
+
+            csproj = csproj.Substring(0, pos) + version + csproj.Substring(posEnd);
+
+            File.WriteAllText(csprojPath, csproj);
         }
     }
 }

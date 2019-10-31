@@ -2726,16 +2726,6 @@
             <param name="cancellationToken">The optional cancellation token.</param>
             <exception cref="T:System.TimeoutException">Thrown if the <paramref name="timeout"/> was exceeded.</exception>
         </member>
-        <member name="M:Neon.Common.NeonHelper.WaitForParallel(System.Collections.Generic.IEnumerable{System.Action},System.Nullable{System.TimeSpan},System.Threading.CancellationToken)">
-            <summary>
-            Performs zero or more actions in parallel, synchronously waiting for all of them
-            to completed.
-            </summary>
-            <param name="actions">The actions to be performed.</param>
-            <param name="timeout">The optional timeout.</param>
-            <param name="cancellationToken">The optional cancellation token.</param>
-            <exception cref="T:System.TimeoutException">Thrown if the <paramref name="timeout"/> was exceeded.</exception>
-        </member>
         <member name="M:Neon.Common.NeonHelper.JTokenEquals(Newtonsoft.Json.Linq.JToken,Newtonsoft.Json.Linq.JToken)">
             <summary>
             Compares the two Newtonsoft JSON.NET <see cref="T:Newtonsoft.Json.Linq.JToken"/> instances along
@@ -4097,122 +4087,6 @@
             emulated program must exit cleanly when this returns.
             </summary>
         </member>
-        <member name="T:Neon.Common.NeonServiceMap">
-            <summary>
-            Holds more detailed information describing the Neon cluster services.  This a
-            <see cref="T:Neon.Service.ServiceMap"/> keyed by the service names defined in <see cref="T:Neon.Common.NeonServices"/>
-            and the class also has properties named for each service you can use as a shortcut.
-            </summary>
-            <remarks>
-            <note>
-            The default constructor builds a <see cref="T:Neon.Common.NeonServiceMap"/> for all environments, and clones
-            them for each Dev's workstation in the Neon Office, setting the correct static IP.
-            </note>
-            </remarks>
-        </member>
-        <member name="F:Neon.Common.NeonServiceMap.DefaultEndpointName">
-            <summary>
-            The default service endpoint name.
-            </summary>
-        </member>
-        <member name="F:Neon.Common.NeonServiceMap.serviceMaps">
-            <summary>
-            Returns a dictionary holding all service maps.
-            </summary>
-        </member>
-        <member name="P:Neon.Common.NeonServiceMap.Production">
-            <summary>
-            Returns the Production internal service map.
-            </summary>
-        </member>
-        <member name="M:Neon.Common.NeonServiceMap.GetMapName(System.String)">
-            <summary>
-            Returns the $NAME service map.
-            </summary>
-        </member>
-        <member name="M:Neon.Common.NeonServiceMap.#cctor">
-            <summary>
-            Constructor.
-            </summary>
-        </member>
-        <member name="M:Neon.Common.NeonServiceMap.VerifyInit(Neon.Common.NeonServiceMap)">
-            <summary>
-            Ensure that the service description properties have been initialized
-            for all service endpoints.
-            </summary>
-            <param name="map"></param>
-        </member>
-        <member name="M:Neon.Common.NeonServiceMap.BuildProduction">
-            <summary>
-            Builds the <see cref="T:Neon.Common.NeonServiceMap"/> for internal production services.
-            </summary>
-        </member>
-        <member name="M:Neon.Common.NeonServiceMap.CloneWithNewAdress(Neon.Common.NeonServiceMap,System.String)">
-            <summary>
-            Clones a <see cref="T:Neon.Common.NeonServiceMap"/> and changes the <see cref="P:Neon.Service.ServiceDescription.Address"/> for each of the services.
-            </summary>
-        </member>
-        <member name="M:Neon.Common.NeonServiceMap.AddServiceDescription(System.String,Neon.Service.ServiceEndpoint,System.String)">
-            <summary>
-            Adds a <see cref="T:Neon.Service.ServiceDescription"/> for the named service using
-            default details and specifying an optional network endpoint.
-            </summary>
-            <param name="serviceName">The service name.</param>
-            <param name="endpoint">Optionally specifies a single service endpoint.</param>
-            <param name="namespace">The K8s namespace where the service is deployed.</param>
-            <returns>
-            The <see cref="T:Neon.Service.ServiceDescription"/> so that it can be customized further if necessary.
-            </returns>
-            <remarks>
-            This method also initializes any service endpoint <see cref="P:Neon.Service.ServiceEndpoint.ServiceDescription"/>
-            properties to the service description being created and initializes blank or <c>null</c> endpoint
-            names to <see cref="F:Neon.Common.NeonServiceMap.DefaultEndpointName"/>.
-            </remarks>
-        </member>
-        <member name="M:Neon.Common.NeonServiceMap.AddServiceDescription(System.String,System.Collections.Generic.IEnumerable{Neon.Service.ServiceEndpoint})">
-            <summary>
-            Adds a <see cref="T:Neon.Service.ServiceDescription"/> for the named service using
-            default details with a set of network endpoints.
-            </summary>
-            <param name="serviceName">The service name or <c>null</c>.</param>
-            <param name="endpoints">The service's network endpoints.</param>
-            <returns>
-            The <see cref="T:Neon.Service.ServiceDescription"/> so that it can be customized further if necessary.
-            </returns>
-            <remarks>
-            This method also initializes any service endpoints <see cref="P:Neon.Service.ServiceEndpoint.ServiceDescription"/>
-            properties to the service description being created and initializes blank or <c>null</c> endpoint
-            names to <see cref="F:Neon.Common.NeonServiceMap.DefaultEndpointName"/>.
-            </remarks>
-        </member>
-        <member name="M:Neon.Common.NeonServiceMap.Lookup(System.String)">
-            <summary>
-            Returns the <see cref="T:Neon.Service.ServiceDescription"/> for the given service name.
-            </summary>
-            <param name="serviceName">The service name.</param>
-            <returns>The associated <see cref="T:Neon.Service.ServiceDescription"/>.</returns>
-            <exception cref="T:System.Collections.Generic.KeyNotFoundException">Thrown if thre service map has no description for the service.</exception>
-        </member>
-        <member name="T:Neon.Common.NeonServices">
-            <summary>
-            Defines the Neon service names.  
-            </summary>
-        </member>
-        <member name="F:Neon.Common.NeonServices.ClusterManager">
-            <summary>
-            Cluster Manager Operator.
-            </summary>
-        </member>
-        <member name="F:Neon.Common.NeonServices.Elasticsearch">
-            <summary>
-            Elasticsearch.
-            </summary>
-        </member>
-        <member name="F:Neon.Common.NeonServices.Kibana">
-            <summary>
-            Kibana.
-            </summary>
-        </member>
         <member name="T:Neon.Csv.CsvReader">
             <summary>
             Parses CSV encoded rows from text.
@@ -4969,7 +4843,7 @@
         </member>
         <member name="M:Neon.Data.RoundtripDataHelper.GetPersistedKey(System.String,System.Object[])">
             <summary>
-            Generates an database key for a persisted entity.
+            Generates an database key for a persisted entity from one or more arguments.
             </summary>
             <param name="persistedType">The entity type string.</param>
             <param name="args">Arguments identifying the entity.</param>
@@ -8590,6 +8464,12 @@
             <returns>The free port number.</returns>
             <exception cref="T:Neon.Net.NetworkException">Thrown when there are no available ports.</exception>
         </member>
+        <member name="M:Neon.Net.NetHelper.GetRoutableIpAddress">
+            <summary>
+            Returns a routable (non-loopback) IPv4 address for the current machine.
+            </summary>
+            <returns>The IP address or <c>null</c> if there doesn't appear to be a connected network interface.</returns>
+        </member>
         <member name="T:Neon.Net.NetworkCidr">
             <summary>
             Describes a IP network subnet using Classless Inter-Domain Routing (CIDR) notation.
@@ -9559,6 +9439,127 @@
             <param name="message">The message.</param>
             <param name="innerException">Optional inner exception.</param>
         </member>
+        <member name="T:Neon.Service.NeonServiceMap">
+            <summary>
+            Holds more detailed information describing the Neon cluster services.  This a
+            <see cref="T:Neon.Service.ServiceMap"/> keyed by the service names defined in <see cref="T:Neon.Service.NeonServices"/>
+            and the class also has properties named for each service you can use as a shortcut.
+            </summary>
+            <remarks>
+            <note>
+            The default constructor builds a <see cref="T:Neon.Service.NeonServiceMap"/> for all environments, and clones
+            them for each Dev's workstation in the Neon Office, setting the correct static IP.
+            </note>
+            </remarks>
+        </member>
+        <member name="F:Neon.Service.NeonServiceMap.DefaultEndpointName">
+            <summary>
+            The default service endpoint name.
+            </summary>
+        </member>
+        <member name="F:Neon.Service.NeonServiceMap.serviceMaps">
+            <summary>
+            Returns a dictionary holding all service maps.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.NeonServiceMap.Production">
+            <summary>
+            Returns the Production internal service map.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.NeonServiceMap.GetMapName(System.String)">
+            <summary>
+            Returns the $NAME service map.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.NeonServiceMap.#cctor">
+            <summary>
+            Constructor.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.NeonServiceMap.VerifyInit(Neon.Service.NeonServiceMap)">
+            <summary>
+            Ensure that the service description properties have been initialized
+            for all service endpoints.
+            </summary>
+            <param name="map"></param>
+        </member>
+        <member name="M:Neon.Service.NeonServiceMap.BuildProduction">
+            <summary>
+            Builds the <see cref="T:Neon.Service.NeonServiceMap"/> for internal production services.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.NeonServiceMap.CloneWithNewAdress(Neon.Service.NeonServiceMap,System.String)">
+            <summary>
+            Clones a <see cref="T:Neon.Service.NeonServiceMap"/> and changes the <see cref="P:Neon.Service.ServiceDescription.Address"/> for each of the services.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.NeonServiceMap.AddServiceDescription(System.String,Neon.Service.ServiceEndpoint,System.String)">
+            <summary>
+            Adds a <see cref="T:Neon.Service.ServiceDescription"/> for the named service using
+            default details and specifying an optional network endpoint.
+            </summary>
+            <param name="serviceName">The service name.</param>
+            <param name="endpoint">Optionally specifies a single service endpoint.</param>
+            <param name="namespace">The K8s namespace where the service is deployed.</param>
+            <returns>
+            The <see cref="T:Neon.Service.ServiceDescription"/> so that it can be customized further if necessary.
+            </returns>
+            <remarks>
+            This method also initializes any service endpoint <see cref="P:Neon.Service.ServiceEndpoint.ServiceDescription"/>
+            properties to the service description being created and initializes blank or <c>null</c> endpoint
+            names to <see cref="F:Neon.Service.NeonServiceMap.DefaultEndpointName"/>.
+            </remarks>
+        </member>
+        <member name="M:Neon.Service.NeonServiceMap.AddServiceDescription(System.String,System.Collections.Generic.IEnumerable{Neon.Service.ServiceEndpoint})">
+            <summary>
+            Adds a <see cref="T:Neon.Service.ServiceDescription"/> for the named service using
+            default details with a set of network endpoints.
+            </summary>
+            <param name="serviceName">The service name or <c>null</c>.</param>
+            <param name="endpoints">The service's network endpoints.</param>
+            <returns>
+            The <see cref="T:Neon.Service.ServiceDescription"/> so that it can be customized further if necessary.
+            </returns>
+            <remarks>
+            This method also initializes any service endpoints <see cref="P:Neon.Service.ServiceEndpoint.ServiceDescription"/>
+            properties to the service description being created and initializes blank or <c>null</c> endpoint
+            names to <see cref="F:Neon.Service.NeonServiceMap.DefaultEndpointName"/>.
+            </remarks>
+        </member>
+        <member name="M:Neon.Service.NeonServiceMap.Lookup(System.String)">
+            <summary>
+            Returns the <see cref="T:Neon.Service.ServiceDescription"/> for the given service name.
+            </summary>
+            <param name="serviceName">The service name.</param>
+            <returns>The associated <see cref="T:Neon.Service.ServiceDescription"/>.</returns>
+            <exception cref="T:System.Collections.Generic.KeyNotFoundException">Thrown if thre service map has no description for the service.</exception>
+        </member>
+        <member name="T:Neon.Service.NeonServices">
+            <summary>
+            Defines the Neon service names.  
+            </summary>
+        </member>
+        <member name="F:Neon.Service.NeonServices.ClusterManager">
+            <summary>
+            Cluster Manager Operator.
+            </summary>
+        </member>
+        <member name="F:Neon.Service.NeonServices.Elasticsearch">
+            <summary>
+            Elasticsearch.
+            </summary>
+        </member>
+        <member name="F:Neon.Service.NeonServices.Kibana">
+            <summary>
+            Kibana.
+            </summary>
+        </member>
+        <member name="F:Neon.Service.NeonServices.TestCadence">
+            <summary>
+            Non-production service used to test Cadence running in a Linux container.
+            </summary>
+        </member>
         <member name="T:Neon.Service.ServiceApiContact">
             <summary>
             Holds the contact information for a service API.  This maps closely
@@ -10432,6 +10433,165 @@
         <member name="M:Neon.Tasks.NonDisposableTask`1.GetAwaiter">
             <summary>
             Returns the task's awaiter.
+            </summary>
+        </member>
+        <member name="T:Neon.Tasks.SyncContext">
+            <summary>
+            Used by public <c>async</c> library methods to reset the current
+            task <see cref="T:System.Threading.SynchronizationContext"/> so that continuations won't
+            be marshalled back to the current thread, improving performance.
+            </summary>
+            <remarks>
+            <para>
+            This class was adapted from this blog post:
+            </para>
+            <para>
+            <a href="https://blogs.msdn.microsoft.com/benwilli/2017/02/09/an-alternative-to-configureawaitfalse-everywhere/"/>
+            </para>
+            <para>
+            The only real changes are that I renamed the structure and converted
+            it into a singleton.
+            </para>
+            <para>
+            By default, awaited tasks will always be completed on the calling thread.  This is typically required 
+            for applications with user interfaces such as XAML or Windows Forms applications because the awaiter
+            will typically need the results on the single UI thread to be able to manuiplate the user interface.
+            This behavior is great for UI apps, but can introduce substantial overhead for server applications
+            or even portions of UI apps where an async operation performs a lot other async operations.
+            </para>
+            <para>
+            The problem is that typical servers applications run asynchronously on thread pool threads and don't
+            generally care about the thread they're running on.  The default await behavior requires that each
+            async operation be completed on the calling thread, but under load, it's very likely that the calling
+            thread will have been reused for another operation.  This means that when the async operation completes,
+            the task will need to wait for the calling thread to be returned to the thread pool before it can be
+            fetched and task continuation executed on it.  This can result in a substantial performance hit just
+            to manage this process as well what may be a substantial amount of time for the original thread to
+            make it back to the pool.
+            </para>
+            <para>
+            As the blog post describes, developers are encouraged to call <see cref="M:System.Threading.Tasks.Task.ConfigureAwait(System.Boolean)"/>,
+            passing <c>false</c> for every <c>async</c> call where the result doesn't need to be marshalled back
+            to the original synchronization context.  Non-UI class libraries typically don't care about this.
+            </para>
+            <para>
+            The problem is that to do this properly, MSFT recommends that you call <c>Task.ConfigureAwait(false)</c>
+            on <b>EVERY</b> <c>async</c> call you made in these situations.  This is pretty ugly and will be tough
+            to enforce on large projects over long periods of time because it's easy to miss one.
+            </para>
+            <para>
+            This <c>struct</c> implements a custom awaiter that saves the current synchronization context and then
+            clears it for the rest of the current method execution and then restores the original context when
+            when the method returns.  This means that every subsequent <c>await</c>  performed in the method will 
+            simply fetch a pool thread to continue execution, rather than to the original context thread.  To
+            accomplish this, you'll simply await <see cref="P:Neon.Tasks.SyncContext.ClearAsync"/> at or near the top of your method:
+            </para>
+            <code language="C#">
+            using Neon.Task;
+            
+            public async Task&lt;string&gt; HelloAsync()
+            {
+                await SyncContext.ClearAsync;
+                
+                await DoSomthingAsync();
+                await DoSomethingElseAsync();
+                
+                return "Hello World!";
+            }
+            </code>
+            <note>
+            <see cref="P:Neon.Tasks.SyncContext.ClearAsync"/> is not a method so you don't
+            need to pass any parameters.
+            </note>
+            <para>
+            This call clears the current synchronization context such that the
+            subsequent <c>async</c> calls will each marshal back to threads
+            obtained from the thread pool and due to compiler async magic,
+            the original synchronization context will be restored before the
+            <c>HelloAsync()</c> method returns.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:Neon.Tasks.SyncContext.ClearAsync">
+            <summary>
+            <c>await</c> this singleton to clear the current synchronization
+            context for the scope of the current method.  The original context
+            will be restored when the method returns.
+            </summary>
+            <remarks>
+            <para>
+            You'll typically at or near the top of your method.  This will
+            look something like:
+            </para>
+            <code language="C#">
+            using Neon.Task;
+            
+            public async Task&lt;string&gt; HelloAsync()
+            {
+                await SyncContext.ClearAsync;
+                
+                await DoSomthingAsync();
+                await DoSomethingElseAsync();
+                
+                return "Hello World!";
+            }
+            </code>
+            <note>
+            <see cref="P:Neon.Tasks.SyncContext.ClearAsync"/> is not a method so you don't
+            need to pass any parameters.
+            </note>
+            <para>
+            This call clears the current synchronization context such that the
+            subsequent <c>async</c> calls will each marshal back to threads
+            obtained from the thread pool and due to compiler async magic,
+            the original synchronization context will be restored before the
+            <c>HelloAsync()</c> method returns.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:Neon.Tasks.SyncContext.IsDisabled">
+            <summary>
+            <para>
+            Optionally disables context resetting globally.  This provides an
+            escape hatch for situations where an application needs to revert
+            back to the default synchronization context behavior.  This turns
+            <c>await SyncContext.ClearAsync</c> calls into a NOP.
+            </para>
+            <note>
+            Most applications should never need to set this.
+            </note>
+            </summary>
+        </member>
+        <member name="M:Neon.Tasks.SyncContext.#cctor">
+            <summary>
+            Static constructor.
+            </summary>
+        </member>
+        <member name="M:Neon.Tasks.SyncContext.#ctor(System.Int32)">
+            <summary>
+            Private constructor.
+            </summary>
+            <param name="unused">Ignored.</param>
+        </member>
+        <member name="P:Neon.Tasks.SyncContext.IsCompleted">
+            <summary>
+            <b>INTERNAL USE ONLY:</b> Do not call this directly.
+            </summary>
+        </member>
+        <member name="M:Neon.Tasks.SyncContext.OnCompleted(System.Action)">
+            <summary>
+            <b>INTERNAL USE ONLY:</b> Do not call this directly.
+            </summary>
+            <param name="continuation">The continuation action.</param>
+        </member>
+        <member name="M:Neon.Tasks.SyncContext.GetAwaiter">
+            <summary>
+            <b>INTERNAL USE ONLY:</b> Do not call this directly.
+            </summary>
+        </member>
+        <member name="M:Neon.Tasks.SyncContext.GetResult">
+            <summary>
+            <b>INTERNAL USE ONLY:</b> Do not call this directly.
             </summary>
         </member>
         <member name="T:Neon.Time.GatedTimer">

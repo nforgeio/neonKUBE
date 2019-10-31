@@ -33,7 +33,7 @@ function SetVersion
         [string]$project
     )
 
-	text pack-version "$env:NF_ROOT\product-version.txt" "$env:NF_ROOT\Lib\$project\$project.csproj"
+	neon-build pack-version "$env:NF_ROOT\product-version.txt" "$env:NF_ROOT\Lib\$project\$project.csproj"
 }
 
 function Publish
@@ -47,7 +47,11 @@ function Publish
 	dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Debug --include-symbols --include-source -o "$env:NF_build\nuget"
 }
 
-# Update the project versions first.
+# Copy the version from [$/product-version] into [$/Lib/Neon/Common/Build.cs]
+
+& neon-build build-version
+
+# Update the project versions.
 
 SetVersion Neon.Cadence
 SetVersion Neon.Common

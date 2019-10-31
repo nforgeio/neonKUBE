@@ -329,6 +329,14 @@
             </summary>
             <param name="exitCode">The exit code.</param>
         </member>
+        <member name="M:NeonBuild.Program.PackVersion(Neon.Common.CommandLine)">
+            <summary>
+            Reads a Nuget package version string from the first line of a text file and
+            then updates the version section in a CSPROJ file or NUSPEC with the version.  
+            This is useful for batch publishing multiple libraries.
+            </summary>
+            <param name="commandLine">The command line.</param>
+        </member>
         <member name="T:NeonBuild.WinInstallBuilder">
             <summary>
             Builds the <b>ksetup</b> installer for Windows.
