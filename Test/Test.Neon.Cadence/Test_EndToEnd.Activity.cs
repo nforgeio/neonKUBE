@@ -1062,7 +1062,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task ActivityExternalCancelByToken()
+        public async Task Activity_ExternalCancelByToken()
         {
             await SyncContext.ClearAsync;
 
@@ -1084,7 +1084,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task ActivityExternalCancelById()
+        public async Task Activity_ExternalCancelById()
         {
             await SyncContext.ClearAsync;
 

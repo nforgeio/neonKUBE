@@ -35,6 +35,7 @@ using Neon.Data;
 using Neon.IO;
 using Neon.Kube;
 using Neon.Net;
+using Neon.Retry;
 using Neon.Tasks;
 using Neon.Xunit;
 using Neon.Xunit.Cadence;
@@ -4064,6 +4065,9 @@ namespace TestCadence
 
             [WorkflowMethod(Name = "activity-timeout")]
             Task<bool> ActivityTimeout();
+
+            [WorkflowMethod(Name = "activity-exception")]
+            Task<bool> ActivityException();
         }
 
         [Workflow(AutoRegister = true)]
@@ -4127,6 +4131,30 @@ namespace TestCadence
 
                 return false;
             }
+
+            public async Task<bool> ActivityException()
+            {
+
+                // Call and activity that throws a [TransientException] and
+                // verify that we see a [CadenceCustomException] formatted
+                // with the exception information.
+                //
+                // The method returns TRUE when the exception looks good.
+
+                var stub = Workflow.NewActivityStub<IActivityTimeout>();
+
+                await stub.SleepAsync(TimeSpan.Zero);
+
+                try
+                {
+                    await stub.ThrowExceptionAsync();
+                }
+                catch (Exception e)
+                {
+                }
+
+                return true;
+            }
         }
 
         [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
@@ -4134,6 +4162,9 @@ namespace TestCadence
         {
             [ActivityMethod(Name = "sleep")]
             Task SleepAsync(TimeSpan sleepTime);
+
+            [ActivityMethod(Name = "throw-exception")]
+            Task ThrowExceptionAsync();
         }
 
         public class ActivityTimeout : ActivityBase, IActivityTimeout
@@ -4141,6 +4172,19 @@ namespace TestCadence
             public async Task SleepAsync(TimeSpan sleepTime)
             {
                 await Task.Delay(sleepTime);
+            }
+
+            public async Task ThrowExceptionAsync()
+            {
+                // Throw a [TransientException] so the calling workflow can verify
+                // that the GOLANG error is generated properly and that it ends
+                // being wrapped in a [CadenceCustomException] as expected.
+
+                await Task.CompletedTask;
+
+                return;
+
+                throw new TransientException("This is a test!");
             }
         }
 
@@ -4191,6 +4235,21 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IWorkflowTimeout>();
 
             Assert.True(await stub.ActivityHeartbeatTimeoutAsync());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_DotNetException()
+        {
+            await SyncContext.ClearAsync;
+
+            // Call a workflow that calls an activity that throws a .NET
+            // exception and verify that the exception caught by the
+            // workflow looks reasonable.
+
+            var stub = client.NewWorkflowStub<IWorkflowTimeout>();
+
+            Assert.True(await stub.ActivityException());
         }
 
         //---------------------------------------------------------------------

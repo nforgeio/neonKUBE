@@ -124,7 +124,7 @@ namespace Neon.Cadence.Internal
         {
             Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
 
-            this.String = $"{e.GetType().Name}{{{e.Message}}}";
+            this.String = $"{e.GetType().FullName}{{{e.Message}}}";
             this.Type   = "custom";
         }
 
