@@ -2302,7 +2302,7 @@ namespace TestCadence
 
             var stub = client.NewWorkflowStub<IWorkflowUnregistered>(options);
 
-            await Assert.ThrowsAsync<CadenceTimeoutException>(async () => await stub.HelloAsync("Jack"));
+            await Assert.ThrowsAsync<StartToCloseTimeoutException>(async () => await stub.HelloAsync("Jack"));
         }
 
         //---------------------------------------------------------------------
@@ -4056,16 +4056,91 @@ namespace TestCadence
         [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowTimeout : IWorkflow
         {
-            [WorkflowMethod]
-            Task RunAsync(TimeSpan sleepTime);
+            [WorkflowMethod(Name = "sleep")]
+            Task SleepAsync(TimeSpan sleepTime);
+
+            [WorkflowMethod(Name = "activity-heartbeat-timeout")]
+            Task<bool> ActivityHeartbeatTimeoutAsync();
+
+            [WorkflowMethod(Name = "activity-timeout")]
+            Task<bool> ActivityTimeout();
         }
 
         [Workflow(AutoRegister = true)]
         public class WorkflowTimeout : WorkflowBase, IWorkflowTimeout
         {
-            public async Task RunAsync(TimeSpan sleepTime)
+            public async Task SleepAsync(TimeSpan sleepTime)
             {
                 await Workflow.SleepAsync(sleepTime);
+            }
+
+            public async Task<bool> ActivityHeartbeatTimeoutAsync()
+            {
+                // We're going to start an activity that will sleep for
+                // longer than its heartbeat interval.  Cadence should
+                // detect that the heartbeat time was exceeded and
+                // throw an [ActivityHeartbeatTimeoutException].
+                //
+                // The method returns TRUE if we catch ther desired
+                // exception.
+
+                var sleepTime   = TimeSpan.FromSeconds(5);
+                var timeoutTime = TimeSpan.FromTicks(sleepTime.Ticks / 2);
+                var stub        = Workflow.NewActivityStub<IActivityTimeout>(new ActivityOptions() { HeartbeatTimeout = timeoutTime });
+
+                try
+                {
+                    await stub.SleepAsync(sleepTime);
+                }
+                catch (ActivityHeartbeatTimeoutException)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
+            public async Task<bool> ActivityTimeout()
+            {
+                // We're going to start an activity that will run longer than it's
+                // start to close timeout and verify that we see a
+                // [StartToCloseTimeoutException].  The method returns TRUE
+                // if we catch the expected exception.
+
+                var sleepTime   = TimeSpan.FromSeconds(5);
+                var timeoutTime = TimeSpan.FromTicks(sleepTime.Ticks / 2);
+                var stub        = Workflow.NewActivityStub<IActivityTimeout>(
+                    new ActivityOptions()
+                    { 
+                        StartToCloseTimeout = timeoutTime,
+                        HeartbeatTimeout    = TimeSpan.FromSeconds(60),
+                    });
+
+                try
+                {
+                    await stub.SleepAsync(sleepTime);
+                }
+                catch (StartToCloseTimeoutException)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IActivityTimeout : IActivity
+        {
+            [ActivityMethod(Name = "sleep")]
+            Task SleepAsync(TimeSpan sleepTime);
+        }
+
+        public class ActivityTimeout : ActivityBase, IActivityTimeout
+        {
+            public async Task SleepAsync(TimeSpan sleepTime)
+            {
+                await Task.Delay(sleepTime);
             }
         }
 
@@ -4076,7 +4151,7 @@ namespace TestCadence
             await SyncContext.ClearAsync;
 
             // Verify that we get the expected exception when a workflow doesn't
-            // complete within a START_TO_CLOSE_TIMEOUT
+            // complete within a START_TO_CLOSE_TIMEOUT.
 
             var timeout   = TimeSpan.FromSeconds(2);
             var sleepTime = TimeSpan.FromTicks(timeout.Ticks * 2);
@@ -4085,9 +4160,37 @@ namespace TestCadence
                 new WorkflowOptions()
                 {
                     ScheduleToCloseTimeout = timeout
-                }); ;
+                });
 
-            await Assert.ThrowsAsync<WorkflowStartToCloseTimeoutException>(async () => await stub.RunAsync(sleepTime));
+            await Assert.ThrowsAsync<StartToCloseTimeoutException>(async () => await stub.SleepAsync(sleepTime));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_StartToCloseTimeout()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that we get the expected exception when an activity doesn't
+            // complete within a START_TO_CLOSE_TIMEOUT.
+
+            var stub = client.NewWorkflowStub<IWorkflowTimeout>();
+
+            Assert.True(await stub.ActivityTimeout());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_HeartbeatTimeout()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that we see an [ActivityHeartbeatTimeoutException] when
+            // we run an activity that doesn't heartbeat in time.
+
+            var stub = client.NewWorkflowStub<IWorkflowTimeout>();
+
+            Assert.True(await stub.ActivityHeartbeatTimeoutAsync());
         }
 
         //---------------------------------------------------------------------

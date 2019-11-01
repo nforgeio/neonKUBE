@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowStartToCloseTimeoutException.cs
+// FILE:	    StartToCloseTimeoutException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,21 +22,21 @@ using Neon.Cadence.Internal;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Thrown when a workflow did not complete within the required time.
+    /// Thrown when a workflow or activity did not complete within the required time.
     /// </summary>
-    public class WorkflowStartToCloseTimeoutException : CadenceTimeoutException
+    public class StartToCloseTimeoutException : CadenceTimeoutException
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="message">Optionally specifies a message.</param>
         /// <param name="innerException">Optionally specifies an inner exception.</param>
-        public WorkflowStartToCloseTimeoutException(string message = null, Exception innerException = null)
+        public StartToCloseTimeoutException(string message = null, Exception innerException = null)
             : base(message, innerException)
         {
         }
 
         /// <inheritdoc/>
-        internal override string CadenceError => "WorkflowStartToCloseTimeoutError";
+        internal override string CadenceError => "StartToCloseTimeoutError";
     }
 }

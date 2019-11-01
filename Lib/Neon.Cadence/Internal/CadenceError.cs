@@ -265,26 +265,23 @@ namespace Neon.Cadence.Internal
                 case CadenceErrorTypes.Terminated:
 
                     return new TerminatedException(message);
-
+                     
                 case CadenceErrorTypes.Timeout:
 
                     // Special case some timeout exceptions.
 
                     switch (message)
                     {
-                        case "Timeout START_TO_CLOSE":
+                        case "TimeoutType: START_TO_CLOSE":
 
-                            return new WorkflowStartToCloseTimeoutException();
+                            return new StartToCloseTimeoutException();
 
-                        case "Timeout HEARTBEAT":
+                        case "TimeoutType: HEARTBEAT":
 
                             return new ActivityHeartbeatTimeoutException();
-
-                        default:
-
-                            return new CadenceTimeoutException(message);
                     }
 
+                    return new CadenceTimeoutException(message);
 
                 default:
 
