@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Xunit.Cadence</RootNamespace>
-    <Version>0.7.0-alpha</Version>
+    <Version>0.7.0</Version>
     <Authors>Jeff Lill</Authors>
     <Company>neonFORGE, LLC</Company>
     <Description>neonKUBE Xunit related extensions for Uber Cadence.</Description>

@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Xunit.Kube</RootNamespace>
     <PackageId>Neon.Xunit.Kube</PackageId>
-    <Version>0.7.0-alpha</Version>
+    <Version>0.7.0</Version>
     <Authors>Jeff Lill</Authors>
     <Product>neonKUBE</Product>
     <Description>neonKUBE Xunit testing helpers.</Description>
