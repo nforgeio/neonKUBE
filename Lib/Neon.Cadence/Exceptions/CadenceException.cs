@@ -51,6 +51,11 @@ namespace Neon.Cadence
         internal abstract CadenceErrorTypes CadenceErrorType { get; }
 
         /// <summary>
+        /// Returns the additional details about the exception.
+        /// </summary>
+        public string Details { get; internal set; }
+
+        /// <summary>
         /// Converts the exception into a <see cref="CadenceError"/>.
         /// </summary>
         /// <returns>The <see cref="CadenceError"/>.</returns>

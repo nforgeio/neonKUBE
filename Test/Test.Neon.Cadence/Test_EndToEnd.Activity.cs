@@ -815,9 +815,9 @@ namespace TestCadence
                     await stub.RunAsync();
                     return null;
                 }
-                catch (Exception e)
+                catch (CadenceException e)
                 {
-                    return e.Message;
+                    return $"{e.Message}: {e.Details}";
                 }
             }
         }
@@ -836,7 +836,7 @@ namespace TestCadence
                 TaskStartToCloseTimeout = TimeSpan.FromSeconds(60)
             };
 
-            var stub = client.NewWorkflowStub<IWorkflowActivityFail>(options);
+            var stub  = client.NewWorkflowStub<IWorkflowActivityFail>(options);
             var error = await stub.RunAsync();
 
             Assert.NotNull(error);

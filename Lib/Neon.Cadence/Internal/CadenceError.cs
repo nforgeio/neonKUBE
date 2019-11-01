@@ -222,24 +222,26 @@ namespace Neon.Cadence.Internal
                 message = string.Empty;
             }
 
+            // We're going to save the error in the exception [Message] property and
+            // save the message to the [Reasons] property and then  we'll encode the
+            // error as the exception message.  This seems a bit confusing but that's
+            // the way we're doing it.
+
+            var details = message;
+
+            message = error;
+
             // First, we're going to try mapping the error identifier to one of the
             // predefined Cadence exceptions and if that doesn't work, we'll generate
             // a more generic exception.
 
             if (goErrorToConstructor.TryGetValue(error, out var constructor))
             {
-                return (CadenceException)constructor.Invoke(new object[] { error, null });
-            }
+                var e = (CadenceException)constructor.Invoke(new object[] { error, null });
 
-            // Create a more generic exception.
+                e.Details = details;
 
-            if (!string.IsNullOrEmpty(message))
-            {
-                message = $"{error}: {message}";
-            }
-            else
-            {
-                message = error;
+                return e;
             }
 
             var errorType = GetErrorType();
@@ -248,24 +250,24 @@ namespace Neon.Cadence.Internal
             {
                 case CadenceErrorTypes.Cancelled:
 
-                    return new CancelledException(message);
+                    return new CancelledException(message) { Details = details };
 
                 case CadenceErrorTypes.Custom:
 
-                    return new CadenceCustomException(message);
+                    return new CadenceCustomException(message) { Details = details };
 
                 case CadenceErrorTypes.Generic:
 
-                    return new CadenceGenericException(message);
+                    return new CadenceGenericException(message) { Details = details };
 
                 case CadenceErrorTypes.Panic:
 
-                    return new CadencePanicException(message);
+                    return new CadencePanicException(message) { Details = details };
 
                 case CadenceErrorTypes.Terminated:
 
-                    return new TerminatedException(message);
-                     
+                    return new TerminatedException(message) { Details = details };
+
                 case CadenceErrorTypes.Timeout:
 
                     // Special case some timeout exceptions.

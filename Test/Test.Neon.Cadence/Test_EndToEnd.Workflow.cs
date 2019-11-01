@@ -2268,12 +2268,16 @@ namespace TestCadence
             try
             {
                 await stub.RunAsync();
+                Assert.True(false, "CadenceGenericException expected");
             }
-            catch (Exception e)
+            catch (CadenceGenericException e)
             {
-                Assert.IsType<CadenceGenericException>(e);
                 Assert.Contains("ArgumentException", e.Message);
-                Assert.Contains("forced-failure", e.Message);
+                Assert.Contains("forced-failure", e.Details);
+            }
+            catch
+            {
+                Assert.True(false, "CadenceGenericException expected");
             }
         }
 
@@ -4066,8 +4070,18 @@ namespace TestCadence
             [WorkflowMethod(Name = "activity-timeout")]
             Task<bool> ActivityTimeout();
 
-            [WorkflowMethod(Name = "activity-exception")]
-            Task<bool> ActivityException();
+            [WorkflowMethod(Name = "activity-dotnetexception")]
+            Task<bool> ActivityDotNetException();
+        }
+
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IActivityTimeout : IActivity
+        {
+            [ActivityMethod(Name = "sleep")]
+            Task SleepAsync(TimeSpan sleepTime);
+
+            [ActivityMethod(Name = "throw-transient")]
+            Task ThrowTransientAsync();
         }
 
         [Workflow(AutoRegister = true)]
@@ -4109,7 +4123,7 @@ namespace TestCadence
                 // We're going to start an activity that will run longer than it's
                 // start to close timeout and verify that we see a
                 // [StartToCloseTimeoutException].  The method returns TRUE
-                // if we catch the expected exception.
+                // when we catch the expected exception.
 
                 var sleepTime   = TimeSpan.FromSeconds(5);
                 var timeoutTime = TimeSpan.FromTicks(sleepTime.Ticks / 2);
@@ -4132,41 +4146,40 @@ namespace TestCadence
                 return false;
             }
 
-            public async Task<bool> ActivityException()
+            public async Task<bool> ActivityDotNetException()
             {
-
-                // Call and activity that throws a [TransientException] and
-                // verify that we see a [CadenceCustomException] formatted
+                // Call an activity that throws a [TransientException] and
+                // verify that we see a [CadenceGenericException] formatted
                 // with the exception information.
                 //
                 // The method returns TRUE when the exception looks good.
 
                 var stub = Workflow.NewActivityStub<IActivityTimeout>();
 
-                await stub.SleepAsync(TimeSpan.Zero);
-
                 try
                 {
-                    await stub.ThrowExceptionAsync();
+                    await stub.ThrowTransientAsync();
                 }
-                catch (Exception e)
+                catch (CadenceGenericException e)
                 {
+                    if (e.Message != typeof(TransientException).FullName)
+                    {
+                        return false;
+                    }
+
+                    if (e.Details != "This is a test!")
+                    {
+                        return false;
+                    }
+
+                    return true;
                 }
 
-                return true;
+                return false;
             }
         }
 
-        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
-        public interface IActivityTimeout : IActivity
-        {
-            [ActivityMethod(Name = "sleep")]
-            Task SleepAsync(TimeSpan sleepTime);
-
-            [ActivityMethod(Name = "throw-exception")]
-            Task ThrowExceptionAsync();
-        }
-
+        [Activity(AutoRegister = true)]
         public class ActivityTimeout : ActivityBase, IActivityTimeout
         {
             public async Task SleepAsync(TimeSpan sleepTime)
@@ -4174,15 +4187,13 @@ namespace TestCadence
                 await Task.Delay(sleepTime);
             }
 
-            public async Task ThrowExceptionAsync()
+            public async Task ThrowTransientAsync()
             {
                 // Throw a [TransientException] so the calling workflow can verify
-                // that the GOLANG error is generated properly and that it ends
-                // being wrapped in a [CadenceCustomException] as expected.
+                // that the GOLANG error is generated properly and that it ends up
+                // being wrapped in a [CadenceGenericException] as expected.
 
                 await Task.CompletedTask;
-
-                return;
 
                 throw new TransientException("This is a test!");
             }
@@ -4249,7 +4260,7 @@ namespace TestCadence
 
             var stub = client.NewWorkflowStub<IWorkflowTimeout>();
 
-            Assert.True(await stub.ActivityException());
+            Assert.True(await stub.ActivityDotNetException());
         }
 
         //---------------------------------------------------------------------
