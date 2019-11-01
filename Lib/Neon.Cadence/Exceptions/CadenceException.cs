@@ -51,6 +51,12 @@ namespace Neon.Cadence
         internal abstract CadenceErrorTypes CadenceErrorType { get; }
 
         /// <summary>
+        /// Returns the Cadence error reason used for specifying non-retryable errors
+        /// for a <see cref="RetryOptions"/> instance.
+        /// </summary>
+        internal abstract string Reason { get; }
+
+        /// <summary>
         /// Returns the additional details about the exception.
         /// </summary>
         public string Details { get; internal set; }

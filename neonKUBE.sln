@@ -255,7 +255,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Common", "Test\Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "test-cadence", "Services\test-cadence\test-cadence.csproj", "{75ED3E48-DFC6-481B-8168-A184DDD19FFB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Neon.Models.Cadence", "Test\Test.Neon.Models.Cadence\Test.Neon.Models.Cadence.csproj", "{F19FF67A-660D-4B3F-8590-01DE5F14744D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Models.Cadence", "Test\Test.Neon.Models.Cadence\Test.Neon.Models.Cadence.csproj", "{F19FF67A-660D-4B3F-8590-01DE5F14744D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
