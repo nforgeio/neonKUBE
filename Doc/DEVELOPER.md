@@ -132,7 +132,7 @@ Follow the steps below to configure a development or test workstation:
     * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
     * Close the CMD window when the script is finished
   
-20. Install the latest build of neonKUBE from [here](https://github.com/nforgeio/neonKUBE/releases)
+20. Install the latest release build of neonKUBE from [here](https://github.com/nforgeio/neonKUBE/releases)
 
 21. Restart Visual Studio (to pick up the environment changes).
 
@@ -186,5 +186,11 @@ Follow the steps below to configure a development or test workstation:
       * Click **Next** and click **Install Schemas**
       * **Optional:** Install Snippets (I typically don't install these)
       * Click **Next** and **Finish**.  Don't install the Visual Studio Spell Checker.
+    * Clone the **nforgeio.github.io** repository.  This hosts the generated neonKUBE documentation website.  This repo must be named **nforgeio.github.io** and be located in the same directory as your main neonKUBE repo:
+    ```
+    cd "%NF_ROOT%\.."
+    mkdir nforgeio.github.io
+    git clone https://github.com/nforgeio/nforgeio.github.io.git
+    ```
 
 30. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
