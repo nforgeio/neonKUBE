@@ -83,7 +83,7 @@ namespace Renci.SshNet
         /// The connection timeout. The default value is 30 seconds.
         /// </value>
         /// <example>
-        ///   <code source="..\..\src\Renci.SshNet.Tests\Classes\SshClientTest.cs" region="Example SshClient Connect Timeout" language="C#" title="Specify connection timeout" />
+        ///   <code source="..\..\Lib\Neon.SSH.NET\Examples\SshClientTest.cs" region="Example SshClient Connect Timeout" language="C#" title="Specify connection timeout" />
         /// </example>
         TimeSpan Timeout { get; }
 
