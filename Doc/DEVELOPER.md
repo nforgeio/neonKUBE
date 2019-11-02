@@ -186,6 +186,7 @@ Follow the steps below to configure a development or test workstation:
       * Click **Next** and click **Install Schemas**
       * **Optional:** Install Snippets (I typically don't install these)
       * Click **Next** and **Finish**.  Don't install the Visual Studio Spell Checker.
+      * **Install:** Microsoft Build Tools 2015 from: [here](https://www.microsoft.com/en-us/download/details.aspx?id=48159)
     * Clone the **nforgeio.github.io** repository.  This hosts the generated neonKUBE documentation website.  This repo must be named **nforgeio.github.io** and be located in the same directory as your main neonKUBE repo:
     ```
     cd "%NF_ROOT%\.."
