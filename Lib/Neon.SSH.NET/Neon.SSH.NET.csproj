@@ -19,6 +19,7 @@ This is a cloned and slightly updated build of https://www.nuget.org/packages/SS
     <Authors>Renci</Authors>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageTags>ssh scp sftp</PackageTags>
+    <Configurations>Debug;Release;CodeDoc</Configurations>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -32,6 +33,13 @@ This is a cloned and slightly updated build of https://www.nuget.org/packages/SS
     <DocumentationFile>C:\src\neonKUBE\Lib\Neon.SSH.NET\bin\Release\Neon.SSH.NET.xml</DocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors></WarningsAsErrors>
+    <NoWarn>NU1605</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
+    <DocumentationFile>C:\src\neonKUBE\Lib\Neon.SSH.NET\bin\Release\Neon.SSH.NET.xml</DocumentationFile>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors />
     <NoWarn>NU1605</NoWarn>
   </PropertyGroup>
 

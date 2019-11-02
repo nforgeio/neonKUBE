@@ -23,42 +23,32 @@
 #
 # OPTIONS:
 #
-#       -debug      - Builds the DEBUG version (this is the default)
-#       -release    - Builds the RELEASE version
-#       -nobuild    - Don't build the solution; just publish
 #       -installer  - Builds installer binaries
+#       -codedoc    - Builds the code documentation
+#       -all        - Builds all of the options above
 
 param 
 (
-	[switch]$debug     = $false,
-	[switch]$release   = $false,
-	[switch]$nobuild   = $false,
-	[switch]$installer = $false
+	[switch]$installer = $false,
+    [switch]$codedoc   = $false,
+    [switch]$all       = $false
 )
 
-$msbuild    = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
-$nfRoot     = "$env:NF_ROOT"
-$nfSolution = "$nfRoot\neonKUBE.sln"
-$nfBuild    = "$env:NF_BUILD"
-$nfTools    = "$nfRoot\Tools"
-$env:PATH  += ";$nfBuild"
-$version    = Get-Content "$env:NF_ROOT\product-version.txt" -First 1
-
-if (-not $debug -and -not $release)
+if ($all)
 {
-    $debug = $true
+    $installer = $true
+    $codedoc   = $true
 }
 
-if ($debug)
-{
-    $config      = "Debug"
-    $buildConfig = "-p:Configuration=Debug"
-}
-else
-{
-    $config      = "Release"
-    $buildConfig = "-p:Configuration=Release"
-}
+$msbuild     = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
+$nfRoot      = "$env:NF_ROOT"
+$nfSolution  = "$nfRoot\neonKUBE.sln"
+$nfBuild     = "$env:NF_BUILD"
+$nfTools     = "$nfRoot\Tools"
+$env:PATH   += ";$nfBuild"
+$version     = Get-Content "$env:NF_ROOT\product-version.txt" -First 1
+$config      = "Release"
+$buildConfig = "-p:Configuration=Release"
 
 function PublishCore
 {
@@ -172,7 +162,7 @@ dotnet publish -r osx-x64 -c Release /p:PublishSingleFile=true
 cd $nfRoot
 
 ""
-"Generating OS/X neon-cli sha512..."
+"Generating OS/X neon-cli SHA512..."
 ""
 
 & cat "$nfBuild\osx\neon-osx" | openssl dgst -sha512 -hex > "$nfBuild\osx\neon-osx-$version.sha512.txt"
@@ -211,7 +201,7 @@ if ($installer)
     }
 
     ""
-    "Generating windows installer sha512..."
+    "Generating windows installer SHA512..."
 	""
 	
     & cat "$nfBuild\neonKUBE-setup-$version.exe" | openssl dgst -sha512 -hex > "$nfBuild\neonKUBE-setup-$version.sha512.txt"
@@ -220,6 +210,61 @@ if ($installer)
     {
         ""
         "*** Windows Installer: SHA512 failed ***"
+        ""
+        exit 1
+    }
+}
+
+# Build the code documentation if requested.
+
+if ($codedoc)
+{
+    ""
+    "**********************************************************"
+    "***                CODE DOCUMENTATION                  ***"
+    "**********************************************************"
+    ""
+
+    & "$msbuild" "$nfSolution" -p:Configuration=CodeDoc
+
+    if (-not $?)
+    {
+        ""
+        "*** BUILD FAILED ***"
+        ""
+        exit 1
+    }
+
+    # Move the documentation output to the solution's [$/Build] folder.
+    #
+    # First we're going to remove some pesky aliases:
+
+    del alias:rm
+    del alias:cp
+    del alias:mv
+
+    # Copy the CHM file to a more convenient place for adding to the GitHub release
+    # and generate the SHA512 for it.
+
+    $nfDocOutput = "$nfroot\Websites\CodeDoc\bin\CodeDoc"
+
+    & cp "$nfDocOutput\neonKUBE.chm" "$nfbuild"
+
+    ""
+    "Generating neonKUBE.chm SHA512..."
+	""
+
+    & cat "$nfBuild\neonKUBE.chm" | openssl dgst -sha512 -hex > "$nfBuild\neonKUBE.chm.sha512.txt"
+
+    # Move the documentation build output.
+	
+    & rm -r --force "$nfBuild\codedoc"
+    & mv "$nfDocOutput" "$nfBuild\codedoc"
+
+    if (-not $?)
+    {
+        ""
+        "*** neonKUBE.chm: SHA512 failed ***"
         ""
         exit 1
     }

@@ -7,6 +7,7 @@
     <AssemblyName>neon</AssemblyName>
     <LangVersion>latest</LangVersion>
     <RuntimeIdentifiers>win10-x64;osx-x64</RuntimeIdentifiers>
+    <Configurations>Debug;Release;CodeDoc</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
