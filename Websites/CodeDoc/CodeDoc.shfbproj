@@ -43,7 +43,7 @@
       <DocumentationSource sourceFile="..\..\Lib\Neon.Xunit.Couchbase\Neon.Xunit.Couchbase.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Xunit.Kube\Neon.Xunit.Kube.csproj" />
     </DocumentationSources>
-    <HelpFileFormat>HtmlHelp1</HelpFileFormat>
+    <HelpFileFormat>HtmlHelp1, Website</HelpFileFormat>
     <SyntaxFilters>Standard</SyntaxFilters>
     <PresentationStyle>VS2013</PresentationStyle>
     <CleanIntermediates>True</CleanIntermediates>
