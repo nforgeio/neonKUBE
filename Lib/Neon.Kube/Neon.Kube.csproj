@@ -22,6 +22,7 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <PackageIconUrl>https://doc.neonkube.com/images/nuget-icon.png</PackageIconUrl>
+    <PackageTags>kubernetes</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

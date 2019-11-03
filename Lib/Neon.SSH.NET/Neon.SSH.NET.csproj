@@ -18,7 +18,7 @@ This is a cloned and slightly updated build of https://www.nuget.org/packages/SS
     <FileVersion>0.0.0.0</FileVersion>
     <Authors>Renci</Authors>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageTags>ssh scp sftp</PackageTags>
+    <PackageTags>ssh scp sftp ssh.net</PackageTags>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <PackageIconUrl>https://doc.neonkube.com/images/nuget-icon.png</PackageIconUrl>
   </PropertyGroup>

@@ -18,6 +18,7 @@
     <PreserveCompilationContext>true</PreserveCompilationContext>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <PackageIconUrl>https://doc.neonkube.com/images/nuget-icon.png</PackageIconUrl>
+    <PackageTags>data utility</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
