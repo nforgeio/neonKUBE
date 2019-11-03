@@ -268,6 +268,14 @@ if ($codedoc)
         ""
         exit 1
     }
+
+    # Insert the Google Analytics gtag scripts.
+
+    ""
+    "Enabling Google Analytics..."
+	""
+
+    & neon-build gtag "$nfroot\Websites\CodeDoc\gtag.js" "$nfBuild\codedoc"
 }
 
 cd $originalDir

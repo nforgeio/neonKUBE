@@ -8,8 +8,8 @@
     ".NETCoreApp,Version=v3.0": {
       "neon-build/1.0.0": {
         "dependencies": {
-          "Neon.Common": "0.7.0-alpha",
-          "Neon.Kube": "0.7.0-alpha"
+          "Neon.Common": "0.7.0",
+          "Neon.Kube": "0.7.0"
         },
         "runtime": {
           "neon-build.dll": {}
@@ -1913,7 +1913,7 @@
           }
         }
       },
-      "Neon.Common/0.7.0-alpha": {
+      "Neon.Common/0.7.0": {
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection": "3.0.0",
           "Microsoft.Extensions.Logging.Abstractions": "3.0.0",
@@ -1932,21 +1932,21 @@
           "Neon.Common.dll": {}
         }
       },
-      "Neon.Couchbase/0.7.0-alpha": {
+      "Neon.Couchbase/0.7.0": {
         "dependencies": {
           "CouchbaseNetClient": "2.7.12",
           "Linq2Couchbase": "1.4.1",
           "Microsoft.CSharp": "4.6.0",
           "Microsoft.Extensions.Logging.Abstractions": "3.0.0",
-          "Neon.Common": "0.7.0-alpha"
+          "Neon.Common": "0.7.0"
         },
         "runtime": {
           "Neon.Couchbase.dll": {}
         }
       },
-      "Neon.Cryptography/0.7.0-alpha": {
+      "Neon.Cryptography/0.7.0": {
         "dependencies": {
-          "Neon.Common": "0.7.0-alpha",
+          "Neon.Common": "0.7.0",
           "Newtonsoft.Json": "12.0.2",
           "System.Security.Cryptography.Cng": "4.6.0"
         },
@@ -1954,7 +1954,7 @@
           "Neon.Cryptography.dll": {}
         }
       },
-      "Neon.Kube/0.7.0-alpha": {
+      "Neon.Kube/0.7.0": {
         "dependencies": {
           "DNS": "5.0.0",
           "KubernetesClient": "1.5.26",
@@ -1962,10 +1962,10 @@
           "Microsoft.Net.Http.Server": "1.1.4",
           "Microsoft.OpenApi": "1.1.4",
           "Microsoft.Windows.Compatibility": "3.0.0",
-          "Neon.Common": "0.7.0-alpha",
-          "Neon.Couchbase": "0.7.0-alpha",
-          "Neon.Cryptography": "0.7.0-alpha",
-          "Neon.SSH.NET": "0.7.0-alpha",
+          "Neon.Common": "0.7.0",
+          "Neon.Couchbase": "0.7.0",
+          "Neon.Cryptography": "0.7.0",
+          "Neon.SSH.NET": "0.7.0",
           "Newtonsoft.Json": "12.0.2",
           "SharpZipLib.NETStandard": "1.0.7",
           "System.Diagnostics.Contracts": "4.3.0",
@@ -1980,7 +1980,7 @@
           "Neon.Kube.dll": {}
         }
       },
-      "Neon.SSH.NET/0.7.0-alpha": {
+      "Neon.SSH.NET/0.7.0": {
         "runtime": {
           "Neon.SSH.NET.dll": {}
         }
@@ -3183,27 +3183,27 @@
       "path": "yamldotnet/6.1.2",
       "hashPath": "yamldotnet.6.1.2.nupkg.sha512"
     },
-    "Neon.Common/0.7.0-alpha": {
+    "Neon.Common/0.7.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
     },
-    "Neon.Couchbase/0.7.0-alpha": {
+    "Neon.Couchbase/0.7.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
     },
-    "Neon.Cryptography/0.7.0-alpha": {
+    "Neon.Cryptography/0.7.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
     },
-    "Neon.Kube/0.7.0-alpha": {
+    "Neon.Kube/0.7.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
     },
-    "Neon.SSH.NET/0.7.0-alpha": {
+    "Neon.SSH.NET/0.7.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

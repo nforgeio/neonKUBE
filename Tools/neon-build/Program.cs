@@ -99,8 +99,8 @@ project local [prerelease.txt] file as specified here:
 
     https://github.com/nforgeio/neonKUBE/issues/715
 
-neon-build help gtag TAG-FILE HELP-FOLDER
------------------------------------------
+neon-build gtag TAG-FILE HELP-FOLDER
+------------------------------------
 Reads the Google Analytics script TAG-FILE and then inserts the script
 into the Sandcastle Help File Builder generated documentation page files
 named *.htm and *.html within the specified folder (recursively).
@@ -420,6 +420,11 @@ named *.htm and *.html within the specified folder (recursively).
                         PackVersion(commandLine);
                         break;
 
+                    case "gtag":
+
+                        GTag(commandLine);
+                        break;
+
                     default:
 
                         Console.Error.WriteLine($"*** ERROR: Unexpected command [{command}].");
@@ -469,7 +474,6 @@ named *.htm and *.html within the specified folder (recursively).
             Environment.Exit(exitCode);
         }
 
-
         /// <summary>
         /// Reads a Nuget package version string from the first line of a text file and
         /// then updates the version section in a CSPROJ file or NUSPEC with the version.  
@@ -487,10 +491,9 @@ named *.htm and *.html within the specified folder (recursively).
             }
 
             var solutionVersionPath = Environment.ExpandEnvironmentVariables(commandLine.Arguments[0]);
-            var csprojPath = Environment.ExpandEnvironmentVariables(commandLine.Arguments[1]);
-            var localVersionPath = Path.Combine(Path.GetDirectoryName(csprojPath), "prerelease.txt");
-
-            var rawSolutionVersion = File.ReadAllLines(solutionVersionPath).FirstOrDefault();
+            var csprojPath          = Environment.ExpandEnvironmentVariables(commandLine.Arguments[1]);
+            var localVersionPath    = Path.Combine(Path.GetDirectoryName(csprojPath), "prerelease.txt");
+            var rawSolutionVersion  = File.ReadAllLines(solutionVersionPath).FirstOrDefault();
 
             if (string.IsNullOrWhiteSpace(rawSolutionVersion))
             {
@@ -574,6 +577,89 @@ named *.htm and *.html within the specified folder (recursively).
             csproj = csproj.Substring(0, pos) + version + csproj.Substring(posEnd);
 
             File.WriteAllText(csprojPath, csproj);
+
+            Program.Exit(0);
+        }
+
+        /// <summary>
+        /// Loads a Google Analytics [gtag.js] file and inserts it at the top of the <b>head</b>
+        /// section of the HTML pages found in a folder.
+        /// </summary>
+        /// <param name="commandLine">The command line.</param>
+        private static void GTag(CommandLine commandLine)
+        {
+            // $hack(jefflill): This is fragile because it depends on how SHFB generates HTML pages.
+
+            commandLine = commandLine.Shift(1);
+
+            if (commandLine.Arguments.Length != 2)
+            {
+                Console.WriteLine(usage);
+                Program.Exit(1);
+            }
+
+            var gtagPath   = commandLine.Arguments[0];
+            var siteFolder = commandLine.Arguments[1];
+            var gtag       = File.ReadAllText(gtagPath);
+
+            if (!gtag.Contains("Google Analytics") || !gtag.Contains("<script"))
+            {
+                Console.Error.WriteLine($"[{gtagPath}] does not look like a valid Google Analytics [gtag.js] file.");
+                Program.Exit(1);
+            }
+
+            Console.WriteLine($"neon-build gtag \"{gtagPath}\" \"{siteFolder}\"");
+            Console.WriteLine("Processing special pages...");
+
+            // Special-case the [*.html] files (I believe there are only two of them).
+
+            foreach (var pagePath in Directory.EnumerateFiles(siteFolder, "*.html", SearchOption.AllDirectories))
+            {
+                var html = File.ReadAllText(pagePath);
+
+                if (html.Contains(gtag))
+                {
+                    // The page already looks like it's already been modified.
+
+                    continue;
+                }
+
+                html = html.Replace("<head>\r\n", "<head>\r\n" + gtag);
+
+                File.WriteAllText(pagePath, html);
+            }
+
+            // Now process the [*.htm] files which hold all of the site content.
+
+            Console.WriteLine("Processing content pages...");
+
+            var pagePaths = Directory.GetFiles(siteFolder, "*.htm", SearchOption.AllDirectories);
+            var count     = 0;
+
+            foreach (var pagePath in pagePaths)
+            {
+                if (count % 200 == 0)
+                {
+                    Console.WriteLine($"Procssing page [{count + 1} of {pagePaths.Length}]");
+                }
+
+                count++;
+
+                var html = File.ReadAllText(pagePath);
+
+                if (html.Contains(gtag))
+                {
+                    // The page already looks like it's already been modified.
+
+                    continue;
+                }
+
+                html = html.Replace("<html><head>", "<html><head>" + gtag);
+
+                File.WriteAllText(pagePath, html);
+            }
+
+            Program.Exit(0);
         }
     }
 }
