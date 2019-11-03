@@ -1,0 +1,134 @@
+#------------------------------------------------------------------------------
+# FILE:         neon-release.ps1
+# CONTRIBUTOR:  Jeff Lill
+# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Performs neonKUBE release related functions.  Note that the 
+# neon-builder.ps1 script must have been run successfully.
+#
+# USAGE: powershell -file ./neon-release.ps1 [OPTIONS]
+#
+# OPTIONS:
+#
+#       -codedoc    - Releases the code documentation
+#       -all        - Performs all of the options above
+
+param 
+(
+    [switch]$codedoc = $false,
+    [switch]$all     = $false
+)
+
+if ($all)
+{
+    $codedoc = $true
+}
+
+$msbuild    = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
+$nfRoot     = "$env:NF_ROOT"
+$nfSolution = "$nfRoot\neonKUBE.sln"
+$nfBuild    = "$env:NF_BUILD"
+$nfTools    = "$nfRoot\Tools"
+$nfCodeDoc  = "$nfRoot\..\nforgeio.github.io"
+$env:PATH  += ";$nfBuild"
+$version    = Get-Content "$nfRoot\product-version.txt" -First 1
+
+$originalDir = $pwd
+
+# Publish the code documentation.
+
+if ($codedoc)
+{
+    ""
+    "**********************************************************"
+    "***                 CODE DOCUMENTATION                 ***"
+    "**********************************************************"
+    ""
+
+    cd $nfCodeDoc
+
+    # Verify that [$nfCodeDoc] actually references the local clone
+    # of the [nforgeio.github.io] repository.
+
+    if (-not (Test-Path "$nfCodeDoc\codedoc.txt"))
+    {
+        ""
+        "*** [$nfCodeDoc] does not reference a clone of the the [nforgeio.github.io] repo."
+        ""
+        exit 1
+    }
+
+    # Remove some pesky aliases:
+
+    del alias:rm
+    del alias:cp
+    del alias:mv
+
+    # Clean all generated files from [nforgeio.github.io] repo.
+    #
+    # NOTE: Don't remove these non-generated files and folders:
+    #
+    #   .git
+    #   .vs
+    #   images
+    #   .gitignore
+    #   CNAME
+    #   codedoc.txt
+
+    "Cleaning [nforgeio.github.io]..."
+
+    rm -r -f "$nfCodeDoc\fti"
+    rm -r -f "$nfCodeDoc\icons"
+    rm -r -f "$nfCodeDoc\scripts"
+    rm -r -f "$nfCodeDoc\styles"
+    rm -r -f "$nfCodeDoc\toc"
+    rm -r -f "$nfCodeDoc\html"
+
+    rm -f "$nfCodeDoc\index.html"
+    rm -f "$nfCodeDoc\LastBuild.log"
+    rm -f "$nfCodeDoc\search.html"
+    rm -f "$nfCodeDoc\SearchHelp.aspx"
+    rm -f "$nfCodeDoc\SearchHelp.inc.php"
+    rm -f "$nfCodeDoc\SearchHelp.php"
+    rm -f "$nfCodeDoc\Web.Config"
+    rm -f "$nfCodeDoc\WebKI.xml"
+    rm -f "$nfCodeDoc\WebTOC.xml"
+
+    # Copy the generated CodeDoc site to the [nforgeio.github.io] repo.
+
+    "Copying content to [nforgeio.github.io]..."
+
+    cp -r "$nfBuild\codedoc\." "$nfCodeDoc\"
+
+    # Remove any unnecessary files.
+    
+    "Removing unnecessary files from [nforgeio.github.io]..."
+
+    rm -f LastBuild.log
+    rm -f *.aspx
+    rm -f *.php
+    rm -f Web.Config
+
+    # Push the changes to GitHub.
+
+    "Commiting local changes..."
+    git add --all
+    git commit -m "RELEASE: $version"
+
+    "Pushing to origin..."
+    git push
+}
+
+cd $originalDir
