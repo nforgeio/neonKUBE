@@ -91,14 +91,19 @@ Used to insert the first line of the [$/product-version] text file
 into the `[$/Lib/Neon.Common/Build.cs`] file, replacing the value of the
 [ProductVersion] constant.
 
-pack-version VERSION-FILE CSPROJ-FILE
--------------------------------------
+neon-build pack-version VERSION-FILE CSPROJ-FILE
+------------------------------------------------
 Updates the specified library CSPROJ file version to a combination of
 the global VERSION-FILE (typically [$/product-version.txt] and an optional
 project local [prerelease.txt] file as specified here:
 
     https://github.com/nforgeio/neonKUBE/issues/715
 
+neon-build help gtag TAG-FILE HELP-FOLDER
+-----------------------------------------
+Reads the Google Analytics script TAG-FILE and then inserts the script
+into the Sandcastle Help File Builder generated documentation page files
+named *.htm and *.html within the specified folder (recursively).
 ";
         private static CommandLine commandLine;
 
