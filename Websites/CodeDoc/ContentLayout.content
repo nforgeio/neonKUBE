@@ -1,18 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Topics>
-  <Topic id="6e0122fd-beb8-4334-9fa2-43a79c330dd9" visible="True" isDefault="true" isSelected="true" title="Welcome to the [TODO: Add project name]">
+  <Topic id="6e0122fd-beb8-4334-9fa2-43a79c330dd9" visible="True" isDefault="true" isExpanded="true" title="neonKUBE">
     <HelpKeywords>
       <HelpKeyword index="K" term="Welcome" />
     </HelpKeywords>
-  </Topic>
-  <Topic id="2265da34-026c-4660-95ff-2d44c0b85519" visible="True" isExpanded="true" title="Version History">
-    <HelpKeywords>
-      <HelpKeyword index="K" term="version, history" />
-    </HelpKeywords>
-    <Topic id="c9b25643-fb64-48bb-98d1-bab37aa312f8" visible="True" title="Version 1.0.0.0">
-      <HelpKeywords>
-        <HelpKeyword index="K" term="version, 1.0.0.0" />
-      </HelpKeywords>
-    </Topic>
+    <Topic id="8d4cab22-393a-468a-96fe-41870fa99b32" visible="True" isSelected="true" title="Neon.Common class library" />
   </Topic>
 </Topics>

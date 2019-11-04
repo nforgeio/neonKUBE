@@ -1,0 +1,161 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<topic id="8d4cab22-393a-468a-96fe-41870fa99b32" revisionNumber="1">
+  <developerConceptualDocument
+    xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
+    <introduction>
+      <autoOutline>0</autoOutline>
+      <para>
+        The <legacyBold>Neon.Common</legacyBold> class library is built for NETStandard 2.0.
+        It's relatively small and includes miscellaneous types that are useful on their own
+        and are also required by other Neon projects.  This is suitable for including in all
+        .NET Core and .NET Framework projects including Xamarin.
+      </para>
+      <alert class="warning">
+        <para>
+          This class library has not been tested for Windows UWP applications and it's
+          highly likely that you'll run into problems with this environment.
+        </para>
+      </alert>
+      <para>
+        The sections below outline the library namespaces and provide a brief overview for
+        the more important and useful types.
+      </para>
+    </introduction>
+
+    <section address="Neon.Common">
+      <title>Neon.Common</title>
+      <content>
+        <para>
+          The <codeEntityReference qualifyHint="false">N:Neon.Common</codeEntityReference> namespace includes
+          several handy types including: 
+        </para>
+        <list class="nobullet">
+          <listItem>
+            <para>
+              <codeEntityReference qualifyHint="false">T:Neon.Common.CommandLine</codeEntityReference>: 
+              Manages the command line for console applications.  The heritage of this class goes back to 2005
+              and this is used by many of my projects so I still use it.  There probably are better solutions
+              available.
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <codeEntityReference qualifyHint="false">T:Neon.Common.SemanticVersion</codeEntityReference>: 
+              An implementation of the
+              <externalLink>
+                <linkText>Semantic Version 2.0</linkText>
+                <linkUri>https://semver.org/</linkUri>
+              </externalLink>
+              specification.
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <codeEntityReference qualifyHint="false">T:Neon.Common.IServiceContainer</codeEntityReference>:
+              Acts as neonKUBE's central hub for managing dependency injection.  This implements the standard
+              Microsoft <codeInline>Microsoft.Extensions.DependencyInjection.IServiceCollection</codeInline> and 
+              <codeInline>System.IServiceProvider</codeInline> interfaces and may be replaced with an alternative
+              implementation.
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <codeEntityReference qualifyHint="false">T:Neon.Common.NeonHelper</codeEntityReference>:
+              This has become somewhat of a dumping ground for miscellaneous utility methods including
+              support for <legacyBold>compression</legacyBold>, <legacyBold>CSV processing</legacyBold>,
+              <legacyBold>hexidecimal serialization</legacyBold>, <legacyBold>I/O operations</legacyBold>,
+              <legacyBold>operating system and .NET platform identification</legacyBold>,
+              <legacyBold>JSON/YAML serialization</legacyBold>, <legacyBold>process management</legacyBold>,
+              and <legacyBold>random number utilities</legacyBold>.
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <codeEntityReference qualifyHint="false">T:Neon.Common.IServiceContainer</codeEntityReference>:
+              Acts as neonKUBE's central hub for managing dependency injection.  This implements the standard
+              Microsoft <codeInline>Microsoft.Extensions.DependencyInjection.IServiceCollection</codeInline> and 
+              <codeInline>System.IServiceProvider</codeInline> interfaces and may be replaced with an alternative
+              implementation.
+            </para>
+          </listItem>
+        </list>
+      </content>
+    </section>
+
+    <section>
+      <title>Neon.Csv</title>
+      <content>
+        <para>
+          The <codeEntityReference qualifyHint="false">N:Neon.Csv</codeEntityReference> namespace includes
+          types for reading and writing Comma Seperated Value (CSV) content.
+        </para>
+        <list class="nobullet">
+          <listItem>
+            <para>
+              <codeEntityReference qualifyHint="false">T:Neon.Csv.CsvReader</codeEntityReference>:
+              Simple parsing of CSV text. 
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <codeEntityReference qualifyHint="false">T:Neon.Csv.CsvWriter</codeEntityReference>:
+              Simple serialization data into CSV text.
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <codeEntityReference qualifyHint="false">T:Neon.Csv.CsvTableReader</codeEntityReference>:
+              A somewhat higher level way to read CSV text.
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <codeEntityReference qualifyHint="false">T:Neon.Csv.CsvTableWriter</codeEntityReference>:
+              A somewhat higher level way to write CSV text.
+            </para>
+          </listItem>
+        </list>
+      </content>
+    </section>
+
+    <section>
+      <title>Neon.Data</title>
+      <content>
+        <para>
+          The <codeEntityReference qualifyHint="false">N:Neon.Data</codeEntityReference> namespace includes
+          
+        </para>
+        <list class="nobullet">
+          <listItem>
+            <para>
+              <codeEntityReference qualifyHint="false">T:Neon.Csv.CsvReader</codeEntityReference>:
+              Simple parsing of CSV text.
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <codeEntityReference qualifyHint="false">T:Neon.Csv.CsvWriter</codeEntityReference>:
+              Simple serialization data into CSV text.
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <codeEntityReference qualifyHint="false">T:Neon.Csv.CsvTableReader</codeEntityReference>:
+              A somewhat higher level way to read CSV text.
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <codeEntityReference qualifyHint="false">T:Neon.Csv.CsvTableWriter</codeEntityReference>:
+              A somewhat higher level way to write CSV text.
+            </para>
+          </listItem>
+        </list>
+      </content>
+    </section>
+
+    <relatedTopics>
+    </relatedTopics>
+  </developerConceptualDocument>
+</topic>

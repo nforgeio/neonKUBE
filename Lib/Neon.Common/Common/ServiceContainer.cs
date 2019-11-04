@@ -79,7 +79,7 @@ namespace Neon.Common
         // I'm going to use a monitor to protect the services collection and the
         // cached service provider and we'll rebuild the provider as necessary
         // after any changes to the services.  This should is clean and should
-        // be relatively efficient for most commobn use cases.
+        // be relatively efficient for most common use cases.
 
         // $todo(jefflill)
         //

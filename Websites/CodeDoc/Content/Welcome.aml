@@ -2,8 +2,16 @@
 <topic id="6e0122fd-beb8-4334-9fa2-43a79c330dd9" revisionNumber="1">
 	<developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
 		<introduction>
-			<para>This is a sample conceptual topic.  You can use this as a starting point for adding more conceptual
-content to your help project.</para>
+			<para>
+        neonKUBE is an open source project released under the MIT license.  This project includes several
+        class libraries published as nuget packages.  The project also includes a nacent Kubernetes distribution
+        called neonKUBE which is still very much a work in progress.
+      </para>
+      <para>
+        The central theme behind these projects is to fill in some that gaps developers might encounter
+        when developing scalable services intended to be hosted on public cloud providers such as Aws,
+        Azure, and Google Cloud, or hosted within in private datacenters.
+      </para>
 		</introduction>
 
 		<section>
