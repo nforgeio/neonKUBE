@@ -19,7 +19,7 @@
 
 6. Rebuild the RELEASE version via:
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neon-builder -installer`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neon-builder -all`
 
 7. Verify that the new release installer works.
 

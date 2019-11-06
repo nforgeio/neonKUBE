@@ -149,6 +149,36 @@ Report any issues at: &amp;lt%3ba href=&amp;quot%3bhttps://github.com/nforgeio/n
       <Private>True</Private>
     </Reference>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="media\alpha.png">
+      <ImageId>alpha</ImageId>
+      <AlternateText>alpha</AlternateText>
+    </Image>
+    <Image Include="media\internal.png">
+      <ImageId>internal</ImageId>
+      <AlternateText>internal</AlternateText>
+    </Image>
+    <Image Include="media\neonlogo.png">
+      <ImageId>neonlogo</ImageId>
+      <AlternateText>neonlogo</AlternateText>
+    </Image>
+    <Image Include="media\NETStandard2.0.png">
+      <ImageId>NETStandard2.0</ImageId>
+      <AlternateText>NETStandard 2.0</AlternateText>
+    </Image>
+    <Image Include="media\NETStandard2.1.png">
+      <ImageId>NETStandard2.1</ImageId>
+      <AlternateText>NETStandard 2.1</AlternateText>
+    </Image>
+    <Image Include="media\preview.png">
+      <ImageId>preview</ImageId>
+      <AlternateText>preview</AlternateText>
+    </Image>
+    <Image Include="media\release.png">
+      <ImageId>release</ImageId>
+      <AlternateText>release</AlternateText>
+    </Image>
+  </ItemGroup>
   <!-- Import the SHFB build targets -->
   <Import Project="$(SHFBROOT)\SandcastleHelpFileBuilder.targets" />
   <!-- The pre-build and post-build event properties must appear *after* the targets file import in order to be

@@ -23,12 +23,14 @@
 #
 # OPTIONS:
 #
-#       -installer  - Builds installer binaries
+#       -tools      - Builds the command line tools
+#       -installer  - Builds installer (and everything being installed)
 #       -codedoc    - Builds the code documentation
 #       -all        - Builds all of the options above
 
 param 
 (
+    [switch]$tools     = $false,
 	[switch]$installer = $false,
     [switch]$codedoc   = $false,
     [switch]$all       = $false
@@ -36,8 +38,14 @@ param
 
 if ($all)
 {
+    $tools     = $true
     $installer = $true
     $codedoc   = $true
+}
+
+if ($installer)
+{
+    $tools = $true
 }
 
 $msbuild     = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
@@ -142,43 +150,48 @@ if (-not $nobuild)
     }
 }
 
-# Publish the Windows .NET Core binaries to the build folder.
+# Build the Neon tools.
 
-PublishCore "Tools\neon-cli\neon-cli.csproj"    "neon"
-PublishCore "Tools\unix-text\unix-text.csproj"  "unix-text"
-
-# Hack to publish OS/X version of [neon-cli] to the build folder.
-
-""
-"**********************************************************"
-"***                   OS/X neon-cli                    ***"
-"**********************************************************"
-""
-
-cd "$nfTools\neon-cli"
-dotnet publish -r osx-x64 -c Release /p:PublishSingleFile=true
-& mkdir "$nfBuild\osx"
-& cp "$nfTools\neon-cli\bin\Release\netcoreapp3.0\osx-x64\publish\neon" "$nfBuild\osx\neon-osx"
-cd $nfRoot
-
-""
-"Generating OS/X neon-cli SHA512..."
-""
-
-& cat "$nfBuild\osx\neon-osx" | openssl dgst -sha512 -hex > "$nfBuild\osx\neon-osx-$version.sha512.txt"
-
-if (-not $?)
+if ($tools)
 {
-	""
-	"*** OS/X neon-cli: SHA512 failed ***"
-	""
-	exit 1
-}
-	
-# Publish the WinDesktop binaries to the build folder.
+    # Publish the Windows .NET Core binaries to the build folder.
 
- md -Force "$nfBuild\win-desktop"
- cp -R "$nfRoot\Desktop\WinDesktop\bin\Release\*" "$nfBuild\win-desktop"
+    PublishCore "Tools\neon-cli\neon-cli.csproj"    "neon"
+    PublishCore "Tools\unix-text\unix-text.csproj"  "unix-text"
+
+    # Hack to publish OS/X version of [neon-cli] to the build folder.
+
+    ""
+    "**********************************************************"
+    "***                   OS/X neon-cli                    ***"
+    "**********************************************************"
+    ""
+
+    cd "$nfTools\neon-cli"
+    dotnet publish -r osx-x64 -c Release /p:PublishSingleFile=true
+    & mkdir "$nfBuild\osx"
+    & cp "$nfTools\neon-cli\bin\Release\netcoreapp3.0\osx-x64\publish\neon" "$nfBuild\osx\neon-osx"
+    cd $nfRoot
+
+    ""
+    "Generating OS/X neon-cli SHA512..."
+    ""
+
+    & cat "$nfBuild\osx\neon-osx" | openssl dgst -sha512 -hex > "$nfBuild\osx\neon-osx-$version.sha512.txt"
+
+    if (-not $?)
+    {
+	    ""
+	    "*** OS/X neon-cli: SHA512 failed ***"
+	    ""
+	    exit 1
+    }
+	
+    # Publish the WinDesktop binaries to the build folder.
+
+     md -Force "$nfBuild\win-desktop"
+     cp -R "$nfRoot\Desktop\WinDesktop\bin\Release\*" "$nfBuild\win-desktop"
+ }
  
  # Build the installer if requested.
 
