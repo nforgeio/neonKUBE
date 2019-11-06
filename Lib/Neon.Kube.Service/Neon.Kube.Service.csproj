@@ -30,6 +30,11 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors></WarningsAsErrors>
     <NoWarn>NU1605</NoWarn>
+    <DocumentationFile>bin\Debug\Neon.Kube.Service.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>bin\Release\Neon.Kube.Service.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

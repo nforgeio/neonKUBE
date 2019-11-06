@@ -8,56 +8,265 @@
         called neonKUBE which is still very much a work in progress.
       </para>
       <para>
-        The central theme behind these projects is to fill in some that gaps developers might encounter
+        The central theme behind these projects is to fill in some gaps developers encounter
         when developing scalable services intended to be hosted on public cloud providers such as Aws,
         Azure, and Google Cloud, or hosted within in private datacenters.
       </para>
+      <para>
+        We'll touch on the components below.  Visit the table of contents to to locate more details.
+      </para>
+      <alert class="note">
+        <para>
+          All neonKUBE packages and utilities are available under the 
+          <externalLink>
+            <linkText>MIT Open Source License</linkText>
+            <linkUri>https://opensource.org/licenses/MIT</linkUri>
+          </externalLink>.
+        </para>
+      </alert>
 		</introduction>
 
-		<section>
-			<title>Getting Started</title>
-			<content>
-				<para>To get started, add a documentation source to the project (a Visual Studio solution, project, or
-assembly and XML comments file).  See the <legacyBold>Getting Started</legacyBold> topics in the Sandcastle Help
-File Builder's help file for more information.  The following default items are included in this project:</para>
+    <section address="Neon.Common">
+      <title>Neon.Common</title>
+      <content>
+        <para>
+          This NETStandard2.0 nuget package includes common code used by the other packages as well 
+          as classes that may have direct value for your projects.  This package is designed to be 
+          relatively small and is compatible with all .NET enviromments including Xamarin applications.
+        </para>
+      </content>
+    </section>
 
-				<list class="bullet">
-					<listItem>
-						<para><localUri>ContentLayout.content</localUri> - Use the content layout file to manage the
-conceptual content in the project and define its layout in the table of contents.</para>
-					</listItem>
+    <section address="Neon.Cadence">
+      <title>Neon.Cadence</title>
+      <content>
+        <para>
+          This NETStandard2.0 nuget package is a .NET compatible client for the
+          <externalLink>
+            <linkText>Uber Cadence</linkText>
+            <linkUri>https://cadenceworkflow.io/docs/</linkUri>
+          </externalLink> workflow engine.
+        </para>
+        <para>
+          Cadence is a superb workflow engine designed for scale and also for developers
+          who enjoy spending their time writing code rather than messing with workflow
+          editing software or complex build processes.  The <legacyBold>Neon.Cadence</legacyBold>
+          client combined with the <legacyBold>Uber Cadence Server</legacyBold>, you'll be
+          able to author complex workflows in your favorite .NET language.
+        </para>
+        <para>
+          Neon.Cadence is supported on 64-bit computers running Windows, OS/X, or Linux.
+        </para>
+      </content>
+    </section>
 
-					<listItem>
-						<para>The <localUri>.\media</localUri> folder - Place images in this folder that you will reference
-from conceptual content using <codeInline>medialLink</codeInline> or <codeInline>mediaLinkInline</codeInline>
-elements.  If you will not have any images in the file, you may remove this folder.</para>
-					</listItem>
+    <section address="Neon.Couchbase">
+      <title>Neon.Couchbase</title>
+      <content>
+        <para>
+          This NETStandard2.0 nuget package includes some extensions and wrapper
+          classes intended to to the enhance the
+          <externalLink>
+            <linkText>Couchbase No-SQL Database</linkText>
+            <linkUri>https://www.couchbase.com/</linkUri>
+          </externalLink> 
+        </para>
+      </content>
+    </section>
 
-					<listItem>
-						<para>The <localUri>.\icons</localUri> folder - This contains a default logo for the help file.  You
-may replace it or remove it and the folder if not wanted.  If removed or if you change the file name, update
-the <ui>Transform Args</ui> project properties page by removing or changing the filename in the
-<codeInline>logoFile</codeInline> transform argument.  Note that unlike images referenced from conceptual topics,
-the logo file should have its <legacyBold>BuildAction</legacyBold> property set to <codeInline>Content</codeInline>.</para>
-					</listItem>
+    <section address="Neon.Cryptography">
+      <title>Neon.Cryptography</title>
+      <content>
+        <para>
+          This NETStandard2.0 nuget package provides some cryptography related
+          classes make hashing easy as well <codeEntityReference qualifyHint="false">T:Neon.Cryptography.NeonVault</codeEntityReference>
+          which provides a general purpose way for encrypting data (inspired by 
+          <externalLink>
+            <linkText>Ansible Vault</linkText>
+            <linkUri>https://docs.ansible.com/ansible/latest/user_guide/vault.html</linkUri>
+          </externalLink>.
+        </para>
+      </content>
+    </section>
 
-					<listItem>
-						<para>The <localUri>.\Content</localUri> folder - Use this to store your conceptual topics.  You may
-name the files and organize them however you like.  One suggestion is to lay the files out on disk as you have
-them in the content layout file as shown in this project but the choice is yours.  Files can be added via the
-Solution Explorer or from within the content layout file editor.  Files must appear in the content layout file
-in order to be compiled into the help file.</para>
-					</listItem>
-				</list>
+    <section>
+      <title>Neon.Kube</title>
+      <content>
+        <para>
+          This NETStandard2.0 nuget package includes several classes used for implementing
+          our neonKUBE Kubernetes distribution.  Most developers won't need to reference
+          this directly from their code.
+        </para>
+      </content>
+    </section>
 
-				<para>See the <legacyBold>Conceptual Content</legacyBold> topics in the Sandcastle Help File Builder's
-help file for more information.  See the <legacyBold> Sandcastle MAML Guide</legacyBold> for details on Microsoft
-Assistance Markup Language (MAML) which is used to create these topics.</para>
-			</content>
-		</section>
+    <section>
+      <title>Neon.Kube.Service</title>
+      <content>
+        <para>
+          This NETStandard2.0 nuget package includes the  <codeEntityReference qualifyHint="false">T:Neon.Kube.Service.KubeService</codeEntityReference> 
+          class which handles a lot of the boilerplate code for a Kubernetes or other services including log integration,
+          reacting to termination signals on Linux and OS/X as well as abstracting environment variables and
+          configuration file access such that the same service code can run in unit tests as well as production.
+        </para>
+      </content>
+    </section>
 
-		<relatedTopics>
-			<link xlink:href="2265da34-026c-4660-95ff-2d44c0b85519" />
+    <section>
+      <title>Neon.ModelGen</title>
+      <content>
+        <para>
+          This NetStandard2.0 nuget package is used to automate the generation of classes that include 
+          <codeEntityReference qualifyHint="false">T:System.ComponentModel.INotifyPropertyChanged</codeEntityReference>
+          boilerplate code.    This also can be used to generate classes that implement
+          <codeEntityReference qualifyHint="false">T:Neon.Data.IRoundtripData</codeEntityReference> which
+          provides a way for classes to be future proofed by being able to round-trip data serialization even when
+          data includes properties that are not implemented by the class.
+        </para>
+        <para>
+          ModelGen also supports the generation of REST API clients for web services.
+        </para>
+        <para>
+          You can use these classes to integrate model generation into your own tooling or use the 
+          <legacyBold>neon-cli</legacyBold> tool.
+        </para>
+      </content>
+    </section>
+
+    <section>
+      <title>Neon.Nats</title>
+      <content>
+        <para>
+          This NETStandard2.0 package includes some extensions and helpers for
+          <externalLink>
+            <linkText>NATS Open Source Messaging</linkText>
+            <linkUri></linkUri>
+          </externalLink>.
+        </para>
+      </content>
+    </section>
+
+    <section>
+      <title>Neon.SSH.NET</title>
+      <content>
+        <para>
+          This NETStandard2.0 package is used to establish manage SSH connections to
+          remote computers.  This is a partial clone of the
+          <externalLink>
+            <linkText>SSH.NET</linkText>
+            <linkUri>https://github.com/sshnet/SSH.NET</linkUri>
+          </externalLink>
+          GitHub project that fixes a 
+          <externalLink>
+            <linkText>serious bug</linkText>
+            <linkUri>https://github.com/sshnet/SSH.NET/pull/515</linkUri>
+          </externalLink>
+          preventing connections to machines running modern Linux distributions.  The parent
+          repo seems to have gone inactive so we cloned this and hacked a fix to solve our 
+          immediate problem.  We didn't clone unit tests and we'd rather not sign-on to maintain 
+          this long-term, but feel free to use this as you wish.
+        </para>
+      </content>
+    </section>
+
+    <section>
+      <title>Neon XUnit packages</title>
+      <content>
+        <para>
+          Neon provides three NETStandard nuget packages with Xunit related helpers
+          and test fixture implementations.  
+        </para>
+        <para>
+          <legacyBold>Neon.Xunit</legacyBold> includes some Ansible related helpers
+          as well a test fixtures for ASP.NET, containers, Docker, environment variables,
+          local DNS host lookup, <codeEntityReference qualifyHint="false">T:Neon.Kube.Service.KubeService</codeEntityReference>,
+          NATS Messaging/Streaming, as well as a fixture that can be used to combine
+          other fixtures.
+        </para>
+        <para>
+          <legacyBold>Neon.Xunit.Cadence</legacyBold> provides a test fixture that
+          starts and manages Cadence/Cassendra as a local Docker container while
+          unit tests execute.  We use this for testing <legacyBold>Neon.Cadence</legacyBold>
+          and we expect workflow developers to do the same until we implement a 
+          built-in testing solution like the Java and GO clients have.
+        </para>
+        <para>
+          <legacyBold>Neon.Xunit.Couchbase</legacyBold> provides a test fixture that
+          starts and manages Cadence as a local Docker container during unit tests.
+        </para>
+      </content>
+    </section>
+
+    <section>
+      <title>Internal Assemblies and Namespaces</title>
+      <content>
+        <alert class="warning">
+          <para>
+            Several Neon assemblies are published to nuget but are intended only for internal
+            use by other Neon components.  Documentation for these are included here but you
+            should avoid using these APIs directly.  We reserve the right to make significant
+            changes without notice.
+          </para>
+        </alert>
+        <para>
+          Avoid referencing these internal packages directly.
+        </para>
+        <list class="nobullet">
+          <listItem>
+            <para>
+              <legacyBold>Neon.Docker</legacyBold>
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <legacyBold>Neon.HyperV</legacyBold>
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <legacyBold>Neon.Kube.Aws</legacyBold>
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <legacyBold>Neon.Kube.Azure</legacyBold>
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <legacyBold>Neon.Kube.Google</legacyBold>
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <legacyBold>Neon.Kube.HyperVLocal</legacyBold>
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <legacyBold>Neon.Kube.Machine</legacyBold>
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <legacyBold>Neon.Kube.XenServer</legacyBold>
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <legacyBold>Neon.XenServer</legacyBold>
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              <legacyBold>Neon.Xunit.Kube</legacyBold>
+            </para>
+          </listItem>
+        </list>
+      </content>
+    </section>
+    
+    <relatedTopics>
 		</relatedTopics>
 	</developerConceptualDocument>
 </topic>
