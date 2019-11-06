@@ -29,7 +29,7 @@ using Neon.Kube;
 using Neon.Tasks;
 using Neon.Time;
 
-namespace Neon.DnsTools
+namespace Neon.Net
 {
     /// <summary>
     /// Extends <see cref="DnsClient"/> to support resolution against 
