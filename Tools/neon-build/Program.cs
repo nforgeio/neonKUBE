@@ -640,7 +640,7 @@ named *.htm and *.html within the specified folder (recursively).
             {
                 if (count % 200 == 0)
                 {
-                    Console.WriteLine($"Procssing page [{count + 1} of {pagePaths.Length}]");
+                    Console.WriteLine($"Procssing page: {count + 1}/{pagePaths.Length}");
                 }
 
                 count++;

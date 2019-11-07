@@ -23,17 +23,23 @@
 #
 # OPTIONS:
 #
-#       -tools      - Builds the command line tools
-#       -installer  - Builds installer (and everything being installed)
-#       -codedoc    - Builds the code documentation
-#       -all        - Builds all of the options above
+#       -tools        - Builds the command line tools
+#       -installer    - Builds installer (and everything being installed)
+#       -codedoc      - Builds the code documentation
+#       -all          - Builds with all of the options above
+#
+#       -noanalytics  - Disables adding the Google Analytics scripts when
+#                       generating the CodeDoc website via -codedoc,
+#                       speeding site building when you're working on 
+#                       documentation
 
 param 
 (
-    [switch]$tools     = $false,
-	[switch]$installer = $false,
-    [switch]$codedoc   = $false,
-    [switch]$all       = $false
+    [switch]$tools       = $false,
+	[switch]$installer   = $false,
+    [switch]$codedoc     = $false,
+    [switch]$all         = $false,
+    [switch]$noAnalytics = $false
 )
 
 if ($all)
@@ -282,13 +288,16 @@ if ($codedoc)
         exit 1
     }
 
-    # Insert the Google Analytics gtag scripts.
+    if (-not $noAnalytics)
+    {
+        # Insert the Google Analytics gtag scripts.
 
-    ""
-    "Enabling Google Analytics..."
-	""
+        ""
+        "Enabling Google Analytics..."
+	    ""
 
-    & neon-build gtag "$nfroot\Websites\CodeDoc\gtag.js" "$nfBuild\codedoc"
+        & neon-build gtag "$nfroot\Websites\CodeDoc\gtag.js" "$nfBuild\codedoc"
+    }
 }
 
 cd $originalDir

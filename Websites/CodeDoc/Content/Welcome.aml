@@ -2,6 +2,12 @@
 <topic id="6e0122fd-beb8-4334-9fa2-43a79c330dd9" revisionNumber="1">
 	<developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
 		<introduction>
+      <alert class="note">
+        <para>
+          This documentation site is still a work in progress.  We'll be fleshing this out over the
+          next few months.
+        </para>
+      </alert>
 			<para>
         neonKUBE is an open source project released under the MIT license.  This project includes several
         class libraries published as nuget packages.  The project also includes a nacent Kubernetes distribution
@@ -34,8 +40,8 @@
           <externalLink>
             <linkText>nuget.org</linkText>
             <linkUri>https://nuget.org</linkUri>
-          </externalLink>
-          All of these packages are currently built for <mediaLinkInline><image xlink:href="NETStandard2.0"/></mediaLinkInline>.
+          </externalLink>.
+          All packages are currently built as <mediaLinkInline><image xlink:href="NETStandard2.0"/></mediaLinkInline>
         </para>
         <para>
           neonKUBE applications and tools are available on GitGub Releases here:
@@ -46,37 +52,30 @@
           We currently categorize released binaries with one of four levels of
           maturity:
         </para>
-        <definitionTable>
-          <definedTerm>
-            <mediaLinkInline><image xlink:href="release"/></mediaLinkInline>
-          </definedTerm>
-          <definition>
+        <table>
+          <row>
+            <entry><para><mediaLinkInline><image xlink:href="release"/></mediaLinkInline></para></entry>
+            <entry>
             <para>
               indicates that the release is expected suitable for production use.  Released binary
               versions follow the semantic version 2.0 specification and don't include a pre-release
               identifier.
             </para>
-          </definition>
-
-          <definedTerm>
-            <mediaLinkInline>
-              <image xlink:href="preview"/>
-            </mediaLinkInline>
-          </definedTerm>
-          <definition>
+            </entry>
+          </row>
+          <row>
+            <entry><para><mediaLinkInline><image xlink:href="preview"/></mediaLinkInline></para></entry>
+            <entry>
             <para>
               indicates that the released binary still has some work in progress but is relatively stable
               and also that we expect that we we'll try to avoid making significant breaking changes to
               the API surface area.  This may be suitable for production but you should take care.
             </para>
-          </definition>
-
-          <definedTerm>
-            <mediaLinkInline>
-              <image xlink:href="alpha"/>
-            </mediaLinkInline>
-          </definedTerm>
-          <definition>
+            </entry>
+          </row>
+          <row>
+            <entry><para><mediaLinkInline><image xlink:href="alpha"/></mediaLinkInline></para></entry>
+            <entry>
             <para>
               indicates that the released binary is not ready for general production use.  There are likely
               to be serious bugs and implementation gaps and it is also very likely that the API may still
@@ -84,26 +83,23 @@
               interested parties a chance to review what we're doing and also so that we and close partners
               can give these a spin in test and sometimes production.
             </para>
-          </definition>
-
-          <definedTerm>
-            <mediaLinkInline>
-              <image xlink:href="internal"/>
-            </mediaLinkInline>
-          </definedTerm>
-          <definition>
+            </entry>
+          </row>
+          <row>
+            <entry><para><mediaLinkInline><image xlink:href="internal"/></mediaLinkInline></para></entry>
+            <entry>
             <para>
               indicates that the released binary is not intended for general consumption.  These are typically
-              referenced by other neonKUBE and related projects.
+              referenced by other neonKUBE libaries and tools.
             </para>
             <alert class="warning">
               <para>
                 <legacyBold>We reserve the right to change or abandon these components at any time without notice.</legacyBold>
               </para>
             </alert>
-          </definition>
-
-        </definitionTable>
+            </entry>
+          </row>
+        </table>
       </content>
     </section>
 
@@ -313,7 +309,7 @@
           <para>
             We are building and releasing some neonKUBE Kubernetes related binaries at this
             time, but they should be considered to be at <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline>
-            maturity and to be avoided at this time.
+            maturity and should be avoided.
           </para>
         </alert>
       </content>
@@ -337,52 +333,52 @@
         <list class="nobullet">
           <listItem>
             <para>
-              <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline> <legacyBold>Neon.Docker</legacyBold>
+              <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline><legacyBold> Neon.Docker</legacyBold>
             </para>
           </listItem>
           <listItem>
             <para>
-              <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline> <legacyBold>Neon.HyperV</legacyBold>
+              <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline><legacyBold> Neon.HyperV</legacyBold>
             </para>
           </listItem>
           <listItem>
             <para>
-              <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline> <legacyBold>Neon.Kube.Aws</legacyBold>
+              <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline><legacyBold> Neon.Kube.Aws</legacyBold>
             </para>
           </listItem>
           <listItem>
             <para>
-              <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline> <legacyBold>Neon.Kube.Azure</legacyBold>
+              <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline><legacyBold> Neon.Kube.Azure</legacyBold>
             </para>
           </listItem>
           <listItem>
             <para>
-              <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline> <legacyBold>Neon.Kube.Google</legacyBold>
+              <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline><legacyBold> Neon.Kube.Google</legacyBold>
             </para>
           </listItem>
           <listItem>
             <para>
-              <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline> <legacyBold>Neon.Kube.HyperVLocal</legacyBold>
+              <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline><legacyBold> Neon.Kube.HyperVLocal</legacyBold>
             </para>
           </listItem>
           <listItem>
             <para>
-              <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline> <legacyBold>Neon.Kube.Machine</legacyBold>
+              <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline><legacyBold> Neon.Kube.Machine</legacyBold>
             </para>
           </listItem>
           <listItem>
             <para>
-              <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline> <legacyBold>Neon.Kube.XenServer</legacyBold>
+              <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline><legacyBold> Neon.Kube.XenServer</legacyBold>
             </para>
           </listItem>
           <listItem>
             <para>
-              <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline> <legacyBold>Neon.XenServer</legacyBold>
+              <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline><legacyBold> Neon.XenServer</legacyBold>
             </para>
           </listItem>
           <listItem>
             <para>
-              <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline> <legacyBold>Neon.Xunit.Kube</legacyBold>
+              <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline><legacyBold> Neon.Xunit.Kube</legacyBold>
             </para>
           </listItem>
         </list>

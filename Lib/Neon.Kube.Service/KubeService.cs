@@ -123,15 +123,11 @@ namespace Neon.Kube.Service
     /// For production, <see cref="GetConfigFilePath(string)"/> will simply return the file
     /// path passed so that the configuration file located there will referenced.  For
     /// testing, <see cref="GetConfigFilePath(string)"/> will return the path specified by
-    /// an earlier call to <see cref="SetConfigFilePath(string, string)"/> or to a
-    /// temporary file initialized by previous calls to <see cref="SetConfigFile(string, string)"/>
+    /// an earlier call to <see cref="SetConfigFilePath(string, string, Func{string, string})"/> or to a
+    /// temporary file initialized by previous calls to <see cref="SetConfigFile(string, string, bool)"/>
     /// or <see cref="SetConfigFile(string, byte[])"/>.  This indirection provides a 
     /// consistent way to run services in production as well as in tests, including tests
     /// running multiple services simultaneously.
-    /// </para>
-    /// <para>
-    /// You can also use <see cref="LoadConfigFile(string, string, Func{string, string})"/>
-    /// during unit testing to load a potentially encrypted configuration file.
     /// </para>
     /// <para><b>SERVICE TERMINATION</b></para>
     /// <para>
@@ -285,7 +281,7 @@ namespace Neon.Kube.Service
         /// <param name="isDirty">Optionally specifies whether there are uncommit changes to the branch.</param>
         /// <exception cref="KeyNotFoundException">
         /// Thrown if there is no service description for <paramref name="name"/>
-        /// within <see cref="serviceMap"/>.
+        /// within the <see cref="ServiceMap"/>.
         /// </exception>
         /// <remarks>
         /// <para>
@@ -303,10 +299,9 @@ namespace Neon.Kube.Service
         public KubeService(
             ServiceMap  serviceMap, 
             string      name, 
-            string      branch        = null, 
-            string      commit        = null, 
-            bool        isDirty       = false,
-            bool        noProcessExit = false)
+            string      branch  = null, 
+            string      commit  = null, 
+            bool        isDirty = false)
         {
             Covenant.Requires<ArgumentNullException>(serviceMap != null, nameof(serviceMap));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
@@ -653,7 +648,7 @@ namespace Neon.Kube.Service
         /// <para>
         /// Stops the service if it's not already stopped.  This is intended to be called by
         /// external things like unit test fixtures and is not intended to be called by the
-        /// service itself.  Service implementations should use <see cref="ExitCode(int, bool)"/>.
+        /// service itself.
         /// </para>
         /// </summary>
         /// <exception cref="TimeoutException">

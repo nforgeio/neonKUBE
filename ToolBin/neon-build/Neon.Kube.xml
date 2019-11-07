@@ -7255,98 +7255,98 @@
         <member name="M:Neon.Kube.UploadStep.ToString">
             <inheritdoc/>
         </member>
-        <member name="T:Neon.DnsTools.NeonDnsClient">
+        <member name="T:Neon.Net.NeonDnsClient">
             <summary>
             Extends <see cref="T:DNS.Client.DnsClient"/> to support resolution against 
             multiple nameservers.
             </summary>
         </member>
-        <member name="T:Neon.DnsTools.NeonDnsClient.Answer">
+        <member name="T:Neon.Net.NeonDnsClient.Answer">
             <summary>
             Used to cache a DNS response.
             </summary>
         </member>
-        <member name="P:Neon.DnsTools.NeonDnsClient.Answer.Addresses">
+        <member name="P:Neon.Net.NeonDnsClient.Answer.Addresses">
             <summary>
             The host addresses.
             </summary>
         </member>
-        <member name="P:Neon.DnsTools.NeonDnsClient.Answer.TTD">
+        <member name="P:Neon.Net.NeonDnsClient.Answer.TTD">
             <summary>
             The scheduled time (SYS) for this cached entry to expire.
             </summary>
         </member>
-        <member name="M:Neon.DnsTools.NeonDnsClient.CreateWithCaching(System.Net.IPAddress[])">
+        <member name="M:Neon.Net.NeonDnsClient.CreateWithCaching(System.Net.IPAddress[])">
             <summary>
             Creates a DNS client that caches responses.
             </summary>
             <param name="nameservers">The nameservers specified as <see cref="T:System.Net.IPAddress"/> instances.</param>
-            <returns>The <see cref="T:Neon.DnsTools.NeonDnsClient"/>.</returns>
+            <returns>The <see cref="T:Neon.Net.NeonDnsClient"/>.</returns>
         </member>
-        <member name="M:Neon.DnsTools.NeonDnsClient.CreateWithCaching(System.String[])">
+        <member name="M:Neon.Net.NeonDnsClient.CreateWithCaching(System.String[])">
             <summary>
             Creates a DNS client that caches responses.
             </summary>
             <param name="nameservers">The nameservers specified as IP address strings.</param>
-            <returns>The <see cref="T:Neon.DnsTools.NeonDnsClient"/>.</returns>
+            <returns>The <see cref="T:Neon.Net.NeonDnsClient"/>.</returns>
         </member>
-        <member name="M:Neon.DnsTools.NeonDnsClient.Create(System.Net.IPAddress[])">
+        <member name="M:Neon.Net.NeonDnsClient.Create(System.Net.IPAddress[])">
             <summary>
             Creates a DNS client that <b>does not</b> cache responses.
             </summary>
             <param name="nameservers">The nameservers specified as <see cref="T:System.Net.IPAddress"/> instances.</param>
-            <returns>The <see cref="T:Neon.DnsTools.NeonDnsClient"/>.</returns>
+            <returns>The <see cref="T:Neon.Net.NeonDnsClient"/>.</returns>
         </member>
-        <member name="M:Neon.DnsTools.NeonDnsClient.Create(System.String[])">
+        <member name="M:Neon.Net.NeonDnsClient.Create(System.String[])">
             <summary>
             Creates a DNS client that <b>does not</b> cache responses.
             </summary>
             <param name="nameservers">The nameservers specified as IP address strings.</param>
-            <returns>The <see cref="T:Neon.DnsTools.NeonDnsClient"/>.</returns>
+            <returns>The <see cref="T:Neon.Net.NeonDnsClient"/>.</returns>
         </member>
-        <member name="M:Neon.DnsTools.NeonDnsClient.#ctor(System.Net.IPAddress[])">
+        <member name="M:Neon.Net.NeonDnsClient.#ctor(System.Net.IPAddress[])">
             <summary>
             Constructs an instance to query one or more nameserver IP addresses.
             </summary>
             <param name="nameservers">The name server IP addresses (at least one must be passed).</param>
         </member>
-        <member name="M:Neon.DnsTools.NeonDnsClient.#ctor(System.String[])">
+        <member name="M:Neon.Net.NeonDnsClient.#ctor(System.String[])">
             <summary>
             Constructs an instance to query one or more nameserver IP address strings.
             </summary>
             <param name="nameservers">The name server IP addresses (at least one must be passed).</param>
         </member>
-        <member name="M:Neon.DnsTools.NeonDnsClient.Finalize">
+        <member name="M:Neon.Net.NeonDnsClient.Finalize">
             <summary>
             Finalizer.
             </summary>
         </member>
-        <member name="M:Neon.DnsTools.NeonDnsClient.Dispose">
+        <member name="M:Neon.Net.NeonDnsClient.Dispose">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.DnsTools.NeonDnsClient.Dispose(System.Boolean)">
+        <member name="M:Neon.Net.NeonDnsClient.Dispose(System.Boolean)">
             <summary>
             Releases any important resources associated with the instance.
             </summary>
             <param name="disposing">Pass <c>true</c> if the instance is being disposed as opposed to being finalized.</param>
         </member>
-        <member name="M:Neon.DnsTools.NeonDnsClient.EnableCaching">
+        <member name="M:Neon.Net.NeonDnsClient.EnableCaching">
             <summary>
             Specifies that responses are to be cached until the TTL expires.
             </summary>
         </member>
-        <member name="M:Neon.DnsTools.NeonDnsClient.PurgeExpired(System.Object)">
+        <member name="M:Neon.Net.NeonDnsClient.PurgeExpired(System.Object)">
             <summary>
             Removes any expired answers from the cache.
             </summary>
             <param name="state">Not used.</param>
         </member>
-        <member name="M:Neon.DnsTools.NeonDnsClient.ClearCache">
+        <member name="M:Neon.Net.NeonDnsClient.ClearCache">
             <summary>
             Clears any cached cached answers.
             </summary>
         </member>
-        <member name="M:Neon.DnsTools.NeonDnsClient.LookupAsync(System.String,System.Boolean)">
+        <member name="M:Neon.Net.NeonDnsClient.LookupAsync(System.String,System.Boolean)">
             <summary>
             Attempts to resolve an IP address or fully qualified domain name
             into host IP addresses.
@@ -7411,16 +7411,16 @@
             <summary>Branch: jeff</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: ebd59947b</summary>
+            <summary>Commit: 28d2e09c3</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: ebd59947b6a11dbe818691b944ffcd7fc45db122</summary>
+            <summary>Sha: 28d2e09c35b3cc6e263f9b891ca03004ae7fe7b8</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 96</summary>
+            <summary>Commits on top of base version: 105</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: v0.7.0-alpha-96-gebd59947b</summary>
+            <summary>Tag: v0.7.0-alpha-105-g28d2e09c3</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
             <summary>Base tag: v0.7.0-alpha</summary>
@@ -7447,7 +7447,7 @@
             <summary>Minor: 7</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 96</summary>
+            <summary>Patch: 105</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: alpha</summary>
