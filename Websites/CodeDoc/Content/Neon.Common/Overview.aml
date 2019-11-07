@@ -261,10 +261,10 @@
           <codeEntityReference qualifyHint="false">T:System.RandomExtensions</codeEntityReference>,
           <codeEntityReference qualifyHint="false">T:System.ReflectionExtensions</codeEntityReference>,
           <codeEntityReference qualifyHint="false">T:System.StringExtensions</codeEntityReference>,
-          <codeEntityReference qualifyHint="false">T:System.TimeSpanExtensions</codeEntityReference>, and
+          <codeEntityReference qualifyHint="false">T:System.TimeSpanExtensions</codeEntityReference>,
           <codeEntityReference qualifyHint="false">T:System.Text.StringBuilderExtensions</codeEntityReference>,
-          <codeEntityReference qualifyHint="false">T:System.Net.Http.HttpClientExtensions</codeEntityReference>,
-          <codeEntityReference qualifyHint="false">T:YamlDotNet.RepresentationModel.YamlDotNetExtensions</codeEntityReference>,
+          <codeEntityReference qualifyHint="false">T:System.Net.Http.HttpClientExtensions</codeEntityReference>, and
+          <codeEntityReference qualifyHint="false">T:YamlDotNet.RepresentationModel.YamlDotNetExtensions</codeEntityReference>.
         </para>
       </content>
     </section>
