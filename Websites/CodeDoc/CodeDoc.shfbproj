@@ -56,7 +56,7 @@
     <WorkingPath>..\..\Build\codedoc\working\</WorkingPath>
     <HelpTitle>neonKUBE class libraries and tools</HelpTitle>
     <HelpFileVersion>1.0.0.0</HelpFileVersion>
-    <RootNamespaceContainer>False</RootNamespaceContainer>
+    <RootNamespaceContainer>True</RootNamespaceContainer>
     <NamespaceGrouping>False</NamespaceGrouping>
     <MaximumGroupParts>2</MaximumGroupParts>
     <Preliminary>False</Preliminary>
