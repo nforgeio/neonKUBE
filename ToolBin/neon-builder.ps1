@@ -53,10 +53,10 @@ $nfRoot      = "$env:NF_ROOT"
 $nfSolution  = "$nfRoot\neonKUBE.sln"
 $nfBuild     = "$env:NF_BUILD"
 $nfTools     = "$nfRoot\Tools"
-$env:PATH   += ";$nfBuild"
 $version     = Get-Content "$env:NF_ROOT\product-version.txt" -First 1
 $config      = "Release"
 $buildConfig = "-p:Configuration=Release"
+$env:PATH   += ";$nfBuild"
 
 function PublishCore
 {

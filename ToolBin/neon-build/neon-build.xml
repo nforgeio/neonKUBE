@@ -300,6 +300,12 @@
             Hosts the program entrypoint.
             </summary>
         </member>
+        <member name="M:NeonBuild.Program.BuildVersion(Neon.Common.CommandLine)">
+            <summary>
+            Updates the build version in [$/Lib/Neon.Common/Build.cs]
+            </summary>
+            <param name="commandLine">The command line.</param>
+        </member>
         <member name="M:NeonBuild.Program.Main(System.String[])">
             <summary>
             This is the program entrypoint.
@@ -329,6 +335,12 @@
             </summary>
             <param name="exitCode">The exit code.</param>
         </member>
+        <member name="M:NeonBuild.Program.Gzip(Neon.Common.CommandLine)">
+            <summary>
+            GZIPs a file as required.
+            </summary>
+            <param name="commandLine">The command line.</param>
+        </member>
         <member name="M:NeonBuild.Program.PackVersion(Neon.Common.CommandLine)">
             <summary>
             Reads a Nuget package version string from the first line of a text file and
@@ -336,6 +348,21 @@
             This is useful for batch publishing multiple libraries.
             </summary>
             <param name="commandLine">The command line.</param>
+        </member>
+        <member name="P:NeonBuild.Program.ContentFile.TopicId">
+            <summary>
+            The SHFB generated topic ID.
+            </summary>
+        </member>
+        <member name="P:NeonBuild.Program.ContentFile.ContentPath">
+            <summary>
+            Path to the content [*.aml] file in the source repo.
+            </summary>
+        </member>
+        <member name="P:NeonBuild.Program.ContentFile.FileName">
+            <summary>
+            HTML file name to be generated for this for this topic.
+            </summary>
         </member>
         <member name="M:NeonBuild.Program.Shfb(Neon.Common.CommandLine)">
             <summary>

@@ -337,7 +337,7 @@ OPTIONS:
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine($"*** ERROR: {e.Message}");
+                Console.Error.WriteLine($"*** ERROR: {e.GetType().FullName}: {e.Message}");
                 Program.Exit(1);
             }
         }

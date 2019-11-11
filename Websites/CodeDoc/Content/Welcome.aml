@@ -15,7 +15,7 @@
       </para>
       <para>
         The central theme behind these projects is to fill in some gaps developers encounter
-        when developing scalable services intended to be hosted on public cloud providers such as Aws,
+        when developing scalable services intended to be hosted on public cloud providers such as AWS,
         Azure, and Google Cloud, or hosted within in private datacenters.
       </para>
       <para>

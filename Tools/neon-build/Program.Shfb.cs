@@ -46,7 +46,7 @@ namespace NeonBuild
             public string ContentPath { get; set; }
 
             /// <summary>
-            /// HTML file name to be generated for this for this topic
+            /// HTML file name to be generated for this for this topic.
             /// </summary>
             public string FileName { get; set; }
         }
@@ -67,12 +67,12 @@ namespace NeonBuild
                 Program.Exit(1);
             }
 
-            var shfbFolder   = commandLine.Arguments[0];
+            var shfbFolder = commandLine.Arguments[0];
             var outputFolder = commandLine.Arguments[1];
-            var gtagPath     = commandLine.GetOption("--gtag");
-            var dryRun       = commandLine.HasOption("--dryrun");
-            var gtag         = !string.IsNullOrEmpty(gtagPath) ? File.ReadAllText(gtagPath) : null;
-            var html         = string.Empty;
+            var gtagPath = commandLine.GetOption("--gtag");
+            var dryRun = commandLine.HasOption("--dryrun");
+            var gtag = !string.IsNullOrEmpty(gtagPath) ? File.ReadAllText(gtagPath) : null;
+            var html = string.Empty;
 
             // Verify that the [gtag.js] file looks reasonable.
 
@@ -122,7 +122,7 @@ namespace NeonBuild
 
             foreach (var contentPath in Directory.EnumerateFiles(Path.Combine(shfbFolder, "Content"), "*.aml", SearchOption.AllDirectories))
             {
-                string topicId       = null;
+                string topicId = null;
                 string topicFilename = null;
 
                 foreach (var rawLine in File.ReadAllLines(contentPath))
@@ -132,7 +132,7 @@ namespace NeonBuild
                     if (line.StartsWith("<!-- topic-filename=\""))
                     {
                         var startPos = "<!-- topic-filename=\"".Length;
-                        var endPos   = line.IndexOf('"', startPos);
+                        var endPos = line.IndexOf('"', startPos);
 
                         if (endPos == -1)
                         {
@@ -149,7 +149,7 @@ namespace NeonBuild
                     else if (line.StartsWith("<topic id=\""))
                     {
                         var startPos = "<topic id=\"".Length;
-                        var endPos   = line.IndexOf('"', startPos);
+                        var endPos = line.IndexOf('"', startPos);
 
                         if (endPos == -1)
                         {
@@ -163,7 +163,7 @@ namespace NeonBuild
                 if (topicId != null && topicIdToContent.TryGetValue(topicId, out var contentFile))
                 {
                     contentFile.ContentPath = contentPath;
-                    contentFile.FileName    = (topicFilename ?? contentFile.TopicId) + ".htm";
+                    contentFile.FileName = (topicFilename ?? contentFile.TopicId) + ".htm";
                 }
             }
 
@@ -171,7 +171,7 @@ namespace NeonBuild
             // all going to be hosted in the same website folder.
 
             var contentFileNames = new HashSet<string>();
-            var contentError     = false;
+            var contentError = false;
 
             foreach (var topic in topicIdToContent)
             {
@@ -224,29 +224,38 @@ namespace NeonBuild
             }
 
             // Replace the [index.html] file with the contents of the HTML page it
-            // references and then delete the referenced file.
+            // references and then delete the referenced file.  We're also going to
+            // track the index topic ID so any references to it will be updated to
+            // just [index.html].
 
             var indexPath = Path.Combine(outputFolder, "index.html");
-            
+
             html = File.ReadAllText(indexPath);
 
-            var pRefStart = html.IndexOf("<a href=\"html/");
+            var indexTopicIdPath = Path.Combine(outputFolder, "index.topicid");
+            var pRefStart        = html.IndexOf("<a href=\"html/");
+            var indexTopicId     = (string)null;
             int pRefEnd;
 
             if (pRefStart != -1)
             {
                 pRefStart += "<a href=\"html/".Length;
-                pRefEnd    = html.IndexOf('"', pRefStart + "<a href=\"html/".Length);
+                pRefEnd = html.IndexOf(".htm\"", pRefStart + "<a href=\"html/".Length);
 
                 if (pRefEnd != -1)
                 {
-                    var indexTopicId = html.Substring(pRefStart, pRefEnd - pRefStart);
+                    indexTopicId = html.Substring(pRefStart, pRefEnd - pRefStart);
 
-                    var indexRefPath = Path.Combine(outputFolder, "html", indexTopicId);
-                    var contents     = File.ReadAllText(indexRefPath);
+                    var indexRefPath = Path.Combine(outputFolder, "html", indexTopicId + ".htm");
+                    var contents = File.ReadAllText(indexRefPath);
 
                     File.WriteAllText(indexPath, contents);
                     File.Delete(indexRefPath);
+
+                    // Write a [index.topicid] file with the topic ID so running the tool
+                    // again will be able to identify this.
+
+                    File.WriteAllText(indexTopicIdPath, indexTopicId);
 
                     // We also need to munge the [search.html] file so the back button goes
                     // to [index.html].
@@ -254,33 +263,24 @@ namespace NeonBuild
                     var searchPath = Path.Combine(outputFolder, "search.html");
 
                     html = File.ReadAllText(searchPath);
-                    html = html.Replace("html/" + indexTopicId, "index.html");
+                    html = html.Replace("html/" + indexTopicId + ".htm", "index.html");
 
                     File.WriteAllText(searchPath, html);
                 }
             }
+            else
+            {
+                indexTopicId = File.ReadAllText(indexTopicIdPath);
+            }
 
-            // Munge the [WebKI.xml] and [WebTOC.xml] files by removing the [html/]
-            // in all of the URI attributes.
+            // Update the index topic so it references [index.html]
 
-            var webKiPath = Path.Combine(outputFolder, "WebKI.xml");
+            topicIdToContent[indexTopicId].FileName = "index.html";
 
-            html = File.ReadAllText(webKiPath);
-            html = html.Replace("Url=\"html/", "Url=\"");
-
-            File.WriteAllText(webKiPath, html);
-
-            var webTocPath = Path.Combine(outputFolder, "WebTOC.xml");
-
-            html = File.ReadAllText(webTocPath);
-            html = html.Replace("Url=\"html/", "Url=\"");
-
-            File.WriteAllText(webTocPath, html);
-
-            // Now process the [*.htm] files that hold all of the site content:
+            // Now process the [*.htm/html] files that hold all of the site content:
             //
-            //  1. Insert the [gtag.js] scripts when requested.
-            //  2. Replace GUID based conceptual topic references with friendly names.
+            //  1. Insert the [gtag.js] scripts when requested
+            //  2. Replace GUID based conceptual topic references with friendly names
 
             Console.WriteLine("Processing content pages...");
 
@@ -325,7 +325,7 @@ namespace NeonBuild
                     html = html.Replace("<html><head>", "<html><head>" + gtag);
                 }
 
-                // We also need to process [href] and [src] references
+                // We also need to remove [href] and [src] references
                 // to any of the local directories.
 
                 html = html.Replace("src=\"../fti/", "src=\"fti/");
@@ -336,12 +336,20 @@ namespace NeonBuild
                 html = html.Replace("src=\"../toc/", "src=\"toc/");
 
                 html = html.Replace("href=\"../fti/", "href=\"fti/");
-                html = html.Replace("href=\"../html/", "href=\"html/");
+                html = html.Replace("href=\"../html/", "href=\"");
                 html = html.Replace("href=\"../icons/", "href=\"icons/");
                 html = html.Replace("href=\"../media/", "href=\"scripts/");
                 html = html.Replace("href=\"../scripts/", "href=\"scripts/");
                 html = html.Replace("href=\"../styles/", "href=\"styles/");
                 html = html.Replace("href=\"../toc/", "href=\"toc/");
+
+                // Replace any references to topic IDs with their friendly names.
+
+                foreach (var content in topicIdToContent.Values)
+                {
+                    html = html.Replace($"content=\"{content.TopicId}", $"content=\"{Path.GetFileNameWithoutExtension(content.FileName)}");
+                    html = html.Replace($"href=\"{content.TopicId}.htm", $"href=\"{content.FileName}");
+                }
 
                 // Update the file.
 
@@ -364,6 +372,71 @@ namespace NeonBuild
 
                 NeonHelper.DeleteFolder(htmlFolder);
                 Directory.Delete(htmlFolder);
+            }
+
+            Console.WriteLine("Munging TOC files...");
+
+            // Munge the [WebKI.xml], [WebTOC.xml], and [toc/*.xml] files by stripping any [html/] 
+            // prefixes from  the Url attributes.  We're also going to replace any GUID based references
+            // that map friendly topics to the friendly IDs.
+
+            var tocFilePaths = Directory.GetFiles(Path.Combine(outputFolder, "toc")).ToList();
+
+            tocFilePaths.Add(Path.Combine(outputFolder, "WebKI.xml"));
+            tocFilePaths.Add(Path.Combine(outputFolder, "WebTOC.xml"));
+
+            foreach (var filePath in tocFilePaths)
+            {
+                var xml = File.ReadAllText(filePath);
+
+                // Remove any HTML folder prefixes.
+
+                xml = xml.Replace("Url=\"html/", "Url=\"");
+
+                // Make any GUID --> friendly name replacements.
+
+                var sbXml    = new StringBuilder();
+                int lastPos  = 0;
+                int startPos = 0;
+                int endPos;
+
+                while (true)
+                {
+                    startPos = xml.IndexOf("Url=\"", lastPos);
+
+                    if (startPos == -1)
+                    {
+                        sbXml.Append(xml.Substring(lastPos));
+                        break;
+                    }
+
+                    startPos += "Url=\"".Length;
+
+                    sbXml.Append(xml.Substring(lastPos, startPos - lastPos));
+
+                    endPos = xml.IndexOf(".htm\"", startPos);
+
+                    if (endPos == -1)
+                    {
+                        sbXml.Append(xml.Substring(startPos));
+                        break;
+                    }
+
+                    var topicId = xml.Substring(startPos, endPos - startPos);
+
+                    if (topicIdToContent.TryGetValue(topicId, out var contentFile))
+                    {
+                        sbXml.Append(contentFile.FileName);
+                    }
+                    else
+                    {
+                        sbXml.Append(topicId);
+                    }
+
+                    lastPos = endPos;
+                }
+
+                File.WriteAllText(filePath, sbXml.ToString());
             }
 
             Program.Exit(0);
