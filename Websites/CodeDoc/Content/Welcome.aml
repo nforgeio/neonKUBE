@@ -395,12 +395,12 @@
         <linkUri>https://github.com/nforgeio/neonKUBE/releases</linkUri>
       </externalLink>
       <externalLink>
-        <linkText>Uber Cadence</linkText>
-        <linkUri>https://cadenceworkflow.io/docs/</linkUri>
-      </externalLink>
-      <externalLink>
         <linkText>Semantic Version 2.0 Specification</linkText>
         <linkUri>https://semver.org/</linkUri>
+      </externalLink>
+      <externalLink>
+        <linkText>Uber Cadence</linkText>
+        <linkUri>https://cadenceworkflow.io/docs/</linkUri>
       </externalLink>
     </relatedTopics>
 	</developerConceptualDocument>

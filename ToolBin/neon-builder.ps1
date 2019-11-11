@@ -27,19 +27,13 @@
 #       -installer    - Builds installer (and everything being installed)
 #       -codedoc      - Builds the code documentation
 #       -all          - Builds with all of the options above
-#
-#       -noanalytics  - Disables adding the Google Analytics scripts when
-#                       generating the CodeDoc website via -codedoc,
-#                       speeding site building when you're working on 
-#                       documentation
 
 param 
 (
-    [switch]$tools       = $false,
-	[switch]$installer   = $false,
-    [switch]$codedoc     = $false,
-    [switch]$all         = $false,
-    [switch]$noAnalytics = $false
+    [switch]$tools     = $false,
+	[switch]$installer = $false,
+    [switch]$codedoc   = $false,
+    [switch]$all       = $false
 )
 
 if ($all)
@@ -288,16 +282,17 @@ if ($codedoc)
         exit 1
     }
 
-    if (-not $noAnalytics)
-    {
-        # Insert the Google Analytics gtag scripts.
+    # Munge the SHFB generated documentation site:
+    #
+    #   1. Insert the Google Analytics [gtag.js] scripts
+    #   2. Munge and relocate HTML files for better site
+    #      layout and friendlier permalinks.
 
-        ""
-        "Enabling Google Analytics..."
-	    ""
+    ""
+    "Tweaking Layout and Enabling Google Analytics..."
+	""
 
-        & neon-build gtag "$nfroot\Websites\CodeDoc\gtag.js" "$nfBuild\codedoc"
-    }
+    & neon-build shfb --gtag="$nfroot\Websites\CodeDoc\gtag.js" "$nfRoot\WebSites\CodeDoc" "$nfBuild\codedoc"
 }
 
 cd $originalDir

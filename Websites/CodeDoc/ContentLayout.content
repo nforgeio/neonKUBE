@@ -4,7 +4,9 @@
     <HelpKeywords>
       <HelpKeyword index="K" term="Welcome" />
     </HelpKeywords>
-    <Topic id="b4a13879-cf87-43e2-8b6e-a122d8809d7a" visible="True" isSelected="true" title="Neon.Cadence" />
+    <Topic id="b4a13879-cf87-43e2-8b6e-a122d8809d7a" visible="True" isExpanded="true" title="Neon.Cadence">
+      <Topic id="142a68cf-85c4-4394-95d4-82a184a696c4" visible="True" isSelected="true" />
+    </Topic>
     <Topic id="8d4cab22-393a-468a-96fe-41870fa99b32" visible="True" title="Neon.Common" />
   </Topic>
 </Topics>

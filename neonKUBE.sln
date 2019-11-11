@@ -7,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doc", "Doc", "{2CFE7466-98C
 	ProjectSection(SolutionItems) = preProject
 		Doc\CADENCE.md = Doc\CADENCE.md
 		Doc\Cheats.txt = Doc\Cheats.txt
+		Doc\CODEDOC.md = Doc\CODEDOC.md
 		Doc\DEVELOPER.md = Doc\DEVELOPER.md
 		Doc\MAINTAIN.md = Doc\MAINTAIN.md
 		Doc\RELEASE.md = Doc\RELEASE.md

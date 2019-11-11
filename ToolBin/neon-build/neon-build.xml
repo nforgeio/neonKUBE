@@ -337,10 +337,9 @@
             </summary>
             <param name="commandLine">The command line.</param>
         </member>
-        <member name="M:NeonBuild.Program.GTag(Neon.Common.CommandLine)">
+        <member name="M:NeonBuild.Program.Shfb(Neon.Common.CommandLine)">
             <summary>
-            Loads a Google Analytics [gtag.js] file and inserts it at the top of the <b>head</b>
-            section of the HTML pages found in a folder.
+            Handles post-processing of a SHFB generated documentation site.
             </summary>
             <param name="commandLine">The command line.</param>
         </member>

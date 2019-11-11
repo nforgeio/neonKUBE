@@ -11763,22 +11763,6 @@
             <param name="path">The file or folder path.</param>
             <returns><c>true</c> on success.</returns>
         </member>
-        <member name="T:Newtonsoft.Json.Linq.JsonExtensions">
-            <summary>
-            Newtonsoft JSON Linq extensions.
-            </summary>
-        </member>
-        <member name="M:Newtonsoft.Json.Linq.JsonExtensions.TryGetValue``1(Newtonsoft.Json.Linq.JObject,System.String,``0@)">
-            <summary>
-            Attempts to return the value of a specified <see cref="T:Newtonsoft.Json.Linq.JObject"/> property
-            converted to a specific type.
-            </summary>
-            <typeparam name="T">The desired type.</typeparam>
-            <param name="jObject">The <see cref="T:Newtonsoft.Json.Linq.JObject"/> instance.</param>
-            <param name="propertyName">The property name.</param>
-            <param name="value">Returns as the property value if present.</param>
-            <returns><c>true</c> if the property was present and returned.</returns>
-        </member>
         <member name="T:System.Diagnostics.Contracts.Covenant">
             <summary>
             A simple, lightweight, and partial implementation of the Microsoft Dev Labs <c>Contract</c> class.
@@ -11830,85 +11814,78 @@
             <param name="message">An optional message to be included in the exception thrown.</param>
             <exception cref="T:Neon.Diagnostics.AssertException">Thrown if <paramref name="condition"/> is <c>false</c>.</exception>
         </member>
-        <member name="T:System.IO.IOExtensions">
+        <member name="T:System.AppDomainExtensions">
             <summary>
-            Implements I/O related class extensions.
+            Implements <see cref="T:System.AppDomain"/> extension methods.
             </summary>
         </member>
-        <member name="M:System.IO.IOExtensions.Write(System.IO.Stream,System.Byte[])">
+        <member name="M:System.AppDomainExtensions.GetUserAssemblies(System.AppDomain)">
             <summary>
-            Writes a byte array to a stream.
+            Enumerates all non <b>System</b> and <b>Microsoft</b> assemblies currently
+            loaded in the <see cref="T:System.AppDomain"/>.  This can be used as a performance
+            optimization when you only need to scan user assemblies.
             </summary>
-            <param name="stream">The stream.</param>
-            <param name="bytes">The byte array.</param>
+            <param name="appDomain"></param>
+            <returns>The enumerated assemblies.</returns>
+            <remarks>
+            We also use this to work around this Visual Studio bug: 
+            <a href="https://github.com/nforgeio/neonKUBE/issues/531"/>
+            </remarks>
         </member>
-        <member name="M:System.IO.IOExtensions.WriteAsync(System.IO.Stream,System.Byte[])">
+        <member name="T:System.EnumExtensions">
             <summary>
-            Asynchronously writes a byte array to a stream.
+            <see cref="T:System.Enum"/> extensions.
             </summary>
-            <param name="stream">The stream.</param>
-            <param name="bytes">The byte array.</param>
         </member>
-        <member name="M:System.IO.IOExtensions.ReadBytes(System.IO.Stream,System.Int32)">
+        <member name="M:System.EnumExtensions.ToMemberString(System.Enum)">
             <summary>
-            Reads the byte array from the current position, advancing
-            the position past the value read.
+            Converts an enumeration value into a string, using the <see cref="T:System.Runtime.Serialization.EnumMemberAttribute"/>
+            value if one was specified for the value in the enumeration type definition otherwise
+            the default enumeration value name will be returned.
             </summary>
-            <param name="stream">The stream.</param>
-            <param name="cb">The number of bytes to read.</param>
-            <returns>
-            The byte array.  Note that the array returned may have a length
-            less than the size requested if the end of the file has been
-            reached.
-            </returns>
+            <param name="value">The enumeration value to be converted.</param>
+            <returns>The member or default string value.</returns>
+            <remarks>
+            This is useful because <see cref="M:System.Enum.ToString"/> ignores any <see cref="T:System.Runtime.Serialization.EnumMemberAttribute"/>
+            attributes.
+            </remarks>
         </member>
-        <member name="M:System.IO.IOExtensions.ReadToEnd(System.IO.Stream)">
+        <member name="T:System.ExceptionExtensions">
             <summary>
-            Reads all bytes from the current position to the end of the stream.
+            <see cref="T:System.Exception"/> extensions.
             </summary>
-            <returns>The byte array.</returns>
         </member>
-        <member name="M:System.IO.IOExtensions.ReadToEndAsync(System.IO.Stream)">
+        <member name="M:System.ExceptionExtensions.Contains``1(System.Exception)">
             <summary>
-            Asynchronously reads all bytes from the current position to the end of the stream.
+            Determines whether the exception has a specified type or was triggered by
+            an underlying exception of a specified type.  This is useful for checking whether
+            an exception has a specific inner exception or whether an <see cref="T:System.AggregateException"/>
+            was triggered with a specific exception type.
             </summary>
-            <returns>The byte array.</returns>
+            <typeparam name="T">The target exception type.</typeparam>
+            <param name="e">The exception being tested.</param>
+            <returns><c>true</c> if the exception was triggered by an exception of type <typeparamref name="T"/>.</returns>
         </member>
-        <member name="M:System.IO.IOExtensions.DeflateTo(System.IO.Stream,System.IO.Stream)">
+        <member name="M:System.ExceptionExtensions.Find``1(System.Exception)">
             <summary>
-            Uses deflate to compress a source to a target stream.
+            Searches an exception for an underlying exception of a specific type specified as a generic
+            type parameter.   This is useful for  checking whether an exception has a specific inner 
+            exception or whether an <see cref="T:System.AggregateException"/> was triggered with a specific 
+            exception type.
             </summary>
-            <param name="source">The source stream.</param>
-            <param name="target">The target stream.</param>
+            <typeparam name="T">The target exception type.</typeparam>
+            <param name="e">The exception being tested.</param>
+            <returns>The underlying exception or <c>null</c>.</returns>
         </member>
-        <member name="M:System.IO.IOExtensions.InflateTo(System.IO.Stream,System.IO.Stream)">
+        <member name="M:System.ExceptionExtensions.Find(System.Exception,System.Type)">
             <summary>
-            Uses deflate to decompress a source to a target stream.
+            Searches an exception for an underlying exception of a specific type.  This is useful for 
+            checking whether an exception has a specific inner exception or whether an <see cref="T:System.AggregateException"/>
+            was triggered with a specific exception type.
             </summary>
-            <param name="source">The source stream.</param>
-            <param name="target">The target stream.</param>
-        </member>
-        <member name="M:System.IO.IOExtensions.GzipTo(System.IO.Stream,System.IO.Stream)">
-            <summary>
-            Uses GZIP to compress a source to a target stream.
-            </summary>
-            <param name="source">The source stream.</param>
-            <param name="target">The target stream.</param>
-        </member>
-        <member name="M:System.IO.IOExtensions.GunzipTo(System.IO.Stream,System.IO.Stream)">
-            <summary>
-            Uses GZIP to decompress a source to a target stream.
-            </summary>
-            <param name="source">The source stream.</param>
-            <param name="target">The target stream.</param>
-        </member>
-        <member name="M:System.IO.IOExtensions.Lines(System.IO.TextReader,System.Boolean)">
-            <summary>
-            Returns an enumerator that returns the lines of text from a <see cref="T:System.IO.TextReader"/>.
-            </summary>
-            <param name="reader">The reader.</param>
-            <param name="ignoreBlank">Optionally skip empty lines or lines with oly whitespace.</param>
-            <returns>The <see cref="T:System.Collections.Generic.IEnumerable`1"/>.</returns>
+            <param name="e">The exception being tested.</param>
+            <param name="exceptionType">The target exception type.</param>
+            <returns>The underlying exception or <c>null</c>.</returns>
         </member>
         <member name="T:System.Net.Http.HttpClientExtensions">
             <summary>
@@ -12235,79 +12212,6 @@
             <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
             <exception cref="T:System.InvalidOperationException">Thrown when the request has already been sent by the <see cref="T:System.Net.Http.HttpClient"/> class.</exception>
         </member>
-        <member name="T:System.AppDomainExtensions">
-            <summary>
-            Implements <see cref="T:System.AppDomain"/> extension methods.
-            </summary>
-        </member>
-        <member name="M:System.AppDomainExtensions.GetUserAssemblies(System.AppDomain)">
-            <summary>
-            Enumerates all non <b>System</b> and <b>Microsoft</b> assemblies currently
-            loaded in the <see cref="T:System.AppDomain"/>.  This can be used as a performance
-            optimization when you only need to scan user assemblies.
-            </summary>
-            <param name="appDomain"></param>
-            <returns>The enumerated assemblies.</returns>
-            <remarks>
-            We also use this to work around this Visual Studio bug: 
-            <a href="https://github.com/nforgeio/neonKUBE/issues/531"/>
-            </remarks>
-        </member>
-        <member name="T:System.EnumExtensions">
-            <summary>
-            <see cref="T:System.Enum"/> extensions.
-            </summary>
-        </member>
-        <member name="M:System.EnumExtensions.ToMemberString(System.Enum)">
-            <summary>
-            Converts an enumeration value into a string, using the <see cref="T:System.Runtime.Serialization.EnumMemberAttribute"/>
-            value if one was specified for the value in the enumeration type definition otherwise
-            the default enumeration value name will be returned.
-            </summary>
-            <param name="value">The enumeration value to be converted.</param>
-            <returns>The member or default string value.</returns>
-            <remarks>
-            This is useful because <see cref="M:System.Enum.ToString"/> ignores any <see cref="T:System.Runtime.Serialization.EnumMemberAttribute"/>
-            attributes.
-            </remarks>
-        </member>
-        <member name="T:System.ExceptionExtensions">
-            <summary>
-            <see cref="T:System.Exception"/> extensions.
-            </summary>
-        </member>
-        <member name="M:System.ExceptionExtensions.Contains``1(System.Exception)">
-            <summary>
-            Determines whether the exception has a specified type or was triggered by
-            an underlying exception of a specified type.  This is useful for checking whether
-            an exception has a specific inner exception or whether an <see cref="T:System.AggregateException"/>
-            was triggered with a specific exception type.
-            </summary>
-            <typeparam name="T">The target exception type.</typeparam>
-            <param name="e">The exception being tested.</param>
-            <returns><c>true</c> if the exception was triggered by an exception of type <typeparamref name="T"/>.</returns>
-        </member>
-        <member name="M:System.ExceptionExtensions.Find``1(System.Exception)">
-            <summary>
-            Searches an exception for an underlying exception of a specific type specified as a generic
-            type parameter.   This is useful for  checking whether an exception has a specific inner 
-            exception or whether an <see cref="T:System.AggregateException"/> was triggered with a specific 
-            exception type.
-            </summary>
-            <typeparam name="T">The target exception type.</typeparam>
-            <param name="e">The exception being tested.</param>
-            <returns>The underlying exception or <c>null</c>.</returns>
-        </member>
-        <member name="M:System.ExceptionExtensions.Find(System.Exception,System.Type)">
-            <summary>
-            Searches an exception for an underlying exception of a specific type.  This is useful for 
-            checking whether an exception has a specific inner exception or whether an <see cref="T:System.AggregateException"/>
-            was triggered with a specific exception type.
-            </summary>
-            <param name="e">The exception being tested.</param>
-            <param name="exceptionType">The target exception type.</param>
-            <returns>The underlying exception or <c>null</c>.</returns>
-        </member>
         <member name="T:System.Collections.Generic.IEnumerableExtensions">
             <summary>
             <see cref="T:System.Collections.Generic.IEnumerable`1"/> extension methods.
@@ -12554,6 +12458,102 @@
             The name of the event to remove the handler from.
             </param>
             <param name="handler">The delegate to remove.</param>
+        </member>
+        <member name="T:System.IO.IOExtensions">
+            <summary>
+            Implements I/O related class extensions.
+            </summary>
+        </member>
+        <member name="M:System.IO.IOExtensions.Write(System.IO.Stream,System.Byte[])">
+            <summary>
+            Writes a byte array to a stream.
+            </summary>
+            <param name="stream">The stream.</param>
+            <param name="bytes">The byte array.</param>
+        </member>
+        <member name="M:System.IO.IOExtensions.WriteAsync(System.IO.Stream,System.Byte[])">
+            <summary>
+            Asynchronously writes a byte array to a stream.
+            </summary>
+            <param name="stream">The stream.</param>
+            <param name="bytes">The byte array.</param>
+        </member>
+        <member name="M:System.IO.IOExtensions.ReadBytes(System.IO.Stream,System.Int32)">
+            <summary>
+            Reads the byte array from the current position, advancing
+            the position past the value read.
+            </summary>
+            <param name="stream">The stream.</param>
+            <param name="cb">The number of bytes to read.</param>
+            <returns>
+            The byte array.  Note that the array returned may have a length
+            less than the size requested if the end of the file has been
+            reached.
+            </returns>
+        </member>
+        <member name="M:System.IO.IOExtensions.ReadToEnd(System.IO.Stream)">
+            <summary>
+            Reads all bytes from the current position to the end of the stream.
+            </summary>
+            <returns>The byte array.</returns>
+        </member>
+        <member name="M:System.IO.IOExtensions.ReadToEndAsync(System.IO.Stream)">
+            <summary>
+            Asynchronously reads all bytes from the current position to the end of the stream.
+            </summary>
+            <returns>The byte array.</returns>
+        </member>
+        <member name="M:System.IO.IOExtensions.DeflateTo(System.IO.Stream,System.IO.Stream)">
+            <summary>
+            Uses deflate to compress a source to a target stream.
+            </summary>
+            <param name="source">The source stream.</param>
+            <param name="target">The target stream.</param>
+        </member>
+        <member name="M:System.IO.IOExtensions.InflateTo(System.IO.Stream,System.IO.Stream)">
+            <summary>
+            Uses deflate to decompress a source to a target stream.
+            </summary>
+            <param name="source">The source stream.</param>
+            <param name="target">The target stream.</param>
+        </member>
+        <member name="M:System.IO.IOExtensions.GzipTo(System.IO.Stream,System.IO.Stream)">
+            <summary>
+            Uses GZIP to compress a source to a target stream.
+            </summary>
+            <param name="source">The source stream.</param>
+            <param name="target">The target stream.</param>
+        </member>
+        <member name="M:System.IO.IOExtensions.GunzipTo(System.IO.Stream,System.IO.Stream)">
+            <summary>
+            Uses GZIP to decompress a source to a target stream.
+            </summary>
+            <param name="source">The source stream.</param>
+            <param name="target">The target stream.</param>
+        </member>
+        <member name="M:System.IO.IOExtensions.Lines(System.IO.TextReader,System.Boolean)">
+            <summary>
+            Returns an enumerator that returns the lines of text from a <see cref="T:System.IO.TextReader"/>.
+            </summary>
+            <param name="reader">The reader.</param>
+            <param name="ignoreBlank">Optionally skip empty lines or lines with oly whitespace.</param>
+            <returns>The <see cref="T:System.Collections.Generic.IEnumerable`1"/>.</returns>
+        </member>
+        <member name="T:Newtonsoft.Json.Linq.JsonExtensions">
+            <summary>
+            Newtonsoft JSON Linq extensions.
+            </summary>
+        </member>
+        <member name="M:Newtonsoft.Json.Linq.JsonExtensions.TryGetValue``1(Newtonsoft.Json.Linq.JObject,System.String,``0@)">
+            <summary>
+            Attempts to return the value of a specified <see cref="T:Newtonsoft.Json.Linq.JObject"/> property
+            converted to a specific type.
+            </summary>
+            <typeparam name="T">The desired type.</typeparam>
+            <param name="jObject">The <see cref="T:Newtonsoft.Json.Linq.JObject"/> instance.</param>
+            <param name="propertyName">The property name.</param>
+            <param name="value">Returns as the property value if present.</param>
+            <returns><c>true</c> if the property was present and returned.</returns>
         </member>
         <member name="T:YamlDotNet.RepresentationModel.YamlDotNetExtensions">
             <summary>
