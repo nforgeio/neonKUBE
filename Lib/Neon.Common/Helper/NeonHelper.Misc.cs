@@ -636,23 +636,6 @@ namespace Neon.Common
         /// <param name="token1">The first token.</param>
         /// <param name="token2">The second token.</param>
         /// <returns><c>true</c> if the tokens are to be considered as equal.</returns>
-        /// <remarks>
-        /// <para>
-        /// I have run into a situation in the <c>Neon.Couchbase.Dynamic.DynamicEntity</c> implementation
-        /// where I've serialized a Couchbase Lite document and then when loading the updated
-        /// revision, <see cref="JToken.EqualityComparer"/> indicates that two properties with
-        /// the same name and <c>null</c> values are different.
-        /// </para>
-        /// <para>
-        /// I think the basic problem is that a NULL token has a different token type than
-        /// a string token with a NULL value and also that some token types such as <see cref="JTokenType.Date"/>,
-        /// <see cref="JTokenType.Guid"/>, <see cref="JTokenType.TimeSpan"/>, and <see cref="JTokenType.Uri"/> 
-        /// will be round tripped as <see cref="JTokenType.String"/> values.
-        /// </para>
-        /// <para>
-        /// This method addresses these issues.
-        /// </para>
-        /// </remarks>
         public static bool JTokenEquals(JToken token1, JToken token2)
         {
             var token1IsNull = token1 == null;
