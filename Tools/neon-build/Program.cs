@@ -118,6 +118,9 @@ OPTIONS:
     --gtag=PATH     - Optionally specifies the path to the Google Analytics
                       [gtag.js] file to insert into the help files for
                       visitor tracking purposes.
+
+    --styles=FOLDER - Optionally specifies a folder with CSS style files
+                      that will be copied to the site [styles] folder.
 ";
         private static CommandLine commandLine;
 

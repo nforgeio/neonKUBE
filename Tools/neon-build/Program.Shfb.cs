@@ -72,6 +72,7 @@ namespace NeonBuild
             var gtagPath     = commandLine.GetOption("--gtag");
             var dryRun       = commandLine.HasOption("--dryrun");
             var gtag         = !string.IsNullOrEmpty(gtagPath) ? File.ReadAllText(gtagPath) : null;
+            var stylesFolder = commandLine.GetOption("--styles");
             var html         = string.Empty;
 
             // Verify that the [gtag.js] file looks reasonable.
@@ -446,6 +447,23 @@ namespace NeonBuild
                 xml = xml.Replace("index.html.htm", "index.html");
 
                 File.WriteAllText(filePath, xml);
+            }
+
+            // Copy any custom styles.
+
+            if (!string.IsNullOrEmpty(stylesFolder))
+            {
+                foreach (var stylePath in Directory.EnumerateFiles(stylesFolder, "*.*", SearchOption.TopDirectoryOnly))
+                {
+                    var targetPath = Path.Combine(outputFolder, "styles", Path.GetFileName(stylePath));
+
+                    if (File.Exists(targetPath))
+                    {
+                        File.Delete(targetPath);
+                    }
+
+                    File.Copy(stylePath, targetPath);
+                }
             }
 
             Program.Exit(0);

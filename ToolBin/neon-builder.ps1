@@ -298,7 +298,7 @@ if ($codedoc)
     "Tweaking Layout and Enabling Google Analytics..."
 	""
 
-    & neon-build shfb --gtag="$nfroot\Websites\CodeDoc\gtag.js" "$nfRoot\WebSites\CodeDoc" "$nfBuild\codedoc"
+    & neon-build shfb --gtag="$nfroot\Websites\CodeDoc\gtag.js" --styles="$nfRoot\WebSites\CodeDoc\styles" "$nfRoot\WebSites\CodeDoc" "$nfBuild\codedoc"
 }
 
 cd $originalDir
