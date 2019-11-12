@@ -10,7 +10,7 @@ body {
 }
 h1 {
 	font-family: 'Segoe UI' , 'Lucida Grande' , Verdana, Arial, Helvetica, sans-serif;
-	font-size: 2.5em;
+	font-size: 2.0em;
 	font-weight: normal;
 	margin-top: 0;
 	color: #000;
@@ -240,7 +240,7 @@ div.caption {
 .collapsibleRegionTitle {
 	font-family: 'Segoe UI Semibold' , 'Segoe UI' , 'Lucida Grande' , Verdana, Arial, Helvetica, sans-serif !important;
 	font-style: normal !important;
-	font-size: 1.769em;
+	font-size: 1.25em;
 	margin-top: 9px;
 	margin-bottom: 19px;
 	padding-top: 20px;
