@@ -5,8 +5,18 @@
       <HelpKeyword index="K" term="Welcome" />
     </HelpKeywords>
     <Topic id="b4a13879-cf87-43e2-8b6e-a122d8809d7a" visible="True" isExpanded="true" title="Neon.Cadence">
-      <Topic id="142a68cf-85c4-4394-95d4-82a184a696c4" visible="True" isSelected="true" />
+      <Topic id="142a68cf-85c4-4394-95d4-82a184a696c4" visible="True" />
     </Topic>
-    <Topic id="8d4cab22-393a-468a-96fe-41870fa99b32" visible="True" title="Neon.Common" />
+    <Topic id="8d4cab22-393a-468a-96fe-41870fa99b32" visible="True" isExpanded="true" title="Neon.Common">
+      <Topic id="8d4cab22-393a-468a-96fe-41870fa99b32" visible="True" />
+    </Topic>
   </Topic>
+  <Topic id="c9653350-5d9c-4629-bdba-3d05286dadc7" visible="True" title="Neon.Couchbase" />
+  <Topic id="b5793b0c-a9cd-4e6c-9793-f2e8505e8458" visible="True" title="Neon.Cryptography" />
+  <Topic id="7bc8021c-493a-4512-8532-b8969edf82c8" visible="True" title="Neon.Kube" />
+  <Topic id="c9e62b7b-b1a6-4fe5-b295-af3badd66012" visible="True" title="Neon.ModelGen" />
+  <Topic id="59439cfa-8a94-4034-832b-75fba1756466" visible="True" title="Neon.NATS" />
+  <Topic id="a331f9c6-c9b5-4b21-a827-f717bba4d612" visible="True" title="Neon SSH.NET" />
+  <Topic id="d9a25b6f-b9e0-4e71-bce0-cc8a93a565e5" visible="True" title="Neon.Web" />
+  <Topic id="900fb12b-112e-41cb-9d94-b0fe7fe97332" visible="True" isSelected="true" title="Neon.Xunit" />
 </Topics>
