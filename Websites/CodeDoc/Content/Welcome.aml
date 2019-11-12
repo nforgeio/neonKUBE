@@ -10,8 +10,8 @@
       </alert>
 			<para>
         neonKUBE is an open source project released under the MIT license.  This project includes several
-        class libraries published as nuget packages.  The project also includes a nacent Kubernetes distribution
-        called neonKUBE which is still very much a work in progress.
+        class general purpose libraries published as nuget packages (known as the Neon libraries) as well as 
+        a nacent Kubernetes distribution called neonKUBE which is still very much a work in progress.
       </para>
       <para>
         The central theme behind these projects is to fill in some gaps developers encounter
@@ -23,7 +23,7 @@
       </para>
       <alert class="note">
         <para>
-          All neonKUBE packages and utilities are available under the 
+          All Neon and neonKUBE packages and utilities are available under the 
           <externalLink>
             <linkText>MIT Open Source License</linkText>
             <linkUri>https://opensource.org/licenses/MIT</linkUri>
@@ -36,7 +36,7 @@
       <title>Downloads and Packages</title>
       <content>
         <para>
-          neonKUBE .NET libraries are available as packages on
+          Neon and neonKUBE .NET libraries are available as packages on
           <externalLink>
             <linkText>nuget.org</linkText>
             <linkUri>https://nuget.org</linkUri>
