@@ -48,7 +48,22 @@ function Publish
 
 	$version = Get-Content "$env:NF_ROOT\product-version.txt" -First 1
 
-	nuget push -Source nuget.org "$env:NF_BUILD\nuget\$project.$version.nupkg"
+    if (Test-Path "$env:NF_ROOT\Lib\$project\prerelease.txt")
+    {
+        $prerelease = Get-Content "$env:NF_ROOT\Lib\$project\prerelease.txt" -First 1
+        $prerelease = $prerelease.Trim()
+
+        if ($prerelease -ne "")
+        {
+            $prerelease = "-" + $prerelease
+        }
+    }
+    else
+    {
+        $prerelease = ""
+    }
+
+	nuget push -Source nuget.org "$env:NF_BUILD\nuget\$project.$version$prerelease.nupkg"
 }
 
 # Copy the version from [$/product-version] into [$/Lib/Neon/Common/Build.cs]
