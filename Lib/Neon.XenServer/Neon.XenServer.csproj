@@ -5,8 +5,8 @@
     <Version>0.7.1-internal</Version>
     <Authors>Jeff Lill</Authors>
     <Company>neonFORGE, LLC</Company>
-    <Product>neonKUBE</Product>
-    <Description>neonKUBE XenServer provisioning.</Description>
+    <Product>Neon</Product>
+    <Description>Neon XenServer itilities</Description>
     <Copyright>Copyright © 2016-2019 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
@@ -19,7 +19,7 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <PackageIconUrl>https://doc.neonkube.com/images/nuget-icon.png</PackageIconUrl>
-    <PackageTags>kubernetes</PackageTags>
+    <PackageTags>XenServer</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

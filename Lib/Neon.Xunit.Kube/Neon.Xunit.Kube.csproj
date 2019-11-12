@@ -7,7 +7,7 @@
     <Version>0.7.1</Version>
     <Authors>Jeff Lill</Authors>
     <Product>neonKUBE</Product>
-    <Description>neonKUBE Xunit testing helpers.</Description>
+    <Description>neonKUBE Neon Xunit testing helpers.</Description>
     <Copyright>Copyright © 2016-2019 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>

@@ -5,8 +5,8 @@
     <Version>0.7.1-preview</Version>
     <Authors>Jeff Lill</Authors>
     <Company>neonFORGE, LLC</Company>
-    <Product>neonKUBE</Product>
-    <Description>neonKUBE data model generator library.</Description>
+    <Product>Neon</Product>
+    <Description>Neon data model generator library.</Description>
     <Copyright>Copyright © 2016-2019 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.ModelGen/README.md</PackageProjectUrl>
     <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>

@@ -5,8 +5,8 @@
     <Version>0.7.1</Version>
     <Authors>Jeff Lill</Authors>
     <Company>neonFORGE, LLC</Company>
-    <Product>neonKUBE</Product>
-    <Description>neonKUBE website and API related classes and enhancements.</Description>
+    <Product>Neon</Product>
+    <Description>Neon website and API related classes and enhancements.</Description>
     <Copyright>Copyright © 2016-2019 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>

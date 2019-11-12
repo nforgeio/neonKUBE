@@ -5,8 +5,8 @@
     <Version>0.7.1-internal</Version>
     <Authors>Jeff LIll</Authors>
     <Company>neonFORGE, LLC</Company>
-    <Product>neonHIVE</Product>
-    <Description>neonHIVE Azure Hosting.</Description>
+    <Product>neonKUBE</Product>
+    <Description>neonKUBE Azure Hosting.</Description>
     <Copyright>Copyright © 2016-2019 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>

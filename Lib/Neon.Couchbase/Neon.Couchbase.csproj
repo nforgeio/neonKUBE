@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -6,7 +6,7 @@
     <Authors>Jeff Lill</Authors>
     <Version>0.7.1</Version>
     <Company>neonFORGE, LLC</Company>
-    <Product>neonKUBE</Product>
+    <Product>Neon</Product>
     <Description>neonKUBE Couchbase client extensions.</Description>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2019 by neonFORGE LLC.  All rights reserved.</Copyright>

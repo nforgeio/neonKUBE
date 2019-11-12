@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the neonKUBE HAProxy base images.
+# Builds the Neon HAProxy base images.
 #
 # Usage: powershell -file build.ps1 REGISTRY VERSION TAG
 

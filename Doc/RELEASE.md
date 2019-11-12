@@ -1,4 +1,4 @@
-# neonKUBE Release Process:
+# Neon Release Process:
 
 ## Prepare
 
@@ -32,11 +32,13 @@
   c. Set **Target** to the `release-VERSION` branch
   e: Check **This is a pre-release** as required
   f. Add the release setup binary named like: **neonKUBE-setup-0.7.1-alpha.sha512.txt**
-  g. Add the OS/X neon-cli binary from **osx** folder as: **neon**
-  h. Edit the release notes including adding the SHA512s for:
+  g. Add the OS/X neon-cli binary from **osx** folder as: **neon-osx**
+  h. Add **neon.chm**
+  i. Edit the release notes including adding the SHA512s for:
 
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`%NF_BUILD%\neonKUBE-setup.sha512.txt`
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`%NF_BUILD%\osx\neon-0.7.1-alpha.sha512.txt`
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`%NF_BUILD%\neon.chm.sha512.txt`
 
   i. Publish the release
 

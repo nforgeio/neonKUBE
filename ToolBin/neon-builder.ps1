@@ -267,13 +267,13 @@ if ($codedoc)
 
     $nfDocOutput = "$nfroot\Websites\CodeDoc\bin\CodeDoc"
 
-    & cp "$nfDocOutput\neonKUBE.chm" "$nfbuild"
+    & cp "$nfDocOutput\neon.chm" "$nfbuild"
 
     ""
-    "Generating neonKUBE.chm SHA512..."
+    "Generating neon.chm SHA512..."
 	""
 
-    & cat "$nfBuild\neonKUBE.chm" | openssl dgst -sha512 -hex > "$nfBuild\neonKUBE.chm.sha512.txt"
+    & cat "$nfBuild\neon.chm" | openssl dgst -sha512 -hex > "$nfBuild\neon.chm.sha512.txt"
 
     # Move the documentation build output.
 	
@@ -283,7 +283,7 @@ if ($codedoc)
     if (-not $?)
     {
         ""
-        "*** neonKUBE.chm: SHA512 failed ***"
+        "*** neon.chm: SHA512 failed ***"
         ""
         exit 1
     }
