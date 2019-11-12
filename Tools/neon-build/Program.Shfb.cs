@@ -67,12 +67,12 @@ namespace NeonBuild
                 Program.Exit(1);
             }
 
-            var shfbFolder = commandLine.Arguments[0];
+            var shfbFolder   = commandLine.Arguments[0];
             var outputFolder = commandLine.Arguments[1];
-            var gtagPath = commandLine.GetOption("--gtag");
-            var dryRun = commandLine.HasOption("--dryrun");
-            var gtag = !string.IsNullOrEmpty(gtagPath) ? File.ReadAllText(gtagPath) : null;
-            var html = string.Empty;
+            var gtagPath     = commandLine.GetOption("--gtag");
+            var dryRun       = commandLine.HasOption("--dryrun");
+            var gtag         = !string.IsNullOrEmpty(gtagPath) ? File.ReadAllText(gtagPath) : null;
+            var html         = string.Empty;
 
             // Verify that the [gtag.js] file looks reasonable.
 
@@ -436,7 +436,16 @@ namespace NeonBuild
                     lastPos = endPos;
                 }
 
-                File.WriteAllText(filePath, sbXml.ToString());
+                // $hack(jeff.lill):
+                //
+                // Somehow we've ended up with references to [index.html.htm] in the TOC
+                // related files at this point.  We're just going to do a search/replace
+                // to fix this.
+
+                xml = sbXml.ToString();
+                xml = xml.Replace("index.html.htm", "index.html");
+
+                File.WriteAllText(filePath, xml);
             }
 
             Program.Exit(0);

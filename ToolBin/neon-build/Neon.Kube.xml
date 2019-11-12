@@ -7411,16 +7411,16 @@
             <summary>Branch: jeff</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: aada773ae</summary>
+            <summary>Commit: 8374a2ddd</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: aada773ae80d57610ad8de7fc5c897924632ef42</summary>
+            <summary>Sha: 8374a2dddcc607af304e38b6b47921462f6944a7</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 112</summary>
+            <summary>Commits on top of base version: 113</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: v0.7.0-alpha-112-gaada773ae</summary>
+            <summary>Tag: v0.7.0-alpha-113-g8374a2ddd</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
             <summary>Base tag: v0.7.0-alpha</summary>
@@ -7447,7 +7447,7 @@
             <summary>Minor: 7</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 112</summary>
+            <summary>Patch: 113</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: alpha</summary>

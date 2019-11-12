@@ -238,6 +238,20 @@ if ($codedoc)
     "**********************************************************"
     ""
 
+    # Remove some pesky aliases:
+
+    del alias:rm
+    del alias:cp
+    del alias:mv
+
+    if (-not $?)
+    {
+        ""
+        "*** ERROR: Cannot remove: $nfBuild\codedoc"
+        ""
+        exit 1
+    }
+
     & "$msbuild" "$nfSolution" -p:Configuration=CodeDoc
 
     if (-not $?)
@@ -247,14 +261,6 @@ if ($codedoc)
         ""
         exit 1
     }
-
-    # Move the documentation output to the solution's [$/Build] folder.
-    #
-    # First we're going to remove some pesky aliases:
-
-    del alias:rm
-    del alias:cp
-    del alias:mv
 
     # Copy the CHM file to a more convenient place for adding to the GitHub release
     # and generate the SHA512 for it.
