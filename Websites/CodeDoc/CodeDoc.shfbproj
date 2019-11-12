@@ -83,7 +83,7 @@
     <WebsiteAdContent>
     </WebsiteAdContent>
     <AppendMarkdownFileExtensionsToUrls>False</AppendMarkdownFileExtensionsToUrls>
-    <FooterText>Offline help available for Windows: &amp;lt%3ba href=&amp;quot%3bneon.chm&amp;quot%3b&amp;gt%3bneonKUBE.chm&amp;lt%3b/a&amp;gt%3b&amp;lt%3b/br&amp;gt%3b
+    <FooterText>Offline help available for Windows: &amp;lt%3ba href=&amp;quot%3bneon.chm&amp;quot%3b&amp;gt%3bneonKUBE.chm&amp;lt%3b/a&amp;gt%3b&amp;lt%3bbr/&amp;gt%3b
 Report any issues at: &amp;lt%3ba href=&amp;quot%3bhttps://github.com/nforgeio/neonKUBE&amp;quot%3b&amp;gt%3bhttps://github.com/nforgeio/neonKUBE&amp;lt%3b/a&amp;gt%3b</FooterText>
     <CopyrightText>Copyright %28c%29 2016-2019 by neonFORGE, LLC.  All rights reserved.</CopyrightText>
     <ProjectSummary>&amp;lt%3bp&amp;gt%3b
@@ -197,7 +197,6 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <Folder Include="media" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Content\Neon.Cadence\Getting Started\Step 1.aml" />
     <None Include="Content\Neon.Cadence\Overview.aml" />
     <None Include="Content\Neon.Common\Overview.aml" />
     <None Include="Content\Neon.Couchbase\Overview.aml" />
