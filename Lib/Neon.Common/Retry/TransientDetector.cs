@@ -36,7 +36,7 @@ namespace Neon.Retry
     public static class TransientDetector
     {
         /// <summary>
-        /// Always determines that the exception is always transient.
+        /// Considers <b>every</b> exceptions to be transient.
         /// </summary>
         /// <param name="e">The potential transient exception.</param>
         /// <returns><c>true</c></returns>
@@ -48,7 +48,7 @@ namespace Neon.Retry
         }
 
         /// <summary>
-        /// Never determines that the exception is never transient.
+        /// Considers <b>no</b> exceptions to be transient.
         /// </summary>
         /// <param name="e">The potential transient exception.</param>
         /// <returns><c>false</c></returns>
