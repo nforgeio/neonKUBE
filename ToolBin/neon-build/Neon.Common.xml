@@ -2735,23 +2735,6 @@
             <param name="token1">The first token.</param>
             <param name="token2">The second token.</param>
             <returns><c>true</c> if the tokens are to be considered as equal.</returns>
-            <remarks>
-            <para>
-            I have run into a situation in the <c>Neon.Couchbase.Dynamic.DynamicEntity</c> implementation
-            where I've serialized a Couchbase Lite document and then when loading the updated
-            revision, <see cref="P:Newtonsoft.Json.Linq.JToken.EqualityComparer"/> indicates that two properties with
-            the same name and <c>null</c> values are different.
-            </para>
-            <para>
-            I think the basic problem is that a NULL token has a different token type than
-            a string token with a NULL value and also that some token types such as <see cref="F:Newtonsoft.Json.Linq.JTokenType.Date"/>,
-            <see cref="F:Newtonsoft.Json.Linq.JTokenType.Guid"/>, <see cref="F:Newtonsoft.Json.Linq.JTokenType.TimeSpan"/>, and <see cref="F:Newtonsoft.Json.Linq.JTokenType.Uri"/> 
-            will be round tripped as <see cref="F:Newtonsoft.Json.Linq.JTokenType.String"/> values.
-            </para>
-            <para>
-            This method addresses these issues.
-            </para>
-            </remarks>
         </member>
         <member name="M:Neon.Common.NeonHelper.StripFileScheme(System.String)">
             <summary>
@@ -9361,14 +9344,14 @@
         </member>
         <member name="M:Neon.Retry.TransientDetector.Always(System.Exception)">
             <summary>
-            Always determines that the exception is always transient.
+            Considers <b>every</b> exceptions to be transient.
             </summary>
             <param name="e">The potential transient exception.</param>
             <returns><c>true</c></returns>
         </member>
         <member name="M:Neon.Retry.TransientDetector.Never(System.Exception)">
             <summary>
-            Never determines that the exception is never transient.
+            Considers <b>no</b> exceptions to be transient.
             </summary>
             <param name="e">The potential transient exception.</param>
             <returns><c>false</c></returns>
