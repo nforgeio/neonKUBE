@@ -1,0 +1,1 @@
+This folder holds the Visio and other files used to source the media images included in the code documentation, making it possible to easily tweak these over time.

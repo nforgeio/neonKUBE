@@ -195,9 +195,12 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <Folder Include="Content\Neon.Xunit" />
     <Folder Include="icons" />
     <Folder Include="media" />
+    <Folder Include="media\Neon.Cadence" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Content\Neon.Cadence\Deployment.aml" />
     <None Include="Content\Neon.Cadence\Overview.aml" />
+    <None Include="Content\Neon.Cadence\Terminology.aml" />
     <None Include="Content\Neon.Common\Overview.aml" />
     <None Include="Content\Neon.Couchbase\Overview.aml" />
     <None Include="Content\Neon.Cryptography\Overview.aml" />
@@ -233,6 +236,18 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <Image Include="media\internal.png">
       <ImageId>internal</ImageId>
       <AlternateText>internal</AlternateText>
+    </Image>
+    <Image Include="media\Neon.Cadence\deployment-multi-tenant.png">
+      <ImageId>deployment-multi-tenant</ImageId>
+      <AlternateText>deployment-multi-tenant</AlternateText>
+    </Image>
+    <Image Include="media\Neon.Cadence\deployment-scaled.png">
+      <ImageId>deployment-scaled</ImageId>
+      <AlternateText>deployment-scaled</AlternateText>
+    </Image>
+    <Image Include="media\Neon.Cadence\deployment-simple.png">
+      <ImageId>deployment-simple</ImageId>
+      <AlternateText>deployment-simple</AlternateText>
     </Image>
     <Image Include="media\neonlogo.png">
       <ImageId>neonlogo</ImageId>

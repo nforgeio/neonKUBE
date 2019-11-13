@@ -1,7 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Topics>
-  <Topic id="b4a13879-cf87-43e2-8b6e-a122d8809d7a" visible="True" title="Neon.Cadence" />
-  <Topic id="8d4cab22-393a-468a-96fe-41870fa99b32" visible="True" isSelected="true" title="Neon.Common" />
+  <Topic id="b4a13879-cf87-43e2-8b6e-a122d8809d7a" visible="True" isExpanded="true" title="Neon.Cadence">
+    <Topic id="b4a13879-cf87-43e2-8b6e-a122d8809d7a" visible="True" />
+    <Topic id="c169d35c-2fe4-439d-a7f8-298f39e252be" visible="True" />
+    <Topic id="e7611458-d70d-458a-9dfe-09bd8811ec11" visible="True" />
+  </Topic>
+  <Topic id="8d4cab22-393a-468a-96fe-41870fa99b32" visible="True" isExpanded="true" title="Neon.Common">
+    <Topic id="8d4cab22-393a-468a-96fe-41870fa99b32" visible="True" />
+  </Topic>
   <Topic id="c9653350-5d9c-4629-bdba-3d05286dadc7" visible="True" title="Neon.Couchbase" />
   <Topic id="b5793b0c-a9cd-4e6c-9793-f2e8505e8458" visible="True" title="Neon.Cryptography" />
   <Topic id="7bc8021c-493a-4512-8532-b8969edf82c8" visible="True" title="Neon.Kube" />
