@@ -62,7 +62,7 @@ if ($codedoc)
     # Verify that [$nfCodeDoc] actually references the local clone
     # of the [nforgeio.github.io] repository.
 
-    if (-not (Test-Path "$nfCodeDoc\codedoc.txt"))
+    if (-not (Test-Path "$nfCodeDoc\is-codedoc.txt"))
     {
         ""
         "*** [$nfCodeDoc] does not reference a clone of the the [nforgeio.github.io] repo."
@@ -85,7 +85,7 @@ if ($codedoc)
     #   images
     #   .gitignore
     #   CNAME
-    #   codedoc.txt
+    #   is-codedoc.txt
 
     "Cleaning [nforgeio.github.io]..."
 

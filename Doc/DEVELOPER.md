@@ -186,11 +186,17 @@ Follow the steps below to configure a development or test workstation:
       * Click **Next** and click **Install Schemas**
       * **Optional:** Install Snippets (I typically don't install these)
       * Click **Next** and **Finish**.  Don't install the Visual Studio Spell Checker.
-    * Clone the **nforgeio.github.io** repository.  This hosts the generated Neon documentation website.  This repo must be named **nforgeio.github.io** and be located in the same directory as your main neonKUBE repo:
+    * Clone the **nforgeio/nforgeio.github.io** repository.  This hosts the generated Neon documentation website.  The cloned folder must be named **nforgeio.github.io** and be located in the same parent directory as your main neonKUBE repo:
     ```
     cd "%NF_ROOT%\.."
     mkdir nforgeio.github.io
     git clone https://github.com/nforgeio/nforgeio.github.io.git
+    ```
+    * You'll also need to clone the **nforgeio/cadence-samples** repo.  This hosts the Cadence samples which are referenced by the code documention.  The cloned folder must be named **cadence-samples** and be located in the same parent directory as your main neonKUBE repo: 
+    ```
+    cd "%NF_ROOT%\.."
+    mkdir cadence-samples
+    git clone https://github.com/nforgeio/cadence-samples.git
     ```
 
 30. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
