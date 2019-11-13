@@ -13,19 +13,19 @@
 
 3. Run all unit tests in **RELEASE** mode
 
-4. Build and publish all of the Docker images: `neon-publish-images -all`
+4. Build and publish the Docker images, the nuget packages, code documentation, as well as a full RELEASE build:
+   ```
+   neon-publish-images -all
+   neon-nuget-public
+   neon-builder -all
+   neon-release -all
+   ```
 
-5. Publish the nuget packages: `neon-nuget-public`
+5. Verify that the new release installer works.
 
-6. Rebuild the RELEASE version via:
+6. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: v0.7.1-alpha**
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neon-builder -all`
-
-7. Verify that the new release installer works.
-
-8. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: v0.7.1-alpha**
-
-9. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
+7. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
 
   a. Create the release if it doesn't already exist
   b. Set **Tag** to the version with a leading "v" (like **v0.7.1-alpha**)
@@ -35,12 +35,12 @@
   g. Add the OS/X neon-cli binary from **osx** folder as: **neon-osx**
   h. Add **neon.chm**
   i. Edit the release notes including adding the SHA512s for:
-
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`%NF_BUILD%\neonKUBE-setup.sha512.txt`
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`%NF_BUILD%\osx\neon-0.7.1-alpha.sha512.txt`
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`%NF_BUILD%\neon.chm.sha512.txt`
-
-  i. Publish the release
+  ```
+  %NF_BUILD%\neonKUBE-setup.sha512.txt
+  %NF_BUILD%\osx\neon-0.7.1-alpha.sha512.txt
+  %NF_BUILD%\neon.chm.sha512.txtl
+  ```
+  j. Publish the release
 
 ## Post Release
 

@@ -36,16 +36,16 @@ if ($all)
     $codedoc = $true
 }
 
-$msbuild    = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
-$nfRoot     = "$env:NF_ROOT"
-$nfSolution = "$nfRoot\neonKUBE.sln"
-$nfBuild    = "$env:NF_BUILD"
-$nfTools    = "$nfRoot\Tools"
-$nfCodeDoc  = "$nfRoot\..\nforgeio.github.io"
-$env:PATH  += ";$nfBuild"
-$version    = Get-Content "$nfRoot\product-version.txt" -First 1
-
-$originalDir = $pwd
+$msbuild          = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
+$nfRoot           = "$env:NF_ROOT"
+$nfSolution       = "$nfRoot\neonKUBE.sln"
+$nfBuild          = "$env:NF_BUILD"
+$nfTools          = "$nfRoot\Tools"
+$nfCodeDoc        = "$nfRoot\..\nforgeio.github.io"
+$nfCadenceSamples = "$nfRoot\..\cadence-samples"
+$env:PATH        += ";$nfBuild"
+$version          = Get-Content "$nfRoot\product-version.txt" -First 1
+$originalDir      = $pwd
 
 # Publish the code documentation.
 
@@ -60,12 +60,23 @@ if ($codedoc)
     cd $nfCodeDoc
 
     # Verify that [$nfCodeDoc] actually references the local clone
-    # of the [nforgeio.github.io] repository.
+    # of the [nforgeio/nforgeio.github.io] repository.
 
     if (-not (Test-Path "$nfCodeDoc\is-codedoc.txt"))
     {
         ""
-        "*** [$nfCodeDoc] does not reference a clone of the the [nforgeio.github.io] repo."
+        "*** [$nfCodeDoc] does not reference a clone of the the [nforgeio/nforgeio.github.io] repo."
+        ""
+        exit 1
+    }
+
+    # Verify that [$nfCadenceSamples] actually references the local clone
+    # of the [nforgeio/cadence-samples.github.io] repository.
+
+    if (-not (Test-Path "$nfCadenceSamples\is-cadence-samples.txt"))
+    {
+        ""
+        "*** [$nfCadenceSamples] does not reference a clone of the the [nforgeio/cadence-samples.github.io] repo."
         ""
         exit 1
     }
