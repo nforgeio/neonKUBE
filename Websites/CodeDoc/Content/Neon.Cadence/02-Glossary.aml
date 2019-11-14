@@ -120,10 +120,10 @@
                 </para>
                 <para>
                   For example, say you have workflow-A and workflow-B running on server-0 and then workflow-B
-                  and workflow-C running on server-1, and both of these registred with task lisk MYTASKS.
+                  and workflow-C running on server-1, and both of these registered with task lisk MYTASKS.
                   Then you execute workflow A.  Cadence may attempt execute it on server-1 but this will
                   fail, because workflow-A isn't implemented there.  Cadence is smart and will retry by
-                  selecting another worker registred for MYTASKS until it finds a worker that can handle
+                  selecting another worker registered for MYTASKS until it finds a worker that can handle
                   it (or the workflow times out).
                 </para>
                 <para>
