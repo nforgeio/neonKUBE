@@ -36,8 +36,11 @@ REM Configure the environment variables.
 set NF_TOOLBIN=%NF_ROOT%\ToolBin
 set NF_BUILD=%NF_ROOT%\Build
 set NF_CACHE=%NF_ROOT%\Build-cache
+set NF_SNIPPETS=%NF_ROOT%\Snippets
 set NF_TEST=%NF_ROOT%\Test
 set NF_TEMP=C:\Temp
+set NF_CODEDOC=%NF_ROOT%\..\nforgeio.github.io
+set NF_SAMPLES_CADENCE=%NF_ROOT%\..\cadence-samples
 set NEON_SKIPSLOWTESTS=1
 set DOTNETPATH=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319
 set WINSDKPATH=C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6 Tools\x64
@@ -49,8 +52,11 @@ setx NF_ROOT "%NF_ROOT%" /M
 setx NF_TOOLBIN "%NF_TOOLBIN%" /M
 setx NF_BUILD "%NF_BUILD%" /M
 setx NF_CACHE "%NF_CACHE%" /M
+setx NF_SNIPPETS "%NF_SNIPPETS%" /M
 setx NF_TEST "%NF_TEST%" /M
 setx NF_TEMP "%NF_TEMP%" /M
+setx NF_CODEDOC "%NF_CODEDOC%" /M
+setx NF_SAMPLES_CADENCE "%NF_SAMPLES_CADENCE%" /M
 setx NEON_SKIPSLOWTESTS %NEON_SKIPSLOWTESTS% /M
 setx DOTNET_CLI_TELEMETRY_OPTOUT 1 /M
 

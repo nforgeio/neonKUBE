@@ -322,9 +322,9 @@
           <para>
             <mediaLinkInline><image xlink:href="internal"/></mediaLinkInline>
             Several Neon assemblies are published to nuget but are intended only for internal
-            use by other Neon components.  Documentation for these are included here but you
-            should avoid using these APIs directly.  We reserve the right to make significant
-            changes without notice.
+            use by other Neon components.  You should avoid referencing these packages directly 
+            in your projects.  We reserve the right to make breaking changes or abondon thesse
+            packages without notice.
           </para>
         </alert>
         <para>

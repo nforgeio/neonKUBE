@@ -1,0 +1,149 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- topic-filename="Neon.Cadence-GettingStarted-Workflows" -->
+<topic id="1576a65f-94bd-4bed-9ff6-935b1c20fd87" revisionNumber="1">
+  <developerConceptualDocument
+    xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
+
+    <introduction>
+      <para>
+        This page describes how to code your first workflow in .NET.
+      </para>
+    </introduction>
+
+    <section address="WorkflowDefinition">
+      <title>Workflow Definition</title>
+      <content>
+        <para>
+          .NET Cadence workflows are defined by an <codeInline>interface</codeInline> and then implemented
+          as a <codeInline>class</codeInline>.  Here's a simple <legacyBold>HelloWorld</legacyBold> example:
+        </para>
+        <code source="%NF_SNIPPETS%\Cadence\Snippets.Cadence.HelloWorld\Program.cs" language="c#" tabSize="4"/>
+        <para>
+          Here we define <codeInline>IHelloWorkflow</codeInline> which defines the <codeInline>HelloAsync</codeInline> 
+          workflow method which implements your workflow.  Workflow interfaces have a couple requirements:
+        </para>
+        <list class="bullet">
+          <listItem>
+            <para>Workflow interfaces need to inherit <codeEntityReference qualifyHint="false">T:Neon.Cadence.IWorkflow</codeEntityReference></para>
+          </listItem>
+          <listItem>
+            <para>All workflow interface methods must be <codeInline>async</codeInline></para>
+          </listItem>
+        </list>
+        <para>
+          The <codeEntityReference qualifyHint="false">T:Neon.Cadence.WorkflowInterfaceAttribute</codeEntityReference> is optional
+          but can be used to specify workflow related options.  In this example, we're indicating that the workflow will be registered
+          with Cadence in the <legacyBold>my-tasks</legacyBold> task list (we'll be discussing task lists in depth later).
+        </para>
+        <para>
+          Next, we define the <legacyBold>HelloWorkflow</legacyBold> <codeInline>class</codeInline> that actually implements
+          the workflow.  All workflow implementations must inherit <codeEntityReference qualifyHint="false">T:Neon.Cadence.WorkflowBase</codeEntityReference>
+          and also implement the workflow interface you defined.  In this case, the <codeInline>HelloAsync()</codeInline> workflow
+          method simply returns a string value.
+        </para>
+        <para>
+          The example above is coded as a basic console application with the <codeInline>Main()</codeInline> method:
+        </para>
+        <list class="ordered">
+          <listItem>
+            <para>
+              Initializes the connection settings to connect Cadence running on the local machine, configuring <legacyBold>my-domain</legacyBold>
+              as the default domain where your workflows and activities will be registered and run, and indicating that the default domain
+              should be created it it doesn't already exist (handy for testing).
+            </para>
+          </listItem>
+          <listItem>
+            <para>Establishes a connection to Cadence.</para>
+          </listItem>
+          <listItem>
+            <para>Registers the workflow implementation.</para>
+          </listItem>
+          <listItem>
+            <para>
+              Starts the workflow worker.  This tells Cadence that you've finished registering workflow and activity implementations
+              and your workflow service is ready to be assigned tasks by Cadence.  We tell Cadence that this worker handles work
+              within the <legacyBold>my-tasks</legacyBold> task list.
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              Creates a type-safe stub that implements the specified workflow interface such that calling the method actually
+              executes the workflow.  The program then calls the stub's <codeInline>HelloAsync()</codeInline> method and 
+              prints the result to the console.
+            </para>
+          </listItem>
+        </list>
+        <para>
+          Running a workflow really couldn't be much simpler.  Here's what's happening under the covers:
+        </para>
+        <list class="ordered">
+          <listItem>
+            <para>
+              The stub <codeInline>HelloAsync()</codeInline> method tells the Cadence server to start the workflow,
+              with any arguments passed.  Note that the stub method doesn't return until the the workflow completes.
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              Cadence receives this requests and persists the details to Cassandra for reliability and then 
+              looks for a workflow service that is registered for <legacyBold>my-tasks</legacyBold>.
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              Cadence will see that our sample application has registered itself and will schedule the workflow
+              to be executed by our application.
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              The application's <codeEntityReference qualifyHint="false">T:Neon.Cadence.CadenceClient</codeEntityReference>
+              receives the workflow execution request from Cadence, instantiates an instance of the <codeInline>HelloWorkflow</codeInline>
+              workflow class and then calls the <codeInline>HelloAsync()</codeInline> method.
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+               <codeInline>HelloAsync()</codeInline> does its thing and returns the result string.
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+               Cadence persists the result to Cassandra, marks the workflow as complete, and then signals
+               the pending stub <codeInline>HelloAsync()</codeInline> call that it can return with the
+               value returned by your workflow implementation.
+            </para>
+          </listItem>
+        </list>
+        <para>
+          This may not look like much, but Cadence makes this operation inheritly reliable by:
+        </para>
+        <list class="bullet">
+          <listItem>
+            <para>Holding the workflow until a workflow service is available to handle it.</para>
+          </listItem>
+          <listItem>
+            <para>Reassigning the workflow if the workflow service executing it is restarted or fails.</para>
+          </listItem>
+          <listItem>
+            <para>Ensuring that the workflow is idempotent such that steps that have already been completed won't be reexecuted due to workflow service failures.</para>
+          </listItem>
+          <listItem>
+            <para>Load balancing work across multiple registered workflow service instances.</para>
+          </listItem>
+          <listItem>
+            <para>Recording the history of the workflow execution along with the final result.</para>
+          </listItem>
+        </list>
+        <para>
+          This example is super simple of course but even here, Cadence delivers substantial benefits.
+          This would be non-trivial to do reliably with custom code without Cadence.
+        </para>
+      </content>
+    </section>
+
+    <relatedTopics>
+    </relatedTopics>
+  </developerConceptualDocument>
+</topic>
