@@ -1,24 +1,22 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!-- topic-filename="Neon.Cadence-GettingStarted-Workflows" -->
+<!-- topic-filename="Neon.Cadence-GettingStarted-BasicWorkflow" -->
 <topic id="1576a65f-94bd-4bed-9ff6-935b1c20fd87" revisionNumber="1">
   <developerConceptualDocument
     xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5"
     xmlns:xlink="http://www.w3.org/1999/xlink">
 
     <introduction>
-      <para>
-        This page describes how to code your first workflow in .NET.
-      </para>
     </introduction>
 
-    <section address="WorkflowDefinition">
-      <title>Workflow Definition</title>
+    <section>
       <content>
         <para>
           .NET Cadence workflows are defined by an <codeInline>interface</codeInline> and then implemented
-          as a <codeInline>class</codeInline>.  Here's a simple <legacyBold>HelloWorld</legacyBold> example:
+          as a <codeInline>class</codeInline>.  We'll start out with a simple <legacyBold>HelloWorld</legacyBold>
+          console application targeting .NET Core or .NET Framework and adding references to the 
+          <legacyBold>Neon.Cadence</legacyBold> and <legacyBold>Neon.Common</legacyBold> nuget packages.
         </para>
-        <code source="%NF_SNIPPETS%\Cadence\Snippets.Cadence.HelloWorld\Program.cs" language="c#" tabSize="4"/>
+        <code source="%NF_SNIPPETS%\Cadence\Snippets.Cadence.HelloWorld\Program-BasicWorkflow.cs" language="c#" tabSize="4"/>
         <para>
           Here we define <codeInline>IHelloWorkflow</codeInline> which defines the <codeInline>HelloAsync</codeInline> 
           workflow method which implements your workflow.  Workflow interfaces have a couple requirements:
@@ -61,9 +59,8 @@
           </listItem>
           <listItem>
             <para>
-              Starts the workflow worker.  This tells Cadence that you've finished registering workflow and activity implementations
-              and your workflow service is ready to be assigned tasks by Cadence.  We tell Cadence that this worker handles work
-              within the <legacyBold>my-tasks</legacyBold> task list.
+              Starts the workflow worker.  This informs Cadence that you've finished registering workflow and activity implementations
+              and your workflow service is ready to be assigned tasks by Cadence within the <legacyBold>my-tasks</legacyBold> task list.
             </para>
           </listItem>
           <listItem>
@@ -121,7 +118,7 @@
         </para>
         <list class="bullet">
           <listItem>
-            <para>Holding the workflow until a workflow service is available to handle it.</para>
+            <para>Assigning the workflow to an available workflow instance, waiting for one to be ready.</para>
           </listItem>
           <listItem>
             <para>Reassigning the workflow if the workflow service executing it is restarted or fails.</para>
@@ -137,9 +134,19 @@
           </listItem>
         </list>
         <para>
-          This example is super simple of course but even here, Cadence delivers substantial benefits.
+          This example is super simple but even here, Cadence delivers substantial benefits.
           This would be non-trivial to do reliably with custom code without Cadence.
         </para>
+        <alert class="note">
+          <para>
+            This example is a bit contrived because we are implementing and invoking a workflow in
+            the same program.  Normally, folks will deploy a workflow service that runs until terminated
+            and have workflows invoked from other applications such as console or ASP.NET applications.
+            Note that any 64-bit Windows, Linux or OS/X .NET Core or Windows .NET Framework application can use
+            <codeEntityReference qualifyHint="false">T:Neon.Cadence.CadenceClient</codeEntityReference>
+            to establish a connection to a Cadence cluster and invoke or manage workflows.
+          </para>
+        </alert>
       </content>
     </section>
 

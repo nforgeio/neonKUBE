@@ -6,14 +6,9 @@
     xmlns:xlink="http://www.w3.org/1999/xlink">
 
     <introduction>
-      <para>
-        This page describes the primary Cadence workflow concepts and terminology.  You should take the
-        time to skim over these terms to give you come context as you dive further in.
-      </para>
     </introduction>
 
     <section address="glossary">
-      <title>Terminology</title>
       <content>
         <para>
           This section describes the primary Cadence workflow concepts and terminology.  You should take the

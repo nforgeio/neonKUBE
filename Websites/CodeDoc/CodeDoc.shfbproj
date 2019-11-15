@@ -202,7 +202,9 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <None Include="Content\Neon.Cadence\03-Deployment.aml" />
     <None Include="Content\Neon.Cadence\01-Overview.aml" />
     <None Include="Content\Neon.Cadence\02-Glossary.aml" />
-    <None Include="Content\Neon.Cadence\04-GettingStarted\Workflows.aml" />
+    <None Include="Content\Neon.Cadence\04-GettingStarted\01-BasicWorkflow.aml" />
+    <None Include="Content\Neon.Cadence\04-GettingStarted\02-BasicActivity.aml" />
+    <None Include="Content\Neon.Cadence\04-GettingStarted\03-MultiStepWorkflows.aml" />
     <None Include="Content\Neon.Common\01-Overview.aml" />
     <None Include="Content\Neon.Couchbase\01-Overview.aml" />
     <None Include="Content\Neon.Cryptography\01-Overview.aml" />

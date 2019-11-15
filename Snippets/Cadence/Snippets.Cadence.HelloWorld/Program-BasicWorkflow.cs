@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-using Neon.Common;
 using Neon.Cadence;
+using Neon.Common;
 
 namespace HelloWorld
 {
@@ -24,7 +24,9 @@ namespace HelloWorld
     public static class Program
     {
         public static async Task Main(string[] args)
-        {
+        {  
+            // Connect to Cadence
+
             var settings = new CadenceSettings()
             {
                 DefaultDomain = "my-domain",
@@ -34,14 +36,17 @@ namespace HelloWorld
 
             using (var client = await CadenceClient.ConnectAsync(settings))
             {
+                // Register your workflow implementation to let Cadence
+                // know we're open for business.
+
                 await client.RegisterWorkflowAsync<HelloWorkflow>();
+                await client.StartWorkerAsync("my-tasks");
 
-                using (await client.StartWorkerAsync("my-tasks"))
-                {
-                    var stub = client.NewWorkflowStub<IHelloWorkflow>();
+                // Invoke your workflow.
 
-                    Console.WriteLine(await stub.HelloAsync("Jeff"));
-                }
+                var stub = client.NewWorkflowStub<IHelloWorkflow>();
+
+                Console.WriteLine(await stub.HelloAsync("Jeff"));
             }
         }
     }
