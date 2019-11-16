@@ -183,9 +183,9 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="Content" />
-    <Folder Include="Content\Neon.Cadence\05-GettingStarted" />
-    <Folder Include="Content\Neon.Cadence\06-WorkflowDetails" />
-    <Folder Include="Content\Neon.Cadence\07-ActivityDetails" />
+    <Folder Include="Content\Neon.Cadence\GettingStarted" />
+    <Folder Include="Content\Neon.Cadence\WorkflowDetails" />
+    <Folder Include="Content\Neon.Cadence\ActivityDetails" />
     <Folder Include="Content\Neon.Common\" />
     <Folder Include="Content\Neon.Cadence" />
     <Folder Include="Content\Neon.Couchbase" />
@@ -201,23 +201,23 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <Folder Include="media\Neon.Cadence" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Content\Neon.Cadence\03-Deployment.aml" />
-    <None Include="Content\Neon.Cadence\01-Overview.aml" />
-    <None Include="Content\Neon.Cadence\02-Glossary.aml" />
-    <None Include="Content\Neon.Cadence\05-GettingStarted\01-BasicWorkflow.aml" />
-    <None Include="Content\Neon.Cadence\05-GettingStarted\02-BasicActivity.aml" />
-    <None Include="Content\Neon.Cadence\04-JavaDiff.aml" />
-    <None Include="Content\Neon.Cadence\05-GettingStarted\03-MultiStepWorkflows.aml" />
-    <None Include="Content\Neon.Cadence\05-GettingStarted\04-CadenceSamples.aml" />
-    <None Include="Content\Neon.Common\01-Overview.aml" />
-    <None Include="Content\Neon.Couchbase\01-Overview.aml" />
-    <None Include="Content\Neon.Cryptography\01-Overview.aml" />
-    <None Include="Content\Neon.Kube\01-Overview.aml" />
-    <None Include="Content\Neon.ModelGen\01-Overview.aml" />
-    <None Include="Content\Neon.NATS\01-Overview.aml" />
-    <None Include="Content\Neon.SSH.NET\01-Overview.aml" />
-    <None Include="Content\Neon.Web\01-Overview.aml" />
-    <None Include="Content\Neon.Xunit\01-Overview.aml" />
+    <None Include="Content\Neon.Cadence\Deployment.aml" />
+    <None Include="Content\Neon.Cadence\Overview.aml" />
+    <None Include="Content\Neon.Cadence\Glossary.aml" />
+    <None Include="Content\Neon.Cadence\GettingStarted\BasicWorkflow.aml" />
+    <None Include="Content\Neon.Cadence\GettingStarted\BasicActivity.aml" />
+    <None Include="Content\Neon.Cadence\JavaDiff.aml" />
+    <None Include="Content\Neon.Cadence\GettingStarted\MultiStepWorkflows.aml" />
+    <None Include="Content\Neon.Cadence\GettingStarted\CadenceSamples.aml" />
+    <None Include="Content\Neon.Common\Overview.aml" />
+    <None Include="Content\Neon.Couchbase\Overview.aml" />
+    <None Include="Content\Neon.Cryptography\Overview.aml" />
+    <None Include="Content\Neon.Kube\Overview.aml" />
+    <None Include="Content\Neon.ModelGen\Overview.aml" />
+    <None Include="Content\Neon.NATS\Overview.aml" />
+    <None Include="Content\Neon.SSH.NET\Overview.aml" />
+    <None Include="Content\Neon.Web\Overview.aml" />
+    <None Include="Content\Neon.Xunit\Overview.aml" />
     <None Include="Content\Welcome.aml" />
   </ItemGroup>
   <ItemGroup>
