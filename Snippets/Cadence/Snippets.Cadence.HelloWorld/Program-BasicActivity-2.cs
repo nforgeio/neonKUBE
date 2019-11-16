@@ -66,7 +66,7 @@ namespace HelloWorld_BasicActivity_2
                 await client.RegisterActivityAsync<SendHelloActivity>();
                 await client.StartWorkerAsync("my-tasks");
 
-                // Invoke your workflow.
+                // Invoke the workflow.
 
                 var workflowStub = client.NewWorkflowStub<IHelloWorkflow>();
 
