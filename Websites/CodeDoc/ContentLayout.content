@@ -10,7 +10,7 @@
       <Topic id="1576a65f-94bd-4bed-9ff6-935b1c20fd87" visible="True" title="Basic workflow" />
       <Topic id="2084205f-aa66-4426-a559-063658da86aa" visible="True" title="Basic activity" />
       <Topic id="77bd3d69-f67d-4d4e-9e97-631439d19e8f" visible="True" title="Multi-step workflows" />
-      <Topic id="f1fd2005-7e8f-4d93-8278-5752d1576cd4" visible="True" isSelected="true" title="Cadence samples" />
+      <Topic id="f1fd2005-7e8f-4d93-8278-5752d1576cd4" visible="True" title="Cadence samples" />
     </Topic>
   </Topic>
   <Topic id="febab646-a6fe-4c79-89cd-dadd6d30ad92" visible="True" noFile="true" isExpanded="true" title="Neon.Common">
@@ -25,8 +25,8 @@
   <Topic id="350ace58-4498-4fda-bebf-431bb2fef475" visible="True" noFile="true" isExpanded="true" title="Neon.Kube">
     <Topic id="7bc8021c-493a-4512-8532-b8969edf82c8" visible="True" title="Overview" />
   </Topic>
-  <Topic id="db9500f6-7359-49a1-9dc2-e6aa4599132a" visible="True" noFile="true" isExpanded="true" title="Neon.ModelGen">
-    <Topic id="c9e62b7b-b1a6-4fe5-b295-af3badd66012" visible="True" title="Overview" />
+  <Topic id="db9500f6-7359-49a1-9dc2-e6aa4599132a" visible="True" noFile="true" isExpanded="true" isSelected="true" title="Neon.ModelGen">
+    <Topic id="2962db0e-03c4-4a07-b8f8-807825db6863" visible="True" />
   </Topic>
   <Topic id="f2f15c12-51f0-4209-a899-637d34a96d2a" visible="True" noFile="true" isExpanded="true" title="Neon.NATS">
     <Topic id="59439cfa-8a94-4034-832b-75fba1756466" visible="True" title="Overview" />
