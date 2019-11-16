@@ -1,0 +1,198 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- topic-filename="Neon.Cadence-JavaDifferences -->
+<topic id="62735281-ac6d-4ddb-944a-8a4bb70fb180" revisionNumber="1">
+  <developerConceptualDocument
+    xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
+
+    <introduction>
+    </introduction>
+
+    <section>
+      <content>
+        <para>
+          Our initial .NET Cadence client implementation was modeled more closely to the Uber Cadence Go client
+          and not the Java client.  We discussed this with Maxim and he convinced us that we really should use
+          Java as the standard because it's better and it's hard to argue with better.  So we did an extensive
+          top-to-bottom refactoring and ended up with something we're pretty happy with.
+        </para>
+        <para>
+          We did want to embrace some .NET capabilies like <codeInline>async/await</codeInline> that are not
+          present in the Java world.  We also made a few changes that align with our underlying implementation
+          (which pxoxies a Cadence Go client).  So there are some differences, but we tried pretty hard to keep
+          the spirit of the Java client alive.  This page outlines the more important differences.
+        </para>
+        <table>
+          <row>
+            <entry>
+              <para><legacyBold>async/await</legacyBold></para>
+            </entry>
+            <entry>
+              <para>
+                The .NET Cadence client follows the modern C# task conventions by taking advantage of <codeInline>async/await</codeInline>.
+                This can dramatically reduce the number of threads required to execute workflows and activities improving scalability.
+                As a consequence, we've appended <legacyBold>Async</legacyBold> to many our method names, following the .NET convention.
+                We have kept the root Java names though, where they make sense.
+              </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para><legacyBold>PascalCase</legacyBold></para>
+            </entry>
+            <entry>
+              <para>
+                We followed the .NET convention and renamed the API methods to be PascalCase.
+              </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para><legacyBold>Properties</legacyBold></para>
+            </entry>
+            <entry>
+              <para>
+                .NET langauges like C# and Visual Basic support properties as first class language elements.  The .NET client
+                exposes properties rather than duplicating the Java <codeInline>getXXX()/setXXX()</codeInline> convention.
+              </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para><legacyBold>Native Types</legacyBold></para>
+            </entry>
+            <entry>
+              <para>
+                We use native typee .NET types like <codeInline>TimeSpan</codeInline> and <codeInline>DateTime</codeInline>
+                rather than porting the corresponding Java types.
+              </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para><codeEntityReference qualifyHint="false">T:Neon.Cadence.CadenceClient</codeEntityReference></para>
+            </entry>
+            <entry>
+              <para>
+                We've combined that capabilities of the Java <codeInline>IServiceClient</codeInline> and <codeInline>WorkflowClient</codeInline>
+                types into our <codeEntityReference qualifyHint="false">T:Neon.Cadence.CadenceClient</codeEntityReference> class.  This class
+                is disposable, following .NET conventions and we added <codeEntityReference qualifyHint="false">T:Neon.Cadence.CadenceSettings</codeEntityReference>
+                which is used to configure a Cadence client.  These settings can be easily deserialized from JSON or YAML which is handy when
+                loading workflow service configuration from a file (e.g. a Kubernetes pod config).
+              </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para><legacyBold>Registration</legacyBold></para>
+            </entry>
+            <entry>
+              <para>
+                The Java client does not require that workflow and activity implementations be registered before use
+                (which is nice).  The .NET client follows the Go client convention and requires registration.
+              </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para><legacyBold>Ambient globals</legacyBold></para>
+            </entry>
+            <entry>
+              <para>
+                The Java client uses thread-local storage to expose the static <codeInline>Workflow</codeInline> class
+                to threads executing workflows and <codeInline>Activity</codeInline> to threads executing activities.
+                These classes return values and perform operations for the workflow or activity associated with the
+                thread.  We looked closely at doing something similar for .NET which also supports thread local storage.
+                That didn't make sense though, because we decided to be task centric.  .NET also supports <codeInline>AsyncLocal</codeInline>
+                storage but this doesn't really play well with arbitrary threads and we worried this would end up being
+                confusing and probably just plain bad.
+              </para>
+              <para>
+                So instead we require that workflow implementations derive from <codeEntityReference qualifyHint="false">T:Neon.Cadence.WorkflowBase</codeEntityReference>
+                and activity implementations derive from <codeEntityReference qualifyHint="false">T:Neon.Cadence.ActivityBase</codeEntityReference>.
+                <codeInline>WorkflowBase</codeInline> exposes the <codeEntityReference qualifyHint="false">P:Neon.Cadence.WorkflowBase.Workflow</codeEntityReference>
+                property and <codeInline>ActivityBase</codeInline> exposes the <codeEntityReference qualifyHint="false">P:Neon.Cadence.ActivityBase.Activity</codeEntityReference>
+                property.  These perform the same functions as the corresponding Java types and will look pretty much the same in
+                your workflow code to boot.
+              </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para><legacyBold>Activity instances</legacyBold></para>
+            </entry>
+            <entry>
+              <para>
+                The Java client creates only a single instance of an activity class for each activity implementation and 
+                requires that developers take care to ensure that their activity code is thread-safe.  The .NET implementation
+                constructs a distinct activity class instance for every activity invoked.  This is a consequence of exposing
+                the <codeEntityReference qualifyHint="false">P:Neon.Cadence.ActivityBase.Activity</codeEntityReference>
+                property with per-actvity invocation properties and methods.  We also believe this is nicer.
+              </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>
+                <legacyBold>optional arguments</legacyBold>
+              </para>
+            </entry>
+            <entry>
+              <para>
+                C# and Visual Basic support optional arguments.  Many of our APIs take advantage of this to simplify
+                the API surface area.
+              </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>
+                <legacyBold>nullable types</legacyBold>
+              </para>
+            </entry>
+            <entry>
+              <para>
+                Java and Go types like strings and classes aren't implicitly nullable whereas these are nullable
+                in .NET languages.  Java and Go deal with this by using wrapper types in some situations.  The
+                .NET client uses the .NET capabilities to simplify some of these types.
+              </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>
+                <legacyBold>default domain</legacyBold>
+              </para>
+            </entry>
+            <entry>
+              <para>
+                The .NET client can optionally be configured with a default Cadence domain and this domain
+                will be assumed when the domain isn't specified for an operation.  We added this as a convienence
+                for the common situation where all workflow service operations are constrained to a single domain.
+              </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>
+                <legacyBold>unit testing</legacyBold>
+              </para>
+            </entry>
+            <entry>
+              <para>
+                The .NET client doesn't currently provide an in-memory implementation that can be
+                used for intensive workflow unit testing.  This is something we'll be adding in the
+                future.  In the meantime, we do have the <codeEntityReference qualifyHint="false">T:Neon.Xunit.Cadence.CadenceFixture</codeEntityReference>
+                which can be used to run unit tests against a real Cadence service running locally
+                as a Docker container.
+              </para>
+            </entry>
+          </row>
+        </table>
+      </content>
+    </section>
+
+    <relatedTopics>
+    </relatedTopics>
+  </developerConceptualDocument>
+</topic>

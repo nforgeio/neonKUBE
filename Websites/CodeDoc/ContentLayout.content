@@ -5,10 +5,12 @@
     <Topic id="b4a13879-cf87-43e2-8b6e-a122d8809d7a" visible="True" title="Overview" />
     <Topic id="c169d35c-2fe4-439d-a7f8-298f39e252be" visible="True" title="Glossary" />
     <Topic id="e7611458-d70d-458a-9dfe-09bd8811ec11" visible="True" title="Deployment" />
-    <Topic id="53949a06-8a0b-4485-a1eb-e85932121320" visible="True" noFile="true" isExpanded="true" title="Getting Started">
+    <Topic id="62735281-ac6d-4ddb-944a-8a4bb70fb180" visible="True" title="Java client differences" />
+    <Topic id="53949a06-8a0b-4485-a1eb-e85932121320" visible="True" noFile="true" isExpanded="true" title="Getting started">
       <Topic id="1576a65f-94bd-4bed-9ff6-935b1c20fd87" visible="True" title="Basic workflow" />
       <Topic id="2084205f-aa66-4426-a559-063658da86aa" visible="True" title="Basic activity" />
-      <Topic id="77bd3d69-f67d-4d4e-9e97-631439d19e8f" visible="True" isSelected="true" title="Multi-step workflows" />
+      <Topic id="77bd3d69-f67d-4d4e-9e97-631439d19e8f" visible="True" title="Multi-step workflows" />
+      <Topic id="f1fd2005-7e8f-4d93-8278-5752d1576cd4" visible="True" isSelected="true" title="Cadence samples" />
     </Topic>
   </Topic>
   <Topic id="febab646-a6fe-4c79-89cd-dadd6d30ad92" visible="True" noFile="true" isExpanded="true" title="Neon.Common">
