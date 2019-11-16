@@ -24,14 +24,14 @@ This is a cloned and slightly updated build of https://www.nuget.org/packages/SS
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>C:\src\neonKUBE\Lib\Neon.SSH.NET\bin\Debug\Neon.SSH.NET.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\Neon.SSH.NET.xml</DocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors></WarningsAsErrors>
     <NoWarn>NU1605</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>C:\src\neonKUBE\Lib\Neon.SSH.NET\bin\Release\Neon.SSH.NET.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\Neon.SSH.NET.xml</DocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors></WarningsAsErrors>
     <NoWarn>NU1605</NoWarn>

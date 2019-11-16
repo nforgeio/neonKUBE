@@ -27,14 +27,14 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DocumentationFile>C:\src\neonKUBE\Lib\Neon.Nats\bin\Debug\Neon.Nats.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\Neon.Nats.xml</DocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors></WarningsAsErrors>
     <NoWarn>NU1605</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>C:\src\neonKUBE\Lib\Neon.Nats\bin\Release\Neon.Nats.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\Neon.Nats.xml</DocumentationFile>
     <DefineConstants />
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors></WarningsAsErrors>
