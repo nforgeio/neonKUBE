@@ -95,74 +95,47 @@ The Neon class libraries organizes classes in several namespaces.  Most classes 
 </ProjectSummary>
     <NamespaceSummaries>
       <NamespaceSummaryItem name="(global)" isDocumented="False" />
-      <NamespaceSummaryItem name="Couchbase" isDocumented="True">The &lt;b&gt;Neon.Couchbase&lt;b&gt; package extends the standard CouchbaseNet types by adding dozens of &lt;i&gt;safe&lt;/i&gt; APIs that handle transient errors and also make it easier to retrieve the operation result.  We also added the &lt;b&gt;Neon.Bucket&lt;/b&gt; which adds some additional capabilities.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.Cadence.Internal" isDocumented="False" />
-      <NamespaceSummaryItem name="TestCadence" isDocumented="False" />
-      <NamespaceSummaryItem name="ICSharpCode.SharpZipLib.Zip" isDocumented="True">This namespace includes a couple types to make using the ZIP library easier.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Microsoft.Net.Http.Client" isDocumented="True">This namespace includes some probably archaic code used to support Unix domain sockets before .NET Core 3.0.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="NATS.Client" isDocumented="True">This namespace extends the standard NATS messaging types.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon" isDocumented="True">This is the root namespace for the Neon and neonKUBE packages.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="STAN.Client" isDocumented="True">This namespace extends the standard NATS streaming client.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.Cadence" isDocumented="True">This namespace defines the Neon .NET client for the Uber Cadence workflow service.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.Collections" isDocumented="True">This namespace defines a handful or probably archaic custom collection classes.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.Common" isDocumented="True">This namespace includes a a lot of types used by the remaining class libraries.  You might find some of these useful as well.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.Cryptography" isDocumented="True">This namespace Includes some cryptographic helper methods and extensuions making operations like MD5 or SHA-* hashing easier as well as the &lt;b&gt;NeonVault&lt;/b&gt; class which can be used to persist encrypted data (inspired by Ansible Vault).</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.Csv" isDocumented="True">This namespace includes types for reading and writing Comma Separated Value (CSV) formatted data.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.Data" isDocumented="True">This namespace defines some data converters as well as types and interfaces supporting ModelGen generated data types.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.Diagnostics" isDocumented="True">This namespace includes the common logging code used throughout Neon applications and libraries.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.Docker" isDocumented="False" />
-      <NamespaceSummaryItem name="Neon.IO" isDocumented="True">This namespace includes some handy file and stream related types.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.Kube" isDocumented="True">This namespace includes neonKUBE Kubernetes distribution related types.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.Kube.Service" isDocumented="True">This namespace includes types that implement much of the boilerplate code for a service application suitable for deploying as a Docker container, a Kubernetes pod, or just a stand alone service.  This namespace is probably misnamed because it can be used completely independently from the &lt;b&gt;Neon.Kube&lt;b&gt; package.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.ModelGen" isDocumented="True">This namespace includes the types used to generate data models from interface definitions.  These models can be built to support round-tripping data without loss as well as optionally adding &lt;b&gt;IPropertyNotifyChanged&lt;/b&gt; related code for UX binding.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.Net" isDocumented="True">This namespace defines &lt;b&gt;JsonClient&lt;/b&gt; which makes calling REST APIs easier as well as a handful of other network related utilities.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.Retry" isDocumented="True">This namespace includes simple types that can be used to mitigate transient errors.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.Service" isDocumented="True">This namespace defines types used to describe an application service.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.Tasks" isDocumented="True">This namespace includes a handful of types that implement the async equivalent of primitives like &lt;b&gt;auto/manual reset events&lt;/b&gt;, &lt;b&gt;mutexes&lt;/b&gt;, &lt;b&gt;reader/writer locks&lt;/b&gt;, and &lt;b&gt;timers&lt;/b&gt;.  This also includes &lt;b&gt;SyncContext&lt;/b&gt; which can be used to easily clear the synchronization context within API implementations.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.Time" isDocumented="True">This namespace includes some time related types.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.Web" isDocumented="True">This namespace includes &lt;b&gt;NeonController&lt;/b&gt; and &lt;b&gt;NeonControllerBase&lt;/b&gt; which can be used as the base for your ASP.NET controllers.  These mostly add logging capabilities.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.Windows" isDocumented="True">This namespace includes low-level Windows API P/Invoke mappings.,</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.Xunit" isDocumented="True">This namespace includes unit test related helper classes include Xunit test fixtures for ASP.NET, Docker Containers, Docker Swarm, Environment variables, DNS (local hosts file), Kube services, NATS/STAN message queues.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.Xunit.Cadence" isDocumented="True">This namespace includes a Cadence Xunit test fixture.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.Xunit.Couchbase" isDocumented="True">This namespace includes a Couchbase Xunit test fixture.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Neon.Xunit.Kube" isDocumented="True">This namespace includes additional utilties for testing neonKUBE functionality.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Newtonsoft.Json.Linq" isDocumented="True">This namespace includes JSON.NET extensions.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Renci.SshNet" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
-Copyright © Renci 2010-2017</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Renci.SshNet.Common" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
+<NamespaceSummaryItem name="TestCadence" isDocumented="False" />
+<NamespaceSummaryItem name="ICSharpCode.SharpZipLib.Zip" isDocumented="True">This namespace includes a couple types to make using the ZIP library easier.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="Microsoft.Net.Http.Client" isDocumented="True">This namespace includes some probably archaic code used to support Unix domain sockets before .NET Core 3.0.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="Neon" isDocumented="True">This is the root namespace for the Neon and neonKUBE packages.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="Neon.Docker" isDocumented="False" />
+<NamespaceSummaryItem name="Neon.Service" isDocumented="True">This namespace defines types used to describe an application service.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="Neon.Time" isDocumented="True">This namespace includes some time related types.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="Newtonsoft.Json.Linq" isDocumented="True">This namespace includes JSON.NET extensions.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="Renci.SshNet.Common" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
 Copyright © Renci 2010-2017v</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Renci.SshNet.Compression" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
+<NamespaceSummaryItem name="Renci.SshNet.Compression" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
 Copyright © Renci 2010-2017v</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Renci.SshNet.Messages" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
+<NamespaceSummaryItem name="Renci.SshNet.Messages" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
 Copyright © Renci 2010-2017</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Renci.SshNet.Messages.Authentication" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
+<NamespaceSummaryItem name="Renci.SshNet.Messages.Authentication" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
 Copyright © Renci 2010-2017</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Renci.SshNet.Messages.Connection" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
+<NamespaceSummaryItem name="Renci.SshNet.Messages.Connection" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
 Copyright © Renci 2010-2017</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Renci.SshNet.Messages.Transport" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
+<NamespaceSummaryItem name="Renci.SshNet.Messages.Transport" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
 Copyright © Renci 2010-2017</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Renci.SshNet.Security" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
+<NamespaceSummaryItem name="Renci.SshNet.Security" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
 Copyright © Renci 2010-2017</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Renci.SshNet.Security.Cryptography" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
+<NamespaceSummaryItem name="Renci.SshNet.Security.Cryptography" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
 Copyright © Renci 2010-2017</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Renci.SshNet.Security.Cryptography.Ciphers" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
+<NamespaceSummaryItem name="Renci.SshNet.Security.Cryptography.Ciphers" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
 Copyright © Renci 2010-2017</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Renci.SshNet.Security.Cryptography.Ciphers.Modes" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
+<NamespaceSummaryItem name="Renci.SshNet.Security.Cryptography.Ciphers.Modes" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
 Copyright © Renci 2010-2017</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Renci.SshNet.Security.Cryptography.Ciphers.Paddings" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
+<NamespaceSummaryItem name="Renci.SshNet.Security.Cryptography.Ciphers.Paddings" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
 Copyright © Renci 2010-2017</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="Renci.SshNet.Sftp" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
+<NamespaceSummaryItem name="Renci.SshNet.Sftp" isDocumented="True">This namespace includes Renci SSH.NET types.&lt;br/&gt;
 Copyright © Renci 2010-2017</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="System" isDocumented="True">This namespace includes extensions to some standard .NET classes.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="System.Collections.Generic" isDocumented="True">This namespace includes extensions to some standard .NET classes.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="System.Diagnostics.Contracts" isDocumented="True">This namespace adds the &lt;b&gt;System.Diagnostics.Covenant&lt;/b&gt; type.  This is an alternative to the standard &lt;b&gt;System.Diagnostics.Contract&lt;/b&gt; type which is used across Neon for parameter checking etc.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="System.IO" isDocumented="True">This namespace extends some of the standard .NET I/O related classes.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="System.Net.Http" isDocumented="True">This namespace extends some of the standard .NET HTTP related classes.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="System.Text" isDocumented="True">This namespace extends the standard .NET &lt;b&gt;StringBuilder&lt;/b&gt; class.</NamespaceSummaryItem>
-      <NamespaceSummaryItem name="YamlDotNet.RepresentationModel" isDocumented="True">This namespace includes YAML related utilities.</NamespaceSummaryItem>
-    </NamespaceSummaries>
+<NamespaceSummaryItem name="System" isDocumented="True">This namespace includes extensions to some standard .NET classes.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="System.Collections.Generic" isDocumented="True">This namespace includes extensions to some standard .NET classes.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="System.Diagnostics.Contracts" isDocumented="True">This namespace adds the &lt;b&gt;System.Diagnostics.Covenant&lt;/b&gt; type.  This is an alternative to the standard &lt;b&gt;System.Diagnostics.Contract&lt;/b&gt; type which is used across Neon for parameter checking etc.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="System.IO" isDocumented="True">This namespace extends some of the standard .NET I/O related classes.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="System.Net.Http" isDocumented="True">This namespace extends some of the standard .NET HTTP related classes.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="System.Text" isDocumented="True">This namespace extends the standard .NET &lt;b&gt;StringBuilder&lt;/b&gt; class.</NamespaceSummaryItem>
+<NamespaceSummaryItem name="YamlDotNet.RepresentationModel" isDocumented="True">This namespace includes YAML related utilities.</NamespaceSummaryItem></NamespaceSummaries>
     <RootNamespaceTitle>Neon Namespaces</RootNamespaceTitle>
-    <MissingTags>Summary, Parameter, Returns, AutoDocumentCtors, Namespace, TypeParameter, AutoDocumentDispose</MissingTags>
+    <MissingTags>Summary, Parameter, Returns, AutoDocumentCtors, TypeParameter, AutoDocumentDispose</MissingTags>
   </PropertyGroup>
   <!-- There are no properties for these groups.  AnyCPU needs to appear in order for Visual Studio to perform
 			 the build.  The others are optional common platform types that may appear. -->

@@ -69,10 +69,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Csv\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="..\..\LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>

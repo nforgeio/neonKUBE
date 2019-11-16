@@ -35,7 +35,7 @@ namespace Neon.Windows
 {
     /// <summary>
     /// <para>
-    /// Internal proxy for executing PowerShell commands on Windows machines.
+    /// A simple proxy for executing PowerShell commands on Windows machines.
     /// </para>
     /// <note>
     /// This class requires elevated administrative rights.
