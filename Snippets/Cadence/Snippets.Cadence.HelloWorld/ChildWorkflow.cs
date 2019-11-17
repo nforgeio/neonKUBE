@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Neon.Cadence;
 using Neon.Common;
 
-namespace HelloWorld_MultiStep
+namespace HelloWorld_ChildWorkflow
 {
     #region code
     [ActivityInterface(TaskList = "my-tasks")]
@@ -39,7 +39,7 @@ namespace HelloWorld_MultiStep
 
         public async Task SendMessageAsync(string email, string messageText)
         {
-            var smtp    = new SmtpClient("mail.my-company.com");
+            var smtp = new SmtpClient("mail.my-company.com");
             var message = new MailMessage("bot@my-company.com", email);
 
             message.Body = messageText;
@@ -70,33 +70,22 @@ namespace HelloWorld_MultiStep
         }
     }
 
-    public static class Program
+    [WorkflowInterface(TaskList = "my-tasks")]
+    public interface IParentWorkfow : IWorkflow
     {
-        public static async Task Main(string[] args)
+        Task DoEmailingAsync(string adminEmail);
+    }
+
+    [Workflow(AutoRegister = true)]
+    public class ParentWorkflow : WorkflowBase, IParentWorkfow
+    {
+        public async Task DoEmailingAsync(string adminEmail)
         {
-            // Connect to Cadence
+            var childStub    = Workflow.NewChildWorkflowStub<IEmailWorkflow>();
+            var activityStub = Workflow.NewActivityStub<IEmailActivity>();
 
-            var settings = new CadenceSettings()
-            {
-                DefaultDomain = "my-domain",
-                CreateDomain  = true,
-                Servers       = new List<string>() { "cadence://localhost:7933" }
-            };
-
-            using (var client = await CadenceClient.ConnectAsync(settings))
-            {
-                // Register your workflow and activity implementations to let 
-                // Cadence know we're open for business.
-
-                await client.RegisterAssemblyAsync(System.Reflection.Assembly.GetExecutingAssembly());
-                await client.StartWorkerAsync("my-tasks");
-
-                // Invoke the workflow.
-
-                var workflowStub = client.NewWorkflowStub<IEmailWorkflow>();
-
-                await workflowStub.SendMessagesAsync();
-            }
+            await childStub.SendMessagesAsync();
+            await activityStub.SendMessageAsync(adminEmail, "All emails were sent.");
         }
     }
     #endregion

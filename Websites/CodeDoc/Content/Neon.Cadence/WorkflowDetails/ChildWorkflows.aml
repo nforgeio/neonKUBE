@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- topic-filename="Neon.Cadence-Workflow-ChildWorkflows" -->
+<topic id="cd6968a4-2e65-48fb-ad94-bb11e19d3b71" revisionNumber="1">
+  <developerConceptualDocument
+    xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
+
+    <introduction>
+    </introduction>
+
+    <section>
+      <content>
+        <para>
+          Cadence lets workflows call other workflows.  These are known as <legacyBold>child workflows</legacyBold>.
+          The example below shows how to do this:
+        </para>
+        <code source="%NF_SNIPPETS%\Cadence\Snippets.Cadence.HelloWorld\ChildWorkflow.cs" region="code" language="c#" tabSize="4"/>
+        <para>
+          This sample defines an activity and two workflows: <codeInline>IEmailActivity</codeInline>,
+          <codeInline>IEmailWorkflow</codeInline>, and <codeInline>IParentWorkfow</codeInline>.  The parent
+          workflow calls <codeInline>IEmailActivity</codeInline> as a child workflow which uses the activity
+          to send emails.  Then after the child workflow is finished, the parent workflow calls the activity
+          to send an email to the administrator indicating that the operation is complete.
+        </para>
+      </content>
+    </section>
+
+    <relatedTopics>
+    </relatedTopics>
+  </developerConceptualDocument>
+</topic>

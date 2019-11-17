@@ -12,9 +12,10 @@
       <Topic id="f1fd2005-7e8f-4d93-8278-5752d1576cd4" visible="True" title="Cadence samples" />
     </Topic>
     <Topic id="1869c666-93ff-490d-b9be-96b9e7ae1be8" visible="True" noFile="true" isExpanded="true" title="Workflow details">
-      <Topic id="47a2af19-5f1f-4c5f-853e-88d9bc439d5f" visible="True" isSelected="true" title="Coding Rules" />
+      <Topic id="47a2af19-5f1f-4c5f-853e-88d9bc439d5f" visible="True" title="Coding Rules" />
       <Topic id="03749f45-4d19-4f65-8aeb-6e24162efdf0" visible="True" title="IDs &amp; Executions" />
-      <Topic id="61af6a0e-5dff-420c-826e-007977c8ecb3" visible="True" title="Scheduling" />
+      <Topic id="61af6a0e-5dff-420c-826e-007977c8ecb3" visible="True" title="Timeouts" />
+      <Topic id="cd6968a4-2e65-48fb-ad94-bb11e19d3b71" visible="True" isSelected="true" title="Child Workflows" />
       <Topic id="28e276cd-ad5b-4194-928f-14d8a42a8958" visible="True" title="Options" />
       <Topic id="9dad47bc-7aa4-4979-9a5b-c68d10b230a7" visible="True" title="Queries" />
       <Topic id="10a488d2-0ed5-4689-b558-35dcd318889b" visible="True" title="Signals &amp; Queues" />

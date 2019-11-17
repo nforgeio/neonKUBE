@@ -184,11 +184,13 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <None Include="Content\Neon.Cadence\JavaDiff.aml" />
     <None Include="Content\Neon.Cadence\GettingStarted\MultiStepWorkflows.aml" />
     <None Include="Content\Neon.Cadence\GettingStarted\CadenceSamples.aml" />
-    <None Include="Content\Neon.Cadence\WorkflowDetails\Coding Rules.aml" />
+    <None Include="Content\Neon.Cadence\WorkflowDetails\ChildWorkflows.aml" />
+    <None Include="Content\Neon.Cadence\WorkflowDetails\CodingRules.aml" />
+    <None Include="Content\Neon.Cadence\WorkflowDetails\DecisionTasks.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\IDsExecutions.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\Options.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\Queries.aml" />
-    <None Include="Content\Neon.Cadence\WorkflowDetails\Scheduling.aml" />
+    <None Include="Content\Neon.Cadence\WorkflowDetails\Timeouts.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\SignalsQueues.aml" />
     <None Include="Content\Neon.Common\Overview.aml" />
     <None Include="Content\Neon.Couchbase\Overview.aml" />

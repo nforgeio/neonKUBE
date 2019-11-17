@@ -12,6 +12,7 @@ namespace HelloWorld_BasicActivity_2
     [ActivityInterface(TaskList = "my-tasks")]
     public interface ISendHelloActivity : IActivity
     {
+        [ActivityMethod]
         Task SendHelloAsync(string email, string name);
     }
 
@@ -31,6 +32,7 @@ namespace HelloWorld_BasicActivity_2
     [WorkflowInterface(TaskList = "my-tasks")]
     public interface IHelloWorkflow : IWorkflow
     {
+        [WorkflowMethod]
         Task HelloAsync(string email, string name);
     }
 

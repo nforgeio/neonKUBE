@@ -139,7 +139,7 @@ namespace Neon.Cadence
         /// <summary>
         /// <para>
         /// Optionally specifies the maximum time the workflow may execute from start to finish.
-        /// This will defaults to 24 hours.
+        /// This defaults to 24 hours.
         /// </para>
         /// <note>
         /// This overrides the optional corresponding value specified in the

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Neon.Cadence;
 using Neon.Common;
 
-namespace HelloWorld
+namespace HelloWorld_WorkflowOptions
 {
     [WorkflowInterface(TaskList = "my-tasks")]
     public interface IHelloWorkflow : IWorkflow
@@ -25,7 +25,7 @@ namespace HelloWorld
     public static class Program
     {
         public static async Task Main(string[] args)
-        {  
+        {
             // Connect to Cadence
 
             var settings = new CadenceSettings()
@@ -43,11 +43,18 @@ namespace HelloWorld
                 await client.RegisterWorkflowAsync<HelloWorkflow>();
                 await client.StartWorkerAsync("my-tasks");
 
-                // Invoke your workflow.
+                #region code
+                // Invoke a workflow with options:
 
-                var stub = client.NewWorkflowStub<IHelloWorkflow>();
+                var stub = client.NewWorkflowStub<IHelloWorkflow>(
+                    new WorkflowOptions()
+                    {
+                         WorkflowId             = "my-ultimate-workflow",
+                         ScheduleToStartTimeout = TimeSpan.FromMinutes(5) 
+                    });
 
                 Console.WriteLine(await stub.HelloAsync("Jeff"));
+                #endregion
             }
         }
     }

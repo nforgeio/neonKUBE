@@ -40,6 +40,19 @@
           <row>
             <entry>
               <para>
+                <legacyBold>Child Workflow</legacyBold>
+              </para>
+            </entry>
+            <entry>
+              <para>
+                These are workflows that were started in the context of another workflow.
+              </para>
+            </entry>
+          </row>
+
+          <row>
+            <entry>
+              <para>
                 <legacyBold>Client Stub</legacyBold>
               </para>
             </entry>
@@ -81,6 +94,19 @@
                 you could create new domains with the team name plus <legacyBold>-test</legacyBold>.
                 Cadence domain capacity is close to being unconstrained, so you could even
                 create separate domains for each of your developers if needed.
+              </para>
+            </entry>
+          </row>
+
+          <row>
+            <entry>
+              <para>
+                <legacyBold>External Workflow</legacyBold>
+              </para>
+            </entry>
+            <entry>
+              <para>
+                These are top-level workflows that were not started as a child workflow. 
               </para>
             </entry>
           </row>

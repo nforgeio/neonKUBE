@@ -38,7 +38,8 @@
         <code source="%NF_SNIPPETS%\Cadence\Snippets.Cadence.HelloWorld\Program-BasicActivity-1.cs" region="code" language="c#" tabSize="4"/>
         <para>
           Here we define the <codeInline>ISendHelloActivity</codeInline> interface which defines a method that
-          sends an email message.  Note that activity interfaces must inherit <codeEntityReference qualifyHint="false">T:Neon.Cadence.IActivity</codeEntityReference>
+          sends an email message.  This method is tagged with a <codeEntityReference qualifyHint="false">T:Neon.Cadence.ActivityMethodAttribute</codeEntityReference>
+          attribute indicating that it's an activity entry point.  Note that activity interfaces must inherit <codeEntityReference qualifyHint="false">T:Neon.Cadence.IActivity</codeEntityReference>
           and that we tagged this with <codeEntityReference qualifyHint="false">T:Neon.Cadence.ActivityInterfaceAttribute</codeEntityReference>
           indicating that the activity will execute within the <legacyBold>my-tasks</legacyBold> task list.
         </para>

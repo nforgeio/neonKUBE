@@ -32,13 +32,15 @@
         <para>
           The <codeEntityReference qualifyHint="false">T:Neon.Cadence.WorkflowInterfaceAttribute</codeEntityReference> is optional
           but can be used to specify workflow related options.  In this example, we're indicating that the workflow will be registered
-          with Cadence in the <legacyBold>my-tasks</legacyBold> task list (we'll be discussing task lists in depth later).
+          with Cadence in the <legacyBold>my-tasks</legacyBold> task list (we'll be discussing task lists in depth later).  All workflow 
+          implementations must inherit <codeEntityReference qualifyHint="false">T:Neon.Cadence.WorkflowBase</codeEntityReference>
+          and also implement the workflow interface you defined.
         </para>
         <para>
           Next, we define the <legacyBold>HelloWorkflow</legacyBold> <codeInline>class</codeInline> that actually implements
-          the workflow.  All workflow implementations must inherit <codeEntityReference qualifyHint="false">T:Neon.Cadence.WorkflowBase</codeEntityReference>
-          and also implement the workflow interface you defined.  In this case, the <codeInline>HelloAsync()</codeInline> workflow
-          method simply returns a string value.
+          the workflow.  In this case, the <codeInline>HelloAsync()</codeInline> workflow method simply returns a string value.
+          We tag the method with a <codeEntityReference qualifyHint="false">T:Neon.Cadence.WorkflowMethodAttribute</codeEntityReference>
+          to indicate that it's a workflow entry point.
         </para>
         <para>
           The example above is coded as a basic console application with the <codeInline>Main()</codeInline> method:
