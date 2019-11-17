@@ -29,7 +29,7 @@ using Xunit;
 namespace Neon.Xunit.Cadence
 {
     /// <summary>
-    /// Used to run the Docker <b>nkubeio.cadence-dev</b> container on 
+    /// Used to run the Docker <b>nkubeio/cadence-dev</b> container on 
     /// the current machine as a test fixture while tests are being performed 
     /// and then deletes the container when the fixture is disposed.
     /// </summary>
@@ -46,6 +46,10 @@ namespace Neon.Xunit.Cadence
     /// advantage is that <see cref="DockerFixture"/> will ensure that all
     /// (potentially conflicting) containers are removed before the Cadence
     /// fixture is started.
+    /// </para>
+    /// <para>
+    /// See <see cref="Start(CadenceSettings, string, string, string[], string, LogLevel, bool, bool, string, bool, bool, bool)"/>
+    /// for more information about how this works.
     /// </para>
     /// </remarks>
     /// <threadsafety instance="true"/>

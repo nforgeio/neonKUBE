@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!-- topic-filename="Neon.Cadence-JavaDifferences -->
+<!-- topic-filename="Neon.Cadence-JavaDiff -->
 <topic id="62735281-ac6d-4ddb-944a-8a4bb70fb180" revisionNumber="1">
   <developerConceptualDocument
     xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5"
@@ -63,7 +63,7 @@
             </entry>
             <entry>
               <para>
-                We use native typee .NET types like <codeInline>TimeSpan</codeInline> and <codeInline>DateTime</codeInline>
+                We use native .NET types like <codeInline>TimeSpan</codeInline> and <codeInline>DateTime</codeInline>
                 rather than porting the corresponding Java types.
               </para>
             </entry>
@@ -78,7 +78,7 @@
                 types into our <codeEntityReference qualifyHint="false">T:Neon.Cadence.CadenceClient</codeEntityReference> class.  This class
                 is disposable, following .NET conventions and we added <codeEntityReference qualifyHint="false">T:Neon.Cadence.CadenceSettings</codeEntityReference>
                 which is used to configure a Cadence client.  These settings can be easily deserialized from JSON or YAML which is handy when
-                loading workflow service configuration from a file (e.g. a Kubernetes pod config).
+                loading your workflow service configuration from a file (e.g. a Kubernetes pod config).
               </para>
             </entry>
           </row>

@@ -5,13 +5,21 @@
     <Topic id="b4a13879-cf87-43e2-8b6e-a122d8809d7a" visible="True" title="Overview" />
     <Topic id="c169d35c-2fe4-439d-a7f8-298f39e252be" visible="True" title="Glossary" />
     <Topic id="e7611458-d70d-458a-9dfe-09bd8811ec11" visible="True" title="Deployment" />
-    <Topic id="62735281-ac6d-4ddb-944a-8a4bb70fb180" visible="True" title="Java client differences" />
     <Topic id="53949a06-8a0b-4485-a1eb-e85932121320" visible="True" noFile="true" isExpanded="true" title="Getting started">
       <Topic id="1576a65f-94bd-4bed-9ff6-935b1c20fd87" visible="True" title="Basic workflow" />
       <Topic id="2084205f-aa66-4426-a559-063658da86aa" visible="True" title="Basic activity" />
       <Topic id="77bd3d69-f67d-4d4e-9e97-631439d19e8f" visible="True" title="Multi-step workflows" />
       <Topic id="f1fd2005-7e8f-4d93-8278-5752d1576cd4" visible="True" title="Cadence samples" />
     </Topic>
+    <Topic id="1869c666-93ff-490d-b9be-96b9e7ae1be8" visible="True" noFile="true" isExpanded="true" title="Workflow details">
+      <Topic id="47a2af19-5f1f-4c5f-853e-88d9bc439d5f" visible="True" title="Coding requirements" />
+      <Topic id="03749f45-4d19-4f65-8aeb-6e24162efdf0" visible="True" title="IDs &amp; Executions" />
+      <Topic id="61af6a0e-5dff-420c-826e-007977c8ecb3" visible="True" isSelected="true" title="Scheduling" />
+      <Topic id="28e276cd-ad5b-4194-928f-14d8a42a8958" visible="True" title="Options" />
+      <Topic id="9dad47bc-7aa4-4979-9a5b-c68d10b230a7" visible="True" title="Queries" />
+      <Topic id="10a488d2-0ed5-4689-b558-35dcd318889b" visible="True" title="Signals &amp; Queues" />
+    </Topic>
+    <Topic id="62735281-ac6d-4ddb-944a-8a4bb70fb180" visible="True" title="Java client differences" />
   </Topic>
   <Topic id="febab646-a6fe-4c79-89cd-dadd6d30ad92" visible="True" noFile="true" isExpanded="true" title="Neon.Common">
     <Topic id="8d4cab22-393a-468a-96fe-41870fa99b32" visible="True" title="Overview" />
@@ -25,7 +33,7 @@
   <Topic id="350ace58-4498-4fda-bebf-431bb2fef475" visible="True" noFile="true" isExpanded="true" title="Neon.Kube">
     <Topic id="7bc8021c-493a-4512-8532-b8969edf82c8" visible="True" title="Overview" />
   </Topic>
-  <Topic id="db9500f6-7359-49a1-9dc2-e6aa4599132a" visible="True" noFile="true" isExpanded="true" isSelected="true" title="Neon.ModelGen">
+  <Topic id="db9500f6-7359-49a1-9dc2-e6aa4599132a" visible="True" noFile="true" isExpanded="true" title="Neon.ModelGen">
     <Topic id="2962db0e-03c4-4a07-b8f8-807825db6863" visible="True" />
   </Topic>
   <Topic id="f2f15c12-51f0-4209-a899-637d34a96d2a" visible="True" noFile="true" isExpanded="true" title="Neon.NATS">
