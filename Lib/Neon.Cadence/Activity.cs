@@ -83,7 +83,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Returns the additional information about the activity and the workflow
-        /// that invoked it.  Note that this doesn't work for local activities.
+        /// that invoked it.  Note that this is not supported for local activities.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown for local activities.</exception>
         public ActivityTask Task => parent.ActivityTask;
@@ -196,7 +196,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <remarks>
         /// <note>
-        /// This method doesn't work for local activities.
+        /// This method is not supported for local activities.
         /// </note>
         /// </remarks>
         public void DoNotCompleteOnReturn()
