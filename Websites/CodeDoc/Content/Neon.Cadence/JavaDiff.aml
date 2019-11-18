@@ -188,6 +188,35 @@
               </para>
             </entry>
           </row>
+          <row>
+            <entry>
+              <para>
+                <legacyBold>workflow queues</legacyBold>
+              </para>
+            </entry>
+            <entry>
+              <para>
+                I suspect that the .NET <codeEntityReference qualifyHint="false">T:Neon.Cadence.WorkflowQueue`1</codeEntityReference> class
+                is less capable than the Java equivalant, but the Java class isn't really documented.  The .NET class is designed
+                for just two scenarios:
+              </para>
+              <list class="bullet">
+                <listItem>
+                  <para>
+                    Signal processing: Signal methods can write items to a queue for the workflow method to read.
+                  </para>
+                </listItem>
+                <listItem>
+                  <para>
+                    Workflow queues: Workflow methods and read and write items to queues.
+                  </para>
+                </listItem>
+              </list>
+              <para>
+                .NET queues cannot be shared across different workflows or between a workflow and its activities.
+              </para>
+            </entry>
+          </row>
         </table>
       </content>
     </section>

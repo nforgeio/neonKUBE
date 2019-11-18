@@ -513,9 +513,9 @@ namespace TestCadence
             }
         }
 
-        [SlowFact]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Workflow_Cron()
+        public async Task Workflow_Cron()
         {
             var assembly = Assembly.GetExecutingAssembly();
 
@@ -532,11 +532,11 @@ namespace TestCadence
                 CronSchedule = "0/1 * * * *"
             };
 
-            // Start the CRON workflow and wait for the result from the first run.  
+            // Start the CRON workflow and wait for the result from the first run.
 
-            var stub = client.NewWorkflowStub<ICronWorkflow>(options);
+            var stub = client.NewWorkflowFutureStub<ICronWorkflow>(string.Empty, options);
 
-            stub.RunAsync();
+            await stub.StartAsync();
 
             NeonHelper.WaitFor(() => CronActivity.CronCalls.Count >= 1, timeout: TimeSpan.FromMinutes(1.5));
 

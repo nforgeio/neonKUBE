@@ -77,11 +77,24 @@
           <listItem>
             <para>
               The better way is just to signal the workflow when the event happens.  You'll define a signal workflow
-              method and use a <codeEntityReference qualifyHint="false">F:Neon.Cadence.Internal.InternalMessageTypes.WorkflowQueueCloseReply</codeEntityReference>
+              method and use a <codeEntityReference qualifyHint="false">T:Neon.Cadence.WorkflowQueue`1</codeEntityReference>
               to notify your workflow method logic.
             </para>
           </listItem>
         </list>
+        <para>
+          Here's a sample showing how a workflow uses a queue to react to received signals.
+        </para>
+        <code source="%NF_SNIPPETS%\Cadence\Snippets.Cadence.HelloWorld\SignalWorkflow.cs" region="code" language="c#" tabSize="4"/>
+        <para>
+          The workflow above creates a queue and then loops, waiting for signals to be received and 
+          be added to to the queue.  It reads these signals, updates its state and returns when it
+          sees a "done" signal.
+        </para>
+        <para>
+          Signals are delivered to workflows asynchronously.  This means that the the signal method may
+          return to the caller before the workflow has actually receieved it.
+        </para>
       </content>
     </section>
 

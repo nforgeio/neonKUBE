@@ -50,7 +50,7 @@ using Neon.Common;
 //
 // This is a bit of a mess, probably mostly for unit testing.  Right now this is
 // a particular problem in the [NeonController] implementation which has some
-// unforunate hardcoding.
+// unfortunate hardcoding.
 //
 // I'm going to revisit this when I start implementing unit tests with dependency 
 // injection.

@@ -177,6 +177,7 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
   </ItemGroup>
   <ItemGroup>
     <None Include="Content\Neon.Cadence\Deployment.aml" />
+    <None Include="Content\Neon.Cadence\Logging.aml" />
     <None Include="Content\Neon.Cadence\Overview.aml" />
     <None Include="Content\Neon.Cadence\Glossary.aml" />
     <None Include="Content\Neon.Cadence\GettingStarted\BasicWorkflow.aml" />
@@ -186,9 +187,11 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <None Include="Content\Neon.Cadence\GettingStarted\CadenceSamples.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\ChildWorkflows.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\CodingRules.aml" />
+    <None Include="Content\Neon.Cadence\WorkflowDetails\CRON.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\DecisionTasks.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\IDsExecutions.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\Options.aml" />
+    <None Include="Content\Neon.Cadence\WorkflowDetails\Parallel.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\Queries.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\Timeouts.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\SignalsQueues.aml" />

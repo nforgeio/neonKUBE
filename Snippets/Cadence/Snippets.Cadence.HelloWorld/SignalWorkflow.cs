@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Neon.Cadence;
 using Neon.Common;
 
-namespace Snippets_QueryWorkflow
+namespace Snippets_SignalWorkflow
 {
     #region code
     [WorkflowInterface(TaskList = "my-tasks")]
@@ -14,6 +14,9 @@ namespace Snippets_QueryWorkflow
         [WorkflowMethod]
         Task DoItAsync();
 
+        [SignalMethod("signal")]
+        Task SignalAsync(string message);
+
         [QueryMethod("get-status")]
         Task<string> GetStatusAsync();
     }
@@ -21,22 +24,27 @@ namespace Snippets_QueryWorkflow
     [Workflow]
     public class MyWorkflow : WorkflowBase, IMyWorkflow
     {
-        private string state = "started";
+        private string                  state = "started";
+        private WorkflowQueue<string>   signalQueue;
 
         public async Task DoItAsync()
         {
-            var sleepTime = TimeSpan.FromSeconds(5);
+            signalQueue = await Workflow.NewQueueAsync<string>();
 
-            state = "sleeping #1";
-            await Workflow.SleepAsync(sleepTime);
+            while (true)
+            {
+                state = await signalQueue.DequeueAsync();
 
-            state = "sleeping #2";
-            await Workflow.SleepAsync(sleepTime);
+                if (state == "done")
+                {
+                    break;
+                }
+            }
+        }
 
-            state = "sleeping #3";
-            await Workflow.SleepAsync(sleepTime);
-
-            state = "done";
+        public async Task SignalAsync(string message)
+        {
+            await signalQueue.EnqueueAsync(message);
         }
 
         public async Task<string> GetStatusAsync()
@@ -61,18 +69,21 @@ namespace Snippets_QueryWorkflow
                 await client.RegisterAssemblyAsync(System.Reflection.Assembly.GetExecutingAssembly());
                 await client.StartWorkerAsync("my-tasks");
 
-                // Invoke the workflow and then query it's status a few times.
+                // Invoke the workflow, send it some signals and very that
+                // it changed its state to the signal value.
 
                 var stub = client.NewWorkflowStub<IMyWorkflow>();
                 var task = stub.DoItAsync();
 
-                for (int i = 0; i < 5; i++)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(2.5));
+                await stub.SignalAsync("signal #1");
+                Console.WriteLine(await stub.GetStatusAsync());
 
-                    Console.WriteLine(await stub.GetStatusAsync());
-                }
+                await stub.SignalAsync("signal #2");
+                Console.WriteLine(await stub.GetStatusAsync());
 
+                // This signal completes the workflow.
+
+                await stub.SignalAsync("done");
                 await task;
             }
         }
