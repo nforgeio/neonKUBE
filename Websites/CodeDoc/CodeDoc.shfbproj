@@ -176,6 +176,8 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <Folder Include="media\Neon.Cadence" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Content\Neon.Cadence\ActivityDetails\Basics.aml" />
+    <None Include="Content\Neon.Cadence\ActivityDetails\Local.aml" />
     <None Include="Content\Neon.Cadence\Deployment.aml" />
     <None Include="Content\Neon.Cadence\Logging.aml" />
     <None Include="Content\Neon.Cadence\Overview.aml" />
@@ -187,6 +189,7 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <None Include="Content\Neon.Cadence\GettingStarted\CadenceSamples.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\ChildWorkflows.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\CodingRules.aml" />
+    <None Include="Content\Neon.Cadence\WorkflowDetails\ContinueAsNew.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\CRON.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\DecisionTasks.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\IDsExecutions.aml" />

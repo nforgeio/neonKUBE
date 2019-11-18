@@ -87,6 +87,19 @@
               a workflow execution or to implement the new algorithm.
             </para>
           </listItem>
+          <listItem>
+            <para>
+              A workflow stub may only be used execute a single workflow entry point method.  Reusing a stub will fail with an exception.  The
+              reason for this is that the stub will remain attached to the running workflow so that you can signal or query it by calling
+              signal or query methods.
+            </para>
+            <alert class="note">
+              <para>
+                Activity stubs work differently, these do allow you to reuse a stub by allowing calls to multiple activity
+                methods.  This makes sense because activities don't have anything equivalent to signals or queries.
+              </para>
+            </alert>
+          </listItem>
         </list>
       </content>
     </section>
