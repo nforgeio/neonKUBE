@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- topic-filename="Neon.Cadence-Interop" -->
+<topic id="47f856e1-c10b-4c33-bbca-a02cd79aec9d" revisionNumber="1">
+  <developerConceptualDocument
+    xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
+
+    <introduction>
+    </introduction>
+
+    <section>
+      <content>
+        <para>
+          Although we'd love it if you commited to using the .NET Cadence client for all
+          your workflow needs, the time may come where your .NET code needs to interoperate
+          with workflows and activities written in Java or Go.  The reverse can also happen,
+          where Java or Go code needs to interoperate with .NET workflows and activities.
+          To accmplish this, you'll need to know some details aboput how Cadence works.
+        </para>
+        <para>
+          Cadence has a concept called a <legacyBold>workflow type name</legacyBold>.  This
+          is a string used to identify a workflow implementation.  This is a top-level concept
+          for the Go client: workflow implementations are first registered using a unique
+          (within a domain) name and then workflows can be executed using this name.  The Java
+          and .NET clients try to obscure workflow type names by deriving the name from the
+          workflow interface name possibly combined with workflow method information.
+        </para>
+        <para>
+          The .NET client uses the fully qualified name of the workflow interface removing
+          any leading "I" as the workflow type name.  For workflow interface methods without
+          <codeEntityReference qualifyHint="false">P:Neon.Cadence.WorkflowMethodAttribute.Name</codeEntityReference>
+          being specified, the workflow will be registered using this type name.  If the method
+          was tagged with a name, then the workflow will be registered as:
+        </para>
+        <para>
+          <legacyBold>INTERFACE-NAME::METHOD-NAME</legacyBold>
+        </para>
+        <para>
+          where <legacyBold>METHOD-NAME</legacyBold> is <codeEntityReference qualifyHint="false">P:Neon.Cadence.WorkflowMethodAttribute.Name</codeEntityReference>. 
+        </para>
+        <para>
+          This is essentially how the Java client works as well.  What this means is that Go 
+          or Java code interacting with .NET workflows will need to use the .NET convention for 
+          constructing the workflow type names.  .NET code interacting with Go/Java will need to
+          do the same.  This can be accomplished by using untyped workflow stubs and explicitly
+          specifying the target workflow type name.
+        </para>
+        <para>
+          Activities work much the same way, by specifying activity type names.
+        </para>
+      </content>
+    </section>
+
+    <relatedTopics>
+    </relatedTopics>
+  </developerConceptualDocument>
+</topic>

@@ -185,6 +185,7 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <None Include="Content\Neon.Cadence\OtherTopics\Data serialization.aml" />
     <None Include="Content\Neon.Cadence\OtherTopics\JavaDiff.aml" />
     <None Include="Content\Neon.Cadence\OtherTopics\Logging.aml" />
+    <None Include="Content\Neon.Cadence\OtherTopics\Interop.aml" />
     <None Include="Content\Neon.Cadence\Overview.aml" />
     <None Include="Content\Neon.Cadence\Glossary.aml" />
     <None Include="Content\Neon.Cadence\GettingStarted\BasicWorkflow.aml" />

@@ -31,7 +31,8 @@
     <Topic id="906729d2-656b-4bd2-a7d9-0beb010a868b" visible="True" noFile="true" isExpanded="true" title="Other Topics">
       <Topic id="907cf0a2-3f54-4c9f-a93f-3e54f5e2f806" visible="True" />
       <Topic id="41335d55-fbda-49f1-9187-fffeafb41352" visible="True" />
-      <Topic id="824a3ec2-5cc2-4fe8-94c1-1038ffbdc5e2" visible="True" isSelected="true" title="Unit testing" />
+      <Topic id="824a3ec2-5cc2-4fe8-94c1-1038ffbdc5e2" visible="True" title="Unit testing" />
+      <Topic id="47f856e1-c10b-4c33-bbca-a02cd79aec9d" visible="True" isSelected="true" title="Interop" />
       <Topic id="62735281-ac6d-4ddb-944a-8a4bb70fb180" visible="True" title="Java differences" />
     </Topic>
   </Topic>
