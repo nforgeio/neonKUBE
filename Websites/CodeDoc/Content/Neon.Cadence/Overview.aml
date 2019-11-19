@@ -79,6 +79,10 @@
         <linkUri>https://github.com/nforgeio/neonKUBE/tree/master/Lib/Neon.Cadence</linkUri>
       </externalLink>
       <externalLink>
+        <linkText>.NET Cadence Open Issues</linkText>
+        <linkUri>https://github.com/nforgeio/neonKUBE/issues?q=is%3Aopen+is%3Aissue+label%3Acadence</linkUri>
+      </externalLink>
+      <externalLink>
         <linkText>.NET Cadence Samples</linkText>
         <linkUri>https://github.com/nforgeio/cadence-samples</linkUri>
       </externalLink>

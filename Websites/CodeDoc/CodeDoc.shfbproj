@@ -159,6 +159,7 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
   <ItemGroup>
     <Folder Include="Content" />
     <Folder Include="Content\Neon.Cadence\GettingStarted" />
+    <Folder Include="Content\Neon.Cadence\OtherTopics" />
     <Folder Include="Content\Neon.Cadence\WorkflowDetails" />
     <Folder Include="Content\Neon.Cadence\ActivityDetails" />
     <Folder Include="Content\Neon.Common\" />
@@ -177,14 +178,17 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
   </ItemGroup>
   <ItemGroup>
     <None Include="Content\Neon.Cadence\ActivityDetails\Basics.aml" />
+    <None Include="Content\Neon.Cadence\ActivityDetails\ExternalCompletion.aml" />
     <None Include="Content\Neon.Cadence\ActivityDetails\Local.aml" />
     <None Include="Content\Neon.Cadence\Deployment.aml" />
-    <None Include="Content\Neon.Cadence\Logging.aml" />
+    <None Include="Content\Neon.Cadence\OtherTopics\UnitTesting.aml" />
+    <None Include="Content\Neon.Cadence\OtherTopics\Data serialization.aml" />
+    <None Include="Content\Neon.Cadence\OtherTopics\JavaDiff.aml" />
+    <None Include="Content\Neon.Cadence\OtherTopics\Logging.aml" />
     <None Include="Content\Neon.Cadence\Overview.aml" />
     <None Include="Content\Neon.Cadence\Glossary.aml" />
     <None Include="Content\Neon.Cadence\GettingStarted\BasicWorkflow.aml" />
     <None Include="Content\Neon.Cadence\GettingStarted\BasicActivity.aml" />
-    <None Include="Content\Neon.Cadence\JavaDiff.aml" />
     <None Include="Content\Neon.Cadence\GettingStarted\MultiStepWorkflows.aml" />
     <None Include="Content\Neon.Cadence\GettingStarted\CadenceSamples.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\ChildWorkflows.aml" />

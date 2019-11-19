@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!-- topic-filename="Neon.Cadence-JavaDiff -->
+<!-- topic-filename="Neon.Cadence-Other-JavaDiff -->
 <topic id="62735281-ac6d-4ddb-944a-8a4bb70fb180" revisionNumber="1">
   <developerConceptualDocument
     xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5"
@@ -48,7 +48,7 @@
           </row>
           <row>
             <entry>
-              <para><legacyBold>Properties</legacyBold></para>
+              <para><legacyBold>properties</legacyBold></para>
             </entry>
             <entry>
               <para>
@@ -59,7 +59,7 @@
           </row>
           <row>
             <entry>
-              <para><legacyBold>Native Types</legacyBold></para>
+              <para><legacyBold>native Types</legacyBold></para>
             </entry>
             <entry>
               <para>
@@ -84,7 +84,7 @@
           </row>
           <row>
             <entry>
-              <para><legacyBold>Registration</legacyBold></para>
+              <para><legacyBold>registration</legacyBold></para>
             </entry>
             <entry>
               <para>
@@ -95,7 +95,7 @@
           </row>
           <row>
             <entry>
-              <para><legacyBold>Ambient globals</legacyBold></para>
+              <para><legacyBold>ambient globals</legacyBold></para>
             </entry>
             <entry>
               <para>
@@ -119,7 +119,7 @@
           </row>
           <row>
             <entry>
-              <para><legacyBold>Activity instances</legacyBold></para>
+              <para><legacyBold>activity instances</legacyBold></para>
             </entry>
             <entry>
               <para>
@@ -214,6 +214,20 @@
               </list>
               <para>
                 .NET queues cannot be shared across different workflows or between a workflow and its activities.
+              </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>
+                <legacyBold>data converters</legacyBold>
+              </para>
+            </entry>
+            <entry>
+              <para>
+                The Java client supports custom data converters for specific workflows and activities as well as
+                for the client.  .NET currently supports custom converters at the client level.  This is something
+                we may add in the future.
               </para>
             </entry>
           </row>
