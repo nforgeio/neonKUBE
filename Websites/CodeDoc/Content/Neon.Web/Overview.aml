@@ -11,7 +11,7 @@
     <section address="summary">
       <content>
         <para>
-          Handy ASP.NET related extensions and utilities.
+          Handy ASP.NET related extensions and utilities including new base controller classes that provide integrated logging.
         </para>
       </content>
     </section>

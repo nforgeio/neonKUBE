@@ -15,15 +15,19 @@
           data model classes that can support round-trip data transmission without loss
           in many common scenarios providing a way to help future-proof your applications.
           This also can support generating the boilerplate code implementing 
-          [T:System.ComponentModel.INotifyPropertyChanged] for UX applications.
+          <legacyBold>INotifyPropertyChanged</legacyBold> for UX applications a well
+          as generatin REST service clients.
         </para>
         <para>
           Most developers won't need to reference this library since the functionally is
-          exposed by the <codeInline>neon generated models ...</codeInline> command.
+          exposed by this <legacyBold>neon-cli</legacyBold> command:
         </para>
         <para>
-          This is still a work in progress.  The [T:System.ComponentModel.INotifyPropertyChanged]
-          support works but the round-trip functionally doesn't work yet.
+          <codeInline>neon generated models ...</codeInline> command.
+        </para>
+        <para>
+          This is still a work in progress.  The <legacyBold>INotifyPropertyChanged</legacyBold>
+          and REST client generation support works now but the round-trip functionally doesn't work yet.
         </para>
       </content>
     </section>

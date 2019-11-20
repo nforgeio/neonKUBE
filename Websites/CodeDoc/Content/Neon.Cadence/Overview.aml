@@ -49,7 +49,7 @@
           Cadence is a general purpose platform that can handle workflows that exist for just a moment or two
           or workflows that run for days months or even years.  Cadence persists the state of running workflows
           using the Cassandra or MySQL database to ensure that workflows will execute correctly even in the
-          face of hardware failures.  Both Cadence and Cassandra can be easily scaled horizontally for fault
+          face of hardware failures.  Cadence and Cassandra can be easily scaled horizontally for fault
           tolerance and to handle very high loads.  Uber has Cadence deployments that can handle millions
           of simultanious workflows.
         </para>

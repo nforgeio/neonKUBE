@@ -47,7 +47,7 @@
             <entry><para><legacyBold>Neon.Xunit.Kube</legacyBold></para></entry>
             <entry>
               <para>
-                used internally for neonKUBE related unit testing.
+                is currently used internally for neonKUBE related unit testing.
               </para>
             </entry>
           </row>

@@ -10,6 +10,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doc", "Doc", "{2CFE7466-98C
 		Doc\CODEDOC.md = Doc\CODEDOC.md
 		Doc\DEVELOPER.md = Doc\DEVELOPER.md
 		Doc\MAINTAIN.md = Doc\MAINTAIN.md
+		Doc\RELEASE-TEMPLATE.md = Doc\RELEASE-TEMPLATE.md
 		Doc\RELEASE.md = Doc\RELEASE.md
 		Doc\SUDO and WinSCP.docx = Doc\SUDO and WinSCP.docx
 		Doc\Ubuntu-18.04 Hyper-V Template.docx = Doc\Ubuntu-18.04 Hyper-V Template.docx
@@ -269,7 +270,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Snippets", "Snippets", "{CB
 		Snippets\README.md = Snippets\README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snippets.Cadence.HelloWorld", "Snippets\Cadence\Snippets.Cadence.HelloWorld\Snippets.Cadence.HelloWorld.csproj", "{6B21D400-2F16-4A68-A672-2100E571854D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Snippets.Cadence.HelloWorld", "Snippets\Cadence\Snippets.Cadence.HelloWorld\Snippets.Cadence.HelloWorld.csproj", "{6B21D400-2F16-4A68-A672-2100E571854D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

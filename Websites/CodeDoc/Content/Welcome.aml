@@ -2,14 +2,8 @@
 <topic id="6e0122fd-beb8-4334-9fa2-43a79c330dd9" revisionNumber="1">
 	<developerConceptualDocument xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink">
 		<introduction>
-      <alert class="note">
-        <para>
-          This documentation site is still a work in progress.  We'll be fleshing this out over the
-          next few months.
-        </para>
-      </alert>
 			<para>
-        neonKUBE is an open source project released under the MIT license.  This project includes several
+        Neon/neonKUBE is an open source project released under the MIT license.  This project includes several
         class general purpose libraries published as nuget packages (known as the Neon libraries) as well as 
         a nacent Kubernetes distribution called neonKUBE which is still very much a work in progress.
       </para>
