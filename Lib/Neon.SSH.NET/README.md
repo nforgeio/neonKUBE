@@ -17,10 +17,10 @@ The original SSH.NET Nuget packages were working well for us up to 02-2019, when
 
 neonFORGE required a fix for this issue to support the neonKUBE Kubernetes distribution so we went ahead and cloned the project and applied some fixes suggested but not commited to the original repo.
 
-We'll be publishing this to Nuget as **Neon.SSH.NET** as a .NETStandard 2.0 class library for our own purposes, but the community is welcome to use this under the orignal [MIT license](https://opensource.org/licenses/MIT) as well as the [Apache v2](https://opensource.org/licenses/Apache-2.0) licenses.
+We'll be publishing this to Nuget as **Neon.SSH.NET** as a .NETStandard 2.0 class library for our own purposes, but the community is welcome to use this under the orignal [MIT](https://opensource.org/licenses/MIT) as well as the [Apache v2](https://opensource.org/licenses/Apache-2.0) licenses.
 
 **IMPORTANT NOTE:** Our primary goal here to solve our own problems and we hope and expect to do only very limited upgrades to this library over time.  We are by no means experts on the SSH/SCP protocols nor this codebase. 
 
 ## Repistory Clone Information
 
-This directory is a partial copy of the [sshnet/SSH.NET](https://github.com/sshnet/SSH.NET) GitHub repository.  This was copied on **06-04-2019** from the **develop** branch at commit **bd01d97**.  The [nforgeio/SSH.NET](https://github.com/nforgeio/SSH.NET) was forked from the original repo at the same time as an archive and also so that it will be easy to track any changes to the origin in the future (if there are any).
+This directory is a partial copy of the [sshnet/SSH.NET](https://github.com/sshnet/SSH.NET) GitHub repository.  This was copied on **06-04-2019** from the **develop** branch at commit **bd01d97**.

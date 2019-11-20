@@ -11,7 +11,19 @@
     <section address="summary">
       <content>
         <para>
-          $todo(jefflill)
+          This package includes a helper class and an extension making it a bit easier
+          to generate hashes: <codeEntityReference qualifyHint="false">T:Neon.Cryptography.CryptoHelper</codeEntityReference>
+          and <codeEntityReference qualifyHint="false">T:Neon.Cryptography.CryptoExtensions</codeEntityReference> as
+          well as <codeEntityReference qualifyHint="false">T:Neon.Cryptography.NeonVault</codeEntityReference> which
+          can be used for encrypting data at rest and perhaps for transmission.  This was inspired by
+          [Ansible Vault](https://docs.ansible.com/ansible/latest/user_guide/vault.html).
+        </para>
+        <para>
+          You'll find the namespace documentation here:
+          <externalLink>
+            <linkText>Neon.Cryptography</linkText>
+            <linkUri>https://doc.neonkube.com/N_Neon_Cryptography.htm</linkUri>
+          </externalLink>
         </para>
       </content>
     </section>

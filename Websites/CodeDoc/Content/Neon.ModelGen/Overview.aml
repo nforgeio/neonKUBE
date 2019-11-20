@@ -11,7 +11,19 @@
     <section address="summary">
       <content>
         <para>
-          $todo(jefflill)
+          This package is designed to convert compiled .NET interface definitions into
+          data model classes that can support round-trip data transmission without loss
+          in many common scenarios providing a way to help future-proof your applications.
+          This also can support generating the boilerplate code implementing 
+          [T:System.ComponentModel.INotifyPropertyChanged] for UX applications.
+        </para>
+        <para>
+          Most developers won't need to reference this library since the functionally is
+          exposed by the <codeInline>neon generated models ...</codeInline> command.
+        </para>
+        <para>
+          This is still a work in progress.  The [T:System.ComponentModel.INotifyPropertyChanged]
+          support works but the round-trip functionally doesn't work yet.
         </para>
       </content>
     </section>

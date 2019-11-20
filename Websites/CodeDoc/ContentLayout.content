@@ -32,7 +32,7 @@
       <Topic id="907cf0a2-3f54-4c9f-a93f-3e54f5e2f806" visible="True" />
       <Topic id="41335d55-fbda-49f1-9187-fffeafb41352" visible="True" />
       <Topic id="824a3ec2-5cc2-4fe8-94c1-1038ffbdc5e2" visible="True" title="Unit testing" />
-      <Topic id="47f856e1-c10b-4c33-bbca-a02cd79aec9d" visible="True" isSelected="true" title="Interop" />
+      <Topic id="47f856e1-c10b-4c33-bbca-a02cd79aec9d" visible="True" title="Interop" />
       <Topic id="62735281-ac6d-4ddb-944a-8a4bb70fb180" visible="True" title="Java differences" />
     </Topic>
   </Topic>
@@ -45,8 +45,8 @@
   <Topic id="683092e7-1cd9-4946-8acc-a62b74434739" visible="True" noFile="true" isExpanded="true" title="Neon.Cryptography">
     <Topic id="b5793b0c-a9cd-4e6c-9793-f2e8505e8458" visible="True" title="Overview" />
   </Topic>
-  <Topic id="350ace58-4498-4fda-bebf-431bb2fef475" visible="True" noFile="true" isExpanded="true" title="Neon.Kube">
-    <Topic id="7bc8021c-493a-4512-8532-b8969edf82c8" visible="True" title="Overview" />
+  <Topic id="350ace58-4498-4fda-bebf-431bb2fef475" visible="True" noFile="true" isExpanded="true" title="Neon.Kube.Servioce">
+    <Topic id="7bc8021c-493a-4512-8532-b8969edf82c8" visible="True" isSelected="true" />
   </Topic>
   <Topic id="db9500f6-7359-49a1-9dc2-e6aa4599132a" visible="True" noFile="true" isExpanded="true" title="Neon.ModelGen">
     <Topic id="2962db0e-03c4-4a07-b8f8-807825db6863" visible="True" />
