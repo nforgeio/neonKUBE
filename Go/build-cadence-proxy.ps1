@@ -39,7 +39,7 @@ Set-Location $projectPath
 # Build the WINDOWS binary
 $env:GOOS	= "windows"
 $env:GOARCH = "amd64"
-go build -i -ldflags="-w -s" -v -o $buildPath\cadence-proxy.win.exe cmd\cadenceproxy\main.go > "$logPath" 2>&1
+go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.win.exe cmd\cadenceproxy\main.go > "$logPath" 2>&1
 
 $exitCode = $lastExitCode
 
@@ -53,7 +53,7 @@ if ($exitCode -ne 0)
 # Build the LINUX binary
 $env:GOOS   = "linux"
 $env:GOARCH = "amd64"
-go build -i -ldflags="-w -s" -v -o $buildPath\cadence-proxy.linux cmd\cadenceproxy\main.go > "$logPath" 2>&1
+go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.linux cmd\cadenceproxy\main.go > "$logPath" 2>&1
 
 $exitCode = $lastExitCode
 
@@ -67,7 +67,7 @@ if ($exitCode -ne 0)
 # Build the OSX binary
 $env:GOOS   = "darwin"
 $env:GOARCH = "amd64"
-go build -i -ldflags="-w -s" -v -o $buildPath\cadence-proxy.osx cmd\cadenceproxy\main.go > "$logPath" 2>&1
+go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.osx cmd\cadenceproxy\main.go > "$logPath" 2>&1
 
 $exitCode = $lastExitCode
 
