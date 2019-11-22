@@ -28,7 +28,7 @@ namespace Neon.Retry
     /// <summary>
     /// This namespace includes simple types that can be used to mitigate transient errors.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

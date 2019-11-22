@@ -30,7 +30,7 @@ namespace Neon.ModelGen
     /// These models can be built to support round-tripping data without loss as well as optionally
     /// adding <see cref="INotifyPropertyChanged"/> related code for UX binding.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

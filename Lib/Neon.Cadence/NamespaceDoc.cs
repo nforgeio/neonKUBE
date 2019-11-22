@@ -30,7 +30,7 @@ namespace Neon.Cadence
     /// <summary>
     /// This namespace defines the Neon .NET client for the Uber Cadence workflow service.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

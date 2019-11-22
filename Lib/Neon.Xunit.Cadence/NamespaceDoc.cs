@@ -28,7 +28,7 @@ namespace Neon.Xunit.Cadence
     /// <summary>
     /// This namespace includes a Cadence Xunit test fixture.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

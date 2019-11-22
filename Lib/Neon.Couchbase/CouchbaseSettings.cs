@@ -55,6 +55,25 @@ namespace Neon.Data
         // Instance members
 
         /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public CouchbaseSettings()
+        {
+        }
+
+        /// <summary>
+        /// Constructs an instance with server URIs.
+        /// </summary>
+        /// <param name="servers">Specifies one or more server URIs.</param>
+        public CouchbaseSettings(params Uri[] servers)
+        {
+            foreach (var server in servers)
+            {
+                this.Servers.Add(server);
+            }
+        }
+
+        /// <summary>
         /// One or more Couchbase server URIs.
         /// </summary>
         /// <remarks>

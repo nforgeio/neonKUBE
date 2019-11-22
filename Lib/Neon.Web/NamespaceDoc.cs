@@ -30,7 +30,7 @@ namespace Neon.Web
     /// can be used as the base  classes for your ASP.NET controllers.  These add logging capabilities to
     /// your AP.NET applications.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

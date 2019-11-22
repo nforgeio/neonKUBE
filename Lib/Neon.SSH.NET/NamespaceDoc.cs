@@ -27,7 +27,7 @@ namespace Renci.SshNet
     /// This namespace includes Renci SSH.NET types.<br/>
     /// Copyright © Renci 2010-2017
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

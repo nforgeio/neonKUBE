@@ -30,7 +30,7 @@ namespace Neon.Cryptography
     /// MD5 or SHA-* hashing easier as well as the <b>NeonVault</b> class which can be used to persist 
     /// encrypted data (inspired by Ansible Vault).
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

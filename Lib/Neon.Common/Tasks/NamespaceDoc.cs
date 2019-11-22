@@ -31,7 +31,7 @@ namespace Neon.Tasks
     /// and <b>timers</b>.  This also includes <b>SyncContext</b> which can be used to easily
     /// clear the synchronization context within API implementations.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

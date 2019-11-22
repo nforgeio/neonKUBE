@@ -28,7 +28,7 @@ namespace Neon.HyperV
     /// <summary>
     /// Internal namespace.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

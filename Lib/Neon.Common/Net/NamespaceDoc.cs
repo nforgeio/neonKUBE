@@ -30,7 +30,7 @@ namespace Neon.Net
     /// as a handful of other network related utilities provided by <see cref="NetHelper"/> and
     /// <see cref="Pinger"/>.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

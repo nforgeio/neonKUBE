@@ -5090,6 +5090,11 @@
             <param name="clusterDefinition">The cluster definition.</param>
             <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         </member>
+        <member name="T:Neon.Kube.NamespaceDoc">
+            <summary>
+            This namespace includes neonKUBE Kubernetes distribution related types.
+            </summary>
+        </member>
         <member name="T:Neon.Kube.NodeProxyCreator">
             <summary>
             Creates a <see cref="T:Neon.Kube.SshProxy`1"/> for the specified host and server name,
@@ -7408,31 +7413,31 @@
             <summary>IsDirtyString: true</summary>
         </member>
         <member name="F:ThisAssembly.Git.Branch">
-            <summary>Branch: jeff</summary>
+            <summary>Branch: release-1.0.0</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: 33105e9d8</summary>
+            <summary>Commit: cb020a226</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: 33105e9d8fd9bb21282605cbda327024894b6013</summary>
+            <summary>Sha: cb020a226cfc7cc01b463987987506ad23598d4e</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 129</summary>
+            <summary>Commits on top of base version: 5</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: v0.7.0-alpha-129-g33105e9d8</summary>
+            <summary>Tag: </summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
-            <summary>Base tag: v0.7.0-alpha</summary>
+            <summary>Base tag: </summary>
         </member>
         <member name="T:ThisAssembly.Git.BaseVersion">
             <summary>Provides access to the base version information used to determine the <see cref="T:ThisAssembly.Git.SemVer" />.</summary>      
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Major">
-            <summary>Major: 0</summary>
+            <summary>Major: 1</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Minor">
-            <summary>Minor: 7</summary>
+            <summary>Minor: 0</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Patch">
             <summary>Patch: 0</summary>
@@ -7441,22 +7446,22 @@
             <summary>Provides access to SemVer information for the current assembly.</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Major">
-            <summary>Major: 0</summary>
+            <summary>Major: 1</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Minor">
-            <summary>Minor: 7</summary>
+            <summary>Minor: 0</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 129</summary>
+            <summary>Patch: 5</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
-            <summary>Label: alpha</summary>
+            <summary>Label: release</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.DashLabel">
-            <summary>Label with dash prefix: -alpha</summary>
+            <summary>Label with dash prefix: -release</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Source">
-            <summary>Source: Tag</summary>
+            <summary>Source: Branch</summary>
         </member>
     </members>
 </doc>

@@ -29,7 +29,7 @@ namespace Neon.Windows
     /// This namespace defines low-level Windows P/Invoke mappings as well as
     /// a simply class that can execute PowerShell commands.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

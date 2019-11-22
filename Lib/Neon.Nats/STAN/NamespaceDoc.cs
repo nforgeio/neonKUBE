@@ -28,7 +28,7 @@ namespace STAN.Client
     /// <summary>
     /// This namespace extends the standard NATS streaming client.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

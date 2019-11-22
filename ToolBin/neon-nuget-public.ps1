@@ -33,6 +33,7 @@ function SetVersion
         [string]$project
     )
 
+    "$project"
 	neon-build pack-version "$env:NF_ROOT\product-version.txt" "$env:NF_ROOT\Lib\$project\$project.csproj"
 }
 

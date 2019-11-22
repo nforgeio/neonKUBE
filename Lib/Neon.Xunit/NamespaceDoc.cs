@@ -30,7 +30,7 @@ namespace Neon.Xunit
     /// Docker Containers, Docker Swarm, Environment variables, DNS (local hosts file), Kube services, 
     /// NATS/STAN message queues.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

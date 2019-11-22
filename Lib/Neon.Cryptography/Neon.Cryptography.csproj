@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Cryptography</RootNamespace>
-    <Version>0.7.1</Version>
+    <Version>1.0.0</Version>
     <Company>neonFORGE, LLC</Company>
     <Authors>Jeff Lill</Authors>
     <Description>neonKUBE cryptography library.</Description>
@@ -15,7 +15,7 @@
     <LangVersion>latest</LangVersion>
     <IsPackable>true</IsPackable>
     <PackageLicenseUrl></PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Cryptography/README.md</PackageProjectUrl>
+    <PackageProjectUrl>https://doc.neonkube.com/Neon.Cryptography-Overview.htm</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
@@ -47,6 +47,7 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors />
     <NoWarn>NU1605</NoWarn>
+    <DocumentationFile>bin\Release\Neon.Cryptography.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

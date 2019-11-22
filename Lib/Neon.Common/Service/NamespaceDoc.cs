@@ -28,7 +28,7 @@ namespace Neon.Service
     /// <summary>
     /// This namespace defines types used to describe an application service.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

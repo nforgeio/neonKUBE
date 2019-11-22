@@ -28,7 +28,7 @@ namespace Neon.Collections
     /// <summary>
     /// This namespace defines a handful of probably archaic custom collection classes.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

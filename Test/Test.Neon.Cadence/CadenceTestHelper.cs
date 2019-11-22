@@ -68,7 +68,7 @@ namespace TestCadence
         /// <summary>
         /// Specifies whether Cadence unit tests will connect to Cadence in DEBUG mode.
         /// </summary>
-        public const bool Debug = true;
+        public const bool Debug = false;
 
         /// <summary>
         /// <para>

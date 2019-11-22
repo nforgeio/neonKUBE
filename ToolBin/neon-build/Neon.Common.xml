@@ -434,6 +434,11 @@
             </summary>
             <returns>The bitmap string.</returns>
         </member>
+        <member name="T:Neon.Collections.NamespaceDoc">
+            <summary>
+            This namespace defines a handful of probably archaic custom collection classes.
+            </summary>
+        </member>
         <member name="T:Neon.Collections.NiceDictionary`2">
             <summary>
             A dictionary of values where the indexer will return the default value
@@ -4070,6 +4075,12 @@
             emulated program must exit cleanly when this returns.
             </summary>
         </member>
+        <member name="T:Neon.Common.NamespaceDoc">
+            <summary>
+            This namespace includes a a lot of types used by the remaining class libraries. 
+            You might find some of these useful as well.
+            </summary>
+        </member>
         <member name="T:Neon.Csv.CsvReader">
             <summary>
             Parses CSV encoded rows from text.
@@ -4419,6 +4430,11 @@
             </summary>
             <param name="args">The arguments.</param>
         </member>
+        <member name="T:Neon.Csv.NamespaceDoc">
+            <summary>
+            This namespace includes types for reading and writing Comma Separated Value (CSV) formatted data.
+            </summary>
+        </member>
         <member name="T:Neon.Data.DateTimeJsonConverter">
             <summary>
             <para>
@@ -4682,6 +4698,11 @@
             Asynchronously writes the instance as JSON to a <see cref="T:System.IO.Stream"/>.
             </summary>
             <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+        </member>
+        <member name="T:Neon.Data.NamespaceDoc">
+            <summary>
+            This namespace defines some data converters as well as types and interfaces supporting ModelGen generated data types.
+            </summary>
         </member>
         <member name="T:Neon.Data.NotifyPropertyChanged">
             <summary>
@@ -5590,6 +5611,11 @@
             </summary>
             <param name="message">The optional message to be recorded.</param>
         </member>
+        <member name="T:Neon.Diagnostics.NamespaceDoc">
+            <summary>
+            This namespace includes the common logging code used throughout Neon applications and libraries.
+            </summary>
+        </member>
         <member name="T:Neon.Diagnostics.NeonLogger">
             <summary>
             A general purpose implementation of <see cref="T:Neon.Diagnostics.INeonLogger"/> and <see cref="T:Microsoft.Extensions.Logging.ILogger"/>.
@@ -6316,6 +6342,11 @@
         </member>
         <member name="M:Neon.IO.LinuxPermissions.ToString">
             <inheritdoc/>
+        </member>
+        <member name="T:Neon.IO.NamespaceDoc">
+            <summary>
+            This namespace includes some handy file and stream related types.
+            </summary>
         </member>
         <member name="T:Neon.IO.PreprocessReader">
             <summary>
@@ -8223,6 +8254,13 @@
             </summary>
             <exception cref="T:Neon.Net.HttpException">Thrown if the response doesn't indicate success.</exception>
         </member>
+        <member name="T:Neon.Net.NamespaceDoc">
+            <summary>
+            This namespace defines <see cref="T:Neon.Net.JsonClient"/> which makes calling REST APIs easier as well
+            as a handful of other network related utilities provided by <see cref="T:Neon.Net.NetHelper"/> and
+            <see cref="T:Neon.Net.Pinger"/>.
+            </summary>
+        </member>
         <member name="T:Neon.Net.NetConst">
             <summary>
             Network related constants.
@@ -9217,6 +9255,11 @@
         <member name="M:Neon.Retry.LinearRetryPolicy.InvokeAsync``1(System.Func{System.Threading.Tasks.Task{``0}})">
             <inheritdoc/>
         </member>
+        <member name="T:Neon.Retry.NamespaceDoc">
+            <summary>
+            This namespace includes simple types that can be used to mitigate transient errors.
+            </summary>
+        </member>
         <member name="T:Neon.Retry.NoRetryPolicy">
             <summary>
             Implements an <see cref="T:Neon.Retry.IRetryPolicy"/> that does not attempt to retry operations.
@@ -9421,6 +9464,11 @@
             </summary>
             <param name="message">The message.</param>
             <param name="innerException">Optional inner exception.</param>
+        </member>
+        <member name="T:Neon.Service.NamespaceDoc">
+            <summary>
+            This namespace defines types used to describe an application service.
+            </summary>
         </member>
         <member name="T:Neon.Service.NeonServiceMap">
             <summary>
@@ -10373,6 +10421,14 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="T:Neon.Tasks.NamespaceDoc">
+            <summary>
+            This namespace includes a handful of types that implement the async equivalent of
+            primitives like <b>auto/manual reset events</b>, <b>mutexes</b>, <b>reader/writer locks</b>, 
+            and <b>timers</b>.  This also includes <b>SyncContext</b> which can be used to easily
+            clear the synchronization context within API implementations.
+            </summary>
+        </member>
         <member name="T:Neon.Tasks.NonDisposableTask">
             <summary>
             Used to convert a <see cref="T:System.Threading.Tasks.Task"/> into an awaitable that that does not
@@ -10894,6 +10950,11 @@
             Renders the time span as a GO Duration compatible string.
             </summary>
             <returns>The GO duration.</returns>
+        </member>
+        <member name="T:Neon.Time.NamespaceDoc">
+            <summary>
+            This namespace includes some time related types.
+            </summary>
         </member>
         <member name="T:Neon.Time.PolledTimer">
             <summary>
@@ -11632,10 +11693,16 @@
             </summary>
             <returns>The formatted string.</returns>
         </member>
+        <member name="T:Neon.Windows.NamespaceDoc">
+            <summary>
+            This namespace defines low-level Windows P/Invoke mappings as well as
+            a simply class that can execute PowerShell commands.
+            </summary>
+        </member>
         <member name="T:Neon.Windows.PowerShell">
             <summary>
             <para>
-            Internal proxy for executing PowerShell commands on Windows machines.
+            A simple proxy for executing PowerShell commands on Windows machines.
             </para>
             <note>
             This class requires elevated administrative rights.

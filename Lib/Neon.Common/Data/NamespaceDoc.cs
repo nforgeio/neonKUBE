@@ -28,7 +28,7 @@ namespace Neon.Data
     /// <summary>
     /// This namespace defines some data converters as well as types and interfaces supporting ModelGen generated data types.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

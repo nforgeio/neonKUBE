@@ -59,7 +59,6 @@ namespace Neon.Cryptography
     /// authority after the certificate and before the private key.
     /// </note>
     /// </remarks>
-    [Obsolete("Use the standard .NET Core certificate classes instead of this.")]
     public class TlsCertificate
     {
         //---------------------------------------------------------------------

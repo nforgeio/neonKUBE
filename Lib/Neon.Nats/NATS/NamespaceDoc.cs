@@ -28,7 +28,7 @@ namespace NATS.Client
     /// <summary>
     /// This namespace extends the standard NATS messaging types.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }
