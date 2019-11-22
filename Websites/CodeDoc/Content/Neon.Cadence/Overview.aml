@@ -64,6 +64,12 @@
           </externalLink>
         </para>
         <para>
+          Here's a link to the Neon Cadence client namespace documentation:
+        </para>
+        <para>
+          <codeEntityReference qualifyHint="false">N:Neon.Cadence</codeEntityReference>
+        </para>
+        <para>
           We'll remainder of these pages will guide you through creating your first workflows.
         </para>
       </content>
@@ -78,6 +84,7 @@
         <linkText>.NET Cadence GitHub Repository</linkText>
         <linkUri>https://github.com/nforgeio/neonKUBE/tree/master/Lib/Neon.Cadence</linkUri>
       </externalLink>
+      <codeEntityReference qualifyHint="false">N:Neon.Cadence</codeEntityReference>
       <externalLink>
         <linkText>.NET Cadence Open Issues</linkText>
         <linkUri>https://github.com/nforgeio/neonKUBE/issues?q=is%3Aopen+is%3Aissue+label%3Acadence</linkUri>

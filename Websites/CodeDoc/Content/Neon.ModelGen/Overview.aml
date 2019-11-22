@@ -33,6 +33,7 @@
     </section>
 
     <relatedTopics>
+      <codeEntityReference qualifyHint="false">N:Neon.ModelGen</codeEntityReference>
     </relatedTopics>
   </developerConceptualDocument>
 </topic>

@@ -28,6 +28,7 @@
     </section>
 
     <relatedTopics>
+      <codeEntityReference qualifyHint="false">N:Neon.Kube.Service</codeEntityReference>
     </relatedTopics>
   </developerConceptualDocument>
 </topic>

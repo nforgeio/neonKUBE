@@ -32,6 +32,14 @@
     </section>
 
     <relatedTopics>
+      <externalLink>
+        <linkText>Neon NATS.Client namespace documentation</linkText>
+        <linkUri>https://doc.neonkube.com/N_NATS_Client.htm</linkUri>
+      </externalLink>
+      <externalLink>
+        <linkText>Neon STAN.Client namespace documentation</linkText>
+        <linkUri>https://doc.neonkube.com/N_STAN_Client.htm</linkUri>
+      </externalLink>
     </relatedTopics>
   </developerConceptualDocument>
 </topic>

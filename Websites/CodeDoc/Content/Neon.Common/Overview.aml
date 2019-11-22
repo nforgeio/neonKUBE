@@ -10,7 +10,11 @@
         The <legacyBold>Neon.Common</legacyBold> class library is built for NETStandard 2.0.
         It's relatively small and includes miscellaneous types that are useful on their own
         and are also required by other Neon projects.  This is suitable for including in all
-        .NET Core and .NET Framework projects including Xamarin.
+        .NET Core and .NET Framework projects including Xamarin.  Here's a link to the 
+        namespace documentation:
+      </para>
+      <para>
+        <codeEntityReference qualifyHint="false">N:Neon.Common</codeEntityReference>
       </para>
       <alert class="warning">
         <para>
@@ -271,6 +275,7 @@
     </section>
 
     <relatedTopics>
+      <codeEntityReference qualifyHint="false">N:Neon.Common</codeEntityReference>
     </relatedTopics>
   </developerConceptualDocument>
 </topic>

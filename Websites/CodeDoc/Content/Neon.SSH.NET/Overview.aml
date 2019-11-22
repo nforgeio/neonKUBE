@@ -77,6 +77,7 @@
     </section>
 
     <relatedTopics>
+      <codeEntityReference qualifyHint="false">N:Renci.SshNet</codeEntityReference>
     </relatedTopics>
   </developerConceptualDocument>
 </topic>

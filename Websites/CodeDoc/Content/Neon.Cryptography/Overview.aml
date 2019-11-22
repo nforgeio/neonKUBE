@@ -20,15 +20,15 @@
         </para>
         <para>
           You'll find the namespace documentation here:
-          <externalLink>
-            <linkText>Neon.Cryptography</linkText>
-            <linkUri>https://doc.neonkube.com/N_Neon_Cryptography.htm</linkUri>
-          </externalLink>
+        </para>
+        <para>
+          <codeEntityReference qualifyHint="false">N:Neon.Cryptography</codeEntityReference>
         </para>
       </content>
     </section>
 
     <relatedTopics>
+      <codeEntityReference qualifyHint="false">N:Neon.Cryptography</codeEntityReference>
     </relatedTopics>
   </developerConceptualDocument>
 </topic>

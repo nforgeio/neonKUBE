@@ -36,6 +36,10 @@
     </section>
 
     <relatedTopics>
+      <externalLink>
+        <linkText>Neon Couchbase namespace documentation</linkText>
+        <linkUri>https://doc.neonkube.com/N_Couchbase.htm</linkUri>
+      </externalLink>
     </relatedTopics>
   </developerConceptualDocument>
 </topic>

@@ -46,6 +46,7 @@
     </section>
 
     <relatedTopics>
+      <codeEntityReference qualifyHint="false">N:Neon.Cadence</codeEntityReference>
     </relatedTopics>
   </developerConceptualDocument>
 </topic>
