@@ -60,7 +60,11 @@ namespace NeonBuild
             {
                 localPrerelease = File.ReadAllLines(localVersionPath).FirstOrDefault();
 
-                if (!string.IsNullOrEmpty(localPrerelease))
+                if (string.IsNullOrEmpty(localPrerelease))
+                {
+                    localPrerelease = string.Empty;
+                }
+                else
                 {
                     localPrerelease.Trim();
                 }
@@ -68,11 +72,6 @@ namespace NeonBuild
                 if (localPrerelease.StartsWith("-"))
                 {
                     localPrerelease = localPrerelease.Substring(1);
-                }
-
-                if (string.IsNullOrEmpty(localPrerelease))
-                {
-                    localPrerelease = null;
                 }
 
                 localPrerelease = localPrerelease.ToLowerInvariant();

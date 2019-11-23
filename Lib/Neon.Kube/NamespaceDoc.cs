@@ -28,7 +28,7 @@ namespace Neon.Kube
     /// <summary>
     /// This namespace includes neonKUBE Kubernetes distribution related types.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

@@ -13,7 +13,7 @@
     <RootNamespace>CodeDoc</RootNamespace>
     <Name>CodeDoc</Name>
     <!-- SHFB properties -->
-    <FrameworkVersion>Cross-platform (.NET Core/.NET Standard)</FrameworkVersion>
+    <FrameworkVersion>.NET Framework 4.6.2</FrameworkVersion>
     <OutputPath>..\..\Build\codedoc\</OutputPath>
     <HtmlHelpName>neon</HtmlHelpName>
     <Language>en-US</Language>
@@ -30,7 +30,6 @@
       <DocumentationSource sourceFile="..\..\Lib\Neon.Common\Neon.Common.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Cadence\Neon.Cadence.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Couchbase\Neon.Couchbase.csproj" />
-      <DocumentationSource sourceFile="..\..\Lib\Neon.Cryptography\Neon.Cryptography.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Docker\Neon.Docker.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.ModelGen\Neon.ModelGen.csproj" />
@@ -42,6 +41,7 @@
       <DocumentationSource sourceFile="..\..\Lib\Neon.Xunit.Cadence\Neon.Xunit.Cadence.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Xunit.Couchbase\Neon.Xunit.Couchbase.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Xunit.Kube\Neon.Xunit.Kube.csproj" />
+      <DocumentationSource sourceFile="..\..\Lib\Neon.Cryptography\Neon.Cryptography.csproj" />
     </DocumentationSources>
     <HelpFileFormat>HtmlHelp1, Website</HelpFileFormat>
     <SyntaxFilters>Standard</SyntaxFilters>

@@ -29,7 +29,7 @@ namespace Neon.Common
     /// This namespace includes a a lot of types used by the remaining class libraries. 
     /// You might find some of these useful as well.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

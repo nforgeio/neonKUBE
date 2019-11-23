@@ -31,7 +31,7 @@ namespace Neon.Kube.Service
     /// stand alone service.  This namespace is probably misnamed because it can be used completely 
     /// independently from the <b>Neon.Kube</b> package.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

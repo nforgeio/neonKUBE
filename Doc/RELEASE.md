@@ -18,26 +18,26 @@
    neon-publish-images -all
    neon-nuget-public
    neon-builder -all
-   neon-release -all
+   neon-release -codedoc
    ```
 
 5. Verify that the new release installer works.
 
-6. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: v0.7.1-alpha**
+6. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: v1.0.0**
 
 7. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
 
   a. Create the release if it doesn't already exist
-  b. Set **Tag** to the version with a leading "v" (like **v0.7.1-alpha**)
+  b. Set **Tag** to the version with a leading "v" (like **v1.0.0**)
   c. Set **Target** to the `release-VERSION` branch
   e: Check **This is a pre-release** as required
-  f. Add the release setup binary named like: **neonKUBE-setup-0.7.1-alpha.sha512.txt**
+  f. Add the release setup binary named like: **neonKUBE-setup-1.0.0.sha512.txt**
   g. Add the OS/X neon-cli binary from **osx** folder as: **neon-osx**
   h. Add **neon.chm**
   i. Edit the release notes including adding the SHA512s for:
   ```
   %NF_BUILD%\neonKUBE-setup.sha512.txt
-  %NF_BUILD%\osx\neon-0.7.1-alpha.sha512.txt
+  %NF_BUILD%\osx\neon-1.0.0.sha512.txt
   %NF_BUILD%\neon.chm.sha512.txtl
   ```
   j. Publish the release

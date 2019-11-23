@@ -3,19 +3,23 @@ This is a full Neon release intended for general consumption.  Note that some pa
 <table>
   <tr>
     <td>Documentation</td>
-    <td><a href="https://doc.neonkube.com](https://doc.neonkube.com">https://doc.neonkube.com](https://doc.neonkube.com</a></td>
+    <td><a href="https://doc.neonkube.com">https://doc.neonkube.com</a></td>
   </tr>
   <tr>
     <td>GitHub Repository:</td>
     <td><a href="https://github.com/nforgeio/neonKUBE">https://github.com/nforgeio/neonKUBE</a></td>
   </tr>
-</table>
+  <tr>
+    <td>Cadence samples:</td>
+    <td><a href="https://github.com/nforgeio/cadence-samples">https://github.com/nforgeio/cadence-samples</a></td>
+  </tr></table>
 
 ### <img src="https://doc.neonkube.com/media/release.png"/> Neon.Cadence
 
-This package provides a .NET client for the [Uber Cadence](https://cadenceworkflow.io/docs/) workflow platform.  This is the first preview quality release and is still a bit of a work in progress.  That being said, most functionality is implemented and we're using this in production for a day-job project.  You can get started [here](https://doc.neonkube.com/Neon.Cadence-Overview.htm).
+This package provides a .NET client for the [Uber Cadence](https://cadenceworkflow.io/docs/) workflow platform.  This is the first public release and is still a bit of a work in progress.  That being said, most functionality is implemented and we're using this in production for a day-job project.  You can get started [here](https://doc.neonkube.com/Neon.Cadence-Overview.htm).
 
-**Changes:** No significant changes for this release.
+**Changes:** 
+* `CadenceSettings` adds a constructor where you can specify the server URIs
 
 ### <img src="https://doc.neonkube.com/media/release.png"/> Neon.Common 
 
@@ -27,7 +31,8 @@ This package includes a few dozen useful types used by other Neon components.  T
 
 This package extends the standard [CouchbaseNetClient](https://www.nuget.org/packages/CouchbaseNetClient) package, adding *safe* methods that return the operation result directly, handling transient errors transparently and throwing exceptions for hard errors.  This also includes some configuration related extensions.  You can get started [here](https://doc.neonkube.com/Neon.Couchbase-Overview.htm).
 
-**Changes:** No significant changes for this release.
+**Changes:** 
+* `CouchbaseSettings` adds a constructor where you can specify the server URIs
 
 ### <img src="https://doc.neonkube.com/media/release.png"/> Neon.Cryptography
 
@@ -47,7 +52,7 @@ This package is designed to convert compiled .NET interface definitions into dat
 
 Most developers won't need to reference this library since the functionally is exposed by this **neon-cli** command:
 ```
-neon generated models ...
+neon generate models ...
 ```
 This is still a work in progress.  The `INotifyPropertyChanged` and REST client generation support works now but the round-trip functionally doesn't work yet.
 
@@ -77,7 +82,7 @@ This package includes generally useful test fixtures for ASP.NET, Containers, Do
 
 **Changes:** No significant changes for this release.
 
-### <img src="https://doc.neonkube.com/media/preview.png"/> Neon.Xunit.Cadence
+### <img src="https://doc.neonkube.com/media/release.png"/> Neon.Xunit.Cadence
 
 This package includes a fixture for running Cadence locally as a Docker container during for unit tests.
 
@@ -147,3 +152,14 @@ Neon components are released using versions compatible with [Semantic Versioning
     <td>indicates that the released binary is not intended for general consumption. These are typically referenced by other neonKUBE libaries and tools. </td>
   </tr>
 </table>
+
+### Binary SHA512 signatures:
+
+**neonKUBE-setup-1.0.0.exe:**
+`FILL THIS IN`
+
+**neon.chm:**
+`FILL THIS IN`
+
+**neon-osx:**
+`FILL THIS IN`

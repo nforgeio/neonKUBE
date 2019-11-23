@@ -28,7 +28,7 @@ namespace Neon.Diagnostics
     /// <summary>
     /// This namespace includes the common logging code used throughout Neon applications and libraries.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

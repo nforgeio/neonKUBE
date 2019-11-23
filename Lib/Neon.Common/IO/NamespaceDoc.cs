@@ -28,7 +28,7 @@ namespace Neon.IO
     /// <summary>
     /// This namespace includes some handy file and stream related types.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

@@ -46,6 +46,21 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Constructs an instance with server URIs.
+        /// </summary>
+        /// <param name="servers">Specifies one or more server URIs.</param>
+        public CadenceSettings(params string[] servers)
+        {
+            foreach (var server in servers)
+            {
+                if (!string.IsNullOrEmpty(server))
+                {
+                    this.Servers.Add(server);
+                }
+            }
+        }
+
+        /// <summary>
         /// One or more Couchbase server URIs.
         /// </summary>
         /// <remarks>

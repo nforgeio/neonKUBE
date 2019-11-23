@@ -28,7 +28,7 @@ namespace Neon.Csv
     /// <summary>
     /// This namespace includes types for reading and writing Comma Separated Value (CSV) formatted data.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

@@ -28,7 +28,7 @@ namespace Neon.Xunit.Couchbase
     /// <summary>
     /// This namespace includes a Couchbase Xunit test fixture.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

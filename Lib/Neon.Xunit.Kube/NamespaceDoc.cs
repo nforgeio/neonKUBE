@@ -28,7 +28,7 @@ namespace Neon.Xunit.Kube
     /// <summary>
     /// This namespace includes additional utilties for testing neonKUBE functionality.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc
     {
     }

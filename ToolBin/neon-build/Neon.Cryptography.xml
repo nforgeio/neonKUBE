@@ -507,6 +507,13 @@
             <param name="input">The stream.</param>
             <returns>The hash HEX string.</returns>
         </member>
+        <member name="T:Neon.Cryptography.NamespaceDoc">
+            <summary>
+            This namespace Includes some cryptographic helper methods and extensuions making operations like
+            MD5 or SHA-* hashing easier as well as the <b>NeonVault</b> class which can be used to persist 
+            encrypted data (inspired by Ansible Vault).
+            </summary>
+        </member>
         <member name="T:Neon.Cryptography.NeonVault">
             <summary>
             Manages the encryption and decryption of files using passwords.  This works

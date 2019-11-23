@@ -3509,6 +3509,17 @@
             <param name="strict">Optionally require that all input properties map to route properties.</param>
             <returns>The parsed <see cref="T:Neon.Data.CouchbaseSettings"/>.</returns>
         </member>
+        <member name="M:Neon.Data.CouchbaseSettings.#ctor">
+            <summary>
+            Default constructor.
+            </summary>
+        </member>
+        <member name="M:Neon.Data.CouchbaseSettings.#ctor(System.Uri[])">
+            <summary>
+            Constructs an instance with server URIs.
+            </summary>
+            <param name="servers">Specifies one or more server URIs.</param>
+        </member>
         <member name="P:Neon.Data.CouchbaseSettings.Servers">
             <summary>
             One or more Couchbase server URIs.

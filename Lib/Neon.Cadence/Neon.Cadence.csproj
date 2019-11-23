@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Cadence</RootNamespace>
-    <Version>0.7.1-preview</Version>
+    <Version>1.0.0</Version>
     <Company>neonFORGE, LLC</Company>
     <Authors>Jeff Lill, John C Burns</Authors>
     <Description>.NET client for Uber Cadence.</Description>
@@ -15,7 +15,7 @@
     <LangVersion>latest</LangVersion>
     <IsPackable>true</IsPackable>
     <PackageLicenseUrl></PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Cadence/README.md</PackageProjectUrl>
+    <PackageProjectUrl>https://doc.neonkube.com/Neon.Cadence-Overview.htm</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
@@ -51,6 +51,7 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors />
     <NoWarn>NU1605</NoWarn>
+    <DocumentationFile>bin\Release\Neon.Cadence.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

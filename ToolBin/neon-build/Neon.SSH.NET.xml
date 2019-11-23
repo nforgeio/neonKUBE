@@ -9926,6 +9926,12 @@
             Called when type specific data need to be saved.
             </summary>
         </member>
+        <member name="T:Renci.SshNet.NamespaceDoc">
+            <summary>
+            This namespace includes Renci SSH.NET types.<br/>
+            Copyright © Renci 2010-2017
+            </summary>
+        </member>
         <member name="T:Renci.SshNet.NetConfClient">
             <summary>
             Contains operation for working with NetConf server.
