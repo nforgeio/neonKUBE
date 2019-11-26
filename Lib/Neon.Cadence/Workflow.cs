@@ -45,6 +45,26 @@ namespace Neon.Cadence
         /// </summary>
         public const int DefaultVersion = -1;
 
+        //---------------------------------------------------------------------
+        // Static members
+
+        private static AsyncLocal<Workflow> currentWorkflow = new AsyncLocal<Workflow>();
+
+        /// <summary>
+        /// Returns the <see cref="Workflow"/> information for the worflow executing within the
+        /// current asynchronous flow or <c>null</c> if the current code is not executing within
+        /// the context of a workflow.  This property use an internal <see cref="AsyncLocal{T}"/>
+        /// to manage this state.
+        /// </summary>
+        public static Workflow Current
+        {
+            get => currentWorkflow.Value;
+            internal set => currentWorkflow.Value = value;
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private object      syncLock = new object();
         private int         pendingOperationCount;
         private long        nextLocalActivityActionId;

@@ -4383,5 +4383,39 @@ namespace TestCadence
                 }
             }
         }
+
+        //---------------------------------------------------------------------
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IWorkflowAmbientState : IWorkflow
+        {
+            [WorkflowMethod()]
+            Task<bool> RunAsync();
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowAmbientState : WorkflowBase, IWorkflowAmbientState
+        {
+            public async Task<bool> RunAsync()
+            {
+                // Returns TRUE when the workflow property and the correspending ambient
+                // reference the same instance.
+
+                return await Task.FromResult(object.ReferenceEquals(this.Workflow, Workflow.Current));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_AmbientState()
+        {
+            // Verify that the ambient [Workflow.Current] property is being set properly.
+
+            var stub = client.NewWorkflowStub<IWorkflowAmbientState>();
+
+            Assert.Null(Workflow.Current);
+            Assert.True(await stub.RunAsync());
+            Assert.Null(Workflow.Current);
+        }
     }
 }
