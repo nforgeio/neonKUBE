@@ -102,10 +102,22 @@
                 The Java client uses thread-local storage to expose the static <codeInline>Workflow</codeInline> class
                 to threads executing workflows and <codeInline>Activity</codeInline> to threads executing activities.
                 These classes return values and perform operations for the workflow or activity associated with the
-                thread.  We looked closely at doing something similar for .NET which also supports thread local storage.
-                That didn't make sense though, because we decided to be task centric.  .NET also supports <codeInline>AsyncLocal</codeInline>
-                storage but this doesn't really play well with arbitrary threads and we worried this would end up being
-                confusing and probably just plain bad.
+                thread.  For workflows we use <codeEntityReference qualifyHint="false">T:System.Threading.AsyncLocal`1</codeEntityReference>
+                internally to implement the <codeInline>static</codeInline> <codeEntityReference qualifyHint="false">P:Neon.Cadence.Workflow.Current</codeEntityReference>
+                property.  This will be set when your workflow code is invoked and will be available within your workflow
+                class as well as any code your workflow calls.  This works because workflows are prohibited from starting
+                additional threads.
+              </para>
+              <alert class="note">
+                <para>
+                  Code within your workflow class can also reference this state via this shortcut: 
+                  <codeEntityReference qualifyHint="false">P:Neon.Cadence.WorkflowBase.Workflow</codeEntityReference>
+                </para>
+              </alert>
+              <para>
+                We did not implement a similar ambient property for activities because activities are allowed to
+                spin up threads and <codeEntityReference qualifyHint="false">T:System.Threading.AsyncLocal`1</codeEntityReference>
+                won't work as expected for activities that create threads.
               </para>
               <para>
                 So instead we require that workflow implementations derive from <codeEntityReference qualifyHint="false">T:Neon.Cadence.WorkflowBase</codeEntityReference>

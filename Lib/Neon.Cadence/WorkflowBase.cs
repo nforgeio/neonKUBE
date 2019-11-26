@@ -562,6 +562,8 @@ namespace Neon.Cadence
                     isReplaying:        request.ReplayStatus == InternalReplayStatus.Replaying,
                     methodMap:          registration.MethodMap);
 
+            Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information for workflow library code.
+
             lock (syncLock)
             {
                 idToWorkflow.Add(workflowKey, workflow);

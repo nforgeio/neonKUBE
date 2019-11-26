@@ -1231,7 +1231,6 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Instance members
 
-        private IPAddress                       address                 = IPAddress.Parse("127.0.0.2");    // Using a non-default loopback to avoid port conflicts
         private Process                         proxyProcess            = null;
         private int                             proxyPort               = 0;
         private Dictionary<long, Worker>        workers                 = new Dictionary<long, Worker>();
@@ -1311,17 +1310,17 @@ namespace Neon.Cadence
                 {
                     idToClient.Add(this.ClientId, this);
 
-                    httpServer = new HttpServer(address, settings);
+                    httpServer = new HttpServer(Address, settings);
                     ListenUri  = httpServer.ListenUri;
 
                     // Determine the port we'll have [cadence-proxy] listen on and then
                     // fire up the cadence-proxy process.
 
-                    proxyPort = !settings.DebugPrelaunched ? NetHelper.GetUnusedTcpPort(address) : debugProxyPort;
+                    proxyPort = !settings.DebugPrelaunched ? NetHelper.GetUnusedTcpPort(Address) : debugProxyPort;
 
                     if (!Settings.DebugPrelaunched && proxyProcess == null)
                     {
-                        proxyProcess = StartProxy(new IPEndPoint(address, proxyPort), settings, ClientId);
+                        proxyProcess = StartProxy(new IPEndPoint(Address, proxyPort), settings, ClientId);
                     }
                 }
                 catch
@@ -1344,7 +1343,7 @@ namespace Neon.Cadence
 
             proxyClient = new HttpClient(httpHandler, disposeHandler: true)
             {
-                BaseAddress = new Uri($"http://{address}:{proxyPort}"),
+                BaseAddress = new Uri($"http://{Address}:{proxyPort}"),
                 Timeout     = settings.ProxyTimeout > TimeSpan.Zero ? settings.ProxyTimeout : Settings.DebugHttpTimeout
             };
         }
@@ -1464,6 +1463,22 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Returns the IP address to be used for binding the network interface for both
+        /// the local web server as well as that for <b>cadence-proxy</b>.
+        /// </summary>
+        private IPAddress Address
+        {
+            get
+            {
+                // We're going to use a non-standard loopback address for Windows and Linux
+                // to help avoid port conflicts.  OS/X doesn't support this by default, so
+                // we'll use the standard loopback for that.
+
+                return NeonHelper.IsOSX ? IPAddress.Loopback : IPAddress.Parse("127.0.0.2");
+            }
+        }
+
+        /// <summary>
         /// Returns the locally unique ID for the client instance.
         /// </summary>
         internal long ClientId { get; private set; }
@@ -1481,7 +1496,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Returns the URI the associated <b>cadence-proxy</b> instance is listening on.
         /// </summary>
-        public Uri ProxyUri => new Uri($"http://{address}:{proxyPort}");
+        public Uri ProxyUri => new Uri($"http://{Address}:{proxyPort}");
 
         /// <summary>
         /// <para>
