@@ -136,16 +136,16 @@ namespace Test.Neon.Models.Definitions
     {
         [PersistableKey]
         [JsonProperty(PropertyName = "id")]
-        public int Id { get; set; }
+        int Id { get; set; }
 
         [JsonProperty(PropertyName = "mother")]
-        public Person Mother { get; set; }
+        Person Mother { get; set; }
 
         [JsonProperty(PropertyName = "father")]
-        public Person Father { get; set; }
+        Person Father { get; set; }
 
         [JsonProperty(PropertyName = "baby")]
-        public Person Baby { get; set; }
+        Person Baby { get; set; }
     }
 
     [ServiceModel]
