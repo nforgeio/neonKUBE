@@ -10,8 +10,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Neon.Cadence" Version="1.0.0" />
-    <PackageReference Include="Neon.Common" Version="1.0.0" />
+    <PackageReference Include="Neon.Cadence" Version="1.0.1" />
+    <PackageReference Include="Neon.Common" Version="1.0.1" />
   </ItemGroup>
 
 </Project>
