@@ -4384,7 +4384,6 @@ namespace TestCadence
             }
         }
 
-#if TODO // Restore these
         //---------------------------------------------------------------------
 
         [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
@@ -4418,6 +4417,5 @@ namespace TestCadence
             Assert.True(await stub.RunAsync());
             Assert.Null(Workflow.Current);
         }
-#endif
     }
 }
