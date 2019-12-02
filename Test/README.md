@@ -12,4 +12,4 @@ Projects that end with **.net** target .NET Frametwork, projects that end with *
 
 Note that the .NET Core projects hold the actual test source files.  The .NET and portable projects simply reference the .NET Core project source files via links.
 
-**NOTE:** You'll need to manually ensure that you keep the linked source files in sync with the source test projects.
+**NOTE:** You'll need to manually ensure that you keep the linked source files in sync with the source test projects by adding or removing files as necessary.
