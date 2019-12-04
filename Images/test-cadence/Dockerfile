@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM        nkubedev/aspnet:master-3.0.0-bionic
+FROM        nkubedev/aspnet:master-3.1.0-bionic
 MAINTAINER  marcus@loopie.io
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
