@@ -255,8 +255,8 @@ namespace Neon.Xunit.Cadence
                     new string[]
                     {
                         "--detach",
-                        "-p", $"{GetHostInterface(hostInterface)}:7933-7939:7933-7939",
-                        "-p", $"{GetHostInterface(hostInterface)}:8088:8088"
+                        "-p", $"{GetHostInterface(hostInterface)}7933-7939:7933-7939",
+                        "-p", $"{GetHostInterface(hostInterface)}8088:8088"
                     },
                     env: env,
                     keepOpen: keepOpen);
@@ -273,7 +273,7 @@ namespace Neon.Xunit.Cadence
                 };
 
                 settings.Servers.Clear();
-                settings.Servers.Add($"http://{GetHostInterface(hostInterface, forConnection: true)}:{NetworkPorts.Cadence}");
+                settings.Servers.Add($"http://{GetHostInterface(hostInterface, forConnection: true)}{NetworkPorts.Cadence}");
 
                 this.settings       = settings;
                 this.keepConnection = keepConnection;

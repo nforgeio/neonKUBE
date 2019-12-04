@@ -91,8 +91,10 @@ namespace Neon.Xunit
         }
 
         /// <summary>
-        /// Used by derived fixtures to retrieve the host network interface where 
-        /// container ports should be published.
+        /// Used by derived fixtures to retrieve the host network interface prefix for the docker
+        /// <b>-p</b> port publish option.  This will be empty for the <b>0.0.0.0</b> interface or
+        /// will be the IP address of the target interface followed by a colon (:) for all other
+        /// interfaces.
         /// </summary>
         /// <param name="hostInterface">The desired host interface IPv4 address or <c>null</c>.</param>
         /// <param name="forConnection">
@@ -116,10 +118,15 @@ namespace Neon.Xunit
 
             if (forConnection && hostInterface == "0.0.0.0")
             {
-                return "127.0.0.1";
+                return "127.0.0.1:";
             }
 
-            return hostInterface;
+            if (hostInterface != "0.0.0.0")
+            {
+                return hostInterface + ":";
+            }
+
+            return string.Empty;
         }
 
         //---------------------------------------------------------------------
