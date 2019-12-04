@@ -22,6 +22,20 @@
           to send emails.  Then after the child workflow is finished, the parent workflow calls the activity
           to send an email to the administrator indicating that the operation is complete.
         </para>
+        <alert address="note">
+          <para>
+            The <codeEntityReference qualifyHint="false">P:Neon.Cadence.WorkflowBase.Workflow</codeEntityReference> property
+            inherited by all workflow classes provides access to lots of workflow related functionality including logging,
+            child workflow and activity stub creation, workflow version management as well as workflow-safe utilities
+            for time/sleep, UUIDs, random numbers, etc.
+          </para>
+          <para>
+            These same capabilities are available in code outside of the workflow class via the
+            <codeEntityReference qualifyHint="false">P:Workflow.Current</codeEntityReference> property.
+            Note that this property is implemented internally via <codeEntityReference qualifyHint="false">T:System.Threading.AsyncLocal`1</codeEntityReference>.
+            This makes it possible to implement workflow libraries. 
+          </para>
+        </alert>
       </content>
     </section>
 
