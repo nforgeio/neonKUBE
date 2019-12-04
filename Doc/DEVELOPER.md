@@ -9,7 +9,7 @@ This page describes how to get started with neonKUBE development.
 * Visual Studio 2019 Edition (or better)
 * Visual Studio Code
 
-Note that the build environment currently assumes that only one Windows user will be acting as a developer on any given workstation.  Developers cannot share a machine.
+Note that the build environment currently assumes that only one Windows user will be acting as a developer on any given workstation.  Developers cannot share a machine and Neon only builds on Windows at this time.
 
 ## Workstation Configuration
 
@@ -179,13 +179,13 @@ Follow the steps below to configure a development or test workstation:
     * **Install:** the HTML Help Compiler by running `$/External/htmlhelp.exe` with the default options.  You can ignore any message about a newer version already being installed.
     * **Unzip:** `$/External/SHFBInstaller_v2019.9.15.0.zip` to a temporary folder and run `SandcastleInstaller.exe`, then:
       * Click **Next** until you get to the **Sandcastle Help File Builder and Tools** page.
-      * Click **Install SHFB**
+      * Click **Next** and then **Install SHFB**
       * Go through the wizard, accepting the licence and use the default options.
       * Click **Finish** to close the SHFB installer.
       * Click **Next** in the guided installation and then **Install Package** to install the Visual Studio package.
       * Click **Next** and click **Install Schemas**
-      * **Optional:** Install Snippets (I typically don't install these)
-      * Click **Next** and **Finish**.  Don't install the Visual Studio Spell Checker.
+      * **Optional:** Install Snippets (I don't don't install these myself)
+      * Click **Next** and **Close**.  Don't install the Visual Studio Spell Checker.
     * Clone the **nforgeio/nforgeio.github.io** repository.  This hosts the generated Neon documentation website.  The cloned folder must be named **nforgeio.github.io** and be located in the same parent directory as your main neonKUBE repo:
     ```
     cd "%NF_ROOT%\.."
