@@ -32,7 +32,7 @@ ARG         APPNAME
 COPY bin/__dep              /usr/bin/$APPNAME.dotnet/
 RUN echo ** NEW LAYER **
 
-ENV TZ=America/Los_Angeles
+ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # App files.
