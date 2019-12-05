@@ -10,6 +10,13 @@ These images are tagged with the Uber Cadence version version plus the image bui
 
 This image combines Uber Cadence and its backing Cassendra database and is intended for local Cadence unit and integration testing.
 
+## Execute
+
+You can start this container locally via:
+```
+docker run -d --name cadence-dev -p 7933-7939:7933-7939 -p 8088:8088 nkubeio/cadence-dev:latest
+```
+
 ## Notes
 
 **Exposed Ports**: 
