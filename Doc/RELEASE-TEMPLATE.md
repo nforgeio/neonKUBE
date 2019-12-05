@@ -16,7 +16,7 @@ This is a full Neon release intended for general consumption.  Note that some pa
 
 ### <img src="https://doc.neonkube.com/media/release.png"/> Neon.Cadence
 
-This package provides a .NET client for the [Uber Cadence](https://cadenceworkflow.io/docs/) workflow platform.  This is the first public release and is still a bit of a work in progress.  That being said, most functionality is implemented and we're using this in production for a day-job project.  You can get started [here](https://doc.neonkube.com/Neon.Cadence-Overview.htm).
+This package provides a .NET client for the [Uber Cadence](https://cadenceworkflow.io/docs/) workflow platform.  This is still a bit of a work in progress.  That being said, most functionality is implemented and we're using this in production for a day-job project.  You can get started [here](https://doc.neonkube.com/Neon.Cadence-Overview.htm).
 
 **Changes:** 
 * `CadenceSettings` adds a constructor where you can specify the server URIs
