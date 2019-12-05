@@ -66,7 +66,7 @@ This package extends the [NATS Scalabable Messaging Platform](https://nats.io/),
 
 ### <img src="https://doc.neonkube.com/media/release.png"/> Neon.SSH.NET
 
-This is a semi-clone of the [https://github.com/sshnet/SSH.NET](>https://github.com/sshnet/SSH.NET) project which hasn't been supported for a while.  This fixes this [#515: Bugfix for "scp: error: unexpected filename](https://github.com/sshnet/SSH.NET/pull/515) that was preventing us from connecting to modern Linux distributions.
+This is a semi-clone of the [https://github.com/sshnet/SSH.NET](>https://github.com/sshnet/SSH.NET) project which hasn't been supported for a while.  This fixes this issue [#515: Bugfix for "scp: error: unexpected filename](https://github.com/sshnet/SSH.NET/pull/515) that was preventing us from connecting to modern Linux distributions.
 
 **Changes:** No significant changes for this release.
 

@@ -11,9 +11,14 @@
 2. Update `$/product-version.txt` (or `GitHub/product-version.txt` in the solution) with the 
    new package version as required.
 
-3. Run all unit tests in **RELEASE** mode
+3. Run all unit tests on Windows in **RELEASE** mode.
 
-4. Build and publish the Docker images, the nuget packages, code documentation, as well as a full RELEASE build:
+4. Public the nuget packages locally and then manually verify that they pass on OS/X:
+   ```
+   neon-nuget-local
+   ```
+
+5. Build and publish the Docker images, the nuget packages, code documentation, as well as a full RELEASE build:
    ```
    neon-publish-images -all
    neon-nuget-public
@@ -21,17 +26,19 @@
    neon-release -codedoc
    ```
 
-5. Verify that the new release installer works.
+6. Update the **cadence-samples** solution to reference the new packages and verify that the samples work.
 
-6. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: v1.0.0**
+7. Verify that the new release installer works.
 
-7. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
+8. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: v1.0.0**
+
+9. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
 
   a. Create the release if it doesn't already exist
   b. Set **Tag** to the version with a leading "v" (like **v1.0.0**)
   c. Set **Target** to the `release-VERSION` branch
   e: Check **This is a pre-release** as required
-  f. Add the release setup binary named like: **neonKUBE-setup-1.0.0.sha512.txt**
+  f. Add the release setup binary named like: **neonKUBE-setup-1.0.0.exet**
   g. Add the OS/X neon-cli binary from **osx** folder as: **neon-osx**
   h. Add **neon.chm**
   i. Edit the release notes including adding the SHA512s for:

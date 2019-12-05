@@ -98,6 +98,10 @@ if ($codedoc)
     #   CNAME
     #   is-codedoc.txt
 
+    "Pulling [nforgeio.github.io]..."
+    
+    git pull
+
     "Cleaning [nforgeio.github.io]..."
 
     rm -r -f "$nfCodeDoc\fti"
