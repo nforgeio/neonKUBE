@@ -1633,6 +1633,12 @@ namespace Neon.ModelGen
 
                     writer.WriteLine($"        public {className}()");
                     writer.WriteLine($"        {{");
+
+                    if (genPersistence && dataModel.IsPersistable)
+                    {
+                        writer.WriteLine($"            __T = PersistedType;");
+                    }
+
                     writer.WriteLine($"            __O = new JObject();");
                     writer.WriteLine($"        }}");
 
@@ -1649,6 +1655,12 @@ namespace Neon.ModelGen
 
                     writer.WriteLine($"        protected {className}(JObject jObject)");
                     writer.WriteLine($"        {{");
+
+                    if (genPersistence && dataModel.IsPersistable)
+                    {
+                        writer.WriteLine($"            __T = PersistedType;");
+                    }
+
                     writer.WriteLine($"            __O = jObject;");
                     writer.WriteLine($"        }}");
                 }
