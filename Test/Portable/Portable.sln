@@ -19,6 +19,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Models.Definitions", "Test.Neon.Models.Definitions\Test.Neon.Models.Definitions.csproj", "{E09B6A50-7371-458B-A6F9-19B970092478}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Models.Cadence", "Test.Neon.Models.Cadence\Test.Neon.Models.Cadence.csproj", "{D24D5723-999F-47C8-8A7C-5B84703B83F5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E09B6A50-7371-458B-A6F9-19B970092478} = {E09B6A50-7371-458B-A6F9-19B970092478}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
