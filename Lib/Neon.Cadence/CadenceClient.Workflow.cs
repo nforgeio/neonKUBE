@@ -681,7 +681,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Cancels a workflow if it has not already finished.
+        /// Terninates a workflow if it has not already finished.
         /// </summary>
         /// <param name="execution">Identifies the running workflow.</param>
         /// <param name="reason">Optionally specifies an error reason string.</param>
@@ -691,7 +691,7 @@ namespace Neon.Cadence
         /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
-        internal async Task TerminateWorkflowAsync(WorkflowExecution execution, string reason = null, byte[] details = null, string domain = null)
+        public async Task TerminateWorkflowAsync(WorkflowExecution execution, string reason = null, byte[] details = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
