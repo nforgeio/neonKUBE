@@ -59,11 +59,9 @@
 
 4. Create a draft for the next GitHub release.
 
-    * Be sure to set the branch to the new release.
+   **NOTE:** Be sure to set the branch as the new release.
 
-5. Build and publish all of the Docker images: `powershell -file %NF_ROOT%/Images/publish.ps1 -all`
-
-6. Archive the source code:
+5. Archive the source code:
 
   1. Close all Visual Studio windows.
   2. Run `neon-archive.cmd` in a command window.
