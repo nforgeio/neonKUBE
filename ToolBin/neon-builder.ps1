@@ -75,7 +75,7 @@ function PublishCore
     # Build the [pubcore] arguments:
 
     $projectPath = [System.IO.Path]::Combine($nfRoot, $projectPath)
-    $targetPath  = [System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "netcoreapp3.0", "$targetName.dll")
+    $targetPath  = [System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "netcoreapp3.1", "$targetName.dll")
 
     # Publish the binaries.
 
@@ -170,7 +170,7 @@ if ($tools)
     cd "$nfTools\neon-cli"
     dotnet publish -r osx-x64 -c Release /p:PublishSingleFile=true
     & mkdir "$nfBuild\osx"
-    & cp "$nfTools\neon-cli\bin\Release\netcoreapp3.0\osx-x64\publish\neon" "$nfBuild\osx\neon-osx"
+    & cp "$nfTools\neon-cli\bin\Release\netcoreapp3.1\osx-x64\publish\neon" "$nfBuild\osx\neon-osx"
     cd $nfRoot
 
     ""

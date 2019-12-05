@@ -319,7 +319,7 @@ or:
             //
             // will publish their output to:
             //
-            //      PROJECT-DIR\bin\CONFIGURATION\netcoreapp3.0\publish
+            //      PROJECT-DIR\bin\CONFIGURATION\netcoreapp3.1\publish
             //
             // Projects that use <RuntimeIdentifiers/> (plural) with one
             // or more runtime identifiers like:
@@ -328,7 +328,7 @@ or:
             //
             // will publish output to:
             //
-            //      PROJECT-DIR\bin\CONFIGURATION\netcoreapp3.0\win10-x64\publish
+            //      PROJECT-DIR\bin\CONFIGURATION\netcoreapp3.1\win10-x64\publish
             //
             // We're going to probe for the existence of the first folder
             // and assume the second if the first doesn't exist.

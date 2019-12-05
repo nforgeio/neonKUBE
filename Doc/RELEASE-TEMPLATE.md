@@ -70,7 +70,7 @@ This is a semi-clone of the [https://github.com/sshnet/SSH.NET](>https://github.
 
 **Changes:** No significant changes for this release.
 
-### <img src="https://doc.neonkube.com/media/release.png"/> Neon.Web
+### <img src="https://doc.neonkube.com/media/release.png"/> Neon.Web 
 
 Handy ASP.NET related extensions and utilities including new base controller classes that provide integrated logging.
 
@@ -78,7 +78,7 @@ Handy ASP.NET related extensions and utilities including new base controller cla
 
 ### <img src="https://doc.neonkube.com/media/release.png"/> Neon.Xunit
 
-This package includes generally useful test fixtures for ASP.NET, Containers, Docker, NATS as well as a fixture that can be used to compose fixtures including custom fixtures.
+This package includes generally useful test fixtures for ASP.NET, Containers, Docker, NATS as well as a fixture that can be used to compose fixtures including your custom fixtures.
 
 **Changes:** No significant changes for this release.
 
@@ -130,7 +130,9 @@ We don't have an OS/X version of the desktop yet, but you can manually install *
    spctl --master-disable
    ```
 
-### Versioning
+Neon related production images are hosted on DockerHub: [here](https://hub.docker.com/orgs/nkubeio/repositories)
+
+**Changes:** No significant changes for this release.
 
 Neon components are released using versions compatible with [Semantic Versioning 2.0](https://semver.org/).  All packages and binaries are unit tested together before being published and you should upgrade all Neon nuget packages together so that all have the same version number.  Note that some packages may have pre-release identifier, indicating that component is still a work in progress or that a package is only for use by other Neon components.
 
