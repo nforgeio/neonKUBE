@@ -119,16 +119,16 @@ For Windows, you simply need to download and run **neonKUBE-setup-#.#.#.exe** to
 
 We don't have an OS/X version of the desktop yet, but you can manually install **neon-cli** via:
 1. Download the **neon-osx** file below.  This will appear in Safari downloads as **neon-osx.dms**.
-2. Manually copy **neon-osx** below to your `/usr/local/bin` directory (we don't have a **.dmg** file yet).
+2. Manually copy **neon-osx.dms** below to your `/usr/local/bin` directory (we don't have a **.dmg** file yet).
 3. Open a terminal window and run these commands:
-   ```
-   sudo bash
-   cd /usr/local/bin
-   rm neon
-   mv neon-osx.cmd neon
-   chmod 777 neon
-   spctl --master-disable
-   ```
+    ```
+    sudo bash
+    cd /usr/local/bin
+    rm neon
+    mv neon-osx.dms neon
+    chmod 777 neon
+    spctl --master-disable
+    ```
 
 Neon related production images are hosted on DockerHub: [here](https://hub.docker.com/orgs/nkubeio/repositories)
 
