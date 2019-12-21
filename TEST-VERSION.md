@@ -1,4 +1,4 @@
-1000.0.0-test
+1000.0.2-test
 
 The version line above specifies the most recent version of locally published nuget packages used for testing packages befoire they are published to nuget.  This should be incremented each time you need to build and manually deploy packages after any changes.
 
@@ -23,9 +23,15 @@ Here's (clunky) way to use this to run tests on OS/X against unpublished nuget p
 
 **IMPORTANT!**
 
-Before commiting any changes on Windows, be sure to:
+Before commiting any changes **on Windows**, be sure to:
 
 1. Undo changes to: **product-version.txt**
 2. Undo any changes to: **ALL PROJECT FILES**
 
 The last step is very important because the `neon-nuget-local.ps1` script updates the package version for all published projects.
+
+Before commiting any changes **on OS/X**, be sure to:
+
+1. Undo any changes to: **ALL PROJECT FILES**
+
+The last step is very important because you don't want to commit references to locally published test packages.

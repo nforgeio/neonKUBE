@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Common</RootNamespace>
-    <Version>1.0.1</Version>
+    <Version>1000.0.2-test</Version>
     <Company>neonFORGE, LLC</Company>
     <Authors>Jeff Lill</Authors>
     <Description>Neon common library.</Description>

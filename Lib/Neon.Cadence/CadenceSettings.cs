@@ -395,8 +395,8 @@ namespace Neon.Cadence
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally indicates that the <b>cadence-proxy</b> will
         /// already be running for debugging purposes.  When this is <c>true</c>, the 
-        /// <b>cadence-client</b> be hardcoded to listen on <b>127.0.0.2:5001</b> and
-        /// the <b>cadence-proxy</b> will be assumed to be listening on <b>127.0.0.2:5000</b>.
+        /// <b>cadence-client</b> be hardcoded to listen on <b>127.0.0.1:5001</b> and
+        /// the <b>cadence-proxy</b> will be assumed to be listening on <b>127.0.0.1:5000</b>.
         /// This defaults to <c>false.</c>
         /// </summary>
         [JsonIgnore]
