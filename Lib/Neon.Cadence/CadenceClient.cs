@@ -1466,7 +1466,17 @@ namespace Neon.Cadence
         /// Returns the IP address to be used for binding the network interface for both
         /// the local web server as well as that for <b>cadence-proxy</b>.
         /// </summary>
-        private IPAddress Address => IPAddress.Loopback;
+        private IPAddress Address
+        {
+            get
+            {
+                // We're going to use a non-standard loopback address for Windows and Linux
+                // to help avoid port conflicts.  OS/X doesn't support this by default, so
+                // we'll use the standard loopback for that.
+
+                return NeonHelper.IsOSX ? IPAddress.Loopback : IPAddress.Parse("127.0.0.2");
+            }
+        }
 
         /// <summary>
         /// Returns the locally unique ID for the client instance.
