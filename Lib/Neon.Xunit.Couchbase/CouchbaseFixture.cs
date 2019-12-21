@@ -211,16 +211,16 @@ namespace Neon.Xunit.Couchbase
                     new string[]
                     {
                         "--detach",
-                        "-p", $"{GetHostInterface(hostInterface)}4369:4369",
-                        "-p", $"{GetHostInterface(hostInterface)}8091-8096:8091-8096",
-                        "-p", $"{GetHostInterface(hostInterface)}9100-9105:9100-9105",
-                        "-p", $"{GetHostInterface(hostInterface)}9110-9118:9110-9118",
-                        "-p", $"{GetHostInterface(hostInterface)}9120-9122:9120-9122",
-                        "-p", $"{GetHostInterface(hostInterface)}9999:9999",
-                        "-p", $"{GetHostInterface(hostInterface)}11207:11207",
-                        "-p", $"{GetHostInterface(hostInterface)}11209-11211:11209-11211",
-                        "-p", $"{GetHostInterface(hostInterface)}18091-18096:18091-18096",
-                        "-p", $"{GetHostInterface(hostInterface)}21100-21299:21100-21299"
+                        "-p", $"{GetHostInterface(hostInterface)}:4369:4369",
+                        "-p", $"{GetHostInterface(hostInterface)}:8091-8096:8091-8096",
+                        "-p", $"{GetHostInterface(hostInterface)}:9100-9105:9100-9105",
+                        "-p", $"{GetHostInterface(hostInterface)}:9110-9118:9110-9118",
+                        "-p", $"{GetHostInterface(hostInterface)}:9120-9122:9120-9122",
+                        "-p", $"{GetHostInterface(hostInterface)}:9999:9999",
+                        "-p", $"{GetHostInterface(hostInterface)}:11207:11207",
+                        "-p", $"{GetHostInterface(hostInterface)}:11209-11211:11209-11211",
+                        "-p", $"{GetHostInterface(hostInterface)}:18091-18096:18091-18096",
+                        "-p", $"{GetHostInterface(hostInterface)}:21100-21299:21100-21299"
                     },
                     env: env);
 
@@ -229,7 +229,7 @@ namespace Neon.Xunit.Couchbase
                 settings = settings ?? new CouchbaseSettings();
 
                 settings.Servers.Clear();
-                settings.Servers.Add(new Uri($"http://{GetHostInterface(hostInterface, forConnection: true)}8091"));
+                settings.Servers.Add(new Uri($"http://{GetHostInterface(hostInterface, forConnection: true)}:8091"));
 
                 if (settings.Bucket == null)
                 {
@@ -242,7 +242,7 @@ namespace Neon.Xunit.Couchbase
                 Password = password;
 
                 jsonClient             = new JsonClient();
-                jsonClient.BaseAddress = new Uri($"http://{GetHostInterface(hostInterface, forConnection: true)}8094");
+                jsonClient.BaseAddress = new Uri($"http://{GetHostInterface(hostInterface, forConnection: true)}:8094");
                 jsonClient.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue(
                         "Basic",

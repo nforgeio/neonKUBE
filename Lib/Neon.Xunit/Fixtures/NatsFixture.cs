@@ -145,9 +145,9 @@ namespace Neon.Xunit
                 new string[]
                 {
                     "--detach",
-                    "-p", $"{GetHostInterface(hostInterface)}4222:4222",
-                    "-p", $"{GetHostInterface(hostInterface)}8222:8222",
-                    "-p", $"{GetHostInterface(hostInterface)}6222:6222"
+                    "-p", $"{GetHostInterface(hostInterface)}:4222:4222",
+                    "-p", $"{GetHostInterface(hostInterface)}:8222:8222",
+                    "-p", $"{GetHostInterface(hostInterface)}:6222:6222"
                 };
 
             if (!IsRunning)
@@ -161,7 +161,7 @@ namespace Neon.Xunit
             retry.InvokeAsync(
                 async () =>
                 {
-                    Connection = factory.CreateConnection($"nats://{GetHostInterface(hostInterface, forConnection: true)}4222");
+                    Connection = factory.CreateConnection($"nats://{GetHostInterface(hostInterface, forConnection: true)}:4222");
 
                     await Task.CompletedTask;
 
@@ -188,7 +188,7 @@ namespace Neon.Xunit
             retry.InvokeAsync(
                 async () =>
                 {
-                    Connection = factory.CreateConnection($"nats://{GetHostInterface(hostInterface, forConnection: true)}4222");
+                    Connection = factory.CreateConnection($"nats://{GetHostInterface(hostInterface, forConnection: true)}:4222");
                     await Task.CompletedTask;
 
                 }).Wait();
