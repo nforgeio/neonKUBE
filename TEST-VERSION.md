@@ -1,4 +1,4 @@
-1000.0.6-test
+1000.0.7-test
 
 The version line above specifies the most recent version of locally published nuget packages used for testing packages befoire they are published to nuget.  This should be incremented each time you need to build and manually deploy packages after any changes.
 

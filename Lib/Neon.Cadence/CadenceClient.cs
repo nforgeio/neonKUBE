@@ -602,6 +602,79 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// <para>
+        /// Writes the <b>cadence-proxy</b> binaries to the specified folder.  This is
+        /// provided so that you can pre-provision the executable and then use the 
+        /// <see cref="CadenceSettings.BinaryPath"/> setting to reference it.
+        /// These files will be written:
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><b>cadence-proxy.win.exe</b></term>
+        ///     <description>
+        ///     The Windows AMD64 executable
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>cadence-proxy.linux</b></term>
+        ///     <description>
+        ///     The Linux AMD64 executable
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>cadence-proxy.osx</b></term>
+        ///     <description>
+        ///     The OS/X AMD64 executable
+        ///     </description>
+        /// </item>
+        /// </list>
+        /// <para>
+        /// This is useful for situations where the executable must be pre-provisioned for
+        /// security.  One example is deploying Cadence workers to a Docker container with
+        /// a read-only file system.
+        /// </para>
+        /// </summary>
+        /// <param name="folderPath">Path to the output folder.</param>
+        public static void ExtractCadenceProxy(string folderPath)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folderPath));
+
+            var resources = new string[]
+            {
+                "Neon.Cadence.Resources.cadence-proxy.win.exe.gz",
+                "Neon.Cadence.Resources.cadence-proxy.linux.gz",
+                "Neon.Cadence.Resources.cadence-proxy.osx.gz"
+            };
+
+            var files = new string[]
+            {
+                "cadence-proxy.win.exe",
+                "cadence-proxy.linux",
+                "cadence-proxy.osx"
+            };
+
+            for (int i = 0; i < resources.Length; i++)
+            {
+                var resourcePath   = resources[i];
+                var resourceStream = thisAssembly.GetManifestResourceStream(resourcePath);
+                var binaryPath     = Path.Combine(folderPath, files[i]);
+
+                if (resourceStream == null)
+                {
+                    throw new KeyNotFoundException($"Embedded resource [{resourcePath}] not found.  Cannot extract [cadency-proxy].");
+                }
+
+                using (resourceStream)
+                {
+                    using (var binaryStream = new FileStream(binaryPath, FileMode.Create, FileAccess.ReadWrite))
+                    {
+                        resourceStream.GunzipTo(binaryStream);
+                    }
+                }
+            }
+        } 
+
+        /// <summary>
         /// Writes the correct <b>cadence-proxy</b> binary for the current environment
         /// to the file system (if that hasn't been done already) and then launches 
         /// a proxy instance configured to listen at the specified endpoint.

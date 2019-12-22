@@ -328,5 +328,32 @@ namespace TestCadence
 
             Assert.Equal(CadenceTestHelper.TaskList, description.Configuration.TaskList);
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void Base_ExtractCadenceProxy()
+        {
+            // Verify that we can extract the [cadence-proxy] binaries.
+
+            using (var folder = new TempFolder())
+            {
+                CadenceClient.ExtractCadenceProxy(folder.Path);
+
+                var names = new string[]
+                {
+                    "cadence-proxy.win.exe",
+                    "cadence-proxy.linux",
+                    "cadence-proxy.osx"
+                };
+
+                foreach (var name in names)
+                {
+                    var fullPath = Path.Combine(folder.Path, name);
+
+                    Assert.True(File.Exists(fullPath));
+                    Assert.True(new FileInfo(fullPath).Length > 0);
+                }
+            }
+        }
     }
 }
