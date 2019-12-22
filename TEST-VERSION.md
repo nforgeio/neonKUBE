@@ -1,8 +1,8 @@
-1000.0.0-test
+1000.0.6-test
 
 The version line above specifies the most recent version of locally published nuget packages used for testing packages befoire they are published to nuget.  This should be incremented each time you need to build and manually deploy packages after any changes.
 
-This is required because Visual Studio for Mac caches packages and doesn't make it easy to reload packages with the same name and version into a solution.  Visual Studio for Windows does now have a **Clear All Cache(s)** button in **Tools/Nuget Package Manager/General** settings.
+This is required because Visual Studio caches packages and doesn't make it easy to reload packages with the same name and version into a solution.  Visual Studio for Windows does now have a **Clear All Cache(s)** button in **Tools/Nuget Package Manager/General** settings.
 
 Here's (clunky) way to use this to run tests on OS/X against unpublished nuget packages:
 
