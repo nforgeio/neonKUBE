@@ -106,4 +106,12 @@ Publish Neon.Xunit
 Publish Neon.Xunit.Cadence
 Publish Neon.Xunit.Couchbase
 Publish Neon.Xunit.Kube
+
+# Remove the generated standard nuget packages and replace them with the
+# packages including symbols and source code.
+
+# Get-ChildItem "$env:NF_BUILD\nuget\*.symbols.nupkg"  | Rename-Item -NewName { $_.Name -replace '.symbols.nupkg', '.symbols.tmp' }
+# Remove-Item -Path "$env:NF_BUILD\nuget\*.nupkg"
+# Get-ChildItem "$env:NF_BUILD\nuget\*.symbols.tmp"  | Rename-Item -NewName { $_.Name -replace '.symbols.tmp', '.nupkg' }
+
 pause
