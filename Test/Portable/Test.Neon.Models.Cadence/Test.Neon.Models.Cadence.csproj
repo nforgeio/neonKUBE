@@ -14,4 +14,8 @@
     <PackageReference Include="Neon.Common" Version="1.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Test.Neon.Models.Definitions\Test.Neon.Models.Definitions.csproj" />
+  </ItemGroup>
+
 </Project>
