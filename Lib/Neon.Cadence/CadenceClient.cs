@@ -881,6 +881,37 @@ namespace Neon.Cadence
             {
                 try
                 {
+                    // We're going to wait up to 30 seconds for [cadence-proxy] to initialize
+                    // itself to be ready to receive requests.  We're going to ping the proxy's
+                    // HTTP endpoint with GET requests until we see an HTTP response.
+                    //
+                    // Note that [cadence-proxy] accepts only POST requests, so these GETs will
+                    // be ignored and we'll see a 405 Method Not Allowed response when the proxy
+                    // is ready.
+
+                    using (var initClient = new HttpClient())
+                    {
+                        initClient.BaseAddress = client.proxyClient.BaseAddress;
+                        initClient.Timeout     = TimeSpan.FromSeconds(1);
+
+                        await NeonHelper.WaitForAsync(
+                            async () =>
+                            {
+                                try
+                                {
+                                    await initClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "/"));
+
+                                    return true;
+                                }
+                                catch
+                                {
+                                    return false;
+                                }
+                            },
+                            timeout: TimeSpan.FromSeconds(30),
+                            pollTime: TimeSpan.FromMilliseconds(500));
+                    }
+
                     // Send the [InitializeRequest] to the [cadence-proxy] so it will know
                     // where the .NET Client is listening.
 
@@ -891,11 +922,6 @@ namespace Neon.Cadence
                             LibraryPort    = client.ListenUri.Port,
                             LogLevel       = client.Settings.LogLevel
                         };
-
-                    //-------------------------------
-                    // $debug(jefflill): DELETE THIS!
-                    await Task.Delay(30000);
-                    //-------------------------------
 
                     await client.CallProxyAsync(initializeRequest);
 
