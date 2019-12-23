@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_Win32.cs
+// FILE:        TargetPlatforms.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -19,26 +19,42 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-
-using Neon.Common;
-using Neon.Windows;
-using Neon.Xunit;
 
 using Xunit;
 
-namespace TestCommon
+namespace Neon.Xunit
 {
-    public class Test_Win32
+    /// <summary>
+    /// Enumerates the platforms that can be targeted by unit tests tagged
+    /// with <see cref="PlatformFactAttribute"/>.  Note that these flags may
+    /// be bitwise-ORed together.
+    /// </summary>
+    [Flags]
+    public enum TargetPlatforms : uint
     {
-        [PlatformFact(TargetPlatforms.Windows)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public void GetPhysicallyInstalledSystemMemory()
-        {
-            Assert.True(Win32.GetPhysicallyInstalledSystemMemory(out var memKB));
-            Assert.True(memKB > ByteUnits.MebiBytes);
-        }
+        /// <summary>
+        /// Target all platforms.
+        /// </summary>
+        All = 0xffffffff,
+
+        /// <summary>
+        /// Target Windows.
+        /// </summary>
+        Windows = 0x00000001,
+
+        /// <summary>
+        /// Target Linux.
+        /// </summary>
+        Linux = 0x00000002,
+
+        /// <summary>
+        /// Target OS/X.
+        /// </summary>
+        Osx = 0x00000004
     }
 }
