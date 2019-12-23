@@ -27,7 +27,7 @@ using System.Threading.Tasks;
 
 using Xunit;
 
-namespace TestCadence
+namespace Neon.Xunit
 {
     /// <summary>
     /// Inherits from <see cref="FactAttribute"/> and sets <see cref="FactAttribute.Skip"/> when
