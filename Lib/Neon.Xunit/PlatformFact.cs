@@ -34,7 +34,7 @@ namespace Neon.Xunit
 {
     /// <summary>
     /// Inherits from <see cref="FactAttribute"/> and sets <see cref="FactAttribute.Skip"/> when
-    /// the <b>NEON_SKIPSLOWTESTS</b> environment variable is set to "1".
+    /// the current operating system platform doesn't match any of the specified platform flags.
     /// </summary>
     public class PlatformFactAttribute : FactAttribute
     {
@@ -45,17 +45,17 @@ namespace Neon.Xunit
         public PlatformFactAttribute(TargetPlatforms platforms)
             : base()
         {
-            if (NeonHelper.IsWindows && (platforms | TargetPlatforms.Windows) != 0)
+            if (NeonHelper.IsWindows && (platforms & TargetPlatforms.Windows) != 0)
             {
                 return;
             }
 
-            if (NeonHelper.IsLinux && (platforms | TargetPlatforms.Linux) != 0)
+            if (NeonHelper.IsLinux && (platforms & TargetPlatforms.Linux) != 0)
             {
                 return;
             }
 
-            if (NeonHelper.IsOSX && (platforms | TargetPlatforms.Osx) != 0)
+            if (NeonHelper.IsOSX && (platforms & TargetPlatforms.Osx) != 0)
             {
                 return;
             }
