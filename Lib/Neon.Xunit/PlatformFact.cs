@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:        SlowFactAttribute.cs
+// FILE:        PlatformFactAttribute.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -21,9 +21,12 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+
+using Neon.Common;
 
 using Xunit;
 
@@ -31,17 +34,33 @@ namespace Neon.Xunit
 {
     /// <summary>
     /// Inherits from <see cref="FactAttribute"/> and sets <see cref="FactAttribute.Skip"/> when
-    /// the <b>NEON_SKIPSLOWTESTS</b> environment variable is set to "1".
+    /// the current operating system platform doesn't match any of the specified platform flags.
     /// </summary>
-    public class SlowFactAttribute : FactAttribute
+    public class PlatformFactAttribute : FactAttribute
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public SlowFactAttribute()
+        /// <param name="platforms">Specifies the platforms where the tagged test should execute.</param>
+        public PlatformFactAttribute(TargetPlatforms platforms)
             : base()
         {
-            Skip = Environment.GetEnvironmentVariable("NEON_SKIPSLOWTESTS") == "1" ? "Skipping slow tests bacause environment variable NEON_SKIPSLOWTESTS=1." : null;
+            if (NeonHelper.IsWindows && (platforms & TargetPlatforms.Windows) != 0)
+            {
+                return;
+            }
+
+            if (NeonHelper.IsLinux && (platforms & TargetPlatforms.Linux) != 0)
+            {
+                return;
+            }
+
+            if (NeonHelper.IsOSX && (platforms & TargetPlatforms.Osx) != 0)
+            {
+                return;
+            }
+
+            Skip = $"Unit test is disabled for: {RuntimeInformation.OSDescription}";
         }
     }
 }

@@ -69,7 +69,7 @@ namespace Neon.Xunit
         /// running applications.  When all tests are running on a single host,
         /// you should consider setting this to one of the 16 million loopback
         /// addresses in the <b>127.0.0.0/8</b> subnet (e.g. 127.0.0.1, 127.0.0.2,
-        /// etc.  You'll need to set this before starting any fixture containers.
+        /// etc).  You'll need to set this before starting any fixture containers.
         /// </para>
         /// <note>
         /// Fixtures implemented by neonFORGE that are derived from <see cref="ContainerFixture"/> 

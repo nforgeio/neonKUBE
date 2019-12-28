@@ -8,6 +8,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Lib\Neon.Cadence\Neon.Cadence.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
+    <ProjectReference Include="..\Test.Neon.Models.Definitions\Test.Neon.Models.Definitions.csproj" />
   </ItemGroup>
 
 </Project>

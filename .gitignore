@@ -113,3 +113,6 @@ Go/**/test/logs/**
 .vscode/settings.json
 /Go/src/github.com/cadence-proxy/cmd/playground/.vscode/settings.json
 /Go/src/github.com/cadence-proxy/cmd/playground/.vscode/launch.json
+
+# OS/X related files
+.DS_Store

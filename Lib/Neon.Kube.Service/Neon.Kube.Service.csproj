@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Service</RootNamespace>
-    <Version>1.0.1</Version>
+    <Version>1.0.3</Version>
     <Company>neonFORGE, LLC</Company>
     <Authors>Jeff Lill</Authors>
     <Description>neonKUBE service library.</Description>
@@ -42,7 +42,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GitInfo" Version="2.0.20">
+    <PackageReference Include="GitInfo" Version="2.0.26">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

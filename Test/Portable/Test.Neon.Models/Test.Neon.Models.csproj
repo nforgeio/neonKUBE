@@ -6,11 +6,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CouchbaseNetClient" Version="2.7.12" />
-    <PackageReference Include="Linq2Couchbase" Version="1.4.1" />
-    <PackageReference Include="Neon.Cadence" Version="1.0.1" />
-    <PackageReference Include="Neon.Common" Version="1.0.1" />
-    <PackageReference Include="Neon.Couchbase" Version="1.0.1" />
+    <PackageReference Include="CouchbaseNetClient" Version="2.7.15" />
+    <PackageReference Include="Linq2Couchbase" Version="1.4.2" />
+    <PackageReference Include="Neon.Cadence" Version="1.0.3" />
+    <PackageReference Include="Neon.Common" Version="1.0.3" />
+    <PackageReference Include="Neon.Couchbase" Version="1.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Test.Neon.Models.Definitions\Test.Neon.Models.Definitions.csproj" />
   </ItemGroup>
 
   <Target Name="ModelGen" BeforeTargets="BeforeCompile">
