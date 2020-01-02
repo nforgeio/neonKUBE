@@ -85,7 +85,7 @@
     <AppendMarkdownFileExtensionsToUrls>False</AppendMarkdownFileExtensionsToUrls>
     <FooterText>Offline help available for Windows: &amp;lt%3ba href=&amp;quot%3bneon.chm&amp;quot%3b&amp;gt%3bneon.chm&amp;lt%3b/a&amp;gt%3b&amp;lt%3bbr/&amp;gt%3b
 Report any issues at: &amp;lt%3ba href=&amp;quot%3bhttps://github.com/nforgeio/neonKUBE&amp;quot%3b&amp;gt%3bhttps://github.com/nforgeio/neonKUBE&amp;lt%3b/a&amp;gt%3b</FooterText>
-    <CopyrightText>Copyright %28c%29 2016-2019 by neonFORGE, LLC.  All rights reserved.</CopyrightText>
+    <CopyrightText>Copyright %28c%29 2016-2020 by neonFORGE, LLC.  All rights reserved.</CopyrightText>
     <ProjectSummary>&amp;lt%3bp&amp;gt%3b
 The Neon class libraries organizes classes in several namespaces.  Most classes are defined in &amp;lt%3bb&amp;gt%3bNeon.%2a&amp;lt%3b/b&amp;gt%3b namespaces but we do define some extension methods within non-Neon namespaces so they&amp;#39%3bll for convienence.
 &amp;lt%3b/p&amp;gt%3b
