@@ -78,6 +78,44 @@ namespace System
             return false;
         }
 
+        /// <summary>
+        /// Determines whether a type inherits from (or is) a specified base type.
+        /// </summary>
+        /// <typeparam name="T">Identifies the type we're matching.</typeparam>
+        /// <param name="type">The type being tested.</param>
+        /// <returns><c>true</c> if <paramref name="type"/> inherits or is <typeparamref name="T"/>.</returns>
+        public static bool Is<T>(this Type type)
+        {
+            Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
+
+            return Is(type, typeof(T));
+        }
+
+        /// <summary>
+        /// Determines whether a type inherits from (or is) a specified base type.
+        /// </summary>
+        /// <param name="type">The type being tested.</param>
+        /// <param name="targetType">Identifies the type we're matching.</param>
+        /// <returns><c>true</c> if <paramref name="type"/> inherits or is <paramref name="targetType"/>.</returns>
+        public static bool Is(this Type type, Type targetType)
+        {
+            Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
+            Covenant.Requires<ArgumentNullException>(targetType != null, nameof(targetType));
+
+            do
+            {
+                if (type == targetType)
+                {
+                    return true;
+                }
+
+                type = type.BaseType;
+            }
+            while (type != null);
+
+            return false;
+        }
+
         //---------------------------------------------------------------------
         // System.Reflection.Method
 
