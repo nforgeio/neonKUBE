@@ -393,6 +393,9 @@
     <Compile Include="..\Test.Neon.Common\Net\Test_JsonClient.PutUnsafe.cs">
       <Link>Net\Test_JsonClient.PutUnsafe.cs</Link>
     </Compile>
+    <Compile Include="..\Test.Neon.Common\Net\Test_Jwt.cs">
+      <Link>Net\Test_Jwt.cs</Link>
+    </Compile>
     <Compile Include="..\Test.Neon.Common\Net\Test_NetHelper.cs">
       <Link>Net\Test_NetHelper.cs</Link>
     </Compile>

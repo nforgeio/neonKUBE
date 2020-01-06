@@ -297,7 +297,7 @@ namespace TestCommon
             Assert.Equal(new byte[] { 0, 1, 2, 3 }, NeonHelper.Base64UrlDecode("AAECAw%3D%3D"));
             Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, NeonHelper.Base64UrlDecode("AAECAwQ%3D"));
 
-            // Verify that we can decode known values without padding.
+            // Verify that we can decode known values without URL encoded padding.
 
             Assert.Equal(new byte[0], NeonHelper.Base64UrlDecode(""));
             Assert.Equal(new byte[] { 0 }, NeonHelper.Base64UrlDecode("AA"));
@@ -305,6 +305,15 @@ namespace TestCommon
             Assert.Equal(new byte[] { 0, 1, 2 }, NeonHelper.Base64UrlDecode("AAEC"));
             Assert.Equal(new byte[] { 0, 1, 2, 3 }, NeonHelper.Base64UrlDecode("AAECAw"));
             Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, NeonHelper.Base64UrlDecode("AAECAwQ"));
+
+            // Verify that we can decode known values with standard '=' padding.
+
+            Assert.Equal(new byte[0], NeonHelper.Base64UrlDecode(""));
+            Assert.Equal(new byte[] { 0 }, NeonHelper.Base64UrlDecode("AA=="));
+            Assert.Equal(new byte[] { 0, 1 }, NeonHelper.Base64UrlDecode("AAE="));
+            Assert.Equal(new byte[] { 0, 1, 2 }, NeonHelper.Base64UrlDecode("AAEC"));
+            Assert.Equal(new byte[] { 0, 1, 2, 3 }, NeonHelper.Base64UrlDecode("AAECAw=="));
+            Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, NeonHelper.Base64UrlDecode("AAECAwQ="));
         }
     }
 }
