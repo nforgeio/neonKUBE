@@ -177,6 +177,7 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <Folder Include="media\Neon.Cadence" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Content\Neon.Cadence\WorkflowDetails\SynchronousSignals.aml" />
     <None Include="Content\Neon.Kube.Service\Overview.aml" />
     <None Include="Content\Neon.Cadence\ActivityDetails\Basics.aml" />
     <None Include="Content\Neon.Cadence\ActivityDetails\ExternalCompletion.aml" />
