@@ -57,7 +57,7 @@
 
 3. Create the next release branch and push it.
 
-4. Create a draft for the next GitHub release.
+4. Create a draft for the next GitHub release from: `$/Doc/RELEASE-TEMPLATE.md`
 
    **NOTE:** Be sure to set the branch as the new release.
 
