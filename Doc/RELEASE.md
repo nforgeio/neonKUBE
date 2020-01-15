@@ -18,7 +18,7 @@
    neon-nuget-local
    ```
 
-5. Build and publish the Docker images, the nuget packages, code documentation, as well as a full RELEASE build:
+5. Build and publish the Docker images, the nuget packages, code documentation, as well as the full RELEASE build:
    ```
    neon-publish-images -all
    neon-nuget-public

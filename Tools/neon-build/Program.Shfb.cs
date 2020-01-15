@@ -446,6 +446,13 @@ namespace NeonBuild
                 xml = sbXml.ToString();
                 xml = xml.Replace("index.html.htm", "index.html");
 
+                // $hack(jeff.lill): Issue #746:
+                //
+                // We've also ended up with some URLs with an extra ".htm" suffix at
+                // this point, we're just going to a search and replace of these too.
+
+                xml = xml.Replace(".htm.htm", ".htm");
+
                 File.WriteAllText(filePath, xml);
             }
 

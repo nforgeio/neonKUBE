@@ -2864,6 +2864,24 @@
             <returns>The decoded bytes.</returns>
             <exception cref="T:System.NullReferenceException">Thrown if <paramref name="input"/> is <c>null</c>.</exception>
         </member>
+        <member name="M:Neon.Common.NeonHelper.Base64UrlEncode(System.Byte[],System.Boolean)">
+            <summary>
+            Encodes a byte array using <b>Base64Url</b> encoding as specifed here: <a href="">RFC 4648</a>
+            </summary>
+            <param name="bytes">The input byte array.</param>
+            <param name="retainPadding">
+            Optionally onverts any '=' characters padding into escaped "%3D", otherwise
+            any padding will be omitted from the output.
+            </param>
+            <returns>The Base64Url encoded string.</returns>
+        </member>
+        <member name="M:Neon.Common.NeonHelper.Base64UrlDecode(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="encoded"></param>
+            <returns></returns>
+        </member>
         <member name="M:Neon.Common.NeonHelper.GetAssemblyFolder(System.Reflection.Assembly)">
             <summary>
             Returns the fully qualified path to the folder holding the
@@ -8254,6 +8272,62 @@
             </summary>
             <exception cref="T:Neon.Net.HttpException">Thrown if the response doesn't indicate success.</exception>
         </member>
+        <member name="T:Neon.Net.Jwt">
+            <summary>
+            A lightweight implementation of Json Web Token (JWT) suitable for use by
+            client applications.  The JWT structure is described <a href="https://jwt.io/introduction/">here</a>.
+            </summary>
+        </member>
+        <member name="M:Neon.Net.Jwt.Parse(System.String)">
+            <summary>
+            <para>
+            Parses a <see cref="T:Neon.Net.Jwt"/> from an encoded string.
+            </para>
+            <note>
+            <b>WARNING:</b> This method <b>does not verify the signature</b> so it is <b>not suitable for
+            verifying a JWT's authenticity</b>.
+            </note>
+            </summary>
+            <param name="jwtString">The encoded JWT string.</param>
+            <returns>The parsed <see cref="T:Neon.Net.Jwt"/> instance.</returns>
+            <exception cref="T:System.FormatException">Thrown if the JWT format is invalid.</exception>
+        </member>
+        <member name="M:Neon.Net.Jwt.#ctor(System.String)">
+            <summary>
+            Private constructor.
+            </summary>
+            <param name="jwtString">The encoded JWT string.</param>
+            <exception cref="T:System.FormatException">Thrown if the JWT format is invalid.</exception>
+        </member>
+        <member name="P:Neon.Net.Jwt.Header">
+            <summary>
+            Returns a Newtonsoft <see cref="T:Newtonsoft.Json.Linq.JObject"/> with the JWT <b>header</b> properties.
+            </summary>
+        </member>
+        <member name="P:Neon.Net.Jwt.Payload">
+            <summary>
+            Returns a Newtonsoft <see cref="T:Newtonsoft.Json.Linq.JObject"/> with the JWT <b>payload</b> properties.
+            </summary>
+        </member>
+        <member name="P:Neon.Net.Jwt.Signature">
+            <summary>
+            Returns the JWT <b>signature</b> as a byte array.
+            </summary>
+        </member>
+        <member name="M:Neon.Net.Jwt.ToString">
+            <summary>
+            <para>
+            Renders the JWT back into its encoded string format.
+            </para>
+            <note>
+            This method currently returns the original string used to parse the JWT.  It does
+            not actually perform any encoding so any changes made to the properties will not
+            be included in the output.
+            </note>
+            </summary>
+            <returns>The encode JWT.</returns>
+            <exception cref="T:System.InvalidOperationException">Thrown if the JWT wasn't parsed from a string.</exception>
+        </member>
         <member name="T:Neon.Net.NamespaceDoc">
             <summary>
             This namespace defines <see cref="T:Neon.Net.JsonClient"/> which makes calling REST APIs easier as well
@@ -12366,6 +12440,22 @@
             <returns><c>true</c> if <paramref name="type"/> implements <paramref name="type"/>.</returns>
             <exception cref="T:System.ArgumentNullException">Thrown if either of <paramref name="type"/> or <paramref name="interfaceType"/> are <c>null</c>.</exception>
             <exception cref="T:System.ArgumentException">Thrown if <paramref name="interfaceType"/> is not an <c>interface</c>.</exception>
+        </member>
+        <member name="M:System.ReflectionExtensions.Is``1(System.Type)">
+            <summary>
+            Determines whether a type inherits from (or is) a specified base type.
+            </summary>
+            <typeparam name="T">Identifies the type we're matching.</typeparam>
+            <param name="type">The type being tested.</param>
+            <returns><c>true</c> if <paramref name="type"/> inherits or is <typeparamref name="T"/>.</returns>
+        </member>
+        <member name="M:System.ReflectionExtensions.Is(System.Type,System.Type)">
+            <summary>
+            Determines whether a type inherits from (or is) a specified base type.
+            </summary>
+            <param name="type">The type being tested.</param>
+            <param name="targetType">Identifies the type we're matching.</param>
+            <returns><c>true</c> if <paramref name="type"/> inherits or is <paramref name="targetType"/>.</returns>
         </member>
         <member name="M:System.ReflectionExtensions.GetParameterTypes(System.Reflection.MethodInfo)">
             <summary>
