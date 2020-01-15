@@ -38,7 +38,7 @@
   b. Set **Tag** to the version with a leading "v" (like **v1.0.0**)
   c. Set **Target** to the `release-VERSION` branch
   e: Check **This is a pre-release** as required
-  f. Add the release setup binary named like: **neonKUBE-setup-1.0.0.exet**
+  f. Add the release setup binary named like: **neonKUBE-setup-1.0.0.exe**
   g. Add the OS/X neon-cli binary from **osx** folder as: **neon-osx**
   h. Add **neon.chm**
   i. Edit the release notes including adding the SHA512s for:

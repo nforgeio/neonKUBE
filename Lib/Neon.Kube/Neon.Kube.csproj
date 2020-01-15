@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Kube</RootNamespace>
     <Authors>Jeff Lill</Authors>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
     <Company>neonFORGE, LLC</Company>
     <Product>neonKUBE</Product>
     <Description>neonKUBE utilities.</Description>
