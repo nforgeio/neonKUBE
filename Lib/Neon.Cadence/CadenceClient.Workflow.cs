@@ -745,15 +745,29 @@ namespace Neon.Cadence
         /// parameters.
         /// </summary>
         /// <param name="execution">The <see cref="WorkflowExecution"/>.</param>
-        /// <param name="signalName">Identifies the signal.</param>
-        /// <param name="signalArgs">Optionally specifies the signal arguments as a byte array.</param>
+        /// <param name="transactionId">Uniquely identifies the signal transaction.</param>
+        /// <param name="signalArgs">Specifies the signal arguments as a byte array.</param>
         /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <returns>The encoded signal results or <c>null</c> for signals that don't return a result.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
-        internal async Task SynchronousSignalWorkflowAsync(WorkflowExecution execution, string signalName, byte[] signalArgs = null, string domain = null)
+        /// <remarks>
+        /// <para>
+        /// <paramref name="transactionId"/> must be passed as a globally unique identifier for the
+        /// signal transaction.  This will be used for identifying specific signal call when the querying 
+        /// the workflow for the signal result.
+        /// </para>
+        /// <para>
+        /// <paramref name="signalArgs"/> must include <paramref name="transactionId"/> encoded as the
+        /// first argument and the target signal name as the second argument.  The application signal
+        /// arguments must follow the ID and signal name arguments. 
+        /// </para>
+        /// </remarks>
+        internal async Task<byte[]> SynchronousSignalWorkflowAsync(WorkflowExecution execution, string transactionId, byte[] signalArgs, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(transactionId), nameof(transactionId));
+            Covenant.Requires<ArgumentNullException>(signalArgs != null && signalArgs.Length > 1, nameof(signalArgs));
             EnsureNotDisposed();
 
             var reply = (WorkflowSignalReply)await CallProxyAsync(
