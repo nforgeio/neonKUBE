@@ -437,7 +437,7 @@ namespace NeonBuild
                     lastPos = endPos;
                 }
 
-                // $hack(jeff.lill):
+                // $hack(jefflill):
                 //
                 // Somehow we've ended up with references to [index.html.htm] in the TOC
                 // related files at this point.  We're just going to do a search/replace
@@ -446,7 +446,7 @@ namespace NeonBuild
                 xml = sbXml.ToString();
                 xml = xml.Replace("index.html.htm", "index.html");
 
-                // $hack(jeff.lill): Issue #746:
+                // $hack(jefflill): Issue #746:
                 //
                 // We've also ended up with some URLs with an extra ".htm" suffix at
                 // this point, we're just going to a search and replace of these too.
