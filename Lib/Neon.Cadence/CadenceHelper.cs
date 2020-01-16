@@ -81,21 +81,25 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Determines whether the type passed is a <see cref="Task"/> or <see cref="Task{T}"/>.
+        /// Determines whether the type passed is a <see cref="Task"/>.
         /// </summary>
         /// <param name="type">The type being tested.</param>
-        /// <returns><c>true</c> if the type is a Cadence task.</returns>
+        /// <returns><c>true</c> if the type is a <see cref="Task"/>.</returns>
         internal static bool IsTask(Type type)
         {
-            if (type == typeof(Task))
-            {
-                return true;
-            }
-            else
-            {
-                return type.IsGenericType && type.FullName.StartsWith(genericTaskNamePrefix);
-            }
+            return type == typeof(Task);
         }
+
+        /// <summary>
+        /// Determines whether the type passed is a <see cref="Task{T}"/>.
+        /// </summary>
+        /// <param name="type">The type being tested.</param>
+        /// <returns><c>true</c> if the type is a <see cref="Task{T}"/>.</returns>
+        internal static bool IsTaskT(Type type)
+        {
+            return type.IsGenericType && type.FullName.StartsWith(genericTaskNamePrefix);
+        }
+
         /// <summary>
         /// Ensures that a workflow type name is valid.
         /// </summary>
@@ -271,9 +275,9 @@ namespace Neon.Cadence.Internal
                     continue;
                 }
 
-                if (!CadenceHelper.IsTask(method.ReturnType))
+                if (!(CadenceHelper.IsTask(method.ReturnType) || CadenceHelper.IsTaskT(method.ReturnType)))
                 {
-                    throw new WorkflowTypeException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                    throw new WorkflowTypeException($"Workflow workflow method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                 }
 
                 var name = workflowMethodAttribute.Name ?? string.Empty;
@@ -304,9 +308,14 @@ namespace Neon.Cadence.Internal
                     continue;
                 }
 
-                if (!CadenceHelper.IsTask(method.ReturnType))
+                if (CadenceHelper.IsTaskT(method.ReturnType))
                 {
-                    throw new WorkflowTypeException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                    throw new WorkflowTypeException($"Non-synchronous workflow signal method [{workflowInterface.FullName}.{method.Name}()] cannot return a value.");
+                }
+
+                if (!(CadenceHelper.IsTask(method.ReturnType)))
+                {
+                    throw new WorkflowTypeException($"Workflow signal method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                 }
 
                 var name = signalMethodAttribute.Name ?? string.Empty;
@@ -319,7 +328,7 @@ namespace Neon.Cadence.Internal
                 signalNames.Add(name);
             }
 
-            // Validate the signal method names and return types.
+            // Validate the query method names and return types.
 
             var queryNames = new HashSet<string>();
 
@@ -332,9 +341,9 @@ namespace Neon.Cadence.Internal
                     continue;
                 }
 
-                if (!CadenceHelper.IsTask(method.ReturnType))
+                if (!(CadenceHelper.IsTask(method.ReturnType) || CadenceHelper.IsTaskT(method.ReturnType)))
                 {
-                    throw new WorkflowTypeException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                    throw new WorkflowTypeException($"Workflow query method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                 }
 
                 var name = queryMethodAttribute.Name ?? string.Empty;
@@ -506,7 +515,7 @@ namespace Neon.Cadence.Internal
                     continue;
                 }
 
-                if (!CadenceHelper.IsTask(method.ReturnType))
+                if (!(CadenceHelper.IsTask(method.ReturnType) || CadenceHelper.IsTaskT(method.ReturnType)))
                 {
                     throw new WorkflowTypeException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
                 }
