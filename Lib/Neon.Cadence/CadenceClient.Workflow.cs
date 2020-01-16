@@ -739,6 +739,37 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Transmits a signal to a running external workflow and then polls by querying the workflow
+        /// to wait for the signal to be received and processed by the workflow.  This overload does 
+        /// not return a result. This low-level method accepts a byte array with the already encoded 
+        /// parameters.
+        /// </summary>
+        /// <param name="execution">The <see cref="WorkflowExecution"/>.</param>
+        /// <param name="signalName">Identifies the signal.</param>
+        /// <param name="signalArgs">Optionally specifies the signal arguments as a byte array.</param>
+        /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
+        internal async Task SynchronousSignalWorkflowAsync(WorkflowExecution execution, string signalName, byte[] signalArgs = null, string domain = null)
+        {
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
+            EnsureNotDisposed();
+
+            var reply = (WorkflowSignalReply)await CallProxyAsync(
+                new WorkflowSignalRequest()
+                {
+                    WorkflowId = execution.WorkflowId,
+                    SignalName = signalName,
+                    SignalArgs = signalArgs,
+                    RunId      = execution.RunId,
+                    Domain     = ResolveDomain(domain)
+                });
+
+            reply.ThrowOnError();
+        }
+
+        /// <summary>
         /// Transmits a signal to an external workflow, starting the workflow if it's not currently running.
         /// This low-level method accepts a byte array with the already encoded parameters.
         /// </summary>

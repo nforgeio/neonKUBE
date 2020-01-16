@@ -44,6 +44,7 @@ using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Net;
+using Neon.Retry;
 using Neon.Tasks;
 
 namespace Neon.Cadence
@@ -1353,6 +1354,7 @@ namespace Neon.Cadence
         private bool                            isDisposed              = false;
         private List<Type>                      registeredActivityTypes = new List<Type>();
         private List<Type>                      registeredWorkflowTypes = new List<Type>();
+        private IRetryPolicy                    signalPollPolicy        = new ExponentialRetryPolicy(e => true, maxAttempts: 100, initialRetryInterval: TimeSpan.FromSeconds(1), maxRetryInterval: TimeSpan.FromSeconds(4), timeout: TimeSpan.FromSeconds(60));
         private HttpClient                      proxyClient;
         private HttpServer                      httpServer;
         private Exception                       pendingException;
@@ -1621,6 +1623,30 @@ namespace Neon.Cadence
         /// arguments passed to the handler.
         /// </summary>
         public event CadenceClosedDelegate ConnectionClosed;
+
+        /// <summary>
+        /// <para>
+        /// Specifies the retry policy that controls how the client polls workflows for synchronous
+        /// signal completions.  This defaults to a reasonable <see cref="ExponentialRetryPolicy"/>
+        /// but may be customized.
+        /// </para>
+        /// <note>
+        /// Any existing transient exception detector function specified for the retry policy
+        /// being set will be replaced by a function that considers all exceptions as transient
+        /// to support the polling Cadence for signal completion.
+        /// </note>
+        /// </summary>
+        public IRetryPolicy SignalPollPolicy
+        {
+            get => signalPollPolicy;
+
+            set
+            {
+                Covenant.Requires<ArgumentNullException>(value != null);
+
+                signalPollPolicy = value.Clone(e => true);
+            }
+        }
 
         /// <summary>
         /// Ensures that that client instance is not disposed.
@@ -1965,7 +1991,7 @@ namespace Neon.Cadence
 
                             log.LogWarn(() => $" Request Timeout: [request={operation.Request.GetType().Name}, started={operation.StartTimeUtc.ToString(NeonHelper.DateFormat100NsTZ)}, timeout={operation.Timeout}].");
 
-                            // $todo(jeff.lill):
+                            // $todo(jefflill):
                             //
                             // We're not supporting cancellation so I'm going to comment
                             // this out.  We should probably remove this if we decide never

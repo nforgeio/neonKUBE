@@ -308,14 +308,24 @@ namespace Neon.Cadence.Internal
                     continue;
                 }
 
-                if (CadenceHelper.IsTaskT(method.ReturnType))
+                if (signalMethodAttribute.Synchronous)
                 {
-                    throw new WorkflowTypeException($"Non-synchronous workflow signal method [{workflowInterface.FullName}.{method.Name}()] cannot return a value.");
+                    if (!(CadenceHelper.IsTaskT(method.ReturnType) || CadenceHelper.IsTaskT(method.ReturnType)))
+                    {
+                        throw new WorkflowTypeException($"Synchronous workflow signal method [{workflowInterface.FullName}.{method.Name}()] must return a [Task] or [Task<T>].");
+                    }
                 }
-
-                if (!(CadenceHelper.IsTask(method.ReturnType)))
+                else
                 {
-                    throw new WorkflowTypeException($"Workflow signal method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                    if (!(CadenceHelper.IsTask(method.ReturnType)))
+                    {
+                        throw new WorkflowTypeException($"Workflow signal method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                    }
+
+                    if (CadenceHelper.IsTaskT(method.ReturnType))
+                    {
+                        throw new WorkflowTypeException($"Non-synchronous workflow signal method [{workflowInterface.FullName}.{method.Name}()] cannot return a result via a [Task<T>].  Use [SignalMethod(Synchronous = true)] to enable this.");
+                    }
                 }
 
                 var name = signalMethodAttribute.Name ?? string.Empty;
