@@ -1,7 +1,7 @@
 ﻿//------------------------------------------------------------------------------
 // FILE:         ClusterManager.cs
 // CONTRIBUTOR:  Marcus Bowyer
-// COPYRIGHT:    Copyright (c) 2016-2020 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
