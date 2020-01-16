@@ -22,8 +22,7 @@ This is a full Neon release intended for general consumption.  Note that some pa
 
 This package provides a .NET client for the [Uber Cadence](https://cadenceworkflow.io/docs/) workflow platform.  This is still a bit of a work in progress.  That being said, most functionality is implemented and we're using this in production for a day-job project.  You can get started [here](https://doc.neonkube.com/Neon.Cadence-Overview.htm).
 
-**Changes:** 
-* `CadenceSettings` adds a constructor where you can specify the server URIs
+**Changes:** No significant changes for this release.
 
 ### <img src="https://doc.neonkube.com/media/release.png"/> Neon.Common 
 
@@ -35,8 +34,7 @@ This package includes a few dozen useful types used by other Neon components.  T
 
 This package extends the standard [CouchbaseNetClient](https://www.nuget.org/packages/CouchbaseNetClient) package, adding *safe* methods that return the operation result directly, handling transient errors transparently and throwing exceptions for hard errors.  This also includes some configuration related extensions.  You can get started [here](https://doc.neonkube.com/Neon.Couchbase-Overview.htm).
 
-**Changes:** 
-* `CouchbaseSettings` adds a constructor where you can specify the server URIs
+**Changes:** No significant changes for this release.
 
 ### <img src="https://doc.neonkube.com/media/release.png"/> Neon.Cryptography
 
