@@ -53,9 +53,10 @@ namespace Neon.Retry
         public TimeSpan? Timeout => null;
 
         /// <inheritdoc/>
-        public IRetryPolicy Clone()
+        public IRetryPolicy Clone(Func<Exception, bool> transientDetector = null)
         {
-            // The class is invariant we can safely return ourself.
+            // This class is invariant and doesn't use a transient detector
+            // so we just return the same instance.
             
             return this;
         }

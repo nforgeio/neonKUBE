@@ -76,7 +76,7 @@ namespace Neon.Retry
         public TimeSpan? Timeout { get; private set; }
 
         /// <inheritdoc/>
-        public abstract IRetryPolicy Clone();
+        public abstract IRetryPolicy Clone(Func<Exception, bool> transientDetector = null);
 
         /// <inheritdoc/>
         public abstract Task InvokeAsync(Func<Task> action);

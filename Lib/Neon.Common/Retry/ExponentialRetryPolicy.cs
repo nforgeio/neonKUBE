@@ -161,11 +161,19 @@ namespace Neon.Retry
         public TimeSpan MaxRetryInterval { get; private set; }
 
         /// <inheritdoc/>
-        public override IRetryPolicy Clone()
+        public override IRetryPolicy Clone(Func<Exception, bool> transientDetector = null)
         {
-            // The class is invariant we can safely return ourself.
+            if (transientDetector == null)
+            {
+                // The class is invariant we can safely return ourself
+                // when we're retaining the current transient detector.
 
-            return this;
+                return this;
+            }
+            else
+            {
+                return new ExponentialRetryPolicy(transientDetector ?? this.transientDetector, MaxAttempts, InitialRetryInterval, MaxRetryInterval, Timeout, SourceModule);
+            }
         }
 
         /// <inheritdoc/>

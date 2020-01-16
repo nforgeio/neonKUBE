@@ -40,8 +40,12 @@ namespace Neon.Retry
         /// <summary>
         /// Returns a copy of the retry policy.
         /// </summary>
+        /// <param name="transientDetector">
+        /// Optionally specifies a replacement transient detector function 
+        /// that will be set in the cloned policy.
+        /// </param>
         /// <returns>The policy copy.</returns>
-        IRetryPolicy Clone();
+        IRetryPolicy Clone(Func<Exception, bool> transientDetector = null);
 
         /// <summary>
         /// Retries an action that returns no result when it throws exceptions due to 
@@ -69,7 +73,7 @@ namespace Neon.Retry
     {
         public TimeSpan? Timeout => null;
 
-        public IRetryPolicy Clone()
+        public IRetryPolicy Clone(Func<Exception, bool> transientFunc = null)
         {
             return null;
         }

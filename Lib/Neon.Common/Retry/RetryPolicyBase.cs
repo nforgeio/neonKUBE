@@ -43,6 +43,8 @@ namespace Neon.Retry
         /// <param name="timeout">Optionally specifies the maximum time the operation should be retried (defaults to no limit).</param>
         public RetryPolicyBase(string sourceModule = null, TimeSpan? timeout = null)
         {
+            this.SourceModule = sourceModule;
+
             if (!string.IsNullOrEmpty(sourceModule))
             {
                 this.log = LogManager.Default.GetLogger(sourceModule);
@@ -76,13 +78,18 @@ namespace Neon.Retry
         public TimeSpan? Timeout { get; private set; }
 
         /// <inheritdoc/>
-        public abstract IRetryPolicy Clone();
+        public abstract IRetryPolicy Clone(Func<Exception, bool> transientDetector = null);
 
         /// <inheritdoc/>
         public abstract Task InvokeAsync(Func<Task> action);
 
         /// <inheritdoc/>
         public abstract Task<TResult> InvokeAsync<TResult>(Func<Task<TResult>> action);
+
+        /// <summary>
+        /// Returns the source module.
+        /// </summary>
+        protected string SourceModule { get; private set; }
 
         /// <summary>
         /// Logs a transient exception that is going to be retried if logging
