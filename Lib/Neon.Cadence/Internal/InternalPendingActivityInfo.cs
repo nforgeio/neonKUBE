@@ -33,9 +33,9 @@ namespace Neon.Cadence.Internal
     {
         /// <summary>
         /// The activity ID.
-        /// </summary>
-        [JsonProperty(PropertyName = "activityID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        /// </summary>        [JsonProperty(PropertyName = "activityID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
+
         public string ActivityID { get; set; }
 
         /// <summary>

@@ -745,7 +745,7 @@ namespace Neon.Cadence
         /// parameters.
         /// </summary>
         /// <param name="execution">The <see cref="WorkflowExecution"/>.</param>
-        /// <param name="transactionId">Uniquely identifies the signal transaction.</param>
+        /// <param name="signalCallId">Specifies the call ID encoded in the <see cref="SyncSignalInfo"/>.</param>
         /// <param name="signalArgs">Specifies the signal arguments as a byte array.</param>
         /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
         /// <returns>The encoded signal results or <c>null</c> for signals that don't return a result.</returns>
@@ -753,34 +753,22 @@ namespace Neon.Cadence
         /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         /// <remarks>
         /// <para>
-        /// <paramref name="transactionId"/> must be passed as a globally unique identifier for the
-        /// signal transaction.  This will be used for identifying specific signal call when the querying 
-        /// the workflow for the signal result.
-        /// </para>
-        /// <para>
-        /// <paramref name="signalArgs"/> must include <paramref name="transactionId"/> encoded as the
-        /// first argument and the target signal name as the second argument.  The application signal
-        /// arguments must follow the ID and signal name arguments. 
+        /// <paramref name="signalArgs"/> must include an internal <see cref="SyncSignalInfo"/> encoded as 
+        /// the first argument followed by the user signal arguments.  This first argument includes the
+        /// information required by the worker client to route the user's signal and then transmit the reply
+        /// back to this client.  <paramref name="signalCallId"/> must be passed as the ID uniqiely identifying
+        /// this signal call.  This must be the same ID embedded in the <see cref="SyncSignalInfo"/> encoded
+        /// as the first signal parameter.  This method uses this ID to wait for the specific reply to this
+        /// call from the worker that received and processed the signal.
         /// </para>
         /// </remarks>
-        internal async Task<byte[]> SynchronousSignalWorkflowAsync(WorkflowExecution execution, string transactionId, byte[] signalArgs, string domain = null)
+        internal async Task<byte[]> SynchronousSignalWorkflowAsync(WorkflowExecution execution, string signalCallId, byte[] signalArgs, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(transactionId), nameof(transactionId));
             Covenant.Requires<ArgumentNullException>(signalArgs != null && signalArgs.Length > 1, nameof(signalArgs));
             EnsureNotDisposed();
 
-            var reply = (WorkflowSignalReply)await CallProxyAsync(
-                new WorkflowSignalRequest()
-                {
-                    WorkflowId = execution.WorkflowId,
-                    SignalName = signalName,
-                    SignalArgs = signalArgs,
-                    RunId      = execution.RunId,
-                    Domain     = ResolveDomain(domain)
-                });
-
-            reply.ThrowOnError();
+            throw new NotImplementedException();
         }
 
         /// <summary>
