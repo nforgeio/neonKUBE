@@ -191,6 +191,8 @@ namespace Neon.Cadence.Internal
             private static MethodInfo       signalWorkflowAsync;                    // from: CadenceClient
             private static MethodInfo       signalWorkflowWithStartAsync;           // from: CadenceClient
             private static MethodInfo       signalChildWorkflowAsync;               // from: CadenceClient
+            private static MethodInfo       syncSignalWorkflowAsync;                // from: CadenceClient
+            private static MethodInfo       syncSignalChildWorkflowAsync;           // from: CadenceClient
             private static MethodInfo       queryWorkflowAsync;                     // from: CadenceClient
             private static MethodInfo       resolveDomain;                          // from: CadenceClient
             private static MethodInfo       newWorkflowStub;                        // from: CadenceClient
@@ -218,6 +220,8 @@ namespace Neon.Cadence.Internal
                 signalWorkflowAsync                   = NeonHelper.GetMethod(clientType, ""SignalWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
                 signalWorkflowWithStartAsync          = NeonHelper.GetMethod(clientType, ""SignalWorkflowWithStartAsync"", typeof(string), typeof(string), typeof(byte[]), typeof(byte[]), typeof(WorkflowOptions));
                 signalChildWorkflowAsync              = NeonHelper.GetMethod(clientType, ""SignalChildWorkflowAsync"", typeof(Workflow), typeof(ChildExecution), typeof(string), typeof(byte[]));
+                syncSignalWorkflowAsync               = NeonHelper.GetMethod(clientType, ""SyncSignalWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(string), typeof(byte[]), typeof(string));
+                syncSignalChildWorkflowAsync          = NeonHelper.GetMethod(clientType, ""SyncSignalChildWorkflowAsync"", typeof(Workflow), typeof(ChildExecution), typeof(string), typeof(string), typeof(byte[]));
                 queryWorkflowAsync                    = NeonHelper.GetMethod(clientType, ""QueryWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
                 resolveDomain                         = NeonHelper.GetMethod(clientType, ""ResolveDomain"", typeof(string));
                 newWorkflowStub                       = NeonHelper.GetMethod(clientType, ""NewWorkflowStub"", typeof(string), typeof(WorkflowOptions));
@@ -289,6 +293,18 @@ namespace Neon.Cadence.Internal
             public static async Task<byte[]> QueryWorkflowAsync(CadenceClient client, WorkflowExecution execution, string queryType, byte[] queryArgs, string domain)
             {
                 return await (Task<byte[]>)queryWorkflowAsync.Invoke(client, new object[] { execution, queryType, queryArgs, domain });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static async Task<byte[]> SyncSignalWorkflowAsync(CadenceClient client, WorkflowExecution execution, string signalName, string signalId, byte[] signalArgs, string domain)
+            {
+                return await (Task<byte[]>)syncSignalWorkflowAsync.Invoke(client, new object[] { execution, signalName, signalId, signalArgs, domain });
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static async Task<byte[]> SyncSignalChildWorkflowAsync(CadenceClient client, Workflow parentWorkflow, ChildExecution childExecution, string signalName, string signalId, byte[] signalArgs)
+            {
+                return await (Task<byte[]>)syncSignalChildWorkflowAsync.Invoke(client, new object[] { parentWorkflow, childExecution, signalName, signalId, signalArgs });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
@@ -451,9 +467,23 @@ namespace Neon.Cadence.Internal
                 {
                     var signalAttribute = signalMethodAttributes.First();
 
-                    if (method.ReturnType.IsGenericType || method.ReturnType != typeof(Task))
+                    if (signalAttribute.Synchronous)
                     {
-                        throw new WorkflowTypeException($"Workflow signal method [{workflowInterface.FullName}.{method.Name}()] does not return a [Task].");
+                        // Synchronous signal can return both Task or Task<T>.
+
+                        if (!CadenceHelper.IsTask(method.ReturnType) && !CadenceHelper.IsTask(method.ReturnType))
+                        {
+                            throw new WorkflowTypeException($"Workflow signal method [{workflowInterface.FullName}.{method.Name}()] does not return a [Task] or a [Task<T>].");
+                        }
+                    }
+                    else
+                    {
+                        // Fire-and-forget signals may only return Task.
+
+                        if (method.ReturnType.IsGenericType || method.ReturnType != typeof(Task))
+                        {
+                            throw new WorkflowTypeException($"Workflow signal method [{workflowInterface.FullName}.{method.Name}()] does not return a [Task].");
+                        }
                     }
 
                     if (signalNames.Contains(signalAttribute.Name))
@@ -953,11 +983,13 @@ namespace Neon.Cadence.Internal
             }
 
             // Generate the workflow signal methods.  Note that these will vary a bit
-            // between external and child workflows.
+            // between external and child workflows as well as for fire-and-forget vs.
+            // synchronous.
 
             foreach (var details in methodSignatureToDetails.Values.Where(d => d.Kind == WorkflowMethodKind.Signal))
             {
-                var sbParams = new StringBuilder();
+                var sbParams        = new StringBuilder();
+                var signalAttribute = details.SignalMethodAttribute;
                 
                 foreach (var param in details.Method.GetParameters())
                 {
@@ -965,7 +997,26 @@ namespace Neon.Cadence.Internal
                 }
 
                 sbSource.AppendLine();
-                sbSource.AppendLine($"        public async Task {details.Method.Name}({sbParams})");
+
+                if (signalAttribute.Synchronous)
+                {
+                    if (details.ReturnType == typeof(void))
+                    {
+                        sbSource.AppendLine($"        public async Task {details.Method.Name}({sbParams})");
+                    }
+                    else
+                    {
+                        // We need to replace the "+" characters .NET uses for nested types into
+                        // "." so the result will be a valid C# type identifier.
+
+                        sbSource.AppendLine($"        public async Task<{details.ReturnType.FullName.Replace('+', '.')}> {details.Method.Name}({sbParams})");
+                    }
+                }
+                else
+                {
+                    sbSource.AppendLine($"        public async Task {details.Method.Name}({sbParams})");
+                }
+
                 sbSource.AppendLine($"        {{");
                 sbSource.AppendLine($"            await SyncContext.ClearAsync;");
                 sbSource.AppendLine();
@@ -979,9 +1030,21 @@ namespace Neon.Cadence.Internal
                     sbSource.AppendLine($"                throw new WorkflowExecutionAlreadyStartedException(\"Workflow stub for [{workflowInterface.FullName}] cannot be signalled because a workflow method needs to be called first.\");");
                     sbSource.AppendLine($"            }}");
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
-                    sbSource.AppendLine();
-                    sbSource.AppendLine($"            await ___StubHelper.SignalChildWorkflowAsync(this.client, this.parentWorkflow, this.childExecution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___argBytes);");
+
+                    if (signalAttribute.Synchronous)
+                    {
+                        sbSource.AppendLine("             var __signalId   = Guid.NewGuid().ToString(\"d\");");;
+                        sbSource.AppendLine($"            var __signalInfo = new SyncSignalInfo({StringLiteral(signalAttribute.Name)}, __signalId)");
+                        sbSource.AppendLine($"            var ___argBytes  = {SerializeArgsExpression(details.Method.GetParameters(), "__signalInfo")};");
+                        sbSource.AppendLine();
+                        sbSource.AppendLine($"            await ___StubHelper.SyncSignalChildWorkflowAsync(this.client, this.parentWorkflow, this.childExecution, {StringLiteral(CadenceClient.SyncSignalName)}, __signalId, ___argBytes);");
+                    }
+                    else
+                    {
+                        sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
+                        sbSource.AppendLine();
+                        sbSource.AppendLine($"            await ___StubHelper.SignalChildWorkflowAsync(this.client, this.parentWorkflow, this.childExecution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___argBytes);");
+                    }
                 }
                 else
                 {
@@ -992,9 +1055,21 @@ namespace Neon.Cadence.Internal
                     sbSource.AppendLine($"                throw new WorkflowExecutionAlreadyStartedException(\"Workflow stub for [{workflowInterface.FullName}] cannot be signalled because a workflow method needs to be called first.\");");
                     sbSource.AppendLine($"            }}");
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
-                    sbSource.AppendLine();
-                    sbSource.AppendLine($"            await ___StubHelper.SignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___argBytes, this.domain);");
+
+                    if (signalAttribute.Synchronous)
+                    {
+                        sbSource.AppendLine("             var __signalId   = Guid.NewGuid().ToString(\"d\");");;
+                        sbSource.AppendLine($"            var __signalInfo = new SyncSignalInfo({StringLiteral(signalAttribute.Name)}, __signalId)");
+                        sbSource.AppendLine($"            var ___argBytes  = {SerializeArgsExpression(details.Method.GetParameters(), "__signalInfo")};");
+                        sbSource.AppendLine();
+                        sbSource.AppendLine($"            await ___StubHelper.SyncSignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, __signalId, ___argBytes, this.domain);");
+                    }
+                    else
+                    {
+                        sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
+                        sbSource.AppendLine();
+                        sbSource.AppendLine($"            await ___StubHelper.SignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___argBytes, this.domain);");
+                    }
                 }
 
                 sbSource.AppendLine($"        }}");
@@ -1227,15 +1302,15 @@ namespace Neon.Cadence.Internal
         /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
         /// <param name="parentWorkflow">The parent workflow.</param>
         /// <param name="workflowTypeName">Optionally specifies the workflow type name.</param>
-        /// <param name="execution">The child execution.</param>
+        /// <param name="childExecution">The child execution.</param>
         /// <returns>The stub instance.</returns>
         /// <exception cref="WorkflowTypeException">Thrown when there are problems with the <typeparamref name="TWorkflowInterface"/>.</exception>
-        public static TWorkflowInterface NewChildWorkflowStub<TWorkflowInterface>(CadenceClient client, Workflow parentWorkflow, string workflowTypeName, ChildExecution execution)
+        public static TWorkflowInterface NewChildWorkflowStub<TWorkflowInterface>(CadenceClient client, Workflow parentWorkflow, string workflowTypeName, ChildExecution childExecution)
             where TWorkflowInterface : class
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
-            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
+            Covenant.Requires<ArgumentNullException>(childExecution != null, nameof(childExecution));
 
             var workflowInterface = typeof(TWorkflowInterface);
             var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
@@ -1249,7 +1324,7 @@ namespace Neon.Cadence.Internal
 
             var stub = GetWorkflowStub(typeof(TWorkflowInterface), isChild: true);
 
-            return (TWorkflowInterface)stub.Create(client, client.DataConverter, parentWorkflow, workflowTypeName, execution);
+            return (TWorkflowInterface)stub.Create(client, client.DataConverter, parentWorkflow, workflowTypeName, childExecution);
         }
 
         /// <summary>
@@ -1752,10 +1827,16 @@ namespace Neon.Cadence.Internal
         /// serialize workflow method parameters to a byte array.
         /// </summary>
         /// <param name="args">The parameters.</param>
+        /// <param name="firstArgVariable">Optionally specifies the name of a local variable that should be passed as the first argument.</param>
         /// <returns>The C# expression.</returns>
-        private static string SerializeArgsExpression(ParameterInfo[] args)
+        private static string SerializeArgsExpression(ParameterInfo[] args, string firstArgVariable = null)
         {
             var sb = new StringBuilder();
+
+            if (firstArgVariable != null)
+            {
+                sb.AppendWithSeparator(firstArgVariable, ", ");
+            }
 
             foreach (var arg in args)
             {

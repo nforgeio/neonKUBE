@@ -38,23 +38,23 @@ namespace Neon.Cadence
     {
         private bool            completed = false;
         private Workflow        parentWorkflow;
-        private ChildExecution  execution;
+        private ChildExecution  childExecution;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="parentWorkflow">Identifies the parent workflow context.</param>
-        /// <param name="execution">The child workflow execution.</param>
-        internal ChildWorkflowFuture(Workflow parentWorkflow, ChildExecution execution)
+        /// <param name="childExecution">The child workflow execution.</param>
+        internal ChildWorkflowFuture(Workflow parentWorkflow, ChildExecution childExecution)
         {
             this.parentWorkflow = parentWorkflow;
-            this.execution      = execution;
+            this.childExecution = childExecution;
         }
 
         /// <summary>
         /// Returns the workflow execution.
         /// </summary>
-        public WorkflowExecution Execution => execution.Execution;
+        public WorkflowExecution Execution => childExecution.Execution;
 
         /// <inheritdoc/>
         public async Task GetAsync()
@@ -68,7 +68,7 @@ namespace Neon.Cadence
 
             completed = true;
 
-            await parentWorkflow.Client.GetChildWorkflowResultAsync(parentWorkflow, execution);
+            await parentWorkflow.Client.GetChildWorkflowResultAsync(parentWorkflow, childExecution);
         }
     }
 
@@ -80,23 +80,23 @@ namespace Neon.Cadence
     {
         private bool            completed = false;
         private Workflow        parentWorkflow;
-        private ChildExecution  execution;
+        private ChildExecution  childExecution;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="parentWorkflow">Identifies the parent workflow context.</param>
-        /// <param name="execution">The child workflow execution.</param>
-        internal ChildWorkflowFuture(Workflow parentWorkflow, ChildExecution execution)
+        /// <param name="childExecution">The child workflow execution.</param>
+        internal ChildWorkflowFuture(Workflow parentWorkflow, ChildExecution childExecution)
         {
             this.parentWorkflow = parentWorkflow;
-            this.execution      = execution;
+            this.childExecution = childExecution;
         }
 
         /// <summary>
         /// Returns the workflow execution.
         /// </summary>
-        public WorkflowExecution Execution => execution.Execution;
+        public WorkflowExecution Execution => childExecution.Execution;
 
         /// <inheritdoc/>
         public async Task<TResult> GetAsync()
@@ -110,7 +110,7 @@ namespace Neon.Cadence
 
             completed = true;
 
-            var resultBytes = await parentWorkflow.Client.GetChildWorkflowResultAsync(parentWorkflow, execution);
+            var resultBytes = await parentWorkflow.Client.GetChildWorkflowResultAsync(parentWorkflow, childExecution);
 
             return parentWorkflow.Client.DataConverter.FromData<TResult>(resultBytes);
         }

@@ -148,17 +148,17 @@ namespace Neon.Cadence.Internal
         /// <param name="dataConverter">The data converter.</param>
         /// <param name="parentWorkflow">The parent workflow.</param>
         /// <param name="workflowTypeName">Specifies the workflow type name.</param>
-        /// <param name="execution">The child execution information.</param>
+        /// <param name="childExecution">The child execution information.</param>
         /// <returns>The workflow stub as an <see cref="object"/>.</returns>
-        public object Create(CadenceClient client, IDataConverter dataConverter, Workflow parentWorkflow, string workflowTypeName, ChildExecution execution)
+        public object Create(CadenceClient client, IDataConverter dataConverter, Workflow parentWorkflow, string workflowTypeName, ChildExecution childExecution)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(dataConverter != null, nameof(dataConverter));
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
-            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
+            Covenant.Requires<ArgumentNullException>(childExecution != null, nameof(childExecution));
 
-            return childExecutedConstructor.Invoke(new object[] { client, dataConverter, parentWorkflow, workflowTypeName, execution });
+            return childExecutedConstructor.Invoke(new object[] { client, dataConverter, parentWorkflow, workflowTypeName, childExecution });
         }
 
         /// <summary>

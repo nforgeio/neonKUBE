@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
 
 using Newtonsoft.Json;
 
@@ -34,26 +35,33 @@ namespace Neon.Cadence.Internal
     internal class SyncSignalInfo
     {
         /// <summary>
-        /// The signal name used for synchronous signals.  Signals sent here will be
-        /// handled internally by <see cref="WorkflowBase"/> and forwarded on to the
-        /// user's signal handler method.
+        /// Constructor.
         /// </summary>
-        public const string SyncSignalName = "__cadence-sync-signal";
+        /// <param name="targetSignal">Identifies the target signal.</param>
+        /// <param name="signalId">The globally unique signal ID.</param>
+        public SyncSignalInfo(string targetSignal, string signalId)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetSignal), nameof(targetSignal));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalId), nameof(signalId));
+
+            this.TargetSignal = targetSignal;
+            this.SignalId     = signalId;
+        }
 
         /// <summary>
         /// Identifies the signal method targeted by the user.  We need this because the 
-        /// the signal will be sent to <see cref="SyncSignalName"/> and the internal handler
-        /// will need this to identify the actual user single method.
+        /// the signal will be sent to <see cref="TargetSignal"/> and the internal handler
+        /// will need this to identify the actual user single method to be called.
         /// </summary>
         [JsonProperty(PropertyName = "TargetSignal", Required = Required.Always)]
         public string TargetSignal { get; set; }
 
         /// <summary>
-        /// Specifies where the workflow will send the <see cref="SyncSignalReply"/> when
-        /// the signal completes.  This URI targets the calling client and includes enough
-        /// information so the client can map the reply to the waiting operation.
+        /// Specifies a globally unique ID for the signal request operation.  The
+        /// target worker will manage the current state of the signal request and
+        /// the client will use this to poll the worker for the current state.
         /// </summary>
-        [JsonProperty(PropertyName = "ReplyUri", Required = Required.Always)]
-        public string ReplyUri { get; set; }
+        [JsonProperty(PropertyName = "SignalId", Required = Required.Always)]
+        public string SignalId { get; set; }
     }
 }

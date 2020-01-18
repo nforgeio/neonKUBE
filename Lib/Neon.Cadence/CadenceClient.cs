@@ -247,6 +247,18 @@ namespace Neon.Cadence
         /// </summary>
         private const int debugClientPort = 5001;
 
+        /// <summary>
+        /// The signal name used for synchronous signals.  Signals sent here will be
+        /// handled internally by <see cref="WorkflowBase"/> and forwarded on to the
+        /// user's signal handler method.
+        /// </summary>
+        internal const string SyncSignalName = "__reserved-sync-signal";
+
+        /// <summary>
+        /// The internal query name used to poll the state of a synchronous signals.
+        /// </summary>
+        internal const string SyncSignalQueryName = "__reserved-sync-query";
+
         //---------------------------------------------------------------------
         // Private types
 
@@ -1347,23 +1359,25 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Instance members
 
-        private Process                         proxyProcess            = null;
-        private int                             proxyPort               = 0;
-        private Dictionary<long, Worker>        workers                 = new Dictionary<long, Worker>();
-        private Dictionary<string, Type>        activityTypes           = new Dictionary<string, Type>();
-        private bool                            isDisposed              = false;
-        private List<Type>                      registeredActivityTypes = new List<Type>();
-        private List<Type>                      registeredWorkflowTypes = new List<Type>();
-        private HttpClient                      proxyClient;
-        private HttpServer                      httpServer;
-        private Exception                       pendingException;
-        private bool                            closingConnection;
-        private bool                            connectionClosedRaised;
-        private int                             workflowCacheSize;
-        private Thread                          heartbeatThread;
-        private Thread                          timeoutThread;
-        private bool                            workflowWorkerStarted;
-        private bool                            activityWorkerStarted;
+        private Process                                 proxyProcess            = null;
+        private int                                     proxyPort               = 0;
+        private Dictionary<long, Worker>                workers                 = new Dictionary<long, Worker>();
+        private Dictionary<string, Type>                activityTypes           = new Dictionary<string, Type>();
+        private bool                                    isDisposed              = false;
+        private List<Type>                              registeredActivityTypes = new List<Type>();
+        private List<Type>                              registeredWorkflowTypes = new List<Type>();
+        private HttpClient                              proxyClient;
+        private HttpServer                              httpServer;
+        private Exception                               pendingException;
+        private bool                                    closingConnection;
+        private bool                                    connectionClosedRaised;
+        private int                                     workflowCacheSize;
+        private Thread                                  heartbeatThread;
+        private Thread                                  timeoutThread;
+        private bool                                    workflowWorkerStarted;
+        private bool                                    activityWorkerStarted;
+        private IRetryPolicy                            syncSignalRetry;
+        private Dictionary<string, SyncSignalStatus>    syncSignalOperations    = new Dictionary<string, SyncSignalStatus>();
 
         /// <summary>
         /// Used for unit testing only.
@@ -1419,6 +1433,16 @@ namespace Neon.Cadence
             DataConverter      = new JsonDataConverter();
             cadenceLogger      = LogManager.Default.GetLogger("cadence", isLogEnabledFunc: () => Settings.LogCadence);
             cadenceProxyLogger = LogManager.Default.GetLogger("cadence-proxy", isLogEnabledFunc: () => Settings.LogCadenceProxy);
+
+            // Initialize a reasonable default synchronous signal query retry policy. 
+
+            syncSignalRetry = new ExponentialRetryPolicy(
+                e => true, 
+                maxAttempts:          int.MaxValue, 
+                initialRetryInterval: TimeSpan.FromSeconds(1), 
+                maxRetryInterval:     TimeSpan.FromSeconds(5), 
+                timeout:              TimeSpan.FromSeconds(120), 
+                sourceModule:         nameof(CadenceClient));
 
             lock (syncLock)
             {
@@ -1622,6 +1646,28 @@ namespace Neon.Cadence
         /// arguments passed to the handler.
         /// </summary>
         public event CadenceClosedDelegate ConnectionClosed;
+
+        /// <summary>
+        /// <para>
+        /// Controls how synchronous signals operations are polled until the signal operation is
+        /// completed.  This defaults to something reasonable.
+        /// </para>
+        /// <note>
+        /// The transient detector function specified by the policy passed is ignore and is
+        /// replaced by a function that considers all exceptions to be transient.
+        /// </note>
+        /// </summary>
+        public IRetryPolicy SyncSignalRetry
+        {
+            get => syncSignalRetry;
+
+            set
+            {
+                Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
+
+                syncSignalRetry = value.Clone(e => true);
+            }
+        }
 
         /// <summary>
         /// Ensures that that client instance is not disposed.
@@ -1964,13 +2010,13 @@ namespace Neon.Cadence
                             // run in parallel rather than waiting for them to complete
                             // one-by-one.
 
-                            log.LogWarn(() => $" Request Timeout: [request={operation.Request.GetType().Name}, started={operation.StartTimeUtc.ToString(NeonHelper.DateFormat100NsTZ)}, timeout={operation.Timeout}].");
+                            log.LogWarn(() => $"Request Timeout: [request={operation.Request.GetType().Name}, started={operation.StartTimeUtc.ToString(NeonHelper.DateFormat100NsTZ)}, timeout={operation.Timeout}].");
 
                             // $todo(jefflill):
                             //
                             // We're not supporting cancellation so I'm going to comment
-                            // this out.  We should probably remove this if we decide never
-                            // to support this.
+                            // this out.  We should probably remove this if we decide that
+                            // we're never going to support this.
 #if TODO
                             var notAwaitingThis = Task.Run(
                                 async () =>

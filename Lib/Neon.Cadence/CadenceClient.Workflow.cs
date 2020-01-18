@@ -600,15 +600,15 @@ namespace Neon.Cadence
         /// completes if it is still running.
         /// </summary>
         /// <param name="parentWorkflow">The parent workflow.</param>
-        /// <param name="execution">Identifies the child workflow execution.</param>
+        /// <param name="childExecution">Identifies the child workflow execution.</param>
         /// <returns>The workflow result encoded as bytes or <c>null</c>.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
-        internal async Task<byte[]> GetChildWorkflowResultAsync(Workflow parentWorkflow, ChildExecution execution)
+        internal async Task<byte[]> GetChildWorkflowResultAsync(Workflow parentWorkflow, ChildExecution childExecution)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
-            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
+            Covenant.Requires<ArgumentNullException>(childExecution != null, nameof(childExecution));
             EnsureNotDisposed();
 
             var reply = await parentWorkflow.ExecuteNonParallel(
@@ -618,7 +618,7 @@ namespace Neon.Cadence
                         new WorkflowWaitForChildRequest()
                         {
                             ContextId = parentWorkflow.ContextId,
-                            ChildId   = execution.ChildId
+                            ChildId   = childExecution.ChildId
                         });
                 });
 
@@ -681,7 +681,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Terninates a workflow if it has not already finished.
+        /// Terminates a workflow if it has not already finished.
         /// </summary>
         /// <param name="execution">Identifies the running workflow.</param>
         /// <param name="reason">Optionally specifies an error reason string.</param>
@@ -736,39 +736,6 @@ namespace Neon.Cadence
                 });
 
             reply.ThrowOnError();
-        }
-
-        /// <summary>
-        /// Transmits a signal to a running external workflow and then polls by querying the workflow
-        /// to wait for the signal to be received and processed by the workflow.  This overload does 
-        /// not return a result. This low-level method accepts a byte array with the already encoded 
-        /// parameters.
-        /// </summary>
-        /// <param name="execution">The <see cref="WorkflowExecution"/>.</param>
-        /// <param name="signalCallId">Specifies the call ID encoded in the <see cref="SyncSignalInfo"/>.</param>
-        /// <param name="signalArgs">Specifies the signal arguments as a byte array.</param>
-        /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
-        /// <returns>The encoded signal results or <c>null</c> for signals that don't return a result.</returns>
-        /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
-        /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
-        /// <remarks>
-        /// <para>
-        /// <paramref name="signalArgs"/> must include an internal <see cref="SyncSignalInfo"/> encoded as 
-        /// the first argument followed by the user signal arguments.  This first argument includes the
-        /// information required by the worker client to route the user's signal and then transmit the reply
-        /// back to this client.  <paramref name="signalCallId"/> must be passed as the ID uniqiely identifying
-        /// this signal call.  This must be the same ID embedded in the <see cref="SyncSignalInfo"/> encoded
-        /// as the first signal parameter.  This method uses this ID to wait for the specific reply to this
-        /// call from the worker that received and processed the signal.
-        /// </para>
-        /// </remarks>
-        internal async Task<byte[]> SynchronousSignalWorkflowAsync(WorkflowExecution execution, string signalCallId, byte[] signalArgs, string domain = null)
-        {
-            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
-            Covenant.Requires<ArgumentNullException>(signalArgs != null && signalArgs.Length > 1, nameof(signalArgs));
-            EnsureNotDisposed();
-
-            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -852,7 +819,7 @@ namespace Neon.Cadence
         /// </note>
         /// </summary>
         /// <param name="parentWorkflow">The parent workflow.</param>
-        /// <param name="execution">The child workflow execution.</param>
+        /// <param name="childExecution">The child workflow execution.</param>
         /// <param name="signalName">Specifies the signal name.</param>
         /// <param name="signalArgs">Specifies the signal arguments as an encoded byte array.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -860,10 +827,10 @@ namespace Neon.Cadence
         /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
-        internal async Task SignalChildWorkflowAsync(Workflow parentWorkflow, ChildExecution execution, string signalName, byte[] signalArgs)
+        internal async Task SignalChildWorkflowAsync(Workflow parentWorkflow, ChildExecution childExecution, string signalName, byte[] signalArgs)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
-            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
+            Covenant.Requires<ArgumentNullException>(childExecution != null, nameof(childExecution));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
 
             var reply = await parentWorkflow.ExecuteNonParallel(
@@ -873,7 +840,7 @@ namespace Neon.Cadence
                         new WorkflowSignalChildRequest()
                         {
                             ContextId   = parentWorkflow.ContextId,
-                            ChildId     = execution.ChildId,
+                            ChildId     = childExecution.ChildId,
                             SignalName  = signalName,
                             SignalArgs  = signalArgs
                         });
@@ -881,6 +848,158 @@ namespace Neon.Cadence
 
             reply.ThrowOnError();
             parentWorkflow.UpdateReplay(reply);
+        }
+
+        /// <summary>
+        /// Transmits a signal to a running external workflow and then polls the completion by querying the workflow
+        /// to wait for the signal to be received and processed by the workflow.  This overload does 
+        /// not return a result.  This low-level method accepts a byte array with the already encoded 
+        /// parameters.
+        /// </summary>
+        /// <param name="execution">The <see cref="WorkflowExecution"/>.</param>
+        /// <param name="signalName">The target signal name.</param>
+        /// <param name="signalId">The globally unique signal transaction ID.</param>
+        /// <param name="signalArgs">Specifies the signal arguments as a byte array.</param>
+        /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
+        /// <returns>The encoded signal results or <c>null</c> for signals that don't return a result.</returns>
+        /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
+        /// <exception cref="TimeoutException">Thrown if the operation timed out while waiting for a reply.</exception>
+        /// <remarks>
+        /// <para>
+        /// <paramref name="signalArgs"/> must include an internal <see cref="SyncSignalInfo"/> encoded as 
+        /// the first argument followed by the user's signal arguments.  This first argument includes the
+        /// information required by the worker to route to the user's signal as well as the globally
+        /// unique transaction ID that the worker will use to track the signal execution state and the
+        /// client will use to poll for that state.
+        /// </para>
+        /// <note>
+        /// The value passed as <paramref name="signalId"/> must match that in <see cref="SyncSignalStatus"/>
+        /// encoded as the first argument encoded in <paramref name="signalArgs"/>.
+        /// </note>
+        /// </remarks>
+        internal async Task<byte[]> SyncSignalWorkflowAsync(WorkflowExecution execution, string signalName, string signalId, byte[] signalArgs, string domain = null)
+        {
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalId), nameof(signalId));
+            Covenant.Requires<ArgumentNullException>(signalArgs != null && signalArgs.Length > 1, nameof(signalArgs));
+            EnsureNotDisposed();
+
+            // Execute the signal.
+
+            await SignalWorkflowAsync(execution, SyncSignalName, signalArgs, domain);
+
+            // Poll for the result via queries.
+
+            byte[]              queryArgs = DataConverter.ToData(new object[] { signalId });
+            byte[]              rawStatus = null;
+            SyncSignalStatus    status    = null;
+
+            await syncSignalRetry.InvokeAsync<SyncSignalStatus>(
+                async () =>
+                {
+                    // $todo(jefflill):
+                    //
+                    // We should use consistent queries here after we support query consistency:
+                    //
+                    //      https://github.com/nforgeio/neonKUBE/issues/751
+
+                    rawStatus = await QueryWorkflowAsync(execution, SyncSignalQueryName, queryArgs, domain);
+                    status    = DataConverter.FromData<SyncSignalStatus>(rawStatus);
+
+                    if (!status.Completed)
+                    {
+                        throw new TimeoutException($"Timeout waiting for reply from signal [{signalName}].");
+                    }
+
+                    return status;
+                });
+
+            // Handle any error returned.
+
+            if (status.Error != null)
+            {
+                throw new SyncSignalException(status.Error);
+            }
+
+            return status.Result;
+        }
+
+        /// <summary>
+        /// Transmits a signal to a child workflow and then polls for the completion by querying the workflow
+        /// to wait for the signal to be received and processed by the workflow.  This overload does 
+        /// not return a result.  This low-level method accepts a byte array with the already encoded 
+        /// parameters.
+        /// </summary>
+        /// <param name="parentWorkflow">The parent workflow.</param>
+        /// <param name="childExecution">The child workflow execution.</param>
+        /// <param name="signalName">The target signal name.</param>
+        /// <param name="signalId">The globally unique signal transaction ID.</param>
+        /// <param name="signalArgs">Specifies the signal arguments as an encoded byte array.</param>
+        /// <returns>The encoded signal results or <c>null</c> for signals that don't return a result.</returns>
+        /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
+        /// <remarks>
+        /// <para>
+        /// <paramref name="signalArgs"/> must include an internal <see cref="SyncSignalInfo"/> encoded as 
+        /// the first argument followed by the user's signal arguments.  This first argument includes the
+        /// information required by the worker to route to the user's signal as well as the globally
+        /// unique transaction ID that the worker will use to track the signal execution state and the
+        /// client will use to poll for that state.
+        /// </para>
+        /// <note>
+        /// The value passed as <paramref name="signalId"/> must match that in <see cref="SyncSignalStatus"/>
+        /// encoded as the first argument encoded in <paramref name="signalArgs"/>.
+        /// </note>
+        /// </remarks>
+        internal async Task<byte[]> SyncSignalChildWorkflowAsync(Workflow parentWorkflow, ChildExecution childExecution, string signalName, string signalId, byte[] signalArgs)
+        {
+            Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
+            Covenant.Requires<ArgumentNullException>(childExecution != null, nameof(childExecution));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalId), nameof(signalId));
+            Covenant.Requires<ArgumentNullException>(signalArgs != null && signalArgs.Length > 1, nameof(signalArgs));
+            EnsureNotDisposed();
+
+            // Execute the signal.
+
+            await SignalChildWorkflowAsync(parentWorkflow, childExecution, SyncSignalName, signalArgs);
+
+            // Poll for the result via queries.
+
+            byte[]              queryArgs = DataConverter.ToData(new object[] { signalId });
+            byte[]              rawStatus = null;
+            SyncSignalStatus    status    = null;
+
+            await syncSignalRetry.InvokeAsync<SyncSignalStatus>(
+                async () =>
+                {
+                    // $todo(jefflill):
+                    //
+                    // We should use consistent queries here after we support query consistency:
+                    //
+                    //      https://github.com/nforgeio/neonKUBE/issues/751
+
+                    rawStatus = await QueryWorkflowAsync(childExecution.Execution, SyncSignalQueryName, queryArgs);
+                    status    = DataConverter.FromData<SyncSignalStatus>(rawStatus);
+
+                    if (!status.Completed)
+                    {
+                        throw new TimeoutException($"Timeout waiting for reply from signal [{signalName}].");
+                    }
+
+                    return status;
+                });
+
+            // Handle any error returned.
+
+            if (status.Error != null)
+            {
+                throw new SyncSignalException(status.Error);
+            }
+
+            return status.Result;
         }
     }
 }
