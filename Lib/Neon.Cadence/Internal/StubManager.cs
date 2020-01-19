@@ -166,7 +166,7 @@ namespace Neon.Cadence.Internal
             // name's C# compatible.  We're also going to prepend "global::"
             // to avoid namespace conflicts.
 
-            return "global::" + type.FullName.Replace('+', '.');
+            return "global::" + CadenceHelper.TypeNameToSource(type);
         }
 
         /// <summary>
@@ -1006,10 +1006,7 @@ namespace Neon.Cadence.Internal
                     }
                     else
                     {
-                        // We need to replace the "+" characters .NET uses for nested types into
-                        // "." so the result will be a valid C# type identifier.
-
-                        sbSource.AppendLine($"        public async Task<{details.ReturnType.FullName.Replace('+', '.')}> {details.Method.Name}({sbParams})");
+                        sbSource.AppendLine($"        public async Task<{CadenceHelper.TypeNameToSource(details.ReturnType)}> {details.Method.Name}({sbParams})");
                     }
                 }
                 else
@@ -1033,11 +1030,16 @@ namespace Neon.Cadence.Internal
 
                     if (signalAttribute.Synchronous)
                     {
-                        sbSource.AppendLine("             var __signalId   = Guid.NewGuid().ToString(\"d\");");;
-                        sbSource.AppendLine($"            var __signalInfo = new SyncSignalInfo({StringLiteral(signalAttribute.Name)}, __signalId)");
-                        sbSource.AppendLine($"            var ___argBytes  = {SerializeArgsExpression(details.Method.GetParameters(), "__signalInfo")};");
-                        sbSource.AppendLine();
-                        sbSource.AppendLine($"            await ___StubHelper.SyncSignalChildWorkflowAsync(this.client, this.parentWorkflow, this.childExecution, {StringLiteral(CadenceClient.SyncSignalName)}, __signalId, ___argBytes);");
+                        sbSource.AppendLine("             var ___signalId     = Guid.NewGuid().ToString(\"d\");");;
+                        sbSource.AppendLine($"            var ___signalInfo   = new SyncSignalInfo({StringLiteral(signalAttribute.Name)}, __signalId)");
+                        sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters(), "__signalInfo")};");
+                        sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.SyncSignalChildWorkflowAsync(this.client, this.parentWorkflow, this.childExecution, {StringLiteral(CadenceClient.SyncSignalName)}, ___signalId, ___argBytes);");
+
+                        if (details.ReturnType != typeof(void))
+                        {
+                            sbSource.AppendLine();
+                            sbSource.AppendLine($"           return this.dataConverter.FromData<{CadenceHelper.TypeNameToSource(details.ReturnType)}>(___resultBytes);");
+                        }
                     }
                     else
                     {
@@ -1058,11 +1060,17 @@ namespace Neon.Cadence.Internal
 
                     if (signalAttribute.Synchronous)
                     {
-                        sbSource.AppendLine("             var __signalId   = Guid.NewGuid().ToString(\"d\");");;
-                        sbSource.AppendLine($"            var __signalInfo = new SyncSignalInfo({StringLiteral(signalAttribute.Name)}, __signalId)");
-                        sbSource.AppendLine($"            var ___argBytes  = {SerializeArgsExpression(details.Method.GetParameters(), "__signalInfo")};");
-                        sbSource.AppendLine();
-                        sbSource.AppendLine($"            await ___StubHelper.SyncSignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, __signalId, ___argBytes, this.domain);");
+                        sbSource.AppendLine("             var ___signalId    = Guid.NewGuid().ToString(\"d\");");;
+                        sbSource.AppendLine($"            var ___signalInfo  = new SyncSignalInfo({StringLiteral(signalAttribute.Name)}, __signalId)");
+                        sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters(), "__signalInfo")};");
+                        sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.SyncSignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___signalId, ___argBytes, this.domain);");
+
+                        if (details.ReturnType != typeof(void))
+                        {
+                            sbSource.AppendLine();
+                            sbSource.AppendLine($"           return this.dataConverter.FromData<{CadenceHelper.TypeNameToSource(details.ReturnType)}>(___resultBytes);");
+                        }
+
                     }
                     else
                     {

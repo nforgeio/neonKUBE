@@ -114,6 +114,35 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
+        /// Converts a .NET type name into a form suitable for using in generated C# source code.
+        /// This handles the replacement of any embedded <b>(+)</b> characters that indicate
+        /// a nested type into <b>(.)</b> characters compatible with C#. 
+        /// </summary>
+        /// <param name="typeName">The type name.</param>
+        /// <returns>The normalized type name.</returns>
+        internal static string TypeNameToSource(string typeName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(typeName));
+
+            return typeName.Replace('+', '.');
+        }
+
+        /// <summary>
+        /// Returns the fully qualified name of the type passed, converting it into a form 
+        /// suitable for using in generated C# source code. This handles the replacement of 
+        /// any embedded <b>(+)</b> characters that indicate a nested type into <b>(.)</b> 
+        /// characters compatible with C#. 
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns>The normalized fully qualified type name.</returns>
+        internal static string TypeNameToSource(Type type)
+        {
+            Covenant.Requires<ArgumentNullException>(type != null);
+
+            return TypeNameToSource(type.FullName);
+        }
+
+        /// <summary>
         /// Returns the Cadence workflow type name to be used for a workflow interface or
         /// implementation class.
         /// </summary>
@@ -162,10 +191,7 @@ namespace Neon.Cadence.Internal
                 fullName += name.Substring(1);
             }
 
-            // We need to replace the "+" characters .NET uses for nested types into
-            // "." so the result will be a valid C# type identifier.
-
-            return fullName.Replace('+', '.');
+            return TypeNameToSource(fullName);
         }
 
         /// <summary>
@@ -217,10 +243,7 @@ namespace Neon.Cadence.Internal
                 fullName += name.Substring(1);
             }
 
-            // We need to replace the "+" characters .NET uses for nested types into
-            // "." so the result will be a valid C# type identifier.
-
-            return fullName.Replace('+', '.');
+            return TypeNameToSource(fullName);
         }
 
         /// <summary>
@@ -768,11 +791,9 @@ namespace Neon.Cadence.Internal
                 }
             }
 
-            // We're going to use the global namespace to avoid namespace conflicts and
-            // we need to replace the "+" characters .NET uses for nested types into
-            // "." so the result will be a valid C# type identifier.
+            // We're going to use the global namespace to avoid namespace conflicts.
 
-            return $"global::{typeName}".Replace('+', '.');
+            return TypeNameToSource($"global::{typeName}");
         }
 
         /// <summary>

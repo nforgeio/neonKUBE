@@ -45,6 +45,25 @@ namespace Neon.Cadence
             return $"{e.GetType().FullName}:{e.Message}";
         }
 
+        /// <summary>
+        /// Extracts the message from the error string.
+        /// </summary>
+        /// <param name="error">The error string.</param>
+        /// <returns>The message.</returns>
+        private static string GetMessage(string error)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(error), nameof(error));
+
+            var fields = error.Split(colon, 2);
+
+            if (fields.Length != 2)
+            {
+                throw new FormatException($"Invalid error string: {error}.");
+            }
+
+            return fields[1];
+        }
+
         //---------------------------------------------------------------------
         // Instance members
 
@@ -53,6 +72,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="error">The error information as formatted by <see cref="GetError(Exception)"/>.</param>
         public SyncSignalException(string error)
+            : base(GetMessage(error))
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(error), nameof(error));
 
@@ -64,17 +84,11 @@ namespace Neon.Cadence
             }
 
             ExceptionName = fields[0];
-            Message       = fields[1];
         }
 
         /// <summary>
         /// The fully qualified name of the exception thrown by the target signal method.
         /// </summary>
         public string ExceptionName { get; private set; }
-
-        /// <summary>
-        /// The message specified for the exception thrown by the target signal method.
-        /// </summary>
-        public string Message { get; private set; }
     }
 }
