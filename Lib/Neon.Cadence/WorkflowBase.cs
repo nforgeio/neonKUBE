@@ -823,7 +823,25 @@ namespace Neon.Cadence
                             {
                                 // Method returns [Task<T>]: AKA a result.
 
-                                result = await (Task<object>)(method.Invoke(workflow, userArgs));
+                                // $note(jefflill):
+                                //
+                                // I would have liked to do something like this:
+                                //
+                                //      result = await (Task<object>)(method.Invoke(workflow, userArgs));
+                                //
+                                // here, but that not going to work because the Task<T>
+                                // being returned won't typically be a Task<object>,
+                                // so the cast will fail.
+                                //
+                                // So instead, I'm going to use reflection to obtain the 
+                                // Task.Result property and then obtain the result from that.
+
+                                var task           = (Task)(method.Invoke(workflow, userArgs));
+                                var resultProperty = task.GetType().GetProperty("Result");
+
+                                await task;
+
+                                result = resultProperty.GetValue(task);
                             }
                         }
                         catch (Exception e)

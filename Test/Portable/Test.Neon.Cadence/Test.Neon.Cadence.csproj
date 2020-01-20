@@ -28,11 +28,13 @@
     <Compile Include="..\..\Test.Neon.Cadence\Test_RegistrationError.Workflow.cs" Link="Test_RegistrationError.Workflow.cs" />
     <Compile Include="..\..\Test.Neon.Cadence\Test_Replay.cs" Link="Test_Replay.cs" />
     <Compile Include="..\..\Test.Neon.Cadence\Test_Settings.cs" Link="Test_Settings.cs" />
+    <Compile Include="..\..\Test.Neon.Cadence\Test_SignalChecks.cs" Link="Test_SignalChecks.cs" />
     <Compile Include="..\..\Test.Neon.Cadence\Test_StubManager.ActivityError.cs" Link="Test_StubManager.ActivityError.cs" />
     <Compile Include="..\..\Test.Neon.Cadence\Test_StubManager.ActivityGenerate.cs" Link="Test_StubManager.ActivityGenerate.cs" />
     <Compile Include="..\..\Test.Neon.Cadence\Test_StubManager.cs" Link="Test_StubManager.cs" />
     <Compile Include="..\..\Test.Neon.Cadence\Test_StubManager.WorkflowError.cs" Link="Test_StubManager.WorkflowError.cs" />
     <Compile Include="..\..\Test.Neon.Cadence\Test_StubManager.WorkflowGenerate.cs" Link="Test_StubManager.WorkflowGenerate.cs" />
+    <Compile Include="..\..\Test.Neon.Cadence\Test_SyncSignals.cs" Link="Test_SyncSignals.cs" />
     <Compile Include="..\..\Test.Neon.Cadence\Test_Worker.cs" Link="Test_Worker.cs" />
   </ItemGroup>
 

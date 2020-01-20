@@ -1443,8 +1443,8 @@ namespace Neon.Cadence
             syncSignalRetry = new ExponentialRetryPolicy(
                 e => true, 
                 maxAttempts:          int.MaxValue, 
-                initialRetryInterval: TimeSpan.FromSeconds(1), 
-                maxRetryInterval:     TimeSpan.FromSeconds(5), 
+                initialRetryInterval: TimeSpan.FromSeconds(0.25), 
+                maxRetryInterval:     TimeSpan.FromSeconds(2), 
                 timeout:              TimeSpan.FromSeconds(120), 
                 sourceModule:         nameof(CadenceClient));
 

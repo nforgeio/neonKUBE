@@ -100,15 +100,15 @@ namespace TestCadence
             [SignalMethod("signal-void", Synchronous = true)]
             Task SignalAsync(TimeSpan delay);
 
-            //[SignalMethod("signal-with-result", Synchronous = true)]
-            //Task<string> SignalAsync(TimeSpan delay, string input);
+            [SignalMethod("signal-with-result", Synchronous = true)]
+            Task<string> SignalAsync(TimeSpan delay, string input);
         }
 
         [Workflow(AutoRegister = true)]
         public class SyncSignal : WorkflowBase, ISyncSignal
         {
             public static readonly TimeSpan WorkflowDelay = TimeSpan.FromSeconds(10);
-            public static readonly TimeSpan SignalDelay   = TimeSpan.FromSeconds(3);
+            public static readonly TimeSpan SignalDelay   = TimeSpan.FromSeconds(6);
 
             public static bool SignalBeforeDelay = false;
             public static bool SignalAfterDelay  = false;
@@ -156,6 +156,67 @@ namespace TestCadence
             await stub.SignalAsync(TimeSpan.Zero);
             Assert.True(SyncSignal.SignalBeforeDelay);
             Assert.True(SyncSignal.SignalAfterDelay);
+
+            await task;
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task SyncSignal_Void_WithDelay()
+        {
+            // Verify that sending a synchronous signal returning void
+            // works as expected when we delay the signal execution long
+            // enough to force query retries.
+
+            SyncSignal.Clear();
+
+            var stub = client.NewWorkflowStub<ISyncSignal>();
+            var task = stub.RunAsync(SyncSignal.WorkflowDelay);
+
+            await stub.SignalAsync(SyncSignal.SignalDelay);
+            Assert.True(SyncSignal.SignalBeforeDelay);
+            Assert.True(SyncSignal.SignalAfterDelay);
+
+            await task;
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task SyncSignal_Result()
+        {
+            // Verify that sending a synchronous signal returning a result
+            // works as expected when there's no delay executing the signal.
+
+            SyncSignal.Clear();
+
+            var stub   = client.NewWorkflowStub<ISyncSignal>();
+            var task   = stub.RunAsync(SyncSignal.WorkflowDelay);
+            var result = await stub.SignalAsync(TimeSpan.Zero, "Hello World!");
+
+            Assert.True(SyncSignal.SignalBeforeDelay);
+            Assert.True(SyncSignal.SignalAfterDelay);
+            Assert.Equal("Hello World!", result);
+
+            await task;
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task SyncSignal_Result_WithDelay()
+        {
+            // Verify that sending a synchronous signal returning a result
+            // works as expected when we delay the signal execution long
+            // enough to force query retries.
+
+            SyncSignal.Clear();
+
+            var stub = client.NewWorkflowStub<ISyncSignal>();
+            var task = stub.RunAsync(SyncSignal.WorkflowDelay);
+            var result = await stub.SignalAsync(SyncSignal.SignalDelay, "Hello World!");
+
+            Assert.True(SyncSignal.SignalBeforeDelay);
+            Assert.True(SyncSignal.SignalAfterDelay);
+            Assert.Equal("Hello World!", result);
 
             await task;
         }
