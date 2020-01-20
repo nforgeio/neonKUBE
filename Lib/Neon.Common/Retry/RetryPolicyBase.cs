@@ -57,15 +57,15 @@ namespace Neon.Retry
                 // Compute the UTC deadline, taking care not not to
                 // exceed the end-of-time.
 
-                var utcNow = SysTime.Now;
+                var sysNow = SysTime.Now;
 
-                if (timeout >= DateTime.MaxValue - utcNow)
+                if (timeout >= DateTime.MaxValue - sysNow)
                 {
                     sysDeadline = DateTime.MaxValue;
                 }
                 else
                 {
-                    sysDeadline = utcNow + timeout.Value;
+                    sysDeadline = sysNow + timeout.Value;
                 }
             }
             else
@@ -118,7 +118,7 @@ namespace Neon.Retry
         {
             Covenant.Requires<ArgumentException>(delay >= TimeSpan.Zero, nameof(delay));
 
-            var maxDelay = sysDeadline - DateTime.UtcNow;
+            var maxDelay = sysDeadline - SysTime.Now;
 
             if (delay > maxDelay)
             {
