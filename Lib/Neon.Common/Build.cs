@@ -1,7 +1,7 @@
-﻿//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // FILE:	    Build.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ namespace Neon
         /// <summary>
         /// The copyright statement to be included in all assemblies.
         /// </summary>
-        public const string Copyright = "Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.";
+        public const string Copyright = "Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.";
 
         /// <summary>
         /// The product name.
@@ -46,7 +46,7 @@ namespace Neon
         /// <summary>
         /// The released product version.
         /// </summary>
-        public const string ProductVersion = "0.6.9-alpha";
+        public const string ProductVersion = "1.0.4";
 
         /// <summary>
         /// The product license.

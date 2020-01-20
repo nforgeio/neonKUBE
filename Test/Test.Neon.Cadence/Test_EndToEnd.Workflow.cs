@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:        Test_EndToEnd.Workflow.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,9 +33,14 @@ using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Data;
 using Neon.IO;
+using Neon.Kube;
+using Neon.Net;
+using Neon.Retry;
 using Neon.Tasks;
 using Neon.Xunit;
 using Neon.Xunit.Cadence;
+
+using Test.Neon.Models.Cadence;
 
 using Newtonsoft.Json;
 using Xunit;
@@ -371,7 +376,7 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IWorkflowStubExecTwice>();
 
             await stub.RunAsync();
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await stub.RunAsync());
+            await Assert.ThrowsAsync<WorkflowExecutionAlreadyStartedException>(async () => await stub.RunAsync());
         }
 
         //---------------------------------------------------------------------
@@ -445,8 +450,8 @@ namespace TestCadence
 
             var stub = client.NewWorkflowStub<IWorkflowMultipleStubCalls>();
 
-            await stub.RunAsync();                                                                      // This call should work.
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await stub.RunAsync());     // This call should fail.
+            await stub.RunAsync();                                                                                  // This call should work.
+            await Assert.ThrowsAsync<WorkflowExecutionAlreadyStartedException>(async () => await stub.RunAsync());  // This call should fail.
         }
 
         //---------------------------------------------------------------------
@@ -508,9 +513,9 @@ namespace TestCadence
             }
         }
 
-        [SlowFact]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public void Workflow_Cron()
+        public async Task Workflow_Cron()
         {
             var assembly = Assembly.GetExecutingAssembly();
 
@@ -527,11 +532,11 @@ namespace TestCadence
                 CronSchedule = "0/1 * * * *"
             };
 
-            // Start the CRON workflow and wait for the result from the first run.  
+            // Start the CRON workflow and wait for the result from the first run.
 
-            var stub = client.NewWorkflowStub<ICronWorkflow>(options);
+            var stub = client.NewWorkflowFutureStub<ICronWorkflow>(string.Empty, options);
 
-            stub.RunAsync();
+            await stub.StartAsync();
 
             NeonHelper.WaitFor(() => CronActivity.CronCalls.Count >= 1, timeout: TimeSpan.FromMinutes(1.5));
 
@@ -1150,7 +1155,7 @@ namespace TestCadence
                     await Workflow.SleepAsync(TimeSpan.FromSeconds(1));
                 }
 
-                throw new CadenceTimeoutException("Timeout waiting for signal(s).");
+                throw new TimeoutException("Timeout waiting for signal(s).");
             }
 
             public async Task SignalAsync(string message)
@@ -1214,7 +1219,7 @@ namespace TestCadence
 
             var stub = client.NewWorkflowStub<IWorkflowSignal>();
 
-            await Assert.ThrowsAsync<InvalidOperationException>(async () => await stub.SignalAsync("my-signal"));
+            await Assert.ThrowsAsync<WorkflowExecutionAlreadyStartedException>(async () => await stub.SignalAsync("my-signal"));
         }
 
         //---------------------------------------------------------------------
@@ -2263,12 +2268,16 @@ namespace TestCadence
             try
             {
                 await stub.RunAsync();
+                Assert.True(false, "CadenceGenericException expected");
             }
-            catch (Exception e)
+            catch (CadenceGenericException e)
             {
-                Assert.IsType<CadenceGenericException>(e);
                 Assert.Contains("ArgumentException", e.Message);
-                Assert.Contains("forced-failure", e.Message);
+                Assert.Contains("forced-failure", e.Details);
+            }
+            catch
+            {
+                Assert.True(false, "CadenceGenericException expected");
             }
         }
 
@@ -2298,7 +2307,7 @@ namespace TestCadence
 
             var stub = client.NewWorkflowStub<IWorkflowUnregistered>(options);
 
-            await Assert.ThrowsAsync<CadenceTimeoutException>(async () => await stub.HelloAsync("Jack"));
+            await Assert.ThrowsAsync<StartToCloseTimeoutException>(async () => await stub.HelloAsync("Jack"));
         }
 
         //---------------------------------------------------------------------
@@ -3147,7 +3156,7 @@ namespace TestCadence
                     await stub.HelloAsync("Jill");
                     return false;   // We're expecting an exception.
                 }
-                catch (CadenceWorkflowRunningException)
+                catch (WorkflowExecutionAlreadyStartedException)
                 {
                     return true;    // Expecting this.
                 }
@@ -3481,6 +3490,932 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IWorkflowUntypedChildFuture>(workflowTypeName: "WorkflowUntypedChildFuture");
 
             Assert.True(await stub.WithResult() && !WorkflowUntypedChildFuture.Error);
+        }
+
+        //---------------------------------------------------------------------
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IWorkflowQueueTest : IWorkflow
+        {
+            [WorkflowMethod(Name = "QueueToSelf_Single")]
+            Task<string> QueueToSelf_Single();
+
+            [WorkflowMethod(Name = "QueueToSelf_Multiple")]
+            Task<string> QueueToSelf_Multiple(int capacity);
+
+            [WorkflowMethod(Name = "QueueToSelf_WithClose")]
+            Task<string> QueueToSelf_WithClose();
+
+            [WorkflowMethod(Name = "QueueToSelf_Timeout")]
+            Task<string> QueueToSelf_Timeout();
+
+            [WorkflowMethod(Name = "WaitForSignals")]
+            Task<List<string>> WaitForSignals(int expectedSignals);
+
+            [WorkflowMethod(Name = "WaitForSignalsAndClose")]
+            Task<List<string>> WaitForSignalAndClose(int expectedSignals);
+
+            [WorkflowMethod(Name = "QueueToSelf_Bytes")]
+            Task<string> QueueToSelf_Bytes(int byteCount);
+
+            [SignalMethod("signal")]
+            Task SignalAsync(string message);
+        }
+
+        /// <summary>
+        /// This workflow tests basic signal reception by waiting for some number of signals
+        /// and then returning the received signal messages.  The workflow will timeout
+        /// if the signals aren't received in time.  Note that we've hacked workflow start
+        /// detection using a static field.
+        /// </summary>
+        [Workflow(AutoRegister = true)]
+        public class WorkflowQueueTest : WorkflowBase, IWorkflowQueueTest
+        {
+            private WorkflowQueue<string>   signalQueue;
+
+            public async Task<string> QueueToSelf_Single()
+            {
+                // Tests basic queuing by creating a queue, enqueueing a string and then
+                // dequeuing it locally.  This return NULL if the test passed otherwise
+                // an error message.
+
+                using (var queue = await Workflow.NewQueueAsync<string>())
+                {
+                    if (queue.Capacity != WorkflowQueue<TargetException>.DefaultCapacity)
+                    {
+                        return $"1: Expected: capacity == {WorkflowQueue<TargetException>.DefaultCapacity}";
+                    }
+
+                    await queue.EnqueueAsync("Hello World!");
+
+                    var dequeued = await queue.DequeueAsync();
+
+                    if (dequeued != "Hello World!")
+                    {
+                        return $"2: Unpexected item: {dequeued}";
+                    }
+
+                    return null;
+                }
+            }
+
+            public async Task<string> QueueToSelf_Multiple(int capacity = 0)
+            {
+                // Tests basic queuing by creating a queue, enqueueing multiple strings
+                // and then dequeuing them locally.  This return NULL if the test passed
+                // otherwise an error message.
+
+                if (capacity == 0)
+                {
+                    // Verify that we're able to process a few items with a default
+                    // capacity queue.
+
+                    using (var queue = await Workflow.NewQueueAsync<string>())
+                    {
+                        if (queue.Capacity != WorkflowQueue<TargetException>.DefaultCapacity)
+                        {
+                            return $"1: Expected: capacity == {WorkflowQueue<TargetException>.DefaultCapacity}";
+                        }
+
+                        await queue.EnqueueAsync("signal 1");
+                        await queue.EnqueueAsync("signal 2");
+
+                        var item = await queue.DequeueAsync();
+
+                        if (item != "signal 1")
+                        {
+                            return $"2: Unpexected item: {item}";
+                        }
+
+                        item = await queue.DequeueAsync();
+
+                        if (item != "signal 2")
+                        {
+                            return $"3: Unpexected item: {item}";
+                        }
+
+                        return null;
+                    }
+                }
+                else
+                {
+                    // Verify that we can use a non default capacity and
+                    // that we can fill the queue to capacity, read all
+                    // of the items, and then fill and read again once more.
+                    //
+                    // The second pass ensures that nothing weird happens
+                    // after we fill and then drain a queue.
+
+                    using (var queue = await Workflow.NewQueueAsync<string>(capacity: capacity))
+                    {
+                        if (queue.Capacity != capacity)
+                        {
+                            return $"1: Expected: capacity == {capacity}";
+                        }
+
+                        for (int pass = 1; pass <= 2; pass++)
+                        {
+                            // Do the writes.
+
+                            for (int i = 0; i < capacity; i++)
+                            {
+                                await queue.EnqueueAsync($"signal {i}");
+                            }
+
+                            // Do the reads.
+
+                            for (int i = 0; i < capacity; i++)
+                            {
+                                var item = await queue.DequeueAsync();
+
+                                if (item != $"signal {i}")
+                                {
+                                    return $"2: Unpexected item: {item}";
+                                }
+                            }
+                        }
+
+                        return null;
+                    }
+                }
+            }
+
+            public async Task<string> QueueToSelf_Timeout()
+            {
+                // Verifies that [cadence-proxy] honors dequeuing timeouts.
+
+                using (var queue = await Workflow.NewQueueAsync<string>())
+                {
+                    try
+                    {
+                        await queue.DequeueAsync(TimeSpan.FromSeconds(1));
+                        return "1: Expected dequeue to timeout";
+                    }
+                    catch (CadenceTimeoutException)
+                    {
+                        return null;    // Expecting this
+                    }
+                    catch (Exception e)
+                    {
+                        return $"2: Unexpected exception: {e.GetType().FullName}: {e.Message}";
+                    }
+                }
+            }
+
+            public async Task<string> QueueToSelf_WithClose()
+            {
+                // Tests basic queuing by creating a queue, enqueueing a string and then closing
+                // the queue locally and then verifying that the we can dequeue the string and
+                // then see a [WorkflowQueueClosedExcetion] on the next read.
+                //
+                // This return NULL if the test passed otherwise an error message.
+
+                using (var queue = await Workflow.NewQueueAsync<string>())
+                {
+                    if (queue.Capacity != WorkflowQueue<TargetException>.DefaultCapacity)
+                    {
+                        return $"1: Expected: capacity == {WorkflowQueue<TargetException>.DefaultCapacity}";
+                    }
+
+                    await queue.EnqueueAsync("Hello World!");
+                    await queue.CloseAsync();
+
+                    var dequeued = await queue.DequeueAsync();
+
+                    if (dequeued != "Hello World!")
+                    {
+                        return $"2: Unpexected item: {dequeued}";
+                    }
+
+                    try
+                    {
+                        await queue.DequeueAsync(TimeSpan.FromSeconds(maxWaitSeconds));
+
+                        return $"3: ERROR: {nameof(WorkflowQueueClosedException)} expected.";
+                    }
+                    catch (WorkflowQueueClosedException)
+                    {
+                    }
+                    catch
+                    {
+                        return $"4: ERROR: {nameof(WorkflowQueueClosedException)} expected.";
+                    }
+
+                    return null;
+                }
+            }
+
+            public async Task<string> QueueToSelf_Bytes(int byteCount)
+            {
+                // Tests the maximum queued message size limit by writing a message
+                // of the specified sized to the queue and then returning NULL if
+                // the operation worked or the full name of the exception thrown if
+                // it failed.
+                //
+                // The unit test will call this twice, once with a byte count that's
+                // just less than or equal to the limit and then again with a count
+                // that's just over the limit.  The first call should succeed and 
+                // the second should fail, with the expected exception.
+
+                using (var queue = await Workflow.NewQueueAsync<byte[]>())
+                {
+                    var bytes = new byte[byteCount];
+
+                    for (int i = 0; i < byteCount; i++)
+                    {
+                        bytes[i] = (byte)i;
+                    }
+
+                    try
+                    {
+                        await queue.EnqueueAsync(bytes);
+                    }
+                    catch (Exception e)
+                    {
+                        return e.GetType().FullName;
+                    }
+
+                    return null;
+                }
+            }
+
+            public async Task<List<string>> WaitForSignals(int expectedSignals)
+            {
+                // Creates a queue and then waits for the requested number of signals
+                // to be received and be delivered to the workflow via the queue.
+
+                signalQueue = await Workflow.NewQueueAsync<string>();
+
+                var signals = new List<string>();
+
+                for (int i = 0; i < expectedSignals; i++)
+                {
+                    signals.Add(await signalQueue.DequeueAsync(TimeSpan.FromSeconds(maxWaitSeconds)));
+                }
+
+                return signals;
+            }
+
+            public async Task<List<string>> WaitForSignalAndClose(int expectedSignals)
+            {
+                // Creates a queue and then waits for the requested number of signals
+                // to be received and be delivered to the workflow via the queue and
+                // then performs one more read, expecting a [WorkflowQueueClosedExce[tion].
+
+                signalQueue = await Workflow.NewQueueAsync<string>();
+
+                var signals = new List<string>();
+
+                for (int i = 0; i < expectedSignals; i++)
+                {
+                    signals.Add(await signalQueue.DequeueAsync(TimeSpan.FromSeconds(maxWaitSeconds)));
+                }
+
+                try
+                {
+                    await signalQueue.DequeueAsync(TimeSpan.FromSeconds(maxWaitSeconds));
+
+                    signals.Add($"ERROR: {nameof(WorkflowQueueClosedException)} expected.");
+                }
+                catch (WorkflowQueueClosedException)
+                {
+                }
+                catch
+                {
+                    signals.Add($"ERROR: {nameof(WorkflowQueueClosedException)} expected.");
+                }
+
+                return signals;
+            }
+
+            public async Task SignalAsync(string message)
+            {
+                Covenant.Assert(signalQueue != null);
+
+                if (message == "close")
+                {
+                    await signalQueue.CloseAsync();
+                }
+                else
+                {
+                    await signalQueue.EnqueueAsync(message);
+                }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Queue_Single()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify the simple case where a workflow creates a queue and then
+            // can enqueue/dequeue a single item locally within the workflow method.
+
+            var stub = client.NewWorkflowStub<IWorkflowQueueTest>();
+
+            Assert.Null(await stub.QueueToSelf_Single());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Queue_Multiple()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify the simple case where a workflow creates a queue and then
+            // can enqueue/dequeue multiple items locally within the workflow method.
+            // This test creates a queue with the default capacity.
+
+            var stub = client.NewWorkflowStub<IWorkflowQueueTest>();
+
+            Assert.Null(await stub.QueueToSelf_Multiple(0));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Queue_Multiple_200()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify the simple case where a workflow creates a queue and then
+            // can enqueue/dequeue multiple items locally within the workflow method.
+            // This test creates a queue with a 200 item capacity.
+
+            var stub = client.NewWorkflowStub<IWorkflowQueueTest>();
+
+            Assert.Null(await stub.QueueToSelf_Multiple(200));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Queue_Timeout()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that [cadence-proxy] honors dequeue timeouts.
+
+            var stub = client.NewWorkflowStub<IWorkflowQueueTest>();
+
+            Assert.Null(await stub.QueueToSelf_Timeout());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Queue_Close()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify the simple case where a workflow creates a queue and then
+            // can enqueue/dequeue a single item locally within the workflow method.
+
+            var stub = client.NewWorkflowStub<IWorkflowQueueTest>();
+
+            Assert.Null(await stub.QueueToSelf_WithClose());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Queue_FromSignal_Single()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that a workflow can process data received via a signal
+            // when is then fed to the workflow via a queue.
+
+            var stub   = client.NewWorkflowFutureStub<IWorkflowQueueTest>("WaitForSignals");
+            var future = await stub.StartAsync<List<string>>(1);
+
+            await stub.SignalAsync("signal", "signal: 0");
+
+            var received = await future.GetAsync();
+
+            Assert.Single(received);
+            Assert.Contains(received, v => v == "signal: 0");
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Queue_FromSignal_Multiple()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that a workflow can process data received via multiple signals
+            // when are then fed to the workflow via a queue.
+
+            const int signalCount = 5;
+
+            var stub   = client.NewWorkflowFutureStub<IWorkflowQueueTest>("WaitForSignals");
+            var future = await stub.StartAsync<List<string>>(signalCount);
+            var sent   = new List<string>();
+
+            for (int i = 0; i < signalCount; i++)
+            {
+                sent.Add($"signal: {i}");
+            }
+
+            foreach (var signal in sent)
+            {
+                await stub.SignalAsync("signal", signal);
+            }
+
+            var received = await future.GetAsync();
+
+            Assert.Equal(signalCount, received.Count);
+
+            foreach (var signal in sent)
+            {
+                Assert.Contains(received, v => v == signal);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Queue_CloseViaSignal()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that a queue closed via a signal throws a [WorkflowQueueClosedException]
+            // when dequeued in the workflow.
+
+            const int signalCount = 5;
+
+            var stub   = client.NewWorkflowFutureStub<IWorkflowQueueTest>("WaitForSignalsAndClose");
+            var future = await stub.StartAsync<List<string>>(signalCount);
+            var sent   = new List<string>();
+
+            for (int i = 0; i < signalCount; i++)
+            {
+                sent.Add($"signal: {i}");
+            }
+
+            foreach (var signal in sent)
+            {
+                await stub.SignalAsync("signal", signal);
+            }
+
+            await stub.SignalAsync("signal", "close");
+
+            var received = await future.GetAsync();
+
+            Assert.Equal(signalCount, received.Count);
+
+            foreach (var signal in sent)
+            {
+                Assert.Contains(received, v => v == signal);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Queue_ItemMax()
+        {
+            await SyncContext.ClearAsync;
+
+            // The maximim size allowed for an encoded item is 64MiB-1.  This
+            // test verifies that we proactively check for this by creating 
+            // an encoded item just under the limit and another just over the
+            // limit and then verifying that the first item can be written
+            // and the second can't.
+
+            // Determine the limits:
+
+            byte[]  item;
+            int     maxGood = 0;
+            int     minBad  = 0;
+
+            for (int count = 0; count <= ushort.MaxValue; count++)
+            {
+                item = new byte[count];
+
+                var encoded = client.DataConverter.ToData(item);
+
+                if (encoded.Length <= ushort.MaxValue)
+                {
+                    maxGood = count;
+                }
+                else
+                {
+                    minBad = count;
+                    break;
+                }
+            }
+
+            // First call with an item under the limit.
+
+            var stub = client.NewWorkflowStub<IWorkflowQueueTest>();
+
+            Assert.Null(await stub.QueueToSelf_Bytes(maxGood));
+
+            // Second call with an item over the limit.
+
+            stub = client.NewWorkflowStub<IWorkflowQueueTest>();
+
+            Assert.Equal("System.NotSupportedException", await stub.QueueToSelf_Bytes(minBad));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Queue_ViaExternalStub_ByExecution()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that we can create a typed stub using an execution for an existing workflow
+            // and use that to send a signal.
+
+            var stub      = client.NewWorkflowFutureStub<IWorkflowQueueTest>("WaitForSignals");
+            var future    = await stub.StartAsync<List<string>>(1);
+            var typedStub = client.NewWorkflowStub<IWorkflowQueueTest>(future.Execution);
+
+            await typedStub.SignalAsync("signal: 0");
+
+            var received = await future.GetAsync();
+
+            Assert.Single(received);
+            Assert.Contains(received, v => v == "signal: 0");
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Queue_ViaExternalStub_ByIDs()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that we can create a typed stub using IDs for an existing workflow
+            // and use that to send a signal.
+
+            var stub      = client.NewWorkflowFutureStub<IWorkflowQueueTest>("WaitForSignals");
+            var future    = await stub.StartAsync<List<string>>(1);
+            var typedStub = client.NewWorkflowStub<IWorkflowQueueTest>(future.Execution.WorkflowId, future.Execution.RunId);
+
+            await typedStub.SignalAsync("signal: 0");
+
+            var received = await future.GetAsync();
+
+            Assert.Single(received);
+            Assert.Contains(received, v => v == "signal: 0");
+        }
+
+        //---------------------------------------------------------------------
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IWorkflowTimeout : IWorkflow
+        {
+            [WorkflowMethod(Name = "sleep")]
+            Task SleepAsync(TimeSpan sleepTime);
+
+            [WorkflowMethod(Name = "activity-heartbeat-timeout")]
+            Task<bool> ActivityHeartbeatTimeoutAsync();
+
+            [WorkflowMethod(Name = "activity-timeout")]
+            Task<bool> ActivityTimeout();
+
+            [WorkflowMethod(Name = "activity-dotnetexception")]
+            Task<bool> ActivityDotNetException();
+        }
+
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IActivityTimeout : IActivity
+        {
+            [ActivityMethod(Name = "sleep")]
+            Task SleepAsync(TimeSpan sleepTime);
+
+            [ActivityMethod(Name = "throw-transient")]
+            Task ThrowTransientAsync();
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowTimeout : WorkflowBase, IWorkflowTimeout
+        {
+            public async Task SleepAsync(TimeSpan sleepTime)
+            {
+                await Workflow.SleepAsync(sleepTime);
+            }
+
+            public async Task<bool> ActivityHeartbeatTimeoutAsync()
+            {
+                // We're going to start an activity that will sleep for
+                // longer than its heartbeat interval.  Cadence should
+                // detect that the heartbeat time was exceeded and
+                // throw an [ActivityHeartbeatTimeoutException].
+                //
+                // The method returns TRUE if we catch ther desired
+                // exception.
+
+                var sleepTime   = TimeSpan.FromSeconds(5);
+                var timeoutTime = TimeSpan.FromTicks(sleepTime.Ticks / 2);
+                var stub        = Workflow.NewActivityStub<IActivityTimeout>(new ActivityOptions() { HeartbeatTimeout = timeoutTime });
+
+                try
+                {
+                    await stub.SleepAsync(sleepTime);
+                }
+                catch (ActivityHeartbeatTimeoutException)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
+            public async Task<bool> ActivityTimeout()
+            {
+                // We're going to start an activity that will run longer than it's
+                // start to close timeout and verify that we see a
+                // [StartToCloseTimeoutException].  The method returns TRUE
+                // when we catch the expected exception.
+
+                var sleepTime   = TimeSpan.FromSeconds(5);
+                var timeoutTime = TimeSpan.FromTicks(sleepTime.Ticks / 2);
+                var stub        = Workflow.NewActivityStub<IActivityTimeout>(
+                    new ActivityOptions()
+                    { 
+                        StartToCloseTimeout = timeoutTime,
+                        HeartbeatTimeout    = TimeSpan.FromSeconds(60),
+                    });
+
+                try
+                {
+                    await stub.SleepAsync(sleepTime);
+                }
+                catch (StartToCloseTimeoutException)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
+            public async Task<bool> ActivityDotNetException()
+            {
+                // Call an activity that throws a [TransientException] and
+                // verify that we see a [CadenceGenericException] formatted
+                // with the exception information.
+                //
+                // The method returns TRUE when the exception looks good.
+
+                var stub = Workflow.NewActivityStub<IActivityTimeout>();
+
+                try
+                {
+                    await stub.ThrowTransientAsync();
+                }
+                catch (CadenceGenericException e)
+                {
+                    if (e.Message != typeof(TransientException).FullName)
+                    {
+                        return false;
+                    }
+
+                    if (e.Details != "This is a test!")
+                    {
+                        return false;
+                    }
+
+                    return true;
+                }
+
+                return false;
+            }
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ActivityTimeout : ActivityBase, IActivityTimeout
+        {
+            public async Task SleepAsync(TimeSpan sleepTime)
+            {
+                await Task.Delay(sleepTime);
+            }
+
+            public async Task ThrowTransientAsync()
+            {
+                // Throw a [TransientException] so the calling workflow can verify
+                // that the GOLANG error is generated properly and that it ends up
+                // being wrapped in a [CadenceGenericException] as expected.
+
+                await Task.CompletedTask;
+
+                throw new TransientException("This is a test!");
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_StartToCloseTimeout()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that we get the expected exception when a workflow doesn't
+            // complete within a START_TO_CLOSE_TIMEOUT.
+
+            var timeout   = TimeSpan.FromSeconds(2);
+            var sleepTime = TimeSpan.FromTicks(timeout.Ticks * 2);
+
+            var stub = client.NewWorkflowStub<IWorkflowTimeout>(
+                new WorkflowOptions()
+                {
+                    ScheduleToCloseTimeout = timeout
+                });
+
+            await Assert.ThrowsAsync<StartToCloseTimeoutException>(async () => await stub.SleepAsync(sleepTime));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_StartToCloseTimeout()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that we get the expected exception when an activity doesn't
+            // complete within a START_TO_CLOSE_TIMEOUT.
+
+            var stub = client.NewWorkflowStub<IWorkflowTimeout>();
+
+            Assert.True(await stub.ActivityTimeout());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_HeartbeatTimeout()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that we see an [ActivityHeartbeatTimeoutException] when
+            // we run an activity that doesn't heartbeat in time.
+
+            var stub = client.NewWorkflowStub<IWorkflowTimeout>();
+
+            Assert.True(await stub.ActivityHeartbeatTimeoutAsync());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_DotNetException()
+        {
+            await SyncContext.ClearAsync;
+
+            // Call a workflow that calls an activity that throws a .NET
+            // exception and verify that the exception caught by the
+            // workflow looks reasonable.
+
+            var stub = client.NewWorkflowStub<IWorkflowTimeout>();
+
+            Assert.True(await stub.ActivityDotNetException());
+        }
+
+        //---------------------------------------------------------------------
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Container()
+        {
+            await SyncContext.ClearAsync;
+
+            // Start the [nkubeio/test-cadence:latest] Docker image locally, having it
+            // connect to the local Cadence cluster and then start a bunch of workflows that
+            // will be executed by the container and verify that they completed.
+
+            // We need a routable IP address for the current machine so we can use it to
+            // generate the Cadence URI we'll pass to the [test-cadence] container so it
+            // will be able to connect to the Cadence server running locally.
+
+            var ipAddress = NetHelper.GetRoutableIpAddress();
+
+            if (ipAddress == null)
+            {
+                Assert.True(false, "Cannot complete test without a routable IP address.");
+                return;
+            }
+
+            // Start the [test-cadence] container and give it a chance to connect to Cadence
+            // and register its workflows and activities.  We'll remove any existing container
+            // first and then remove the container after we're done.
+
+            var testCadenceImage = $"{KubeConst.NeonBranchRegistry}/test-cadence:latest";
+
+            // $debug(jefflill): 
+            //
+            // It might be useful to uncomment/modify this line while
+            // debugging changes to the [test-cadence] Docker image.
+
+            // testCadenceImage = "nkubedev/test-cadence:cadence-latest";
+
+            NeonHelper.Execute("docker",
+                new object[]
+                {
+                    "rm", "--force", "test-cadence"
+                });
+
+            // Make sure we have the latest image first.
+
+            var exitCode = NeonHelper.Execute("docker",
+                new object[]
+                {
+                    "pull",
+                    testCadenceImage
+                });
+
+            if (exitCode != 0)
+            {
+                Assert.True(false, $"Cannot pull the [{testCadenceImage}] Docker image.");
+            }
+
+            // Start the test workflow service.
+
+            exitCode = NeonHelper.Execute("docker",
+                new object[]
+                {
+                    "run",
+                    "--detach", 
+                    "--name", "test-cadence",
+                    "--env", $"CADENCE_SERVERS=cadence://{ipAddress}:7933",
+                    "--env", $"CADENCE_DOMAIN={CadenceFixture.DefaultDomain}",
+                    "--env", $"CADENCE_TASKLIST={CadenceTestHelper.TaskList}",
+                    testCadenceImage
+                });
+
+            if (exitCode != 0)
+            {
+                Assert.True(false, $"Cannot run the [{testCadenceImage}] Docker image.");
+            }
+
+            try
+            {
+                // Start a decent number of workflows that will run in parallel for a while
+                // and then verify that they all complete successfully.
+
+                const int workflowCount      = 500;
+                const int workflowIterations = 5;
+
+                var sleepTime = TimeSpan.FromSeconds(1);
+                var pending   = new List<Task<string>>();
+
+                for (int i = 0; i < workflowCount; i++)
+                {
+                    var stub = client.NewWorkflowStub<IBusyworkWorkflow>(
+                        new WorkflowOptions()
+                        {
+                            WorkflowId = $"busywork-{Guid.NewGuid().ToString("d")}",
+                            TaskList   = CadenceTestHelper.TaskList
+                        });
+
+                    pending.Add(stub.DoItAsync(workflowIterations, sleepTime, $"workflow-{i}"));
+                }
+
+                for (int i = 0; i < workflowCount; i++)
+                {
+                    Assert.Equal($"workflow-{i}", await pending[i]);
+                }
+            }
+            finally
+            {
+                // Kill the [test-cadence] container.
+
+                exitCode = NeonHelper.Execute("docker",
+                    new object[]
+                    {
+                        "rm", "--force", "test-cadence",
+                    });
+
+                if (exitCode != 0)
+                {
+                    Assert.True(false, $"Cannot remove the [{testCadenceImage}] Docker container.");
+                }
+            }
+        }
+
+        //---------------------------------------------------------------------
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IWorkflowAmbientState : IWorkflow
+        {
+            [WorkflowMethod()]
+            Task<bool> RunAsync();
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowAmbientState : WorkflowBase, IWorkflowAmbientState
+        {
+            public async Task<bool> RunAsync()
+            {
+                // Returns TRUE when the workflow property and the correspending ambient
+                // reference the same instance.
+
+                return await Task.FromResult(object.ReferenceEquals(this.Workflow, Workflow.Current));
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_AmbientState()
+        {
+            // Verify that the ambient [Workflow.Current] property is being set properly.
+
+            var stub = client.NewWorkflowStub<IWorkflowAmbientState>();
+
+            Assert.Null(Workflow.Current);
+            Assert.True(await stub.RunAsync());
+            Assert.Null(Workflow.Current);
         }
     }
 }

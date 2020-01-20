@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Test_ReflectionExtensions.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -73,6 +73,18 @@ namespace TestCommon
         }
     }
 
+    internal class Bar
+    {
+    }
+
+    internal class BarExtended : Bar
+    {
+    }
+
+    internal class BarBarExtended : BarExtended
+    {
+    }
+
     public class Test_ReflectionExtensions
     {
         [Fact]
@@ -92,6 +104,41 @@ namespace TestCommon
 
             Assert.Throws<ArgumentNullException>(() => ((Type)null).Implements<IFoo>());
             Assert.Throws<ArgumentException>(() => fooType.Implements<NotFoo>());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void Type_Is()
+        {
+            Assert.True(typeof(Bar).Is<object>());
+            Assert.True(typeof(Bar).Is<Bar>());
+            Assert.False(typeof(Bar).Is<int>());
+
+            Assert.True(typeof(BarExtended).Is<object>());
+            Assert.True(typeof(BarExtended).Is<Bar>());
+            Assert.True(typeof(BarExtended).Is<BarExtended>());
+            Assert.False(typeof(BarExtended).Is<int>());
+
+            Assert.True(typeof(BarBarExtended).Is<object>());
+            Assert.True(typeof(BarBarExtended).Is<Bar>());
+            Assert.True(typeof(BarBarExtended).Is<BarExtended>());
+            Assert.True(typeof(BarBarExtended).Is<BarBarExtended>());
+            Assert.False(typeof(BarBarExtended).Is<int>());
+
+            Assert.True(typeof(Bar).Is(typeof(object)));
+            Assert.True(typeof(Bar).Is(typeof(Bar)));
+            Assert.False(typeof(Bar).Is(typeof(int)));
+
+            Assert.True(typeof(BarExtended).Is(typeof(object)));
+            Assert.True(typeof(BarExtended).Is(typeof(Bar)));
+            Assert.True(typeof(BarExtended).Is(typeof(BarExtended)));
+            Assert.False(typeof(BarExtended).Is(typeof(int)));
+
+            Assert.True(typeof(BarBarExtended).Is(typeof(object)));
+            Assert.True(typeof(BarBarExtended).Is(typeof(Bar)));
+            Assert.True(typeof(BarBarExtended).Is(typeof(BarExtended)));
+            Assert.True(typeof(BarBarExtended).Is(typeof(BarBarExtended)));
+            Assert.False(typeof(BarBarExtended).Is(typeof(int)));
         }
 
         [Fact]

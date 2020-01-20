@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    LogManager.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ using Neon.Common;
 //
 // This is a bit of a mess, probably mostly for unit testing.  Right now this is
 // a particular problem in the [NeonController] implementation which has some
-// unforunate hardcoding.
+// unfortunate hardcoding.
 //
 // I'm going to revisit this when I start implementing unit tests with dependency 
 // injection.

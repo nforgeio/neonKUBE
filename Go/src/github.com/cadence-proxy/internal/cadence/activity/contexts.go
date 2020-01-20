@@ -32,18 +32,18 @@ var (
 
 type (
 
-	// ActivityContextsMap holds a thread-safe map[interface{}]interface{} of
+	// ContextsMap holds a thread-safe map[interface{}]interface{} of
 	// ActivityContexts with their contextID's
-	ActivityContextsMap struct {
+	ContextsMap struct {
 		sync.Mutex
-		contexts map[int64]*ActivityContext
+		contexts map[int64]*Context
 	}
 
-	// ActivityContext holds a Cadence activity
+	// Context holds a Cadence activity
 	// context, the registered activity function, and a context cancel function.
 	// This struct is used as an intermediate for storing worklfow information
 	// and state while registering and executing cadence activitys
-	ActivityContext struct {
+	Context struct {
 		ctx          context.Context
 		cancelFunc   context.CancelFunc
 		activityName *string
@@ -78,8 +78,8 @@ func GetContextID() int64 {
 //
 // returns *ActivityContext -> pointer to a newly initialized
 // activity ExecutionContext in memory
-func NewActivityContext(ctx context.Context) *ActivityContext {
-	actx := new(ActivityContext)
+func NewActivityContext(ctx context.Context) *Context {
+	actx := new(Context)
 	actx.SetContext(ctx)
 	return actx
 }
@@ -87,7 +87,7 @@ func NewActivityContext(ctx context.Context) *ActivityContext {
 // GetContext gets a ActivityContext's context.Context
 //
 // returns context.Context -> a cadence context context
-func (actx *ActivityContext) GetContext() context.Context {
+func (actx *Context) GetContext() context.Context {
 	return actx.ctx
 }
 
@@ -95,35 +95,35 @@ func (actx *ActivityContext) GetContext() context.Context {
 //
 // param value context.Context -> a cadence activity context to be
 // set as a ActivityContext's cadence context.Context
-func (actx *ActivityContext) SetContext(value context.Context) {
+func (actx *Context) SetContext(value context.Context) {
 	actx.ctx = value
 }
 
 // GetActivityName gets a ActivityContext's activity function name
 //
 // returns *string -> a cadence activity function name
-func (actx *ActivityContext) GetActivityName() *string {
+func (actx *Context) GetActivityName() *string {
 	return actx.activityName
 }
 
 // SetActivityName sets a ActivityContext's activity function name
 //
 // param value *string -> a cadence activity function name
-func (actx *ActivityContext) SetActivityName(value *string) {
+func (actx *Context) SetActivityName(value *string) {
 	actx.activityName = value
 }
 
 // GetCancelFunction gets a ActivityContext's context cancel function
 //
 // returns context.CancelFunc -> a cadence activity context cancel function
-func (actx *ActivityContext) GetCancelFunction() context.CancelFunc {
+func (actx *Context) GetCancelFunction() context.CancelFunc {
 	return actx.cancelFunc
 }
 
 // SetCancelFunction sets a ActivityContext's cancel function
 //
 // param value context.CancelFunc -> a cadence activity context cancel function
-func (actx *ActivityContext) SetCancelFunction(value context.CancelFunc) {
+func (actx *Context) SetCancelFunction(value context.CancelFunc) {
 	actx.cancelFunc = value
 }
 
@@ -131,9 +131,9 @@ func (actx *ActivityContext) SetCancelFunction(value context.CancelFunc) {
 // ActivityContextsMap instance methods
 
 // NewActivityContextsMap is the constructor for an ActivityContextsMap
-func NewActivityContextsMap() *ActivityContextsMap {
-	o := new(ActivityContextsMap)
-	o.contexts = make(map[int64]*ActivityContext)
+func NewActivityContextsMap() *ContextsMap {
+	o := new(ContextsMap)
+	o.contexts = make(map[int64]*Context)
 	return o
 }
 
@@ -147,7 +147,7 @@ func NewActivityContextsMap() *ActivityContextsMap {
 // execute activity functions. This will be the mapped value
 //
 // returns int64 -> long contextID of the new cadence ActivityContext added to the map
-func (a *ActivityContextsMap) Add(contextID int64, actx *ActivityContext) int64 {
+func (a *ContextsMap) Add(contextID int64, actx *Context) int64 {
 	a.Lock()
 	defer a.Unlock()
 	a.contexts[contextID] = actx
@@ -161,7 +161,7 @@ func (a *ActivityContextsMap) Add(contextID int64, actx *ActivityContext) int64 
 // This will be the mapped key.
 //
 // returns int64 -> long contextID of the ActivityContext removed from the map
-func (a *ActivityContextsMap) Remove(contextID int64) int64 {
+func (a *ContextsMap) Remove(contextID int64) int64 {
 	a.Lock()
 	defer a.Unlock()
 	delete(a.contexts, contextID)
@@ -175,7 +175,7 @@ func (a *ActivityContextsMap) Remove(contextID int64) int64 {
 // This will be the mapped key.
 //
 // returns *ActivityContext -> pointer to ActivityContext with the specified id
-func (a *ActivityContextsMap) Get(contextID int64) *ActivityContext {
+func (a *ContextsMap) Get(contextID int64) *Context {
 	a.Lock()
 	defer a.Unlock()
 	return a.contexts[contextID]

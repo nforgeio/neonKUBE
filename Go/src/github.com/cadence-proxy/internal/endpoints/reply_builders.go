@@ -26,18 +26,17 @@ import (
 	"go.uber.org/cadence/activity"
 	"go.uber.org/cadence/workflow"
 
-	proxyclient "github.com/cadence-proxy/internal/cadence/client"
+	internal "github.com/cadence-proxy/internal"
 	proxyerror "github.com/cadence-proxy/internal/cadence/error"
 	"github.com/cadence-proxy/internal/messages"
-	internal "github.com/cadence-proxy/internal"
 )
 
-func buildReply(reply messages.IProxyReply, cadenceError *proxyerror.CadenceError, result ...interface{}) {
+func buildReply(reply messages.IProxyReply, cadenceError *proxyerror.CadenceError, values ...interface{}) {
 
-	// check if there is anything in result
+	// check if there is anything in values
 	var value interface{}
-	if len(result) > 0 {
-		value = result[0]
+	if len(values) > 0 {
+		value = values[0]
 	}
 
 	// handle the messages individually based on their message type
@@ -94,6 +93,12 @@ func buildReply(reply messages.IProxyReply, cadenceError *proxyerror.CadenceErro
 			buildDomainUpdateReply(v, cadenceError)
 		}
 
+	// DomainListReply
+	case internal.DomainListReply:
+		if v, ok := reply.(*messages.DomainListReply); ok {
+			buildDomainListReply(v, cadenceError, value)
+		}
+
 	// TerminateReply
 	case internal.TerminateReply:
 		if v, ok := reply.(*messages.TerminateReply); ok {
@@ -116,6 +121,12 @@ func buildReply(reply messages.IProxyReply, cadenceError *proxyerror.CadenceErro
 	case internal.PingReply:
 		if v, ok := reply.(*messages.PingReply); ok {
 			buildPingReply(v, cadenceError)
+		}
+
+	// DescribeTaskListReply
+	case internal.DescribeTaskListReply:
+		if v, ok := reply.(*messages.DescribeTaskListReply); ok {
+			buildDescribeTaskListReply(v, cadenceError, value)
 		}
 
 	// -------------------------------------------------------------------------
@@ -259,6 +270,30 @@ func buildReply(reply messages.IProxyReply, cadenceError *proxyerror.CadenceErro
 			buildWorkflowGetVersionReply(v, cadenceError, value)
 		}
 
+	// WorkflowQueueNewReply
+	case internal.WorkflowQueueNewReply:
+		if v, ok := reply.(*messages.WorkflowQueueNewReply); ok {
+			buildWorkflowQueueNewReply(v, cadenceError)
+		}
+
+	// WorkflowQueueWriteReply
+	case internal.WorkflowQueueWriteReply:
+		if v, ok := reply.(*messages.WorkflowQueueWriteReply); ok {
+			buildWorkflowQueueWriteReply(v, cadenceError, value)
+		}
+
+	// WorkflowQueueReadReply
+	case internal.WorkflowQueueReadReply:
+		if v, ok := reply.(*messages.WorkflowQueueReadReply); ok {
+			buildWorkflowQueueReadReply(v, cadenceError, value)
+		}
+
+	// WorkflowQueueCloseReply
+	case internal.WorkflowQueueCloseReply:
+		if v, ok := reply.(*messages.WorkflowQueueCloseReply); ok {
+			buildWorkflowQueueCloseReply(v, cadenceError)
+		}
+
 	// -------------------------------------------------------------------------
 	// activity message types
 
@@ -353,6 +388,7 @@ func createReplyMessage(request messages.IProxyRequest) messages.IProxyReply {
 
 	reply.SetRequestID(request.GetRequestID())
 	reply.SetClientID(request.GetClientID())
+
 	if v, ok := reply.(messages.IProxyReply); ok {
 		return v
 	}
@@ -387,7 +423,7 @@ func buildDomainDescribeReply(reply *messages.DomainDescribeReply, cadenceError 
 		if v, ok := describeDomainResponse[0].(*cadenceshared.DescribeDomainResponse); ok {
 			reply.SetDomainInfoName(v.DomainInfo.Name)
 			reply.SetDomainInfoDescription(v.DomainInfo.Description)
-			reply.SetDomainInfoStatus(proxyclient.StringToDomainStatus(v.DomainInfo.Status.String()))
+			reply.SetDomainInfoStatus(v.DomainInfo.Status)
 			reply.SetConfigurationEmitMetrics(*v.Configuration.EmitMetric)
 			reply.SetConfigurationRetentionDays(*v.Configuration.WorkflowExecutionRetentionPeriodInDays)
 			reply.SetDomainInfoOwnerEmail(v.DomainInfo.OwnerEmail)
@@ -401,6 +437,16 @@ func buildDomainRegisterReply(reply *messages.DomainRegisterReply, cadenceError 
 
 func buildDomainUpdateReply(reply *messages.DomainUpdateReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
+}
+
+func buildDomainListReply(reply *messages.DomainListReply, cadenceError *proxyerror.CadenceError, listDomainsResponse ...interface{}) {
+	reply.SetError(cadenceError)
+	if len(listDomainsResponse) > 0 {
+		if v, ok := listDomainsResponse[0].(*cadenceshared.ListDomainsResponse); ok {
+			reply.SetDomains(v.Domains)
+			reply.SetNextPageToken(v.NextPageToken)
+		}
+	}
 }
 
 func buildHeartbeatReply(reply *messages.HeartbeatReply, cadenceError *proxyerror.CadenceError) {
@@ -430,6 +476,15 @@ func buildStopWorkerReply(reply *messages.StopWorkerReply, cadenceError *proxyer
 
 func buildPingReply(reply *messages.PingReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
+}
+
+func buildDescribeTaskListReply(reply *messages.DescribeTaskListReply, cadenceError *proxyerror.CadenceError, response ...interface{}) {
+	reply.SetError(cadenceError)
+	if len(response) > 0 {
+		if v, ok := response[0].(*cadenceshared.DescribeTaskListResponse); ok {
+			reply.SetResult(v)
+		}
+	}
 }
 
 // -------------------------------------------------------------------------
@@ -594,6 +649,37 @@ func buildWorkflowGetVersionReply(reply *messages.WorkflowGetVersionReply, caden
 }
 
 func buildWorkflowSetQueryHandlerReply(reply *messages.WorkflowSetQueryHandlerReply, cadenceError *proxyerror.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
+func buildWorkflowQueueNewReply(reply *messages.WorkflowQueueNewReply, cadenceError *proxyerror.CadenceError) {
+	reply.SetError(cadenceError)
+}
+
+func buildWorkflowQueueWriteReply(reply *messages.WorkflowQueueWriteReply, cadenceError *proxyerror.CadenceError, isFull ...interface{}) {
+	reply.SetError(cadenceError)
+	if len(isFull) > 0 {
+		if v, ok := isFull[0].(bool); ok {
+			reply.SetIsFull(v)
+		}
+	}
+}
+
+func buildWorkflowQueueReadReply(reply *messages.WorkflowQueueReadReply, cadenceError *proxyerror.CadenceError, values ...interface{}) {
+	reply.SetError(cadenceError)
+	if len(values) > 0 {
+		if v, ok := values[0].([]interface{}); ok {
+			if _v, _ok := v[0].([]byte); _ok {
+				reply.SetData(_v)
+			}
+			if _v, _ok := v[1].(bool); _ok {
+				reply.SetIsClosed(_v)
+			}
+		}
+	}
+}
+
+func buildWorkflowQueueCloseReply(reply *messages.WorkflowQueueCloseReply, cadenceError *proxyerror.CadenceError) {
 	reply.SetError(cadenceError)
 }
 

@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:        Test_Messages.Workflow.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -1453,7 +1453,7 @@ namespace TestCadence
                 message.Domain = "my-domain";
                 message.RunId = "my-run-id";
                 message.ActivityId = "my-activity-id";
-                message.Error = new CadenceError(new CadenceEntityNotExistsException("my-error"));
+                message.Error = new CadenceError(new EntityNotExistsException("my-error"));
                 message.Result = new byte[] { 5, 6, 7, 8, 9 };
 
                 Assert.Equal(555, message.RequestId);
@@ -1461,7 +1461,7 @@ namespace TestCadence
                 Assert.Equal("my-run-id", message.RunId);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-activity-id", message.ActivityId);
-                Assert.Equal("CadenceEntityNotExistsException{my-error}", message.Error.String);
+                Assert.Equal("Neon.Cadence.EntityNotExistsException{my-error}", message.Error.String);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.Result);
 
                 stream.SetLength(0);
@@ -1476,7 +1476,7 @@ namespace TestCadence
                 Assert.Equal("my-run-id", message.RunId);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-activity-id", message.ActivityId);
-                Assert.Equal("CadenceEntityNotExistsException{my-error}", message.Error.String);
+                Assert.Equal("Neon.Cadence.EntityNotExistsException{my-error}", message.Error.String);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.Result);
 
                 // Verify Clone()
@@ -1489,7 +1489,7 @@ namespace TestCadence
                 Assert.Equal("my-run-id", message.RunId);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-activity-id", message.ActivityId);
-                Assert.Equal("CadenceEntityNotExistsException{my-error}", message.Error.String);
+                Assert.Equal("Neon.Cadence.EntityNotExistsException{my-error}", message.Error.String);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.Result);
 
                 // Echo the message via the associated [cadence-proxy] and verify.
@@ -1502,7 +1502,7 @@ namespace TestCadence
                 Assert.Equal("my-run-id", message.RunId);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.Equal("my-activity-id", message.ActivityId);
-                Assert.Equal("CadenceEntityNotExistsException{my-error}", message.Error.String);
+                Assert.Equal("Neon.Cadence.EntityNotExistsException{my-error}", message.Error.String);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.Result);
             }
         }

@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    InternalPendingChildExecutionInfo.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -60,14 +60,6 @@ namespace Neon.Cadence.Internal
         public long InitiatedId { get; set; }
 
         /// <summary>
-        /// Returns policy used to close this child when its parent is closed.  These values
-        /// must match those defined by <see cref="ParentClosePolicy"/>.
-        /// </summary>
-        [JsonProperty(PropertyName = "parentClosePolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue((int)global::Neon.Cadence.ParentClosePolicy.Abandon)]
-        public int ParentClosePolicy { get; internal set; }
-
-        /// <summary>
         /// Converts the instance into the corresponding public <see cref="PendingChildExecutionInfo"/>.
         /// </summary>
         public PendingChildExecutionInfo ToPublic()
@@ -77,8 +69,7 @@ namespace Neon.Cadence.Internal
                 WorkflowId        = this.WorkflowId,
                 RunId             = this.RunId,
                 WorkflowTypeName  = this.WorkflowTypeName,
-                InitatedId        = this.InitiatedId,
-                ParentClosePolicy = (ParentClosePolicy)this.ParentClosePolicy
+                InitatedId        = this.InitiatedId
             };
         }
     }

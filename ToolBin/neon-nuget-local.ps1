@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # FILE:         neon-nuget-local.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ function SetVersion
         [string]$project
     )
 
-	text pack-version "$env:NF_ROOT\product-version.txt" "$env:NF_ROOT\Lib\$project\$project.csproj"
+	neon-build pack-version "$env:NF_ROOT\product-version.txt" "$env:NF_ROOT\Lib\$project\$project.csproj"
 }
 
 function Publish
@@ -47,7 +47,11 @@ function Publish
 	dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Debug --include-symbols --include-source -o "$env:NF_build\nuget"
 }
 
-# Update the project versions first.
+# Copy the version from [$/product-version] into [$/Lib/Neon/Common/Build.cs]
+
+& neon-build build-version
+
+# Update the project versions.
 
 SetVersion Neon.Cadence
 SetVersion Neon.Common
@@ -102,4 +106,12 @@ Publish Neon.Xunit
 Publish Neon.Xunit.Cadence
 Publish Neon.Xunit.Couchbase
 Publish Neon.Xunit.Kube
+
+# Remove the generated standard nuget packages and replace them with the
+# packages including symbols and source code.
+
+# Get-ChildItem "$env:NF_BUILD\nuget\*.symbols.nupkg"  | Rename-Item -NewName { $_.Name -replace '.symbols.nupkg', '.symbols.tmp' }
+# Remove-Item -Path "$env:NF_BUILD\nuget\*.nupkg"
+# Get-ChildItem "$env:NF_BUILD\nuget\*.symbols.tmp"  | Rename-Item -NewName { $_.Name -replace '.symbols.tmp', '.nupkg' }
+
 pause

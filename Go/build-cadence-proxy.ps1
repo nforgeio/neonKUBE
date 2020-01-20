@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # FILE:         build-cadence-proxy.ps1
 # CONTRIBUTOR:  John C Burns
-# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ Set-Location $projectPath
 # Build the WINDOWS binary
 $env:GOOS	= "windows"
 $env:GOARCH = "amd64"
-go build -i -ldflags="-w -s" -v -o $buildPath\cadence-proxy.win.exe cmd\cadenceproxy\main.go > "$logPath" 2>&1
+go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.win.exe cmd\cadenceproxy\main.go > "$logPath" 2>&1
 
 $exitCode = $lastExitCode
 
@@ -53,7 +53,7 @@ if ($exitCode -ne 0)
 # Build the LINUX binary
 $env:GOOS   = "linux"
 $env:GOARCH = "amd64"
-go build -i -ldflags="-w -s" -v -o $buildPath\cadence-proxy.linux cmd\cadenceproxy\main.go > "$logPath" 2>&1
+go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.linux cmd\cadenceproxy\main.go > "$logPath" 2>&1
 
 $exitCode = $lastExitCode
 
@@ -67,7 +67,7 @@ if ($exitCode -ne 0)
 # Build the OSX binary
 $env:GOOS   = "darwin"
 $env:GOARCH = "amd64"
-go build -i -ldflags="-w -s" -v -o $buildPath\cadence-proxy.osx cmd\cadenceproxy\main.go > "$logPath" 2>&1
+go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\cadence-proxy.osx cmd\cadenceproxy\main.go > "$logPath" 2>&1
 
 $exitCode = $lastExitCode
 

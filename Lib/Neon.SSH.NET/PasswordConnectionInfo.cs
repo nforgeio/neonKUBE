@@ -9,9 +9,9 @@ namespace Renci.SshNet
     /// Provides connection information when password authentication method is used
     /// </summary>
     /// <example>
-    ///     <code source="..\..\src\Renci.SshNet.Tests\Classes\PasswordConnectionInfoTest.cs" region="Example PasswordConnectionInfo" language="C#" title="Connect using username and password" />
-    ///     <code source="..\..\src\Renci.SshNet.Tests\Classes\PasswordConnectionInfoTest.cs" region="Example PasswordConnectionInfo PasswordExpired" language="C#" title="Change password when connecting" />
-    ///     <code source="..\..\src\Renci.SshNet.Tests\Classes\PasswordConnectionInfoTest.cs" region="Example PasswordConnectionInfo AuthenticationBanner" language="C#" title="Display authentication banner" />
+    ///     <code source="..\..\Lib\Neon.SSH.NET\Examples\PasswordConnectionInfoTest.cs" region="Example PasswordConnectionInfo" language="C#" title="Connect using username and password" />
+    ///     <code source="..\..\Lib\Neon.SSH.NET\Examples\PasswordConnectionInfoTest.cs" region="Example PasswordConnectionInfo PasswordExpired" language="C#" title="Change password when connecting" />
+    ///     <code source="..\..\Lib\Neon.SSH.NET\Examples\PasswordConnectionInfoTest.cs" region="Example PasswordConnectionInfo AuthenticationBanner" language="C#" title="Display authentication banner" />
     /// </example>
     public class PasswordConnectionInfo : ConnectionInfo, IDisposable
     {
@@ -19,7 +19,7 @@ namespace Renci.SshNet
         /// Occurs when user's password has expired and needs to be changed.
         /// </summary>
         /// <example>
-        ///     <code source="..\..\src\Renci.SshNet.Tests\Classes\PasswordConnectionInfoTest.cs" region="Example PasswordConnectionInfo PasswordExpired" language="C#" title="Change password when connecting" />
+        ///     <code source="..\..\Lib\Neon.SSH.NET\Examples\PasswordConnectionInfoTest.cs" region="Example PasswordConnectionInfo PasswordExpired" language="C#" title="Change password when connecting" />
         /// </example>
         public event EventHandler<AuthenticationPasswordChangeEventArgs> PasswordExpired;
 
@@ -30,7 +30,7 @@ namespace Renci.SshNet
         /// <param name="username">Connection username.</param>
         /// <param name="password">Connection password.</param>
         /// <example>
-        ///     <code source="..\..\src\Renci.SshNet.Tests\Classes\PasswordConnectionInfoTest.cs" region="Example PasswordConnectionInfo" language="C#" title="Connect using username and password" />
+        ///     <code source="..\..\Lib\Neon.SSH.NET\Examples\PasswordConnectionInfoTest.cs" region="Example PasswordConnectionInfo" language="C#" title="Connect using username and password" />
         /// </example>
         /// <exception cref="ArgumentNullException"><paramref name="password"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException"><paramref name="host"/> is invalid, or <paramref name="username"/> is <c>null</c> or contains only whitespace characters.</exception>

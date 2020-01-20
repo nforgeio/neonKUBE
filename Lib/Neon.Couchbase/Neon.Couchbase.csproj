@@ -4,22 +4,25 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Couchbase</RootNamespace>
     <Authors>Jeff Lill</Authors>
-    <Version>0.6.9-alpha</Version>
+    <Version>1.0.4</Version>
     <Company>neonFORGE, LLC</Company>
-    <Product>neonKUBE</Product>
+    <Product>Neon</Product>
     <Description>neonKUBE Couchbase client extensions.</Description>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
-    <Copyright>Copyright © 2016-2019 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <Copyright>Copyright © 2016-2020 by neonFORGE LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
     <LangVersion>latest</LangVersion>
     <IsPackable>true</IsPackable>
     <PackageLicenseUrl></PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Couchbase/README.md</PackageProjectUrl>
+    <PackageProjectUrl>https://doc.neonkube.com/Neon.Couchbase-Overview.htm</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Configurations>Debug;Release;CodeDoc</Configurations>
+    <PackageIconUrl>https://doc.neonkube.com/images/nuget-icon.png</PackageIconUrl>
+    <PackageTags>couchbase</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -38,11 +41,19 @@
     <NoWarn>NU1605</NoWarn>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG;RELEASE;NETSTANDARD2_0</DefineConstants>
+    <DocumentationFile>bin\Release\Neon.Couchbase.xml</DocumentationFile>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <NoWarn>NU1605</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="CouchbaseNetClient" Version="2.7.12" />
-    <PackageReference Include="Linq2Couchbase" Version="1.4.1" />
-    <PackageReference Include="Microsoft.CSharp" Version="4.6.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.0.0" />
+    <PackageReference Include="CouchbaseNetClient" Version="2.7.15" />
+    <PackageReference Include="Linq2Couchbase" Version="1.4.2" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.0" />
   </ItemGroup>
 
   <ItemGroup>

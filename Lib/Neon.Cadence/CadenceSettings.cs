@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    CadenceSettings.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -43,6 +43,21 @@ namespace Neon.Cadence
         /// </summary>
         public CadenceSettings()
         {
+        }
+
+        /// <summary>
+        /// Constructs an instance with server URIs.
+        /// </summary>
+        /// <param name="servers">Specifies one or more server URIs.</param>
+        public CadenceSettings(params string[] servers)
+        {
+            foreach (var server in servers)
+            {
+                if (!string.IsNullOrEmpty(server))
+                {
+                    this.Servers.Add(server);
+                }
+            }
         }
 
         /// <summary>
@@ -327,6 +342,29 @@ namespace Neon.Cadence
         public string BinaryFolder { get; set; } = null;
 
         /// <summary>
+        /// <para>
+        /// Optionally specifies the path to the <b>cadence-proxy</b> executable file.  This
+        /// file must already be present on disk when a <see cref="CadenceClient"/> connection
+        /// is established and the appropriate execute permissions must be set for Linux and
+        /// OS/X.  This property takes presidence over <see cref="BinaryFolder"/> when set.
+        /// </para>
+        /// <para>
+        /// This is useful for situations where the executable must be pre-provisioned for
+        /// security.  One example is deploying Cadence workers to a Docker container with
+        /// a read-only file system.
+        /// </para>
+        /// <note>
+        /// You can use the <see cref="CadenceClient.ExtractCadenceProxy(string)"/> method to extract
+        /// the Windows, Linux, and OS/X builds of the <b>cadence-proxy</b> executable from
+        /// the <b>Neon.Cadence</b> assembly.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "BinaryPath", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "binaryPath", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string BinaryPath { get; set; } = null;
+
+        /// <summary>
         /// Optionally specifies the logging level for the associated <b>cadence-proxy</b>.
         /// This defaults to <see cref="LogLevel.None"/> which will be appropriate for most
         /// proiduction situations.  You may wish to set this to <see cref="LogLevel.Info"/>
@@ -380,8 +418,8 @@ namespace Neon.Cadence
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Optionally indicates that the <b>cadence-proxy</b> will
         /// already be running for debugging purposes.  When this is <c>true</c>, the 
-        /// <b>cadence-client</b> be hardcoded to listen on <b>127.0.0.2:5001</b> and
-        /// the <b>cadence-proxy</b> will be assumed to be listening on <b>127.0.0.2:5000</b>.
+        /// <b>cadence-client</b> be hardcoded to listen on <b>127.0.0.1:5001</b> and
+        /// the <b>cadence-proxy</b> will be assumed to be listening on <b>127.0.0.1:5000</b>.
         /// This defaults to <c>false.</c>
         /// </summary>
         [JsonIgnore]

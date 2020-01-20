@@ -2,13 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.6.9-alpha</Version>
+    <Version>1.0.4-preview</Version>
     <Authors>Jeff Lill</Authors>
     <Company>neonFORGE, LLC</Company>
-    <Product>neonKUBE</Product>
-    <Description>neonKUBE data model generator library.</Description>
-    <Copyright>Copyright © 2016-2019 by neonFORGE LLC.  All rights reserved.</Copyright>
-    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.ModelGen/README.md</PackageProjectUrl>
+    <Product>Neon</Product>
+    <Description>Neon data model generator library.</Description>
+    <Copyright>Copyright © 2016-2020 by neonFORGE LLC.  All rights reserved.</Copyright>
+    <PackageProjectUrl>https://doc.neonkube.com/Neon.ModelGen-Overview.htm</PackageProjectUrl>
     <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
@@ -16,10 +16,13 @@
     <FileVersion>0.0.0.0</FileVersion>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PreserveCompilationContext>true</PreserveCompilationContext>
+    <Configurations>Debug;Release;CodeDoc</Configurations>
+    <PackageIconUrl>https://doc.neonkube.com/images/nuget-icon.png</PackageIconUrl>
+    <PackageTags>data utility</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>C:\src\neonKUBE\Lib\Neon.ModelGen\bin\Debug\Neon.ModelGen.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\Neon.ModelGen.xml</DocumentationFile>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors></WarningsAsErrors>
@@ -27,10 +30,18 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>C:\src\neonKUBE\Lib\Neon.ModelGen\bin\Release\Neon.ModelGen.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\Neon.ModelGen.xml</DocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors></WarningsAsErrors>
+    <NoWarn>NU1605</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
+    <DocumentationFile>bin\Release\Neon.ModelGen.xml</DocumentationFile>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors />
     <NoWarn>NU1605</NoWarn>
   </PropertyGroup>
 
@@ -39,9 +50,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis" Version="3.3.1" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.3.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="Microsoft.CodeAnalysis" Version="3.4.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.4.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
   </ItemGroup>
 

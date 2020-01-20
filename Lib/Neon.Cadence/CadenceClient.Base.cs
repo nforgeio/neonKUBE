@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    CadenceClient.Base.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -67,11 +67,11 @@ namespace Neon.Cadence
         /// that are now derived from <see cref="ActivityBase"/>.
         /// </exception>
         /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
-        /// <exception cref="CadenceActivityWorkerStartedException">
+        /// <exception cref="ActivityWorkerStartedException">
         /// Thrown if an activity worker has already been started for the client.  You must
         /// register activity implementations before starting workers.
         /// </exception>
-        /// <exception cref="CadenceWorkflowWorkerStartedException">
+        /// <exception cref="WorkflowWorkerStartedException">
         /// Thrown if a workflow worker has already been started for the client.  You must
         /// register workflow implementations before starting workers.
         /// </exception>
@@ -259,7 +259,7 @@ namespace Neon.Cadence
         /// </param>
         /// <param name="domain">Optionally specifies the Cadence domain.</param>
         /// <returns>The <see cref="TaskListDescription"/> for the pollers.</returns>
-        public async Task<TaskListDescription> DescribeTaskList(string taskList, TaskListType taskListType, string domain = null)
+        public async Task<TaskListDescription> DescribeTaskListAsync(string taskList, TaskListType taskListType, string domain = null)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
@@ -295,7 +295,7 @@ namespace Neon.Cadence
         internal async Task StopWorkerAsync(Worker worker)
         {
             Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
-            EnsureNotDisposed();
+            EnsureNotDisposed(noClosingCheck: true);
 
             using (await workerRegistrationMutex.AcquireAsync())
             {

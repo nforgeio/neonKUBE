@@ -28,19 +28,18 @@ type (
 	//
 	// A WorkflowDescribeExecutionRequest contains a reference to a
 	// WorkflowRequest struct in memory and ReplyType, which is
-	// the corresponding MessageType for replying to this WorkflowRequest
+	// the corresponding MessageType for replying to this WorkflowRequest.
 	//
-	// A WorkflowDescribeExecutionRequest will pass all of the given data
-	// necessary to describe the execution of a cadence workflow instance
+	// Describes an executing workflow instance.
 	WorkflowDescribeExecutionRequest struct {
 		*WorkflowRequest
 	}
 )
 
-// NewWorkflowDescribeExecutionRequest is the default constructor for a WorkflowDescribeExecutionRequest
+// NewWorkflowDescribeExecutionRequest is the default constructor for a WorkflowDescribeExecutionRequest.
 //
 // returns *WorkflowDescribeExecutionRequest -> a reference to a newly initialized
-// WorkflowDescribeExecutionRequest in memory
+// WorkflowDescribeExecutionRequest in memory.
 func NewWorkflowDescribeExecutionRequest() *WorkflowDescribeExecutionRequest {
 	request := new(WorkflowDescribeExecutionRequest)
 	request.WorkflowRequest = NewWorkflowRequest()
@@ -51,55 +50,53 @@ func NewWorkflowDescribeExecutionRequest() *WorkflowDescribeExecutionRequest {
 }
 
 // GetWorkflowID gets a WorkflowDescribeExecutionRequest's WorkflowID value
-// from its properties map
+// from its properties map, identifies the workflow by ID.
 //
-// returns *string -> pointer to a string in memory holding the value
-// of a WorkflowDescribeExecutionRequest's WorkflowID
+// returns *string -> WorkflowDescribeExecutionRequest's string WorkflowID.
 func (request *WorkflowDescribeExecutionRequest) GetWorkflowID() *string {
 	return request.GetStringProperty("WorkflowId")
 }
 
 // SetWorkflowID sets an WorkflowDescribeExecutionRequest's WorkflowID value
-// in its properties map
+// in its properties map, identifies the workflow by ID.
 //
-// param value *string -> pointer to a string in memory holding the value
-// of a WorkflowDescribeExecutionRequest's WorkflowID
+// param value *string -> WorkflowDescribeExecutionRequest's string WorkflowID.
 func (request *WorkflowDescribeExecutionRequest) SetWorkflowID(value *string) {
 	request.SetStringProperty("WorkflowId", value)
 }
 
 // GetRunID gets a WorkflowDescribeExecutionRequest's RunID value
-// from its properties map
+// from its properties map, identifies the specific workflow execution to be cancelled
+// and the latest run will be cancelled when this is nil or empty.
 //
-// returns *string -> pointer to a string in memory holding the value
-// of a WorkflowDescribeExecutionRequest's RunID
+// returns *string -> WorkflowDescribeExecutionRequest's string RunID.
 func (request *WorkflowDescribeExecutionRequest) GetRunID() *string {
 	return request.GetStringProperty("RunId")
 }
 
 // SetRunID sets a WorkflowDescribeExecutionRequest's RunID value
-// in its properties map.
+// in its properties map, identifies the specific workflow execution to be cancelled
+// and the latest run will be cancelled when this is nil or empty.
 //
-// param value *string -> a pointer to a string in memory that holds the value
-// to be set in the properties map
+// param value *string -> WorkflowDescribeExecutionRequest's string RunID.
 func (request *WorkflowDescribeExecutionRequest) SetRunID(value *string) {
 	request.SetStringProperty("RunId", value)
 }
 
 // GetDomain gets a WorkflowDescribeExecutionRequest's Domain value
-// from its properties map
+// from its properties map, optionally identifies the target domain when
+// RunIdisn't passed.
 //
-// returns *string -> pointer to a string in memory holding the value
-// of a WorkflowDescribeExecutionRequest's Domain
+// returns *string -> WorkflowDescribeExecutionRequest's string Domain.
 func (request *WorkflowDescribeExecutionRequest) GetDomain() *string {
 	return request.GetStringProperty("Domain")
 }
 
 // SetDomain sets a WorkflowDescribeExecutionRequest's Domain value
-// in its properties map.
+// in its properties map, optionally identifies the target domain when
+// RunIdisn't passed.
 //
-// param value *string -> a pointer to a string in memory that holds the value
-// to be set in the properties map
+// param value *string -> WorkflowDescribeExecutionRequest's string Domain.
 func (request *WorkflowDescribeExecutionRequest) SetDomain(value *string) {
 	request.SetStringProperty("Domain", value)
 }

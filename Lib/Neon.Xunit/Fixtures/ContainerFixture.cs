@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    ContainerFixture.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -69,7 +69,7 @@ namespace Neon.Xunit
         /// running applications.  When all tests are running on a single host,
         /// you should consider setting this to one of the 16 million loopback
         /// addresses in the <b>127.0.0.0/8</b> subnet (e.g. 127.0.0.1, 127.0.0.2,
-        /// etc.  You'll need to set this before starting any fixture containers.
+        /// etc).  You'll need to set this before starting any fixture containers.
         /// </para>
         /// <note>
         /// Fixtures implemented by neonFORGE that are derived from <see cref="ContainerFixture"/> 
@@ -91,8 +91,9 @@ namespace Neon.Xunit
         }
 
         /// <summary>
-        /// Used by derived fixtures to retrieve the host network interface where 
-        /// container ports should be published.
+        /// Used by derived fixtures to retrieve the host network interface address for the docker
+        /// <b>-p</b> port publish option or the address to use for establishing a Cadence connections.
+        /// interfaces.
         /// </summary>
         /// <param name="hostInterface">The desired host interface IPv4 address or <c>null</c>.</param>
         /// <param name="forConnection">

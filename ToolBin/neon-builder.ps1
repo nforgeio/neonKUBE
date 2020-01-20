@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # FILE:         neon-builder.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,40 +23,40 @@
 #
 # OPTIONS:
 #
-#       -debug      - Builds the DEBUG version (this is the default)
-#       -release    - Builds the RELEASE version
-#       -nobuild    - Don't build the solution; just publish
-#       -installer  - Builds installer binaries
+#       -tools        - Builds the command line tools
+#       -installer    - Builds installer (and everything being installed)
+#       -codedoc      - Builds the code documentation
+#       -all          - Builds with all of the options above
 
 param 
 (
-	[switch]$debug     = $false,
-	[switch]$release   = $false,
-	[switch]$nobuild   = $false,
-	[switch]$installer = $false
+    [switch]$tools     = $false,
+	[switch]$installer = $false,
+    [switch]$codedoc   = $false,
+    [switch]$all       = $false
 )
 
-$msbuild    = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
-$nfRoot     = "$env:NF_ROOT"
-$nfBuild    = "$env:NF_BUILD"
-$nfSolution = "$nfRoot\neonKUBE.sln"
-$env:PATH  += ";$nfBuild"
-
-if (-not $debug -and -not $release)
+if ($all)
 {
-    $debug = $true
+    $tools     = $true
+    $installer = $true
+    $codedoc   = $true
 }
 
-if ($debug)
+if ($installer)
 {
-    $config      = "Debug"
-    $buildConfig = "-p:Configuration=Debug"
+    $tools = $true
 }
-else
-{
-    $config      = "Release"
-    $buildConfig = "-p:Configuration=Release"
-}
+
+$msbuild     = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
+$nfRoot      = "$env:NF_ROOT"
+$nfSolution  = "$nfRoot\neonKUBE.sln"
+$nfBuild     = "$env:NF_BUILD"
+$nfTools     = "$nfRoot\Tools"
+$version     = Get-Content "$env:NF_ROOT\product-version.txt" -First 1
+$config      = "Release"
+$buildConfig = "-p:Configuration=Release"
+$env:PATH   += ";$nfBuild"
 
 function PublishCore
 {
@@ -75,7 +75,7 @@ function PublishCore
     # Build the [pubcore] arguments:
 
     $projectPath = [System.IO.Path]::Combine($nfRoot, $projectPath)
-    $targetPath  = [System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "netcoreapp3.0", "$targetName.dll")
+    $targetPath  = [System.IO.Path]::Combine($nfRoot, [System.IO.Path]::GetDirectoryName($projectPath), "bin", $config, "netcoreapp3.1", "$targetName.dll")
 
     # Publish the binaries.
 
@@ -100,6 +100,10 @@ function PublishCore
 
 $originalDir = $pwd
 cd $nfRoot
+
+# Copy the version from [$/product-version] into [$/Lib/Neon/Common/Build.cs]
+
+& neon-build build-version
 
 if (-not $nobuild)
 {
@@ -146,15 +150,48 @@ if (-not $nobuild)
     }
 }
 
-# Publish the .NET Core binaries to the build folder.
+# Build the Neon tools.
 
-PublishCore "Tools\neon-cli\neon-cli.csproj"    "neon"
-PublishCore "Tools\unix-text\unix-text.csproj"  "unix-text"
+if ($tools)
+{
+    # Publish the Windows .NET Core binaries to the build folder.
 
-# Publish the WinDesktop binaries to the build folder.
+    PublishCore "Tools\neon-cli\neon-cli.csproj"    "neon"
+    PublishCore "Tools\unix-text\unix-text.csproj"  "unix-text"
 
- md -Force "$nfBuild\win-desktop"
- cp -R "$nfRoot\Desktop\WinDesktop\bin\Release\*" "$nfBuild\win-desktop"
+    # Hack to publish OS/X version of [neon-cli] to the build folder.
+
+    ""
+    "**********************************************************"
+    "***                   OS/X neon-cli                    ***"
+    "**********************************************************"
+    ""
+
+    cd "$nfTools\neon-cli"
+    dotnet publish -r osx-x64 -c Release /p:PublishSingleFile=true
+    & mkdir "$nfBuild\osx"
+    & cp "$nfTools\neon-cli\bin\Release\netcoreapp3.1\osx-x64\publish\neon" "$nfBuild\osx\neon-osx"
+    cd $nfRoot
+
+    ""
+    "Generating OS/X neon-cli SHA512..."
+    ""
+
+    & cat "$nfBuild\osx\neon-osx" | openssl dgst -sha512 -hex > "$nfBuild\osx\neon-osx-$version.sha512.txt"
+
+    if (-not $?)
+    {
+	    ""
+	    "*** OS/X neon-cli: SHA512 failed ***"
+	    ""
+	    exit 1
+    }
+	
+    # Publish the WinDesktop binaries to the build folder.
+
+     md -Force "$nfBuild\win-desktop"
+     cp -R "$nfRoot\Desktop\WinDesktop\bin\Release\*" "$nfBuild\win-desktop"
+ }
  
  # Build the installer if requested.
 
@@ -166,8 +203,6 @@ if ($installer)
     "**********************************************************"
     ""
 
-    $version = Get-Content "$env:NF_ROOT\product-version.txt" -First 1
-
     & neon-build installer windows
 
     if (-not $?)
@@ -178,16 +213,92 @@ if ($installer)
         exit 1
     }
 
-    "Generating windows installer sha512..."
-    & cat "$nfBuild\neonKUBE-setup-$version.exe" | openssl dgst -sha512 > "$nfBuild\neonKUBE-setup-$version.sha512.txt"
+    ""
+    "Generating windows installer SHA512..."
+	""
+	
+    & cat "$nfBuild\neonKUBE-setup-$version.exe" | openssl dgst -sha512 -hex > "$nfBuild\neonKUBE-setup-$version.sha512.txt"
 
     if (-not $?)
     {
         ""
-        "*** Windows Installer: Build SHA512 failed ***"
+        "*** Windows Installer: SHA512 failed ***"
         ""
         exit 1
     }
+}
+
+# Build the code documentation if requested.
+
+if ($codedoc)
+{
+    ""
+    "**********************************************************"
+    "***                CODE DOCUMENTATION                  ***"
+    "**********************************************************"
+    ""
+
+    # Remove some pesky aliases:
+
+    del alias:rm
+    del alias:cp
+    del alias:mv
+
+    if (-not $?)
+    {
+        ""
+        "*** ERROR: Cannot remove: $nfBuild\codedoc"
+        ""
+        exit 1
+    }
+
+    & "$msbuild" "$nfSolution" -p:Configuration=CodeDoc
+
+    if (-not $?)
+    {
+        ""
+        "*** BUILD FAILED ***"
+        ""
+        exit 1
+    }
+
+    # Copy the CHM file to a more convenient place for adding to the GitHub release
+    # and generate the SHA512 for it.
+
+    $nfDocOutput = "$nfroot\Websites\CodeDoc\bin\CodeDoc"
+
+    & cp "$nfDocOutput\neon.chm" "$nfbuild"
+
+    ""
+    "Generating neon.chm SHA512..."
+	""
+
+    & cat "$nfBuild\neon.chm" | openssl dgst -sha512 -hex > "$nfBuild\neon.chm.sha512.txt"
+
+    # Move the documentation build output.
+	
+    & rm -r --force "$nfBuild\codedoc"
+    & mv "$nfDocOutput" "$nfBuild\codedoc"
+
+    if (-not $?)
+    {
+        ""
+        "*** neon.chm: SHA512 failed ***"
+        ""
+        exit 1
+    }
+
+    # Munge the SHFB generated documentation site:
+    #
+    #   1. Insert the Google Analytics [gtag.js] scripts
+    #   2. Munge and relocate HTML files for better site
+    #      layout and friendlier permalinks.
+
+    ""
+    "Tweaking Layout and Enabling Google Analytics..."
+	""
+
+    & neon-build shfb --gtag="$nfroot\Websites\CodeDoc\gtag.js" --styles="$nfRoot\WebSites\CodeDoc\styles" "$nfRoot\WebSites\CodeDoc" "$nfBuild\codedoc"
 }
 
 cd $originalDir

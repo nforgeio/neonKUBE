@@ -18,7 +18,7 @@ namespace Renci.SshNet
     /// Represents private key information.
     /// </summary>
     /// <example>
-    ///     <code source="..\..\src\Renci.SshNet.Tests\Data\Key.RSA.txt" language="Text" title="Private RSA key example" />
+    ///     <code source="..\..\Lib\Neon.SSH.NET\Examples\Data\Key.RSA.txt" language="Text" title="Private RSA key example" />
     /// </example>
     /// <remarks>
     /// <para>
@@ -26,6 +26,7 @@ namespace Renci.SshNet
     /// </para>
     /// <para>
     /// The following encryption algorithms are supported:
+    /// </para>
     /// <list type="bullet">
     ///     <item>
     ///         <description>DES-EDE3-CBC</description>
@@ -46,7 +47,6 @@ namespace Renci.SshNet
     ///         <description>AES-256-CBC</description>
     ///     </item>
     /// </list>
-    /// </para>
     /// </remarks>
     public class PrivateKeyFile : IDisposable
     {

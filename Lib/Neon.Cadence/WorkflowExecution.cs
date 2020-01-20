@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    WorkflowExecution.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="workflowId">The original ID for the workflow.</param>
         /// <param name="runId">Optionally specifies the current run ID for the workflow.</param>
-        internal WorkflowExecution(string workflowId, string runId = null)
+        public WorkflowExecution(string workflowId, string runId = null)
         {
             this.WorkflowId = workflowId;
             this.RunId      = runId;

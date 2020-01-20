@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Test_NetHelper.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -575,13 +575,13 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void GetUnusedTcpPort()
         {
-            // Verify that we can obtain 100 unique ports on [127.0.0.2].
+            // Verify that we can obtain 100 unique ports on [127.0.0.1].
             // Note that this is a tiny bit fragile because it's possible,
             // but unlikely that there aren't enough free ports on that
             // interface or that the OS will cycle through the free ports
             // before we're done.
 
-            var address = IPAddress.Parse("127.0.0.2");
+            var address = IPAddress.Parse("127.0.0.1");
             var ports   = new HashSet<int>();
 
             for (int i = 0; i < 100; i++)

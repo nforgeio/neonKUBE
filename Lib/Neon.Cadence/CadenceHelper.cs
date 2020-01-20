@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    CadenceHelper.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -81,21 +81,25 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Determines whether the type passed is a <see cref="Task"/> or <see cref="Task{T}"/>.
+        /// Determines whether the type passed is a <see cref="Task"/>.
         /// </summary>
         /// <param name="type">The type being tested.</param>
-        /// <returns><c>true</c> if the type is a Cadence task.</returns>
+        /// <returns><c>true</c> if the type is a <see cref="Task"/>.</returns>
         internal static bool IsTask(Type type)
         {
-            if (type == typeof(Task))
-            {
-                return true;
-            }
-            else
-            {
-                return type.IsGenericType && type.FullName.StartsWith(genericTaskNamePrefix);
-            }
+            return type == typeof(Task);
         }
+
+        /// <summary>
+        /// Determines whether the type passed is a <see cref="Task{T}"/>.
+        /// </summary>
+        /// <param name="type">The type being tested.</param>
+        /// <returns><c>true</c> if the type is a <see cref="Task{T}"/>.</returns>
+        internal static bool IsTaskT(Type type)
+        {
+            return type.IsGenericType && type.FullName.StartsWith(genericTaskNamePrefix);
+        }
+
         /// <summary>
         /// Ensures that a workflow type name is valid.
         /// </summary>
@@ -240,7 +244,7 @@ namespace Neon.Cadence.Internal
 
             if (workflowInterface.IsGenericType)
             {
-                throw new WorkflowTypeException($"[{workflowInterface.FullName}] has generic type parameters.  Workflow interfaces may not be generic.");
+                throw new WorkflowTypeException($"[{workflowInterface.FullName}] has generic type parameters.  Workflow interfaces cannot be generic.");
             }
 
             if (!workflowInterface.IsPublic && !workflowInterface.IsNestedPublic)
@@ -271,9 +275,9 @@ namespace Neon.Cadence.Internal
                     continue;
                 }
 
-                if (!CadenceHelper.IsTask(method.ReturnType))
+                if (!(CadenceHelper.IsTask(method.ReturnType) || CadenceHelper.IsTaskT(method.ReturnType)))
                 {
-                    throw new WorkflowTypeException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                    throw new WorkflowTypeException($"Workflow workflow method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                 }
 
                 var name = workflowMethodAttribute.Name ?? string.Empty;
@@ -304,9 +308,14 @@ namespace Neon.Cadence.Internal
                     continue;
                 }
 
-                if (!CadenceHelper.IsTask(method.ReturnType))
+                if (CadenceHelper.IsTaskT(method.ReturnType))
                 {
-                    throw new WorkflowTypeException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                    throw new WorkflowTypeException($"Non-synchronous workflow signal method [{workflowInterface.FullName}.{method.Name}()] cannot return a value.");
+                }
+
+                if (!(CadenceHelper.IsTask(method.ReturnType)))
+                {
+                    throw new WorkflowTypeException($"Workflow signal method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                 }
 
                 var name = signalMethodAttribute.Name ?? string.Empty;
@@ -319,7 +328,7 @@ namespace Neon.Cadence.Internal
                 signalNames.Add(name);
             }
 
-            // Validate the signal method names and return types.
+            // Validate the query method names and return types.
 
             var queryNames = new HashSet<string>();
 
@@ -332,9 +341,9 @@ namespace Neon.Cadence.Internal
                     continue;
                 }
 
-                if (!CadenceHelper.IsTask(method.ReturnType))
+                if (!(CadenceHelper.IsTask(method.ReturnType) || CadenceHelper.IsTaskT(method.ReturnType)))
                 {
-                    throw new WorkflowTypeException($"Workflow interface method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                    throw new WorkflowTypeException($"Workflow query method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                 }
 
                 var name = queryMethodAttribute.Name ?? string.Empty;
@@ -369,7 +378,7 @@ namespace Neon.Cadence.Internal
 
             if (workflowType.IsGenericType)
             {
-                throw new WorkflowTypeException($"[{workflowType.FullName}] has generic type parameters.  Workflow implementations may not be generic.");
+                throw new WorkflowTypeException($"[{workflowType.FullName}] has generic type parameters.  Workflow implementations cannot be generic.");
             }
 
             if (workflowType.BaseType != typeof(WorkflowBase))
@@ -475,7 +484,7 @@ namespace Neon.Cadence.Internal
 
             if (activityInterface.IsGenericType)
             {
-                throw new ActivityTypeException($"[{activityInterface.FullName}] has generic type parameters.  Activity interfaces may not be generic.");
+                throw new ActivityTypeException($"[{activityInterface.FullName}] has generic type parameters.  Activity interfaces cannot be generic.");
             }
 
             if (!activityInterface.IsPublic && !activityInterface.IsNestedPublic)
@@ -506,7 +515,7 @@ namespace Neon.Cadence.Internal
                     continue;
                 }
 
-                if (!CadenceHelper.IsTask(method.ReturnType))
+                if (!(CadenceHelper.IsTask(method.ReturnType) || CadenceHelper.IsTaskT(method.ReturnType)))
                 {
                     throw new WorkflowTypeException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
                 }
@@ -548,7 +557,7 @@ namespace Neon.Cadence.Internal
 
             if (activityType.IsGenericType)
             {
-                throw new ActivityTypeException($"[{activityType.FullName}] has generic type parameters.  Activity implementations may not be generic.");
+                throw new ActivityTypeException($"[{activityType.FullName}] has generic type parameters.  Activity implementations cannot be generic.");
             }
 
             if (activityType.BaseType != typeof(ActivityBase))
@@ -700,13 +709,13 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// Converts UNIX nano time (UTC) to a <see cref="DateTime"/>.
         /// </summary>
-        /// <param name="nanoseconds">Nano seconds from midnight  1/1/0001</param>
+        /// <param name="nanoseconds">Nano seconds from midnight 1-1-1970 (UTC)</param>
         /// <returns>The corresponding <see cref="DateTime"/>.</returns>
         internal static DateTime UnixNanoToDateTimeUtc(long nanoseconds)
         {
             var ticks = nanoseconds / 100;
 
-            return new DateTime(ticks, DateTimeKind.Utc);
+            return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc) + TimeSpan.FromTicks(ticks);
         }
 
         /// <summary>

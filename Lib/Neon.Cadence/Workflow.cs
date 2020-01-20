@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Workflow.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,12 +45,33 @@ namespace Neon.Cadence
         /// </summary>
         public const int DefaultVersion = -1;
 
+        //---------------------------------------------------------------------
+        // Static members
+
+        private static AsyncLocal<Workflow> currentWorkflow = new AsyncLocal<Workflow>();
+
+        /// <summary>
+        /// Returns the <see cref="Workflow"/> information for the worflow executing within the
+        /// current asynchronous flow or <c>null</c> if the current code is not executing within
+        /// the context of a workflow.  This property use an internal <see cref="AsyncLocal{T}"/>
+        /// to manage this state.
+        /// </summary>
+        public static Workflow Current
+        {
+            get => currentWorkflow.Value;
+            internal set => currentWorkflow.Value = value;
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private object      syncLock = new object();
         private int         pendingOperationCount;
         private long        nextLocalActivityActionId;
         private long        nextActivityId;
         private long        nextQueueId;
         private Random      random;
+        private bool        isReplaying;
 
         /// <summary>
         /// Constructor.
@@ -179,7 +200,20 @@ namespace Neon.Cadence
         /// external things like logging or metric reporting.
         /// </note>
         /// </summary>
-        public bool IsReplaying { get; internal set; }
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
+        public bool IsReplaying
+        {
+            get
+            {
+                Client.EnsureNotDisposed();
+                WorkflowBase.CheckCallContext(allowWorkflow: true);
+
+                return isReplaying;
+            }
+
+            set => isReplaying = value;
+        }
 
         /// <summary>
         /// Returns the execution information for the current workflow.
@@ -201,27 +235,55 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Executes a workflow Cadence related operation, attempting to detect
+        /// Executes a workflow Cadence related operation, trying to detect
         /// when an attempt is made to perform more than one operation in 
         /// parallel, which will likely break workflow determinism.
         /// </summary>
         /// <typeparam name="TResult">The operation result type.</typeparam>
         /// <param name="actionAsync">The workflow action function.</param>
         /// <returns>The action result.</returns>
+        /// <remarks>
+        /// <note>
+        /// This method performs the parallel check only when executing within
+        /// the context of a workflow entry point method.
+        /// </note>
+        /// </remarks>
         internal async Task<TResult> ExecuteNonParallel<TResult>(Func<Task<TResult>> actionAsync)
         {
-            try
+            if (WorkflowBase.CallContext.Value == WorkflowBase.WorkflowCallContext.Entrypoint)
             {
-                if (Interlocked.Increment(ref pendingOperationCount) > 1)
+                // Workflow entry points are restricted to one operation at a time.
+
+                try
                 {
-                    throw new WorkflowParallelOperationException();
+                    if (Interlocked.Increment(ref pendingOperationCount) > 1)
+                    {
+                        throw new WorkflowParallelOperationException();
+                    }
+
+                    return await actionAsync();
                 }
+                finally
+                {
+                    Interlocked.Decrement(ref pendingOperationCount);
+                }
+            }
+            else
+            {
+                // $note(jefflill):
+                //
+                // We're not going to check for parallel execution for query or
+                // signal methods.  There isn't any actually restriction for queries
+                // because they don't impact the workflow state.  Technically,
+                // signals should be restricted to a single operation, but we're
+                // not going to check that for simplicitly and because the only
+                // operation a signal can do is write to a [WorkflowQueue], so
+                // the chances of doing something stupid is pretty low.
+                //
+                // In theory, we could address this by adding another pending
+                // operation counter just for signals.
 
                 return await actionAsync();
-            }
-            finally
-            {
-                Interlocked.Decrement(ref pendingOperationCount);
             }
         }
 
@@ -257,10 +319,13 @@ namespace Neon.Cadence
         /// time method to guarantee determinism when a workflow is replayed.
         /// </note>
         /// </summary>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         public async Task<DateTime> UtcNowAsync()
         {
             await SyncContext.ClearAsync;
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             var reply = await ExecuteNonParallel(
@@ -284,6 +349,8 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="args">The new run arguments.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         public async Task ContinueAsNewAsync(params object[] args)
         {
             // This method doesn't currently do any async operations but I'd
@@ -292,6 +359,7 @@ namespace Neon.Cadence
 
             await SyncContext.ClearAsync;
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             await Task.CompletedTask;
@@ -302,7 +370,7 @@ namespace Neon.Cadence
             // that the cadence-proxy will be able to signal Cadence to continue
             // the workflow with a clean history.
 
-            throw new CadenceContinueAsNewException(
+            throw new ContinueAsNewException(
                 args:       Client.DataConverter.ToData(args),
                 workflow:   WorkflowInfo.WorkflowType,
                 domain:     WorkflowInfo.Domain,
@@ -316,6 +384,8 @@ namespace Neon.Cadence
         /// <param name="options">The continuation options.</param>
         /// <param name="args">The new run arguments.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         public async Task ContinueAsNewAsync(ContinueAsNewOptions options, params object[] args)
         {
             await SyncContext.ClearAsync;
@@ -325,6 +395,7 @@ namespace Neon.Cadence
             // in the future.
 
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             await Task.CompletedTask;
@@ -335,7 +406,7 @@ namespace Neon.Cadence
             // that the cadence-proxy will be able to signal Cadence to continue
             // the workflow with a clean history.
 
-            throw new CadenceContinueAsNewException(
+            throw new ContinueAsNewException(
                 args:                       Client.DataConverter.ToData(args),
                 domain:                     options.Domain ?? WorkflowInfo.Domain,
                 taskList:                   options.TaskList ?? WorkflowInfo.TaskList,
@@ -357,6 +428,8 @@ namespace Neon.Cadence
         /// </param>
         /// <param name="maxSupported">Specifies the maximum supported version.</param>
         /// <returns>The workflow implementation version.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// <para>
         /// It is possible to upgrade workflow implementation with workflows in flight using
@@ -517,6 +590,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(changeId), nameof(changeId));
             Covenant.Requires<ArgumentException>(minSupported <= maxSupported, nameof(minSupported));
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             var reply = await ExecuteNonParallel(
@@ -545,13 +619,16 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="stub">The child workflow stub.</param>
         /// <returns>The <see cref="WorkflowExecution"/>.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the stub has not been started.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         public async Task<WorkflowExecution> GetWorkflowExecutionAsync(object stub)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(stub != null, nameof(stub));
             Covenant.Requires<ArgumentException>(stub is ITypedWorkflowStub, nameof(stub), "The parameter is not a workflow stub.");
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             return await Task.FromResult(((ITypedWorkflowStub)stub).GetExecution());
@@ -569,6 +646,8 @@ namespace Neon.Cadence
         /// <param name="id">Identifies the value in the workflow history.</param>
         /// <param name="function">The side effect function.</param>
         /// <returns>The latest value persisted to the workflow history.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// <para>
         /// This is similar to what you could do with a local activity but is
@@ -605,6 +684,7 @@ namespace Neon.Cadence
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id), nameof(id));
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             T value;
@@ -654,6 +734,8 @@ namespace Neon.Cadence
         /// <param name="id">Identifies the value in the workflow history.</param>
         /// <param name="function">The side effect function.</param>
         /// <returns>The latest value persisted to the workflow history.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// <para>
         /// This is similar to what you could do with a local activity but is
@@ -691,6 +773,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(resultType != null, nameof(resultType));
             Covenant.Requires<ArgumentNullException>(function != null, nameof(function));
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             object value;
@@ -732,10 +815,13 @@ namespace Neon.Cadence
         /// </note>
         /// </summary>
         /// <returns>The new <see cref="Guid"/>.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         public async Task<Guid> NewGuidAsync()
         {
             await SyncContext.ClearAsync;
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             return await SideEffectAsync(() => Guid.NewGuid());
@@ -752,6 +838,8 @@ namespace Neon.Cadence
         /// </note>
         /// </summary>
         /// <returns>The next random double between: <c>0  &lt;= value &lt; 1.0</c></returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// <note>
         /// The internal random number generator is seeded such that workflow instances
@@ -762,6 +850,7 @@ namespace Neon.Cadence
         {
             await SyncContext.ClearAsync;
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             return await SideEffectAsync(() => random.NextDouble());
@@ -777,6 +866,8 @@ namespace Neon.Cadence
         /// </note>
         /// </summary>
         /// <returns>The next random integer greater than or equal to 0</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// <note>
         /// The internal random number generator is seeded such that workflow instances
@@ -787,6 +878,7 @@ namespace Neon.Cadence
         {
             await SyncContext.ClearAsync;
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             return await SideEffectAsync(() => random.Next());
@@ -803,6 +895,8 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="maxValue">The exclusive upper limit of the value returned.  This cannot be negative.</param>
         /// <returns>The next random integer between: <c>0  &lt;= value &lt; maxValue</c></returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// <note>
         /// The internal random number generator is seeded such that workflow instances
@@ -814,6 +908,7 @@ namespace Neon.Cadence
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(maxValue > 0, nameof(maxValue));
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             return await SideEffectAsync(() => random.Next(maxValue));
@@ -832,6 +927,8 @@ namespace Neon.Cadence
         /// <param name="minValue">The inclusive lower limit of the value returned (may be negative).</param>
         /// <param name="maxValue">The exclusive upper limit of the value returned (may be negative).</param>
         /// <returns>The next random integer between: <c>0  &lt;= value &lt; maxValue</c>.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// <note>
         /// The internal random number generator is seeded such that workflow instances
@@ -843,6 +940,7 @@ namespace Neon.Cadence
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(minValue < maxValue, nameof(minValue));
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             return await SideEffectAsync(() => random.Next(minValue, maxValue));
@@ -859,6 +957,8 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="size">The size of the byte array returned (must be positive)..</param>
         /// <returns>The random bytes.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// <note>
         /// The internal random number generator is seeded such that workflow instances
@@ -870,6 +970,7 @@ namespace Neon.Cadence
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(size > 0, nameof(size));
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             return await SideEffectAsync(
@@ -890,6 +991,8 @@ namespace Neon.Cadence
         /// <typeparam name="T">Specifies the result type.</typeparam>
         /// <param name="function">The side effect function.</param>
         /// <returns>The value returned by the first function call.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// <para>
         /// This is similar to what you could do with a local activity but is
@@ -924,6 +1027,7 @@ namespace Neon.Cadence
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(function != null, nameof(function));
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             T value;
@@ -963,6 +1067,8 @@ namespace Neon.Cadence
         /// <param name="resultType">Specifies the result type.</param>
         /// <param name="function">The side effect function.</param>
         /// <returns>The value returned by the first function call.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// <para>
         /// This is similar to what you could do with a local activity but is
@@ -997,6 +1103,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(resultType != null, nameof(resultType));
             Covenant.Requires<ArgumentNullException>(function != null, nameof(function));
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             object value;
@@ -1033,6 +1140,8 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="duration">The duration to pause.</param>
         /// <returns>The tracking <see cref="Task"/></returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// <note>
         /// This must be used instead of calling <see cref="Task.Delay(TimeSpan)"/> or <see cref="Thread.Sleep(TimeSpan)"/>
@@ -1050,6 +1159,7 @@ namespace Neon.Cadence
         {
             await SyncContext.ClearAsync;
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             var reply = await ExecuteNonParallel(
@@ -1072,6 +1182,8 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="time">The wake time.</param>
         /// <returns>The tracking <see cref="Task"/></returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// <note>
         /// Cadence timers have a resolution of only one second at this time
@@ -1084,6 +1196,7 @@ namespace Neon.Cadence
         {
             await SyncContext.ClearAsync;
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             var utcNow = await UtcNowAsync();
@@ -1099,10 +1212,13 @@ namespace Neon.Cadence
         /// and returned a result.
         /// </summary>
         /// <returns><c>true</c> if the a previous CRON workflow run returned a result.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         public async Task<bool> IsSetLastCompletionResultAsync()
         {
             await SyncContext.ClearAsync;
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             var reply = await ExecuteNonParallel(
@@ -1128,10 +1244,13 @@ namespace Neon.Cadence
         /// </summary>
         /// <typeparam name="TResult">The expected result type.</typeparam>
         /// <returns>The previous run result as bytes or <c>null</c>.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         public async Task<TResult> GetLastCompletionResultAsync<TResult>()
         {
             await SyncContext.ClearAsync;
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             var reply = await ExecuteNonParallel(
@@ -1160,6 +1279,8 @@ namespace Neon.Cadence
         /// <typeparam name="TActivityInterface">The activity interface.</typeparam>
         /// <param name="options">Optionally specifies the activity options.</param>
         /// <returns>The new <see cref="ActivityStub"/>.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// <note>
         /// Unlike workflow stubs, a single activity stub instance can be used to
@@ -1177,6 +1298,7 @@ namespace Neon.Cadence
         {
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             return StubManager.NewActivityStub<TActivityInterface>(Client, this, options);
@@ -1194,6 +1316,8 @@ namespace Neon.Cadence
         /// specified by a <see cref="WorkflowAttribute"/>.
         /// </param>
         /// <returns>The child workflow stub.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
         /// workflow.  You'll need to create a new stub for each workflow you wish to
@@ -1205,6 +1329,7 @@ namespace Neon.Cadence
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             return StubManager.NewChildWorkflowStub<TWorkflowInterface>(Client, this, options, workflowTypeName);
@@ -1216,6 +1341,8 @@ namespace Neon.Cadence
         /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
         /// <param name="options">Optionally specifies the new options to use when continuing the workflow.</param>
         /// <returns>The type-safe stub.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// The workflow stub returned is intended just for continuing the workflow by
         /// calling one of the workflow entry point methods tagged by <see cref="WorkflowMethodAttribute"/>.
@@ -1227,6 +1354,7 @@ namespace Neon.Cadence
         {
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             return StubManager.NewContinueAsNewStub<TWorkflowInterface>(Client, options);
@@ -1238,10 +1366,13 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="execution">Identifies the workflow.</param>
         /// <returns>The workflow stub.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         public ExternalWorkflowStub NewExternalWorkflowStub(WorkflowExecution execution)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             return new ExternalWorkflowStub(Client, execution);
@@ -1254,9 +1385,12 @@ namespace Neon.Cadence
         /// <param name="workflowId">Identifies the workflow.</param>
         /// <param name="domain">Optionally overrides the parent workflow domain.</param>
         /// <returns>The workflow stub.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         public ExternalWorkflowStub NewExternalWorkflowStub(string workflowId, string domain = null)
         {
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             return new ExternalWorkflowStub(Client, new WorkflowExecution(workflowId), domain);
@@ -1270,6 +1404,8 @@ namespace Neon.Cadence
         /// <typeparam name="TActivityImplementation">The activity implementation.</typeparam>
         /// <param name="options">Optionally specifies activity options.</param>
         /// <returns>The new <see cref="ActivityStub"/>.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// <note>
         /// Unlike workflow stubs, a single activity stub instance can be used to
@@ -1304,39 +1440,11 @@ namespace Neon.Cadence
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
             CadenceHelper.ValidateActivityImplementation(typeof(TActivityImplementation));
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             return StubManager.NewLocalActivityStub<TActivityInterface, TActivityImplementation>(Client, this, options);
         }
-
-#if TODO
-        // $todo(jefflill): https://github.com/nforgeio/neonKUBE/issues/615
-
-        /// <summary>
-        /// Creates a new untyped activity client stub that can be used to launch activities.
-        /// </summary>
-        /// <param name="options">Optionally specifies the activity options.</param>
-        /// <returns>The new <see cref="IActivityStub"/>.</returns>
-        /// <remarks>
-        /// <note>
-        /// Unlike workflow stubs, a single activity stub instance can be used to
-        /// launch multiple activities.
-        /// </note>
-        /// <para>
-        /// Activities launched by the returned stub will be scheduled normally
-        /// by Cadence to executed on one of the worker nodes.  Use
-        /// <see cref="NewLocalActivityStub{TActivityInterface, TActivityImplementation}(LocalActivityOptions)"/>
-        /// to execute short-lived activities locally within the current process.
-        /// </para>
-        /// </remarks>
-        public IActivityStub NewUntypedActivityStub(ActivityOptions options = null)
-        {
-            Client.EnsureNotDisposed();
-            SetStackTrace();
-
-            throw new NotImplementedException();
-        }
-#endif
 
         /// <summary>
         /// Creates a specialized stub suitable for starting and running a child workflow in parallel
@@ -1350,6 +1458,8 @@ namespace Neon.Cadence
         /// </param>
         /// <param name="options">Optionally specifies custom <see cref="ChildWorkflowOptions"/>.</param>
         /// <returns>A <see cref="ChildWorkflowStub{TWorkflowInterface}"/> instance.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// <para>
         /// Sometimes workflows need to run child workflows in parallel with other child workflows or
@@ -1452,6 +1562,7 @@ namespace Neon.Cadence
             where TWorkflowInterface : class
         {
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             options = ChildWorkflowOptions.Normalize(Client, options, typeof(TWorkflowInterface));
@@ -1467,6 +1578,8 @@ namespace Neon.Cadence
         /// <param name="workflowTypeName">The workflow type name (see the remarks).</param>
         /// <param name="options">Optionally specifies the child workflow options.</param>
         /// <returns>The <see cref="ChildWorkflowFutureStub"/>.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// <para>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
@@ -1497,6 +1610,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
 
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             return new ChildWorkflowFutureStub(this, workflowTypeName, options);
@@ -1511,6 +1625,8 @@ namespace Neon.Cadence
         /// <param name="workflowTypeName">The workflow type name (see the remarks).</param>
         /// <param name="options">Optionally specifies the child workflow options.</param>
         /// <returns>The <see cref="ChildWorkflowFutureStub"/>.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// <para>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
@@ -1541,6 +1657,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
 
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             return new UntypedChildWorkflowFutureStub<TResult>(this, workflowTypeName, options);
@@ -1553,10 +1670,13 @@ namespace Neon.Cadence
         /// <param name="execution">The target <see cref="WorkflowExecution"/>.</param>
         /// <param name="domain">Optionally specifies the target domain.  This defaults to the parent workflow's domain.</param>
         /// <returns>The <see cref="ExternalWorkflowStub"/>.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         public ExternalWorkflowStub NewUntypedExternalWorkflowStub(WorkflowExecution execution, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             throw new NotImplementedException();
@@ -1569,9 +1689,12 @@ namespace Neon.Cadence
         /// <param name="workflowId">The target workflow ID.</param>
         /// <param name="domain">Optionally specifies the target domain.  This defaults to the parent workflow's domain.</param>
         /// <returns>The <see cref="ExternalWorkflowStub"/>.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         public ExternalWorkflowStub NewUntypedExternalWorkflowStub(string workflowId, string domain = null)
         {
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             throw new NotImplementedException();
@@ -1589,6 +1712,8 @@ namespace Neon.Cadence
         /// </param>
         /// <param name="options">Optionally specifies the activity options.</param>
         /// <returns>The new <see cref="ActivityFutureStub{TActivityInterface}"/>.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// <para>
         /// Sometimes workflows need to run activities in parallel with other child workflows or
@@ -1709,6 +1834,7 @@ namespace Neon.Cadence
         {
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             options = ActivityOptions.Normalize(Client, options, typeof(TActivityInterface));
@@ -1729,6 +1855,8 @@ namespace Neon.Cadence
         /// </param>
         /// <param name="options">Optionally specifies the local activity options.</param>
         /// <returns>The new <see cref="NewStartLocalActivityStub{TActivityInterface, TActivityImplementation}(string, LocalActivityOptions)"/>.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// <para>
         /// Sometimes workflows need to run local activities in parallel with other child workflows or
@@ -1850,6 +1978,7 @@ namespace Neon.Cadence
         {
             CadenceHelper.ValidateActivityInterface(typeof(TActivityInterface));
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
             return new LocalActivityFutureStub<TActivityInterface, TActivityImplementation>(this, methodName, options);
@@ -1865,11 +1994,12 @@ namespace Neon.Cadence
         /// Specifies the maximum number items the queue may hold.
         /// </para>
         /// <note>
-        /// This defaults to <b>2</b> and may not be less than <b>2</b>.
+        /// This defaults to <see cref="WorkflowQueue{T}.DefaultCapacity"/>.
         /// </note>
         /// </param>
         /// <returns>The new <see cref="WorkflowQueue{T}"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// <para>
         /// You may write and read data items from the returned queue.  Writes
@@ -1885,11 +2015,12 @@ namespace Neon.Cadence
         /// See <see cref="WorkflowQueue{T}"/> for more information.
         /// </para>
         /// </remarks>
-        public async Task<WorkflowQueue<T>> NewQueueAsync<T>(int capacity = 2)
+        public async Task<WorkflowQueue<T>> NewQueueAsync<T>(int capacity = WorkflowQueue<T>.DefaultCapacity)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentException>(capacity >= 2, nameof(capacity), "Queue capacity cannot be less than [2].");
             Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
 
             var queueId = Interlocked.Increment(ref nextQueueId);
 
@@ -1899,16 +2030,17 @@ namespace Neon.Cadence
                     return (WorkflowQueueNewReply)await Client.CallProxyAsync(
                         new WorkflowQueueNewRequest()
                         {
-                             QueueId  = queueId,
-                             Capacity = capacity
+                            ContextId = this.ContextId,
+                            QueueId   = queueId,
+                            Capacity  = capacity
                         });
                 });
 
             reply.ThrowOnError();
 
-            return new WorkflowQueue<T>(this, queueId);
+            return new WorkflowQueue<T>(this, queueId, capacity);
         }
-        
+
         //---------------------------------------------------------------------
         // Internal activity related methods used by dynamically generated activity stubs.
 
@@ -1923,10 +2055,11 @@ namespace Neon.Cadence
         /// An exception derived from <see cref="CadenceException"/> will be be thrown 
         /// if the child workflow did not complete successfully.
         /// </exception>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
-        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
-        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
         internal async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args = null, ActivityOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName), nameof(activityTypeName));
@@ -1981,6 +2114,7 @@ namespace Neon.Cadence
         /// <param name="activityConstructor">The activity constructor.</param>
         /// <param name="activityMethod">The target local activity method.</param>
         /// <returns>The new local activity action ID.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
         internal long RegisterActivityAction(Type activityType, ConstructorInfo activityConstructor, MethodInfo activityMethod)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
@@ -2019,10 +2153,11 @@ namespace Neon.Cadence
         /// instantiate an instance of <paramref name="activityType"/> and call its
         /// <paramref name="activityMethod"/> method.
         /// </remarks>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
-        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
-        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
         internal async Task<byte[]> ExecuteLocalActivityAsync(Type activityType, ConstructorInfo activityConstructor, MethodInfo activityMethod, byte[] args = null, LocalActivityOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
@@ -2070,7 +2205,7 @@ namespace Neon.Cadence
         {
             await Task.CompletedTask;
 
-            throw new CadenceForceReplayException();
+            throw new ForceReplayException();
         }
     }
 }

@@ -75,6 +75,12 @@ func CreateNewTypedMessage(messageType internal.MessageType) IProxyMessage {
 	case internal.DomainDeprecateRequest:
 		message = NewDomainDeprecateRequest()
 
+	// DomainList
+	case internal.DomainListReply:
+		message = NewDomainListReply()
+	case internal.DomainListRequest:
+		message = NewDomainListRequest()
+
 	// Heartbeat
 	case internal.HeartbeatReply:
 		message = NewHeartbeatReply()
@@ -116,6 +122,12 @@ func CreateNewTypedMessage(messageType internal.MessageType) IProxyMessage {
 		message = NewLogReply()
 	case internal.LogRequest:
 		message = NewLogRequest()
+
+	// DescribeTaskList
+	case internal.DescribeTaskListReply:
+		message = NewDescribeTaskListReply()
+	case internal.DescribeTaskListRequest:
+		message = NewDescribeTaskListRequest()
 
 	// --------------------------------------------------------------------------
 	// Workflow messages
@@ -299,12 +311,6 @@ func CreateNewTypedMessage(messageType internal.MessageType) IProxyMessage {
 		message = NewWorkflowQueueReadReply()
 	case internal.WorkflowQueueReadRequest:
 		message = NewWorkflowQueueReadRequest()
-
-	// WorkflowQueueLength
-	case internal.WorkflowQueueLengthReply:
-		message = NewWorkflowQueueLengthReply()
-	case internal.WorkflowQueueLengthRequest:
-		message = NewWorkflowQueueLengthRequest()
 
 	// WorkflowQueueClose
 	case internal.WorkflowQueueCloseReply:

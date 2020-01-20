@@ -18,7 +18,10 @@
 package messages
 
 import (
+	cadenceshared "go.uber.org/cadence/.gen/go/shared"
+
 	internal "github.com/cadence-proxy/internal"
+	proxyclient "github.com/cadence-proxy/internal/cadence/client"
 )
 
 type (
@@ -50,24 +53,84 @@ func NewDescribeTaskListRequest() *DescribeTaskListRequest {
 	return request
 }
 
-// GetTaskList gets the TaskList property from the DescribeTaskListRequest's
-// properties map.  The TaskList property specifies the cadence tasklist to
-// be described.
+// GetName gets the Name property from the DescribeTaskListRequest's
+// properties map, identifies the task list.
 //
-// returns *string -> pointer to the string in memory holding the value of
-// the TaskList property in the DescribeTaskListRequest.
-func (request *DescribeTaskListRequest) GetTaskList() *string {
-	return request.GetStringProperty("TaskList")
+// returns *string -> the task list name.
+func (request *DescribeTaskListRequest) GetName() *string {
+	return request.GetStringProperty("Name")
 }
 
-// SetTaskList sets the TaskList property in the DescribeTaskListRequest's
-// properties map.  The TaskList property specifies the cadence tasklist to
-// be described.
+// SetName sets the Name property in the DescribeTaskListRequest's
+// properties map, identifies the task list.
 //
-// param value *string -> pointer to the string in memory holding the value of
-// the TaskList property in the DescribeTaskListRequest.
-func (request *DescribeTaskListRequest) SetTaskList(value *string) {
-	request.SetStringProperty("TaskList", value)
+// param value *string -> the task list name.
+func (request *DescribeTaskListRequest) SetName(value *string) {
+	request.SetStringProperty("Name", value)
+}
+
+// GetDomain gets the Domain property from the DescribeTaskListRequest's
+// properties map, identifies the target domain.
+//
+// returns *string -> the task list domain.
+func (request *DescribeTaskListRequest) GetDomain() *string {
+	return request.GetStringProperty("Domain")
+}
+
+// SetDomain sets the Domain property in the DescribeTaskListRequest's
+// properties map, identifies the target domain.
+//
+// param value *string -> the task list domain.
+func (request *DescribeTaskListRequest) SetDomain(value *string) {
+	request.SetStringProperty("Domain", value)
+}
+
+// GetTaskListType gets the TaskListType property from the DescribeTaskListRequest's
+// properties map, identifies the type of task list being requested:
+// decision (AKA workflow) or activity.
+//
+// returns *cadenceshared.TaskListType -> the TaskListType.
+func (request *DescribeTaskListRequest) GetTaskListType() *cadenceshared.TaskListType {
+	taskListTypePtr := request.GetStringProperty("TaskListType")
+	if taskListTypePtr == nil {
+		return nil
+	}
+
+	return proxyclient.StringToTaskListType(*taskListTypePtr)
+}
+
+// SetTaskListType sets the TaskListType property in the DescribeTaskListRequest's
+// properties map, identifies the type of task list being requested:
+// decision (AKA workflow) or activity.
+//
+// param value cadenceshared.TaskListType -> the TaskListType.
+func (request *DescribeTaskListRequest) SetTaskListType(value *cadenceshared.TaskListType) {
+	taskListType := value.String()
+	request.SetStringProperty("TaskListType", &taskListType)
+}
+
+// GetTaskListKind gets the TaskListKind property from the DescribeTaskListRequest's
+// properties map, identifies the type of task list being requested:
+// decision (AKA workflow) or activity.
+//
+// returns *cadenceshared.TaskListKind -> the TaskListKind.
+func (request *DescribeTaskListRequest) GetTaskListKind() *cadenceshared.TaskListKind {
+	taskListKindPtr := request.GetStringProperty("TaskListKind")
+	if taskListKindPtr == nil {
+		return nil
+	}
+
+	return proxyclient.StringToTaskListKind(*taskListKindPtr)
+}
+
+// SetTaskListKind sets the TaskListKind property in the DescribeTaskListRequest's
+// properties map, identifies the type of task list being requested:
+// decision (AKA workflow) or activity.
+//
+// param value cadenceshared.TaskListKind -> the TaskListKind.
+func (request *DescribeTaskListRequest) SetTaskListKind(value *cadenceshared.TaskListKind) {
+	taskListKind := value.String()
+	request.SetStringProperty("TaskListKind", &taskListKind)
 }
 
 // -------------------------------------------------------------------------
@@ -86,6 +149,8 @@ func (request *DescribeTaskListRequest) Clone() IProxyMessage {
 func (request *DescribeTaskListRequest) CopyTo(target IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
 	if v, ok := target.(*DescribeTaskListRequest); ok {
-		v.SetTaskList(request.GetTaskList())
+		v.SetName(request.GetName())
+		v.SetDomain(request.GetDomain())
+		v.SetTaskListType(request.GetTaskListType())
 	}
 }

@@ -32,6 +32,7 @@ daemonset:
     setup.template:
       name: 'metricbeat'
       pattern: 'metricbeat-*'
+    setup.ilm.enabled: false
     setup.dashboards:
       index: "metricbeat-*"
   # If overrideConfig is not empty, metricbeat chart's default config won't be used at all.
@@ -104,6 +105,7 @@ deployment:
     setup.template:
       name: 'metricbeat'
       pattern: 'metricbeat-*'
+    setup.ilm.enabled: false
     setup.dashboards:
       index: "metricbeat-*"
     processors:

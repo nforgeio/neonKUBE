@@ -434,6 +434,11 @@
             </summary>
             <returns>The bitmap string.</returns>
         </member>
+        <member name="T:Neon.Collections.NamespaceDoc">
+            <summary>
+            This namespace defines a handful of probably archaic custom collection classes.
+            </summary>
+        </member>
         <member name="T:Neon.Collections.NiceDictionary`2">
             <summary>
             A dictionary of values where the indexer will return the default value
@@ -2726,16 +2731,6 @@
             <param name="cancellationToken">The optional cancellation token.</param>
             <exception cref="T:System.TimeoutException">Thrown if the <paramref name="timeout"/> was exceeded.</exception>
         </member>
-        <member name="M:Neon.Common.NeonHelper.WaitForParallel(System.Collections.Generic.IEnumerable{System.Action},System.Nullable{System.TimeSpan},System.Threading.CancellationToken)">
-            <summary>
-            Performs zero or more actions in parallel, synchronously waiting for all of them
-            to completed.
-            </summary>
-            <param name="actions">The actions to be performed.</param>
-            <param name="timeout">The optional timeout.</param>
-            <param name="cancellationToken">The optional cancellation token.</param>
-            <exception cref="T:System.TimeoutException">Thrown if the <paramref name="timeout"/> was exceeded.</exception>
-        </member>
         <member name="M:Neon.Common.NeonHelper.JTokenEquals(Newtonsoft.Json.Linq.JToken,Newtonsoft.Json.Linq.JToken)">
             <summary>
             Compares the two Newtonsoft JSON.NET <see cref="T:Newtonsoft.Json.Linq.JToken"/> instances along
@@ -2745,23 +2740,6 @@
             <param name="token1">The first token.</param>
             <param name="token2">The second token.</param>
             <returns><c>true</c> if the tokens are to be considered as equal.</returns>
-            <remarks>
-            <para>
-            I have run into a situation in the <c>Neon.Couchbase.Dynamic.DynamicEntity</c> implementation
-            where I've serialized a Couchbase Lite document and then when loading the updated
-            revision, <see cref="P:Newtonsoft.Json.Linq.JToken.EqualityComparer"/> indicates that two properties with
-            the same name and <c>null</c> values are different.
-            </para>
-            <para>
-            I think the basic problem is that a NULL token has a different token type than
-            a string token with a NULL value and also that some token types such as <see cref="F:Newtonsoft.Json.Linq.JTokenType.Date"/>,
-            <see cref="F:Newtonsoft.Json.Linq.JTokenType.Guid"/>, <see cref="F:Newtonsoft.Json.Linq.JTokenType.TimeSpan"/>, and <see cref="F:Newtonsoft.Json.Linq.JTokenType.Uri"/> 
-            will be round tripped as <see cref="F:Newtonsoft.Json.Linq.JTokenType.String"/> values.
-            </para>
-            <para>
-            This method addresses these issues.
-            </para>
-            </remarks>
         </member>
         <member name="M:Neon.Common.NeonHelper.StripFileScheme(System.String)">
             <summary>
@@ -2885,6 +2863,24 @@
             <param name="input">The input string.</param>
             <returns>The decoded bytes.</returns>
             <exception cref="T:System.NullReferenceException">Thrown if <paramref name="input"/> is <c>null</c>.</exception>
+        </member>
+        <member name="M:Neon.Common.NeonHelper.Base64UrlEncode(System.Byte[],System.Boolean)">
+            <summary>
+            Encodes a byte array using <b>Base64Url</b> encoding as specifed here: <a href="">RFC 4648</a>
+            </summary>
+            <param name="bytes">The input byte array.</param>
+            <param name="retainPadding">
+            Optionally onverts any '=' characters padding into escaped "%3D", otherwise
+            any padding will be omitted from the output.
+            </param>
+            <returns>The Base64Url encoded string.</returns>
+        </member>
+        <member name="M:Neon.Common.NeonHelper.Base64UrlDecode(System.String)">
+            <summary>
+            
+            </summary>
+            <param name="encoded"></param>
+            <returns></returns>
         </member>
         <member name="M:Neon.Common.NeonHelper.GetAssemblyFolder(System.Reflection.Assembly)">
             <summary>
@@ -4097,120 +4093,10 @@
             emulated program must exit cleanly when this returns.
             </summary>
         </member>
-        <member name="T:Neon.Common.NeonServiceMap">
+        <member name="T:Neon.Common.NamespaceDoc">
             <summary>
-            Holds more detailed information describing the Neon cluster services.  This a
-            <see cref="T:Neon.Service.ServiceMap"/> keyed by the service names defined in <see cref="T:Neon.Common.NeonServices"/>
-            and the class also has properties named for each service you can use as a shortcut.
-            </summary>
-            <remarks>
-            <note>
-            The default constructor builds a <see cref="T:Neon.Common.NeonServiceMap"/> for all environments, and clones
-            them for each Dev's workstation in the Neon Office, setting the correct static IP.
-            </note>
-            </remarks>
-        </member>
-        <member name="F:Neon.Common.NeonServiceMap.DefaultEndpointName">
-            <summary>
-            The default service endpoint name.
-            </summary>
-        </member>
-        <member name="F:Neon.Common.NeonServiceMap.serviceMaps">
-            <summary>
-            Returns a dictionary holding all service maps.
-            </summary>
-        </member>
-        <member name="P:Neon.Common.NeonServiceMap.Production">
-            <summary>
-            Returns the Production internal service map.
-            </summary>
-        </member>
-        <member name="M:Neon.Common.NeonServiceMap.GetMapName(System.String)">
-            <summary>
-            Returns the $NAME service map.
-            </summary>
-        </member>
-        <member name="M:Neon.Common.NeonServiceMap.#cctor">
-            <summary>
-            Constructor.
-            </summary>
-        </member>
-        <member name="M:Neon.Common.NeonServiceMap.VerifyInit(Neon.Common.NeonServiceMap)">
-            <summary>
-            Ensure that the service description properties have been initialized
-            for all service endpoints.
-            </summary>
-            <param name="map"></param>
-        </member>
-        <member name="M:Neon.Common.NeonServiceMap.BuildProduction">
-            <summary>
-            Builds the <see cref="T:Neon.Common.NeonServiceMap"/> for internal production services.
-            </summary>
-        </member>
-        <member name="M:Neon.Common.NeonServiceMap.CloneWithNewAdress(Neon.Common.NeonServiceMap,System.String)">
-            <summary>
-            Clones a <see cref="T:Neon.Common.NeonServiceMap"/> and changes the <see cref="P:Neon.Service.ServiceDescription.Address"/> for each of the services.
-            </summary>
-        </member>
-        <member name="M:Neon.Common.NeonServiceMap.AddServiceDescription(System.String,Neon.Service.ServiceEndpoint,System.String)">
-            <summary>
-            Adds a <see cref="T:Neon.Service.ServiceDescription"/> for the named service using
-            default details and specifying an optional network endpoint.
-            </summary>
-            <param name="serviceName">The service name.</param>
-            <param name="endpoint">Optionally specifies a single service endpoint.</param>
-            <param name="namespace">The K8s namespace where the service is deployed.</param>
-            <returns>
-            The <see cref="T:Neon.Service.ServiceDescription"/> so that it can be customized further if necessary.
-            </returns>
-            <remarks>
-            This method also initializes any service endpoint <see cref="P:Neon.Service.ServiceEndpoint.ServiceDescription"/>
-            properties to the service description being created and initializes blank or <c>null</c> endpoint
-            names to <see cref="F:Neon.Common.NeonServiceMap.DefaultEndpointName"/>.
-            </remarks>
-        </member>
-        <member name="M:Neon.Common.NeonServiceMap.AddServiceDescription(System.String,System.Collections.Generic.IEnumerable{Neon.Service.ServiceEndpoint})">
-            <summary>
-            Adds a <see cref="T:Neon.Service.ServiceDescription"/> for the named service using
-            default details with a set of network endpoints.
-            </summary>
-            <param name="serviceName">The service name or <c>null</c>.</param>
-            <param name="endpoints">The service's network endpoints.</param>
-            <returns>
-            The <see cref="T:Neon.Service.ServiceDescription"/> so that it can be customized further if necessary.
-            </returns>
-            <remarks>
-            This method also initializes any service endpoints <see cref="P:Neon.Service.ServiceEndpoint.ServiceDescription"/>
-            properties to the service description being created and initializes blank or <c>null</c> endpoint
-            names to <see cref="F:Neon.Common.NeonServiceMap.DefaultEndpointName"/>.
-            </remarks>
-        </member>
-        <member name="M:Neon.Common.NeonServiceMap.Lookup(System.String)">
-            <summary>
-            Returns the <see cref="T:Neon.Service.ServiceDescription"/> for the given service name.
-            </summary>
-            <param name="serviceName">The service name.</param>
-            <returns>The associated <see cref="T:Neon.Service.ServiceDescription"/>.</returns>
-            <exception cref="T:System.Collections.Generic.KeyNotFoundException">Thrown if thre service map has no description for the service.</exception>
-        </member>
-        <member name="T:Neon.Common.NeonServices">
-            <summary>
-            Defines the Neon service names.  
-            </summary>
-        </member>
-        <member name="F:Neon.Common.NeonServices.ClusterManager">
-            <summary>
-            Cluster Manager Operator.
-            </summary>
-        </member>
-        <member name="F:Neon.Common.NeonServices.Elasticsearch">
-            <summary>
-            Elasticsearch.
-            </summary>
-        </member>
-        <member name="F:Neon.Common.NeonServices.Kibana">
-            <summary>
-            Kibana.
+            This namespace includes a a lot of types used by the remaining class libraries. 
+            You might find some of these useful as well.
             </summary>
         </member>
         <member name="T:Neon.Csv.CsvReader">
@@ -4562,6 +4448,11 @@
             </summary>
             <param name="args">The arguments.</param>
         </member>
+        <member name="T:Neon.Csv.NamespaceDoc">
+            <summary>
+            This namespace includes types for reading and writing Comma Separated Value (CSV) formatted data.
+            </summary>
+        </member>
         <member name="T:Neon.Data.DateTimeJsonConverter">
             <summary>
             <para>
@@ -4826,6 +4717,11 @@
             </summary>
             <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
         </member>
+        <member name="T:Neon.Data.NamespaceDoc">
+            <summary>
+            This namespace defines some data converters as well as types and interfaces supporting ModelGen generated data types.
+            </summary>
+        </member>
         <member name="T:Neon.Data.NotifyPropertyChanged">
             <summary>
             A common implementation of <see cref="T:System.ComponentModel.INotifyPropertyChanged"/>.
@@ -4969,7 +4865,7 @@
         </member>
         <member name="M:Neon.Data.RoundtripDataHelper.GetPersistedKey(System.String,System.Object[])">
             <summary>
-            Generates an database key for a persisted entity.
+            Generates an database key for a persisted entity from one or more arguments.
             </summary>
             <param name="persistedType">The entity type string.</param>
             <param name="args">Arguments identifying the entity.</param>
@@ -5733,6 +5629,11 @@
             </summary>
             <param name="message">The optional message to be recorded.</param>
         </member>
+        <member name="T:Neon.Diagnostics.NamespaceDoc">
+            <summary>
+            This namespace includes the common logging code used throughout Neon applications and libraries.
+            </summary>
+        </member>
         <member name="T:Neon.Diagnostics.NeonLogger">
             <summary>
             A general purpose implementation of <see cref="T:Neon.Diagnostics.INeonLogger"/> and <see cref="T:Microsoft.Extensions.Logging.ILogger"/>.
@@ -6459,6 +6360,11 @@
         </member>
         <member name="M:Neon.IO.LinuxPermissions.ToString">
             <inheritdoc/>
+        </member>
+        <member name="T:Neon.IO.NamespaceDoc">
+            <summary>
+            This namespace includes some handy file and stream related types.
+            </summary>
         </member>
         <member name="T:Neon.IO.PreprocessReader">
             <summary>
@@ -8366,6 +8272,69 @@
             </summary>
             <exception cref="T:Neon.Net.HttpException">Thrown if the response doesn't indicate success.</exception>
         </member>
+        <member name="T:Neon.Net.Jwt">
+            <summary>
+            A lightweight implementation of Json Web Token (JWT) suitable for use by
+            client applications.  The JWT structure is described <a href="https://jwt.io/introduction/">here</a>.
+            </summary>
+        </member>
+        <member name="M:Neon.Net.Jwt.Parse(System.String)">
+            <summary>
+            <para>
+            Parses a <see cref="T:Neon.Net.Jwt"/> from an encoded string.
+            </para>
+            <note>
+            <b>WARNING:</b> This method <b>does not verify the signature</b> so it is <b>not suitable for
+            verifying a JWT's authenticity</b>.
+            </note>
+            </summary>
+            <param name="jwtString">The encoded JWT string.</param>
+            <returns>The parsed <see cref="T:Neon.Net.Jwt"/> instance.</returns>
+            <exception cref="T:System.FormatException">Thrown if the JWT format is invalid.</exception>
+        </member>
+        <member name="M:Neon.Net.Jwt.#ctor(System.String)">
+            <summary>
+            Private constructor.
+            </summary>
+            <param name="jwtString">The encoded JWT string.</param>
+            <exception cref="T:System.FormatException">Thrown if the JWT format is invalid.</exception>
+        </member>
+        <member name="P:Neon.Net.Jwt.Header">
+            <summary>
+            Returns a Newtonsoft <see cref="T:Newtonsoft.Json.Linq.JObject"/> with the JWT <b>header</b> properties.
+            </summary>
+        </member>
+        <member name="P:Neon.Net.Jwt.Payload">
+            <summary>
+            Returns a Newtonsoft <see cref="T:Newtonsoft.Json.Linq.JObject"/> with the JWT <b>payload</b> properties.
+            </summary>
+        </member>
+        <member name="P:Neon.Net.Jwt.Signature">
+            <summary>
+            Returns the JWT <b>signature</b> as a byte array.
+            </summary>
+        </member>
+        <member name="M:Neon.Net.Jwt.ToString">
+            <summary>
+            <para>
+            Renders the JWT back into its encoded string format.
+            </para>
+            <note>
+            This method currently returns the original string used to parse the JWT.  It does
+            not actually perform any encoding so any changes made to the properties will not
+            be included in the output.
+            </note>
+            </summary>
+            <returns>The encode JWT.</returns>
+            <exception cref="T:System.InvalidOperationException">Thrown if the JWT wasn't parsed from a string.</exception>
+        </member>
+        <member name="T:Neon.Net.NamespaceDoc">
+            <summary>
+            This namespace defines <see cref="T:Neon.Net.JsonClient"/> which makes calling REST APIs easier as well
+            as a handful of other network related utilities provided by <see cref="T:Neon.Net.NetHelper"/> and
+            <see cref="T:Neon.Net.Pinger"/>.
+            </summary>
+        </member>
         <member name="T:Neon.Net.NetConst">
             <summary>
             Network related constants.
@@ -8589,6 +8558,12 @@
             <param name="address">The IP address.</param>
             <returns>The free port number.</returns>
             <exception cref="T:Neon.Net.NetworkException">Thrown when there are no available ports.</exception>
+        </member>
+        <member name="M:Neon.Net.NetHelper.GetRoutableIpAddress">
+            <summary>
+            Returns a routable (non-loopback) IPv4 address for the current machine.
+            </summary>
+            <returns>The IP address or <c>null</c> if there doesn't appear to be a connected network interface.</returns>
         </member>
         <member name="T:Neon.Net.NetworkCidr">
             <summary>
@@ -9354,6 +9329,11 @@
         <member name="M:Neon.Retry.LinearRetryPolicy.InvokeAsync``1(System.Func{System.Threading.Tasks.Task{``0}})">
             <inheritdoc/>
         </member>
+        <member name="T:Neon.Retry.NamespaceDoc">
+            <summary>
+            This namespace includes simple types that can be used to mitigate transient errors.
+            </summary>
+        </member>
         <member name="T:Neon.Retry.NoRetryPolicy">
             <summary>
             Implements an <see cref="T:Neon.Retry.IRetryPolicy"/> that does not attempt to retry operations.
@@ -9481,14 +9461,14 @@
         </member>
         <member name="M:Neon.Retry.TransientDetector.Always(System.Exception)">
             <summary>
-            Always determines that the exception is always transient.
+            Considers <b>every</b> exceptions to be transient.
             </summary>
             <param name="e">The potential transient exception.</param>
             <returns><c>true</c></returns>
         </member>
         <member name="M:Neon.Retry.TransientDetector.Never(System.Exception)">
             <summary>
-            Never determines that the exception is never transient.
+            Considers <b>no</b> exceptions to be transient.
             </summary>
             <param name="e">The potential transient exception.</param>
             <returns><c>false</c></returns>
@@ -9558,6 +9538,132 @@
             </summary>
             <param name="message">The message.</param>
             <param name="innerException">Optional inner exception.</param>
+        </member>
+        <member name="T:Neon.Service.NamespaceDoc">
+            <summary>
+            This namespace defines types used to describe an application service.
+            </summary>
+        </member>
+        <member name="T:Neon.Service.NeonServiceMap">
+            <summary>
+            Holds more detailed information describing the Neon cluster services.  This a
+            <see cref="T:Neon.Service.ServiceMap"/> keyed by the service names defined in <see cref="T:Neon.Service.NeonServices"/>
+            and the class also has properties named for each service you can use as a shortcut.
+            </summary>
+            <remarks>
+            <note>
+            The default constructor builds a <see cref="T:Neon.Service.NeonServiceMap"/> for all environments, and clones
+            them for each Dev's workstation in the Neon Office, setting the correct static IP.
+            </note>
+            </remarks>
+        </member>
+        <member name="F:Neon.Service.NeonServiceMap.DefaultEndpointName">
+            <summary>
+            The default service endpoint name.
+            </summary>
+        </member>
+        <member name="F:Neon.Service.NeonServiceMap.serviceMaps">
+            <summary>
+            Returns a dictionary holding all service maps.
+            </summary>
+        </member>
+        <member name="P:Neon.Service.NeonServiceMap.Production">
+            <summary>
+            Returns the Production internal service map.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.NeonServiceMap.GetMapName(System.String)">
+            <summary>
+            Returns the $NAME service map.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.NeonServiceMap.#cctor">
+            <summary>
+            Constructor.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.NeonServiceMap.VerifyInit(Neon.Service.NeonServiceMap)">
+            <summary>
+            Ensure that the service description properties have been initialized
+            for all service endpoints.
+            </summary>
+            <param name="map"></param>
+        </member>
+        <member name="M:Neon.Service.NeonServiceMap.BuildProduction">
+            <summary>
+            Builds the <see cref="T:Neon.Service.NeonServiceMap"/> for internal production services.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.NeonServiceMap.CloneWithNewAdress(Neon.Service.NeonServiceMap,System.String)">
+            <summary>
+            Clones a <see cref="T:Neon.Service.NeonServiceMap"/> and changes the <see cref="P:Neon.Service.ServiceDescription.Address"/> for each of the services.
+            </summary>
+        </member>
+        <member name="M:Neon.Service.NeonServiceMap.AddServiceDescription(System.String,Neon.Service.ServiceEndpoint,System.String)">
+            <summary>
+            Adds a <see cref="T:Neon.Service.ServiceDescription"/> for the named service using
+            default details and specifying an optional network endpoint.
+            </summary>
+            <param name="serviceName">The service name.</param>
+            <param name="endpoint">Optionally specifies a single service endpoint.</param>
+            <param name="namespace">The K8s namespace where the service is deployed.</param>
+            <returns>
+            The <see cref="T:Neon.Service.ServiceDescription"/> so that it can be customized further if necessary.
+            </returns>
+            <remarks>
+            This method also initializes any service endpoint <see cref="P:Neon.Service.ServiceEndpoint.ServiceDescription"/>
+            properties to the service description being created and initializes blank or <c>null</c> endpoint
+            names to <see cref="F:Neon.Service.NeonServiceMap.DefaultEndpointName"/>.
+            </remarks>
+        </member>
+        <member name="M:Neon.Service.NeonServiceMap.AddServiceDescription(System.String,System.Collections.Generic.IEnumerable{Neon.Service.ServiceEndpoint})">
+            <summary>
+            Adds a <see cref="T:Neon.Service.ServiceDescription"/> for the named service using
+            default details with a set of network endpoints.
+            </summary>
+            <param name="serviceName">The service name or <c>null</c>.</param>
+            <param name="endpoints">The service's network endpoints.</param>
+            <returns>
+            The <see cref="T:Neon.Service.ServiceDescription"/> so that it can be customized further if necessary.
+            </returns>
+            <remarks>
+            This method also initializes any service endpoints <see cref="P:Neon.Service.ServiceEndpoint.ServiceDescription"/>
+            properties to the service description being created and initializes blank or <c>null</c> endpoint
+            names to <see cref="F:Neon.Service.NeonServiceMap.DefaultEndpointName"/>.
+            </remarks>
+        </member>
+        <member name="M:Neon.Service.NeonServiceMap.Lookup(System.String)">
+            <summary>
+            Returns the <see cref="T:Neon.Service.ServiceDescription"/> for the given service name.
+            </summary>
+            <param name="serviceName">The service name.</param>
+            <returns>The associated <see cref="T:Neon.Service.ServiceDescription"/>.</returns>
+            <exception cref="T:System.Collections.Generic.KeyNotFoundException">Thrown if thre service map has no description for the service.</exception>
+        </member>
+        <member name="T:Neon.Service.NeonServices">
+            <summary>
+            Defines the Neon service names.  
+            </summary>
+        </member>
+        <member name="F:Neon.Service.NeonServices.ClusterManager">
+            <summary>
+            Cluster Manager Operator.
+            </summary>
+        </member>
+        <member name="F:Neon.Service.NeonServices.Elasticsearch">
+            <summary>
+            Elasticsearch.
+            </summary>
+        </member>
+        <member name="F:Neon.Service.NeonServices.Kibana">
+            <summary>
+            Kibana.
+            </summary>
+        </member>
+        <member name="F:Neon.Service.NeonServices.TestCadence">
+            <summary>
+            Non-production service used to test Cadence running in a Linux container.
+            </summary>
         </member>
         <member name="T:Neon.Service.ServiceApiContact">
             <summary>
@@ -10389,6 +10495,14 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="T:Neon.Tasks.NamespaceDoc">
+            <summary>
+            This namespace includes a handful of types that implement the async equivalent of
+            primitives like <b>auto/manual reset events</b>, <b>mutexes</b>, <b>reader/writer locks</b>, 
+            and <b>timers</b>.  This also includes <b>SyncContext</b> which can be used to easily
+            clear the synchronization context within API implementations.
+            </summary>
+        </member>
         <member name="T:Neon.Tasks.NonDisposableTask">
             <summary>
             Used to convert a <see cref="T:System.Threading.Tasks.Task"/> into an awaitable that that does not
@@ -10432,6 +10546,165 @@
         <member name="M:Neon.Tasks.NonDisposableTask`1.GetAwaiter">
             <summary>
             Returns the task's awaiter.
+            </summary>
+        </member>
+        <member name="T:Neon.Tasks.SyncContext">
+            <summary>
+            Used by public <c>async</c> library methods to reset the current
+            task <see cref="T:System.Threading.SynchronizationContext"/> so that continuations won't
+            be marshalled back to the current thread, improving performance.
+            </summary>
+            <remarks>
+            <para>
+            This class was adapted from this blog post:
+            </para>
+            <para>
+            <a href="https://blogs.msdn.microsoft.com/benwilli/2017/02/09/an-alternative-to-configureawaitfalse-everywhere/"/>
+            </para>
+            <para>
+            The only real changes are that I renamed the structure and converted
+            it into a singleton.
+            </para>
+            <para>
+            By default, awaited tasks will always be completed on the calling thread.  This is typically required 
+            for applications with user interfaces such as XAML or Windows Forms applications because the awaiter
+            will typically need the results on the single UI thread to be able to manuiplate the user interface.
+            This behavior is great for UI apps, but can introduce substantial overhead for server applications
+            or even portions of UI apps where an async operation performs a lot other async operations.
+            </para>
+            <para>
+            The problem is that typical servers applications run asynchronously on thread pool threads and don't
+            generally care about the thread they're running on.  The default await behavior requires that each
+            async operation be completed on the calling thread, but under load, it's very likely that the calling
+            thread will have been reused for another operation.  This means that when the async operation completes,
+            the task will need to wait for the calling thread to be returned to the thread pool before it can be
+            fetched and task continuation executed on it.  This can result in a substantial performance hit just
+            to manage this process as well what may be a substantial amount of time for the original thread to
+            make it back to the pool.
+            </para>
+            <para>
+            As the blog post describes, developers are encouraged to call <see cref="M:System.Threading.Tasks.Task.ConfigureAwait(System.Boolean)"/>,
+            passing <c>false</c> for every <c>async</c> call where the result doesn't need to be marshalled back
+            to the original synchronization context.  Non-UI class libraries typically don't care about this.
+            </para>
+            <para>
+            The problem is that to do this properly, MSFT recommends that you call <c>Task.ConfigureAwait(false)</c>
+            on <b>EVERY</b> <c>async</c> call you made in these situations.  This is pretty ugly and will be tough
+            to enforce on large projects over long periods of time because it's easy to miss one.
+            </para>
+            <para>
+            This <c>struct</c> implements a custom awaiter that saves the current synchronization context and then
+            clears it for the rest of the current method execution and then restores the original context when
+            when the method returns.  This means that every subsequent <c>await</c>  performed in the method will 
+            simply fetch a pool thread to continue execution, rather than to the original context thread.  To
+            accomplish this, you'll simply await <see cref="P:Neon.Tasks.SyncContext.ClearAsync"/> at or near the top of your method:
+            </para>
+            <code language="C#">
+            using Neon.Task;
+            
+            public async Task&lt;string&gt; HelloAsync()
+            {
+                await SyncContext.ClearAsync;
+                
+                await DoSomthingAsync();
+                await DoSomethingElseAsync();
+                
+                return "Hello World!";
+            }
+            </code>
+            <note>
+            <see cref="P:Neon.Tasks.SyncContext.ClearAsync"/> is not a method so you don't
+            need to pass any parameters.
+            </note>
+            <para>
+            This call clears the current synchronization context such that the
+            subsequent <c>async</c> calls will each marshal back to threads
+            obtained from the thread pool and due to compiler async magic,
+            the original synchronization context will be restored before the
+            <c>HelloAsync()</c> method returns.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:Neon.Tasks.SyncContext.ClearAsync">
+            <summary>
+            <c>await</c> this singleton to clear the current synchronization
+            context for the scope of the current method.  The original context
+            will be restored when the method returns.
+            </summary>
+            <remarks>
+            <para>
+            You'll typically at or near the top of your method.  This will
+            look something like:
+            </para>
+            <code language="C#">
+            using Neon.Task;
+            
+            public async Task&lt;string&gt; HelloAsync()
+            {
+                await SyncContext.ClearAsync;
+                
+                await DoSomthingAsync();
+                await DoSomethingElseAsync();
+                
+                return "Hello World!";
+            }
+            </code>
+            <note>
+            <see cref="P:Neon.Tasks.SyncContext.ClearAsync"/> is not a method so you don't
+            need to pass any parameters.
+            </note>
+            <para>
+            This call clears the current synchronization context such that the
+            subsequent <c>async</c> calls will each marshal back to threads
+            obtained from the thread pool and due to compiler async magic,
+            the original synchronization context will be restored before the
+            <c>HelloAsync()</c> method returns.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:Neon.Tasks.SyncContext.IsDisabled">
+            <summary>
+            <para>
+            Optionally disables context resetting globally.  This provides an
+            escape hatch for situations where an application needs to revert
+            back to the default synchronization context behavior.  This turns
+            <c>await SyncContext.ClearAsync</c> calls into a NOP.
+            </para>
+            <note>
+            Most applications should never need to set this.
+            </note>
+            </summary>
+        </member>
+        <member name="M:Neon.Tasks.SyncContext.#cctor">
+            <summary>
+            Static constructor.
+            </summary>
+        </member>
+        <member name="M:Neon.Tasks.SyncContext.#ctor(System.Int32)">
+            <summary>
+            Private constructor.
+            </summary>
+            <param name="unused">Ignored.</param>
+        </member>
+        <member name="P:Neon.Tasks.SyncContext.IsCompleted">
+            <summary>
+            <b>INTERNAL USE ONLY:</b> Do not call this directly.
+            </summary>
+        </member>
+        <member name="M:Neon.Tasks.SyncContext.OnCompleted(System.Action)">
+            <summary>
+            <b>INTERNAL USE ONLY:</b> Do not call this directly.
+            </summary>
+            <param name="continuation">The continuation action.</param>
+        </member>
+        <member name="M:Neon.Tasks.SyncContext.GetAwaiter">
+            <summary>
+            <b>INTERNAL USE ONLY:</b> Do not call this directly.
+            </summary>
+        </member>
+        <member name="M:Neon.Tasks.SyncContext.GetResult">
+            <summary>
+            <b>INTERNAL USE ONLY:</b> Do not call this directly.
             </summary>
         </member>
         <member name="T:Neon.Time.GatedTimer">
@@ -10751,6 +11024,11 @@
             Renders the time span as a GO Duration compatible string.
             </summary>
             <returns>The GO duration.</returns>
+        </member>
+        <member name="T:Neon.Time.NamespaceDoc">
+            <summary>
+            This namespace includes some time related types.
+            </summary>
         </member>
         <member name="T:Neon.Time.PolledTimer">
             <summary>
@@ -11489,10 +11767,16 @@
             </summary>
             <returns>The formatted string.</returns>
         </member>
+        <member name="T:Neon.Windows.NamespaceDoc">
+            <summary>
+            This namespace defines low-level Windows P/Invoke mappings as well as
+            a simply class that can execute PowerShell commands.
+            </summary>
+        </member>
         <member name="T:Neon.Windows.PowerShell">
             <summary>
             <para>
-            Internal proxy for executing PowerShell commands on Windows machines.
+            A simple proxy for executing PowerShell commands on Windows machines.
             </para>
             <note>
             This class requires elevated administrative rights.
@@ -11603,22 +11887,6 @@
             <param name="path">The file or folder path.</param>
             <returns><c>true</c> on success.</returns>
         </member>
-        <member name="T:Newtonsoft.Json.Linq.JsonExtensions">
-            <summary>
-            Newtonsoft JSON Linq extensions.
-            </summary>
-        </member>
-        <member name="M:Newtonsoft.Json.Linq.JsonExtensions.TryGetValue``1(Newtonsoft.Json.Linq.JObject,System.String,``0@)">
-            <summary>
-            Attempts to return the value of a specified <see cref="T:Newtonsoft.Json.Linq.JObject"/> property
-            converted to a specific type.
-            </summary>
-            <typeparam name="T">The desired type.</typeparam>
-            <param name="jObject">The <see cref="T:Newtonsoft.Json.Linq.JObject"/> instance.</param>
-            <param name="propertyName">The property name.</param>
-            <param name="value">Returns as the property value if present.</param>
-            <returns><c>true</c> if the property was present and returned.</returns>
-        </member>
         <member name="T:System.Diagnostics.Contracts.Covenant">
             <summary>
             A simple, lightweight, and partial implementation of the Microsoft Dev Labs <c>Contract</c> class.
@@ -11670,85 +11938,78 @@
             <param name="message">An optional message to be included in the exception thrown.</param>
             <exception cref="T:Neon.Diagnostics.AssertException">Thrown if <paramref name="condition"/> is <c>false</c>.</exception>
         </member>
-        <member name="T:System.IO.IOExtensions">
+        <member name="T:System.AppDomainExtensions">
             <summary>
-            Implements I/O related class extensions.
+            Implements <see cref="T:System.AppDomain"/> extension methods.
             </summary>
         </member>
-        <member name="M:System.IO.IOExtensions.Write(System.IO.Stream,System.Byte[])">
+        <member name="M:System.AppDomainExtensions.GetUserAssemblies(System.AppDomain)">
             <summary>
-            Writes a byte array to a stream.
+            Enumerates all non <b>System</b> and <b>Microsoft</b> assemblies currently
+            loaded in the <see cref="T:System.AppDomain"/>.  This can be used as a performance
+            optimization when you only need to scan user assemblies.
             </summary>
-            <param name="stream">The stream.</param>
-            <param name="bytes">The byte array.</param>
+            <param name="appDomain"></param>
+            <returns>The enumerated assemblies.</returns>
+            <remarks>
+            We also use this to work around this Visual Studio bug: 
+            <a href="https://github.com/nforgeio/neonKUBE/issues/531"/>
+            </remarks>
         </member>
-        <member name="M:System.IO.IOExtensions.WriteAsync(System.IO.Stream,System.Byte[])">
+        <member name="T:System.EnumExtensions">
             <summary>
-            Asynchronously writes a byte array to a stream.
+            <see cref="T:System.Enum"/> extensions.
             </summary>
-            <param name="stream">The stream.</param>
-            <param name="bytes">The byte array.</param>
         </member>
-        <member name="M:System.IO.IOExtensions.ReadBytes(System.IO.Stream,System.Int32)">
+        <member name="M:System.EnumExtensions.ToMemberString(System.Enum)">
             <summary>
-            Reads the byte array from the current position, advancing
-            the position past the value read.
+            Converts an enumeration value into a string, using the <see cref="T:System.Runtime.Serialization.EnumMemberAttribute"/>
+            value if one was specified for the value in the enumeration type definition otherwise
+            the default enumeration value name will be returned.
             </summary>
-            <param name="stream">The stream.</param>
-            <param name="cb">The number of bytes to read.</param>
-            <returns>
-            The byte array.  Note that the array returned may have a length
-            less than the size requested if the end of the file has been
-            reached.
-            </returns>
+            <param name="value">The enumeration value to be converted.</param>
+            <returns>The member or default string value.</returns>
+            <remarks>
+            This is useful because <see cref="M:System.Enum.ToString"/> ignores any <see cref="T:System.Runtime.Serialization.EnumMemberAttribute"/>
+            attributes.
+            </remarks>
         </member>
-        <member name="M:System.IO.IOExtensions.ReadToEnd(System.IO.Stream)">
+        <member name="T:System.ExceptionExtensions">
             <summary>
-            Reads all bytes from the current position to the end of the stream.
+            <see cref="T:System.Exception"/> extensions.
             </summary>
-            <returns>The byte array.</returns>
         </member>
-        <member name="M:System.IO.IOExtensions.ReadToEndAsync(System.IO.Stream)">
+        <member name="M:System.ExceptionExtensions.Contains``1(System.Exception)">
             <summary>
-            Asynchronously reads all bytes from the current position to the end of the stream.
+            Determines whether the exception has a specified type or was triggered by
+            an underlying exception of a specified type.  This is useful for checking whether
+            an exception has a specific inner exception or whether an <see cref="T:System.AggregateException"/>
+            was triggered with a specific exception type.
             </summary>
-            <returns>The byte array.</returns>
+            <typeparam name="T">The target exception type.</typeparam>
+            <param name="e">The exception being tested.</param>
+            <returns><c>true</c> if the exception was triggered by an exception of type <typeparamref name="T"/>.</returns>
         </member>
-        <member name="M:System.IO.IOExtensions.DeflateTo(System.IO.Stream,System.IO.Stream)">
+        <member name="M:System.ExceptionExtensions.Find``1(System.Exception)">
             <summary>
-            Uses deflate to compress a source to a target stream.
+            Searches an exception for an underlying exception of a specific type specified as a generic
+            type parameter.   This is useful for  checking whether an exception has a specific inner 
+            exception or whether an <see cref="T:System.AggregateException"/> was triggered with a specific 
+            exception type.
             </summary>
-            <param name="source">The source stream.</param>
-            <param name="target">The target stream.</param>
+            <typeparam name="T">The target exception type.</typeparam>
+            <param name="e">The exception being tested.</param>
+            <returns>The underlying exception or <c>null</c>.</returns>
         </member>
-        <member name="M:System.IO.IOExtensions.InflateTo(System.IO.Stream,System.IO.Stream)">
+        <member name="M:System.ExceptionExtensions.Find(System.Exception,System.Type)">
             <summary>
-            Uses deflate to decompress a source to a target stream.
+            Searches an exception for an underlying exception of a specific type.  This is useful for 
+            checking whether an exception has a specific inner exception or whether an <see cref="T:System.AggregateException"/>
+            was triggered with a specific exception type.
             </summary>
-            <param name="source">The source stream.</param>
-            <param name="target">The target stream.</param>
-        </member>
-        <member name="M:System.IO.IOExtensions.GzipTo(System.IO.Stream,System.IO.Stream)">
-            <summary>
-            Uses GZIP to compress a source to a target stream.
-            </summary>
-            <param name="source">The source stream.</param>
-            <param name="target">The target stream.</param>
-        </member>
-        <member name="M:System.IO.IOExtensions.GunzipTo(System.IO.Stream,System.IO.Stream)">
-            <summary>
-            Uses GZIP to decompress a source to a target stream.
-            </summary>
-            <param name="source">The source stream.</param>
-            <param name="target">The target stream.</param>
-        </member>
-        <member name="M:System.IO.IOExtensions.Lines(System.IO.TextReader,System.Boolean)">
-            <summary>
-            Returns an enumerator that returns the lines of text from a <see cref="T:System.IO.TextReader"/>.
-            </summary>
-            <param name="reader">The reader.</param>
-            <param name="ignoreBlank">Optionally skip empty lines or lines with oly whitespace.</param>
-            <returns>The <see cref="T:System.Collections.Generic.IEnumerable`1"/>.</returns>
+            <param name="e">The exception being tested.</param>
+            <param name="exceptionType">The target exception type.</param>
+            <returns>The underlying exception or <c>null</c>.</returns>
         </member>
         <member name="T:System.Net.Http.HttpClientExtensions">
             <summary>
@@ -12075,79 +12336,6 @@
             <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
             <exception cref="T:System.InvalidOperationException">Thrown when the request has already been sent by the <see cref="T:System.Net.Http.HttpClient"/> class.</exception>
         </member>
-        <member name="T:System.AppDomainExtensions">
-            <summary>
-            Implements <see cref="T:System.AppDomain"/> extension methods.
-            </summary>
-        </member>
-        <member name="M:System.AppDomainExtensions.GetUserAssemblies(System.AppDomain)">
-            <summary>
-            Enumerates all non <b>System</b> and <b>Microsoft</b> assemblies currently
-            loaded in the <see cref="T:System.AppDomain"/>.  This can be used as a performance
-            optimization when you only need to scan user assemblies.
-            </summary>
-            <param name="appDomain"></param>
-            <returns>The enumerated assemblies.</returns>
-            <remarks>
-            We also use this to work around this Visual Studio bug: 
-            <a href="https://github.com/nforgeio/neonKUBE/issues/531"/>
-            </remarks>
-        </member>
-        <member name="T:System.EnumExtensions">
-            <summary>
-            <see cref="T:System.Enum"/> extensions.
-            </summary>
-        </member>
-        <member name="M:System.EnumExtensions.ToMemberString(System.Enum)">
-            <summary>
-            Converts an enumeration value into a string, using the <see cref="T:System.Runtime.Serialization.EnumMemberAttribute"/>
-            value if one was specified for the value in the enumeration type definition otherwise
-            the default enumeration value name will be returned.
-            </summary>
-            <param name="value">The enumeration value to be converted.</param>
-            <returns>The member or default string value.</returns>
-            <remarks>
-            This is useful because <see cref="M:System.Enum.ToString"/> ignores any <see cref="T:System.Runtime.Serialization.EnumMemberAttribute"/>
-            attributes.
-            </remarks>
-        </member>
-        <member name="T:System.ExceptionExtensions">
-            <summary>
-            <see cref="T:System.Exception"/> extensions.
-            </summary>
-        </member>
-        <member name="M:System.ExceptionExtensions.Contains``1(System.Exception)">
-            <summary>
-            Determines whether the exception has a specified type or was triggered by
-            an underlying exception of a specified type.  This is useful for checking whether
-            an exception has a specific inner exception or whether an <see cref="T:System.AggregateException"/>
-            was triggered with a specific exception type.
-            </summary>
-            <typeparam name="T">The target exception type.</typeparam>
-            <param name="e">The exception being tested.</param>
-            <returns><c>true</c> if the exception was triggered by an exception of type <typeparamref name="T"/>.</returns>
-        </member>
-        <member name="M:System.ExceptionExtensions.Find``1(System.Exception)">
-            <summary>
-            Searches an exception for an underlying exception of a specific type specified as a generic
-            type parameter.   This is useful for  checking whether an exception has a specific inner 
-            exception or whether an <see cref="T:System.AggregateException"/> was triggered with a specific 
-            exception type.
-            </summary>
-            <typeparam name="T">The target exception type.</typeparam>
-            <param name="e">The exception being tested.</param>
-            <returns>The underlying exception or <c>null</c>.</returns>
-        </member>
-        <member name="M:System.ExceptionExtensions.Find(System.Exception,System.Type)">
-            <summary>
-            Searches an exception for an underlying exception of a specific type.  This is useful for 
-            checking whether an exception has a specific inner exception or whether an <see cref="T:System.AggregateException"/>
-            was triggered with a specific exception type.
-            </summary>
-            <param name="e">The exception being tested.</param>
-            <param name="exceptionType">The target exception type.</param>
-            <returns>The underlying exception or <c>null</c>.</returns>
-        </member>
         <member name="T:System.Collections.Generic.IEnumerableExtensions">
             <summary>
             <see cref="T:System.Collections.Generic.IEnumerable`1"/> extension methods.
@@ -12252,6 +12440,22 @@
             <returns><c>true</c> if <paramref name="type"/> implements <paramref name="type"/>.</returns>
             <exception cref="T:System.ArgumentNullException">Thrown if either of <paramref name="type"/> or <paramref name="interfaceType"/> are <c>null</c>.</exception>
             <exception cref="T:System.ArgumentException">Thrown if <paramref name="interfaceType"/> is not an <c>interface</c>.</exception>
+        </member>
+        <member name="M:System.ReflectionExtensions.Is``1(System.Type)">
+            <summary>
+            Determines whether a type inherits from (or is) a specified base type.
+            </summary>
+            <typeparam name="T">Identifies the type we're matching.</typeparam>
+            <param name="type">The type being tested.</param>
+            <returns><c>true</c> if <paramref name="type"/> inherits or is <typeparamref name="T"/>.</returns>
+        </member>
+        <member name="M:System.ReflectionExtensions.Is(System.Type,System.Type)">
+            <summary>
+            Determines whether a type inherits from (or is) a specified base type.
+            </summary>
+            <param name="type">The type being tested.</param>
+            <param name="targetType">Identifies the type we're matching.</param>
+            <returns><c>true</c> if <paramref name="type"/> inherits or is <paramref name="targetType"/>.</returns>
         </member>
         <member name="M:System.ReflectionExtensions.GetParameterTypes(System.Reflection.MethodInfo)">
             <summary>
@@ -12394,6 +12598,102 @@
             The name of the event to remove the handler from.
             </param>
             <param name="handler">The delegate to remove.</param>
+        </member>
+        <member name="T:System.IO.IOExtensions">
+            <summary>
+            Implements I/O related class extensions.
+            </summary>
+        </member>
+        <member name="M:System.IO.IOExtensions.Write(System.IO.Stream,System.Byte[])">
+            <summary>
+            Writes a byte array to a stream.
+            </summary>
+            <param name="stream">The stream.</param>
+            <param name="bytes">The byte array.</param>
+        </member>
+        <member name="M:System.IO.IOExtensions.WriteAsync(System.IO.Stream,System.Byte[])">
+            <summary>
+            Asynchronously writes a byte array to a stream.
+            </summary>
+            <param name="stream">The stream.</param>
+            <param name="bytes">The byte array.</param>
+        </member>
+        <member name="M:System.IO.IOExtensions.ReadBytes(System.IO.Stream,System.Int32)">
+            <summary>
+            Reads the byte array from the current position, advancing
+            the position past the value read.
+            </summary>
+            <param name="stream">The stream.</param>
+            <param name="cb">The number of bytes to read.</param>
+            <returns>
+            The byte array.  Note that the array returned may have a length
+            less than the size requested if the end of the file has been
+            reached.
+            </returns>
+        </member>
+        <member name="M:System.IO.IOExtensions.ReadToEnd(System.IO.Stream)">
+            <summary>
+            Reads all bytes from the current position to the end of the stream.
+            </summary>
+            <returns>The byte array.</returns>
+        </member>
+        <member name="M:System.IO.IOExtensions.ReadToEndAsync(System.IO.Stream)">
+            <summary>
+            Asynchronously reads all bytes from the current position to the end of the stream.
+            </summary>
+            <returns>The byte array.</returns>
+        </member>
+        <member name="M:System.IO.IOExtensions.DeflateTo(System.IO.Stream,System.IO.Stream)">
+            <summary>
+            Uses deflate to compress a source to a target stream.
+            </summary>
+            <param name="source">The source stream.</param>
+            <param name="target">The target stream.</param>
+        </member>
+        <member name="M:System.IO.IOExtensions.InflateTo(System.IO.Stream,System.IO.Stream)">
+            <summary>
+            Uses deflate to decompress a source to a target stream.
+            </summary>
+            <param name="source">The source stream.</param>
+            <param name="target">The target stream.</param>
+        </member>
+        <member name="M:System.IO.IOExtensions.GzipTo(System.IO.Stream,System.IO.Stream)">
+            <summary>
+            Uses GZIP to compress a source to a target stream.
+            </summary>
+            <param name="source">The source stream.</param>
+            <param name="target">The target stream.</param>
+        </member>
+        <member name="M:System.IO.IOExtensions.GunzipTo(System.IO.Stream,System.IO.Stream)">
+            <summary>
+            Uses GZIP to decompress a source to a target stream.
+            </summary>
+            <param name="source">The source stream.</param>
+            <param name="target">The target stream.</param>
+        </member>
+        <member name="M:System.IO.IOExtensions.Lines(System.IO.TextReader,System.Boolean)">
+            <summary>
+            Returns an enumerator that returns the lines of text from a <see cref="T:System.IO.TextReader"/>.
+            </summary>
+            <param name="reader">The reader.</param>
+            <param name="ignoreBlank">Optionally skip empty lines or lines with oly whitespace.</param>
+            <returns>The <see cref="T:System.Collections.Generic.IEnumerable`1"/>.</returns>
+        </member>
+        <member name="T:Newtonsoft.Json.Linq.JsonExtensions">
+            <summary>
+            Newtonsoft JSON Linq extensions.
+            </summary>
+        </member>
+        <member name="M:Newtonsoft.Json.Linq.JsonExtensions.TryGetValue``1(Newtonsoft.Json.Linq.JObject,System.String,``0@)">
+            <summary>
+            Attempts to return the value of a specified <see cref="T:Newtonsoft.Json.Linq.JObject"/> property
+            converted to a specific type.
+            </summary>
+            <typeparam name="T">The desired type.</typeparam>
+            <param name="jObject">The <see cref="T:Newtonsoft.Json.Linq.JObject"/> instance.</param>
+            <param name="propertyName">The property name.</param>
+            <param name="value">Returns as the property value if present.</param>
+            <returns><c>true</c> if the property was present and returned.</returns>
         </member>
         <member name="T:YamlDotNet.RepresentationModel.YamlDotNetExtensions">
             <summary>

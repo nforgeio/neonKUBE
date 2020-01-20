@@ -1,0 +1,110 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Test.Neon.Common\Collections\Test_Bits.cs" Link="Collections\Test_Bits.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Common\Test_Block.cs" Link="Common\Test_Block.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Common\Test_BlockArray.cs" Link="Common\Test_BlockArray.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Common\Test_CommandLine.cs" Link="Common\Test_CommandLine.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Common\Test_EnvironmentParser.cs" Link="Common\Test_EnvironmentParser.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Common\Test_GlobPattern.cs" Link="Common\Test_GlobPattern.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Common\Test_JsonExtensions.cs" Link="Common\Test_JsonExtensions.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Common\Test_LinuxPermissions.cs" Link="Common\Test_LinuxPermissions.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Common\Test_SemanticVersion.cs" Link="Common\Test_SemanticVersion.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Common\Test_ServicesContainer.cs" Link="Common\Test_ServicesContainer.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Common\Test_WeakEventController.cs" Link="Common\Test_WeakEventController.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Csv\Test_CsvReader.cs" Link="Csv\Test_CsvReader.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Csv\Test_CsvTableReader.cs" Link="Csv\Test_CsvTableReader.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Csv\Test_CsvTableWriter.cs" Link="Csv\Test_CsvTableWriter.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Csv\Test_CsvWriter.cs" Link="Csv\Test_CsvWriter.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Diagnostics\Test_Assert.cs" Link="Diagnostics\Test_Assert.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Helper\Test_ByteUnits.cs" Link="Helper\Test_ByteUnits.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Helper\Test_NeonHelper.Compression.cs" Link="Helper\Test_NeonHelper.Compression.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Helper\Test_NeonHelper.cs" Link="Helper\Test_NeonHelper.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Helper\Test_NeonHelper.Json.cs" Link="Helper\Test_NeonHelper.Json.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Helper\Test_NeonHelper.Process.cs" Link="Helper\Test_NeonHelper.Process.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Helper\Test_NeonHelper.Yaml.cs" Link="Helper\Test_NeonHelper.Yaml.cs" />
+    <Compile Include="..\..\Test.Neon.Common\IO\Test_BlockStream.cs" Link="IO\Test_BlockStream.cs" />
+    <Compile Include="..\..\Test.Neon.Common\IO\Test_LinuxPath.cs" Link="IO\Test_LinuxPath.cs" />
+    <Compile Include="..\..\Test.Neon.Common\IO\Test_PreprocessReader.cs" Link="IO\Test_PreprocessReader.cs" />
+    <Compile Include="..\..\Test.Neon.Common\IO\Test_Stream.cs" Link="IO\Test_Stream.cs" />
+    <Compile Include="..\..\Test.Neon.Common\IO\Test_TempFile.cs" Link="IO\Test_TempFile.cs" />
+    <Compile Include="..\..\Test.Neon.Common\IO\Test_TempFolder.cs" Link="IO\Test_TempFolder.cs" />
+    <Compile Include="..\..\Test.Neon.Common\IO\Test_TextReader.cs" Link="IO\Test_TextReader.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Net\Test_JsonClient.cs" Link="Net\Test_JsonClient.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Net\Test_JsonClient.Delete.cs" Link="Net\Test_JsonClient.Delete.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Net\Test_JsonClient.DeleteUnsafe.cs" Link="Net\Test_JsonClient.DeleteUnsafe.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Net\Test_JsonClient.Get.cs" Link="Net\Test_JsonClient.Get.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Net\Test_JsonClient.GetUnsafe.cs" Link="Net\Test_JsonClient.GetUnsafe.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Net\Test_JsonClient.Head.cs" Link="Net\Test_JsonClient.Head.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Net\Test_JsonClient.HeadUnsafe.cs" Link="Net\Test_JsonClient.HeadUnsafe.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Net\Test_JsonClient.Options.cs" Link="Net\Test_JsonClient.Options.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Net\Test_JsonClient.OptionsUnsafe.cs" Link="Net\Test_JsonClient.OptionsUnsafe.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Net\Test_JsonClient.Patch.cs" Link="Net\Test_JsonClient.Patch.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Net\Test_JsonClient.PatchUnsafe.cs" Link="Net\Test_JsonClient.PatchUnsafe.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Net\Test_JsonClient.Post.cs" Link="Net\Test_JsonClient.Post.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Net\Test_JsonClient.PostUnsafe.cs" Link="Net\Test_JsonClient.PostUnsafe.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Net\Test_JsonClient.Put.cs" Link="Net\Test_JsonClient.Put.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Net\Test_JsonClient.PutUnsafe.cs" Link="Net\Test_JsonClient.PutUnsafe.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Net\Test_NetHelper.cs" Link="Net\Test_NetHelper.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Net\Test_NetworkCidr.cs" Link="Net\Test_NetworkCidr.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Net\Test_Pinger.cs" Link="Net\Test_Pinger.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Retry\Test_ExponentialRetryPolicy.cs" Link="Retry\Test_ExponentialRetryPolicy.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Retry\Test_LinearRetryPolicy.cs" Link="Retry\Test_LinearRetryPolicy.cs" />
+    <Compile Include="..\..\Test.Neon.Common\System\Test_AppDomainExtensions.cs" Link="System\Test_AppDomainExtensions.cs" />
+    <Compile Include="..\..\Test.Neon.Common\System\Test_Enum.cs" Link="System\Test_Enum.cs" />
+    <Compile Include="..\..\Test.Neon.Common\System\Test_Exception.cs" Link="System\Test_Exception.cs" />
+    <Compile Include="..\..\Test.Neon.Common\System\Test_IEnumerableExtensions.cs" Link="System\Test_IEnumerableExtensions.cs" />
+    <Compile Include="..\..\Test.Neon.Common\System\Test_ReflectionExtensions.cs" Link="System\Test_ReflectionExtensions.cs" />
+    <Compile Include="..\..\Test.Neon.Common\System\Test_String.cs" Link="System\Test_String.cs" />
+    <Compile Include="..\..\Test.Neon.Common\System\Test_StringBuilder.cs" Link="System\Test_StringBuilder.cs" />
+    <Compile Include="..\..\Test.Neon.Common\System\Test_TimeSpan.cs" Link="System\Test_TimeSpan.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Tasks\Test_AsyncAutoResetEvent.cs" Link="Tasks\Test_AsyncAutoResetEvent.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Tasks\Test_AsyncManualResetEvent.cs" Link="Tasks\Test_AsyncManualResetEvent.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Tasks\Test_AsyncMutex.cs" Link="Tasks\Test_AsyncMutex.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Tasks\Test_AsyncPeriodicTask.cs" Link="Tasks\Test_AsyncPeriodicTask.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Tasks\Test_AsyncReaderWriterLock.cs" Link="Tasks\Test_AsyncReaderWriterLock.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Time\Test_GatedTimer.cs" Link="Time\Test_GatedTimer.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Time\Test_GoTimeSpan.cs" Link="Time\Test_GoTimeSpan.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Time\Test_PolledTimer.cs" Link="Time\Test_PolledTimer.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Time\Test_RecurringTimer.cs" Link="Time\Test_RecurringTimer.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Time\Test_SysTime.cs" Link="Time\Test_SysTime.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Win32\Test_Win32.cs" Link="Win32\Test_Win32.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.4.0" />
+    <PackageReference Include="Neon.Common" Version="1.0.3" />
+    <PackageReference Include="Neon.Xunit" Version="1.0.3" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector" Version="1.1.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Collections\" />
+    <Folder Include="Common\" />
+    <Folder Include="Csv\" />
+    <Folder Include="Diagnostics\" />
+    <Folder Include="Helper\" />
+    <Folder Include="IO\" />
+    <Folder Include="Net\" />
+    <Folder Include="Win32\" />
+    <Folder Include="Time\" />
+    <Folder Include="Tasks\" />
+    <Folder Include="System\" />
+    <Folder Include="Retry\" />
+  </ItemGroup>
+
+</Project>

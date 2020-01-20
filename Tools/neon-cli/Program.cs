@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Program.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -163,7 +163,9 @@ You can disable the use of this encrypted folder by specifying
                 }
                 else if (NeonHelper.IsOSX)
                 {
-                    throw new NotImplementedException("$todo(jefflill): Implement OSX elevated permissions check.");
+                    // $todo(jefflill): Do we really need this?
+
+                    // throw new NotImplementedException("$todo(jefflill): Implement OSX elevated permissions check.");
                 }
             }
 
@@ -447,6 +449,7 @@ You can disable the use of this encrypted folder by specifying
             catch (Exception e)
             {
                 Console.Error.WriteLine($"*** ERROR: {NeonHelper.ExceptionError(e)}");
+                Console.Error.WriteLine(e.StackTrace);
                 Console.Error.WriteLine(string.Empty);
                 return 1;
             }

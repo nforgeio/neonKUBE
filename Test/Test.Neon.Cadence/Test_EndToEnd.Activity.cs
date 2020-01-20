@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:        Test_EndToEnd.Activity.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -196,7 +196,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task LocalActivity_WithResult()
+        public async Task ActivityLocal_WithResult()
         {
             await SyncContext.ClearAsync;
 
@@ -256,7 +256,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task LocalActivity_WithoutResult()
+        public async Task ActivityLocal_WithoutResult()
         {
             await SyncContext.ClearAsync;
             LocalActivityWithouthResult.Reset();
@@ -269,6 +269,148 @@ namespace TestCadence
 
             await stub.HelloAsync("Jeff");
             Assert.Equal("Jeff", LocalActivityWithouthResult.Name);
+        }
+
+        //---------------------------------------------------------------------
+
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface ILocalActivityMultipleMethods : IActivity
+        {
+            [ActivityMethod]
+            Task<string> HelloAsync(string name);
+
+            [ActivityMethod(Name = "goodbye")]
+            Task<string> GoodbyeAsync(string name);
+        }
+
+        public class LocalActivityMultipleMethods : ActivityBase, ILocalActivityMultipleMethods
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
+
+            public async Task<string> GoodbyeAsync(string name)
+            {
+                return await Task.FromResult($"Goodbye {name}!");
+            }
+        }
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface ILocalActivityWorkflowMultipleMethods : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<string> HelloAsync(string name);
+
+            [WorkflowMethod(Name = "goodbye")]
+            Task<string> GoodbyeAsync(string name);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class LocalActivityWorkflowMultipleMethods : WorkflowBase, ILocalActivityWorkflowMultipleMethods
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                var stub = Workflow.NewLocalActivityStub<ILocalActivityMultipleMethods, LocalActivityMultipleMethods>();
+
+                return await stub.HelloAsync(name);
+            }
+
+            public async Task<string> GoodbyeAsync(string name)
+            {
+                var stub = Workflow.NewLocalActivityStub<ILocalActivityMultipleMethods, LocalActivityMultipleMethods>();
+
+                return await stub.GoodbyeAsync(name);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task ActivityLocal_WithMultipleMethods()
+        {
+            await SyncContext.ClearAsync;
+            LocalActivityWithouthResult.Reset();
+
+            // Verify that we can call different methods of a local activity.
+
+            var stub1 = client.NewWorkflowStub<ILocalActivityWorkflowMultipleMethods>();
+
+            Assert.Equal("Hello Jeff!", await stub1.HelloAsync("Jeff"));
+
+            var stub2 = client.NewWorkflowStub<ILocalActivityWorkflowMultipleMethods>();
+
+            Assert.Equal("Goodbye Jeff!", await stub2.GoodbyeAsync("Jeff"));
+        }
+
+        //---------------------------------------------------------------------
+
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IActivityMultipleMethods : IActivity
+        {
+            [ActivityMethod]
+            Task<string> HelloAsync(string name);
+
+            [ActivityMethod(Name = "goodbye")]
+            Task<string> GoodbyeAsync(string name);
+        }
+
+        public class ActivityMultipleMethods : ActivityBase, IActivityMultipleMethods
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
+
+            public async Task<string> GoodbyeAsync(string name)
+            {
+                return await Task.FromResult($"Goodbye {name}!");
+            }
+        }
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IActivityWorkflowMultipleMethods : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<string> HelloAsync(string name);
+
+            [WorkflowMethod(Name = "goodbye")]
+            Task<string> GoodbyeAsync(string name);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class ActivityWorkflowMultipleMethods : WorkflowBase, IActivityWorkflowMultipleMethods
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                var stub = Workflow.NewLocalActivityStub<IActivityMultipleMethods, ActivityMultipleMethods>();
+
+                return await stub.HelloAsync(name);
+            }
+
+            public async Task<string> GoodbyeAsync(string name)
+            {
+                var stub = Workflow.NewLocalActivityStub<IActivityMultipleMethods, ActivityMultipleMethods>();
+
+                return await stub.GoodbyeAsync(name);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_WithMultipleMethods()
+        {
+            await SyncContext.ClearAsync;
+            LocalActivityWithouthResult.Reset();
+
+            // Verify that we can call different methods of a regular activity.
+
+            var stub1 = client.NewWorkflowStub<IActivityWorkflowMultipleMethods>();
+
+            Assert.Equal("Hello Jeff!", await stub1.HelloAsync("Jeff"));
+            
+            var stub2 = client.NewWorkflowStub<IActivityWorkflowMultipleMethods>();
+
+            Assert.Equal("Goodbye Jeff!", await stub2.GoodbyeAsync("Jeff"));
         }
 
         //---------------------------------------------------------------------
@@ -673,9 +815,9 @@ namespace TestCadence
                     await stub.RunAsync();
                     return null;
                 }
-                catch (Exception e)
+                catch (CadenceException e)
                 {
-                    return e.Message;
+                    return $"{e.Message}: {e.Details}";
                 }
             }
         }
@@ -694,7 +836,7 @@ namespace TestCadence
                 TaskStartToCloseTimeout = TimeSpan.FromSeconds(60)
             };
 
-            var stub = client.NewWorkflowStub<IWorkflowActivityFail>(options);
+            var stub  = client.NewWorkflowStub<IWorkflowActivityFail>(options);
             var error = await stub.RunAsync();
 
             Assert.NotNull(error);
@@ -920,7 +1062,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task ActivityExternalCancelByToken()
+        public async Task Activity_ExternalCancelByToken()
         {
             await SyncContext.ClearAsync;
 
@@ -942,7 +1084,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task ActivityExternalCancelById()
+        public async Task Activity_ExternalCancelById()
         {
             await SyncContext.ClearAsync;
 

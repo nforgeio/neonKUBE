@@ -1,0 +1,115 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################=
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Files
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*_i.c
+*_p.c
+*_i.h
+*.ilk
+*.meta
+*.obj
+*.pch
+*.pdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+*.psess
+*.vsp
+*.vspx
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+*.opensdf
+*.sdf
+*.jmconfig
+*.suo
+**/launchSettings.json
+
+# Nuget Packages
+*.nupkg
+# The packages folder can be ignored because of Package Restore
+**/packages/*
+# except build/, which is used as an MSBuild target.
+!**/packages/build/
+# Uncomment if necessary however generally it will be regenerated when needed
+# !**/packages/repositories.config
+
+# Random [.rnd] files are generated sometimes while building Docker
+# images.  I'm not sure where they're coming from and deleting them
+# in the image build scripts doesn't always seem to take.  We'll
+# just ignore these.
+
+*.rnd
+
+# Common ASP.NET 5 Rules
+
+bower_components/
+node_modules/
+wwwroot/
+
+################################################################################
+# Custom rules added for this repository.
+################################################################################
+
+/.vs
+/.vs/**
+/.vscode
+/.vscode/**
+
+# Build artifacts: 
+#
+# NOTE: This assumes that we'll never want to commit folders
+#		    named [bin] or [obj]
+
+/Build/**
+/Build-Cache/**
+**/bin/**
+**/obj/**
+GeneratedModels.cs
+GeneratedEntities.cs
+GeneratedTypes.cs
+GeneratedUxTypes.cs
+
+###################
+### Go Projects ###
+###################
+*.test
+Go/pkg/**
+Go/**/test/logs/**
+
+####################
+### Neon.Cadence ###
+####################
+
+# These files are created during the build and will be embedded
+# into the [Neon.Cadence] assembly as resources.
+
+/Lib/Neon.Cadence/Resources/**
+/Test/Test.Neon.Models/GeneratedUxTypes.cs
+/Lib/Neon.Cadence2/Resources/cadence-proxy.win.exe.gz
+/Lib/Neon.Cadence2/Resources/cadence-proxy.osx.gz
+/Lib/Neon.Cadence2/Resources/cadence-proxy.linux.gz
+.vscode/settings.json
+/Go/src/github.com/cadence-proxy/cmd/playground/.vscode/settings.json
+/Go/src/github.com/cadence-proxy/cmd/playground/.vscode/launch.json

@@ -44,13 +44,13 @@ LINUX = cadence-proxy.linux
 OSX   = cadence-proxy.osx
 
 cadence-proxy-windows:
-	env GOOS=windows GOARCH=amd64 go build -i -ldflags="-w -s" -v -o bin/$(WIN) $(APP_DIR)/*.go
+	env GOOS=windows GOARCH=amd64 go build -i -mod=vendor -ldflags="-w -s" -v -o bin/$(WIN) $(APP_DIR)/*.go
 
 cadence-proxy-linux:
-	env GOOS=linux GOARCH=amd64 go build -i -ldflags="-w -s" -v -o bin/$(LINUX) $(APP_DIR)/*.go
+	env GOOS=linux GOARCH=amd64 go build -i -mod=vendor -ldflags="-w -s" -v -o bin/$(LINUX) $(APP_DIR)/*.go
 
 cadence-proxy-osx:
-	env GOOS=darwin GOARCH=amd64 go build -i -ldflags="-w -s" -v -o bin/$(OSX) $(APP_DIR)/*.go
+	env GOOS=darwin GOARCH=amd64 go build -i -mod=vendor -ldflags="-w -s" -v -o bin/$(OSX) $(APP_DIR)/*.go
 
 simple:
 	go build -i -o bin/simple $(PLAYGROUND_DIR)/simple/*.go
@@ -66,7 +66,7 @@ test: bins
 	@echo $(TEST_DIRS)
 	@for dir in $(TEST_DIRS); do \
 		mkdir -p $(TEST_LOGS)/$$dir; \
-		go test -v -o test/$$dir/test.test -coverprofile=$(TEST_LOGS)/$$dir/cover.out ./$$dir | tee -a $(TEST_LOGS)/test.log; \
+		go test -mod=vendor -v -o test/$$dir/test.test -coverprofile=$(TEST_LOGS)/$$dir/cover.out ./$$dir | tee -a $(TEST_LOGS)/test.log; \
 		go tool cover -html=$(TEST_LOGS)/$$dir/cover.out -o $(TEST_LOGS)/$$dir/cover.html; \
 	done;
 	

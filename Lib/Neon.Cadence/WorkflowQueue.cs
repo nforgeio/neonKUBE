@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    WorkflowQueue.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,15 +31,15 @@ namespace Neon.Cadence
 {
     /// <summary>
     /// Implements a workflow-safe first-in-first-out (FIFO) queue that can be used by
-    /// workflow signal methods to communicate with the running workflow.
+    /// workflow signal methods to communicate with the running workflow logic.
     /// </summary>
     /// <typeparam name="T">Specifies the type of the queued items.</typeparam>
     /// <remarks>
     /// <para>
     /// You can construct workflow queue instances in your workflows via
     /// <see cref="Workflow.NewQueueAsync{T}(int)"/>, optionally specifying 
-    /// the maximum capacity of the queue.  This defaults to 2 and cannot be
-    /// less that 2 items.
+    /// the maximum capacity of the queue.  This defaults to <see cref="DefaultCapacity"/>
+    /// and may not be less that 2 queued items.
     /// </para>
     /// <para>
     /// Items are added to the queue via <see cref="EnqueueAsync(T)"/>.  This
@@ -52,36 +52,123 @@ namespace Neon.Cadence
     /// </note>
     /// <para>
     /// Use <see cref="DequeueAsync(TimeSpan)"/> to read from the queue using
-    /// an optional timeout.  This returns a <see cref="DequeuedItem{T}"/> which
-    /// will hold the item read on success or indicate that the operation timed
-    /// out or the queue is closed.
+    /// an optional timeout.
     /// </para>
+    /// <note>
     /// <para>
-    /// <see cref="GetLengthAsync"/> returns the number of items currently residing
-    /// in the queue and <see cref="CloseAsync"/> closes the queue.
+    /// The <see cref="WorkflowQueue{T}"/> class is intended only for two scenarios
+    /// within an executing workflow:
     /// </para>
+    /// <list type="number">
+    ///     <item>
+    ///     <b>Workflow Entry Point:</b> Workflow entry points have full access queues 
+    ///     including creating, closing, reading, writing, and fetching the length.
+    ///     </item>
+    ///     <item>
+    ///     <b>Workflow Signal:</b> Workflow signal methods have partial access to
+    ///     queues including closing, writing, and fetching the length.  Signals 
+    ///     cannot create or read from queues.
+    ///     </item>
+    ///     </list>
+    /// </note>
     /// </remarks>
-    public class WorkflowQueue<T>
+    public class WorkflowQueue<T> : IDisposable
     {
-        private Workflow        parentWorkflow;
-        private CadenceClient   client;
-        private long            queueId;
-        private bool            isClosed;
+        /// <summary>
+        /// The default maximum number of items allowed in a queue.
+        /// </summary>
+        public const int DefaultCapacity = 100;
+
+        private CadenceClient       client;
+        private long                contextId;
+        private long                queueId;
+        private int                 capacity;
+        private bool                isClosed;
+        private bool                isDisposed;
 
         /// <summary>
         /// Internal constructor.
         /// </summary>
         /// <param name="parentWorkflow">The parent workflow.</param>
         /// <param name="queueId">The queue ID.</param>
-        internal WorkflowQueue(Workflow parentWorkflow, long queueId)
+        /// <param name="capacity">The maximum number of items allowed in the queue.</param>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
+        /// <remarks>
+        /// <note>
+        /// <see cref="WorkflowQueue{T}"/> instances may only be created within 
+        /// workflow entry point methods.
+        /// </note>
+        /// </remarks>
+        internal WorkflowQueue(Workflow parentWorkflow, long queueId, int capacity)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             Covenant.Requires<ArgumentException>(queueId > 0, nameof(queueId));
+            Covenant.Requires<ArgumentException>(capacity >= 2, nameof(capacity));
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
 
-            this.parentWorkflow = parentWorkflow;
-            this.client         = parentWorkflow.Client;
-            this.queueId        = queueId;
-            this.isClosed       = false;
+            this.client    = parentWorkflow.Client;
+            this.contextId = parentWorkflow.ContextId;
+            this.Capacity  = capacity;
+            this.queueId   = queueId;
+            this.isClosed  = false;
+        }
+
+        /// <summary>
+        /// Closes the queue if it's not already closed.
+        /// </summary>
+        /// <remarks>
+        /// <note>
+        /// Queues may be disposed only from within workflow entrypoint or signal methods.
+        /// </note>
+        /// </remarks>
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        /// <summary>
+        /// Releases all associated resources.
+        /// </summary>
+        /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true);
+
+            if (disposing && !isClosed)
+            {
+                CloseAsync().Wait();
+            }
+
+            isDisposed = true;
+        }
+
+        /// <summary>
+        /// Ensures that the instance is not disposed.
+        /// </summary>
+        /// <exception cref="ObjectDisposedException">Thrown if the queue is disposed.</exception>
+        private void CheckDisposed()
+        {
+            if (isDisposed)
+            {
+                throw new ObjectDisposedException(nameof(WorkflowQueue<T>));
+            }
+        }
+
+        /// <summary>
+        /// Returns the maximum number of items allowed in the queue at any given moment.
+        /// This may not be set to a value less than 2.
+        /// </summary>
+        /// <exception cref="ObjectDisposedException">Thrown if the queue is disposed.</exception>
+        public int Capacity
+        {
+            get
+            {
+                CheckDisposed();
+
+                return capacity;
+            }
+
+            set => capacity = value;
         }
 
         /// <summary>
@@ -89,133 +176,139 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="item">The item.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if the queue is closed.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the queue is disposed.</exception>
         /// <exception cref="NotSupportedException">Thrown if the serialized size of <paramref name="item"/> is not less than 64KiB.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if the associated workflow client is disposed.</exception>
+        /// <exception cref="WorkflowQueueClosedException">Thrown if the associated queue has been closed.</exception>
         /// <remarks>
         /// <para>
-        /// This method returns immediately if the queue is full, otherwise
+        /// This method returns immediately if the queue is not full, otherwise
         /// it will block until there's enough space to append the new item.
         /// </para>
         /// <note>
-        /// Serialized item sizes must be less than 64 KiB.
+        /// Item data after being serialized must be less than 64 KiB.
+        /// </note>
+        /// </remarks>
+        /// <remarks>
+        /// <note>
+        /// Items may be added to queues only within workflow entrypoint or signal methods.
         /// </note>
         /// </remarks>
         public async Task EnqueueAsync(T item)
         {
             await SyncContext.ClearAsync;
             client.EnsureNotDisposed();
+            CheckDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true);
 
             if (isClosed)
             {
-                throw new InvalidOperationException($"[{nameof(WorkflowQueue<T>)}] is closed.");
+                throw new WorkflowQueueClosedException($"[{nameof(WorkflowQueue<T>)}] is closed.");
             }
 
-            var bytes = client.DataConverter.ToData(item);
+            var encodedItem = client.DataConverter.ToData(item);
 
-            if (bytes.Length >= 64 * ByteUnits.KibiBytes)
+            if (encodedItem.Length >= 64 * ByteUnits.KibiBytes)
             {
                 throw new NotSupportedException($"Serialized items enqueued to a [{nameof(WorkflowQueue<T>)}] must be less than 64 KiB.");
             }
 
-            var reply = await parentWorkflow.ExecuteNonParallel(
-                async () =>
+            var reply = (WorkflowQueueWriteReply)await client.CallProxyAsync(
+                new WorkflowQueueWriteRequest()
                 {
-                    return (WorkflowQueueWriteReply)await client.CallProxyAsync(
-                        new WorkflowQueueWriteRequest()
-                        {
-                            ContextId = parentWorkflow.ContextId,
-                            QueueId   = queueId,
-                            Data      = bytes
-                        });
+                    ContextId = contextId,
+                    QueueId   = queueId,
+                    Data      = encodedItem
                 });
 
             reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// Attempts to add an item to the queue.  Unlike <see cref="EnqueueAsync(T)"/>, this method
+        /// does not block when the queue is full and returns <c>false</c> instead.
+        /// </summary>
+        /// <param name="item">The item.</param>
+        /// <returns><c>true</c> if the item was written or <c>false</c> if the queue is full and the item was not written.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the queue is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown if the serialized size of <paramref name="item"/> is not less than 64KiB.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated workflow client is disposed.</exception>
+        /// <exception cref="WorkflowQueueClosedException">Thrown if the associated queue has been closed.</exception>
+        /// <remarks>
+        /// <note>
+        /// Item data after being serialized must be less than 64 KiB.
+        /// </note>
+        /// </remarks>
+        /// <remarks>
+        /// <note>
+        /// Items may be added to queues only within workflow entrypoint or signal methods.
+        /// </note>
+        /// </remarks>
+        public async Task<bool> TryEnqueueAsync(T item)
+        {
+            await SyncContext.ClearAsync;
+            client.EnsureNotDisposed();
+            CheckDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true);
+
+            var encodedItem = client.DataConverter.ToData(item);
+
+            if (encodedItem.Length >= 64 * ByteUnits.KibiBytes)
+            {
+                throw new NotSupportedException($"Serialized items enqueued to a [{nameof(WorkflowQueue<T>)}] must be less than 64 KiB.");
+            }
+
+            var reply = (WorkflowQueueWriteReply)await client.CallProxyAsync(
+                new WorkflowQueueWriteRequest()
+                {
+                    ContextId = contextId,
+                    QueueId   = queueId,
+                    NoBlock   = true,
+                    Data      = encodedItem
+                });
+
+            reply.ThrowOnError();
+
+            return !reply.IsFull;
         }
 
         /// <summary>
         /// Attempts to dequeue an item from the queue with an optional timeout.
         /// </summary>
         /// <param name="timeout">The optional timeout.</param>
-        /// <returns>A <see cref="DequeuedItem{T}"/>.</returns>
+        /// <returns>The next item from the queue.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the associated workflow client is disposed.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the queue is disposed.</exception>
+        /// <exception cref="CadenceTimeoutException">Thrown if the timeout was reached before a value could be returned.</exception>
+        /// <exception cref="WorkflowQueueClosedException">Thrown if the the queue is closed.</exception>
         /// <remarks>
-        /// <para>
-        /// By default, this method will wait until an item can be read from the queue
-        /// or the queue is closed.  You may specify a timeout and when this is greater
-        /// than <see cref="TimeSpan.Zero"/>, the method will return after that time if
-        /// no item is waiting.
-        /// </para>
-        /// <para>
-        /// The <see cref="DequeuedItem{T}"/> return holds the item if one was read or
-        /// indicates whether the operation timed out or the queue is closed.
-        /// </para>
+        /// <note>
+        /// Items may be read from queues only from within workflow entrypoint methods.
+        /// </note>
         /// </remarks>
-        public async Task<DequeuedItem<T>> DequeueAsync(TimeSpan timeout = default)
+        public async Task<T> DequeueAsync(TimeSpan timeout = default)
         {
             await SyncContext.ClearAsync;
             client.EnsureNotDisposed();
+            CheckDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
 
-            if (isClosed)
-            {
-                return new DequeuedItem<T>(isClosed: true);
-            }
-
-            var reply = await parentWorkflow.ExecuteNonParallel(
-                async () =>
+            var reply = (WorkflowQueueReadReply)await client.CallProxyAsync(
+                new WorkflowQueueReadRequest()
                 {
-                    return (WorkflowQueueReadReply)await client.CallProxyAsync(
-                        new WorkflowQueueReadRequest()
-                        {
-                            ContextId = parentWorkflow.ContextId,
-                            QueueId   = queueId,
-                        });
+                    ContextId = contextId,
+                    QueueId   = queueId,
+                    Timeout   = timeout
                 });
 
             reply.ThrowOnError();
 
             if (reply.IsClosed)
             {
-                return new DequeuedItem<T>(isClosed: true);
-            }
-            else if (reply.Data == null)
-            {
-                return new DequeuedItem<T>(timedOut: true);
+                throw new WorkflowQueueClosedException();
             }
 
-            return new DequeuedItem<T>(client.DataConverter.FromData<T>(reply.Data));
-        }
-
-        /// <summary>
-        /// Returns the number of items currently waiting in the queue.
-        /// </summary>
-        /// <returns>The item count.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if the queue is closed.</exception>
-        /// <exception cref="ObjectDisposedException">Thrown if the associated workflow client is disposed.</exception>
-        public async Task<int> GetLengthAsync()
-        {
-            await SyncContext.ClearAsync;
-            client.EnsureNotDisposed();
-
-            if (isClosed)
-            {
-                throw new InvalidOperationException($"[{nameof(WorkflowQueue<T>)}] is closed.");
-            }
-
-            var reply = await parentWorkflow.ExecuteNonParallel(
-                async () =>
-                {
-                    return (WorkflowQueueLengthReply)await client.CallProxyAsync(
-                        new WorkflowQueueLengthRequest()
-                        {
-                            ContextId = parentWorkflow.ContextId,
-                            QueueId   = queueId,
-                        });
-                });
-
-            reply.ThrowOnError();
-
-            return reply.Length;
+            return client.DataConverter.FromData<T>(reply.Data);
         }
 
         /// <summary>
@@ -228,25 +321,29 @@ namespace Neon.Cadence
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the associated workflow client is disposed.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the queue is disposed.</exception>
+        /// <remarks>
+        /// <note>
+        /// Queues may be closed only from within workflow entrypoint or signal methods.
+        /// </note>
+        /// </remarks>
         public async Task CloseAsync()
         {
             await SyncContext.ClearAsync;
             client.EnsureNotDisposed();
+            CheckDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true, allowSignal: true);
 
             if (isClosed)
             {
                 return;
             }
 
-            var reply = await parentWorkflow.ExecuteNonParallel(
-                async () =>
+            var reply = (WorkflowQueueCloseReply)await client.CallProxyAsync(
+                new WorkflowQueueCloseRequest()
                 {
-                    return (WorkflowQueueCloseReply)await client.CallProxyAsync(
-                        new WorkflowQueueCloseRequest()
-                        {
-                            ContextId = parentWorkflow.ContextId,
-                            QueueId   = queueId,
-                        });
+                    ContextId = contextId,
+                    QueueId   = queueId,
                 });
 
             reply.ThrowOnError();

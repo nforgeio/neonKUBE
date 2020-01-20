@@ -1,4 +1,4 @@
-# neonKUBE Release Process:
+# Neon Release Process:
 
 ## Prepare
 
@@ -11,34 +11,43 @@
 2. Update `$/product-version.txt` (or `GitHub/product-version.txt` in the solution) with the 
    new package version as required.
 
-3. Update the product version here too: `$/Lib/Neon.Common/Build.cs`
+3. Run all unit tests on Windows in **RELEASE** mode.
 
-4. Run all unit tests in **RELEASE** mode
+4. Public the nuget packages locally and then manually verify that they pass on OS/X:
+   ```
+   neon-nuget-local
+   ```
 
-5. Build and publish all of the Docker images: `neon-publish-images -all`
+5. Build and publish the Docker images, the nuget packages, code documentation, as well as the full RELEASE build:
+   ```
+   neon-publish-images -all
+   neon-nuget-public
+   neon-builder -all
+   neon-release -codedoc
+   ```
 
-6. Publish the nuget packages: `neon-nuget-public`
+6. Update the **cadence-samples** solution to reference the new packages and verify that the samples work.
 
-7. Rebuild the RELEASE version via:
+7. Verify that the new release installer works.
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neon-builder -release -installer`
+8. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: v1.0.0**
 
-8. Verify that the new release installer works.
-
-9. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: v0.6.4-alpha**
-
-10. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
+9. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
 
   a. Create the release if it doesn't already exist
-  b. Set **Tag** to the version with a leading "v" (like **v0.6.4-alpha**)
+  b. Set **Tag** to the version with a leading "v" (like **v1.0.0**)
   c. Set **Target** to the `release-VERSION` branch
   e: Check **This is a pre-release** as required
-  f. Add the release setup binary named like: **neonKUBE-setup-0.6.4-alpha.exe**
-  g. Edit the release notes including adding the SHA512 for the setup from:
-
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`$NF_BUILD%\neonKUBE-setup.sha512.txt`
-
-  h. Publish the release
+  f. Add the release setup binary named like: **neonKUBE-setup-1.0.0.exe**
+  g. Add the OS/X neon-cli binary from **osx** folder as: **neon-osx**
+  h. Add **neon.chm**
+  i. Edit the release notes including adding the SHA512s for:
+  ```
+  %NF_BUILD%\neonKUBE-setup.sha512.txt
+  %NF_BUILD%\osx\neon-1.0.0.sha512.txt
+  %NF_BUILD%\neon.chm.sha512.txtl
+  ```
+  j. Publish the release
 
 ## Post Release
 
@@ -48,13 +57,11 @@
 
 3. Create the next release branch and push it.
 
-4. Create a draft for the next GitHub release.
+4. Create a draft for the next GitHub release from: `$/Doc/RELEASE-TEMPLATE.md`
 
-    * Be sure to set the branch to the new release.
+   **NOTE:** Be sure to set the branch as the new release.
 
-5. Build and publish all of the Docker images: `powershell -file %NF_ROOT%/Images/publish.ps1 -all`
-
-6. Archive the source code:
+5. Archive the source code:
 
   1. Close all Visual Studio windows.
   2. Run `neon-archive.cmd` in a command window.

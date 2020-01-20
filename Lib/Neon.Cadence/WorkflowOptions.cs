@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    WorkflowOptions.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -139,7 +139,7 @@ namespace Neon.Cadence
         /// <summary>
         /// <para>
         /// Optionally specifies the maximum time the workflow may execute from start to finish.
-        /// This will defaults to 24 hours.
+        /// This defaults to 24 hours.
         /// </para>
         /// <note>
         /// This overrides the optional corresponding value specified in the

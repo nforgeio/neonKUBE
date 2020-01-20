@@ -9,7 +9,7 @@ This page describes how to get started with neonKUBE development.
 * Visual Studio 2019 Edition (or better)
 * Visual Studio Code
 
-Note that the build environment currently assumes that only one Windows user will be acting as a developer on any given workstation.  Developers cannot share a machine.
+Note that the build environment currently assumes that only one Windows user will be acting as a developer on any given workstation.  Developers cannot share a machine and Neon only builds on Windows at this time.
 
 ## Workstation Configuration
 
@@ -67,7 +67,7 @@ Follow the steps below to configure a development or test workstation:
   * Select **all workloads** on the first panel
   * Click **Individual components**, type *Git* in the search box and select **Git for Windows** and **GitHub extension for Visual Studio**
   * Click **Install** (and take a coffee break)
-  * Install **.NET Core SDK 3.0.100 (Windows .NET Core Installer x64)** from [here](https://dotnet.microsoft.com/download/dotnet-core/3.0)
+  * Install **.NET Core SDK 3.1.100 (Windows .NET Core Installer x64)** from [here](https://dotnet.microsoft.com/download/visual-studio-sdks)
   * Apply any pending **Visual Studio updates**
   * **Close** Visual Studio and install any updates
   
@@ -114,11 +114,7 @@ Follow the steps below to configure a development or test workstation:
 
 16. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from [here](http://www.7-zip.org/download.html)
 
-17. Install **MinGW (Minimalist GNU for Windows):**
-
-    * Install MinGW from [here](https://sourceforge.net/projects/mingw-w64/) and follow these [instructions](https://code.visualstudio.com/docs/cpp/config-mingw)
-    * You only need to follow instruction through the "Prerequisites" section.
-    * Make sure that when you install, you install for your specific architecture (i.e. x86_64).  
+17. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
 
 18. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
 
@@ -136,7 +132,7 @@ Follow the steps below to configure a development or test workstation:
     * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
     * Close the CMD window when the script is finished
   
-20. Install the latest build of neonKUBE from [here](https://github.com/nforgeio/neonKUBE/releases)
+20. Install the latest release build of neonKUBE from [here](https://github.com/nforgeio/neonKUBE/releases)
 
 21. Restart Visual Studio (to pick up the environment changes).
 
@@ -172,48 +168,35 @@ Follow the steps below to configure a development or test workstation:
 
 28. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
-29. *Optional*: Developers who will be publishing **nuget packages** will need to:
+29. *Optional*: Developers who will be publishing releases will need to:
 
-    * Download the latest recommended **nuget.exe** from [here](https://www.nuget.org/downloads) and put this somewhere in your `PATH`
+    * **Download:** the latest recommended **nuget.exe** from [here](https://www.nuget.org/downloads) and put this somewhere in your `PATH`
     * Obtain a nuget API key from a senior developer and install the key on their workstation via:
       ```
       nuget SetApiKey APIKEY
       ```
+    * **Close:** all Visual Studio instances.
+    * **Install:** the HTML Help Compiler by running `$/External/htmlhelp.exe` with the default options.  You can ignore any message about a newer version already being installed.
+    * **Unzip:** `$/External/SHFBInstaller_v2019.9.15.0.zip` to a temporary folder and run `SandcastleInstaller.exe`, then:
+      * Click **Next** until you get to the **Sandcastle Help File Builder and Tools** page.
+      * Click **Next** and then **Install SHFB**
+      * Go through the wizard, accepting the licence and use the default options.
+      * Click **Finish** to close the SHFB installer.
+      * Click **Next** in the guided installation and then **Install Package** to install the Visual Studio package.
+      * Click **Next** and click **Install Schemas**
+      * **Optional:** Install Snippets (I don't don't install these myself)
+      * Click **Next** and **Close**.  Don't install the Visual Studio Spell Checker.
+    * Clone the **nforgeio/nforgeio.github.io** repository.  This hosts the generated Neon documentation website.  The cloned folder must be named **nforgeio.github.io** and be located in the same parent directory as your main neonKUBE repo:
+    ```
+    cd "%NF_ROOT%\.."
+    mkdir nforgeio.github.io
+    git clone https://github.com/nforgeio/nforgeio.github.io.git
+    ```
+    * You'll also need to clone the **nforgeio/cadence-samples** repo.  This hosts the Cadence samples which are referenced by the code documention.  The cloned folder must be named **cadence-samples** and be located in the same parent directory as your main neonKUBE repo: 
+    ```
+    cd "%NF_ROOT%\.."
+    mkdir cadence-samples
+    git clone https://github.com/nforgeio/cadence-samples.git
+    ```
 
 30. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
-
-## Git Branches
-
-neonKUBE conventions for GitHub branches:
-
-* **master:**
-
-  Includes the most recent relatively stable commits.  Developers will merge any changes here after confirming that the changes appear to work.  The **master** branch should always build and pass unit tests and will generally act as the candidate for test, staging, and production releases.
-
-* **product-version:**
-
-  These are used to track released software.  Release branches should generally not be modified after the release has been made.  When minor changes are required, a new release branch (incrementing the PATCH version) should be created from the current release branch and the new release should be built and published.
-
-* **developer:**
-
-  Developers will generally have one or more branches prefixed by their first name (lowercase), like: **jeff**, **jeff-experimental**,...
-  
-* **feature:**
-
-  When developers need to colloborate on a feature over an extended period of time, we'll create feature branches named like **feature-coolstuff**.  Most development work will happen in a developer or feature branch.
-
-## Coding Conventions
-
-We'll be generally following the [Microsoft C# Coding Conventions](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/inside-a-program/coding-conventions).
-
-## Code Comments
-
-In general, all public types, methods, and properties should have reasonable code comments describing the basic functionality.  Please use the C# `<see>`, `<paramref>`, `<typeparam>`, `<para>`, `<b>`, `<i>`, `<c>` markup elements so that the generated web pages will look nice.  This is especially true for REST APIs so that Swagger can generate nice documentation for developers looking at the API.
-
-## Unit Tests
-
-Each important class library and application should have its own **xunit** based unit test project.  This should be named like **Test.PROJECT** where **PROJECT** is the name of the component being test.  For example we'd create a test project named **Test.Loopie.Common** for the **Loopie.Common** library.
-
-The C# namespace for each test project should be the same as the project name (e.g. **Test.Neon.Common**) and each test class name should be prefixed by **Test_** to avoid namespace conflicts with the classes you need to test against.
-
-Test methods should be organized into categories using the xunit **[Trait(...)]** attribute.

@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    CadenceException.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="message">Optionally specifies message.</param>
+        /// <param name="message">Optionally specifies a message.</param>
         /// <param name="innerException">Optionally specifies the inner exception.</param>
         public CadenceException(string message = null, Exception innerException = null)
             : base(message, innerException)
@@ -49,6 +49,17 @@ namespace Neon.Cadence
         /// Returns the Cadence error type.
         /// </summary>
         internal abstract CadenceErrorTypes CadenceErrorType { get; }
+
+        /// <summary>
+        /// Returns the Cadence error reason used for specifying non-retryable errors
+        /// for a <see cref="RetryOptions"/> instance.
+        /// </summary>
+        internal abstract string Reason { get; }
+
+        /// <summary>
+        /// Returns the additional details about the exception.
+        /// </summary>
+        public string Details { get; internal set; }
 
         /// <summary>
         /// Converts the exception into a <see cref="CadenceError"/>.

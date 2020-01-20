@@ -18,8 +18,10 @@
 package messages
 
 import (
-	proxyclient "github.com/cadence-proxy/internal/cadence/client"
+	cadenceshared "go.uber.org/cadence/.gen/go/shared"
+
 	internal "github.com/cadence-proxy/internal"
+	proxyclient "github.com/cadence-proxy/internal/cadence/client"
 )
 
 type (
@@ -79,26 +81,23 @@ func (reply *DomainDescribeReply) SetDomainInfoDescription(value *string) {
 }
 
 // GetDomainInfoStatus gets the DomainInfoStatus property as a string
-// pointer from a DomainDescribeReply's properties map
+// pointer from a DomainDescribeReply's properties map.
 //
-// returns *DomainStatus -> DomainStatus of the Domain being described
-// from a DomainDescribeReply's properties map
-func (reply *DomainDescribeReply) GetDomainInfoStatus() proxyclient.DomainStatus {
-	domainInfoStatusPtr := reply.GetStringProperty("DomainInfoStatus")
-	if domainInfoStatusPtr == nil {
-		return proxyclient.DomainStatusUnspecified
+// returns *cadenceshared.DomainStatus -> status of the specified domain.
+func (reply *DomainDescribeReply) GetDomainInfoStatus() *cadenceshared.DomainStatus {
+	domainStatusPtr := reply.GetStringProperty("DomainInfoStatus")
+	if domainStatusPtr == nil {
+		return nil
 	}
-	domainStatus := proxyclient.StringToDomainStatus(*domainInfoStatusPtr)
 
-	return domainStatus
+	return proxyclient.StringToDomainStatus(*domainStatusPtr)
 }
 
 // SetDomainInfoStatus sets the DomainInfoStatus property as a string
 // pointer in a DomainDescribeReply's properties map
 //
-// param value *DomainStatus -> DomainStatus value to set
-// as the DomainDescribeReply's DomainInfoStatus in its properties map
-func (reply *DomainDescribeReply) SetDomainInfoStatus(value proxyclient.DomainStatus) {
+// param value *cadenceshared.DomainStatus -> status of the specified domain.
+func (reply *DomainDescribeReply) SetDomainInfoStatus(value *cadenceshared.DomainStatus) {
 	status := value.String()
 	reply.SetStringProperty("DomainInfoStatus", &status)
 }

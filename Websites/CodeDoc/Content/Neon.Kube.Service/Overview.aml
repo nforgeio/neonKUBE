@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- topic-filename="Neon.Kube.Service-Overview" -->
+<topic id="7bc8021c-493a-4512-8532-b8969edf82c8" revisionNumber="1">
+  <developerConceptualDocument
+    xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
+
+    <introduction>
+    </introduction>
+
+    <section address="summary">
+      <content>
+        <para>
+          This package includes two classes that include boilerplate code for implementing
+          Docker container or Kubernetes service applications, including integrated logging
+          as well as handling termination signals for Linux and OS/X.  These classes also
+          provide a nice way to unit test your services.
+        </para>
+        <para>
+          <codeEntityReference qualifyHint="false">T:Neon.Kube.Service.KubeService</codeEntityReference> can be
+          used as the base class for your service.
+        </para>
+        <para>
+          <codeEntityReference qualifyHint="false">T:Neon.Kube.Service.ProcessTerminator</codeEntityReference>
+          is a lower-level class that receives and handle Linux and OS/X termination signals.
+        </para>
+      </content>
+    </section>
+
+    <relatedTopics>
+      <codeEntityReference qualifyHint="false">N:Neon.Kube.Service</codeEntityReference>
+    </relatedTopics>
+  </developerConceptualDocument>
+</topic>

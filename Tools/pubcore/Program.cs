@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Program.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -319,7 +319,7 @@ or:
             //
             // will publish their output to:
             //
-            //      PROJECT-DIR\bin\CONFIGURATION\netcoreapp3.0\publish
+            //      PROJECT-DIR\bin\CONFIGURATION\netcoreapp3.1\publish
             //
             // Projects that use <RuntimeIdentifiers/> (plural) with one
             // or more runtime identifiers like:
@@ -328,7 +328,7 @@ or:
             //
             // will publish output to:
             //
-            //      PROJECT-DIR\bin\CONFIGURATION\netcoreapp3.0\win10-x64\publish
+            //      PROJECT-DIR\bin\CONFIGURATION\netcoreapp3.1\win10-x64\publish
             //
             // We're going to probe for the existence of the first folder
             // and assume the second if the first doesn't exist.

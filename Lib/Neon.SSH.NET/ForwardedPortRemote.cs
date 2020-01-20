@@ -107,7 +107,7 @@ namespace Renci.SshNet
         /// <param name="host">The host.</param>
         /// <param name="port">The port.</param>
         /// <example>
-        ///     <code source="..\..\src\Renci.SshNet.Tests\Classes\ForwardedPortRemoteTest.cs" region="Example SshClient AddForwardedPort Start Stop ForwardedPortRemote" language="C#" title="Remote port forwarding" />
+        ///     <code source="..\..\Lib\Neon.SSH.NET\Examples\ForwardedPortRemoteTest.cs" region="Example SshClient AddForwardedPort Start Stop ForwardedPortRemote" language="C#" title="Remote port forwarding" />
         /// </example>
         public ForwardedPortRemote(uint boundPort, string host, uint port)
             : this(string.Empty, boundPort, host, port)

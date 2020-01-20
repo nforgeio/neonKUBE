@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    CadenceClient.Activity.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ namespace Neon.Cadence
         /// <param name="domain">Optionally overrides the default client domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown if a different activity class has already been registered for <paramref name="activityTypeName"/>.</exception>
-        /// <exception cref="CadenceActivityWorkerStartedException">
+        /// <exception cref="ActivityWorkerStartedException">
         /// Thrown if an activity worker has already been started for the client.  You must
         /// register activity implementations before starting workers.
         /// </exception>
@@ -66,7 +66,7 @@ namespace Neon.Cadence
 
             if (activityWorkerStarted)
             {
-                throw new CadenceActivityWorkerStartedException();
+                throw new ActivityWorkerStartedException();
             }
 
             var activityType = typeof(TActivity);
@@ -97,7 +97,7 @@ namespace Neon.Cadence
         /// derived from <see cref="ActivityBase"/>.
         /// </exception>
         /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
-        /// <exception cref="CadenceActivityWorkerStartedException">
+        /// <exception cref="ActivityWorkerStartedException">
         /// Thrown if an activity worker has already been started for the client.  You must
         /// register activity implementations before starting workers.
         /// </exception>
@@ -114,7 +114,7 @@ namespace Neon.Cadence
 
             if (activityWorkerStarted)
             {
-                throw new CadenceActivityWorkerStartedException();
+                throw new ActivityWorkerStartedException();
             }
 
             foreach (var type in assembly.GetTypes().Where(t => t.IsClass))
@@ -194,7 +194,7 @@ namespace Neon.Cadence
         /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <param name="result">Passed as the activity result for activity success.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the activity no longer exists.</exception>
         public async Task ActivityCompleteByTokenAsync(string taskToken, object result = null, string domain = null)
         {
             await SyncContext.ClearAsync;
@@ -220,7 +220,7 @@ namespace Neon.Cadence
         /// <param name="result">Passed as the activity result for activity success.</param>
         /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the activity no longer exists.</exception>
         public async Task ActivityCompleteByIdAsync(WorkflowExecution execution, string activityId, object result = null, string domain = null)
         {
             await SyncContext.ClearAsync;
@@ -247,7 +247,7 @@ namespace Neon.Cadence
         /// <param name="taskToken">The opaque base-64 encoded activity task token.</param>
         /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the activity no longer exists.</exception>
         public async Task ActivityCancelByTokenAsync(string taskToken, string domain = null)
         {
             await SyncContext.ClearAsync;
@@ -259,7 +259,7 @@ namespace Neon.Cadence
                 {
                     Domain    = ResolveDomain(domain),
                     TaskToken = Convert.FromBase64String(taskToken),
-                    Error     = new CadenceError(new CadenceCancelledException("Cancelled"))
+                    Error     = new CadenceError(new CancelledException("Cancelled"))
                 });
 
             reply.ThrowOnError();
@@ -272,7 +272,7 @@ namespace Neon.Cadence
         /// <param name="activityId">The activity ID.</param>
         /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the activity no longer exists.</exception>
         public async Task ActivityCancelByIdAsync(WorkflowExecution execution, string activityId, string domain = null)
         {
             await SyncContext.ClearAsync;
@@ -287,7 +287,7 @@ namespace Neon.Cadence
                     WorkflowId = execution.WorkflowId,
                     RunId      = execution.RunId,
                     ActivityId = activityId,
-                    Error      = new CadenceError(new CadenceCancelledException("Cancelled"))
+                    Error      = new CadenceError(new CancelledException("Cancelled"))
                 });
 
             reply.ThrowOnError();
@@ -300,7 +300,7 @@ namespace Neon.Cadence
         /// <param name="error">Specifies the activity error.</param>
         /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the activity no longer exists.</exception>
         public async Task ActivityErrorByTokenAsync(string taskToken, Exception error, string domain = null)
         {
             await SyncContext.ClearAsync;
@@ -327,7 +327,7 @@ namespace Neon.Cadence
         /// <param name="error">Specifies the activity error.</param>
         /// <param name="domain">Optionally overrides the default <see cref="CadenceClient"/> domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the activity no longer exists.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the activity no longer exists.</exception>
         public async Task ActivityErrorByIdAsync(WorkflowExecution execution, string activityId, Exception error, string domain = null)
         {
             await SyncContext.ClearAsync;

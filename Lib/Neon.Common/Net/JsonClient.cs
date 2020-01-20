@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    JsonClient.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -97,7 +97,7 @@ namespace Neon.Net
         // Instance members
 
         private object                                      syncLock          = new object();
-        private IRetryPolicy                                safeRetryPolicy   = new ExponentialRetryPolicy(TransientDetector.NetworkOrHttp);
+        private IRetryPolicy                                safeRetryPolicy   = new ExponentialRetryPolicy(TransientDetector.NetworkOrHttp, initialRetryInterval: TimeSpan.FromMilliseconds(250),maxRetryInterval: TimeSpan.FromSeconds(5));
         private IRetryPolicy                                unsafeRetryPolicy = new NoRetryPolicy();
         private Dictionary<Type, IEnhancedJsonConverter>    typeToConverter   = new Dictionary<Type, IEnhancedJsonConverter>();
         private bool                                        disposeClient;

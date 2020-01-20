@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    TransientDetector.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ namespace Neon.Retry
     public static class TransientDetector
     {
         /// <summary>
-        /// Always determines that the exception is always transient.
+        /// Considers <b>every</b> exceptions to be transient.
         /// </summary>
         /// <param name="e">The potential transient exception.</param>
         /// <returns><c>true</c></returns>
@@ -48,7 +48,7 @@ namespace Neon.Retry
         }
 
         /// <summary>
-        /// Never determines that the exception is never transient.
+        /// Considers <b>no</b> exceptions to be transient.
         /// </summary>
         /// <param name="e">The potential transient exception.</param>
         /// <returns><c>false</c></returns>

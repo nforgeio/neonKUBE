@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # FILE:         neon-nuget-public.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,7 +33,8 @@ function SetVersion
         [string]$project
     )
 
-	text pack-version "$env:NF_ROOT\product-version.txt" "$env:NF_ROOT\Lib\$project\$project.csproj"
+    "$project"
+	neon-build pack-version "$env:NF_ROOT\product-version.txt" "$env:NF_ROOT\Lib\$project\$project.csproj"
 }
 
 function Publish
@@ -48,10 +49,29 @@ function Publish
 
 	$version = Get-Content "$env:NF_ROOT\product-version.txt" -First 1
 
-	nuget push -Source nuget.org "$env:NF_BUILD\nuget\$project.$version.nupkg"
+    if (Test-Path "$env:NF_ROOT\Lib\$project\prerelease.txt")
+    {
+        $prerelease = Get-Content "$env:NF_ROOT\Lib\$project\prerelease.txt" -First 1
+        $prerelease = $prerelease.Trim()
+
+        if ($prerelease -ne "")
+        {
+            $prerelease = "-" + $prerelease
+        }
+    }
+    else
+    {
+        $prerelease = ""
+    }
+
+	nuget push -Source nuget.org "$env:NF_BUILD\nuget\$project.$version$prerelease.nupkg"
 }
 
-# Update the project versions first.
+# Copy the version from [$/product-version] into [$/Lib/Neon/Common/Build.cs]
+
+& neon-build build-version
+
+# Update the project versions.
 
 SetVersion Neon.Cadence
 SetVersion Neon.Common

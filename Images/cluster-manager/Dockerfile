@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # FILE:         Dockerfile
 # CONTRIBUTOR:  Marcus Bowyer
-# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM        nkubedev/aspnet:master-3.0.0-bionic
+FROM        nkubedev/aspnet:master-3.1.0-bionic
 MAINTAINER  marcus@loopie.io
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
@@ -32,7 +32,7 @@ ARG         APPNAME
 COPY bin/__dep              /usr/bin/$APPNAME.dotnet/
 RUN echo ** NEW LAYER **
 
-ENV TZ=America/Los_Angeles
+ENV TZ=UTC
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # App files.

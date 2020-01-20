@@ -1,0 +1,103 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- topic-filename="Neon.Cadence-Overview" -->
+<topic id="b4a13879-cf87-43e2-8b6e-a122d8809d7a" revisionNumber="1">
+  <developerConceptualDocument
+    xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <introduction>
+      <para>
+        The <legacyBold>Neon.Cadence</legacyBold> class library is built for NETStandard 2.0
+        and is capable of connecting to an
+        <externalLink>
+          <linkText>Uber Cadence</linkText>
+          <linkUri>https://cadenceworkflow.io/docs/</linkUri>
+        </externalLink>
+        workflow cluster to manage and implement workflows.
+      </para>
+      <alert class="warning">
+        <para>
+          <legacyBold>Neon.Cadence</legacyBold> currently supports AMD 64-bit Windows, OS/X, and Linux 
+          runtime environments only.
+        </para>
+      </alert>
+    </introduction>
+
+    <section address="summary">
+      <content>
+        <para>
+          Uber Cadence is a wonderful open source solution for developers who need to deploy reliable workflows
+          for small to highly scaled applications and services.  This isn't the first workflow product, but
+          it may be the first one tailored specifically for developers who want to code workflows in a popular
+          language as opposed to drawing flow-charts, editing crazy XML workflow definitions, and/or jumping
+          through multi-step build hoops.
+        </para>
+        <para>
+          <legacyBold>Neon.Cadence</legacyBold> combined with Uber Cadence lets you implement workflows in
+          any supported .NET language with little friction.  You can even set breakpoints and debug your
+          workflows directly in Visual Studio.
+        </para>
+        <para>
+          This page describes the key concepts.  Subsequent pages will show you how to get started. 
+        </para>
+      </content>
+    </section>
+
+    <section address="overview">
+      <title>Overview</title>
+      <content>
+        <para>
+          Cadence is a general purpose platform that can handle workflows that exist for just a moment or two
+          or workflows that run for days months or even years.  Cadence persists the state of running workflows
+          using the Cassandra or MySQL database to ensure that workflows will execute correctly even in the
+          face of hardware failures.  Cadence and Cassandra can be easily scaled horizontally for fault
+          tolerance and to handle very high loads.  Uber has Cadence deployments that can handle millions
+          of simultanious workflows.
+        </para>
+        <para>
+          Here's a video by <legacyBold>Maxim Fateev</legacyBold>, the creator of Cadence, describing what
+          Cadence is and how it works:
+        </para>
+        <para>
+          <externalLink>
+            <linkText>Cadence: The Only Workflow Platform You'll Ever Need</linkText>
+            <linkUri>https://www.youtube.com/watch?v=llmsBGKOuWI</linkUri>
+          </externalLink>
+        </para>
+        <para>
+          Here's a link to the Neon Cadence client namespace documentation:
+        </para>
+        <para>
+          <codeEntityReference qualifyHint="false">N:Neon.Cadence</codeEntityReference>
+        </para>
+        <para>
+          We'll remainder of these pages will guide you through creating your first workflows.
+        </para>
+      </content>
+    </section>
+
+    <relatedTopics>
+      <externalLink>
+        <linkText>Cadence: The Only Workflow Platform You'll Ever Need</linkText>
+        <linkUri>https://www.youtube.com/watch?v=llmsBGKOuWI</linkUri>
+      </externalLink>
+      <externalLink>
+        <linkText>.NET Cadence GitHub Repository</linkText>
+        <linkUri>https://github.com/nforgeio/neonKUBE/tree/master/Lib/Neon.Cadence</linkUri>
+      </externalLink>
+      <codeEntityReference qualifyHint="false">N:Neon.Cadence</codeEntityReference>
+      <externalLink>
+        <linkText>.NET Cadence Open Issues</linkText>
+        <linkUri>https://github.com/nforgeio/neonKUBE/issues?q=is%3Aopen+is%3Aissue+label%3Acadence</linkUri>
+      </externalLink>
+      <externalLink>
+        <linkText>.NET Cadence Samples</linkText>
+        <linkUri>https://github.com/nforgeio/cadence-samples</linkUri>
+      </externalLink>
+      <externalLink>
+        <linkText>Uber Cadence</linkText>
+        <linkUri>https://cadenceworkflow.io/docs/</linkUri>
+      </externalLink>
+    </relatedTopics>
+  </developerConceptualDocument>
+</topic>

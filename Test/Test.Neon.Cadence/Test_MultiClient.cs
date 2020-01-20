@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:        Test_MultiClient.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -146,8 +146,18 @@ namespace TestCadence
                     await client2.RegisterWorkflowAsync<WorkflowWithResult2>();
                     await client2.StartWorkerAsync("tasklist-2");
 
-                    var stub1 = client1.NewWorkflowStub<IWorkflowWithResult1>();
-                    var stub2 = client2.NewWorkflowStub<IWorkflowWithResult2>();
+                    var options1 = new WorkflowOptions()
+                    {
+                        TaskList = "tasklist-1"
+                    };
+
+                    var options2 = new WorkflowOptions()
+                    {
+                        TaskList = "tasklist-2"
+                    };
+
+                    var stub1 = client1.NewWorkflowStub<IWorkflowWithResult1>(options: options1);
+                    var stub2 = client2.NewWorkflowStub<IWorkflowWithResult2>(options: options2);
 
                     Assert.Equal("WF1 says: Hello Jeff!", await stub1.HelloAsync("Jeff"));
                     Assert.Equal("WF2 says: Hello Jeff!", await stub2.HelloAsync("Jeff"));

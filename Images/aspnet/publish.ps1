@@ -1,7 +1,7 @@
 ﻿#------------------------------------------------------------------------------
 # FILE:         publish.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -77,6 +77,7 @@ $noImagePush = $nopush
 
 if ($allVersions)
 {
+	Build 3.0.0-bionic
 }
 
-Build 3.0.0-bionic -latest
+Build 3.1.0-bionic -latest

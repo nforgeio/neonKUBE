@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Activity.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -83,7 +83,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Returns the additional information about the activity and the workflow
-        /// that invoked it.  Note that this doesn't work for local activities.
+        /// that invoked it.  Note that this is not supported for local activities.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown for local activities.</exception>
         public ActivityTask Task => parent.ActivityTask;
@@ -196,7 +196,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <remarks>
         /// <note>
-        /// This method doesn't work for local activities.
+        /// This method is not supported for local activities.
         /// </note>
         /// </remarks>
         public void DoNotCompleteOnReturn()

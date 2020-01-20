@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    CadenceClient.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -586,7 +586,7 @@ namespace Neon.Cadence
         /// </summary>
         internal static void Reset()
         {
-            foreach (var client in idToClient.Values)
+            foreach (var client in idToClient.Values.ToArray())
             {
                 client.Dispose();
             }
@@ -602,9 +602,89 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// <para>
+        /// Writes the <b>cadence-proxy</b> binaries to the specified folder.  This is
+        /// provided so that you can pre-provision the executable and then use the 
+        /// <see cref="CadenceSettings.BinaryPath"/> setting to reference it.
+        /// These files will be written:
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><b>cadence-proxy.win.exe</b></term>
+        ///     <description>
+        ///     The Windows AMD64 executable
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>cadence-proxy.linux</b></term>
+        ///     <description>
+        ///     The Linux AMD64 executable
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>cadence-proxy.osx</b></term>
+        ///     <description>
+        ///     The OS/X AMD64 executable
+        ///     </description>
+        /// </item>
+        /// </list>
+        /// <para>
+        /// This is useful for situations where the executable must be pre-provisioned for
+        /// security.  One example is deploying Cadence workers to a Docker container with
+        /// a read-only file system.
+        /// </para>
+        /// </summary>
+        /// <param name="folderPath">Path to the output folder.</param>
+        public static void ExtractCadenceProxy(string folderPath)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folderPath));
+
+            var resources = new string[]
+            {
+                "Neon.Cadence.Resources.cadence-proxy.win.exe.gz",
+                "Neon.Cadence.Resources.cadence-proxy.linux.gz",
+                "Neon.Cadence.Resources.cadence-proxy.osx.gz"
+            };
+
+            var files = new string[]
+            {
+                "cadence-proxy.win.exe",
+                "cadence-proxy.linux",
+                "cadence-proxy.osx"
+            };
+
+            for (int i = 0; i < resources.Length; i++)
+            {
+                var resourcePath   = resources[i];
+                var resourceStream = thisAssembly.GetManifestResourceStream(resourcePath);
+                var binaryPath     = Path.Combine(folderPath, files[i]);
+
+                if (resourceStream == null)
+                {
+                    throw new KeyNotFoundException($"Embedded resource [{resourcePath}] not found.  Cannot extract [cadency-proxy].");
+                }
+
+                using (resourceStream)
+                {
+                    using (var binaryStream = new FileStream(binaryPath, FileMode.Create, FileAccess.ReadWrite))
+                    {
+                        resourceStream.GunzipTo(binaryStream);
+                    }
+                }
+            }
+        } 
+
+        /// <summary>
+        /// <para>
         /// Writes the correct <b>cadence-proxy</b> binary for the current environment
         /// to the file system (if that hasn't been done already) and then launches 
         /// a proxy instance configured to listen at the specified endpoint.
+        /// </para>
+        /// <note>
+        /// If <see cref="CadenceSettings.BinaryPath"/> is not <c>null</c> or empty then
+        /// we'll just execute that binary rather than trying to extract one.  We'll also
+        /// assume that we already have execute permissions.
+        /// </note>
         /// </summary>
         /// <param name="endpoint">The network endpoint where the proxy will listen.</param>
         /// <param name="settings">The cadence connection settings.</param>
@@ -621,90 +701,94 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(endpoint != null, nameof(endpoint));
             Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
 
-            var binaryFolder = settings.BinaryFolder;
+            var binaryPath = settings.BinaryPath;
 
-            if (binaryFolder == null)
+            if (string.IsNullOrEmpty(binaryPath))
             {
-                binaryFolder = NeonHelper.GetAssemblyFolder(thisAssembly);
-            }
+                var binaryFolder = settings.BinaryFolder;
 
-            string resourcePath;
-            string binaryPath;
-
-            if (NeonHelper.IsWindows)
-            {
-                resourcePath = "Neon.Cadence.Resources.cadence-proxy.win.exe.gz";
-                binaryPath   = Path.Combine(binaryFolder, "cadence-proxy.exe");
-            }
-            else if (NeonHelper.IsOSX)
-            {
-                resourcePath = "Neon.Cadence.Resources.cadence-proxy.osx.gz";
-                binaryPath   = Path.Combine(binaryFolder, "cadence-proxy");
-            }
-            else if (NeonHelper.IsLinux)
-            {
-                resourcePath = "Neon.Cadence.Resources.cadence-proxy.linux.gz";
-                binaryPath   = Path.Combine(binaryFolder, "cadence-proxy");
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-
-            lock (syncLock)
-            {
-                if (!proxyWritten)
+                if (string.IsNullOrEmpty(binaryFolder))
                 {
-                    // Extract and decompress the [cadence-proxy] binary.  Note that it's
-                    // possible that another instance of an .NET application using this 
-                    // library is already runing on this machine such that the proxy
-                    // binary file will be read-only.  In this case, we'll log and otherwise
-                    // ignore the exception and assume that the proxy binary is correct.
+                    binaryFolder = NeonHelper.GetAssemblyFolder(thisAssembly);
+                }
 
-                    try
+                string resourcePath;
+
+                if (NeonHelper.IsWindows)
+                {
+                    resourcePath = "Neon.Cadence.Resources.cadence-proxy.win.exe.gz";
+                    binaryPath   = Path.Combine(binaryFolder, "cadence-proxy.exe");
+                }
+                else if (NeonHelper.IsOSX)
+                {
+                    resourcePath = "Neon.Cadence.Resources.cadence-proxy.osx.gz";
+                    binaryPath = Path.Combine(binaryFolder, "cadence-proxy");
+                }
+                else if (NeonHelper.IsLinux)
+                {
+                    resourcePath = "Neon.Cadence.Resources.cadence-proxy.linux.gz";
+                    binaryPath = Path.Combine(binaryFolder, "cadence-proxy");
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+
+                lock (syncLock)
+                {
+                    if (!proxyWritten)
                     {
-                        var resourceStream = thisAssembly.GetManifestResourceStream(resourcePath);
+                        // Extract and decompress the [cadence-proxy] binary.  Note that it's
+                        // possible that another instance of an .NET application using this 
+                        // library is already runing on this machine such that the proxy
+                        // binary file will be read-only.  In this case, we'll log and otherwise
+                        // ignore the exception and assume that the proxy binary is correct.
 
-                        if (resourceStream == null)
+                        try
                         {
-                            throw new KeyNotFoundException($"Embedded resource [{resourcePath}] not found.  Cannot launch [cadency-proxy].");
-                        }
+                            var resourceStream = thisAssembly.GetManifestResourceStream(resourcePath);
 
-                        using (resourceStream)
-                        {
-                            using (var binaryStream = new FileStream(binaryPath, FileMode.Create, FileAccess.ReadWrite))
+                            if (resourceStream == null)
                             {
-                                resourceStream.GunzipTo(binaryStream);
+                                throw new KeyNotFoundException($"Embedded resource [{resourcePath}] not found.  Cannot launch [cadency-proxy].");
+                            }
+
+                            using (resourceStream)
+                            {
+                                using (var binaryStream = new FileStream(binaryPath, FileMode.Create, FileAccess.ReadWrite))
+                                {
+                                    resourceStream.GunzipTo(binaryStream);
+                                }
                             }
                         }
-                    }
-                    catch (Exception e)
-                    {
-                        if (File.Exists(binaryPath))
+                        catch (Exception e)
                         {
-                            log.LogWarn($"[cadence-proxy] binary [{binaryPath}] already exists and is probably read-only.", e);
+                            if (File.Exists(binaryPath))
+                            {
+                                log.LogWarn($"[cadence-proxy] binary [{binaryPath}] already exists and is probably read-only.", e);
+                            }
+                            else
+                            {
+                                log.LogWarn($"[cadence-proxy] binary [{binaryPath}] cannot be written.", e);
+                            }
                         }
-                        else
+
+                        if (NeonHelper.IsLinux || NeonHelper.IsOSX)
                         {
-                            log.LogWarn($"[cadence-proxy] binary [{binaryPath}] cannot be written.", e);
+                            // We need to set the execute permissions on this file.  We're
+                            // going to assume that only the root and current user will
+                            // need execute rights to the proxy binary.
+
+                            var result = NeonHelper.ExecuteCapture("chmod", new object[] { "774", binaryPath });
+
+                            if (result.ExitCode != 0)
+                            {
+                                throw new IOException($"Cannot set execute permissions for [{binaryPath}]:\r\n{result.ErrorText}");
+                            }
                         }
+
+                        proxyWritten = true;
                     }
-
-                    if (NeonHelper.IsLinux || NeonHelper.IsOSX)
-                    {
-                        // We need to set the execute permissions on this file.  We're
-                        // going to assume that only the root and current user will
-                        // need execute rights to the proxy binary.
-
-                        var result = NeonHelper.ExecuteCapture("chmod", new object[] { "774", binaryPath });
-
-                        if (result.ExitCode != 0)
-                        {
-                            throw new IOException($"Cannot set execute permissions for [{binaryPath}]:\r\n{result.ErrorText}");
-                        }
-                    }
-
-                    proxyWritten = true;
                 }
             }
 
@@ -797,6 +881,37 @@ namespace Neon.Cadence
             {
                 try
                 {
+                    // We're going to wait up to 30 seconds for [cadence-proxy] to initialize
+                    // itself to be ready to receive requests.  We're going to ping the proxy's
+                    // HTTP endpoint with GET requests until we see an HTTP response.
+                    //
+                    // Note that [cadence-proxy] accepts only POST requests, so these GETs will
+                    // be ignored and we'll see a 405 Method Not Allowed response when the proxy
+                    // is ready.
+
+                    using (var initClient = new HttpClient())
+                    {
+                        initClient.BaseAddress = client.proxyClient.BaseAddress;
+                        initClient.Timeout     = TimeSpan.FromSeconds(1);
+
+                        await NeonHelper.WaitForAsync(
+                            async () =>
+                            {
+                                try
+                                {
+                                    await initClient.SendAsync(new HttpRequestMessage(HttpMethod.Get, "/"));
+
+                                    return true;
+                                }
+                                catch
+                                {
+                                    return false;
+                                }
+                            },
+                            timeout: TimeSpan.FromSeconds(30),
+                            pollTime: TimeSpan.FromMilliseconds(500));
+                    }
+
                     // Send the [InitializeRequest] to the [cadence-proxy] so it will know
                     // where the .NET Client is listening.
 
@@ -837,7 +952,7 @@ namespace Neon.Cadence
                 catch (Exception e)
                 {
                     client.Dispose();
-                    throw new CadenceConnectException("Cannot connect to Cadence cluster.", e);
+                    throw new ConnectException("Cannot connect to Cadence cluster.", e);
                 }
             }
 
@@ -1097,6 +1212,7 @@ namespace Neon.Cadence
                 lock (syncLock)
                 {
                     operations.TryGetValue(reply.RequestId, out operation);
+                    operations.Remove(reply.RequestId);
                 }
 
                 if (operation != null)
@@ -1230,7 +1346,6 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Instance members
 
-        private IPAddress                       address                 = IPAddress.Parse("127.0.0.2");    // Using a non-default loopback to avoid port conflicts
         private Process                         proxyProcess            = null;
         private int                             proxyPort               = 0;
         private Dictionary<long, Worker>        workers                 = new Dictionary<long, Worker>();
@@ -1270,7 +1385,7 @@ namespace Neon.Cadence
 
             if (settings.Servers == null || settings.Servers.Count == 0)
             {
-                throw new CadenceConnectException("No Cadence servers were specified.");
+                throw new ConnectException("No Cadence servers were specified.");
             }
 
             foreach (var server in settings.Servers)
@@ -1284,7 +1399,7 @@ namespace Neon.Cadence
                 }
                 catch
                 {
-                    throw new CadenceConnectException($"Invalid Cadence server URI: {server}");
+                    throw new ConnectException($"Invalid Cadence server URI: {server}");
                 }
             }
 
@@ -1310,17 +1425,17 @@ namespace Neon.Cadence
                 {
                     idToClient.Add(this.ClientId, this);
 
-                    httpServer = new HttpServer(address, settings);
+                    httpServer = new HttpServer(Address, settings);
                     ListenUri  = httpServer.ListenUri;
 
                     // Determine the port we'll have [cadence-proxy] listen on and then
                     // fire up the cadence-proxy process.
 
-                    proxyPort = !settings.DebugPrelaunched ? NetHelper.GetUnusedTcpPort(address) : debugProxyPort;
+                    proxyPort = !settings.DebugPrelaunched ? NetHelper.GetUnusedTcpPort(Address) : debugProxyPort;
 
                     if (!Settings.DebugPrelaunched && proxyProcess == null)
                     {
-                        proxyProcess = StartProxy(new IPEndPoint(address, proxyPort), settings, ClientId);
+                        proxyProcess = StartProxy(new IPEndPoint(Address, proxyPort), settings, ClientId);
                     }
                 }
                 catch
@@ -1343,7 +1458,7 @@ namespace Neon.Cadence
 
             proxyClient = new HttpClient(httpHandler, disposeHandler: true)
             {
-                BaseAddress = new Uri($"http://{address}:{proxyPort}"),
+                BaseAddress = new Uri($"http://{Address}:{proxyPort}"),
                 Timeout     = settings.ProxyTimeout > TimeSpan.Zero ? settings.ProxyTimeout : Settings.DebugHttpTimeout
             };
         }
@@ -1368,8 +1483,6 @@ namespace Neon.Cadence
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected virtual void Dispose(bool disposing)
         {
-            RaiseConnectionClosed();
-
             closingConnection = true;
 
             if (Settings != null && !Settings.DebugDisableHandshakes)
@@ -1460,7 +1573,15 @@ namespace Neon.Cadence
             {
                 GC.SuppressFinalize(this);
             }
+
+            RaiseConnectionClosed();
         }
+
+        /// <summary>
+        /// Returns the IP address to be used for binding the network interface for both
+        /// the local web server as well as that for <b>cadence-proxy</b>.
+        /// </summary>
+        private IPAddress Address => IPAddress.Loopback;
 
         /// <summary>
         /// Returns the locally unique ID for the client instance.
@@ -1480,7 +1601,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Returns the URI the associated <b>cadence-proxy</b> instance is listening on.
         /// </summary>
-        public Uri ProxyUri => new Uri($"http://{address}:{proxyPort}");
+        public Uri ProxyUri => new Uri($"http://{Address}:{proxyPort}");
 
         /// <summary>
         /// <para>
@@ -1504,18 +1625,23 @@ namespace Neon.Cadence
         /// <summary>
         /// Ensures that that client instance is not disposed.
         /// </summary>
-        /// <exception cref="ObjectDisposedException">Thrown if the client is disposed.</exception>
-        internal void EnsureNotDisposed()
+        /// <param name="noClosingCheck">Optionally skip check that the connection is in the process of closing.</param>
+        /// <exception cref="ObjectDisposedException">Thrown if the client is disposed or is no longer connected to <b>cadence-proxy</b>.</exception>
+        internal void EnsureNotDisposed(bool noClosingCheck = false)
         {
             if (isDisposed)
             {
                 throw new ObjectDisposedException(nameof(CadenceClient));
             }
+            else if (!noClosingCheck && closingConnection)
+            {
+                throw new ObjectDisposedException(nameof(CadenceClient), "Connection to [cadence-proxy] is closing.");
+            }
         }
 
         /// <summary>
-        /// Raises the <see cref="ConnectionClosed"/> event if it hasn't already
-        /// been raised.
+        /// Raises the <see cref="ConnectionClosed"/> event if it hasn't been
+        /// raised already.
         /// </summary>
         /// <param name="exception">Optional exception to be included in the event.</param>
         private void RaiseConnectionClosed(Exception exception = null)
@@ -1526,10 +1652,6 @@ namespace Neon.Cadence
             {
                 raiseConnectionClosed  = !connectionClosedRaised;
                 connectionClosedRaised = true;
-            }
-
-            if (!raiseConnectionClosed)
-            {
             }
 
             if (raiseConnectionClosed)
@@ -1728,14 +1850,14 @@ namespace Neon.Cadence
 
                             if (!Settings.DebugDisableHeartbeats)
                             {
-                                // Verify [cadence-proxy] health via by sending a heartbeat
+                                // Verify [cadence-proxy] health by sending a heartbeat
                                 // and waiting a bit for a reply.
 
                                 try
                                 {
                                     var heartbeatReply = await CallProxyAsync(new HeartbeatRequest(), timeout: Settings.HeartbeatTimeout);
 
-                                    if (heartbeatReply.Error != null)
+                                    if (heartbeatReply.Error != null && !closingConnection)
                                     {
                                         throw new Exception($"[cadence-proxy]: Heartbeat returns [{heartbeatReply.Error}].");
                                     }
@@ -1743,7 +1865,8 @@ namespace Neon.Cadence
                                 catch (Exception e)
                                 {
                                     log.LogError("Heartbeat check failed.  Closing Cadence connection.", e);
-                                    exception = new CadenceTimeoutException("Heartbeat check failed.", e);
+
+                                    exception = new TimeoutException("[cadence-proxy] heartbeat failure.", e);
 
                                     // Break out of the while loop so we'll signal the application that
                                     // the connection has closed and then exit the thread below.
@@ -1842,6 +1965,12 @@ namespace Neon.Cadence
 
                             log.LogWarn(() => $" Request Timeout: [request={operation.Request.GetType().Name}, started={operation.StartTimeUtc.ToString(NeonHelper.DateFormat100NsTZ)}, timeout={operation.Timeout}].");
 
+                            // $todo(jeff.lill):
+                            //
+                            // We're not supporting cancellation so I'm going to comment
+                            // this out.  We should probably remove this if we decide never
+                            // to support this.
+#if TODO
                             var notAwaitingThis = Task.Run(
                                 async () =>
                                 {
@@ -1852,6 +1981,7 @@ namespace Neon.Cadence
 
                                     operation.SetCanceled();
                                 });
+#endif
                         }
                     }
                 }

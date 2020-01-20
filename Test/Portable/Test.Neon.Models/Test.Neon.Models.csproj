@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CouchbaseNetClient" Version="2.7.15" />
+    <PackageReference Include="Linq2Couchbase" Version="1.4.2" />
+    <PackageReference Include="Neon.Cadence" Version="1.0.3" />
+    <PackageReference Include="Neon.Common" Version="1.0.3" />
+    <PackageReference Include="Neon.Couchbase" Version="1.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Test.Neon.Models.Definitions\Test.Neon.Models.Definitions.csproj" />
+  </ItemGroup>
+
+  <Target Name="ModelGen" BeforeTargets="BeforeCompile">
+    <Exec Command="neon version --minimum=0.6.9-alpha" />
+    <Exec Command="neon generate models --target-namespace=Test.Neon.Models --persisted --debug-allow-stepinto &quot;$(SolutionDir)Test.Neon.Models.Definitions\bin\$(Configuration)\netstandard2.0\Test.Neon.Models.Definitions.dll&quot; &quot;$(ProjectDir)GeneratedTypes.cs&quot;" />
+    <Exec Command="neon generate models --target-namespace=Test.Neon.UxModels --persisted --ux=xaml &quot;$(SolutionDir)Test.Neon.Models.Definitions\bin\$(Configuration)\netstandard2.0\Test.Neon.Models.Definitions.dll&quot; &quot;$(ProjectDir)GeneratedUxTypes.cs&quot;" />
+  </Target>
+
+</Project>

@@ -181,7 +181,6 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 		// handle the messages individually
 		// based on their message type
 		ctx := context.Background()
-
 		switch request.GetType() {
 
 		// -------------------------------------------------------------------------
@@ -235,6 +234,12 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 				reply = handleDomainUpdateRequest(ctx, v)
 			}
 
+		// DomainListRequest
+		case internal.DomainListRequest:
+			if v, ok := request.(*messages.DomainListRequest); ok {
+				reply = handleDomainListRequest(ctx, v)
+			}
+
 		// TerminateRequest
 		case internal.TerminateRequest:
 			if v, ok := request.(*messages.TerminateRequest); ok {
@@ -257,6 +262,12 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 		case internal.PingRequest:
 			if v, ok := request.(*messages.PingRequest); ok {
 				reply = handlePingRequest(ctx, v)
+			}
+
+		// DescribeTaskListRequest
+		case internal.DescribeTaskListRequest:
+			if v, ok := request.(*messages.DescribeTaskListRequest); ok {
+				reply = handleDescribeTaskListRequest(ctx, v)
 			}
 
 		// -------------------------------------------------------------------------
@@ -398,6 +409,30 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 		case internal.WorkflowGetVersionRequest:
 			if v, ok := request.(*messages.WorkflowGetVersionRequest); ok {
 				reply = handleWorkflowGetVersionRequest(ctx, v)
+			}
+
+		// WorkflowQueueNewRequest
+		case internal.WorkflowQueueNewRequest:
+			if v, ok := request.(*messages.WorkflowQueueNewRequest); ok {
+				reply = handleWorkflowQueueNewRequest(ctx, v)
+			}
+
+		// WorkflowQueueWriteRequest
+		case internal.WorkflowQueueWriteRequest:
+			if v, ok := request.(*messages.WorkflowQueueWriteRequest); ok {
+				reply = handleWorkflowQueueWriteRequest(ctx, v)
+			}
+
+		// WorkflowQueueReadRequest
+		case internal.WorkflowQueueReadRequest:
+			if v, ok := request.(*messages.WorkflowQueueReadRequest); ok {
+				reply = handleWorkflowQueueReadRequest(ctx, v)
+			}
+
+		// WorkflowQueueCloseRequest
+		case internal.WorkflowQueueCloseRequest:
+			if v, ok := request.(*messages.WorkflowQueueCloseRequest); ok {
+				reply = handleWorkflowQueueCloseRequest(ctx, v)
 			}
 
 		// -------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    WorkflowQueueWriteRequest.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,6 +51,16 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
+        /// Indicates whether the write operation should not block when
+        /// the queue is full.
+        /// </summary>
+        public bool NoBlock
+        {
+            get => GetBoolProperty(PropertyNames.NoBlock);
+            set => SetBoolProperty(PropertyNames.NoBlock, value);
+        }
+
+        /// <summary>
         /// The data to be written to the queue.
         /// </summary>
         public byte[] Data
@@ -77,6 +87,7 @@ namespace Neon.Cadence.Internal
             var typedTarget = (WorkflowQueueWriteRequest)target;
 
             typedTarget.QueueId = this.QueueId;
+            typedTarget.NoBlock = this.NoBlock;
             typedTarget.Data    = this.Data;
         }
     }

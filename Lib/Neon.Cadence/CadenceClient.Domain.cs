@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    CadenceClient.Domain.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,10 +38,10 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="request">The domain properties.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="CadenceDomainAlreadyExistsException">Thrown if the domain already exists.</exception>
-        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
-        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
+        /// <exception cref="DomainAlreadyExistsException">Thrown if the domain already exists.</exception>
+        /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
         private async Task RegisterDomainAsync(InternalRegisterDomainRequest request)
         {
             EnsureNotDisposed();
@@ -76,10 +76,10 @@ namespace Neon.Cadence
         /// to <c>false</c>.
         /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="CadenceDomainAlreadyExistsException">Thrown if the domain already exists.</exception>
-        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
-        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
+        /// <exception cref="DomainAlreadyExistsException">Thrown if the domain already exists.</exception>
+        /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
         public async Task RegisterDomainAsync(string name, string description = null, string ownerEmail = null, int retentionDays = 7, bool ignoreDuplicates = false)
         {
             await SyncContext.ClearAsync;
@@ -99,7 +99,7 @@ namespace Neon.Cadence
                         SecurityToken = Settings.SecurityToken
                     });
             }
-            catch (CadenceDomainAlreadyExistsException)
+            catch (DomainAlreadyExistsException)
             {
                 if (!ignoreDuplicates)
                 {
@@ -113,10 +113,10 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="name">The domain name.</param>
         /// <returns>The <see cref="DomainDescription"/>.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
-        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
-        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
         public async Task<DomainDescription> DescribeDomainAsync(string name)
         {
             await SyncContext.ClearAsync;
@@ -234,12 +234,18 @@ namespace Neon.Cadence
         /// </param>
         /// <returns>A <see cref="DomainListPage"/> with the domains.</returns>
         /// <remarks>
+        /// <para>
         /// This method can be used to retrieve one or more pages of domain
         /// results.  You'll pass <paramref name="pageSize"/> as the maximum number
         /// of domains to be returned per page.  The <see cref="DomainListPage"/>
         /// returned will list the domains and if there are more domains waiting
         /// to be returned, will return token that can be used in a subsequent
-        /// call to retrieve the next page pf results.
+        /// call to retrieve the next page of results.
+        /// </para>
+        /// <note>
+        /// <see cref="DomainListPage.NextPageToken"/> will be set to <c>null</c>
+        /// when there are no more result pages remaining.
+        /// </note>
         /// </remarks>
         public async Task<DomainListPage> ListDomainsAsync(int pageSize, byte[] nextPageToken = null)
         {
@@ -263,10 +269,17 @@ namespace Neon.Cadence
                 domains.Add(domain.ToPublic());
             }
 
+            nextPageToken = reply.NextPageToken;
+
+            if (nextPageToken != null && nextPageToken.Length == 0)
+            {
+                nextPageToken = null;
+            }
+
             return new DomainListPage()
             { 
                 Domains       = domains,
-                NextPageToken = reply.NextPageToken
+                NextPageToken = nextPageToken
             };
         }
     }

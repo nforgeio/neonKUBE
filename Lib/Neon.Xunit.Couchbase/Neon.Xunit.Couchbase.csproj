@@ -2,22 +2,25 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.6.9-alpha</Version>
+    <Version>1.0.4</Version>
     <Authors>Jeff Lill</Authors>
     <Company>neonFORGE, LLC</Company>
-    <Product>neonKUBE</Product>
-    <Description>Couchbase test helpers.</Description>
+    <Product>Neon</Product>
+    <Description>Neon Couchbase test helpers.</Description>
     <PackageReleaseNotes>https://github.com/nforgeio/neonKUBE/releases</PackageReleaseNotes>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
     <LangVersion>latest</LangVersion>
     <IsPackable>true</IsPackable>
     <PackageLicenseUrl></PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/nforgeio/neonKUBE/blob/master/Lib/Neon.Xunit.Couchbase/README.md</PackageProjectUrl>
+    <PackageProjectUrl>https://doc.neonkube.com/Neon.Xunit-Overview.htm</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Configurations>Debug;Release;CodeDoc</Configurations>
+    <PackageIconUrl>https://doc.neonkube.com/images/nuget-icon.png</PackageIconUrl>
+    <PackageTags>xunit couchbase</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -35,9 +38,16 @@
     <NoWarn>NU1605</NoWarn>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
+    <DocumentationFile>bin\Release\Neon.Xunit.Couchbase.xml</DocumentationFile>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <NoWarn>NU1605</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="CouchbaseNetClient" Version="2.7.12" />
-    <PackageReference Include="GitInfo" Version="2.0.20">
+    <PackageReference Include="CouchbaseNetClient" Version="2.7.15" />
+    <PackageReference Include="GitInfo" Version="2.0.26">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>

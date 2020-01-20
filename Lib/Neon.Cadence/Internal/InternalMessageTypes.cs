@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    InternalMessageTypes.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License"),
 // you may not use this file except in compliance with the License.
@@ -328,16 +328,14 @@ namespace Neon.Cadence.Internal
         WorkflowDescribeExecutionReply = 121,
 
         /// <summary>
-        /// <b>RESERVED:</b> This is not currently implemented.
+        /// <b>UNUSED</b>
         /// </summary>
-        [Obsolete("RESERVED")]
-        Reserved0 = 122,
+        Unused0 = 122,
 
         /// <summary>
-        /// <b>RESERVED:</b> This is not currently implemented.
+        /// <b>UNUSED</b>
         /// </summary>
-        [Obsolete("RESERVED")]
-        Reserved1 = 123,
+        Unused1 = 123,
 
         /// <summary>
         /// <b>proxy --> client:</b> Commands the client client and associated .NET application
@@ -579,14 +577,14 @@ namespace Neon.Cadence.Internal
         WorkflowQueueReadReply = 167,
 
         /// <summary>
-        /// <b>proxy --> client:</b> Returns the number if data items in a queue.
+        /// <b>UNUSED</b>
         /// </summary>
-        WorkflowQueueLengthRequest = 168,
+        Unused2 = 168,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Sent in response to a <see cref="WorkflowQueueLengthRequest"/>.
+        /// <b>UNUSED</b>
         /// </summary>
-        WorkflowQueueLengthReply = 169,
+        Unused3 = 169,
 
         /// <summary>
         /// <b>proxy --> client:</b> Closes a queue.

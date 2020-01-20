@@ -1,7 +1,7 @@
 ﻿#------------------------------------------------------------------------------
 # FILE:         publish.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,8 +29,8 @@ param
 	[switch]$dotnet      = $false,        # Rebuild .NET based images
 	[switch]$other       = $false,        # Rebuild all other images (usually script based)
 	[switch]$services    = $false,        # Rebuild all service images
-  [switch]$nopush      = $false,        # Don't push to the registry
-  [switch]$noprune     = $false,        # Don't prune the local Docker state
+    [switch]$nopush      = $false,        # Don't push to the registry
+    [switch]$noprune     = $false,        # Don't prune the local Docker state
 	[switch]$allVersions = $false         # Rebuild all image versions
 )
 
@@ -138,8 +138,8 @@ if ($other)
 	Publish "$image_root\\golang"
     Publish "$image_root\\nats"
     Publish "$image_root\\nats-streaming"
-	Publish "$image_root\\cadence-test"
-	Publish "$image_root\\couchbase-test"
+	Publish "$image_root\\cadence-dev"
+	Publish "$image_root\\couchbase-dev"
 	Publish "$image_root\\test"
 }
 

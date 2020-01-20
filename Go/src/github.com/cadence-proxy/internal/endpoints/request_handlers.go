@@ -125,8 +125,7 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 			&cadenceshared.RegisterDomainRequest{
 				Name:                                   &defaultDomain,
 				WorkflowExecutionRetentionPeriodInDays: &retention,
-			},
-		)
+			})
 
 		if err != nil {
 			if _, ok := err.(*cadenceshared.DomainAlreadyExistsError); !ok {
@@ -189,6 +188,7 @@ func handleHeartbeatRequest(requestCtx context.Context, request *messages.Heartb
 
 	// new HeartbeatReply
 	reply := createReplyMessage(request)
+
 	buildReply(reply, nil)
 
 	return reply
@@ -420,6 +420,43 @@ func handleDomainRegisterRequest(requestCtx context.Context, request *messages.D
 	return reply
 }
 
+func handleDomainListRequest(requestCtx context.Context, request *messages.DomainListRequest) messages.IProxyReply {
+	clientID := request.GetClientID()
+	Logger.Debug("DomainListRequest Received",
+		zap.Int64("ClientId", clientID),
+		zap.Int64("RequestId", request.GetRequestID()),
+		zap.Int("ProcessId", os.Getpid()))
+
+	// new DomainListReply
+	reply := createReplyMessage(request)
+
+	clientHelper := Clients.Get(clientID)
+	if clientHelper == nil {
+		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
+		return reply
+	}
+
+	// create context with timeout
+	ctx, cancel := context.WithTimeout(requestCtx, clientHelper.GetClientTimeout())
+	defer cancel()
+
+	pageSize := request.GetPageSize()
+	listRequest := cadenceshared.ListDomainsRequest{
+		PageSize:      &pageSize,
+		NextPageToken: request.GetNextPageToken(),
+	}
+
+	response, err := clientHelper.ListDomains(ctx, &listRequest)
+	if err != nil {
+		buildReply(reply, proxyerror.NewCadenceError(err))
+		return reply
+	}
+
+	buildReply(reply, nil, response)
+
+	return reply
+}
+
 func handleDomainUpdateRequest(requestCtx context.Context, request *messages.DomainUpdateRequest) messages.IProxyReply {
 	domain := *request.GetName()
 	clientID := request.GetClientID()
@@ -471,6 +508,54 @@ func handleDomainUpdateRequest(requestCtx context.Context, request *messages.Dom
 	}
 
 	buildReply(reply, nil)
+
+	return reply
+}
+
+func handleDescribeTaskListRequest(requestCtx context.Context, request *messages.DescribeTaskListRequest) messages.IProxyReply {
+	name := *request.GetName()
+	domain := *request.GetDomain()
+	clientID := request.GetClientID()
+	Logger.Debug("DescribeTaskListRequest Received",
+		zap.String("TaskList", name),
+		zap.String("Domain", domain),
+		zap.Int64("ClientId", clientID),
+		zap.Int64("RequestId", request.GetRequestID()),
+		zap.Int("ProcessId", os.Getpid()))
+
+	// new DescribeTaskListReply
+	reply := createReplyMessage(request)
+
+	clientHelper := Clients.Get(clientID)
+	if clientHelper == nil {
+		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
+		return reply
+	}
+
+	// create context with timeout
+	ctx, cancel := context.WithTimeout(requestCtx, clientHelper.GetClientTimeout())
+	defer cancel()
+
+	includeStatus := false
+	taskList := cadenceshared.TaskList{
+		Name: &name,
+		Kind: request.GetTaskListKind(),
+	}
+
+	describeRequest := cadenceshared.DescribeTaskListRequest{
+		Domain:                &domain,
+		TaskList:              &taskList,
+		TaskListType:          request.GetTaskListType(),
+		IncludeTaskListStatus: &includeStatus,
+	}
+
+	describeResponse, err := clientHelper.DescribeTaskList(ctx, &describeRequest)
+	if err != nil {
+		buildReply(reply, proxyerror.NewCadenceError(err))
+		return reply
+	}
+
+	buildReply(reply, nil, describeResponse)
 
 	return reply
 }
@@ -1672,6 +1757,225 @@ func handleWorkflowGetVersionRequest(requestCtx context.Context, request *messag
 	return reply
 }
 
+func handleWorkflowQueueNewRequest(requestCtx context.Context, request *messages.WorkflowQueueNewRequest) messages.IProxyReply {
+	contextID := request.GetContextID()
+	queueID := request.GetQueueID()
+	Logger.Debug("WorkflowQueueNewRequest Received",
+		zap.Int64("QueueId", queueID),
+		zap.Int64("ClientId", request.GetClientID()),
+		zap.Int64("ContextId", contextID),
+		zap.Int64("RequestId", request.GetRequestID()),
+		zap.Int("ProcessId", os.Getpid()))
+
+	// new WorkflowQueueNewReply
+	reply := createReplyMessage(request)
+
+	// get the child context from the parent workflow context
+	wectx := WorkflowContexts.Get(contextID)
+	if wectx == nil {
+		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
+		return reply
+	}
+
+	ctx := wectx.GetContext()
+
+	// set ReplayStatus
+	setReplayStatus(ctx, reply)
+
+	capacity := int(request.GetCapacity())
+	queue := workflow.NewBufferedChannel(ctx, capacity)
+	queueID = wectx.AddQueue(queueID, queue)
+
+	Logger.Info("Queue successfully added",
+		zap.Int64("QueueId", queueID),
+		zap.Int("Capacity", capacity),
+		zap.Int64("ContextId", contextID))
+
+	buildReply(reply, nil)
+
+	return reply
+}
+
+func handleWorkflowQueueWriteRequest(requestCtx context.Context, request *messages.WorkflowQueueWriteRequest) messages.IProxyReply {
+	contextID := request.GetContextID()
+	queueID := request.GetQueueID()
+	Logger.Debug("WorkflowQueueWriteRequest Received",
+		zap.Int64("QueueId", queueID),
+		zap.Int64("ClientId", request.GetClientID()),
+		zap.Int64("ContextId", contextID),
+		zap.Int64("RequestId", request.GetRequestID()),
+		zap.Int("ProcessId", os.Getpid()))
+
+	// new WorkflowQueueWriteReply
+	reply := createReplyMessage(request)
+
+	// get the child context from the parent workflow context
+	wectx := WorkflowContexts.Get(contextID)
+	if wectx == nil {
+		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
+		return reply
+	}
+
+	ctx := wectx.GetContext()
+
+	// set ReplayStatus
+	setReplayStatus(ctx, reply)
+
+	data := request.GetData()
+	queue := wectx.GetQueue(queueID)
+	if queue == nil {
+		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
+		return reply
+	}
+
+	// check if we should block and wait to enqueue
+	// or just try to enqueue without blocking.
+	if request.GetNoBlock() {
+		s := workflow.NewSelector(ctx)
+
+		// indicates that the value was successfully added to the queue
+		// and is not full.
+		s.AddSend(queue, data, func() {
+			buildReply(reply, nil, false)
+		})
+
+		// indicates that the queue is full and the value was not added
+		// to the queue.
+		s.AddDefault(func() {
+			buildReply(reply, nil, true)
+		})
+		s.Select(ctx)
+	} else {
+		// send data to queue
+		queue.Send(ctx, data)
+	}
+
+	Logger.Info("Successfully Added to Queue",
+		zap.Int64("QueueId", queueID),
+		zap.Any("Data", data),
+		zap.Int64("ContextId", contextID))
+
+	buildReply(reply, nil)
+
+	return reply
+}
+
+func handleWorkflowQueueReadRequest(requestCtx context.Context, request *messages.WorkflowQueueReadRequest) messages.IProxyReply {
+	contextID := request.GetContextID()
+	queueID := request.GetQueueID()
+	Logger.Debug("WorkflowQueueReadRequest Received",
+		zap.Int64("QueueId", queueID),
+		zap.Int64("ClientId", request.GetClientID()),
+		zap.Int64("ContextId", contextID),
+		zap.Int64("RequestId", request.GetRequestID()),
+		zap.Int("ProcessId", os.Getpid()))
+
+	// new WorkflowQueueReadReply
+	reply := createReplyMessage(request)
+
+	// get the child context from the parent workflow context
+	wectx := WorkflowContexts.Get(contextID)
+
+	if wectx == nil {
+		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
+		return reply
+	}
+
+	ctx := wectx.GetContext()
+
+	// set ReplayStatus
+	setReplayStatus(ctx, reply)
+
+	queue := wectx.GetQueue(queueID)
+	if queue == nil {
+		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
+		return reply
+	}
+
+	timeout := request.GetTimeout()
+	timeoutChannel := workflow.NewChannel(ctx)
+	defer timeoutChannel.Close()
+
+	if timeout > time.Duration(0) {
+		workflow.Go(ctx, func(c workflow.Context) {
+			isReady := false
+			timer := workflow.NewTimer(c, timeout)
+			e := timer.Get(c, &isReady)
+			timeoutChannel.Send(c, e)
+		})
+	}
+
+	var data []byte
+	var isClosed bool
+	var cadenceError *proxyerror.CadenceError
+
+	// read value from queue
+	s := workflow.NewSelector(ctx)
+	s.AddReceive(timeoutChannel, func(c workflow.Channel, more bool) {
+		var err error
+		c.Receive(ctx, err)
+		if err != nil {
+			cadenceError = proxyerror.NewCadenceError(err, proxyerror.Cancelled)
+		} else {
+			cadenceError = proxyerror.NewCadenceError(fmt.Errorf("Timeout reading from workflow queue: %d", queueID), proxyerror.Timeout)
+		}
+	})
+	s.AddReceive(queue, func(c workflow.Channel, more bool) {
+		c.Receive(ctx, &data)
+		if data == nil {
+			isClosed = true
+		}
+	})
+	s.Select(ctx)
+
+	buildReply(reply, cadenceError, append(make([]interface{}, 0), data, isClosed))
+
+	return reply
+}
+
+func handleWorkflowQueueCloseRequest(requestCtx context.Context, request *messages.WorkflowQueueCloseRequest) messages.IProxyReply {
+	contextID := request.GetContextID()
+	queueID := request.GetQueueID()
+	Logger.Debug("WorkflowQueueCloseRequest Received",
+		zap.Int64("QueueId", queueID),
+		zap.Int64("ClientId", request.GetClientID()),
+		zap.Int64("ContextId", contextID),
+		zap.Int64("RequestId", request.GetRequestID()),
+		zap.Int("ProcessId", os.Getpid()))
+
+	// new WorkflowQueueCloseReply
+	reply := createReplyMessage(request)
+
+	// get the child context from the parent workflow context
+	wectx := WorkflowContexts.Get(contextID)
+	if wectx == nil {
+		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
+		return reply
+	}
+
+	ctx := wectx.GetContext()
+
+	// set ReplayStatus
+	setReplayStatus(ctx, reply)
+
+	queue := wectx.GetQueue(queueID)
+	if queue == nil {
+		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
+		return reply
+	}
+
+	// close the queue
+	queue.Close()
+
+	Logger.Info("Successfully closed Queue",
+		zap.Int64("QueueId", queueID),
+		zap.Int64("ContextId", contextID))
+
+	buildReply(reply, nil)
+
+	return reply
+}
+
 // ----------------------------------------------------------------------
 // IProxyRequest activity message type handler methods
 
@@ -1968,6 +2272,7 @@ func handleActivityHasHeartbeatDetailsRequest(requestCtx context.Context, reques
 		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
 		return reply
 	}
+
 	buildReply(reply, nil, activity.HasHeartbeatDetails(actx.GetContext()))
 
 	return reply

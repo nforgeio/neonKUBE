@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    CadenceClient.Workflow.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ namespace Neon.Cadence
         /// <param name="domain">Optionally overrides the default client domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown if another workflow class has already been registered for <paramref name="workflowTypeName"/>.</exception>
-        /// <exception cref="CadenceWorkflowWorkerStartedException">
+        /// <exception cref="WorkflowWorkerStartedException">
         /// Thrown if a workflow worker has already been started for the client.  You must
         /// register workflow implementations before starting workers.
         /// </exception>
@@ -67,7 +67,7 @@ namespace Neon.Cadence
 
             if (workflowWorkerStarted)
             {
-                throw new CadenceWorkflowWorkerStartedException();
+                throw new WorkflowWorkerStartedException();
             }
 
             var workflowType = typeof(TWorkflow);
@@ -99,7 +99,7 @@ namespace Neon.Cadence
         /// derived from <see cref="WorkflowBase"/>.
         /// </exception>
         /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
-        /// <exception cref="CadenceWorkflowWorkerStartedException">
+        /// <exception cref="WorkflowWorkerStartedException">
         /// Thrown if a workflow worker has already been started for the client.  You must
         /// register workflow implementations before starting workers.
         /// </exception>
@@ -287,9 +287,9 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Creates a typed workflow stub connected to a known workflow execution.
-        /// This can be used to signal and query the workflow via the type-safe
-        /// interface methods.
+        /// Creates a typed workflow stub connected to a known workflow execution
+        /// using IDs.  This can be used to signal and query the workflow via the 
+        /// type-safe interface methods.
         /// </summary>
         /// <typeparam name="TWorkflowInterface">Identifies the workflow interface.</typeparam>
         /// <param name="workflowId">Specifies the workflow ID.</param>
@@ -309,7 +309,33 @@ namespace Neon.Cadence
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             EnsureNotDisposed();
 
-            throw new NotImplementedException();
+            return StubManager.NewWorkflowStub<TWorkflowInterface>(this, workflowId, runId, domain);
+        }
+
+        /// <summary>
+        /// Creates a typed workflow stub connected to a known workflow execution
+        /// using a <see cref="WorkflowExecution"/>.  This can be used to signal and
+        /// query the workflow via the type-safe interface methods.
+        /// </summary>
+        /// <typeparam name="TWorkflowInterface">Identifies the workflow interface.</typeparam>
+        /// <param name="execution">Specifies the <see cref="WorkflowExecution"/>.</param>
+        /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflowInterface"/>.</returns>
+        /// <remarks>
+        /// Unlike activity stubs, a workflow stub may only be used to launch a single
+        /// workflow.  You'll need to create a new stub for each workflow you wish to
+        /// invoke and then the first method called on a workflow stub must be
+        /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
+        /// </remarks>
+        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(WorkflowExecution execution)
+            where TWorkflowInterface : class
+        {
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(execution.WorkflowId), nameof(execution.WorkflowId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(execution.RunId), nameof(execution.RunId));
+            CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
+            EnsureNotDisposed();
+
+            return StubManager.NewWorkflowStub<TWorkflowInterface>(this, execution.WorkflowId, execution.RunId);
         }
 
         /// <summary>
@@ -440,9 +466,9 @@ namespace Neon.Cadence
         /// <param name="args">Specifies the workflow arguments encoded into a byte array.</param>
         /// <param name="options">Specifies the workflow options.</param>
         /// <returns>A <see cref="WorkflowExecution"/> identifying the new running workflow instance.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if there is no workflow registered for <paramref name="workflowTypeName"/>.</exception>
-        /// <exception cref="CadenceBadRequestException">Thrown if the request is not valid.</exception>
-        /// <exception cref="CadenceWorkflowRunningException">Thrown if a workflow with this ID is already running.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if there is no workflow registered for <paramref name="workflowTypeName"/>.</exception>
+        /// <exception cref="BadRequestException">Thrown if the request is not valid.</exception>
+        /// <exception cref="WorkflowRunningException">Thrown if a workflow with this ID is already running.</exception>
         /// <remarks>
         /// This method kicks off a new workflow instance and returns after Cadence has
         /// queued the operation but the method <b>does not</b> wait for the workflow to
@@ -478,9 +504,9 @@ namespace Neon.Cadence
         /// <param name="execution">Identifies the workflow execution.</param>
         /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
         /// <returns>The workflow result encoded as bytes or <c>null</c>.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
-        /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task<byte[]> GetWorkflowResultAsync(WorkflowExecution execution, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
@@ -511,9 +537,9 @@ namespace Neon.Cadence
         /// <param name="args">Specifies the workflow arguments encoded into a byte array.</param>
         /// <param name="options">Specifies the workflow options.</param>
         /// <returns>A <see cref="ChildExecution"/> identifying the new running workflow instance.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if there is no workflow registered for <paramref name="workflowTypeName"/>.</exception>
-        /// <exception cref="CadenceBadRequestException">Thrown if the request is not valid.</exception>
-        /// <exception cref="CadenceWorkflowRunningException">Thrown if a workflow with this ID is already running.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if there is no workflow registered for <paramref name="workflowTypeName"/>.</exception>
+        /// <exception cref="BadRequestException">Thrown if the request is not valid.</exception>
+        /// <exception cref="WorkflowRunningException">Thrown if a workflow with this ID is already running.</exception>
         /// <remarks>
         /// This method kicks off a new child workflow instance and returns after Cadence has
         /// queued the operation but the method <b>does not</b> wait for the workflow to
@@ -576,9 +602,9 @@ namespace Neon.Cadence
         /// <param name="parentWorkflow">The parent workflow.</param>
         /// <param name="execution">Identifies the child workflow execution.</param>
         /// <returns>The workflow result encoded as bytes or <c>null</c>.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
-        /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task<byte[]> GetChildWorkflowResultAsync(Workflow parentWorkflow, ChildExecution execution)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
@@ -608,9 +634,9 @@ namespace Neon.Cadence
         /// <param name="execution">Identifies the workflow execution.</param>
         /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
         /// <returns>A <see cref="WorkflowDescription"/>.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
-        /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task<WorkflowDescription> DescribeWorkflowAsync(WorkflowExecution execution, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
@@ -635,9 +661,9 @@ namespace Neon.Cadence
         /// <param name="execution">Identifies the running workflow.</param>
         /// <param name="domain">Optionally identifies the domain.  This defaults to the client domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
-        /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task CancelWorkflowAsync(WorkflowExecution execution, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
@@ -655,17 +681,17 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Cancels a workflow if it has not already finished.
+        /// Terninates a workflow if it has not already finished.
         /// </summary>
         /// <param name="execution">Identifies the running workflow.</param>
         /// <param name="reason">Optionally specifies an error reason string.</param>
         /// <param name="details">Optionally specifies additional details as a byte array.</param>
         /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
-        /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
-        internal async Task TerminateWorkflowAsync(WorkflowExecution execution, string reason = null, byte[] details = null, string domain = null)
+        /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
+        public async Task TerminateWorkflowAsync(WorkflowExecution execution, string reason = null, byte[] details = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
@@ -692,8 +718,8 @@ namespace Neon.Cadence
         /// <param name="signalArgs">Optionally specifies the signal arguments as a byte array.</param>
         /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task SignalWorkflowAsync(WorkflowExecution execution, string signalName, byte[] signalArgs = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
@@ -722,9 +748,9 @@ namespace Neon.Cadence
         /// <param name="startArgs">Optionally specifies the workflow arguments.</param>
         /// <param name="options">Optionally specifies the options to be used for starting the workflow when required.</param>
         /// <returns>The <see cref="WorkflowExecution"/>.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the domain does not exist.</exception>
-        /// <exception cref="CadenceBadRequestException">Thrown if the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the domain does not exist.</exception>
+        /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task<WorkflowExecution> SignalWorkflowWithStartAsync(string workflowTypeName, string signalName, byte[] signalArgs, byte[] startArgs, WorkflowOptions options)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
@@ -759,8 +785,8 @@ namespace Neon.Cadence
         /// <param name="queryArgs">Optionally specifies the query arguments encoded as a byte array.</param>
         /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
         /// <returns>The query result encoded as a byte array.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the workflow no longer exists.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence problems.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         internal async Task<byte[]> QueryWorkflowAsync(WorkflowExecution execution, string queryType, byte[] queryArgs = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
@@ -797,10 +823,10 @@ namespace Neon.Cadence
         /// <param name="signalName">Specifies the signal name.</param>
         /// <param name="signalArgs">Specifies the signal arguments as an encoded byte array.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="CadenceEntityNotExistsException">Thrown if the named domain does not exist.</exception>
-        /// <exception cref="CadenceBadRequestException">Thrown when the request is invalid.</exception>
-        /// <exception cref="CadenceInternalServiceException">Thrown for internal Cadence cluster problems.</exception>
-        /// <exception cref="CadenceServiceBusyException">Thrown when Cadence is too busy.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Cadence cluster problems.</exception>
+        /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
         internal async Task SignalChildWorkflowAsync(Workflow parentWorkflow, ChildExecution execution, string signalName, byte[] signalArgs)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));

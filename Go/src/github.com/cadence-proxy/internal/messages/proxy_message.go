@@ -182,6 +182,8 @@ func handleUnspecifiedMessageType(typeCode []string) IProxyMessage {
 	}
 }
 
+// WriteInt32 writer and int32 to a io.Writer in
+// binary.LittleEndian order.
 func WriteInt32(w io.Writer, value int32) {
 	err := binary.Write(w, binary.LittleEndian, value)
 	if err != nil {
@@ -189,6 +191,8 @@ func WriteInt32(w io.Writer, value int32) {
 	}
 }
 
+// WriteInt64 writer and int64 to a io.Writer in
+// binary.LittleEndian order.
 func WriteInt64(w io.Writer, value int64) {
 	err := binary.Write(w, binary.LittleEndian, value)
 	if err != nil {
@@ -196,6 +200,8 @@ func WriteInt64(w io.Writer, value int64) {
 	}
 }
 
+// WriteString writes a string to a byte buffer in
+// binary.LittleEndian byte order.
 func WriteString(buf *bytes.Buffer, value *string) {
 	if value == nil {
 		err := binary.Write(buf, binary.LittleEndian, int32(-1))
@@ -215,6 +221,7 @@ func WriteString(buf *bytes.Buffer, value *string) {
 	}
 }
 
+// ReadString reads a string from a byte buffer.
 func ReadString(buf *bytes.Buffer) *string {
 	var strPtr *string
 	length := int(ReadInt32(buf))
@@ -232,6 +239,8 @@ func ReadString(buf *bytes.Buffer) *string {
 	return strPtr
 }
 
+// ReadInt32 reads an int32 from a byte buffer
+// in binary.LittelEndian byte order.
 func ReadInt32(buf *bytes.Buffer) int32 {
 	var num int32
 	intBytes := buf.Next(4)
@@ -250,6 +259,8 @@ func ReadInt32(buf *bytes.Buffer) int32 {
 	return num
 }
 
+// ReadInt64 reads an int64 from a byte buffer
+// in binary.LittleEndian byte order.
 func ReadInt64(buf *bytes.Buffer) int64 {
 	var num int64
 	intBytes := buf.Next(8)

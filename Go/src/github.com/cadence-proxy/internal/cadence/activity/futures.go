@@ -25,10 +25,10 @@ import (
 
 type (
 
-	// ActivityFuturesMap holds a thread-safe map of
+	// FuturesMap holds a thread-safe map of
 	// cadence workflow.Future to the ActivityID of the cadence
 	// workflow activity the future belongs to.
-	ActivityFuturesMap struct {
+	FuturesMap struct {
 		sync.Mutex
 		futures map[int64]workflow.Future
 	}
@@ -38,8 +38,8 @@ type (
 // ActivityFuturesMap instance methods
 
 // NewActivityFuturesMap is the constructor for an ActivityFuturesMap
-func NewActivityFuturesMap() *ActivityFuturesMap {
-	o := new(ActivityFuturesMap)
+func NewActivityFuturesMap() *FuturesMap {
+	o := new(FuturesMap)
 	o.futures = make(map[int64]workflow.Future)
 	return o
 }
@@ -53,7 +53,7 @@ func NewActivityFuturesMap() *ActivityFuturesMap {
 // param future workflow.Future -> workflow future result of activity execution.
 //
 // returns int64 -> long activityID of the new cadence workflow.Future added to the map
-func (a *ActivityFuturesMap) Add(activityID int64, future workflow.Future) int64 {
+func (a *FuturesMap) Add(activityID int64, future workflow.Future) int64 {
 	a.Lock()
 	defer a.Unlock()
 	a.futures[activityID] = future
@@ -67,7 +67,7 @@ func (a *ActivityFuturesMap) Add(activityID int64, future workflow.Future) int64
 // This will be the mapped key.
 //
 // returns int64 -> long activityID of the workflow.Future removed from the map
-func (a *ActivityFuturesMap) Remove(activityID int64) int64 {
+func (a *FuturesMap) Remove(activityID int64) int64 {
 	a.Lock()
 	defer a.Unlock()
 	delete(a.futures, activityID)
@@ -81,7 +81,7 @@ func (a *ActivityFuturesMap) Remove(activityID int64) int64 {
 // This will be the mapped key.
 //
 // returns workflow.Future -> workflow future result of activity execution at the specified Id.
-func (a *ActivityFuturesMap) Get(activityID int64) workflow.Future {
+func (a *FuturesMap) Get(activityID int64) workflow.Future {
 	a.Lock()
 	defer a.Unlock()
 	return a.futures[activityID]

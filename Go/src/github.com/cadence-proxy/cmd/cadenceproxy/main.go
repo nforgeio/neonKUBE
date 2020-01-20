@@ -67,9 +67,7 @@ func main() {
 		zapcore.NewCore(
 			endpoints.NewEncoder(),
 			zapcore.Lock(os.Stdout),
-			logLevel,
-		),
-	)
+			logLevel))
 
 	defer l.Sync()
 
@@ -80,6 +78,8 @@ func main() {
 		Transport: http.DefaultTransport,
 	}
 
+	// sets the number of allowed max idel connections
+	// per host.
 	client.Transport.(*http.Transport).MaxIdleConnsPerHost = 10
 
 	// create the instance, set the routes,

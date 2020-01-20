@@ -27,17 +27,17 @@ type (
 
 	// WorkflowDescribeExecutionReply is a WorkflowReply of MessageType
 	// WorkflowDescribeExecutionReply.  It holds a reference to a WorkflowReply in memory
-	// and is the reply type to a WorkflowDescribeExecutionRequest
+	// and answers a WorkflowDescribeExecutionRequest.
 	WorkflowDescribeExecutionReply struct {
 		*WorkflowReply
 	}
 )
 
-// NewWorkflowDescribeExecutionReply is the default constructor for
-// a WorkflowDescribeExecutionReply
+// NewWorkflowDescribeExecutionReply is the constructor for
+// a WorkflowDescribeExecutionReply.
 //
 // returns *WorkflowDescribeExecutionReply -> a pointer to a newly initialized
-// WorkflowDescribeExecutionReply in memory
+// WorkflowDescribeExecutionReply.
 func NewWorkflowDescribeExecutionReply() *WorkflowDescribeExecutionReply {
 	reply := new(WorkflowDescribeExecutionReply)
 	reply.WorkflowReply = NewWorkflowReply()
@@ -47,11 +47,9 @@ func NewWorkflowDescribeExecutionReply() *WorkflowDescribeExecutionReply {
 }
 
 // GetDetails gets the WorkflowDescribeExecutionReply's Details property from its
-// properties map.  Details is the cadence are the DescribeWorkflowExecutionResponse
-// to a DescribeWorkflowExecutionRequest
+// properties map, the workflow execution details.
 //
-// returns *workflow.DescribeWorkflowExecutionResponse -> the response to the cadence workflow
-// describe execution request
+// returns *workflow.DescribeWorkflowExecutionResponse -> the *cadenceshared.DescribeWorkflowExecutionResponse.
 func (reply *WorkflowDescribeExecutionReply) GetDetails() *cadenceshared.DescribeWorkflowExecutionResponse {
 	resp := new(cadenceshared.DescribeWorkflowExecutionResponse)
 	err := reply.GetJSONProperty("Details", resp)
@@ -63,11 +61,9 @@ func (reply *WorkflowDescribeExecutionReply) GetDetails() *cadenceshared.Describ
 }
 
 // SetDetails sets the WorkflowDescribeExecutionReply's Details property in its
-// properties map.  Details is the cadence are the DescribeWorkflowExecutionResponse
-// to a DescribeWorkflowExecutionRequest
+// properties map, the workflow execution details.
 //
-// param value *workflow.DescribeWorkflowExecutionResponse -> the response to the cadence workflow
-// describe execution request to be set in the WorkflowDescribeExecutionReply's properties map
+// param value *workflow.DescribeWorkflowExecutionResponse -> the *cadenceshared.DescribeWorkflowExecutionResponse.
 func (reply *WorkflowDescribeExecutionReply) SetDetails(value *cadenceshared.DescribeWorkflowExecutionResponse) {
 	reply.SetJSONProperty("Details", value)
 }

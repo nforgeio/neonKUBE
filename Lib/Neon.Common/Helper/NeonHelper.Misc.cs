@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    NeonHelper.Misc.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -273,7 +273,7 @@ namespace Neon.Common
             }
 
             var lineEndings = input.IndexOfAny(new char[] { '\r', '\n' }) >= 0;
-            var sb          = new StringBuilder((int)(input.Length * 1.25));
+            var sb = new StringBuilder((int)(input.Length * 1.25));
 
             using (var reader = new StringReader(input))
             {
@@ -636,23 +636,6 @@ namespace Neon.Common
         /// <param name="token1">The first token.</param>
         /// <param name="token2">The second token.</param>
         /// <returns><c>true</c> if the tokens are to be considered as equal.</returns>
-        /// <remarks>
-        /// <para>
-        /// I have run into a situation in the <c>Neon.Couchbase.Dynamic.DynamicEntity</c> implementation
-        /// where I've serialized a Couchbase Lite document and then when loading the updated
-        /// revision, <see cref="JToken.EqualityComparer"/> indicates that two properties with
-        /// the same name and <c>null</c> values are different.
-        /// </para>
-        /// <para>
-        /// I think the basic problem is that a NULL token has a different token type than
-        /// a string token with a NULL value and also that some token types such as <see cref="JTokenType.Date"/>,
-        /// <see cref="JTokenType.Guid"/>, <see cref="JTokenType.TimeSpan"/>, and <see cref="JTokenType.Uri"/> 
-        /// will be round tripped as <see cref="JTokenType.String"/> values.
-        /// </para>
-        /// <para>
-        /// This method addresses these issues.
-        /// </para>
-        /// </remarks>
         public static bool JTokenEquals(JToken token1, JToken token2)
         {
             var token1IsNull = token1 == null;
@@ -733,8 +716,8 @@ namespace Neon.Common
 
                 case JTokenType.Object:
 
-                    var object1       = (JObject)token1;
-                    var object2       = (JObject)token2;
+                    var object1 = (JObject)token1;
+                    var object2 = (JObject)token2;
                     var propertyCount = object1.Properties().Count();
 
                     if (propertyCount != object2.Properties().Count())
@@ -765,8 +748,8 @@ namespace Neon.Common
 
                 case JTokenType.Array:
 
-                    var array1       = (JArray)token1;
-                    var array2       = (JArray)token2;
+                    var array1 = (JArray)token1;
+                    var array2 = (JArray)token2;
                     var elementCount = array1.Children().Count();
 
                     if (elementCount != array2.Children().Count())
@@ -1256,6 +1239,85 @@ namespace Neon.Common
 
             // Do the actual conversion
             return Convert.FromBase64CharArray(base64Chars, 0, base64Chars.Length);
+        }
+
+        /// <summary>
+        /// Encodes a byte array using <b>Base64Url</b> encoding as specifed here: <a href="">RFC 4648</a>
+        /// </summary>
+        /// <param name="bytes">The input byte array.</param>
+        /// <param name="retainPadding">
+        /// Optionally onverts any '=' characters padding into escaped "%3D", otherwise
+        /// any padding will be omitted from the output.
+        /// </param>
+        /// <returns>The Base64Url encoded string.</returns>
+        public static string Base64UrlEncode(byte[] bytes, bool retainPadding = false)
+        {
+            // $todo(jefflill): 
+            //
+            // This would be more efficient as a native implemenation rather than
+            // converting to standard Base64 first.
+
+            Covenant.Requires<ArgumentNullException>(bytes != null, nameof(bytes));
+
+            var encoded = Convert.ToBase64String(bytes).Replace('+', '-').Replace('/', '_');
+
+            if (retainPadding)
+            {
+                encoded = encoded.Replace("=", "%3D");
+            }
+            else
+            {
+                encoded = encoded.TrimEnd('=');
+            }
+
+            return encoded.Replace('+', '-').Replace('/', '_');
+        }
+
+        private static char[] oneBase64Pad  = "=".ToCharArray();
+        private static char[] twoBase64Pads = "==".ToCharArray();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="encoded"></param>
+        /// <returns></returns>
+        public static byte[] Base64UrlDecode(string encoded)
+        {
+            // $todo(jefflill): 
+            //
+            // This would be more efficient as a native implemenation rather than
+            // converting from standard Base64 and messing around with character
+            // lists.
+
+            Covenant.Requires<ArgumentNullException>(encoded != null, nameof(encoded));
+
+            var chars = new List<char>(Uri.UnescapeDataString(encoded).ToCharArray());
+
+            for (int i = 0; i < chars.Count; ++i)
+            {
+                if (chars[i] == '_')
+                {
+                    chars[i] = '/';
+                }
+                else if (chars[i] == '-')
+                {
+                    chars[i] = '+';
+                }
+            }
+
+            switch (chars.Count % 4)
+            {
+                case 2:
+                    chars.AddRange(twoBase64Pads);
+                    break;
+                case 3:
+                    chars.AddRange(oneBase64Pad);
+                    break;
+            }
+
+            var array = chars.ToArray();
+
+            return Convert.FromBase64CharArray(array, 0, array.Length);
         }
 
         /// <summary>

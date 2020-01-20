@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    AesCipher.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -104,8 +104,8 @@ namespace Neon.Cryptography
     /// <list type="number">
     /// <item>
     /// Generate an encryption key via <see cref="GenerateKey(int)"/> and create an instance
-    /// via <see cref="AesCipher(string)"/> passing the key, or just call <see cref="AesCipher(int)"/>
-    /// to create an instance with an already populated random key.
+    /// via <see cref="AesCipher(String, int)"/> passing the key, or just call <see cref="AesCipher(int, int)"/>
+    /// to create with a generated key of the specified size.
     /// </item>
     /// <item>
     /// You can always obtain the key via the <see cref="Key"/> property.
@@ -121,7 +121,7 @@ namespace Neon.Cryptography
     /// </para>
     /// <list type="number">
     /// <item>
-    /// Use <see cref="AesCipher(string)"/> to construct and instance using the key originally
+    /// Use <see cref="AesCipher(string, int)"/> to construct and instance using the key originally
     /// used to encrypt the data.
     /// </item>
     /// <item>
@@ -482,7 +482,7 @@ namespace Neon.Cryptography
         /// <summary>
         /// Decrypts the encrypted bytes passed returning the result as a string.
         /// </summary>
-        /// <param name="encryptedBase64">The encrypted base-64 text.</param>
+        /// <param name="encryptedBytes">The encrypted base-64 text.</param>
         /// <returns>The encrypted result as a base-64 string.</returns>
         public string DecryptStringFrom(byte[] encryptedBytes)
         {
