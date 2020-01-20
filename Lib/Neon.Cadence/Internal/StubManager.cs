@@ -1122,17 +1122,23 @@ namespace Neon.Cadence.Internal
                 sbSource.AppendLine($"        public async {resultTaskType} {details.Method.Name}({sbParams})");
                 sbSource.AppendLine($"        {{");
                 sbSource.AppendLine($"            await SyncContext.ClearAsync;");
+                sbSource.AppendLine($"            await WaitForExecutionAsync();");
                 sbSource.AppendLine();
 
                 if (isChild)
                 {
-                    // Querying child workflows is not currently supported by Cadence.
+                    sbSource.AppendLine();
+                    sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
+                    sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.QueryWorkflowAsync(this.client, this.childExecution.Execution, {StringLiteral(details.QueryMethodAttribute.Name)}, ___argBytes, this.domain);");
 
-                    sbSource.AppendLine($"            throw new NotSupportedException(\"Workflow stub for [{workflowInterface.FullName}] cannot be queried because it was created for a child workflow.  Querying child workflows is not supported by Cadence.\");");
+                    if (!details.IsVoid)
+                    {
+                        sbSource.AppendLine();
+                        sbSource.AppendLine($"            return this.dataConverter.FromData<{resultType}>(___resultBytes);");
+                    }
                 }
                 else
                 {
-                    sbSource.AppendLine($"            await WaitForExecutionAsync();");
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
                     sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.QueryWorkflowAsync(this.client, this.execution, {StringLiteral(details.QueryMethodAttribute.Name)}, ___argBytes, this.domain);");

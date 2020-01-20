@@ -51,6 +51,7 @@
     <Compile Include="..\..\Test.Neon.Common\Net\Test_JsonClient.PostUnsafe.cs" Link="Net\Test_JsonClient.PostUnsafe.cs" />
     <Compile Include="..\..\Test.Neon.Common\Net\Test_JsonClient.Put.cs" Link="Net\Test_JsonClient.Put.cs" />
     <Compile Include="..\..\Test.Neon.Common\Net\Test_JsonClient.PutUnsafe.cs" Link="Net\Test_JsonClient.PutUnsafe.cs" />
+    <Compile Include="..\..\Test.Neon.Common\Net\Test_Jwt.cs" Link="Net\Test_Jwt.cs" />
     <Compile Include="..\..\Test.Neon.Common\Net\Test_NetHelper.cs" Link="Net\Test_NetHelper.cs" />
     <Compile Include="..\..\Test.Neon.Common\Net\Test_NetworkCidr.cs" Link="Net\Test_NetworkCidr.cs" />
     <Compile Include="..\..\Test.Neon.Common\Net\Test_Pinger.cs" Link="Net\Test_Pinger.cs" />

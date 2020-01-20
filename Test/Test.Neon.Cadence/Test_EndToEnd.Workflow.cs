@@ -1842,13 +1842,7 @@ namespace TestCadence
 
             public async Task<bool> QueryChildAsync()
             {
-                // Direct querying of child workflows is not currently supported.
-                // We're going to verify that we get an exception.  This method 
-                // returns TRUE for the expected behavior.
-                //
-                // NOTE: We'll probably relax this constraint in the future:
-                //
-                //      https://github.com/nforgeio/neonKUBE/issues/617
+                // Verify that we can query a child workflow.
 
                 var childStub      = Workflow.NewChildWorkflowStub<IWorkflowChild>();
                 var task           = childStub.WaitForQueryAsync();
@@ -1865,14 +1859,7 @@ namespace TestCadence
                     System.Threading.Thread.Sleep(1000);
                 }
 
-                try
-                {
-                    await childStub.QueryAsync("test");
-                }
-                catch (NotSupportedException)
-                {
-                    pass = true;
-                }
+                pass = await childStub.QueryAsync("test") == "test";
 
                 WorkflowChild.ExitNow = true;
 
@@ -2084,11 +2071,11 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_ChildQueryNotSupported()
+        public async Task Workflow_ChildQuery()
         {
             await SyncContext.ClearAsync;
 
-            // Verify that querying a child workflow is not supported.
+            // Verify that querying a child workflow works.
 
             WorkflowChild.Reset();
 
