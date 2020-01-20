@@ -54,7 +54,7 @@ namespace Neon.Cadence.Internal
         private ConstructorInfo     continueConstructor;
         private ConstructorInfo     childExternalConstructor;
         private ConstructorInfo     childWorkflowIdConstructor;
-        private MethodInfo          toUntyped;
+        private MethodInfo          toUntypedAsync;
 
         /// <summary>
         /// Constructor.
@@ -78,7 +78,7 @@ namespace Neon.Cadence.Internal
             this.childExternalConstructor   = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(WorkflowExecution));
             this.childWorkflowIdConstructor = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(Workflow), typeof(string), typeof(string));
             this.continueConstructor        = NeonHelper.GetConstructor(stubType, typeof(CadenceClient), typeof(IDataConverter), typeof(string), typeof(ContinueAsNewOptions));
-            this.toUntyped                  = NeonHelper.GetMethod(stubType, "ToUntyped", Type.EmptyTypes);
+            this.toUntypedAsync             = NeonHelper.GetMethod(stubType, "ToUntypedAsync", Type.EmptyTypes);
         }
 
         /// <summary>
@@ -226,9 +226,9 @@ namespace Neon.Cadence.Internal
         /// <returns>The new <see cref="WorkflowStub"/>.</returns>
         /// <exception cref="ArgumentException">Thrown if the stub passed is not external (e.g. it's a child stub).</exception>
         /// <exception cref="InvalidOperationException">Thrown if the stubbed workflow has not been started yet.</exception>
-        public WorkflowStub ToUntyped()
+        public async Task<WorkflowStub> ToUntypedAsync()
         {
-            return (WorkflowStub)toUntyped.Invoke(this, Array.Empty<object>());
+            return await (Task<WorkflowStub>)toUntypedAsync.Invoke(this, Array.Empty<object>());
         }
     }
 }

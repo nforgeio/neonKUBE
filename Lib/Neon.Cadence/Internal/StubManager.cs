@@ -605,6 +605,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"        private WorkflowExecution     execution;");
             sbSource.AppendLine($"        private string                workflowId;");
             sbSource.AppendLine($"        private ChildExecution        childExecution;");
+            sbSource.AppendLine($"        private AsyncManualResetEvent executingEvent;");
             sbSource.AppendLine($"        private bool                  continueAsNew;");
             sbSource.AppendLine($"        private ContinueAsNewOptions  continueAsNewOptions;");
 
@@ -613,12 +614,13 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, string workflowTypeName, WorkflowOptions options, System.Type interfaceType = null)");
             sbSource.AppendLine($"        {{");
-            sbSource.AppendLine($"            this.client           = client;");
-            sbSource.AppendLine($"            this.dataConverter    = dataConverter;");
-            sbSource.AppendLine($"            this.workflowTypeName = workflowTypeName;");
-            sbSource.AppendLine($"            this.options          = options;");
-            sbSource.AppendLine($"            this.domain           = ___StubHelper.ResolveDomain(client, options.Domain);");
-            sbSource.AppendLine($"            this.interfaceType    = interfaceType;");
+            sbSource.AppendLine($"            this.client            = client;");
+            sbSource.AppendLine($"            this.dataConverter     = dataConverter;");
+            sbSource.AppendLine($"            this.workflowTypeName  = workflowTypeName;");
+            sbSource.AppendLine($"            this.options           = options;");
+            sbSource.AppendLine($"            this.domain            = ___StubHelper.ResolveDomain(client, options.Domain);");
+            sbSource.AppendLine($"            this.interfaceType     = interfaceType;");
+            sbSource.AppendLine($"            this.executingEvent    = new AsyncManualResetEvent(initialState: false);");
             sbSource.AppendLine($"        }}");
 
             // Generate the constructor used to connect to an existing external workflow by IDs.
@@ -626,11 +628,12 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, string workflowId, string runId = null, string domain = null)");
             sbSource.AppendLine($"        {{");
-            sbSource.AppendLine($"            this.client        = client;");
-            sbSource.AppendLine($"            this.dataConverter = dataConverter;");
-            sbSource.AppendLine($"            this.hasStarted    = true;");
-            sbSource.AppendLine($"            this.execution     = new WorkflowExecution(workflowId, runId);");
-            sbSource.AppendLine($"            this.domain        = ___StubHelper.ResolveDomain(client, domain);");
+            sbSource.AppendLine($"            this.client         = client;");
+            sbSource.AppendLine($"            this.dataConverter  = dataConverter;");
+            sbSource.AppendLine($"            this.hasStarted     = true;");
+            sbSource.AppendLine($"            this.execution      = new WorkflowExecution(workflowId, runId);");
+            sbSource.AppendLine($"            this.domain         = ___StubHelper.ResolveDomain(client, domain);");
+            sbSource.AppendLine($"            this.executingEvent = new AsyncManualResetEvent(initialState: true);");
             sbSource.AppendLine($"        }}");
 
             // Generate the constructor used to attach to an existing workflow by execution.
@@ -638,12 +641,13 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, WorkflowExecution execution, string domain)");
             sbSource.AppendLine($"        {{");
-            sbSource.AppendLine($"            this.client        = client;");
-            sbSource.AppendLine($"            this.dataConverter = dataConverter;");
-            sbSource.AppendLine($"            this.hasStarted    = true;");
-            sbSource.AppendLine($"            this.execution     = execution;");
-            sbSource.AppendLine($"            this.workflowId    = execution.WorkflowId;");
-            sbSource.AppendLine($"            this.domain        = ___StubHelper.ResolveDomain(client, domain);");
+            sbSource.AppendLine($"            this.client         = client;");
+            sbSource.AppendLine($"            this.dataConverter  = dataConverter;");
+            sbSource.AppendLine($"            this.hasStarted     = true;");
+            sbSource.AppendLine($"            this.execution      = execution;");
+            sbSource.AppendLine($"            this.workflowId     = execution.WorkflowId;");
+            sbSource.AppendLine($"            this.domain         = ___StubHelper.ResolveDomain(client, domain);");
+            sbSource.AppendLine($"            this.executingEvent = new AsyncManualResetEvent(initialState: true);");
             sbSource.AppendLine($"        }}");
 
             // Generate the constructor used for child workflow stubs.
@@ -659,6 +663,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.childOptions     = options;");
             sbSource.AppendLine($"            this.domain           = this.childOptions.Domain;");
             sbSource.AppendLine($"            this.interfaceType    = interfaceType;");
+            sbSource.AppendLine($"            this.executingEvent   = new AsyncManualResetEvent(initialState: false);");
             sbSource.AppendLine($"        }}");
 
             // Generate the constructor used for already started child workflow stubs.
@@ -672,6 +677,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.parentWorkflow   = parentWorkflow;");
             sbSource.AppendLine($"            this.workflowTypeName = workflowTypeName;");
             sbSource.AppendLine($"            this.childExecution   = execution;");
+            sbSource.AppendLine($"            this.executingEvent   = new AsyncManualResetEvent(initialState: true);");
             sbSource.AppendLine($"        }}");
 
             // Generate the constructor used to create a continue-as-new stub.
@@ -679,12 +685,12 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine();
             sbSource.AppendLine($"        public {stubClassName}(CadenceClient client, IDataConverter dataConverter, string workflowTypeName, ContinueAsNewOptions options)");
             sbSource.AppendLine($"        {{");
-            sbSource.AppendLine($"            this.client               = client;");
-            sbSource.AppendLine($"            this.dataConverter        = dataConverter;");
-            sbSource.AppendLine($"            this.continueAsNew        = true;");
-            sbSource.AppendLine($"            this.continueAsNewOptions = options ?? new ContinueAsNewOptions();");
-            sbSource.AppendLine();
+            sbSource.AppendLine($"            this.client                        = client;");
+            sbSource.AppendLine($"            this.dataConverter                 = dataConverter;");
+            sbSource.AppendLine($"            this.continueAsNew                 = true;");
+            sbSource.AppendLine($"            this.continueAsNewOptions          = options ?? new ContinueAsNewOptions();");
             sbSource.AppendLine($"            this.continueAsNewOptions.Workflow = workflowTypeName;");
+            sbSource.AppendLine($"            this.executingEvent                = new AsyncManualResetEvent(initialState: true);");
             sbSource.AppendLine($"        }}");
 
             // Generate the constructor used to create an external child workflow stub by [WorkflowExecution].
@@ -697,6 +703,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.parentWorkflow = parentWorkflow;");
             sbSource.AppendLine($"            this.hasStarted     = true;");
             sbSource.AppendLine($"            this.execution      = execution;");
+            sbSource.AppendLine($"            this.executingEvent = new AsyncManualResetEvent(initialState: true);");
             sbSource.AppendLine($"        }}");
 
             // Generate the constructor used to create an external child workflow stub by workflow ID and domain.
@@ -710,20 +717,18 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.hasStarted     = true;");
             sbSource.AppendLine($"            this.workflowId     = workflowId;");
             sbSource.AppendLine($"            this.domain         = domain;");
+            sbSource.AppendLine($"            this.executingEvent = new AsyncManualResetEvent(initialState: true);");
             sbSource.AppendLine($"        }}");
 
             // Generate the method that converts the instance into a new untyped [WorkflowStub] (from ITypedWorkflowStub).
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public WorkflowStub ToUntyped()");
+            sbSource.AppendLine($"        public async Task<WorkflowStub> ToUntypedAsync()");
             sbSource.AppendLine($"        {{");
+            sbSource.AppendLine($"            await WaitForExecutionAsync();");
+            sbSource.AppendLine();
             sbSource.AppendLine($"            if (isChild)");
             sbSource.AppendLine($"            {{");
-            sbSource.AppendLine($"                if (!hasStarted || childExecution == null)");
-            sbSource.AppendLine($"                {{");
-            sbSource.AppendLine($"                    throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has not been been started.\");");
-            sbSource.AppendLine($"                }}");
-            sbSource.AppendLine();
 
             // Note that we're converting the [ChildWorkflowOptions] into a [WorkflowOptions] 
             // as a bit of a hack to make the [WorkflowStub] constructor happy.
@@ -732,24 +737,30 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            }}");
             sbSource.AppendLine($"            else");
             sbSource.AppendLine($"            {{");
-            sbSource.AppendLine($"                if (!hasStarted || execution == null)");
-            sbSource.AppendLine($"                {{");
-            sbSource.AppendLine($"                    throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has not been been started.\");");
-            sbSource.AppendLine($"                }}");
-            sbSource.AppendLine();
             sbSource.AppendLine($"                return (WorkflowStub)___StubHelper.NewWorkflowStub(client, workflowTypeName, execution, options);");
             sbSource.AppendLine($"            }}");
+            sbSource.AppendLine($"        }}");
+
+            // Generate the method that waits for the stub to obtain the workflow or child 
+            // workflow execution information from Cadence.
+
+            sbSource.AppendLine();
+            sbSource.AppendLine($"        public async Task WaitForExecutionAsync()");
+            sbSource.AppendLine($"        {{");
+            sbSource.AppendLine($"            if (!hasStarted)");
+            sbSource.AppendLine($"            {{");
+            sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has not been been started (by calling a workflow method).\");");
+            sbSource.AppendLine($"            }}");
+            sbSource.AppendLine();
+            sbSource.AppendLine($"            await executingEvent.WaitAsync();");
             sbSource.AppendLine($"        }}");
 
             // Generate the method that returns the external workflow stub's execution.
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public WorkflowExecution GetExecution()");
+            sbSource.AppendLine($"        public async Task<WorkflowExecution> GetExecutionAsync()");
             sbSource.AppendLine($"        {{");
-            sbSource.AppendLine($"            if (!hasStarted || (execution == null && childExecution == null))");
-            sbSource.AppendLine($"            {{");
-            sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has not been been started.\");");
-            sbSource.AppendLine($"            }}");
+            sbSource.AppendLine($"            await WaitForExecutionAsync();");
             sbSource.AppendLine();
             sbSource.AppendLine($"            return execution ?? childExecution?.Execution;");
             sbSource.AppendLine($"        }}");
@@ -885,7 +896,10 @@ namespace Neon.Cadence.Internal
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            this.hasStarted     = true;");
                     sbSource.AppendLine($"            this.childExecution = await ___StubHelper.StartChildWorkflowAsync(this.client, this.parentWorkflow, ___workflowTypeName, ___argBytes, ___options);");
-                    sbSource.AppendLine($"            ___resultBytes      = await ___StubHelper.GetChildWorkflowResultAsync(this.client, this.parentWorkflow, this.childExecution);");
+                    sbSource.AppendLine();
+                    sbSource.AppendLine($"            executingEvent.Set();");
+                    sbSource.AppendLine();
+                    sbSource.AppendLine($"            ___resultBytes = await ___StubHelper.GetChildWorkflowResultAsync(this.client, this.parentWorkflow, this.childExecution);");
                     sbSource.AppendLine();
 
                     if (!details.IsVoid)
@@ -978,7 +992,10 @@ namespace Neon.Cadence.Internal
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            this.hasStarted = true;");
                     sbSource.AppendLine($"            this.execution  = await ___StubHelper.StartWorkflowAsync(this.client, ___workflowTypeName, ___argBytes, ___options);");
-                    sbSource.AppendLine($"            ___resultBytes  = await ___StubHelper.GetWorkflowResultAsync(this.client, this.execution, this.domain);");
+                    sbSource.AppendLine();
+                    sbSource.AppendLine($"            executingEvent.Set();");
+                    sbSource.AppendLine();
+                    sbSource.AppendLine($"            ___resultBytes = await ___StubHelper.GetWorkflowResultAsync(this.client, this.execution, this.domain);");
 
                     if (!details.IsVoid)
                     {
@@ -1030,10 +1047,7 @@ namespace Neon.Cadence.Internal
                 {
                     // Code to signal a child workflow. 
 
-                    sbSource.AppendLine($"            if (!this.hasStarted)");
-                    sbSource.AppendLine($"            {{");
-                    sbSource.AppendLine($"                throw new WorkflowExecutionAlreadyStartedException(\"Workflow stub for [{workflowInterface.FullName}] cannot be signalled because a workflow method needs to be called first.\");");
-                    sbSource.AppendLine($"            }}");
+                    sbSource.AppendLine($"            await WaitForExecutionAsync();");
                     sbSource.AppendLine();
 
                     if (signalAttribute.Synchronous)
@@ -1061,10 +1075,7 @@ namespace Neon.Cadence.Internal
                 {
                     // Code to signal an external workflow.
 
-                    sbSource.AppendLine($"            if (!this.hasStarted)");
-                    sbSource.AppendLine($"            {{");
-                    sbSource.AppendLine($"                throw new WorkflowExecutionAlreadyStartedException(\"Workflow stub for [{workflowInterface.FullName}] cannot be signalled because a workflow method needs to be called first.\");");
-                    sbSource.AppendLine($"            }}");
+                    sbSource.AppendLine($"            await WaitForExecutionAsync();");
                     sbSource.AppendLine();
 
                     if (signalAttribute.Synchronous)
@@ -1121,10 +1132,7 @@ namespace Neon.Cadence.Internal
                 }
                 else
                 {
-                    sbSource.AppendLine($"            if (this.execution == null)");
-                    sbSource.AppendLine($"            {{");
-                    sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] cannot be queried because a workflow method needs to be called first.\");");
-                    sbSource.AppendLine($"            }}");
+                    sbSource.AppendLine($"            await WaitForExecutionAsync();");
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
                     sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.QueryWorkflowAsync(this.client, this.execution, {StringLiteral(details.QueryMethodAttribute.Name)}, ___argBytes, this.domain);");
@@ -1147,7 +1155,7 @@ namespace Neon.Cadence.Internal
             var source = sbSource.ToString();
 #if DEBUG
             //------------------------------
-            // $todo(jefflill): DELETE THIS!
+            // $debug(jefflill): DELETE THIS!
             var interfaceName = workflowInterface.Name;
             //------------------------------
 #endif

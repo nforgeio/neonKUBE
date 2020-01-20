@@ -36,7 +36,7 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// Creates an untyped <see cref="WorkflowStub"/> from a typed stub.
         /// </summary>
-        WorkflowStub ToUntyped();
+        Task<WorkflowStub> ToUntypedAsync();
 
         /// <summary>
         /// Obtains the workflow execution for stubs that have been started.  This
@@ -44,11 +44,19 @@ namespace Neon.Cadence.Internal
         /// </summary>
         /// <returns>The workflow <see cref="WorkflowExecution"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown if the stub has not been started.</exception>
-        WorkflowExecution GetExecution();
+        Task<WorkflowExecution> GetExecutionAsync();
 
         /// <summary>
         /// Returns <c>true</c> if the stub has already ontained its workflow execution.
         /// </summary>
         bool HasExecution { get; }
+
+        /// <summary>
+        /// Waits for the workflow stub to be assigned an external or child workflow
+        /// execution.  This is useful for ensuring that the workflow method execution
+        /// has proceeded far enough to have actually submitted the workflow to Cadence.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        Task WaitForExecutionAsync();
     }
 }

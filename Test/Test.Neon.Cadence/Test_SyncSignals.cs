@@ -89,22 +89,6 @@ namespace TestCadence
             }
         }
 
-        /// <summary>
-        /// This is a fragile method that can be used to delay test execution until
-        /// after a workflow has been started.  This just waits 5 seconds rather than
-        /// actually determining that the workflow has started
-        /// </summary>
-        /// <param name="stub">The workflow stub.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task WaitForWorkflowStartAsync(object stub)
-        {
-            var typedStub = stub as ITypedWorkflowStub;
-
-            Covenant.Requires<InvalidCastException>(typedStub != null);
-
-            await NeonHelper.WaitForAsync(async () => await Task.FromResult(typedStub.HasExecution), TimeSpan.FromSeconds(30));
-        }
-
         //---------------------------------------------------------------------
 
         [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
@@ -168,8 +152,6 @@ namespace TestCadence
 
             var stub = client.NewWorkflowStub<ISyncSignal>();
             var task = stub.RunAsync(SyncSignal.WorkflowDelay);
-
-            await WaitForWorkflowStartAsync(stub);
 
             await stub.SignalAsync(TimeSpan.Zero);
             Assert.True(SyncSignal.SignalBeforeDelay);

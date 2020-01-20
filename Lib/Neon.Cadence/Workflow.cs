@@ -631,7 +631,7 @@ namespace Neon.Cadence
             WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
-            return await Task.FromResult(((ITypedWorkflowStub)stub).GetExecution());
+            return await ((ITypedWorkflowStub)stub).GetExecutionAsync();
         }
 
         /// <summary>

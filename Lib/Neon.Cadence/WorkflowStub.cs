@@ -138,12 +138,12 @@ namespace Neon.Cadence
         /// <param name="stub">The source typed workflow stub.</param>
         /// <returns>The <see cref="WorkflowStub"/>.</returns>
         /// 
-        public static WorkflowStub FromTyped(object stub)
+        public static async Task<WorkflowStub> FromTypedAsync(object stub)
         {
             Covenant.Requires<ArgumentNullException>(stub != null, nameof(stub));
             Covenant.Requires<ArgumentException>(stub is ITypedWorkflowStub, nameof(stub), $"[{stub.GetType().FullName}] is not a typed workflow stub.");
 
-          return ((ITypedWorkflowStub)stub).ToUntyped();
+          return await ((ITypedWorkflowStub)stub).ToUntypedAsync();
         }
 
         //---------------------------------------------------------------------
