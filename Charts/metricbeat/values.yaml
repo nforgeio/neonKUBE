@@ -41,7 +41,7 @@ daemonset:
       enabled: true
       config:
         - module: system
-          period: 10s
+          period: 1m
           metricsets:
             - cpu
             - load
@@ -74,7 +74,7 @@ daemonset:
             - pod
             - container
             - volume
-          period: 10s
+          period: 1m
           host: ${NODE_NAME}
           hosts: ["localhost:10255"]
           # If using Red Hat OpenShift remove the previous hosts entry and
@@ -126,7 +126,7 @@ deployment:
             - state_container
             # Uncomment this to get k8s events:
             - event
-          period: 10s
+          period: 1m
           hosts: ["kube-state-metrics.kube-system:8080"]
   # If overrideModules is not empty, metricbeat chart's default modules won't be used at all.
   overrideModules: {}
