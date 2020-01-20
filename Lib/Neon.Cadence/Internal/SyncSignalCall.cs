@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SyncSignalInfo.cs
+// FILE:	    SyncSignalCall.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -28,24 +28,27 @@ using Neon.Common;
 namespace Neon.Cadence.Internal
 {
     /// <summary>
-    /// Holds information necessary to implement synchronous signals.  This is
-    /// added internally as the first parameter to synchronous signals by the
-    /// <see cref="CadenceClient"/>.
+    /// <b>INTERNAL USE ONLY:</b> Holds information necessary to implement synchronous 
+    /// signals.  This is added used internally for transmitting synchronous signals 
+    /// to workflows.
     /// </summary>
-    internal class SyncSignalInfo
+    public class SyncSignalCall
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="targetSignal">Identifies the target signal.</param>
         /// <param name="signalId">The globally unique signal ID.</param>
-        public SyncSignalInfo(string targetSignal, string signalId)
+        /// <param name="userArgs">The encoded user arguments being passed to the signal.</param>
+        public SyncSignalCall(string targetSignal, string signalId, byte[] userArgs)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetSignal), nameof(targetSignal));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalId), nameof(signalId));
+            Covenant.Requires<ArgumentNullException>(userArgs != null, nameof(userArgs));
 
             this.TargetSignal = targetSignal;
             this.SignalId     = signalId;
+            this.UserArgs     = userArgs;
         }
 
         /// <summary>
@@ -63,5 +66,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         [JsonProperty(PropertyName = "SignalId", Required = Required.Always)]
         public string SignalId { get; set; }
+
+        /// <summary>
+        /// The encoded user arguments being passed to the signal.
+        /// </summary>
+        [JsonProperty(PropertyName = "UserArgs", Required = Required.Always)]
+        public byte[] UserArgs { get; set; }
     }
 }

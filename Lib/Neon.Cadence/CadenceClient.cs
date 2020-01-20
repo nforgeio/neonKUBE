@@ -248,16 +248,21 @@ namespace Neon.Cadence
         private const int debugClientPort = 5001;
 
         /// <summary>
+        /// The signal name used to retrieve the current stack trace.
+        /// </summary>
+        internal const string StackQueryName = "__stack_trace";
+
+        /// <summary>
         /// The signal name used for synchronous signals.  Signals sent here will be
         /// handled internally by <see cref="WorkflowBase"/> and forwarded on to the
         /// user's signal handler method.
         /// </summary>
-        internal const string SyncSignalName = "__reserved-sync-signal";
+        internal const string SyncSignalName = "--sync-signal";
 
         /// <summary>
         /// The internal query name used to poll the state of a synchronous signals.
         /// </summary>
-        internal const string SyncSignalQueryName = "__reserved-sync-query";
+        internal const string SyncSignalQueryName = "--sync-signal-query";
 
         //---------------------------------------------------------------------
         // Private types
@@ -1359,25 +1364,24 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Instance members
 
-        private Process                                 proxyProcess            = null;
-        private int                                     proxyPort               = 0;
-        private Dictionary<long, Worker>                workers                 = new Dictionary<long, Worker>();
-        private Dictionary<string, Type>                activityTypes           = new Dictionary<string, Type>();
-        private bool                                    isDisposed              = false;
-        private List<Type>                              registeredActivityTypes = new List<Type>();
-        private List<Type>                              registeredWorkflowTypes = new List<Type>();
-        private HttpClient                              proxyClient;
-        private HttpServer                              httpServer;
-        private Exception                               pendingException;
-        private bool                                    closingConnection;
-        private bool                                    connectionClosedRaised;
-        private int                                     workflowCacheSize;
-        private Thread                                  heartbeatThread;
-        private Thread                                  timeoutThread;
-        private bool                                    workflowWorkerStarted;
-        private bool                                    activityWorkerStarted;
-        private IRetryPolicy                            syncSignalRetry;
-        private Dictionary<string, SyncSignalStatus>    syncSignalOperations    = new Dictionary<string, SyncSignalStatus>();
+        private Process                     proxyProcess            = null;
+        private int                         proxyPort               = 0;
+        private Dictionary<long, Worker>    workers                 = new Dictionary<long, Worker>();
+        private Dictionary<string, Type>    activityTypes           = new Dictionary<string, Type>();
+        private bool                        isDisposed              = false;
+        private List<Type>                  registeredActivityTypes = new List<Type>();
+        private List<Type>                  registeredWorkflowTypes = new List<Type>();
+        private HttpClient                  proxyClient;
+        private HttpServer                  httpServer;
+        private Exception                   pendingException;
+        private bool                        closingConnection;
+        private bool                        connectionClosedRaised;
+        private int                         workflowCacheSize;
+        private Thread                      heartbeatThread;
+        private Thread                      timeoutThread;
+        private bool                        workflowWorkerStarted;
+        private bool                        activityWorkerStarted;
+        private IRetryPolicy                syncSignalRetry;
 
         /// <summary>
         /// Used for unit testing only.

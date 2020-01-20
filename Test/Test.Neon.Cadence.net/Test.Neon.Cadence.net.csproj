@@ -342,6 +342,9 @@
     <Compile Include="..\Test.Neon.Cadence\Test_Settings.cs">
       <Link>Test_Settings.cs</Link>
     </Compile>
+    <Compile Include="..\Test.Neon.Cadence\Test_SignalChecks.cs">
+      <Link>Test_SignalChecks.cs</Link>
+    </Compile>
     <Compile Include="..\Test.Neon.Cadence\Test_StubManager.ActivityError.cs">
       <Link>Test_StubManager.ActivityError.cs</Link>
     </Compile>
@@ -356,6 +359,9 @@
     </Compile>
     <Compile Include="..\Test.Neon.Cadence\Test_StubManager.WorkflowGenerate.cs">
       <Link>Test_StubManager.WorkflowGenerate.cs</Link>
+    </Compile>
+    <Compile Include="..\Test.Neon.Cadence\Test_SyncSignals.cs">
+      <Link>Test_SyncSignals.cs</Link>
     </Compile>
     <Compile Include="..\Test.Neon.Cadence\Test_Worker.cs">
       <Link>Test_Worker.cs</Link>

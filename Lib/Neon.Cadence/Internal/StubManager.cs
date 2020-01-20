@@ -471,7 +471,7 @@ namespace Neon.Cadence.Internal
                     {
                         // Synchronous signal can return both Task or Task<T>.
 
-                        if (!CadenceHelper.IsTask(method.ReturnType) && !CadenceHelper.IsTask(method.ReturnType))
+                        if (!CadenceHelper.IsTask(method.ReturnType) && !CadenceHelper.IsTaskT(method.ReturnType))
                         {
                             throw new WorkflowTypeException($"Workflow signal method [{workflowInterface.FullName}.{method.Name}()] does not return a [Task] or a [Task<T>].");
                         }
@@ -751,7 +751,15 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"                throw new InvalidOperationException(\"Workflow stub for [{workflowInterface.FullName}] has not been been started.\");");
             sbSource.AppendLine($"            }}");
             sbSource.AppendLine();
-            sbSource.AppendLine($"            return execution ?? childExecution.Execution;");
+            sbSource.AppendLine($"            return execution ?? childExecution?.Execution;");
+            sbSource.AppendLine($"        }}");
+
+            // Generate the property that indicates whether the stub has the workflow execution..
+
+            sbSource.AppendLine();
+            sbSource.AppendLine($"        public bool HasExecution");
+            sbSource.AppendLine($"        {{");
+            sbSource.AppendLine($"            get => (execution ?? childExecution?.Execution) != null;");
             sbSource.AppendLine($"        }}");
 
             // Generate the workflow entry point methods.
@@ -1030,10 +1038,11 @@ namespace Neon.Cadence.Internal
 
                     if (signalAttribute.Synchronous)
                     {
-                        sbSource.AppendLine("             var ___signalId     = Guid.NewGuid().ToString(\"d\");");;
-                        sbSource.AppendLine($"            var ___signalInfo   = new SyncSignalInfo({StringLiteral(signalAttribute.Name)}, __signalId)");
-                        sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters(), "__signalInfo")};");
-                        sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.SyncSignalChildWorkflowAsync(this.client, this.parentWorkflow, this.childExecution, {StringLiteral(CadenceClient.SyncSignalName)}, ___signalId, ___argBytes);");
+                        sbSource.AppendLine($"            var ___signalId       = Guid.NewGuid().ToString(\"d\");");
+                        sbSource.AppendLine($"            var ___argBytes       = {SerializeArgsExpression(details.Method.GetParameters())};");
+                        sbSource.AppendLine($"            var ___signalCall     = new SyncSignalCall({StringLiteral(signalAttribute.Name)}, ___signalId, ___argBytes);");
+                        sbSource.AppendLine($"            var ___signalArgBytes = this.dataConverter.ToData(new object[] {{ ___signalCall }});");
+                        sbSource.AppendLine($"            var ___resultBytes    = await ___StubHelper.SyncSignalChildWorkflowAsync(this.client, this.parentWorkflow, this.childExecution, {StringLiteral(CadenceClient.SyncSignalName)}, ___signalId, ___signalArgBytes);");
 
                         if (details.ReturnType != typeof(void))
                         {
@@ -1060,10 +1069,11 @@ namespace Neon.Cadence.Internal
 
                     if (signalAttribute.Synchronous)
                     {
-                        sbSource.AppendLine("             var ___signalId    = Guid.NewGuid().ToString(\"d\");");;
-                        sbSource.AppendLine($"            var ___signalInfo  = new SyncSignalInfo({StringLiteral(signalAttribute.Name)}, __signalId)");
-                        sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters(), "__signalInfo")};");
-                        sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.SyncSignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___signalId, ___argBytes, this.domain);");
+                        sbSource.AppendLine($"            var ___signalId       = Guid.NewGuid().ToString(\"d\");");
+                        sbSource.AppendLine($"            var ___argBytes       = {SerializeArgsExpression(details.Method.GetParameters())};");
+                        sbSource.AppendLine($"            var ___signalCall     = new SyncSignalCall({StringLiteral(signalAttribute.Name)}, ___signalId, ___argBytes);");
+                        sbSource.AppendLine($"            var ___signalArgBytes = this.dataConverter.ToData(new object[] {{ ___signalCall }});");
+                        sbSource.AppendLine($"            var ___resultBytes    = await ___StubHelper.SyncSignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___signalId, ___signalArgBytes, this.domain);");
 
                         if (details.ReturnType != typeof(void))
                         {
@@ -1135,14 +1145,14 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"}}");
 
             var source = sbSource.ToString();
-
-            //-----------------------------------------------------------------
-            // Compile the new workflow stub class into an assembly.
-
+#if DEBUG
             //------------------------------
             // $todo(jefflill): DELETE THIS!
             var interfaceName = workflowInterface.Name;
             //------------------------------
+#endif
+            //-----------------------------------------------------------------
+            // Compile the new workflow stub class into an assembly.
 
             var syntaxTree = CSharpSyntaxTree.ParseText(source);
             var dotnetPath = Path.GetDirectoryName(typeof(object).Assembly.Location);
@@ -1835,16 +1845,10 @@ namespace Neon.Cadence.Internal
         /// serialize workflow method parameters to a byte array.
         /// </summary>
         /// <param name="args">The parameters.</param>
-        /// <param name="firstArgVariable">Optionally specifies the name of a local variable that should be passed as the first argument.</param>
         /// <returns>The C# expression.</returns>
-        private static string SerializeArgsExpression(ParameterInfo[] args, string firstArgVariable = null)
+        private static string SerializeArgsExpression(ParameterInfo[] args)
         {
             var sb = new StringBuilder();
-
-            if (firstArgVariable != null)
-            {
-                sb.AppendWithSeparator(firstArgVariable, ", ");
-            }
 
             foreach (var arg in args)
             {

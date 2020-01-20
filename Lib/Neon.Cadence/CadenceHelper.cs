@@ -333,21 +333,21 @@ namespace Neon.Cadence.Internal
 
                 if (signalMethodAttribute.Synchronous)
                 {
-                    if (!(CadenceHelper.IsTaskT(method.ReturnType) || CadenceHelper.IsTaskT(method.ReturnType)))
+                    if (!CadenceHelper.IsTask(method.ReturnType) && !CadenceHelper.IsTaskT(method.ReturnType))
                     {
                         throw new WorkflowTypeException($"Synchronous workflow signal method [{workflowInterface.FullName}.{method.Name}()] must return a [Task] or [Task<T>].");
                     }
                 }
                 else
                 {
-                    if (!(CadenceHelper.IsTask(method.ReturnType)))
+                    if (!CadenceHelper.IsTask(method.ReturnType))
                     {
-                        throw new WorkflowTypeException($"Workflow signal method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                        throw new WorkflowTypeException($"Fire-and-forget signal method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                     }
 
                     if (CadenceHelper.IsTaskT(method.ReturnType))
                     {
-                        throw new WorkflowTypeException($"Non-synchronous workflow signal method [{workflowInterface.FullName}.{method.Name}()] cannot return a result via a [Task<T>].  Use [SignalMethod(Synchronous = true)] to enable this.");
+                        throw new WorkflowTypeException($"Fire-and-forget workflow signal method [{workflowInterface.FullName}.{method.Name}()] cannot return a result via a [Task<T>].  Use [SignalMethod(Synchronous = true)] to enable this.");
                     }
                 }
 
@@ -550,7 +550,7 @@ namespace Neon.Cadence.Internal
 
                 if (!(CadenceHelper.IsTask(method.ReturnType) || CadenceHelper.IsTaskT(method.ReturnType)))
                 {
-                    throw new WorkflowTypeException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a Task.");
+                    throw new WorkflowTypeException($"Activity interface method [{activityInterface.FullName}.{method.Name}()] must return a [Task].");
                 }
 
                 var name = activityMethodAttribute.Name ?? string.Empty;

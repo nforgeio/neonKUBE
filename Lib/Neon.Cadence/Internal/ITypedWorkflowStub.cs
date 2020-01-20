@@ -45,5 +45,10 @@ namespace Neon.Cadence.Internal
         /// <returns>The workflow <see cref="WorkflowExecution"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown if the stub has not been started.</exception>
         WorkflowExecution GetExecution();
+
+        /// <summary>
+        /// Returns <c>true</c> if the stub has already ontained its workflow execution.
+        /// </summary>
+        bool HasExecution { get; }
     }
 }

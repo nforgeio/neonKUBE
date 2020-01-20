@@ -867,15 +867,15 @@ namespace Neon.Cadence
         /// <exception cref="TimeoutException">Thrown if the operation timed out while waiting for a reply.</exception>
         /// <remarks>
         /// <para>
-        /// <paramref name="signalArgs"/> must include an internal <see cref="SyncSignalInfo"/> encoded as 
-        /// the first argument followed by the user's signal arguments.  This first argument includes the
-        /// information required by the worker to route to the user's signal as well as the globally
-        /// unique transaction ID that the worker will use to track the signal execution state and the
-        /// client will use to poll for that state.
+        /// <paramref name="signalArgs"/> must include an internal <see cref="SyncSignalCall"/> encoded as 
+        /// the only argument.  This first includes the information required by the worker to route to the 
+        /// user's signal, the globally unique transaction ID that the worker will use to track the signal
+        /// execution state and the client will use to poll for that state.  This also includes the encoded
+        /// user arguments being passed to the signal.
         /// </para>
         /// <note>
         /// The value passed as <paramref name="signalId"/> must match that in <see cref="SyncSignalStatus"/>
-        /// encoded as the first argument encoded in <paramref name="signalArgs"/>.
+        /// encoded as the encoded in <paramref name="signalArgs"/>.
         /// </note>
         /// </remarks>
         internal async Task<byte[]> SyncSignalWorkflowAsync(WorkflowExecution execution, string signalName, string signalId, byte[] signalArgs, string domain = null)
@@ -896,7 +896,7 @@ namespace Neon.Cadence
             byte[]              rawStatus = null;
             SyncSignalStatus    status    = null;
 
-            await syncSignalRetry.InvokeAsync<SyncSignalStatus>(
+            status = await SyncSignalRetry.InvokeAsync<SyncSignalStatus>(
                 async () =>
                 {
                     // $todo(jefflill):
@@ -942,15 +942,15 @@ namespace Neon.Cadence
         /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
         /// <remarks>
         /// <para>
-        /// <paramref name="signalArgs"/> must include an internal <see cref="SyncSignalInfo"/> encoded as 
-        /// the first argument followed by the user's signal arguments.  This first argument includes the
-        /// information required by the worker to route to the user's signal as well as the globally
-        /// unique transaction ID that the worker will use to track the signal execution state and the
-        /// client will use to poll for that state.
+        /// <paramref name="signalArgs"/> must include an internal <see cref="SyncSignalCall"/> encoded as 
+        /// the only argument.  This first includes the information required by the worker to route to the 
+        /// user's signal, the globally unique transaction ID that the worker will use to track the signal
+        /// execution state and the client will use to poll for that state.  This also includes the encoded
+        /// user arguments being passed to the signal.
         /// </para>
         /// <note>
         /// The value passed as <paramref name="signalId"/> must match that in <see cref="SyncSignalStatus"/>
-        /// encoded as the first argument encoded in <paramref name="signalArgs"/>.
+        /// encoded as the encoded in <paramref name="signalArgs"/>.
         /// </note>
         /// </remarks>
         internal async Task<byte[]> SyncSignalChildWorkflowAsync(Workflow parentWorkflow, ChildExecution childExecution, string signalName, string signalId, byte[] signalArgs)
@@ -972,7 +972,7 @@ namespace Neon.Cadence
             byte[]              rawStatus = null;
             SyncSignalStatus    status    = null;
 
-            await syncSignalRetry.InvokeAsync<SyncSignalStatus>(
+            await SyncSignalRetry.InvokeAsync<SyncSignalStatus>(
                 async () =>
                 {
                     // $todo(jefflill):

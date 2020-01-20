@@ -38,7 +38,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="e">The exception.</param>
         /// <returns>The formatted error string.</returns>
-        internal string GetError(Exception e)
+        internal static string GetError(Exception e)
         {
             Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
 

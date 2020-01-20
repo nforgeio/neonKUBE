@@ -15,27 +15,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Newtonsoft.Json;
-
-using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
-using Neon.Retry;
-using Neon.Time;
 using Neon.Diagnostics;
-using Neon.Tasks;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Neon.Cadence
 {
@@ -156,10 +146,10 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static object                                           syncLock          = new object();
-        private static INeonLogger                                      log               = LogManager.Default.GetLogger<WorkflowBase>();
-        private static Dictionary<WorkflowInstanceKey, WorkflowBase>    idToWorkflow      = new Dictionary<WorkflowInstanceKey, WorkflowBase>();
-        private static byte[]                                           emptyBytes        = new byte[0];
+        private static object                                           syncLock     = new object();
+        private static INeonLogger                                      log          = LogManager.Default.GetLogger<WorkflowBase>();
+        private static Dictionary<WorkflowInstanceKey, WorkflowBase>    idToWorkflow = new Dictionary<WorkflowInstanceKey, WorkflowBase>();
+        private static byte[]                                           emptyBytes   = new byte[0];
 
         // This dictionary is used to map workflow type names to the target workflow
         // registration.  Note that these mappings are scoped to specific cadence client
@@ -570,6 +560,7 @@ namespace Neon.Cadence
             }
 
             // Register any workflow signal and/or query methods with cadence-proxy.
+            // Note that synchronous signals need special handling further below.
 
             foreach (var signalName in registration.MethodMap.GetSignalNames())
             {
@@ -593,6 +584,36 @@ namespace Neon.Cadence
                     });
 
                 reply.ThrowOnError();
+            }
+
+            // $hack(jefflill): 
+            //
+            // We registered any synchronous signal names above even though we probably
+            // shouldn't have.  This shouldn't really cause any trouble.
+            //
+            // If the workflow has any synchronous signals, we need to register the
+            // special synchronous signal dispatcher as well as the synchronous signal
+            // query handler.
+
+            if (registration.MethodMap.HasSynchronousSignals)
+            {
+                var signalSubscribeReply = (WorkflowSignalSubscribeReply)await client.CallProxyAsync(
+                    new WorkflowSignalSubscribeRequest()
+                    {
+                        ContextId  = contextId,
+                        SignalName = CadenceClient.SyncSignalName
+                    });
+
+                signalSubscribeReply.ThrowOnError();
+
+                var querySubscribeReply = (WorkflowSetQueryHandlerReply)await client.CallProxyAsync(
+                    new WorkflowSetQueryHandlerRequest()
+                    {
+                        ContextId = contextId,
+                        QueryName = CadenceClient.SyncSignalQueryName
+                    });
+
+                querySubscribeReply.ThrowOnError();
             }
 
             // Start the workflow by calling its workflow entry point method.
@@ -694,6 +715,11 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
+            if (request.SignalName == CadenceClient.SyncSignalName)
+            {
+                return await OnSyncSignalAsync(client, request);
+            }
+
             try
             {
                 WorkflowBase.CallContext.Value = WorkflowCallContext.Signal;
@@ -723,9 +749,125 @@ namespace Neon.Cadence
                 }
                 else
                 {
-                    // It's possible that we'll land here if the workflow has been scheduled
-                    // and/or started but execution has not actually started.  Since signals
-                    // are fire-and-forget, we're just going to ignore these here.
+                    // I don't believe we'll ever land here because that would mean that
+                    // Cadence sends signals to a workflow that hasn't started running
+                    // on a worker (which wouldn't make sense).
+                    //
+                    // We're going go ahead and send a reply, just in case.
+
+                    return new WorkflowSignalInvokeReply();
+                }
+            }
+            catch (Exception e)
+            {
+                log.LogError(e);
+
+                return new WorkflowSignalInvokeReply()
+                {
+                    Error = new CadenceError(e)
+                };
+            }
+            finally
+            {
+                WorkflowBase.CallContext.Value = WorkflowCallContext.None;
+            }
+        }
+        /// <summary>
+        /// Handles internal <see cref="CadenceClient.SyncSignalName"/> workflow signals.
+        /// </summary>
+        /// <param name="client">The Cadence client.</param>
+        /// <param name="request">The request message.</param>
+        /// <returns>The reply message.</returns>
+        internal static async Task<WorkflowSignalInvokeReply> OnSyncSignalAsync(CadenceClient client, WorkflowSignalInvokeRequest request)
+        {
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
+
+            try
+            {
+                WorkflowBase.CallContext.Value = WorkflowCallContext.Signal;
+
+                var workflow = GetWorkflow(client, request.ContextId);
+
+                if (workflow != null)
+                {
+                    // The signal arguments should be just a single [SyncSignalCall] that specifies
+                    // the target signal and also includes its encoded arguments.
+
+                    var syncArgs       = client.DataConverter.FromDataArray(request.SignalArgs, typeof(SyncSignalCall));
+                    var syncSignalCall = (SyncSignalCall)syncArgs[0];
+                    var method         = workflow.Workflow.MethodMap.GetSignalMethod(syncSignalCall.TargetSignal);
+
+                    // Persist some state that the signal status queries can examine.
+
+                    lock (workflow.signalIdToStatus)
+                    {
+                        workflow.signalIdToStatus[syncSignalCall.SignalId] = new SyncSignalStatus() { Completed = false };
+                    }
+
+                    if (method != null)
+                    {
+                        var userArgs  = client.DataConverter.FromDataArray(syncSignalCall.UserArgs, method.GetParameterTypes());
+                        var result    = (object)null;
+                        var exception = (Exception)null;
+
+                        try
+                        {
+                            if (CadenceHelper.IsTask(method.ReturnType))
+                            {
+                                // Method returns [Task]: AKA void.
+
+                                await (Task)(method.Invoke(workflow, userArgs));
+                            }
+                            else
+                            {
+                                // Method returns [Task<T>]: AKA a result.
+
+                                result = await (Task<object>)(method.Invoke(workflow, userArgs));
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            exception = e;
+                        }
+
+                        lock (workflow.signalIdToStatus)
+                        {
+                            if (workflow.signalIdToStatus.TryGetValue(syncSignalCall.SignalId, out var syncSignalStatus))
+                            {
+                                syncSignalStatus.Completed = true;
+
+                                if (exception == null)
+                                {
+                                    syncSignalStatus.Result = client.DataConverter.ToData(result);
+                                }
+                                else
+                                {
+                                    syncSignalStatus.Error = SyncSignalException.GetError(exception);
+                                }
+                            }
+                        }
+
+                        return new WorkflowSignalInvokeReply()
+                        {
+                            RequestId = request.RequestId
+                        };
+                    }
+                    else
+                    {
+                        return new WorkflowSignalInvokeReply()
+                        {
+                            Error = new EntityNotExistsException($"Workflow type [{workflow.GetType().FullName}] does not define a signal handler for [signalName={request.SignalName}].").ToCadenceError()
+                        };
+                    }
+                }
+                else
+                {
+                    // I don't believe we'll ever land here because that would mean that
+                    // Cadence sends signals to a workflow that hasn't started running
+                    // on a worker (which wouldn't make sense).
+                    //
+                    // We're going go ahead and send a reply, just in case.
 
                     return new WorkflowSignalInvokeReply();
                 }
@@ -766,20 +908,45 @@ namespace Neon.Cadence
                 {
                     // Handle built-in queries.
 
-                    if (request.QueryName == "__stack_trace")
+                    switch (request.QueryName)
                     {
-                        var trace = string.Empty;
+                        case CadenceClient.StackQueryName:
 
-                        if (workflow.StackTrace != null)
-                        {
-                            trace = workflow.StackTrace.ToString();
-                        }
+                            var trace = string.Empty;
 
-                        return new WorkflowQueryInvokeReply()
-                        {
-                            RequestId = request.RequestId,
-                            Result    = NeonHelper.JsonSerializeToBytes(trace)
-                        };
+                            if (workflow.StackTrace != null)
+                            {
+                                trace = workflow.StackTrace.ToString();
+                            }
+
+                            return new WorkflowQueryInvokeReply()
+                            {
+                                RequestId = request.RequestId,
+                                Result    = client.DataConverter.ToData(trace)
+                            };
+
+                        case CadenceClient.SyncSignalQueryName:
+
+                            // The arguments for this signal is the (string) ID of the target
+                            // signal being polled for status.
+
+                            var syncSignalArgs   = client.DataConverter.FromDataArray(request.QueryArgs, typeof(string));
+                            var syncSignalId     = (string) (syncSignalArgs.Length > 0 ? syncSignalArgs[0] : null);
+                            var syncSignalStatus = (SyncSignalStatus)null;
+
+                            lock (workflow.signalIdToStatus)
+                            {
+                                if (!workflow.signalIdToStatus.TryGetValue(syncSignalId, out syncSignalStatus))
+                                {
+                                    syncSignalStatus = new SyncSignalStatus() { Completed = false };
+                                }
+                            }
+
+                            return new WorkflowQueryInvokeReply()
+                            {
+                                RequestId = request.RequestId,
+                                Result    = client.DataConverter.ToData(syncSignalStatus)
+                            };
                     }
 
                     // Handle user queries.
@@ -911,9 +1078,7 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Instance members
 
-        // This field holds the stack trace for the most recent decision related 
-        // [Workflow] method call.  This will be returned for internal workflow
-        // "__stack_trace" queries.
+        private Dictionary<string, SyncSignalStatus> signalIdToStatus = new Dictionary<string, SyncSignalStatus>();
 
         /// <summary>
         /// This field holds the stack trace for the most recent decision related 

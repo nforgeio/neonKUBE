@@ -54,7 +54,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="content">The input bytes.</param>
         /// <param name="valueTypes">Specifies the expected number of array elements and their types.</param>
-        /// <returns>The deserializes values.</returns>
+        /// <returns>The deserialized values.</returns>
         object[] FromDataArray(byte[] content, params Type[] valueTypes);
 
         /// <summary>

@@ -63,6 +63,11 @@ namespace Neon.Cadence
 
                     if (signalMethodAttribute != null)
                     {
+                        if (signalMethodAttribute.Synchronous)
+                        {
+                            map.HasSynchronousSignals = true;
+                        }
+
                         map.nameToSignalMethod[signalMethodAttribute.Name] = method;
                         continue;
                     }
@@ -152,5 +157,10 @@ namespace Neon.Cadence
         {
             return nameToQueryMethod.Keys.ToList();
         }
+
+        /// <summary>
+        /// Returns <c>true</c> if the workflow defines any synchronous signals.
+        /// </summary>
+        public bool HasSynchronousSignals { get; private set; }
     }
 }

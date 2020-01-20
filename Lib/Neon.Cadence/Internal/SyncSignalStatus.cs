@@ -47,14 +47,14 @@ namespace Neon.Cadence.Internal
         /// This string must be formatted by <see cref="SyncSignalException.GetError(Exception)"/>.
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "Error", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.Include)]
+        [JsonProperty(PropertyName = "Error", Required = Required.AllowNull, DefaultValueHandling = DefaultValueHandling.Include)]
         public string Error { get; set; }
 
         /// <summary>
         /// Returns the encoded result for signals that return results.  This will be <c>null</c> for 
-        /// signals 
+        /// signals that don't return a result.
         /// </summary>
-        [JsonProperty(PropertyName = "Result", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.Include)]
+        [JsonProperty(PropertyName = "Result", Required = Required.AllowNull, DefaultValueHandling = DefaultValueHandling.Include)]
         public byte[] Result { get; set; }
     }
 }
