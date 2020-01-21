@@ -251,7 +251,7 @@ namespace Neon.Cadence
 
             for (int i = 0; i < args.Length; i++)
             {
-                args[i] = TypeDescriptor.GetConverter(parameters[i].ParameterType).ConvertTo(args[i], parameters[i].ParameterType);
+                args[i] = CadenceHelper.ConvertArg(parameters[i].ParameterType, args[i]);
             }
 
             // Validate the return type.
@@ -339,7 +339,7 @@ namespace Neon.Cadence
 
             for (int i = 0; i < args.Length; i++)
             {
-                args[i] = TypeDescriptor.GetConverter(parameters[i].ParameterType).ConvertTo(args[i], parameters[i].ParameterType);
+                args[i] = CadenceHelper.ConvertArg(parameters[i].ParameterType, args[i]);
             }
 
             // Start the activity.

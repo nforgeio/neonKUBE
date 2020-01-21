@@ -110,7 +110,7 @@ namespace Neon.Cadence
 
             for (int i = 0; i < args.Length; i++)
             {
-                args[i] = TypeDescriptor.GetConverter(parameters[i].ParameterType).ConvertTo(args[i], parameters[i].ParameterType);
+                args[i] = CadenceHelper.ConvertArg(parameters[i].ParameterType, args[i]);
             }
 
             // Start the child workflow and then construct and return the future.
@@ -182,7 +182,7 @@ namespace Neon.Cadence
 
             for (int i = 0; i < args.Length; i++)
             {
-                args[i] = TypeDescriptor.GetConverter(parameters[i].ParameterType).ConvertTo(args[i], parameters[i].ParameterType);
+                args[i] = CadenceHelper.ConvertArg(parameters[i].ParameterType, args[i]);
             }
 
             // Start the child workflow and then construct the future.

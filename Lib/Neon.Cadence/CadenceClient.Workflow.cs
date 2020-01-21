@@ -886,7 +886,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(signalArgs != null && signalArgs.Length > 1, nameof(signalArgs));
             EnsureNotDisposed();
 
-            // Execute the signal.
+            // Send the signal.
 
             await SignalWorkflowAsync(execution, SyncSignalName, signalArgs, domain);
 
@@ -955,6 +955,7 @@ namespace Neon.Cadence
         /// </remarks>
         internal async Task<byte[]> SyncSignalChildWorkflowAsync(Workflow parentWorkflow, ChildExecution childExecution, string signalName, string signalId, byte[] signalArgs)
         {
+CadenceHelper.InternalLog("signal-1");
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             Covenant.Requires<ArgumentNullException>(childExecution != null, nameof(childExecution));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
@@ -962,9 +963,11 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(signalArgs != null && signalArgs.Length > 1, nameof(signalArgs));
             EnsureNotDisposed();
 
-            // Execute the signal.
+            // Send the signal.
 
+CadenceHelper.InternalLog("signal-2");
             await SignalChildWorkflowAsync(parentWorkflow, childExecution, SyncSignalName, signalArgs);
+CadenceHelper.InternalLog("signal-3");
 
             // Poll for the result via queries.
 
@@ -981,11 +984,15 @@ namespace Neon.Cadence
                     //
                     //      https://github.com/nforgeio/neonKUBE/issues/751
 
+CadenceHelper.InternalLog("signal-4");
                     rawStatus = await QueryWorkflowAsync(childExecution.Execution, SyncSignalQueryName, queryArgs);
+CadenceHelper.InternalLog("signal-5");
                     status    = DataConverter.FromData<SyncSignalStatus>(rawStatus);
+CadenceHelper.InternalLog("signal-6");
 
                     if (!status.Completed)
                     {
+CadenceHelper.InternalLog("signal-7");
                         throw new TimeoutException($"Timeout waiting for reply from signal [{signalName}].");
                     }
 
@@ -994,11 +1001,14 @@ namespace Neon.Cadence
 
             // Handle any error returned.
 
+CadenceHelper.InternalLog("signal-8");
             if (status.Error != null)
             {
+CadenceHelper.InternalLog("signal-9");
                 throw new SyncSignalException(status.Error);
             }
 
+CadenceHelper.InternalLog("signal-10");
             return status.Result;
         }
     }

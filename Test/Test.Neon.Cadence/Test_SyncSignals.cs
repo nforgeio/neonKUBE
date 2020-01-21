@@ -141,6 +141,50 @@ namespace TestCadence
             }
         }
 
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface ISyncChildSignal : IWorkflow
+        {
+            [WorkflowMethod()]
+            Task<bool> RunAsync(TimeSpan signalDelay, bool signalWithResult);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class SyncChildSignal : WorkflowBase, ISyncChildSignal
+        {
+            public async Task<bool> RunAsync(TimeSpan signalDelay, bool signalWithResult)
+            {
+                SyncSignal.Clear();
+
+                // Start a child workflow and then send a synchronous
+                // signal that returns void or a result depending on
+                // the parameter.
+                //
+                // The method returns TRUE on success.
+
+                var childStub = Workflow.NewChildWorkflowFutureStub<ISyncSignal>();
+                var future    = await childStub.StartAsync(SyncSignal.WorkflowDelay);
+                var pass      = true;
+
+                if (signalWithResult)
+                {
+                    var result = await childStub.Stub.SignalAsync(signalDelay, "Hello World!");
+
+                    pass = result == "Hello World!";
+                }
+                else
+                {
+                    await childStub.Stub.SignalAsync(signalDelay);
+                }
+
+                pass = pass && SyncSignal.SignalBeforeDelay;
+                pass = pass && SyncSignal.SignalAfterDelay;
+
+                await future.GetAsync();
+
+                return pass;
+            }
+        }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task SyncSignal_Void()
@@ -210,8 +254,8 @@ namespace TestCadence
 
             SyncSignal.Clear();
 
-            var stub = client.NewWorkflowStub<ISyncSignal>();
-            var task = stub.RunAsync(SyncSignal.WorkflowDelay);
+            var stub   = client.NewWorkflowStub<ISyncSignal>();
+            var task   = stub.RunAsync(SyncSignal.WorkflowDelay);
             var result = await stub.SignalAsync(SyncSignal.SignalDelay, "Hello World!");
 
             Assert.True(SyncSignal.SignalBeforeDelay);
@@ -219,6 +263,62 @@ namespace TestCadence
             Assert.Equal("Hello World!", result);
 
             await task;
+        }
+
+        //===================================
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task SyncSignalChild_Void()
+        {
+            // Verify that sending a synchronous child signal returning void
+            // works as expected when there's no delay executing the signal.
+
+            var stub = client.NewWorkflowStub<ISyncChildSignal>();
+            var task = stub.RunAsync(SyncSignal.WorkflowDelay, signalWithResult: false);
+
+            Assert.True(await task);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task SyncSignalChild_Void_WithDelay()
+        {
+            // Verify that sending a synchronous child signal returning void
+            // works as expected when we delay the signal execution long
+            // enough to force query retries.
+
+            var stub = client.NewWorkflowStub<ISyncChildSignal>();
+            var task = stub.RunAsync(SyncSignal.WorkflowDelay, signalWithResult: false);
+
+            Assert.True(await task);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task SyncSignalChild_Result()
+        {
+            // Verify that sending a synchronous child signal returning a result
+            // works as expected when there's no delay executing the signal.
+
+            var stub = client.NewWorkflowStub<ISyncChildSignal>();
+            var task = stub.RunAsync(SyncSignal.WorkflowDelay, signalWithResult: true);
+
+            Assert.True(await task);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task SyncSignalChild_Result_WithDelay()
+        {
+            // Verify that sending a synchronous child signal returning a result
+            // works as expected when we delay the signal execution long
+            // enough to force query retries.
+
+            var stub = client.NewWorkflowStub<ISyncChildSignal>();
+            var task = stub.RunAsync(SyncSignal.WorkflowDelay, signalWithResult: true);
+
+            Assert.True(await task);
         }
     }
 }

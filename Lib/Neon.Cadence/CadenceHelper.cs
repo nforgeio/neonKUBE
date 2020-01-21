@@ -1138,5 +1138,76 @@ namespace Neon.Cadence.Internal
         {
             return GetWorkflowTarget(typeof(TWorkflowInterface), methodName).WorkflowTypeName;
         }
+
+        /// <summary>
+        /// <para>
+        /// Used to convert an argument value being passed to a workflow or activity from
+        /// its current type to the target parameter type.  For example, if an <c>int</c>
+        /// argument is being passed to a <c>double</c> parameter, this method will convert
+        /// the <c>int</c> to a <c>double</c> and return the <c>double</c>.
+        /// </para>
+        /// <para>
+        /// This mimics the behavior of the C# complier which which will also perform these
+        /// implicit conversions so the workflow developer won't have to do this explicitly
+        /// (which would be really annoying).
+        /// </para>
+        /// </summary>
+        /// <param name="parameterType">The parameter type we'll be casting <paramref name="arg"/> to.</param>
+        /// <param name="arg">The argument value being passed.</param>
+        /// <returns>The converted argument.</returns>
+        internal static object ConvertArg(Type parameterType, object arg)
+        {
+            // Just return the original argument when no casting is required.
+
+            if (arg == null || arg.GetType() == parameterType)
+            {
+                return arg;
+            }
+
+            // Perform the conversion.
+
+            try
+            {
+                var argType = arg.GetType();
+
+                return TypeDescriptor.GetConverter(argType).ConvertTo(arg, parameterType);
+            }
+            catch
+            {
+                // We're going to return the argument as-is if it can't be converted.
+                // This will probably fail when we try to pass it while invoking the
+                // target method later, but that will result in a nicer exception.
+
+                return arg;
+            }
+        }
+
+#if DEBUG
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Appends a line of text to the debug log which is
+        /// used internally to debug generated code like stubs.  This works only for
+        /// DEBUG builds and hardcodes its output to <b>C:\Temp\cadence-debug.log</b>
+        /// so this only works on Windows.
+        /// </summary>
+        /// <param name="line">The line of text to be written.</param>
+        public static void InternalLog(string line)
+        {
+            const string logPath = @"C:\Temp\cadence-debug.log";
+
+            if (NeonHelper.IsWindows)
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(logPath));
+
+                if (line == null)
+                {
+                    File.AppendAllText(logPath, "\r\n");
+                }
+                else
+                {
+                    File.AppendAllText(logPath, line + "\r\n");
+                }
+            }
+        }
+#endif
     }
 }
