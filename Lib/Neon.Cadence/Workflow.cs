@@ -151,7 +151,7 @@ namespace Neon.Cadence
         internal WorkflowBase Parent { get; private set; }
 
         /// <summary>
-        /// Returns the parent workflow's context ID.
+        /// Returns the workflow's context ID.
         /// </summary>
         internal long ContextId { get; private set; }
 
@@ -219,6 +219,17 @@ namespace Neon.Cadence
         /// Returns the execution information for the current workflow.
         /// </summary>
         public WorkflowExecution Execution { get; internal set; }
+
+        /// <summary>
+        /// Returns the <see cref="SyncSignalStatus"/> information for the specified
+        /// signal ID, adding a status record if one doesn't already exist.
+        /// </summary>
+        /// <param name="signalId">The unique signal ID.</param>
+        /// <returns>The <see cref="SyncSignalStatus"/> for the signal.</returns>
+        internal SyncSignalStatus GetSignalStatus(string signalId)
+        {
+            return WorkflowBase.GetSignalStatus(ContextId, signalId);
+        }
 
         /// <summary>
         /// Handles saving the current stack trace to the parent <see cref="WorkflowBase.StackTrace"/>

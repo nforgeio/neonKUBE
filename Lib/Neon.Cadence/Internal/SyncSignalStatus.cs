@@ -23,6 +23,7 @@ using Newtonsoft.Json;
 
 using Neon.Cadence;
 using Neon.Common;
+using Neon.Tasks;
 
 namespace Neon.Cadence.Internal
 {
@@ -56,5 +57,13 @@ namespace Neon.Cadence.Internal
         /// </summary>
         [JsonProperty(PropertyName = "Result", Required = Required.AllowNull, DefaultValueHandling = DefaultValueHandling.Include)]
         public byte[] Result { get; set; }
+
+        /// <summary>
+        /// Returns the <see cref="AsyncManualResetEvent"/> that a <see cref="SignalInvocation"/> or 
+        /// <see cref="SignalInvocation{TResult}"/> will use to inform the synchronous signal method
+        /// that it's time to return to the caller.
+        /// </summary>
+        [JsonIgnore]
+        public AsyncManualResetEvent ReturnEvent { get; private set; } = new AsyncManualResetEvent(initialState: false);
     }
 }

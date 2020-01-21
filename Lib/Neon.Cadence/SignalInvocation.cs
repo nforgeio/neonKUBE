@@ -21,6 +21,8 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
 
+using Newtonsoft.Json;
+
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
@@ -86,8 +88,6 @@ namespace Neon.Cadence
     /// </remarks>
     public class SignalInvocation : Dictionary<string, object>
     {
-        private AsyncManualResetEvent   returnEvent = new AsyncManualResetEvent(initialState: false);
-
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -96,12 +96,25 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Uniquely identifies the synchronous signal.
+        /// </summary>
+        [JsonProperty(PropertyName = "SignalId", Required = Required.Always)]
+        public string SignalId { get; set; }
+
+        /// <summary>
         /// Specifies the default amount of time the <see cref="ReturnAsync(TimeSpan?)"/> method will
         /// pause before returning to the workflow logic.  This can be overridden via an
         /// optional parameter passed to <see cref="ReturnAsync(TimeSpan?)"/>.  This defaults
         /// to <b>10 seconds</b>.
         /// </summary>
+        [JsonProperty(PropertyName = "ReturnDelay", Required = Required.Always)]
         public TimeSpan ReturnDelay { get; set; } = TimeSpan.FromSeconds(10);
+
+        /// <summary>
+        /// Returns the <see cref="AsyncManualResetEvent"/> used to inform the signal method
+        /// that its time to return to its caller.
+        /// </summary>
+        private AsyncManualResetEvent ReturnEvent => Workflow.Current.GetSignalStatus(SignalId).ReturnEvent;
 
         /// <summary>
         /// Called by the workflow logic when its time for the synchronous signal to
@@ -113,7 +126,7 @@ namespace Neon.Cadence
         {
             delay = delay ?? ReturnDelay;
 
-            returnEvent.Set();
+            ReturnEvent.Set();
             await Workflow.Current.SleepAsync(delay.Value);
         }
 
@@ -125,7 +138,7 @@ namespace Neon.Cadence
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task WaitForReturnAsync()
         {
-            await returnEvent.WaitAsync();
+            await ReturnEvent.WaitAsync();
         }
     }
 
@@ -188,8 +201,7 @@ namespace Neon.Cadence
     /// </remarks>
     public class SignalInvocation<TResult> : Dictionary<string, object>
     {
-        private AsyncManualResetEvent   returnEvent = new AsyncManualResetEvent(initialState: false);
-        private TResult                 result;
+        private TResult     result;
 
         /// <summary>
         /// Constructor.
@@ -199,12 +211,25 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Identifies the synchronous signal.
+        /// </summary>
+        [JsonProperty(PropertyName = "SignalId", Required = Required.Always)]
+        public string SignalId { get; set; }
+
+        /// <summary>
         /// Specifies the default amount of time the <see cref="ReturnAsync(TResult, TimeSpan?)"/> method will
         /// pause before returning to the workflow logic.  This can be overridden via an
         /// optional parameter passed to <see cref="ReturnAsync(TResult, TimeSpan?)"/>.
         /// This defaults to <b>10 seconds</b>.
         /// </summary>
+        [JsonProperty(PropertyName = "ReturnDelay", Required = Required.Always)]
         public TimeSpan ReturnDelay { get; set; } = TimeSpan.FromSeconds(10);
+
+        /// <summary>
+        /// Returns the <see cref="AsyncManualResetEvent"/> used to inform the signal method
+        /// that its time to return to its caller.
+        /// </summary>
+        private AsyncManualResetEvent ReturnEvent => Workflow.Current.GetSignalStatus(SignalId).ReturnEvent;
 
         /// <summary>
         /// Called by the workflow logic when its time for the synchronous signal to
@@ -219,7 +244,7 @@ namespace Neon.Cadence
 
             this.result = result;
 
-            returnEvent.Set();
+            ReturnEvent.Set();
             await Workflow.Current.SleepAsync(delay.Value);
         }
 
@@ -231,7 +256,7 @@ namespace Neon.Cadence
         /// <returns>The result to be returned by the signal.</returns>
         public async Task<TResult> WaitForReturnAsync()
         {
-            await returnEvent.WaitAsync();
+            await ReturnEvent.WaitAsync();
 
             return result;
         }

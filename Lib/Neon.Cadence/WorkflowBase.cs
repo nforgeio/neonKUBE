@@ -427,6 +427,49 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Returns the <see cref="SyncSignalStatus"/> for the specified workflow and signal.
+        /// </summary>
+        /// <param name="contextId">The target workflow context ID.</param>
+        /// <param name="signalId">The target signal ID.</param>
+        /// <returns>The <see cref="SyncSignalStatus"/> for the signal.</returns>
+        internal static SyncSignalStatus GetSignalStatus(long contextId, string signalId)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalId));
+
+            // Lookup the workflow.
+
+            WorkflowBase workflow = null;
+
+            lock (syncLock)
+            {
+                idToWorkflow.TryGetValue(new WorkflowInstanceKey(Workflow.Current.Client, contextId), out workflow);
+            }
+
+            if (workflow == null)
+            {
+                // The workflow doesn't exist so we'll return a dummy status
+                // instance to prevent the caller from barfing.
+
+                return new SyncSignalStatus() { Completed = false };
+            }
+
+            // Lookup the status for the signal, adding a record if one 
+            // doesn't already exist.
+
+            lock (workflow.signalIdToStatus)
+            {
+                if (!workflow.signalIdToStatus.TryGetValue(signalId, out var signalStatus))
+                {
+                    signalStatus = new SyncSignalStatus();
+
+                    workflow.signalIdToStatus.Add(signalId, signalStatus);
+                }
+
+                return signalStatus;
+            }
+        }
+
+        /// <summary>
         /// Called to handle a workflow related request message received from the cadence-proxy.
         /// </summary>
         /// <param name="client">The client that received the request.</param>
@@ -802,19 +845,15 @@ namespace Neon.Cadence
                     // We're also going to use the presence of this state to make
                     // synchronous signal calls idempotent by ensuring that we'll
                     // only call the signal method once per signal ID.
+                    //
+                    // Note thst it's possible that a record has already been created.
 
                     lock (workflow.signalIdToStatus)
                     {
-                        if (workflow.signalIdToStatus.Keys.Contains(syncSignalCall.SignalId))
+                        if (!workflow.signalIdToStatus.Keys.Contains(syncSignalCall.SignalId))
                         {
-                            // Ignore all signals with IDs we have already seen.  This might potentially
-                            // happen if Cadence retries sending the signal.  I'm not sure if this can
-                            // actually happen, but we'll add this check just to be safe.
-
-                            return new WorkflowSignalInvokeReply();
+                            workflow.signalIdToStatus[syncSignalCall.SignalId] = new SyncSignalStatus() { Completed = false };
                         }
-
-                        workflow.signalIdToStatus[syncSignalCall.SignalId] = new SyncSignalStatus() { Completed = false };
                     }
 
                     if (method != null)
