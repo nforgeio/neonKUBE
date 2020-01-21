@@ -108,7 +108,7 @@ namespace TestCadence
         public class SyncSignal : WorkflowBase, ISyncSignal
         {
             public static readonly TimeSpan WorkflowDelay = TimeSpan.FromSeconds(10);
-            public static readonly TimeSpan SignalDelay   = TimeSpan.FromSeconds(6);
+            public static readonly TimeSpan SignalDelay   = TimeSpan.FromSeconds(3);
 
             public static bool SignalBeforeDelay = false;
             public static bool SignalAfterDelay  = false;
@@ -265,8 +265,6 @@ namespace TestCadence
             await task;
         }
 
-        //===================================
-
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task SyncSignalChild_Void()
@@ -275,7 +273,7 @@ namespace TestCadence
             // works as expected when there's no delay executing the signal.
 
             var stub = client.NewWorkflowStub<ISyncChildSignal>();
-            var task = stub.RunAsync(SyncSignal.WorkflowDelay, signalWithResult: false);
+            var task = stub.RunAsync(TimeSpan.Zero, signalWithResult: false);
 
             Assert.True(await task);
         }
@@ -289,7 +287,7 @@ namespace TestCadence
             // enough to force query retries.
 
             var stub = client.NewWorkflowStub<ISyncChildSignal>();
-            var task = stub.RunAsync(SyncSignal.WorkflowDelay, signalWithResult: false);
+            var task = stub.RunAsync(SyncSignal.SignalDelay, signalWithResult: false);
 
             Assert.True(await task);
         }
@@ -302,7 +300,7 @@ namespace TestCadence
             // works as expected when there's no delay executing the signal.
 
             var stub = client.NewWorkflowStub<ISyncChildSignal>();
-            var task = stub.RunAsync(SyncSignal.WorkflowDelay, signalWithResult: true);
+            var task = stub.RunAsync(TimeSpan.Zero, signalWithResult: true);
 
             Assert.True(await task);
         }
@@ -316,7 +314,7 @@ namespace TestCadence
             // enough to force query retries.
 
             var stub = client.NewWorkflowStub<ISyncChildSignal>();
-            var task = stub.RunAsync(SyncSignal.WorkflowDelay, signalWithResult: true);
+            var task = stub.RunAsync(SyncSignal.SignalDelay, signalWithResult: true);
 
             Assert.True(await task);
         }

@@ -1041,11 +1041,8 @@ namespace Neon.Cadence.Internal
                 }
 
                 sbSource.AppendLine($"        {{");
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"1\");");
                 sbSource.AppendLine($"            await SyncContext.ClearAsync;");
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"2\");");
                 sbSource.AppendLine($"            await WaitForExecutionAsync();");
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"3\");");
                 sbSource.AppendLine();
 
                 if (isChild)
@@ -1054,71 +1051,49 @@ sbSource.AppendLine($"CadenceHelper.InternalLog(\"3\");");
 
                     if (signalAttribute.Synchronous)
                     {
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"4\");");
                         sbSource.AppendLine($"            var ___signalId       = Guid.NewGuid().ToString(\"d\");");
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"5\");");
                         sbSource.AppendLine($"            var ___argBytes       = {SerializeArgsExpression(details.Method.GetParameters())};");
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"6\");");
                         sbSource.AppendLine($"            var ___signalCall     = new SyncSignalCall({StringLiteral(signalAttribute.Name)}, ___signalId, ___argBytes);");
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"7\");");
                         sbSource.AppendLine($"            var ___signalArgBytes = this.dataConverter.ToData(new object[] {{ ___signalCall }});");
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"8\");");
                         sbSource.AppendLine($"            var ___resultBytes    = await ___StubHelper.SyncSignalChildWorkflowAsync(this.client, this.parentWorkflow, this.childExecution, {StringLiteral(CadenceClient.SyncSignalName)}, ___signalId, ___signalArgBytes);");
 
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"9\");");
                         if (details.ReturnType != typeof(void))
                         {
                             sbSource.AppendLine();
                             sbSource.AppendLine($"           return this.dataConverter.FromData<{CadenceHelper.TypeNameToSource(details.ReturnType)}>(___resultBytes);");
                         }
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"10\");");
                     }
                     else
                     {
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"11\");");
                         sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"12\");");
                         sbSource.AppendLine();
                         sbSource.AppendLine($"            await ___StubHelper.SignalChildWorkflowAsync(this.client, this.parentWorkflow, this.childExecution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___argBytes);");
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"13\");");
                     }
                 }
                 else
                 {
                     // Code to signal an external workflow.
 
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"14\");");
                     if (signalAttribute.Synchronous)
                     {
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"15\");");
                         sbSource.AppendLine($"            var ___signalId       = Guid.NewGuid().ToString(\"d\");");
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"16\");");
                         sbSource.AppendLine($"            var ___argBytes       = {SerializeArgsExpression(details.Method.GetParameters())};");
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"17\");");
                         sbSource.AppendLine($"            var ___signalCall     = new SyncSignalCall({StringLiteral(signalAttribute.Name)}, ___signalId, ___argBytes);");
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"18\");");
                         sbSource.AppendLine($"            var ___signalArgBytes = this.dataConverter.ToData(new object[] {{ ___signalCall }});");
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"19\");");
                         sbSource.AppendLine($"            var ___resultBytes    = await ___StubHelper.SyncSignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___signalId, ___signalArgBytes, this.domain);");
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"20\");");
 
                         if (details.ReturnType != typeof(void))
                         {
                             sbSource.AppendLine();
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"21\");");
                             sbSource.AppendLine($"           return this.dataConverter.FromData<{CadenceHelper.TypeNameToSource(details.ReturnType)}>(___resultBytes);");
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"22\");");
                         }
 
                     }
                     else
                     {
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"23\");");
                         sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
                         sbSource.AppendLine();
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"24\");");
                         sbSource.AppendLine($"            await ___StubHelper.SignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___argBytes, this.domain);");
-sbSource.AppendLine($"CadenceHelper.InternalLog(\"25\");");
                     }
                 }
 
