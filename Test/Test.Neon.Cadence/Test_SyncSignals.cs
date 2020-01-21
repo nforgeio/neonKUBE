@@ -187,7 +187,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task SyncSignal_Void()
+        public async Task SyncSignal_WithoutResult()
         {
             // Verify that sending a synchronous signal returning void
             // works as expected when there's no delay executing the signal.
@@ -206,7 +206,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task SyncSignal_Void_WithDelay()
+        public async Task SyncSignal_WithoutResult_AndDelay()
         {
             // Verify that sending a synchronous signal returning void
             // works as expected when we delay the signal execution long
@@ -226,7 +226,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task SyncSignal_Result()
+        public async Task SyncSignal_WithResult()
         {
             // Verify that sending a synchronous signal returning a result
             // works as expected when there's no delay executing the signal.
@@ -246,7 +246,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task SyncSignal_Result_WithDelay()
+        public async Task SyncSignal_WithResult_AndDelay()
         {
             // Verify that sending a synchronous signal returning a result
             // works as expected when we delay the signal execution long
@@ -267,7 +267,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task SyncSignalChild_Void()
+        public async Task SyncSignalChild_WithoutResult()
         {
             // Verify that sending a synchronous child signal returning void
             // works as expected when there's no delay executing the signal.
@@ -280,7 +280,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task SyncSignalChild_Void_WithDelay()
+        public async Task SyncSignalChild_WithoutResult_AndDelay()
         {
             // Verify that sending a synchronous child signal returning void
             // works as expected when we delay the signal execution long
@@ -294,7 +294,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task SyncSignalChild_Result()
+        public async Task SyncSignalChild_WithResult()
         {
             // Verify that sending a synchronous child signal returning a result
             // works as expected when there's no delay executing the signal.
@@ -307,7 +307,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task SyncSignalChild_Result_WithDelay()
+        public async Task SyncSignalChild_WithResult_AndDelay()
         {
             // Verify that sending a synchronous child signal returning a result
             // works as expected when we delay the signal execution long
@@ -347,43 +347,56 @@ namespace TestCadence
             {
                 voidQueue = await Workflow.NewQueueAsync<SignalInvocation>();
 
-                var signal = await voidQueue.DequeueAsync();
+                var signalInfo = await voidQueue.DequeueAsync();
 
-                signal.Return();
+                await signalInfo.ReturnAsync();
             }
 
             public async Task RunResultAsync()
             {
                 resultQueue = await Workflow.NewQueueAsync<SignalInvocation<string>>();
 
-                var signal = await resultQueue.DequeueAsync();
-                var input  = (string)signal["input"];
+                var signalInfo = await resultQueue.DequeueAsync();
+                var input      = (string)signalInfo["input"];
 
-                signal.Return($"Hello {input}!");
+                await signalInfo.ReturnAsync($"Hello {input}!");
             }
 
             public async Task SignalAsync()
             {
-                var signal = new SignalInvocation();
+                var signalInfo = new SignalInvocation();
 
-                await voidQueue.EnqueueAsync(signal);
-                await signal.WaitForReturnAsync();
+                await voidQueue.EnqueueAsync(signalInfo);
+                await signalInfo.WaitForReturnAsync();
             }
 
             public async Task<string> SignalAsync(string input)
             {
-                var signal = new SignalInvocation<string>();
+                var signalInfo = new SignalInvocation<string>();
 
-                signal.Add("input", input);
-                await resultQueue.EnqueueAsync(signal);
+                signalInfo.Add("input", input);
+                await resultQueue.EnqueueAsync(signalInfo);
 
-                return await signal.WaitForReturnAsync();
+                return await signalInfo.WaitForReturnAsync();
             }
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task SyncSignal_Invoke_Void()
+        public async Task SyncSignal_Invoke_WithoutResult()
+        {
+            // Verify that [SignalInvocation] works.
+
+            var stub = client.NewWorkflowStub<IInvokeSignal>();
+            var task = stub.RunVoidAsync();
+
+            await stub.SignalAsync();
+            await task;
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task SyncSignal_Invoke_WithResult()
         {
             // Verify that [SignalInvocation] works.
 

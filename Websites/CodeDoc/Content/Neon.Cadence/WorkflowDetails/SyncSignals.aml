@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- topic-filename="Neon.Cadence-Workflow-SyncSignals" -->
+<topic id="4b5b88c8-3d86-442b-8015-9aef7f624df0" revisionNumber="1">
+  <developerConceptualDocument
+    xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
+
+    <introduction>
+    </introduction>
+
+    <section>
+      <content>
+        <alert class="warning">
+          <legacyBold>EXPERIMENTAL:</legacyBold> This is an experimental feature.  Cadence server doesn't 
+          currently have a synchronous way to interact with a running workflow, so the Neon Cadence client 
+          emulates this behavior using a combination of internal signals and queries.  As a developer, 
+          you couild have done something like this yourself, but we felt this was going to be such a useful
+          pattern that it was worth building into the client.  This will ultimately be replaced by upcoming 
+          Cadence server features.
+        </alert>
+        <para>
+          
+        </para>
+      </content>
+    </section>
+
+    <relatedTopics>
+      <codeEntityReference qualifyHint="false">N:Neon.Cadence</codeEntityReference>
+      <codeEntityReference qualifyHint="false">T:Neon.Cadence.SignalInvocation</codeEntityReference>
+      <codeEntityReference qualifyHint="false">T:Neon.Cadence.SignalInvocation`1</codeEntityReference>
+      <codeEntityReference qualifyHint="false">P:Neon.Cadence.SignalMethodAttribute.Synchronous</codeEntityReference>
+    </relatedTopics>
+  </developerConceptualDocument>
+</topic>

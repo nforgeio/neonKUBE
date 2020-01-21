@@ -177,7 +177,7 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <Folder Include="media\Neon.Cadence" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Content\Neon.Cadence\WorkflowDetails\SynchronousSignals.aml" />
+    <None Include="Content\Neon.Cadence\WorkflowDetails\SyncSignals.aml" />
     <None Include="Content\Neon.Kube.Service\Overview.aml" />
     <None Include="Content\Neon.Cadence\ActivityDetails\Basics.aml" />
     <None Include="Content\Neon.Cadence\ActivityDetails\ExternalCompletion.aml" />
@@ -204,7 +204,7 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <None Include="Content\Neon.Cadence\WorkflowDetails\Parallel.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\Queries.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\Timeouts.aml" />
-    <None Include="Content\Neon.Cadence\WorkflowDetails\SignalsQueues.aml" />
+    <None Include="Content\Neon.Cadence\WorkflowDetails\Queues.aml" />
     <None Include="Content\Neon.Common\Overview.aml" />
     <None Include="Content\Neon.Couchbase\Overview.aml" />
     <None Include="Content\Neon.Cryptography\Overview.aml" />

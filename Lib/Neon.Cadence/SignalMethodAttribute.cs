@@ -56,7 +56,7 @@ namespace Neon.Cadence
         /// the Cadence default.  This property defaults to <c>false</c>.
         /// </para>
         /// <note>
-        /// This synchronous signals are considered experimental which means that this feature will 
+        /// Synchronous signals are considered experimental which means that this feature will 
         /// probably have a limited lifespan.  Cadence will probably introduce new <b>update</b>
         /// semantics that will ultimately replace synchronous signals.
         /// </note>
@@ -86,11 +86,12 @@ namespace Neon.Cadence
         /// returning.
         /// </para>
         /// <para>
-        /// This is a somewhat experimental feature and Cadence server doesn't currently support 
-        /// synchronous signals out-of-the-box, so the Neon Cadence client emulates this behavior
-        /// using a combination of internal signals and queries.  As a developer, you couild have
-        /// done something like this yourself, but we felt this was going to be such a useful 
-        /// pattern that it was worth building into the client.
+        /// This is an experimental feature.  Cadence server doesn't currently have a 
+        /// synchronous way to interact with a running workflow, so the Neon Cadence client emulates
+        /// this behavior using a combination of internal signals and queries.  As a developer, 
+        /// you couild have done something like this yourself, but we felt this was going to be 
+        /// such a useful  pattern that it was worth building into the client.  This will ultimately
+        /// be replaced by upcoming Cadence server features.
         /// </para>
         /// <para>
         /// See the documentation site for more information: <a href="https://doc.neonkube.com/Neon.Cadence-Workflow-SynchronousSignals.htm">Synchronous Signals</a>
