@@ -318,5 +318,80 @@ namespace TestCadence
 
             Assert.True(await task);
         }
+
+        //---------------------------------------------------------------------
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IInvokeSignal : IWorkflow
+        {
+            [WorkflowMethod(Name = "run-void")]
+            Task RunVoidAsync();
+
+            [WorkflowMethod(Name = "run-result")]
+            Task RunResultAsync();
+
+            [SignalMethod("signal-void", Synchronous = true)]
+            Task SignalAsync();
+
+            [SignalMethod("signal-with-result", Synchronous = true)]
+            Task<string> SignalAsync(string input);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class InvokeSignal : WorkflowBase, IInvokeSignal
+        {
+            private WorkflowQueue<SignalInvocation>         voidQueue;
+            private WorkflowQueue<SignalInvocation<string>> resultQueue;
+
+            public async Task RunVoidAsync()
+            {
+                voidQueue = await Workflow.NewQueueAsync<SignalInvocation>();
+
+                var signal = await voidQueue.DequeueAsync();
+
+                signal.Return();
+            }
+
+            public async Task RunResultAsync()
+            {
+                resultQueue = await Workflow.NewQueueAsync<SignalInvocation<string>>();
+
+                var signal = await resultQueue.DequeueAsync();
+                var input  = (string)signal["input"];
+
+                signal.Return($"Hello {input}!");
+            }
+
+            public async Task SignalAsync()
+            {
+                var signal = new SignalInvocation();
+
+                await voidQueue.EnqueueAsync(signal);
+                await signal.WaitForReturnAsync();
+            }
+
+            public async Task<string> SignalAsync(string input)
+            {
+                var signal = new SignalInvocation<string>();
+
+                signal.Add("input", input);
+                await resultQueue.EnqueueAsync(signal);
+
+                return await signal.WaitForReturnAsync();
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task SyncSignal_Invoke_Void()
+        {
+            // Verify that [SignalInvocation] works.
+
+            var stub = client.NewWorkflowStub<IInvokeSignal>();
+            var task = stub.RunVoidAsync();
+
+            await stub.SignalAsync();
+            await task;
+        }
     }
 }

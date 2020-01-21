@@ -799,9 +799,21 @@ namespace Neon.Cadence
                     var method         = workflow.Workflow.MethodMap.GetSignalMethod(syncSignalCall.TargetSignal);
 
                     // Persist some state that the signal status queries can examine.
+                    // We're also going to use the presence of this state to make
+                    // synchronous signal calls idempotent by ensuring that we'll
+                    // only call the signal method once per signal ID.
 
                     lock (workflow.signalIdToStatus)
                     {
+                        if (workflow.signalIdToStatus.Keys.Contains(syncSignalCall.SignalId))
+                        {
+                            // Ignore all signals with IDs we have already seen.  This might potentially
+                            // happen if Cadence retries sending the signal.  I'm not sure if this can
+                            // actually happen, but we'll add this check just to be safe.
+
+                            return new WorkflowSignalInvokeReply();
+                        }
+
                         workflow.signalIdToStatus[syncSignalCall.SignalId] = new SyncSignalStatus() { Completed = false };
                     }
 

@@ -50,9 +50,16 @@ namespace Neon.Cadence
         public string Name { get; private set; }
 
         /// <summary>
-        /// Indicates whether the tagged signal method should be generated as a synchronous
-        /// method rather than as a fire-and-forget asynchronous call, which is the Cadence
-        /// default.  This property defaults to <c>false</c>.
+        /// <para>
+        /// <b>EXPERIMENTAL:</b> Indicates whether the tagged signal method should be generated 
+        /// as a synchronous method rather than as a fire-and-forget asynchronous call, which is
+        /// the Cadence default.  This property defaults to <c>false</c>.
+        /// </para>
+        /// <note>
+        /// This synchronous signals are considered experimental which means that this feature will 
+        /// probably have a limited lifespan.  Cadence will probably introduce new <b>update</b>
+        /// semantics that will ultimately replace synchronous signals.
+        /// </note>
         /// </summary>
         /// <remarks>
         /// <para>
