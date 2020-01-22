@@ -3481,6 +3481,12 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        public class PersonItem
+        {
+            public string Name { get; set; }
+            public int Age { get; set; }
+        }
+
         [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowQueueTest : IWorkflow
         {
@@ -3502,8 +3508,11 @@ namespace TestCadence
             [WorkflowMethod(Name = "WaitForSignalsAndClose")]
             Task<List<string>> WaitForSignalAndClose(int expectedSignals);
 
-            [WorkflowMethod(Name = "QueueToSelf_Bytes")]
+            [WorkflowMethod(Name = "QueueToSelf-Bytes")]
             Task<string> QueueToSelf_Bytes(int byteCount);
+
+            [WorkflowMethod(Name = "QueueToSelf-Person")]
+            Task<PersonItem> QueueToSelf_Person(PersonItem person);
 
             [SignalMethod("signal")]
             Task SignalAsync(string message);
@@ -3723,6 +3732,18 @@ namespace TestCadence
                     }
 
                     return null;
+                }
+            }
+
+            public async Task<PersonItem> QueueToSelf_Person(PersonItem person)
+            {
+                // Verify that queues can handle arbitrary class instances.
+
+                using (var queue = await Workflow.NewQueueAsync<PersonItem>())
+                {
+                    await queue.EnqueueAsync(person);
+
+                    return await queue.DequeueAsync();
                 }
             }
 
@@ -3999,6 +4020,28 @@ namespace TestCadence
             stub = client.NewWorkflowStub<IWorkflowQueueTest>();
 
             Assert.Equal("System.NotSupportedException", await stub.QueueToSelf_Bytes(minBad));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Queue_Class()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that queues can handle arbetrary class instances.
+
+            var stub   = client.NewWorkflowStub<IWorkflowQueueTest>();
+            var person = new PersonItem()
+            {
+                Name = "Joe Bloe",
+                Age  = 27
+            };
+
+            person = await stub.QueueToSelf_Person(person);
+
+            Assert.NotNull(person);
+            Assert.Equal("Joe Bloe", person.Name);
+            Assert.Equal(27, person.Age);
         }
 
         [Fact]

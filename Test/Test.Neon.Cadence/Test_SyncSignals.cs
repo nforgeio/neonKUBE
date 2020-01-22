@@ -322,7 +322,7 @@ namespace TestCadence
         //---------------------------------------------------------------------
 
         [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
-        public interface IInvokeSignal : IWorkflow
+        public interface IQueuedSignal : IWorkflow
         {
             [WorkflowMethod(Name = "run-void")]
             Task RunVoidAsync();
@@ -334,77 +334,102 @@ namespace TestCadence
             Task SignalAsync();
 
             [SignalMethod("signal-with-result", Synchronous = true)]
-            Task<string> SignalAsync(string input);
+            Task<string> SignalAsync(string name);
         }
 
         [Workflow(AutoRegister = true)]
-        public class InvokeSignal : WorkflowBase, IInvokeSignal
+        public class QueuedSignal : WorkflowBase, IQueuedSignal
         {
-            private WorkflowQueue<SignalInvocation>         voidQueue;
-            private WorkflowQueue<SignalInvocation<string>> resultQueue;
+            public static bool SignalProcessed;
+
+            private WorkflowQueue<SignalRequest>         voidQueue;
+            private WorkflowQueue<SignalRequest<string>> resultQueue;
 
             public async Task RunVoidAsync()
             {
-                voidQueue = await Workflow.NewQueueAsync<SignalInvocation>();
+                voidQueue = await Workflow.NewQueueAsync<SignalRequest>();
 
-                var signalInfo = await voidQueue.DequeueAsync();
+                var signalRequest = await voidQueue.DequeueAsync();
 
-                await signalInfo.ReturnAsync();
-            }
+                SignalProcessed = true;
 
-            public async Task RunResultAsync()
-            {
-                resultQueue = await Workflow.NewQueueAsync<SignalInvocation<string>>();
-
-                var signalInfo = await resultQueue.DequeueAsync();
-                var input      = (string)signalInfo["input"];
-
-                await signalInfo.ReturnAsync($"Hello {input}!");
+                await signalRequest.ReturnAsync();
             }
 
             public async Task SignalAsync()
             {
-                var signalInfo = new SignalInvocation();
+                var signalRequest = new SignalRequest();
 
-                await voidQueue.EnqueueAsync(signalInfo);
-                await signalInfo.WaitForReturnAsync();
+                await voidQueue.EnqueueAsync(signalRequest);
+                await signalRequest.WaitForReturnAsync();
             }
 
-            public async Task<string> SignalAsync(string input)
+            public async Task RunResultAsync()
             {
-                var signalInfo = new SignalInvocation<string>();
+                resultQueue = await Workflow.NewQueueAsync<SignalRequest<string>>();
 
-                signalInfo.Add("input", input);
-                await resultQueue.EnqueueAsync(signalInfo);
+                var signalRequest = await resultQueue.DequeueAsync();
 
-                return await signalInfo.WaitForReturnAsync();
+                SignalProcessed = true;
+
+                await signalRequest.ReturnAsync($"Hello {signalRequest.Arg<string>("name")}!");
+            }
+
+            public async Task<string> SignalAsync(string name)
+            {
+                var signalRequest = new SignalRequest<string>();
+
+                await resultQueue.EnqueueAsync(signalRequest);
+
+                return await signalRequest.WaitForReturnAsync();
             }
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task SyncSignal_Invoke_WithoutResult()
+        public async Task SyncSignal_Queued_WithoutResult()
         {
-            // Verify that [SignalInvocation] works.
+            // Verify that [SignalRequest] works for void signals.
+            //
+            // This is a bit tricky.  The workflow waits for a signal,
+            // processes it and then returns.  We'll know this happened
+            // because the static [SignalProcessed] property will be set
+            // and also because the signal and workflow methods returned.
 
-            var stub = client.NewWorkflowStub<IInvokeSignal>();
+            QueuedSignal.SignalProcessed = false;
+
+            var stub = client.NewWorkflowStub<IQueuedSignal>();
             var task = stub.RunVoidAsync();
 
             await stub.SignalAsync();
             await task;
+
+            Assert.True(QueuedSignal.SignalProcessed);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task SyncSignal_Invoke_WithResult()
+        public async Task SyncSignal_Queued_WithResult()
         {
-            // Verify that [SignalInvocation] works.
+            // Verify that [SignalRequest] works for signals that return 
+            // a result.
+            //
+            // This is a bit tricky.  The workflow waits for a signal,
+            // processes it and then returns.  We'll know this happened
+            // because the static [SignalProcessed] property will be set
+            // and also because the signal and workflow methods returned.
 
-            var stub = client.NewWorkflowStub<IInvokeSignal>();
-            var task = stub.RunVoidAsync();
+            QueuedSignal.SignalProcessed = false;
 
-            await stub.SignalAsync();
+            var stub = client.NewWorkflowStub<IQueuedSignal>();
+            var task = stub.RunResultAsync();
+
+            var result = await stub.SignalAsync("Jeff");
+
             await task;
+
+            Assert.True(QueuedSignal.SignalProcessed);
+            Assert.True(result == "Hello Jeff!");
         }
     }
 }

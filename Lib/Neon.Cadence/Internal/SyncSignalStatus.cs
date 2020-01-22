@@ -33,9 +33,13 @@ namespace Neon.Cadence.Internal
     internal class SyncSignalStatus
     {
         /// <summary>
+        /// Returns the dictionary of signal method arguments keyed by parameter name.
+        /// </summary>
+        public Dictionary<string, object> Args { get; set; }
+
+        /// <summary>
         /// Returns <c>true</c> if the workflow has finished executing the signal.
         /// </summary>
-        [JsonProperty(PropertyName = "Completed", Required = Required.Always, DefaultValueHandling = DefaultValueHandling.Include)]
         public bool Completed { get; set; }
 
         /// <summary>
@@ -48,22 +52,19 @@ namespace Neon.Cadence.Internal
         /// This string must be formatted by <see cref="SyncSignalException.GetError(Exception)"/>.
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "Error", Required = Required.AllowNull, DefaultValueHandling = DefaultValueHandling.Include)]
         public string Error { get; set; }
 
         /// <summary>
         /// Returns the encoded result for signals that return results.  This will be <c>null</c> for 
         /// signals that don't return a result.
         /// </summary>
-        [JsonProperty(PropertyName = "Result", Required = Required.AllowNull, DefaultValueHandling = DefaultValueHandling.Include)]
         public byte[] Result { get; set; }
 
         /// <summary>
-        /// Returns the <see cref="AsyncManualResetEvent"/> that a <see cref="SignalInvocation"/> or 
-        /// <see cref="SignalInvocation{TResult}"/> will use to inform the synchronous signal method
+        /// Returns the <see cref="AsyncManualResetEvent"/> that a <see cref="SignalRequest"/> or 
+        /// <see cref="SignalRequest{TResult}"/> will use to inform the synchronous signal method
         /// that it's time to return to the caller.
         /// </summary>
-        [JsonIgnore]
         public AsyncManualResetEvent ReturnEvent { get; private set; } = new AsyncManualResetEvent(initialState: false);
     }
 }

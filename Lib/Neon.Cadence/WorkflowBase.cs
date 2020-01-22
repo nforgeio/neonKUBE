@@ -456,7 +456,7 @@ namespace Neon.Cadence
             // Lookup the status for the signal, adding a record if one 
             // doesn't already exist.
 
-            lock (workflow.signalIdToStatus)
+            lock (syncLock)
             {
                 if (!workflow.signalIdToStatus.TryGetValue(signalId, out var signalStatus))
                 {
@@ -758,6 +758,8 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
+            // Handle synchronous signals in a specialized method.
+
             if (request.SignalName == CadenceClient.SyncSignalName)
             {
                 return await OnSyncSignalAsync(client, request);
@@ -775,9 +777,26 @@ namespace Neon.Cadence
 
                     var method = workflow.Workflow.MethodMap.GetSignalMethod(request.SignalName);
 
+                    // We're going to initialize the signal status first, execute the
+                    // signal method (if there is one) on a new task and then return
+                    // the reply.  We need to reply from the current task because 
+                    // cadence-proxy will block on other workflow related operations 
+                    // such as workflow queues.
+                    //
+                    // We're going to allow the new signal task to run to completion
+                    // without awaiting it (because we need to return).
+
                     if (method != null)
                     {
-                        await (Task)(method.Invoke(workflow, client.DataConverter.FromDataArray(request.SignalArgs, method.GetParameterTypes())));
+                        _ = Task.Run(async () =>
+                        {
+                            // Initialize ambient workflow info for this new task as well.
+
+                            WorkflowBase.CallContext.Value = WorkflowCallContext.Signal;
+                            Workflow.Current               = workflow.Workflow;
+
+                            await (Task)(method.Invoke(workflow, client.DataConverter.FromDataArray(request.SignalArgs, method.GetParameterTypes())));
+                        });
 
                         return new WorkflowSignalInvokeReply()
                         {
@@ -817,6 +836,7 @@ namespace Neon.Cadence
                 WorkflowBase.CallContext.Value = WorkflowCallContext.None;
             }
         }
+
         /// <summary>
         /// Handles internal <see cref="CadenceClient.SyncSignalName"/> workflow signals.
         /// </summary>
@@ -841,32 +861,46 @@ namespace Neon.Cadence
                     // The signal arguments should be just a single [SyncSignalCall] that specifies
                     // the target signal and also includes its encoded arguments.
 
-                    var syncArgs       = client.DataConverter.FromDataArray(request.SignalArgs, typeof(SyncSignalCall));
-                    var syncSignalCall = (SyncSignalCall)syncArgs[0];
-                    var method         = workflow.Workflow.MethodMap.GetSignalMethod(syncSignalCall.TargetSignal);
+                    var signalCallArgs = client.DataConverter.FromDataArray(request.SignalArgs, typeof(SyncSignalCall));
+                    var signalCall     = (SyncSignalCall)signalCallArgs[0];
+                    var method         = workflow.Workflow.MethodMap.GetSignalMethod(signalCall.TargetSignal);
+                    var userArgs       = client.DataConverter.FromDataArray(signalCall.UserArgs, method.GetParameterTypes());
 
-                    Workflow.Current.SignalId = syncSignalCall.SignalId;
+                    Workflow.Current.SignalId = signalCall.SignalId;
+
+                    // Create a dictionary with the signal method arguments keyed by parameter name.
+
+                    var args       = new Dictionary<string, object>();
+                    var parameters = method.GetParameters();
+
+                    for (int i = 0; i < parameters.Length; i++)
+                    {
+                        args.Add(parameters[i].Name, userArgs[i]);
+                    }
 
                     // Persist some state that the signal status queries can examine.
                     // We're also going to use the presence of this state to make
                     // synchronous signal calls idempotent by ensuring that we'll
                     // only call the signal method once per signal ID.
                     //
-                    // Note thst it's possible that a record has already been created.
+                    // Note that it's possible that a record has already exists.
 
-                    lock (workflow.signalIdToStatus)
+                    lock (syncLock)
                     {
-                        if (!workflow.signalIdToStatus.Keys.Contains(syncSignalCall.SignalId))
+                        if (!workflow.signalIdToStatus.TryGetValue(signalCall.SignalId, out var signalStatus))
                         {
-                            workflow.signalIdToStatus[syncSignalCall.SignalId] = new SyncSignalStatus() { Completed = false };
+                            signalStatus = new SyncSignalStatus();
+                            workflow.signalIdToStatus.Add(signalCall.SignalId, signalStatus);
                         }
+
+                        signalStatus.Args      = args;
+                        signalStatus.Completed = false;
                     }
 
                     if (method != null)
                     {
                         Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information for workflow library code.
 
-                        var userArgs  = client.DataConverter.FromDataArray(syncSignalCall.UserArgs, method.GetParameterTypes());
                         var result    = (object)null;
                         var exception = (Exception)null;
 
@@ -908,9 +942,9 @@ namespace Neon.Cadence
                             exception = e;
                         }
 
-                        lock (workflow.signalIdToStatus)
+                        lock (syncLock)
                         {
-                            if (workflow.signalIdToStatus.TryGetValue(syncSignalCall.SignalId, out var syncSignalStatus))
+                            if (workflow.signalIdToStatus.TryGetValue(signalCall.SignalId, out var syncSignalStatus))
                             {
                                 syncSignalStatus.Completed = true;
 
@@ -922,6 +956,12 @@ namespace Neon.Cadence
                                 {
                                     syncSignalStatus.Error = SyncSignalException.GetError(exception);
                                 }
+
+                                // We can remove the reference to the [Args] dictionary because it
+                                // will no longer be necessary since the signal method has returned.
+                                // This will allow the GC to recover this sooner.
+
+                                syncSignalStatus.Args = null;
                             }
                         }
 
@@ -1013,7 +1053,7 @@ namespace Neon.Cadence
                             var syncSignalId     = (string) (syncSignalArgs.Length > 0 ? syncSignalArgs[0] : null);
                             var syncSignalStatus = (SyncSignalStatus)null;
 
-                            lock (workflow.signalIdToStatus)
+                            lock (syncLock)
                             {
                                 if (!workflow.signalIdToStatus.TryGetValue(syncSignalId, out syncSignalStatus))
                                 {

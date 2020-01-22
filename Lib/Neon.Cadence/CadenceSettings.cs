@@ -330,6 +330,22 @@ namespace Neon.Cadence
         internal TimeSpan ActivityHeartbeatTimeout => TimeSpan.FromSeconds(Math.Max(ActivityHeartbeatTimeoutSeconds, 0));
 
         /// <summary>
+        /// <b>EXPERIMENTAL:</b> Specifies the default seconds that <see cref="SignalRequest.ReturnAsync(TimeSpan?)"/>
+        /// and <see cref="SignalRequest{MaskedTextResultHint}.ReturnAsync(MaskedTextResultHint, TimeSpan?)"/>
+        /// will pause after before returning to try to ensure that the workflow keeps running long enough to 
+        /// client signal query poll obtain the signal result.  This defaults to <b>10.0 seconds</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "SyncSignalReturnDelaySeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "syncSignalReturnDelaySeconds", ApplyNamingConventions = false)]
+        [DefaultValue(10.0)]
+        public double SyncSignalReturnDelaySeconds { get; set; } = 10.0;
+
+        /// <summary>
+        /// Returns <see cref="SyncSignalReturnDelaySeconds"/> as a <see cref="TimeSpan"/>.
+        /// </summary>
+        internal TimeSpan SyncSignalReturnDelay => TimeSpan.FromSeconds(SyncSignalReturnDelaySeconds);
+
+        /// <summary>
         /// Optionally specifies the folder where the embedded <b>cadence-proxy</b> binary 
         /// will be written before starting it.  This defaults to <c>null</c> which specifies
         /// that the binary will be written to the same folder where the <b>Neon.Cadence</b>
