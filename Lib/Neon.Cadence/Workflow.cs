@@ -182,6 +182,11 @@ namespace Neon.Cadence
         internal Dictionary<long, LocalActivityAction> IdToLocalActivityAction { get; private set; }
 
         /// <summary>
+        /// Returns the unique ID of the signal being called on the current task.
+        /// </summary>
+        internal string SignalId { get; set; }
+
+        /// <summary>
         /// Returns the next available workflow local activity ID.
         /// </summary>
         /// <returns>The nextr ID.</returns>

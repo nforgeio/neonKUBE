@@ -49,30 +49,29 @@ namespace Neon.Cadence
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This class inherits from a dictionary that maps strings to objects with the intention
-    /// that you'll use this to marshal signal arguments to the workflow logic by adding each
-    /// argument to the dictionary by parameter name.  The signal method will then queue the
-    /// invocation to a workflow queue the workflow logic is listening on and then call
-    /// <see cref="WaitForReturnAsync()"/> wait for the workflow logic to call <see cref="ReturnAsync"/>
-    /// to indicate that it's time for the signal method to return.
+    /// The <see cref="Args"/> property returns a dictionary that you can use to marshal 
+    /// signal arguments to the workflow logic by adding each argument to the dictionary by
+    /// parameter name.  Your signal method should then queue the invocation to a workflow queue
+    /// the workflow logic is listening on and then call <see cref="WaitForReturnAsync()"/> wait 
+    /// for the workflow logic to call <see cref="ReturnAsync(TimeSpan?)"/> to indicating
+    /// that it's time for the signal method to return.
     /// </para>
     /// <para>
     /// Your workflow logic will dequeue the signal invocation, extract the signal arguments 
-    /// and cast them to the appropriate types, and then perform any necessary operations.
-    /// When the operations are complete, the workflow logic and call <see cref="ReturnAsync(TimeSpan?)"/> 
-    /// which causes <see cref="WaitForReturnAsync()"/> and ultimately the signal method to 
-    /// return.
+    /// cast them to the appropriate types, and then perform any necessary operations.
+    /// Then call <see cref="ReturnAsync(TimeSpan?)"/> which causes the <see cref="WaitForReturnAsync()"/> 
+    /// call in your signal method to complete.
     /// </para>
     /// <note>
     /// <para>
-    /// By default, <see cref="ReturnAsync(TimeSpan?)"/> will wait 10 seconds after telling the
+    /// By default, <see cref="ReturnAsync(TimeSpan?)"/> will wait 10 seconds after informing the
     /// signal method to return before the <see cref="ReturnAsync(TimeSpan?)"/> itself returns
     /// to the workflow logic.  This is a bit of a hack that tries to ensure that there's enough
     /// time for Cadence client to query for the signal result before the workflow terminates,
-    /// because queries will no longer work at this point
+    /// because queries will no longer work after the workflow is terminated.
     /// </para>
     /// <para>
-    /// This is fragile because it depends on the client signal query pools happening at a frequency
+    /// This is somewhat fragile because it depends on the client signal query polling happening at a frequency
     /// less than this delay.  You can customize the delay by setting <see cref="ReturnDelay"/> to
     /// a different value or passing a custome <see cref="TimeSpan"/> to <see cref="ReturnAsync(TimeSpan?)"/>.
     /// </para>
@@ -86,14 +85,26 @@ namespace Neon.Cadence
     /// See the documentation site for more information: <a href="https://doc.neonkube.com/Neon.Cadence-Workflow-SynchronousSignals.htm">Synchronous Signals</a>
     /// </para>
     /// </remarks>
-    public class SignalInvocation : Dictionary<string, object>
+    public class SignalInvocation 
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         public SignalInvocation()
         {
+            if (string.IsNullOrEmpty(Workflow.Current?.SignalId))
+            {
+                throw new NotSupportedException($"[{nameof(SignalInvocation)}] may only be constructed within a synchronous workflow signal method.");
+            }
+
+            SignalId = Workflow.Current.SignalId;
         }
+
+        /// <summary>
+        /// Returns the signal arguments as a dictionary.
+        /// </summary>
+        [JsonIgnore]
+        public Dictionary<string, object> Args { get; set; } = new Dictionary<string, object>();
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Uniquely identifies the synchronous signal.
@@ -114,6 +125,7 @@ namespace Neon.Cadence
         /// Returns the <see cref="AsyncManualResetEvent"/> used to inform the signal method
         /// that its time to return to its caller.
         /// </summary>
+        [JsonIgnore]
         private AsyncManualResetEvent ReturnEvent => Workflow.Current.GetSignalStatus(SignalId).ReturnEvent;
 
         /// <summary>
@@ -162,30 +174,29 @@ namespace Neon.Cadence
     /// <typeparam name="TResult">The signal result type.</typeparam>
     /// <remarks>
     /// <para>
-    /// This class inherits from a dictionary that maps strings to objects with the intention
-    /// that you'll use this to marshal signal arguments to the workflow logic by adding each
-    /// argument to the dictionary by parameter name.  The signal method will then queue the
-    /// invocation to a workflow queue the workflow logic is listening on and then call
-    /// <see cref="WaitForReturnAsync()"/> to wait for the the workflow logic to call
-    /// <see cref="ReturnAsync(TResult, TimeSpan?)"/>, passing the result to be returned by the signal method.
+    /// The <see cref="Args"/> property returns a dictionary that you can use to marshal 
+    /// signal arguments to the workflow logic by adding each argument to the dictionary by
+    /// parameter name.  Your signal method should then queue the invocation to a workflow queue
+    /// the workflow logic is listening on and then call <see cref="WaitForReturnAsync()"/> wait 
+    /// for the workflow logic to call <see cref="ReturnAsync(TResult, TimeSpan?)"/>, indicating
+    /// that it's time for the signal method to return.
     /// </para>
     /// <para>
     /// Your workflow logic will dequeue the signal invocation, extract the signal arguments 
-    /// and cast them to the appropriate types, and then perform any necessary operations.
-    /// When the operations are complete, the workflow logic and call <see cref="ReturnAsync(TResult, TimeSpan?)"/> 
-    /// which causes <see cref="WaitForReturnAsync()"/> and ultimately the signal method to 
-    /// return.
+    /// cast them to the appropriate types, and then perform any necessary operations.
+    /// Then call <see cref="ReturnAsync(TResult, TimeSpan?)"/> which causes the
+    /// <see cref="WaitForReturnAsync()"/> call in your signal method to complete.
     /// </para>
     /// <note>
     /// <para>
-    /// By default, <see cref="ReturnAsync(TResult, TimeSpan?)"/> will wait 10 seconds after telling the
+    /// By default, <see cref="ReturnAsync(TResult, TimeSpan?)"/> will wait 10 seconds after informing the
     /// signal method to return before the <see cref="ReturnAsync(TResult, TimeSpan?)"/> itself returns
     /// to the workflow logic.  This is a bit of a hack that tries to ensure that there's enough
     /// time for Cadence client to query for the signal result before the workflow terminates,
-    /// because queries will no longer work at this point.
+    /// because queries will no longer work after the workflow is terminated.
     /// </para>
     /// <para>
-    /// This is fragile because it depends on the client signal query pools happening at a frequency
+    /// This is somewhat fragile because it depends on the client signal query polling happening at a frequency
     /// less than this delay.  You can customize the delay by setting <see cref="ReturnDelay"/> to
     /// a different value or passing a custome <see cref="TimeSpan"/> to <see cref="ReturnAsync(TResult, TimeSpan?)"/>.
     /// </para>
@@ -209,6 +220,12 @@ namespace Neon.Cadence
         public SignalInvocation()
         {
         }
+
+        /// <summary>
+        /// Returns the signal arguments as a dictionary.
+        /// </summary>
+        [JsonIgnore]
+        public Dictionary<string, object> Args { get; set; } = new Dictionary<string, object>();
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Identifies the synchronous signal.

@@ -771,6 +771,8 @@ namespace Neon.Cadence
 
                 if (workflow != null)
                 {
+                    Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information for workflow library code.
+
                     var method = workflow.Workflow.MethodMap.GetSignalMethod(request.SignalName);
 
                     if (method != null)
@@ -834,12 +836,16 @@ namespace Neon.Cadence
 
                 if (workflow != null)
                 {
+                    Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information for workflow library code.
+
                     // The signal arguments should be just a single [SyncSignalCall] that specifies
                     // the target signal and also includes its encoded arguments.
 
                     var syncArgs       = client.DataConverter.FromDataArray(request.SignalArgs, typeof(SyncSignalCall));
                     var syncSignalCall = (SyncSignalCall)syncArgs[0];
                     var method         = workflow.Workflow.MethodMap.GetSignalMethod(syncSignalCall.TargetSignal);
+
+                    Workflow.Current.SignalId = syncSignalCall.SignalId;
 
                     // Persist some state that the signal status queries can examine.
                     // We're also going to use the presence of this state to make
@@ -858,6 +864,8 @@ namespace Neon.Cadence
 
                     if (method != null)
                     {
+                        Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information for workflow library code.
+
                         var userArgs  = client.DataConverter.FromDataArray(syncSignalCall.UserArgs, method.GetParameterTypes());
                         var result    = (object)null;
                         var exception = (Exception)null;
@@ -975,6 +983,8 @@ namespace Neon.Cadence
 
                 if (workflow != null)
                 {
+                    Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information for workflow library code.
+
                     // Handle built-in queries.
 
                     switch (request.QueryName)
