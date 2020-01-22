@@ -327,14 +327,14 @@ namespace TestCadence
             [WorkflowMethod(Name = "run-void")]
             Task RunVoidAsync();
 
-            [WorkflowMethod(Name = "run-result")]
+            [SignalMethod("signal-void", Synchronous = true)]
+            Task SignalVoidAsync();
+
+            [WorkflowMethod(Name = "run-with-result")]
             Task RunResultAsync();
 
-            [SignalMethod("signal-void", Synchronous = true)]
-            Task SignalAsync();
-
             [SignalMethod("signal-with-result", Synchronous = true)]
-            Task<string> SignalAsync(string name);
+            Task<string> SignalResultAsync(string name);
         }
 
         [Workflow(AutoRegister = true)]
@@ -356,12 +356,12 @@ namespace TestCadence
                 await signalRequest.ReturnAsync();
             }
 
-            public async Task SignalAsync()
+            public async Task SignalVoidAsync()
             {
                 var signalRequest = new SignalRequest();
 
                 await voidQueue.EnqueueAsync(signalRequest);
-                await signalRequest.WaitForReturnAsync();
+                //await signalRequest.WaitForReturnAsync();
             }
 
             public async Task RunResultAsync()
@@ -375,7 +375,7 @@ namespace TestCadence
                 await signalRequest.ReturnAsync($"Hello {signalRequest.Arg<string>("name")}!");
             }
 
-            public async Task<string> SignalAsync(string name)
+            public async Task<string> SignalResultAsync(string name)
             {
                 var signalRequest = new SignalRequest<string>();
 
@@ -401,7 +401,7 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IQueuedSignal>();
             var task = stub.RunVoidAsync();
 
-            await stub.SignalAsync();
+            await stub.SignalVoidAsync();
             await task;
 
             Assert.True(QueuedSignal.SignalProcessed);
@@ -424,7 +424,7 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IQueuedSignal>();
             var task = stub.RunResultAsync();
 
-            var result = await stub.SignalAsync("Jeff");
+            var result = await stub.SignalResultAsync("Jeff");
 
             await task;
 
