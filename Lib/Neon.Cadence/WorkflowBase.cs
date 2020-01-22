@@ -777,26 +777,9 @@ namespace Neon.Cadence
 
                     var method = workflow.Workflow.MethodMap.GetSignalMethod(request.SignalName);
 
-                    // We're going to initialize the signal status first, execute the
-                    // signal method (if there is one) on a new task and then return
-                    // the reply.  We need to reply from the current task because 
-                    // cadence-proxy will block on other workflow related operations 
-                    // such as workflow queues.
-                    //
-                    // We're going to allow the new signal task to run to completion
-                    // without awaiting it (because we need to return).
-
                     if (method != null)
                     {
-                        _ = Task.Run(async () =>
-                        {
-                            // Initialize ambient workflow info for this new task as well.
-
-                            WorkflowBase.CallContext.Value = WorkflowCallContext.Signal;
-                            Workflow.Current               = workflow.Workflow;
-
-                            await (Task)(method.Invoke(workflow, client.DataConverter.FromDataArray(request.SignalArgs, method.GetParameterTypes())));
-                        });
+                        await (Task)(method.Invoke(workflow, client.DataConverter.FromDataArray(request.SignalArgs, method.GetParameterTypes())));
 
                         return new WorkflowSignalInvokeReply()
                         {
@@ -863,19 +846,19 @@ namespace Neon.Cadence
 
                     var signalCallArgs = client.DataConverter.FromDataArray(request.SignalArgs, typeof(SyncSignalCall));
                     var signalCall     = (SyncSignalCall)signalCallArgs[0];
-                    var method         = workflow.Workflow.MethodMap.GetSignalMethod(signalCall.TargetSignal);
-                    var userArgs       = client.DataConverter.FromDataArray(signalCall.UserArgs, method.GetParameterTypes());
+                    var signalMethod   = workflow.Workflow.MethodMap.GetSignalMethod(signalCall.TargetSignal);
+                    var userSignalArgs = client.DataConverter.FromDataArray(signalCall.UserArgs, signalMethod.GetParameterTypes());
 
                     Workflow.Current.SignalId = signalCall.SignalId;
 
                     // Create a dictionary with the signal method arguments keyed by parameter name.
 
                     var args       = new Dictionary<string, object>();
-                    var parameters = method.GetParameters();
+                    var parameters = signalMethod.GetParameters();
 
                     for (int i = 0; i < parameters.Length; i++)
                     {
-                        args.Add(parameters[i].Name, userArgs[i]);
+                        args.Add(parameters[i].Name, userSignalArgs[i]);
                     }
 
                     // Persist some state that the signal status queries can examine.
@@ -897,20 +880,36 @@ namespace Neon.Cadence
                         signalStatus.Completed = false;
                     }
 
-                    if (method != null)
+                    if (signalMethod != null)
                     {
                         Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information for workflow library code.
 
                         var result    = (object)null;
                         var exception = (Exception)null;
 
+                        // Execute the signal method (if there is one) on a new task and then 
+                        // immediately return the reply.  We need to reply from the current 
+                        // task because cadence-proxy will block on other workflow related
+                        // operations such as workflow queues.
+                        //
+                        // We're going to allow the new signal task to run to completion
+                        // without awaiting it (because we need to return).
+
                         try
                         {
-                            if (CadenceHelper.IsTask(method.ReturnType))
+                            if (CadenceHelper.IsTask(signalMethod.ReturnType))
                             {
                                 // Method returns [Task]: AKA void.
 
-                                await (Task)(method.Invoke(workflow, userArgs));
+                                _ = Task.Run(async () =>
+                                {
+                                    // Initialize ambient workflow info for this new task as well.
+
+                                    WorkflowBase.CallContext.Value = WorkflowCallContext.Signal;
+                                    Workflow.Current               = workflow.Workflow;
+
+                                    await (Task)(signalMethod.Invoke(workflow, userSignalArgs));
+                                });
                             }
                             else
                             {
@@ -929,12 +928,20 @@ namespace Neon.Cadence
                                 // So instead, I'm going to use reflection to obtain the 
                                 // Task.Result property and then obtain the result from that.
 
-                                var task           = (Task)(method.Invoke(workflow, userArgs));
-                                var resultProperty = task.GetType().GetProperty("Result");
+                                _ = Task.Run(async () =>
+                                {
+                                    // Initialize ambient workflow info for this new task as well.
 
-                                await task;
+                                    WorkflowBase.CallContext.Value = WorkflowCallContext.Signal;
+                                    Workflow.Current               = workflow.Workflow;
 
-                                result = resultProperty.GetValue(task);
+                                    var task           = (Task)(signalMethod.Invoke(workflow, userSignalArgs));
+                                    var resultProperty = task.GetType().GetProperty("Result");
+
+                                    await task;
+
+                                    result = resultProperty.GetValue(task);
+                                });
                             }
                         }
                         catch (Exception e)
