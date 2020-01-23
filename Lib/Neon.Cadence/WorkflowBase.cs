@@ -455,7 +455,7 @@ namespace Neon.Cadence
 
             // Lookup the status for the signal.
 
-            lock (syncLock)
+            lock (workflow.signalIdToStatus)
             {
                 if (!workflow.signalIdToStatus.TryGetValue(signalId, out var signalStatus))
                 {
@@ -865,7 +865,7 @@ namespace Neon.Cadence
                     //
                     // Note that it's possible that a record has already exists.
 
-                    lock (syncLock)
+                    lock (workflow.signalIdToStatus)
                     {
                         if (!workflow.signalIdToStatus.TryGetValue(signalCall.SignalId, out var signalStatus))
                         {
@@ -924,7 +924,7 @@ namespace Neon.Cadence
                             exception = e;
                         }
 
-                        lock (syncLock)
+                        lock (workflow.signalIdToStatus)
                         {
                             if (workflow.signalIdToStatus.TryGetValue(signalCall.SignalId, out var syncSignalStatus))
                             {
@@ -1029,7 +1029,7 @@ namespace Neon.Cadence
                             var syncSignalId     = (string) (syncSignalArgs.Length > 0 ? syncSignalArgs[0] : null);
                             var syncSignalStatus = (SyncSignalStatus)null;
 
-                            lock (syncLock)
+                            lock (workflow.signalIdToStatus)
                             {
                                 if (!workflow.signalIdToStatus.TryGetValue(syncSignalId, out syncSignalStatus))
                                 {
