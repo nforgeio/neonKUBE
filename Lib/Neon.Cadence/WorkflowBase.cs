@@ -662,7 +662,7 @@ namespace Neon.Cadence
             //
             //      1. The method returns normally with the workflow result.
             //
-            //      2. The method calls [RestartAsync(result, args)] which throws an
+            //      2. The method calls [ContinuAsNewAsync()] which throws an
             //         [InternalWorkflowRestartException] which will be caught and
             //         handled here.
             //
@@ -865,19 +865,23 @@ namespace Neon.Cadence
                     //
                     // Note that it's possible that a record has already exists.
 
+                    var newSignal = false;
+
                     lock (workflow.signalIdToStatus)
                     {
                         if (!workflow.signalIdToStatus.TryGetValue(signalCall.SignalId, out var signalStatus))
                         {
-                            signalStatus = new SyncSignalStatus();
+                            newSignal    = true;
+                            signalStatus = new SyncSignalStatus()
+                            {
+                                Args = args
+                            };
+
                             workflow.signalIdToStatus.Add(signalCall.SignalId, signalStatus);
                         }
-
-                        signalStatus.Args      = args;
-                        signalStatus.Completed = false;
                     }
 
-                    if (signalMethod != null)
+                    if (newSignal && signalMethod != null)
                     {
                         Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information for workflow library code.
 
