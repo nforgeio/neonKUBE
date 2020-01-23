@@ -105,7 +105,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId), nameof(runId));
 
-            this.Parent                    = parent;
+            this.WorkflowBase                    = parent;
             this.ContextId                 = contextId;
             this.pendingOperationCount     = 0;
             this.nextLocalActivityActionId = 0;
@@ -146,9 +146,9 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Returns the parent <see cref="WorkflowBase"/> implementation.
+        /// Returns the parent <see cref="Cadence.WorkflowBase"/> implementation.
         /// </summary>
-        internal WorkflowBase Parent { get; private set; }
+        internal WorkflowBase WorkflowBase { get; private set; }
 
         /// <summary>
         /// Returns the workflow's context ID.
@@ -247,7 +247,7 @@ namespace Neon.Cadence
         /// </param>
         internal void SetStackTrace(int skipFrames = 2)
         {
-            Parent.StackTrace = new StackTrace(skipFrames, fNeedFileInfo: true);
+            WorkflowBase.StackTrace = new StackTrace(skipFrames, fNeedFileInfo: true);
         }
 
         /// <summary>
