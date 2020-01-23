@@ -453,16 +453,13 @@ namespace Neon.Cadence
                 return new SyncSignalStatus() { Completed = false };
             }
 
-            // Lookup the status for the signal, adding a record if one 
-            // doesn't already exist.
+            // Lookup the status for the signal.
 
             lock (syncLock)
             {
                 if (!workflow.signalIdToStatus.TryGetValue(signalId, out var signalStatus))
                 {
                     signalStatus = new SyncSignalStatus();
-
-                    workflow.signalIdToStatus.Add(signalId, signalStatus);
                 }
 
                 return signalStatus;
@@ -861,7 +858,7 @@ namespace Neon.Cadence
                         args.Add(parameters[i].Name, userSignalArgs[i]);
                     }
 
-                    // Persist some state that the signal status queries can examine.
+                    // Persist the state that the signal status queries will examine.
                     // We're also going to use the presence of this state to make
                     // synchronous signal calls idempotent by ensuring that we'll
                     // only call the signal method once per signal ID.
@@ -887,13 +884,7 @@ namespace Neon.Cadence
                         var result    = (object)null;
                         var exception = (Exception)null;
 
-                        // Execute the signal method (if there is one) on a new task and then 
-                        // immediately return the reply.  We need to reply from the current 
-                        // task because cadence-proxy will block on other workflow related
-                        // operations such as workflow queues.
-                        //
-                        // We're going to allow the new signal task to run to completion
-                        // without awaiting it (because we need to return).
+                        // Execute the signal method (if there is one).
 
                         try
                         {
@@ -901,15 +892,7 @@ namespace Neon.Cadence
                             {
                                 // Method returns [Task]: AKA void.
 
-                                _ = Task.Run(async () =>
-                                {
-                                    // Initialize ambient workflow info for this new task as well.
-
-                                    WorkflowBase.CallContext.Value = WorkflowCallContext.Signal;
-                                    Workflow.Current               = workflow.Workflow;
-
-                                    await (Task)(signalMethod.Invoke(workflow, userSignalArgs));
-                                });
+                                await (Task)(signalMethod.Invoke(workflow, userSignalArgs));
                             }
                             else
                             {
@@ -928,20 +911,12 @@ namespace Neon.Cadence
                                 // So instead, I'm going to use reflection to obtain the 
                                 // Task.Result property and then obtain the result from that.
 
-                                _ = Task.Run(async () =>
-                                {
-                                    // Initialize ambient workflow info for this new task as well.
+                                var task           = (Task)(signalMethod.Invoke(workflow, userSignalArgs));
+                                var resultProperty = task.GetType().GetProperty("Result");
 
-                                    WorkflowBase.CallContext.Value = WorkflowCallContext.Signal;
-                                    Workflow.Current               = workflow.Workflow;
+                                await task;
 
-                                    var task           = (Task)(signalMethod.Invoke(workflow, userSignalArgs));
-                                    var resultProperty = task.GetType().GetProperty("Result");
-
-                                    await task;
-
-                                    result = resultProperty.GetValue(task);
-                                });
+                                result = resultProperty.GetValue(task);
                             }
                         }
                         catch (Exception e)
@@ -963,12 +938,6 @@ namespace Neon.Cadence
                                 {
                                     syncSignalStatus.Error = SyncSignalException.GetError(exception);
                                 }
-
-                                // We can remove the reference to the [Args] dictionary because it
-                                // will no longer be necessary since the signal method has returned.
-                                // This will allow the GC to recover this sooner.
-
-                                syncSignalStatus.Args = null;
                             }
                         }
 

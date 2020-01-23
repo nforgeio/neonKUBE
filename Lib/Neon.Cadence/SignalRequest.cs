@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
@@ -44,22 +45,21 @@ namespace Neon.Cadence
     /// <note>
     /// This synchronous signals are considered experimental which means that this feature will 
     /// probably have a limited lifespan.  Cadence will introduce new <b>update</b>
-    /// semantics soon that will ultimately replace synchronous signals.
+    /// semantics at some point that will ultimately obsolete synchronous signals.
     /// </note>
     /// </summary>
     /// <remarks>
     /// <para>
     /// The <see cref="Args"/> property returns a dictionary that is intialized with the
     /// signal arguments keyed by parameter name.  Your signal method should queue this
-    /// invocation to a workflow queue your workflow logic is listening on and then call 
-    /// <see cref="WaitForReturnAsync()"/> wait signal result returned from the workflow
-    /// logic via a <see cref="ReturnAsync(TimeSpan?)"/> call.
+    /// request to a workflow queue your workflow logic is listening on and then return
+    /// from your signal method.
     /// </para>
     /// <para>
-    /// Your workflow logic will dequeue the signal invocation, extract the signal arguments 
+    /// Your workflow logic will dequeue the signal request, extract the signal arguments 
     /// cast them to the appropriate types, and then perform any necessary operations.
-    /// Then call <see cref="ReturnAsync(TimeSpan?)"/> which causes the <see cref="WaitForReturnAsync()"/> 
-    /// call in your signal method to return so your signal method can return as well.
+    /// Then call <see cref="ReturnAsync(TimeSpan?)"/> which will cause the signal call
+    /// made by the client to return.
     /// </para>
     /// <note>
     /// <para>
@@ -87,20 +87,19 @@ namespace Neon.Cadence
     /// </remarks>
     public class SignalRequest 
     {
-        private SyncSignalStatus    signalStatus;
+        private SyncSignalStatus                    cachedSignalStatus;
+        private ReadOnlyDictionary<string, object>  cachedArgs;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public SignalRequest()
         {
-            // This class may only be constructed within signal or
-            // workflow methods.
+            // This class may only be constructed within signal or workflow methods.
 
             WorkflowBase.CheckCallContext(allowSignal: true, allowWorkflow: true);
 
-            SignalId     = Workflow.Current.SignalId;
-            signalStatus = Workflow.Current.GetSignalStatus(SignalId);
+            SignalId = Workflow.Current.SignalId;
         }
 
         /// <summary>
@@ -110,12 +109,40 @@ namespace Neon.Cadence
         public string SignalId { get; set; }
 
         /// <summary>
-        /// Returns a dictionary holding the signal arguments keyed by parameter name.  You can
+        /// Returns the signal status for this signal request.
+        /// </summary>
+        [JsonIgnore]
+        private SyncSignalStatus SignalStatus
+        {
+            get
+            {
+                if (cachedSignalStatus != null)
+                {
+                    return cachedSignalStatus;
+                }
+
+                return cachedSignalStatus = Workflow.Current.GetSignalStatus(SignalId);
+            }
+        }
+
+        /// <summary>
+        /// Returns the dictionary holding the signal arguments keyed by parameter name.  You can
         /// access the arguments here, casting the <see cref="object"/> values as required or
         /// you can use the generic <see cref="Arg{T}(string)"/> method, which is a bit nicer.
         /// </summary>
-        [JsonProperty(PropertyName = "Args", Required = Required.Always)]
-        public Dictionary<string, object> Args { get; set; } = new Dictionary<string, object>();
+        [JsonIgnore]
+        public ReadOnlyDictionary<string, object> Args
+        {
+            get
+            {
+                if (cachedArgs != null)
+                {
+                    return cachedArgs;
+                }
+
+                return cachedArgs = new ReadOnlyDictionary<string, object>(SignalStatus.Args);
+            }
+        }
 
         /// <summary>
         /// Returns the named argument cast into the specified type.
@@ -129,9 +156,10 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Called by the workflow logic when its time for the synchronous signal to
-        /// return to the caller.  This will cause the <see cref="WaitForReturnAsync"/>
-        /// method called by the signal method to complete.
+        /// Called by yourt workflow logic to indicate that processing for the synchronous
+        /// signal is complete.  This method also waits for a period of time before
+        /// returning to help ensure that the signal result can be delivered back to
+        /// the calling client before the workflow terminates.
         /// </summary>
         /// <param name="delay">Optionally overrides <see cref="CadenceSettings.SyncSignalReturnDelaySeconds"/>.</param>
         public async Task ReturnAsync(TimeSpan? delay = null)
@@ -142,9 +170,8 @@ namespace Neon.Cadence
 
             // Signal [WaitForReturnAsync()] that it should return now.
 
-            signalStatus.Result    = null;  // No result for void signals
-            signalStatus.Completed = true;
-            signalStatus.ReturnEvent.Set();
+            SignalStatus.Result    = null;  // No result for void signals
+            SignalStatus.Completed = true;
 
             // Delay returning to give the client a chance to poll for
             // the signal result.
@@ -152,23 +179,6 @@ namespace Neon.Cadence
             delay = delay ?? Workflow.Current.Client.Settings.SyncSignalReturnDelay;
 
             await Workflow.Current.SleepAsync(delay.Value);
-        }
-
-        /// <summary>
-        /// Called by saynchronous signal methods after queuing the operation to the
-        /// workflow logic to wait for the workflow to indicate that its time to return
-        /// to the caller.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task WaitForReturnAsync()
-        {
-            // This may only be called within a signal method.
-
-            WorkflowBase.CheckCallContext(allowSignal: true);
-
-            // Wait for the signal from [ReturnAsync()] before returning.
-
-            await signalStatus.ReturnEvent.WaitAsync();
         }
     }
 }

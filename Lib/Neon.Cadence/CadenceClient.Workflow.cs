@@ -899,24 +899,35 @@ namespace Neon.Cadence
             status = await SyncSignalRetry.InvokeAsync<SyncSignalStatus>(
                 async () =>
                 {
-                    // $todo(jefflill):
-                    //
-                    // We should use consistent queries here after we support query consistency:
-                    //
-                    //      https://github.com/nforgeio/neonKUBE/issues/751
-
-                    rawStatus = await QueryWorkflowAsync(execution, SyncSignalQueryName, queryArgs, domain);
-                    status    = DataConverter.FromData<SyncSignalStatus>(rawStatus);
-
-                    if (!status.Completed)
+                    try
                     {
-                        throw new TimeoutException($"Timeout waiting for reply from signal [{signalName}].");
+                        // $todo(jefflill):
+                        //
+                        // We should use consistent queries here after we support query consistency:
+                        //
+                        //      https://github.com/nforgeio/neonKUBE/issues/751
+
+                        rawStatus = await QueryWorkflowAsync(execution, SyncSignalQueryName, queryArgs, domain);
+                        status    = DataConverter.FromData<SyncSignalStatus>(rawStatus);
+
+                        if (!status.Completed)
+                        {
+                            throw new TimeoutException($"Timeout waiting for reply from signal [{signalName}].");
+                        }
+
+                        return status;
                     }
 
-                    return status;
+                    catch (EntityNotExistsException)
+                    {
+                        // Stop polling when the workflow is no longer open.
+
+                        status.Error = $"Workflow [workflowID={execution}, RunID={execution.RunId}] not found or is no longer open.";
+                        return status;
+                    }
                 });
 
-            // Handle any error returned.
+            // Handle any returned error.
 
             if (status.Error != null)
             {
@@ -975,24 +986,34 @@ namespace Neon.Cadence
             await SyncSignalRetry.InvokeAsync<SyncSignalStatus>(
                 async () =>
                 {
-                    // $todo(jefflill):
-                    //
-                    // We should use consistent queries here after we support query consistency:
-                    //
-                    //      https://github.com/nforgeio/neonKUBE/issues/751
-
-                    rawStatus = await QueryWorkflowAsync(childExecution.Execution, SyncSignalQueryName, queryArgs);
-                    status    = DataConverter.FromData<SyncSignalStatus>(rawStatus);
-
-                    if (!status.Completed)
+                    try
                     {
-                        throw new TimeoutException($"Timeout waiting for reply from signal [{signalName}].");
-                    }
+                        // $todo(jefflill):
+                        //
+                        // We should use consistent queries here after we support query consistency:
+                        //
+                        //      https://github.com/nforgeio/neonKUBE/issues/751
 
-                    return status;
+                        rawStatus = await QueryWorkflowAsync(childExecution.Execution, SyncSignalQueryName, queryArgs);
+                        status    = DataConverter.FromData<SyncSignalStatus>(rawStatus);
+
+                        if (!status.Completed)
+                        {
+                            throw new TimeoutException($"Timeout waiting for reply from signal [{signalName}].");
+                        }
+
+                        return status;
+                    }
+                    catch (EntityNotExistsException)
+                    {
+                        // Stop polling when the workflow is no longer open.
+
+                        status.Error = $"Workflow [workflowID={childExecution.Execution}, RunID={childExecution.Execution.RunId}] not found or is no longer open.";
+                        return status;
+                    }
                 });
 
-            // Handle any error returned.
+            // Handle any returned error.
 
             if (status.Error != null)
             {

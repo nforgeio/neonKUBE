@@ -57,8 +57,8 @@ namespace Neon.Cadence
         /// </para>
         /// <note>
         /// Synchronous signals are considered experimental which means that this feature will 
-        /// probably have a limited lifespan.  Cadence will probably introduce new <b>update</b>
-        /// semantics that will ultimately replace synchronous signals.
+        /// probably have a limited lifespan.  Cadence will introduce new <b>update</b>
+        /// semantics at some point that will ultimately obsolete synchronous signals.
         /// </note>
         /// </summary>
         /// <remarks>

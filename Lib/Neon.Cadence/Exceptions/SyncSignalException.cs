@@ -71,7 +71,7 @@ namespace Neon.Cadence
         /// Constructor.
         /// </summary>
         /// <param name="error">The error information as formatted by <see cref="GetError(Exception)"/>.</param>
-        public SyncSignalException(string error)
+        internal SyncSignalException(string error)
             : base(GetMessage(error))
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(error), nameof(error));

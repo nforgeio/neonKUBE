@@ -328,7 +328,7 @@ namespace TestCadence
             Task RunVoidAsync();
 
             [SignalMethod("signal-void", Synchronous = true)]
-            Task SignalVoidAsync();
+            Task SignalVoidAsync(string name);
 
             [WorkflowMethod(Name = "run-with-result")]
             Task RunResultAsync();
@@ -341,6 +341,13 @@ namespace TestCadence
         public class QueuedSignal : WorkflowBase, IQueuedSignal
         {
             public static bool SignalProcessed;
+            public static string Name;
+
+            public static void Clear()
+            {
+                SignalProcessed = false;
+                Name = null;
+            }
 
             private WorkflowQueue<SignalRequest>         voidQueue;
             private WorkflowQueue<SignalRequest<string>> resultQueue;
@@ -352,16 +359,17 @@ namespace TestCadence
                 var signalRequest = await voidQueue.DequeueAsync();
 
                 SignalProcessed = true;
+                Name = signalRequest.Arg<string>("name");
 
                 await signalRequest.ReturnAsync();
             }
 
-            public async Task SignalVoidAsync()
+            public async Task SignalVoidAsync(string name)
             {
                 var signalRequest = new SignalRequest();
 
                 await voidQueue.EnqueueAsync(signalRequest);
-                //await signalRequest.WaitForReturnAsync();
+                return;
             }
 
             public async Task RunResultAsync()
@@ -371,8 +379,9 @@ namespace TestCadence
                 var signalRequest = await resultQueue.DequeueAsync();
 
                 SignalProcessed = true;
+                Name = signalRequest.Arg<string>("name");
 
-                await signalRequest.ReturnAsync($"Hello {signalRequest.Arg<string>("name")}!");
+                await signalRequest.ReturnAsync($"Hello {Name}!");
             }
 
             public async Task<string> SignalResultAsync(string name)
@@ -380,8 +389,7 @@ namespace TestCadence
                 var signalRequest = new SignalRequest<string>();
 
                 await resultQueue.EnqueueAsync(signalRequest);
-
-                return await signalRequest.WaitForReturnAsync();
+                return null;
             }
         }
 
@@ -396,15 +404,16 @@ namespace TestCadence
             // because the static [SignalProcessed] property will be set
             // and also because the signal and workflow methods returned.
 
-            QueuedSignal.SignalProcessed = false;
+            QueuedSignal.Clear();
 
             var stub = client.NewWorkflowStub<IQueuedSignal>();
             var task = stub.RunVoidAsync();
 
-            await stub.SignalVoidAsync();
+            await stub.SignalVoidAsync("Jack");
             await task;
 
             Assert.True(QueuedSignal.SignalProcessed);
+            Assert.Equal("Jack", QueuedSignal.Name);
         }
 
         [Fact]
@@ -419,17 +428,18 @@ namespace TestCadence
             // because the static [SignalProcessed] property will be set
             // and also because the signal and workflow methods returned.
 
-            QueuedSignal.SignalProcessed = false;
+            QueuedSignal.Clear();
 
             var stub = client.NewWorkflowStub<IQueuedSignal>();
             var task = stub.RunResultAsync();
 
-            var result = await stub.SignalResultAsync("Jeff");
+            var result = await stub.SignalResultAsync("Jill");
 
             await task;
 
             Assert.True(QueuedSignal.SignalProcessed);
-            Assert.True(result == "Hello Jeff!");
+            Assert.True(result == "Hello Jill!");
+            Assert.Equal("Jill", QueuedSignal.Name);
         }
     }
 }
