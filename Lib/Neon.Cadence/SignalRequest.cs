@@ -58,29 +58,9 @@ namespace Neon.Cadence
     /// <para>
     /// Your workflow logic will dequeue the signal request, extract the signal arguments 
     /// cast them to the appropriate types, and then perform any necessary operations.
-    /// Then call <see cref="ReturnAsync(TimeSpan?)"/> which will cause the signal call
-    /// made by the client to return.
+    /// Then call <see cref="ReturnAsync()"/> which indicates that signal processing
+    /// is finished.
     /// </para>
-    /// <note>
-    /// <para>
-    /// By default, <see cref="ReturnAsync(TimeSpan?)"/> will wait <see cref="CadenceSettings.SyncSignalReturnDelaySeconds"/> 
-    /// (10 seconds) after informing the signal method to return before the <see cref="ReturnAsync(TimeSpan?)"/> itself returns
-    /// to the workflow logic.  This is a bit of a hack that tries to ensure that there's enough
-    /// time for Cadence client to query for the signal result before the workflow terminates,
-    /// because queries will no longer succeed after the workflow is terminated.
-    /// </para>
-    /// <para>
-    /// This is somewhat fragile because it depends on the client signal query polling happening at a frequency
-    /// less than this delay.  You can customize the delay by passing a value to optional <see cref="ReturnAsync(TimeSpan?)"/>
-    /// <c>delay</c> parameter or modifying <see cref="CadenceSettings.SyncSignalReturnDelaySeconds"/> before
-    /// you create the <see cref="CadenceClient"/>.
-    /// </para>
-    /// <para>
-    /// If you know that your workflow logic will run for some time after processing a synchronous
-    /// signal, you can pass <see cref="TimeSpan.Zero"/> to <see cref="ReturnAsync(TimeSpan?)"/>
-    /// to avoid unnecessary delays.
-    /// </para>
-    /// </note>
     /// <para>
     /// See the documentation site for more information: <a href="https://doc.neonkube.com/Neon.Cadence-Workflow-SynchronousSignals.htm">Synchronous Signals</a>
     /// </para>
@@ -156,29 +136,23 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Called by yourt workflow logic to indicate that processing for the synchronous
+        /// Called by your workflow logic to indicate that processing for the synchronous
         /// signal is complete.  This method also waits for a period of time before
         /// returning to help ensure that the signal result can be delivered back to
         /// the calling client before the workflow terminates.
         /// </summary>
-        /// <param name="delay">Optionally overrides <see cref="CadenceSettings.SyncSignalReturnDelaySeconds"/>.</param>
-        public async Task ReturnAsync(TimeSpan? delay = null)
+        public async Task ReturnAsync()
         {
             // This may only be called within a workflow method.
 
             WorkflowBase.CheckCallContext(allowWorkflow: true);
 
-            // Signal [WaitForReturnAsync()] that it should return now.
+            // Save the signal completion so a subsequent polling query can retrieve it.
 
-            SignalStatus.Result    = null;  // No result for void signals
+            SignalStatus.Result    = null;  // NULL result for void signal methods
             SignalStatus.Completed = true;
 
-            // Delay returning to give the client a chance to poll for
-            // the signal result.
-
-            delay = delay ?? Workflow.Current.Client.Settings.SyncSignalReturnDelay;
-
-            await Workflow.Current.SleepAsync(delay.Value);
+            await Task.CompletedTask;
         }
     }
 }

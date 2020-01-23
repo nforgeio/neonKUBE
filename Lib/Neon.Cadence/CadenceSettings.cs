@@ -330,20 +330,19 @@ namespace Neon.Cadence
         internal TimeSpan ActivityHeartbeatTimeout => TimeSpan.FromSeconds(Math.Max(ActivityHeartbeatTimeoutSeconds, 0));
 
         /// <summary>
-        /// <b>EXPERIMENTAL:</b> Specifies the default seconds that <see cref="SignalRequest.ReturnAsync(TimeSpan?)"/>
-        /// and <see cref="SignalRequest{MaskedTextResultHint}.ReturnAsync(MaskedTextResultHint, TimeSpan?)"/>
-        /// will pause after before returning to try to ensure that the workflow keeps running long enough to 
-        /// client signal query poll obtain the signal result.  This defaults to <b>10.0 seconds</b>.
+        /// <b>EXPERIMENTAL:</b> Specifies the maximum seconds that a workflow will be kept alive after
+        /// the workflow method returns to handle any oustanding synchronous signal queries.  This defaults
+        /// to <b>10.0 seconds</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "SyncSignalReturnDelaySeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "syncSignalReturnDelaySeconds", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "MaxWorkflowDelaySeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "maxWorkflowDelaySeconds", ApplyNamingConventions = false)]
         [DefaultValue(10.0)]
-        public double SyncSignalReturnDelaySeconds { get; set; } = 10.0;
+        public double MaxWorkflowDelaySeconds { get; set; } = 10.0;
 
         /// <summary>
-        /// Returns <see cref="SyncSignalReturnDelaySeconds"/> as a <see cref="TimeSpan"/>.
+        /// Returns <see cref="MaxWorkflowDelaySeconds"/> as a <see cref="TimeSpan"/>.
         /// </summary>
-        internal TimeSpan SyncSignalReturnDelay => TimeSpan.FromSeconds(SyncSignalReturnDelaySeconds);
+        internal TimeSpan MaxWorkflowDelay => TimeSpan.FromSeconds(MaxWorkflowDelaySeconds);
 
         /// <summary>
         /// Optionally specifies the folder where the embedded <b>cadence-proxy</b> binary 

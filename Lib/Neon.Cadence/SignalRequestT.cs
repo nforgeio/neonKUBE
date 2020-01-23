@@ -56,34 +56,14 @@ namespace Neon.Cadence
     /// request to a workflow queue your workflow logic is listening on and then return
     /// from the signal method.  The value your return will be ignore in this case and
     /// the actual value returned to the calling client will be specified by your workflow
-    /// logic via a <see cref="ReturnAsync(TResult, TimeSpan?)"/> call.
+    /// logic via a <see cref="ReturnAsync(TResult)"/> call.
     /// </para>
     /// <para>
     /// Your workflow logic will dequeue the signal request, extract the signal arguments,
     /// casting them to the appropriate types, and then perform any necessary operations
-    /// before calling <see cref="ReturnAsync(TResult, TimeSpan?)"/> which actually
-    /// returns the result to the client that called the signal.
+    /// before calling <see cref="ReturnAsync(TResult)"/> which indicates that signal processing
+    /// is finished was well as specifying the value to be returned as the signal result.
     /// </para>
-    /// <note>
-    /// <para>
-    /// By default, <see cref="ReturnAsync(TResult, TimeSpan?)"/> will wait <see cref="CadenceSettings.SyncSignalReturnDelaySeconds"/> 
-    /// (10 seconds) after informing the signal method to return before the <see cref="ReturnAsync(TResult, TimeSpan?)"/> itself returns
-    /// to the workflow logic.  This is a bit of a hack that tries to ensure that there's enough
-    /// time for Cadence client to query for the signal result before the workflow terminates,
-    /// because queries will no longer succeed after the workflow is terminated.
-    /// </para>
-    /// <para>
-    /// This is somewhat fragile because it depends on the client signal query polling happening at a frequency
-    /// less than this delay.  You can customize the delay by passing a value to optional <see cref="ReturnAsync(TResult, TimeSpan?)"/>
-    /// <c>delay</c> parameter or modifying <see cref="CadenceSettings.SyncSignalReturnDelaySeconds"/> before
-    /// you create the <see cref="CadenceClient"/>.
-    /// </para>
-    /// <para>
-    /// If you know that your workflow logic will run for some time after processing a synchronous
-    /// signal, you can pass <see cref="TimeSpan.Zero"/> to <see cref="ReturnAsync(TResult, TimeSpan?)"/>
-    /// to avoid unnecessary delays.
-    /// </para>
-    /// </note>
     /// <para>
     /// See the documentation site for more information: <a href="https://doc.neonkube.com/Neon.Cadence-Workflow-SynchronousSignals.htm">Synchronous Signals</a>
     /// </para>
@@ -160,29 +140,21 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Called by your workflow logic to indicate that processing for the synchronous
-        /// signal is complete.  This method also waits for a period of time before
-        /// returning to help ensure that the signal result can be delivered back to
-        /// the calling client before the workflow terminates.
+        /// signal is complete as well as specifying the signal result.
         /// </summary>
         /// <param name="result">The value to be returned by the signal.</param>
-        /// <param name="delay">Optionally overrides <see cref="CadenceSettings.SyncSignalReturnDelaySeconds"/>.</param>
-        public async Task ReturnAsync(TResult result, TimeSpan? delay = null)
+        public async Task ReturnAsync(TResult result)
         {
             // This may only be called within a workflow method.
 
             WorkflowBase.CheckCallContext(allowWorkflow: true);
 
-            // Signal [WaitForReturnAsync()] that it should return now.
+            // Save the signal completion and result so a subsequent polling query can retrieve it.
 
             SignalStatus.Result    = Workflow.Current.Client.DataConverter.ToData(result);
             SignalStatus.Completed = true;
 
-            // Delay returning to give the client a chance to poll for
-            // the signal result.
-
-            delay = delay ?? Workflow.Current.Client.Settings.SyncSignalReturnDelay;
-
-            await Workflow.Current.SleepAsync(delay.Value);
+            await Task.CompletedTask;
         }
     }
 }

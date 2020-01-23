@@ -637,6 +637,8 @@ namespace Neon.Cadence
 
             if (registration.MethodMap.HasSynchronousSignals)
             {
+                workflow.hasSynchronousSignals = true;
+
                 var signalSubscribeReply = (WorkflowSignalSubscribeReply)await client.CallProxyAsync(
                     new WorkflowSignalSubscribeRequest()
                     {
@@ -693,6 +695,8 @@ namespace Neon.Cadence
                     await (Task)workflowMethod.Invoke(workflow, args);
                 }
 
+                await WaitForPendingWorkflowOperations(workflow);
+
                 return new WorkflowInvokeReply()
                 {
                     Result = serializedResult
@@ -707,6 +711,8 @@ namespace Neon.Cadence
             }
             catch (ContinueAsNewException e)
             {
+                await WaitForPendingWorkflowOperations(workflow);
+
                 return new WorkflowInvokeReply()
                 {
                     ContinueAsNew                             = true,
@@ -724,6 +730,8 @@ namespace Neon.Cadence
             {
                 log.LogError(e);
 
+                await WaitForPendingWorkflowOperations(workflow);
+
                 return new WorkflowInvokeReply()
                 {
                     Error = e.ToCadenceError()
@@ -732,6 +740,8 @@ namespace Neon.Cadence
             catch (Exception e)
             {
                 log.LogError(e);
+
+                await WaitForPendingWorkflowOperations(workflow);
 
                 return new WorkflowInvokeReply()
                 {
@@ -742,6 +752,42 @@ namespace Neon.Cadence
             {
                 WorkflowBase.CallContext.Value = WorkflowCallContext.None;
             }
+        }
+
+        /// <summary>
+        /// Waits for any pending workflow operations (like outstanding synchronous signals) to 
+        /// complete.  This is called before returning from a workflow method.
+        /// </summary>
+        /// <param name="workflow">The target workflow.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private static async Task WaitForPendingWorkflowOperations(WorkflowBase workflow)
+        {
+            Covenant.Requires<ArgumentNullException>(workflow != null);
+
+            // Right now, the only pending operations can be completed outstanding 
+            // synchronous signals that haven't returned their results to the
+            // calling client via polled queries.
+
+            if (!workflow.hasSynchronousSignals)
+            {
+                // The workflow doesn't have synchronous signals, so we can
+                // return immediately.
+
+                return;
+            }
+
+            // Invoke a local activity that waits for all the outstanding
+            // synchronous signals to be acknowledged.
+
+            // $todo(jefflill):
+            //
+            // This is waiting for the maximum time rather than actually executing
+            // a local activity to waiting for all all synchronous signals to be
+            // acknowledged.
+            //
+            // I need to implement this activity.
+
+            await workflow.Workflow.SleepAsync(workflow.Workflow.Client.Settings.MaxWorkflowDelay);
         }
 
         /// <summary>
@@ -1039,6 +1085,14 @@ namespace Neon.Cadence
                                 {
                                     syncSignalStatus = new SyncSignalStatus() { Completed = false };
                                 }
+
+                                if (syncSignalStatus.Completed)
+                                {
+                                    // Indicate that the completed signal has reported that status
+                                    // to the calling client as well as returned the result, if any.
+
+                                    syncSignalStatus.Acknowledged = true;
+                                }
                             }
 
                             return new WorkflowQueryInvokeReply()
@@ -1177,7 +1231,8 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Instance members
 
-        private Dictionary<string, SyncSignalStatus> signalIdToStatus = new Dictionary<string, SyncSignalStatus>();
+        private Dictionary<string, SyncSignalStatus>    signalIdToStatus      = new Dictionary<string, SyncSignalStatus>();
+        private bool                                    hasSynchronousSignals = false;
 
         /// <summary>
         /// This field holds the stack trace for the most recent decision related 

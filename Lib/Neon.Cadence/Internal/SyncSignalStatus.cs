@@ -40,7 +40,8 @@ namespace Neon.Cadence.Internal
         public Dictionary<string, object> Args { get; set; }
 
         /// <summary>
-        /// Returns <c>true</c> if the workflow has finished executing the signal.
+        /// Returns <c>true</c> if the workflow has finished executing the signal
+        /// and that the result is available (for non-void signals).
         /// </summary>
         [JsonProperty(PropertyName = "Completed", Required = Required.Always)]
         public bool Completed { get; set; }
@@ -64,5 +65,14 @@ namespace Neon.Cadence.Internal
         /// </summary>
         [JsonProperty(PropertyName = "Result", Required = Required.AllowNull)]
         public byte[] Result { get; set; }
+
+        /// <summary>
+        /// Returns <c>true</c> after the workflow has returned the result of the
+        /// completed signal operation to a polling query.  This is used internally
+        /// to delay returning from the workflow while there remain outstanding
+        /// synchronous signals that have not been answered.
+        /// </summary>
+        [JsonIgnore]
+        public bool Acknowledged { get; set; }
     }
 }
