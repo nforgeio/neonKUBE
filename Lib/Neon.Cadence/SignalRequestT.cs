@@ -85,7 +85,7 @@ namespace Neon.Cadence
     /// </para>
     /// </note>
     /// <para>
-    /// See the documentation site for more information: <a href="https://doc.neonkube.com/Neon.Cadence-Workflow-SynchronousSignals.htm">Synchronous Signals</a>
+    /// See the documentation site for more information: <a href="https://doc.neonkube.com/Neon.Cadence-Workflow-SyncSignals.htm">Synchronous Signals</a>
     /// </para>
     /// </remarks>
     public class SignalRequest<TResult>
@@ -103,7 +103,7 @@ namespace Neon.Cadence
             WorkflowBase.CheckCallContext(allowSignal: true, allowWorkflow: true);
 
             SignalId = Workflow.Current.SignalId;
-        }
+        }x
 
         /// <summary>
         /// Uniquely identifies the signal.

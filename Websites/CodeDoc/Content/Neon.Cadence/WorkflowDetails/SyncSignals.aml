@@ -13,13 +13,84 @@
         <alert class="warning">
           <legacyBold>EXPERIMENTAL:</legacyBold> This is an experimental feature.  Cadence server doesn't 
           currently have a synchronous way to interact with a running workflow, so the Neon Cadence client 
-          emulates this behavior using a combination of internal signals and queries.  As a developer, 
-          you couild have done something like this yourself, but we felt this was going to be such a useful
-          pattern that it was worth building into the client.  This will ultimately be replaced by upcoming 
-          Cadence server features.
+          emulates this behavior using a combination of internal signals and queries.  This will be obsoleted
+          and eventually removed when Cadence supports this natively.
         </alert>
         <para>
-          
+          Ideally, you'd like your workflows to manage all of the logic for a given operation including
+          reacting to external events.  Cadence currently provides two ways for doing this: external
+          activities and signals.
+        </para>
+        <para>
+          External activities are somewhat difficult configure and use and signals are nice, but they
+          have fire-and-forget semantics, so it's impossible for a signal to indicate to the caller
+          that the signal was processed by the workflow and/or return a result providing more information
+          about how the workflow handled the signal.
+        </para>
+        <para>
+          For example, say you've implemented this order processing workflow:
+        </para>
+        <list class="ordered">
+          <listItem>
+            <para>
+              Customer submits an order to an ecommerce website.
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              The website starts a workflow to process the order.
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              The order workflow sends a packing list to the warehouse, where the order
+              will be packed and shipped.
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              Warehouse workers send a signal to the workflow via a mobile app after
+              the delivery company picks up the package.  This signal includes the
+              tracking ID.
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              The workflow queries the delivery company to obtain the package ETA
+              and then sends an email to the customer with the tracking information.
+            </para>
+          </listItem>
+          <listItem>
+            <para>
+              The workflow monitors the delivery status and sends another email to
+              the customer after the package is delivered.
+            </para>
+          </listItem>
+        </list>
+        <para>
+          That's pretty straightforward, but imagine that customers are allowed to 
+          cancel an order up until the order is packaged for delivery.  So, let's
+          say the customer goes back to the website and cancels the order.  The website
+          could send a cancel signal to the workflow but since signals are fire-and-forget,
+          the website will not be able to determine whether the order was actually cancelled
+          or not.  There is no way for the workflow to return this status to the website.
+        </para>
+        <para>
+          A workaround would be to have the website query the order database to determine
+          whether it's still possible to cancel the order before sending the signal.
+          Another workaround would be to have the website query the database after
+          sending the signal, perhaps checking to see if the order status was changed
+          to cancel.
+        </para>
+        <para>
+          There are two serioud problems with both of these approaches: they start sprinkling
+          order business logic outside of the workflow which will probably become a maintainece
+        </para>
+        <para>
+          As a developer,
+          you could have done something like this yourself, but we felt this was going to be such a useful
+          pattern that it was worth building into the client.  This will ultimately be replaced by upcoming
+          Cadence server features.
         </para>
       </content>
     </section>
