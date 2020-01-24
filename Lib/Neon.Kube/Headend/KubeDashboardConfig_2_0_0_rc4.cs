@@ -43,7 +43,7 @@ namespace Neon.Kube
         /// <summary>
         /// Modified YAML for Dashboard 2.0.0-rc4
         /// </summary>
-        private static readonly string DashboardYaml_2_0_0_beta4 =
+        private static readonly string DashboardYaml_2_0_0_rc2 =
 $@"# Copyright 2017 The Kubernetes Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the """"License"""");
@@ -240,7 +240,7 @@ spec:
     spec:
       containers:
         - name: kubernetes-dashboard
-          image: kubernetesui/dashboard:v2.0.0-beta4
+          image: kubernetesui/dashboard:v2.0.0-rc2
           imagePullPolicy: Always
           ports:
             - containerPort: 8443

@@ -202,21 +202,6 @@ tolerations:
   - key: "node-role.kubernetes.io/master"
     operator: "Exists"
     effect: "NoSchedule"
-  - key: "neonkube.io/ceph"
-    operator: "Exists"
-    effect: "NoSchedule"
-  - key: "neonkube.io/cassandra"
-    operator: "Exists"
-    effect: "NoSchedule"
-  - key: "neonkube.io/couchbase"
-    operator: "Exists"
-    effect: "NoSchedule"
-  - key: "neonkube.io/m3"
-    operator: "Exists"
-    effect: "NoSchedule"
-  - key: "neonkube.io/elasticsearch"
-    operator: "Exists"
-    effect: "NoSchedule"
 
 ## Node labels for fluent-bit pod assignment
 ## Ref: https://kubernetes.io/docs/user-guide/node-selection/

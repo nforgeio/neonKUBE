@@ -107,7 +107,7 @@ namespace TestCadence
         [Workflow(AutoRegister = true)]
         public class SyncSignal : WorkflowBase, ISyncSignal
         {
-            public static readonly TimeSpan WorkflowDelay = TimeSpan.FromSeconds(10);
+            public static readonly TimeSpan WorkflowDelay = TimeSpan.FromSeconds(8);
             public static readonly TimeSpan SignalDelay   = TimeSpan.FromSeconds(3);
 
             public static bool SignalBeforeDelay = false;
@@ -369,7 +369,6 @@ namespace TestCadence
                 var signalRequest = new SignalRequest();
 
                 await voidQueue.EnqueueAsync(signalRequest);
-                return;
             }
 
             public async Task RunResultAsync()
