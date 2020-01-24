@@ -38,7 +38,8 @@ namespace Neon.Cadence.Internal
     /// </summary>
     public static class CadenceHelper
     {
-        private static readonly string genericTaskNamePrefix;
+        private static readonly object      syncLock = new object();
+        private static readonly string      genericTaskNamePrefix;
 
         /// <summary>
         /// The optional separator string used to separate the base workflow type
@@ -1194,17 +1195,27 @@ namespace Neon.Cadence.Internal
         {
             const string logPath = @"C:\Temp\cadence-debug.log";
 
-            if (NeonHelper.IsWindows)
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(logPath));
+            var timestamp = DateTime.Now.ToString(NeonHelper.DateFormatTZ);
 
-                if (line == null)
+            if (!string.IsNullOrEmpty(line) && !line.StartsWith("----"))
+            {
+                line = timestamp + ": " + line;
+            }
+
+            lock (syncLock)
+            {
+                if (NeonHelper.IsWindows)
                 {
-                    File.AppendAllText(logPath, "\r\n");
-                }
-                else
-                {
-                    File.AppendAllText(logPath, line + "\r\n");
+                    Directory.CreateDirectory(Path.GetDirectoryName(logPath));
+
+                    if (line == null)
+                    {
+                        File.AppendAllText(logPath, "\r\n");
+                    }
+                    else
+                    {
+                        File.AppendAllText(logPath, line + "\r\n");
+                    }
                 }
             }
         }

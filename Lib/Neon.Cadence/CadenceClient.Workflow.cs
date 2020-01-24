@@ -917,7 +917,6 @@ namespace Neon.Cadence
 
                         return status;
                     }
-
                     catch (EntityNotExistsException)
                     {
                         // Stop polling when the workflow is no longer open.
