@@ -50,12 +50,13 @@ namespace Neon.Retry
                 this.log = LogManager.Default.GetLogger(sourceModule);
             }
 
-            if (timeout != null && timeout >= TimeSpan.Zero)
+            timeout = timeout ?? TimeSpan.MaxValue;
+
+            if (timeout >= TimeSpan.Zero)
             {
                 this.Timeout = timeout;
 
-                // Compute the UTC deadline, taking care not not to
-                // exceed the end-of-time.
+                // Compute the SYS deadline, taking care not not to exceed the end-of-time.
 
                 var sysNow = SysTime.Now;
 
@@ -122,7 +123,12 @@ namespace Neon.Retry
 
             if (delay > maxDelay)
             {
-                return maxDelay;
+                delay = maxDelay;
+            }
+
+            if (delay <= TimeSpan.Zero)
+            {
+                return TimeSpan.Zero;
             }
             else
             {
