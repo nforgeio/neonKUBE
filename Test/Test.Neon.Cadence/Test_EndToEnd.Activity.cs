@@ -160,7 +160,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
+        [ActivityInterface()]
         public interface ILocalActivityWithResult : IActivity
         {
             [ActivityMethod]
@@ -211,7 +211,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
+        [ActivityInterface()]
         public interface ILocalActivityWithoutResult : IActivity
         {
             [ActivityMethod]
@@ -273,7 +273,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
+        [ActivityInterface()]
         public interface ILocalActivityMultipleMethods : IActivity
         {
             [ActivityMethod]
