@@ -304,6 +304,8 @@ namespace TestCadence
         {
             await SyncContext.ClearAsync;
 
+            var utcNow = DateTime.UtcNow;
+
             // Execute a workflow and then verify that we can describe it.
 
             const string workflowId = "my-base-workflow";
@@ -327,6 +329,17 @@ namespace TestCadence
             Assert.Empty(description.PendingChildren);
 
             Assert.Equal(CadenceTestHelper.TaskList, description.Configuration.TaskList);
+
+            // Ensure that the status properties are reasonable.
+
+            Assert.True(description.Status.HasStarted);
+            Assert.False(description.Status.IsRunning);
+            Assert.True(description.Status.IsClosed);
+
+            Assert.True(description.Status.StartTime >= utcNow);
+            Assert.True(description.Status.CloseTime >= utcNow);
+            Assert.True(description.Status.CloseTime >= description.Status.StartTime);
+            Assert.True(description.Status.ExecutionTime <= description.Status.CloseTime - description.Status.StartTime);
         }
 
         [Fact]

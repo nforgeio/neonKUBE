@@ -108,23 +108,23 @@ namespace Neon.Cadence.Internal
         {
             var executionState = new WorkflowStatus()
             {
-                Execution                 = this.Execution.ToPublic(),
-                TypeName                = this.WorkflowType.Name,
+                Execution           = this.Execution.ToPublic(),
+                TypeName            = this.WorkflowType.Name,
                 WorkflowCloseStatus = (WorkflowExecutionCloseStatus)this.WorkflowCloseStatus,
                 HistoryLength       = this.HistoryLength,
                 ParentDomain        = this.ParentDomainId,
                 ExecutionTime       = TimeSpan.FromTicks(this.ExecutionTime / 100),
                 Memo                = this.Memo?.Fields
-        };
+            };
 
             if (this.StartTime > 0)
             {
-                executionState.StartTime = new DateTime(this.StartTime);
+                executionState.StartTime = CadenceHelper.UnixNanoToDateTimeUtc(this.StartTime);
             }
 
             if (this.CloseTime > 0)
             {
-                executionState.CloseTime = new DateTime(this.CloseTime);
+                executionState.CloseTime = CadenceHelper.UnixNanoToDateTimeUtc(this.CloseTime);
             }
 
             return executionState;
