@@ -424,12 +424,12 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Describes a workflow execution.
+        /// Describes a workflow execution by explicit IDs.
         /// </summary>
         /// <param name="workflowId">The workflow ID.</param>
         /// <param name="runid">Optionally specifies the run ID.</param>
         /// <param name="domain">Optionally specifies the domain.</param>
-        /// <returns></returns>
+        /// <returns>The <see cref="WorkflowDescription"/></returns>
         public async Task<WorkflowDescription> DescribeWorkflowExecutionAsync(string workflowId, string runid = null, string domain = null)
         {
             await SyncContext.ClearAsync;
@@ -444,6 +444,39 @@ namespace Neon.Cadence
                     WorkflowId = workflowId,
                     RunId      = runid ?? string.Empty,
                     Domain     = domain
+                });
+
+            reply.ThrowOnError();
+
+            return reply.Details.ToPublic();
+        }
+
+        /// <summary>
+        /// Describes a workflow execution by <see cref="WorkflowExecution"/>.
+        /// </summary>
+        /// <param name="execution">The workflow execution.</param>
+        /// <returns>The <see cref="WorkflowDescription"/></returns>
+        /// <remarks>
+        /// <note>
+        /// This method requires the <see cref="WorkflowExecution"/> passed to have both the
+        /// <see cref="WorkflowExecution.WorkflowId"/> and <see cref="WorkflowExecution.RunId"/>
+        /// properties to be initialized with the corresponding IDs.
+        /// </note>
+        /// </remarks>
+        public async Task<WorkflowDescription> DescribeWorkflowExecutionAsync(WorkflowExecution execution)
+        {
+            await SyncContext.ClearAsync;
+            Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(execution.WorkflowId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(execution.RunId));
+            EnsureNotDisposed();
+
+            var reply = (WorkflowDescribeExecutionReply)await CallProxyAsync(
+                new WorkflowDescribeExecutionRequest()
+                {
+                    WorkflowId = execution.WorkflowId,
+                    RunId      = execution.RunId,
+                    Domain     = null
                 });
 
             reply.ThrowOnError();
