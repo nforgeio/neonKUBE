@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Retry;
 using Neon.Tasks;
 using Neon.Time;
 
@@ -430,6 +431,7 @@ namespace Neon.Cadence
         /// <param name="runid">Optionally specifies the run ID.</param>
         /// <param name="domain">Optionally specifies the domain.</param>
         /// <returns>The <see cref="WorkflowDescription"/></returns>
+        /// <exception cref="EntityNotExistsException">Thrown if the workflow does not exist.</exception>
         public async Task<WorkflowDescription> DescribeWorkflowExecutionAsync(string workflowId, string runid = null, string domain = null)
         {
             await SyncContext.ClearAsync;
@@ -452,36 +454,64 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Describes a workflow execution by <see cref="WorkflowExecution"/>.
+        /// Waits for a resonable period of time for Cadence to start a workflow.
         /// </summary>
-        /// <param name="execution">The workflow execution.</param>
-        /// <returns>The <see cref="WorkflowDescription"/></returns>
-        /// <remarks>
-        /// <note>
-        /// This method requires the <see cref="WorkflowExecution"/> passed to have both the
-        /// <see cref="WorkflowExecution.WorkflowId"/> and <see cref="WorkflowExecution.RunId"/>
-        /// properties to be initialized with the corresponding IDs.
-        /// </note>
-        /// </remarks>
-        public async Task<WorkflowDescription> DescribeWorkflowExecutionAsync(WorkflowExecution execution)
+        /// <param name="execution">Identifies the target workflow.</param>
+        /// <param name="domain">Optional domain.</param>
+        /// <param name="maxWait">
+        /// Optionally overrides <see cref="CadenceSettings.MaxWorkflowWaitUntilRunningSeconds"/> to
+        /// specify a custom maximum wait time.  The default setting is <b>30 seconds</b>.
+        /// </param>
+        /// <exception cref="EntityNotExistsException">Thrown if the target workflow does not exist.</exception>
+        /// <exception cref="SyncSignalException">Thrown if the workflow is closed or the signal could not be executed for another reason.</exception>
+        /// <exception cref="CadenceTimeoutException">Thrown when the workflow did not start running within a reasonable period of time.</exception>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task WaitUntilWorkflowRunningAsync(WorkflowExecution execution, string domain = null, TimeSpan? maxWait = null)
         {
-            await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(execution != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(execution.WorkflowId));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(execution.RunId));
-            EnsureNotDisposed();
 
-            var reply = (WorkflowDescribeExecutionReply)await CallProxyAsync(
-                new WorkflowDescribeExecutionRequest()
+            maxWait = maxWait ?? Settings.MaxWorkflowWaitUntilRunning;
+
+            var transientExceptions = new Type[]
+            {
+                typeof(QueryFailedException),
+                typeof(CadenceTimeoutException)
+            };
+
+            var retry = new ExponentialRetryPolicy(
+                exceptionTypes:         transientExceptions,
+                maxAttempts:            int.MaxValue,
+                initialRetryInterval:   TimeSpan.FromSeconds(0.25),
+                maxRetryInterval:       TimeSpan.FromSeconds(2),
+                timeout:                maxWait);
+
+            string timeoutMessage = null;
+
+            await retry.InvokeAsync(
+                async () =>
                 {
-                    WorkflowId = execution.WorkflowId,
-                    RunId      = execution.RunId,
-                    Domain     = null
+                    var description = await DescribeWorkflowExecutionAsync(execution.WorkflowId, execution.RunId, domain);
+
+                    if (description.Status.IsRunning)
+                    {
+                        return;
+                    }
+                    else if (description.Status.IsClosed)
+                    {
+                        throw new SyncSignalException($"{typeof(SyncSignalException).FullName}:Wait for workflow [workflowID={execution.WorkflowId}, runID={execution.RunId}] is closed.");
+                    }
+                    else
+                    {
+                        // Avoid generating the same message string over again for each retry.
+
+                        if (timeoutMessage == null)
+                        {
+                            timeoutMessage = $"{typeof(CadenceTimeoutException).FullName}:Wait for workflow [workflowID={execution.WorkflowId}, runID={execution.RunId}] failed to start within [{retry.Timeout}].";
+                        }
+
+                        throw new CadenceTimeoutException(timeoutMessage);
+                    }
                 });
-
-            reply.ThrowOnError();
-
-            return reply.Details.ToPublic();
         }
 
         //---------------------------------------------------------------------
@@ -895,9 +925,9 @@ namespace Neon.Cadence
         /// <param name="signalArgs">Specifies the signal arguments as a byte array.</param>
         /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
         /// <returns>The encoded signal results or <c>null</c> for signals that don't return a result.</returns>
-        /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="SyncSignalException">Thrown if the target synchronous signal doesn't exist or the workflow is already closed.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
-        /// <exception cref="TimeoutException">Thrown if the operation timed out while waiting for a reply.</exception>
+        /// <exception cref="CadenceTimeoutException">Thrown if the operation timed out while waiting for a reply.</exception>
         /// <remarks>
         /// <para>
         /// <paramref name="signalArgs"/> must include an internal <see cref="SyncSignalCall"/> encoded as 
@@ -919,10 +949,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(signalArgs != null && signalArgs.Length > 1, nameof(signalArgs));
             EnsureNotDisposed();
 
-            // Ping the workflow with a query until we get a response.  This ensures that
-            // that workflow is actually scheduled.  If we don't do this and Cadence hasn't
-            // actually scheduled the workflow yet, then the signal call below will fail
-            // silently.
+            // Detect whether the workflow is already closed or wait for it to start running.
 
             await WaitUntilWorkflowRunningAsync(execution);
 
@@ -952,7 +979,7 @@ namespace Neon.Cadence
 
                         if (!status.Completed)
                         {
-                            throw new TimeoutException($"Timeout waiting for reply from signal [{signalName}].");
+                            throw new CadenceTimeoutException($"Timeout waiting for reply from signal [{signalName}].");
                         }
 
                         return status;
@@ -965,6 +992,10 @@ namespace Neon.Cadence
                         {
                             Error = SyncSignalException.GetError<EntityNotExistsException>($"Workflow [workflowID={execution}, RunID={execution.RunId}] not found or is no longer open.")
                         };
+                    }
+                    catch (Exception e)
+                    {
+                        throw;
                     }
                 });
 
@@ -990,8 +1021,9 @@ namespace Neon.Cadence
         /// <param name="signalId">The globally unique signal transaction ID.</param>
         /// <param name="signalArgs">Specifies the signal arguments as an encoded byte array.</param>
         /// <returns>The encoded signal results or <c>null</c> for signals that don't return a result.</returns>
-        /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="SyncSignalException">Thrown if the target synchronous signal doesn't exist or the workflow is already closed.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
+        /// <exception cref="CadenceTimeoutException">Thrown if the operation timed out while waiting for a reply.</exception>
         /// <remarks>
         /// <para>
         /// <paramref name="signalArgs"/> must include an internal <see cref="SyncSignalCall"/> encoded as 
@@ -1014,10 +1046,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(signalArgs != null && signalArgs.Length > 1, nameof(signalArgs));
             EnsureNotDisposed();
 
-            // Ping the workflow with a query until we get a response.  This ensures that
-            // that workflow is actually scheduled.  If we don't do this and Cadence hasn't
-            // actually scheduled the workflow yet, then the signal call below will fail
-            // silently.
+            // Detect whether the workflow is already closed or wait for it to start running.
 
             await WaitUntilWorkflowRunningAsync(childExecution.Execution);
 
@@ -1047,7 +1076,7 @@ namespace Neon.Cadence
 
                         if (!status.Completed)
                         {
-                            throw new TimeoutException($"Timeout waiting for reply from signal [{signalName}].");
+                            throw new CadenceTimeoutException($"Timeout waiting for reply from signal [{signalName}].");
                         }
 
                         return status;

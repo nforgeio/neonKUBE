@@ -253,11 +253,6 @@ namespace Neon.Cadence
         internal const string QueryStack = "__stack_trace";
 
         /// <summary>
-        /// The signal name the querying that pings a workflow to detect whether it's running.
-        /// </summary>
-        internal const string QueryPing = "@@neon-ping";
-
-        /// <summary>
         /// The internal query name used to poll the state of a synchronous signals.
         /// </summary>
         internal const string QuerySyncSignal = "@@neon-query-sync-signal";
@@ -1376,7 +1371,6 @@ namespace Neon.Cadence
         private bool                        isDisposed              = false;
         private List<Type>                  registeredActivityTypes = new List<Type>();
         private List<Type>                  registeredWorkflowTypes = new List<Type>();
-        private IRetryPolicy                waitUntilWorkflowRunningRetry;
         private HttpClient                  proxyClient;
         private HttpServer                  httpServer;
         private Exception                   pendingException;
@@ -1394,12 +1388,6 @@ namespace Neon.Cadence
         /// </summary>
         internal CadenceClient()
         {
-            waitUntilWorkflowRunningRetry = new ExponentialRetryPolicy(
-                exceptionType:        typeof(QueryFailedException), 
-                maxAttempts:          int.MaxValue, 
-                initialRetryInterval: TimeSpan.FromSeconds(0.25), 
-                maxRetryInterval:     TimeSpan.FromSeconds(2), 
-                timeout:              TimeSpan.FromSeconds(30));
         }
 
         /// <summary>
@@ -1891,46 +1879,6 @@ namespace Neon.Cadence
 
                 log.LogCritical(e);
                 throw;
-            }
-        }
-
-        /// <summary>
-        /// <para>
-        /// This method sends an internal query to the workflow to verify that it's running.
-        /// </para>
-        /// <note>
-        /// This works only for workflow implementations written using the Neon.Cadence library.
-        /// </note>
-        /// </summary>
-        /// <param name="execution">Identifies the target workflow.</param>
-        /// <exception cref="QueryFailedException">Thrown when the workflow is not running.</exception>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        internal async Task PingWorkflow(WorkflowExecution execution)
-        {
-            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
-
-            await QueryWorkflowAsync(execution, QueryPing, DataConverter.ToData(new object[0]));
-        }
-
-        /// <summary>
-        /// Waits for a resonable period of time for Cadence to start a workflow.
-        /// </summary>
-        /// <param name="execution">Identifies the target workflow.</param>
-        /// <exception cref="TimeoutException">Thrown when the workflow did not start within a reasonable period of time.</exception>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        internal async Task WaitUntilWorkflowRunningAsync(WorkflowExecution execution)
-        {
-            try
-            {
-                await waitUntilWorkflowRunningRetry.InvokeAsync(
-                    async () =>
-                    {
-                        await PingWorkflow(execution);
-                    });
-            }
-            catch (QueryFailedException e)
-            {
-                throw new TimeoutException($"Wait for workflow [workflowID={execution.WorkflowId}, runID={execution.RunId}] failed to start within [{waitUntilWorkflowRunningRetry.Timeout}].", e);
             }
         }
 

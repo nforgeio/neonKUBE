@@ -114,12 +114,12 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Optionally specifies the maximum time the client should wait for synchronous 
-        /// operations to complete.  This defaults to <b>60 seconds</b>.
+        /// operations to complete.  This defaults to <b>10 seconds</b>.
         /// </summary>
         [JsonProperty(PropertyName = "ClientTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "clientTimeout", ApplyNamingConventions = false)]
-        [DefaultValue(60.0)]
-        public double ClientTimeoutSeconds { get; set; } = 60.0;
+        [DefaultValue(10.0)]
+        public double ClientTimeoutSeconds { get; set; } = 10.0;
 
         /// <summary>
         /// Returns <see cref="ClientTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
@@ -343,6 +343,20 @@ namespace Neon.Cadence
         /// Returns <see cref="MaxWorkflowDelaySeconds"/> as a <see cref="TimeSpan"/>.
         /// </summary>
         internal TimeSpan MaxWorkflowDelay => TimeSpan.FromSeconds(MaxWorkflowDelaySeconds);
+
+        /// <summary>
+        /// The default maximum time the <see cref="CadenceClient.WaitUntilWorkflowRunningAsync(WorkflowExecution, TimeSpan?)"/> method
+        /// will wait for a workflow to start.  This defaults to <b>30.0 seconds</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "MaxWorkflowWaitUntilRunningSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "maxWorkflowWaitUntilRunningSeconds", ApplyNamingConventions = false)]
+        [DefaultValue(30.0)]
+        public double MaxWorkflowWaitUntilRunningSeconds { get; set; } = 30.0;
+
+        /// <summary>
+        /// Returns <see cref="MaxWorkflowWaitUntilRunningSeconds"/> as a <see cref="TimeSpan"/>.
+        /// </summary>
+        internal TimeSpan MaxWorkflowWaitUntilRunning => TimeSpan.FromSeconds(MaxWorkflowWaitUntilRunningSeconds);
 
         /// <summary>
         /// Optionally specifies the folder where the embedded <b>cadence-proxy</b> binary 

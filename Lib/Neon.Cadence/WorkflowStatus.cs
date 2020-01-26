@@ -60,7 +60,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Returns <c>true</c> if the workflow has been completed.
         /// </summary>
-        public bool IsClosed => CloseTime == null;
+        public bool IsClosed => CloseTime != null;
 
         /// <summary>
         /// Returns <c>true</c> if the workflow is currently running.

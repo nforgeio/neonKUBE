@@ -717,15 +717,6 @@ namespace Neon.Cadence
                     });
 
                 querySubscribeReply.ThrowOnError();
-
-                querySubscribeReply = (WorkflowSetQueryHandlerReply)await client.CallProxyAsync(
-                    new WorkflowSetQueryHandlerRequest()
-                    {
-                        ContextId = contextId,
-                        QueryName = CadenceClient.QueryPing
-                    });
-
-                querySubscribeReply.ThrowOnError();
             }
 
             // Start the workflow by calling its workflow entry point method.
@@ -1135,18 +1126,6 @@ namespace Neon.Cadence
                             {
                                 RequestId = request.RequestId,
                                 Result    = client.DataConverter.ToData(trace)
-                            };
-
-                        case CadenceClient.QueryPing:
-
-                            // This query is used to determine whether a workflow is running or not.
-                            // Seeing this query return indicates that the workflow IS NOT RUNNING.
-                            // The query returns NULL.
-
-                            return new WorkflowQueryInvokeReply()
-                            {
-                                RequestId = request.RequestId,
-                                Result    = client.DataConverter.ToData(null)
                             };
 
                         case CadenceClient.QuerySyncSignal:

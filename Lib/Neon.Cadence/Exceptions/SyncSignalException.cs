@@ -23,7 +23,7 @@ using Neon.Cadence.Internal;
 namespace Neon.Cadence
 {
     /// <summary>
-    /// Thrown when a synchronous signal hander threw an exception
+    /// Thrown when a synchronous signal sent to a workflow fails.
     /// </summary>
     public class SyncSignalException : Exception
     {
