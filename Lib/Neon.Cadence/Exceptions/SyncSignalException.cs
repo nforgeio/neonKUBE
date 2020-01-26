@@ -46,6 +46,19 @@ namespace Neon.Cadence
         }
 
         /// <summary>
+        /// Converts an exception type and message into a string suitable for using to construct
+        /// a <see cref="SyncSignalException"/>.
+        /// </summary>
+        /// <typeparam name="TException">The exception type.</typeparam>
+        /// <param name="message">The error message.</param>
+        /// <returns>The formatted error string.</returns>
+        internal static string GetError<TException>(string message)
+            where TException : Exception
+        {
+            return $"{typeof(TException).FullName}:{message}";
+        }
+
+        /// <summary>
         /// Extracts the message from the error string.
         /// </summary>
         /// <param name="error">The error string.</param>

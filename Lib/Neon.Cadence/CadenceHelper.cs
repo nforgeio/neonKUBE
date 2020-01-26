@@ -1183,7 +1183,6 @@ namespace Neon.Cadence.Internal
             }
         }
 
-#if DEBUG
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Appends a line of text to the debug log which is
         /// used internally to debug generated code like stubs.  This works only for
@@ -1191,7 +1190,7 @@ namespace Neon.Cadence.Internal
         /// so this only works on Windows.
         /// </summary>
         /// <param name="line">The line of text to be written.</param>
-        public static void InternalLog(string line)
+        public static void DebugLog(string line)
         {
             const string logPath = @"C:\Temp\cadence-debug.log";
 
@@ -1219,6 +1218,5 @@ namespace Neon.Cadence.Internal
                 }
             }
         }
-#endif
     }
 }

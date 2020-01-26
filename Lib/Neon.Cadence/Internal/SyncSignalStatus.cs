@@ -74,5 +74,11 @@ namespace Neon.Cadence.Internal
         /// </summary>
         [JsonIgnore]
         public bool Acknowledged { get; set; }
+
+        /// <summary>
+        /// Returns the time (UTC) when the signal was acknowledged.
+        /// </summary>
+        [JsonIgnore]
+        public DateTime AcknowledgeTimeUtc { get; set; }
     }
 }

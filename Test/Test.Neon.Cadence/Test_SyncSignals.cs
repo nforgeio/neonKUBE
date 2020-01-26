@@ -15,6 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#pragma warning disable xUnit1026 // Theory methods should use all of their parameters
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -42,6 +44,8 @@ namespace TestCadence
 {
     public class Test_SyncSignals : IClassFixture<CadenceFixture>, IDisposable
     {
+        private const int testIterations = 100;
+
         private CadenceFixture  fixture;
         private CadenceClient   client;
         private HttpClient      proxyClient;
@@ -87,6 +91,14 @@ namespace TestCadence
                 proxyClient.Dispose();
                 proxyClient = null;
             }
+        }
+
+        private void LogStart(int iteration)
+        {
+            //CadenceHelper.DebugLog("");
+            //CadenceHelper.DebugLog("---------------------------------");
+            //CadenceHelper.DebugLog("");
+            //CadenceHelper.DebugLog($"ITERATION: {iteration}");
         }
 
         //---------------------------------------------------------------------
@@ -185,10 +197,13 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Theory]
+        [Repeat(testIterations)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task SyncSignal_WithoutResult()
+        public async Task SyncSignal_WithoutResult(int iteration)
         {
+            LogStart(iteration);
+
             // Verify that sending a synchronous signal returning void
             // works as expected when there's no delay executing the signal.
 
@@ -204,10 +219,13 @@ namespace TestCadence
             await task;
         }
 
-        [Fact]
+        [Theory]
+        [Repeat(testIterations)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task SyncSignal_WithoutResult_AndDelay()
+        public async Task SyncSignal_WithoutResult_AndDelay(int iteration)
         {
+            LogStart(iteration);
+
             // Verify that sending a synchronous signal returning void
             // works as expected when we delay the signal execution long
             // enough to force query retries.
@@ -224,10 +242,13 @@ namespace TestCadence
             await task;
         }
 
-        [Fact]
+        [Theory]
+        [Repeat(testIterations)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task SyncSignal_WithResult()
+        public async Task SyncSignal_WithResult(int iteration)
         {
+            LogStart(iteration);
+
             // Verify that sending a synchronous signal returning a result
             // works as expected when there's no delay executing the signal.
 
@@ -244,10 +265,13 @@ namespace TestCadence
             await task;
         }
 
-        [Fact]
+        [Theory]
+        [Repeat(testIterations)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task SyncSignal_WithResult_AndDelay()
+        public async Task SyncSignal_WithResult_AndDelay(int iteration)
         {
+            LogStart(iteration);
+
             // Verify that sending a synchronous signal returning a result
             // works as expected when we delay the signal execution long
             // enough to force query retries.
@@ -265,10 +289,13 @@ namespace TestCadence
             await task;
         }
 
-        [Fact]
+        [Theory]
+        [Repeat(testIterations)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task SyncSignalChild_WithoutResult()
+        public async Task SyncSignalChild_WithoutResult(int iteration)
         {
+            LogStart(iteration);
+
             // Verify that sending a synchronous child signal returning void
             // works as expected when there's no delay executing the signal.
 
@@ -278,10 +305,13 @@ namespace TestCadence
             Assert.True(await task);
         }
 
-        [Fact]
+        [Theory]
+        [Repeat(testIterations)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task SyncSignalChild_WithoutResult_AndDelay()
+        public async Task SyncSignalChild_WithoutResult_AndDelay(int iteration)
         {
+            LogStart(iteration);
+
             // Verify that sending a synchronous child signal returning void
             // works as expected when we delay the signal execution long
             // enough to force query retries.
@@ -292,10 +322,13 @@ namespace TestCadence
             Assert.True(await task);
         }
 
-        [Fact]
+        [Theory]
+        [Repeat(testIterations)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task SyncSignalChild_WithResult()
+        public async Task SyncSignalChild_WithResult(int iteration)
         {
+            LogStart(iteration);
+
             // Verify that sending a synchronous child signal returning a result
             // works as expected when there's no delay executing the signal.
 
@@ -305,10 +338,13 @@ namespace TestCadence
             Assert.True(await task);
         }
 
-        [Fact]
+        [Theory]
+        [Repeat(testIterations)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task SyncSignalChild_WithResult_AndDelay()
+        public async Task SyncSignalChild_WithResult_AndDelay(int iteration)
         {
+            LogStart(iteration);
+
             // Verify that sending a synchronous child signal returning a result
             // works as expected when we delay the signal execution long
             // enough to force query retries.
@@ -392,10 +428,13 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Theory]
+        [Repeat(testIterations)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task SyncSignal_Queued_WithoutResult()
+        public async Task SyncSignal_Queued_WithoutResult(int iteration)
         {
+            LogStart(iteration);
+
             // Verify that [SignalRequest] works for void signals.
             //
             // This is a bit tricky.  The workflow waits for a signal,
@@ -415,10 +454,13 @@ namespace TestCadence
             Assert.Equal("Jack", QueuedSignal.Name);
         }
 
-        [Fact]
+        [Theory]
+        [Repeat(testIterations)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task SyncSignal_Queued_WithResult()
+        public async Task SyncSignal_Queued_WithResult(int iteration)
         {
+            LogStart(iteration);
+
             // Verify that [SignalRequest] works for signals that return 
             // a result.
             //
