@@ -886,9 +886,16 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(signalArgs != null && signalArgs.Length > 1, nameof(signalArgs));
             EnsureNotDisposed();
 
+            // Ping the workflow with a query until we get a response.  This ensures that
+            // that workflow is actually scheduled.  If we don't do this and Cadence hasn't
+            // actually scheduled the workflow yet, then the signal call below will fail
+            // silently.
+
+            await WaitUntilWorkflowRunningAsync(execution);
+
             // Send the signal.
 
-            await SignalWorkflowAsync(execution, SyncSignalName, signalArgs, domain);
+            await SignalWorkflowAsync(execution, SignalSync, signalArgs, domain);
 
             // Poll for the result via queries.
 
@@ -907,7 +914,7 @@ namespace Neon.Cadence
                         //
                         //      https://github.com/nforgeio/neonKUBE/issues/751
 
-                        rawStatus = await QueryWorkflowAsync(execution, SyncSignalQueryName, queryArgs, domain);
+                        rawStatus = await QueryWorkflowAsync(execution, QuerySyncSignal, queryArgs, domain);
                         status    = DataConverter.FromData<SyncSignalStatus>(rawStatus);
 
                         if (!status.Completed)
@@ -917,13 +924,14 @@ namespace Neon.Cadence
 
                         return status;
                     }
-
                     catch (EntityNotExistsException)
                     {
                         // Stop polling when the workflow is no longer open.
 
-                        status.Error = $"Workflow [workflowID={execution}, RunID={execution.RunId}] not found or is no longer open.";
-                        return status;
+                        return new SyncSignalStatus()
+                        {
+                            Error = SyncSignalException.GetError<EntityNotExistsException>($"Workflow [workflowID={execution}, RunID={execution.RunId}] not found or is no longer open.")
+                        };
                     }
                 });
 
@@ -973,9 +981,16 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(signalArgs != null && signalArgs.Length > 1, nameof(signalArgs));
             EnsureNotDisposed();
 
+            // Ping the workflow with a query until we get a response.  This ensures that
+            // that workflow is actually scheduled.  If we don't do this and Cadence hasn't
+            // actually scheduled the workflow yet, then the signal call below will fail
+            // silently.
+
+            await WaitUntilWorkflowRunningAsync(childExecution.Execution);
+
             // Send the signal.
 
-            await SignalChildWorkflowAsync(parentWorkflow, childExecution, SyncSignalName, signalArgs);
+            await SignalChildWorkflowAsync(parentWorkflow, childExecution, SignalSync, signalArgs);
 
             // Poll for the result via queries.
 
@@ -994,7 +1009,7 @@ namespace Neon.Cadence
                         //
                         //      https://github.com/nforgeio/neonKUBE/issues/751
 
-                        rawStatus = await QueryWorkflowAsync(childExecution.Execution, SyncSignalQueryName, queryArgs);
+                        rawStatus = await QueryWorkflowAsync(childExecution.Execution, QuerySyncSignal, queryArgs);
                         status    = DataConverter.FromData<SyncSignalStatus>(rawStatus);
 
                         if (!status.Completed)

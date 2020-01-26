@@ -174,7 +174,7 @@ namespace Neon.Retry
                 {
                     var adjustedDelay = AdjustDelay(RetryInterval);
 
-                    if (++attempts >= MaxAttempts || !transientDetector(e) || adjustedDelay <= TimeSpan.Zero)
+                    if (++attempts >= MaxAttempts || !transientDetector(e))
                     {
                         throw;
                     }
@@ -200,7 +200,7 @@ namespace Neon.Retry
                 {
                     var adjustedDelay = AdjustDelay(RetryInterval);
 
-                    if (++attempts >= MaxAttempts || !transientDetector(e) || adjustedDelay <= TimeSpan.Zero)
+                    if (++attempts >= MaxAttempts || !transientDetector(e))
                     {
                         throw;
                     }

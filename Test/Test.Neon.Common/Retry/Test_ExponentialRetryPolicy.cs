@@ -503,7 +503,7 @@ namespace TestCommon
                         });
                 });
 
-            Assert.True(times.Count < 6);
+            Assert.Equal(6, times.Count);
         }
     }
 }

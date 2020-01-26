@@ -15,9 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Neon.Cadence.Internal;
-using Neon.Common;
-using Neon.Diagnostics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -26,6 +23,11 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+
+using Neon.Cadence.Internal;
+using Neon.Common;
+using Neon.Diagnostics;
+using Neon.Time;
 
 namespace Neon.Cadence
 {
@@ -141,6 +143,65 @@ namespace Neon.Cadence
             /// method implementations.
             /// </summary>
             public WorkflowMethodMap MethodMap { get; set; }
+        }
+
+        /// <summary>
+        /// Defines the local activity that waits for any pending workflow operations 
+        /// (like synchronus signal result delivery) to complete.
+        /// </summary>
+        [ActivityInterface()]
+        public interface IWaitForPendingWorkflowOperationsActivity : IActivity
+        {
+            /// <summary>
+            /// Waits for any pending workflow operations to complete.
+            /// </summary>
+            /// <param name="contextId">Identifies the workflow.</param>
+            /// <param name="maxWait">The maximum time to wait for the operations.</param>
+            /// <returns></returns>
+            [ActivityMethod]
+            Task WaitAsync(long contextId, TimeSpan maxWait);
+        }
+
+        /// <summary>
+        /// Implements the local activity that waits for any pending workflow operations 
+        /// (like synchronus signal result delivery) to complete.
+        /// </summary>
+        public class WaitForPendingWorkflowOperationsActivity : ActivityBase, IWaitForPendingWorkflowOperationsActivity
+        {
+            /// <inheritdoc/>/>
+            [ActivityMethod]
+            public async Task WaitAsync(long contextId, TimeSpan maxWait)
+            {
+                var workflow = GetWorkflow(Activity.Client, contextId);
+
+                // Wait until any synchronous signals have been acknowledged to the
+                // calling client. 
+
+                if (workflow.hasSynchronousSignals)
+                {
+                    var sysDeadline = SysTime.Now + maxWait;
+                    var signalCount = 0;
+
+                    while (SysTime.Now < sysDeadline)
+                    {
+                        lock (workflow.signalIdToStatus)
+                        {
+                            signalCount = workflow.signalIdToStatus.Count;
+
+                            if (signalCount == 0)
+                            {
+                                break;  // No synchronous signals were called.
+                            }
+                            else if (workflow.signalIdToStatus.Values.All(status => status.Acknowledged))
+                            {
+                                break;  // All signals have been acknowledged
+                            }
+                        }
+
+                        await Task.Delay(TimeSpan.FromSeconds(0.25));
+                    }
+                }
+            }
         }
 
         //---------------------------------------------------------------------
@@ -643,7 +704,7 @@ namespace Neon.Cadence
                     new WorkflowSignalSubscribeRequest()
                     {
                         ContextId  = contextId,
-                        SignalName = CadenceClient.SyncSignalName
+                        SignalName = CadenceClient.SignalSync
                     });
 
                 signalSubscribeReply.ThrowOnError();
@@ -652,7 +713,16 @@ namespace Neon.Cadence
                     new WorkflowSetQueryHandlerRequest()
                     {
                         ContextId = contextId,
-                        QueryName = CadenceClient.SyncSignalQueryName
+                        QueryName = CadenceClient.QuerySyncSignal
+                    });
+
+                querySubscribeReply.ThrowOnError();
+
+                querySubscribeReply = (WorkflowSetQueryHandlerReply)await client.CallProxyAsync(
+                    new WorkflowSetQueryHandlerRequest()
+                    {
+                        ContextId = contextId,
+                        QueryName = CadenceClient.QueryPing
                     });
 
                 querySubscribeReply.ThrowOnError();
@@ -770,7 +840,7 @@ namespace Neon.Cadence
 
             if (!workflow.hasSynchronousSignals)
             {
-                // The workflow doesn't have synchronous signals, so we can
+                // The workflow doesn't implement any synchronous signals, so we can
                 // return immediately.
 
                 return;
@@ -779,15 +849,9 @@ namespace Neon.Cadence
             // Invoke a local activity that waits for all the outstanding
             // synchronous signals to be acknowledged.
 
-            // $todo(jefflill):
-            //
-            // This is waiting for the maximum time rather than actually executing
-            // a local activity to waiting for all all synchronous signals to be
-            // acknowledged.
-            //
-            // I need to implement this activity.
+            var stub = workflow.Workflow.NewLocalActivityStub<IWaitForPendingWorkflowOperationsActivity, WaitForPendingWorkflowOperationsActivity>();
 
-            await workflow.Workflow.SleepAsync(workflow.Workflow.Client.Settings.MaxWorkflowDelay);
+            await stub.WaitAsync(workflow.Workflow.ContextId, workflow.Workflow.Client.Settings.MaxWorkflowDelay);
         }
 
         /// <summary>
@@ -803,7 +867,7 @@ namespace Neon.Cadence
 
             // Handle synchronous signals in a specialized method.
 
-            if (request.SignalName == CadenceClient.SyncSignalName)
+            if (request.SignalName == CadenceClient.SignalSync)
             {
                 return await OnSyncSignalAsync(client, request);
             }
@@ -864,7 +928,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Handles internal <see cref="CadenceClient.SyncSignalName"/> workflow signals.
+        /// Handles internal <see cref="CadenceClient.SignalSync"/> workflow signals.
         /// </summary>
         /// <param name="client">The Cadence client.</param>
         /// <param name="request">The request message.</param>
@@ -912,7 +976,6 @@ namespace Neon.Cadence
                     // Note that it's possible that a record has already exists.
 
                     var newSignal = false;
-
                     lock (workflow.signalIdToStatus)
                     {
                         if (!workflow.signalIdToStatus.TryGetValue(signalCall.SignalId, out var signalStatus))
@@ -978,8 +1041,6 @@ namespace Neon.Cadence
                         {
                             if (workflow.signalIdToStatus.TryGetValue(signalCall.SignalId, out var syncSignalStatus))
                             {
-                                syncSignalStatus.Completed = true;
-
                                 if (exception == null)
                                 {
                                     syncSignalStatus.Result = client.DataConverter.ToData(result);
@@ -988,6 +1049,12 @@ namespace Neon.Cadence
                                 {
                                     syncSignalStatus.Error = SyncSignalException.GetError(exception);
                                 }
+
+                                syncSignalStatus.Completed = true;
+                            }
+                            else
+                            {
+                                Covenant.Assert(false);
                             }
                         }
 
@@ -1055,7 +1122,7 @@ namespace Neon.Cadence
 
                     switch (request.QueryName)
                     {
-                        case CadenceClient.StackQueryName:
+                        case CadenceClient.QueryStack:
 
                             var trace = string.Empty;
 
@@ -1070,7 +1137,19 @@ namespace Neon.Cadence
                                 Result    = client.DataConverter.ToData(trace)
                             };
 
-                        case CadenceClient.SyncSignalQueryName:
+                        case CadenceClient.QueryPing:
+
+                            // This query is used to determine whether a workflow is running or not.
+                            // Seeing this query return indicates that the workflow IS NOT RUNNING.
+                            // The query returns NULL.
+
+                            return new WorkflowQueryInvokeReply()
+                            {
+                                RequestId = request.RequestId,
+                                Result    = client.DataConverter.ToData(null)
+                            };
+
+                        case CadenceClient.QuerySyncSignal:
 
                             // The arguments for this signal is the (string) ID of the target
                             // signal being polled for status.
@@ -1091,7 +1170,8 @@ namespace Neon.Cadence
                                     // Indicate that the completed signal has reported that status
                                     // to the calling client as well as returned the result, if any.
 
-                                    syncSignalStatus.Acknowledged = true;
+                                    syncSignalStatus.Acknowledged       = true;
+                                    syncSignalStatus.AcknowledgeTimeUtc = DateTime.UtcNow;
                                 }
                             }
 
