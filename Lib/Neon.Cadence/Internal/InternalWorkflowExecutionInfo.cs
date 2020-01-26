@@ -102,6 +102,43 @@ namespace Neon.Cadence.Internal
         public InternalMemo Memo { get; set; }
 
         /// <summary>
+        /// Hack to compute the workflowm execution time.
+        /// </summary>
+        /// <returns>The execution <see cref="TimeSpan"/>.</returns>
+        private TimeSpan ComputeExecutionTime()
+        {
+            // $hack(jefflill):
+            //
+            // This hack mitigates:
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/759
+
+            if (this.StartTime > 0 && this.CloseTime > 0)
+            {
+                return CadenceHelper.UnixNanoToDateTimeUtc(this.StartTime) - CadenceHelper.UnixNanoToDateTimeUtc(this.CloseTime);
+            }
+            else if (this.StartTime > 0)
+            {
+                var executionTime = DateTime.UtcNow - CadenceHelper.UnixNanoToDateTimeUtc(this.StartTime);
+
+                // It's possible for this calculation to come out negative when the Cadence server
+                // and client machine clock time is different.  We'll just return zero when this 
+                // happens.
+
+                if (executionTime < TimeSpan.Zero)
+                {
+                    executionTime = TimeSpan.Zero;
+                }
+
+                return executionTime;
+            }
+            else
+            {
+                return TimeSpan.Zero;
+            }
+        }
+
+        /// <summary>
         /// Converts the instance into a public <see cref="WorkflowStatus"/>.
         /// </summary>
         public WorkflowStatus ToPublic()
@@ -113,7 +150,7 @@ namespace Neon.Cadence.Internal
                 WorkflowCloseStatus = (WorkflowExecutionCloseStatus)this.WorkflowCloseStatus,
                 HistoryLength       = this.HistoryLength,
                 ParentDomain        = this.ParentDomainId,
-                ExecutionTime       = TimeSpan.FromTicks(this.ExecutionTime / 100),
+                ExecutionTime       = ComputeExecutionTime(),
                 Memo                = this.Memo?.Fields
             };
 
