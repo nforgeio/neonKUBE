@@ -50,7 +50,7 @@ namespace Neon.Retry
     /// </remarks>
     public class LinearRetryPolicy : RetryPolicyBase, IRetryPolicy
     {
-        private Func<Exception, bool> transientDetector;
+        private Func<Exception, bool>   transientDetector;
 
         /// <summary>
         /// Constructs the retry policy with a specific transitent detection function.d
@@ -161,7 +161,8 @@ namespace Neon.Retry
         /// <inheritdoc/>
         public override async Task InvokeAsync(Func<Task> action)
         {
-            var attempts = 0;
+            var attempts    = 0;
+            var sysDeadline = base.SysDeadline();
 
             while (true)
             {
@@ -172,7 +173,7 @@ namespace Neon.Retry
                 }
                 catch (Exception e)
                 {
-                    var adjustedDelay = AdjustDelay(RetryInterval);
+                    var adjustedDelay = AdjustDelay(RetryInterval, sysDeadline);
 
                     if (++attempts >= MaxAttempts || !transientDetector(e))
                     {
@@ -188,7 +189,8 @@ namespace Neon.Retry
         /// <inheritdoc/>
         public override async Task<TResult> InvokeAsync<TResult>(Func<Task<TResult>> action)
         {
-            var attempts = 0;
+            var attempts    = 0;
+            var sysDeadline = base.SysDeadline();
 
             while (true)
             {
@@ -198,9 +200,9 @@ namespace Neon.Retry
                 }
                 catch (Exception e)
                 {
-                    var adjustedDelay = AdjustDelay(RetryInterval);
+                    var adjustedDelay = AdjustDelay(RetryInterval, sysDeadline);
 
-                    if (++attempts >= MaxAttempts || !transientDetector(e))
+                    if (++attempts >= MaxAttempts || !transientDetector(e) || adjustedDelay <= TimeSpan.Zero)
                     {
                         throw;
                     }

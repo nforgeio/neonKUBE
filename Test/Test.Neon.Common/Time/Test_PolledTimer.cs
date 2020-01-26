@@ -109,7 +109,6 @@ namespace TestCommon
             Assert.True(timer.HasFired);
             Assert.False(timer.HasFired);
 
-            Assert.True(timer.FireTime >= SysTime.Now + timer.Interval);
             Thread.Sleep(2000);
             Assert.True(timer.HasFired);
             Assert.False(timer.HasFired);

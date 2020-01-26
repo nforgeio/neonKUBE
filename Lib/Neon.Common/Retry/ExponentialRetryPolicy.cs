@@ -51,7 +51,7 @@ namespace Neon.Retry
     /// </remarks>
     public class ExponentialRetryPolicy : RetryPolicyBase, IRetryPolicy
     {
-        private Func<Exception, bool> transientDetector;
+        private Func<Exception, bool>   transientDetector;
 
         /// <summary>
         /// Constructs the retry policy with a specific transitent detection function.
@@ -179,8 +179,9 @@ namespace Neon.Retry
         /// <inheritdoc/>
         public override async Task InvokeAsync(Func<Task> action)
         {
-            var attempts = 0;
-            var interval = InitialRetryInterval;
+            var attempts    = 0;
+            var sysDeadline = base.SysDeadline();
+            var interval    = InitialRetryInterval;
 
             while (true)
             {
@@ -191,7 +192,7 @@ namespace Neon.Retry
                 }
                 catch (Exception e)
                 {
-                    var adjustedDelay = AdjustDelay(interval);
+                    var adjustedDelay = AdjustDelay(interval, sysDeadline);
 
                     if (++attempts >= MaxAttempts || !transientDetector(e))
                     {
@@ -214,8 +215,9 @@ namespace Neon.Retry
         /// <inheritdoc/>
         public override async Task<TResult> InvokeAsync<TResult>(Func<Task<TResult>> action)
         {
-            var attempts = 0;
-            var interval = InitialRetryInterval;
+            var attempts    = 0;
+            var sysDeadline = base.SysDeadline();
+            var interval    = InitialRetryInterval;
 
             while (true)
             {
@@ -225,9 +227,9 @@ namespace Neon.Retry
                 }
                 catch (Exception e)
                 {
-                    var adjustedDelay = AdjustDelay(interval);
+                    var adjustedDelay = AdjustDelay(interval, sysDeadline);
 
-                    if (++attempts >= MaxAttempts || !transientDetector(e))
+                    if (++attempts >= MaxAttempts || !transientDetector(e) || adjustedDelay <= TimeSpan.Zero)
                     {
                         throw;
                     }

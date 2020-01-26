@@ -34,44 +34,20 @@ namespace Neon.Retry
     public abstract class RetryPolicyBase : IRetryPolicy
     {
         private INeonLogger log;
-        private DateTime    sysDeadline;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="sourceModule">Optionally enables transient error logging by identifying the source module (defaults to <c>null</c>).</param>
-        /// <param name="timeout">Optionally specifies the maximum time the operation should be retried (defaults to no limit).</param>
+        /// <param name="timeout">Optionally specifies the maximum time the operation will be retried (defaults to unconstrained)</param>
         public RetryPolicyBase(string sourceModule = null, TimeSpan? timeout = null)
         {
             this.SourceModule = sourceModule;
+            this.Timeout      = timeout;
 
             if (!string.IsNullOrEmpty(sourceModule))
             {
                 this.log = LogManager.Default.GetLogger(sourceModule);
-            }
-
-            timeout = timeout ?? TimeSpan.MaxValue;
-
-            if (timeout >= TimeSpan.Zero)
-            {
-                this.Timeout = timeout;
-
-                // Compute the SYS deadline, taking care not not to exceed the end-of-time.
-
-                var sysNow = SysTime.Now;
-
-                if (timeout >= DateTime.MaxValue - sysNow)
-                {
-                    sysDeadline = DateTime.MaxValue;
-                }
-                else
-                {
-                    sysDeadline = sysNow + timeout.Value;
-                }
-            }
-            else
-            {
-                sysDeadline = DateTime.MaxValue;
             }
         }
 
@@ -103,11 +79,42 @@ namespace Neon.Retry
         }
 
         /// <summary>
+        /// Computes the time (SYS) after which the operation should not be retried.
+        /// </summary>
+        protected DateTime SysDeadline()
+        {
+            var timeout = Timeout ?? TimeSpan.MaxValue;
+
+            if (timeout >= TimeSpan.Zero)
+            {
+                this.Timeout = timeout;
+
+                // Compute the SYS deadline, taking care not not to exceed the end-of-time.
+
+                var sysNow = SysTime.Now;
+
+                if (timeout >= DateTime.MaxValue - sysNow)
+                {
+                    return DateTime.MaxValue;
+                }
+                else
+                {
+                    return sysNow + timeout;
+                }
+            }
+            else
+            {
+                return DateTime.MaxValue;
+            }
+        }
+
+        /// <summary>
         /// Adjusts the delay <see cref="TimeSpan"/> passed to ensure such
         /// that delaying the next retry won't exceed the overall retry
         /// timeout (if specified).
         /// </summary>
         /// <param name="delay">The requested delay.</param>
+        /// <param name="sysDeadline">The retry deadline (SYS) computed by <see cref="SysDeadline(TimeSpan?)"/>.</param>
         /// <returns>The adjusted delay.</returns>
         /// <remarks>
         /// <note>
@@ -115,11 +122,12 @@ namespace Neon.Retry
         /// calling retry policy should immediately stop retrying.
         /// </note>
         /// </remarks>
-        protected TimeSpan AdjustDelay(TimeSpan delay)
+        protected TimeSpan AdjustDelay(TimeSpan delay, DateTime sysDeadline)
         {
             Covenant.Requires<ArgumentException>(delay >= TimeSpan.Zero, nameof(delay));
 
-            var maxDelay = sysDeadline - SysTime.Now;
+            var sysNow   = SysTime.Now;
+            var maxDelay = sysDeadline - sysNow;
 
             if (delay > maxDelay)
             {
