@@ -33,6 +33,13 @@ namespace TestCommon
 {
     public class Test_SysTime
     {
+        // $todo(jeff.lill):
+        //
+        // I'm going to simplify this to just use UTC for now:
+        //
+        //      https://github.com/nforgeio/neonKUBE/issues/760
+        //      https://github.com/nforgeio/neonKUBE/issues/761
+#if TODO
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void InitialValue()
@@ -41,6 +48,7 @@ namespace TestCommon
             Assert.True(SysTime.Now >= DateTime.MinValue + TimeSpan.FromDays(365 / 2));
             Assert.True(SysTime.Now <= DateTime.MinValue + TimeSpan.FromDays(365 * 1.5));
         }
+#endif
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]

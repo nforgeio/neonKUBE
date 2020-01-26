@@ -18,6 +18,13 @@
 using System;
 using System.Threading;
 
+// $todo(jeff.lill):
+//
+// I'm going to simplify this to just use UTC for now:
+//
+//      https://github.com/nforgeio/neonKUBE/issues/760
+//      https://github.com/nforgeio/neonKUBE/issues/761
+
 // $todo(jefflill):
 //
 // This class uses [Environment.TickCount] to measure time from system boot.
@@ -118,6 +125,86 @@ namespace Neon.Time
     /// </remarks>
     public static class SysTime
     {
+        /// <summary>
+        /// Returns the current time relative to time the system started.
+        /// </summary>
+        private static DateTime GetTime()
+        {
+            return DateTime.UtcNow;
+        }
+
+        /// <summary>
+        /// Returns the current time relative to time the system started.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if there's a problem with the system timer.</exception>
+        public static DateTime Now
+        {
+            get => DateTime.UtcNow;
+        }
+
+        /// <summary>
+        /// Returns the resolution of the underlying system timer.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if there's a problem with the system timer.</exception>
+        public static TimeSpan Resolution => TimeSpan.FromMilliseconds(15);
+
+        /// <summary>
+        /// Returns what is essentially an infinite timespan.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The value returned will calculated such that when added to the
+        /// current <see cref="SysTime" />.<see cref="Now" /> value that the
+        /// result will be <see cref="DateTime.MaxValue" /> minus one year.
+        /// </para>
+        /// <para>
+        /// This is useful for situations where you need specify an infinite
+        /// timeout but you want to avoid wrap-around when adding this to
+        /// the current <see cref="SysTime" />.
+        /// </para>
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">Thrown if there's a problem with the system timer.</exception>
+        public static TimeSpan Infinite => DateTime.MaxValue - SysTime.Now - TimeSpan.FromDays(365);
+
+        /// <summary>
+        /// Tracks an external time source.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The <see cref="SysTime" /> class is also capable of maintaining rough
+        /// synchronization with an external time source.  To use this feature,
+        /// you'll periodically get the time from the external source and assign
+        /// it to the static <see cref="ExternalNow" /> property then you can
+        /// use the <see cref="ExternalNow" /> property to get and estimate of the
+        /// current external time.
+        /// </para>
+        /// <para>
+        /// The local side clock will likely drift over time, resulting in a skew
+        /// between the time returned by <see cref="ExternalNow" /> and the actual
+        /// time at the external source.  This skew can be limited by getting the
+        /// external time and assigning it to <see cref="ExternalNow" /> more
+        /// frequently.
+        /// </para>
+        /// <note>
+        /// The time returned by <see cref="ExternalNow" /> is not guaranteed to be
+        /// monotimically increasing since reported times may jump around as the
+        /// bias between the local and external clocks are adjusted.
+        /// </note>
+        /// </remarks>
+        public static DateTime ExternalNow
+        {
+            get { throw new NotImplementedException(); }
+            set { throw new NotImplementedException(); }
+        }
+
+        /// <summary>
+        /// Used by Unit tests to reset the timer class to its initial value.
+        /// </summary>
+        public static void Reset()
+        {
+        }
+
+#if TODO
         //---------------------------------------------------------------------
         // Windows Implementation
         //
@@ -125,7 +212,7 @@ namespace Neon.Time
         // The problem is that this will wrap around after about 49.7 days.
         // To handle this, I'm going to periodically poll GetTickCount() every
         // 5 minutes, looking for a new count that is less than a previous
-        // count, indicating that the counter overflowed.
+        // count, indicating that the counter overflowed and wrapped around.
 
         private static object       syncLock = new object();
         private static uint         lastCount;      // The last GetTickCount() polled
@@ -151,7 +238,7 @@ namespace Neon.Time
             lastCount    = (uint)Environment.TickCount;
             year         = TimeSpan.FromDays(365);
 
-            // Initialize this such that the first time returned by Now
+            // Initialize this such that the first time returned by [Now]
             // will be quite a long time after DateTime.MinValue.
 
             msi  = (ulong)(TimeSpan.TicksPerDay * 365 / TimeSpan.TicksPerMillisecond);
@@ -296,5 +383,6 @@ namespace Neon.Time
             get { return DateTime.UtcNow + externalBias; }
             set { externalBias = ExternalNow - DateTime.UtcNow; }
         }
+#endif
     }
 }
