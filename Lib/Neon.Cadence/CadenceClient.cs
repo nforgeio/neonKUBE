@@ -1445,7 +1445,7 @@ namespace Neon.Cadence
                 e => true, 
                 maxAttempts:          int.MaxValue, 
                 initialRetryInterval: TimeSpan.FromSeconds(0.25), 
-                maxRetryInterval:     TimeSpan.FromSeconds(2), 
+                maxRetryInterval:     TimeSpan.FromSeconds(1), 
                 timeout:              TimeSpan.FromSeconds(60), 
                 sourceModule:         nameof(CadenceClient));
 

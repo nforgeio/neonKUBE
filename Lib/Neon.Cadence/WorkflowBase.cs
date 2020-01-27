@@ -182,24 +182,43 @@ namespace Neon.Cadence
                     var sysDeadline = SysTime.Now + maxWait;
                     var signalCount = 0;
 
+var startTime = DateTime.UtcNow;    // $debug(jefflill): DELETE THIS!
+
+CadenceHelper.DebugLog($"WorkflowWait: start waiting");
+try
+{
                     while (SysTime.Now < sysDeadline)
                     {
+CadenceHelper.DebugLog($"WorkflowWait: locking");
                         lock (workflow.signalIdToStatus)
                         {
+CadenceHelper.DebugLog($"WorkflowWait: polling [{DateTime.UtcNow - startTime}]");
                             signalCount = workflow.signalIdToStatus.Count;
 
                             if (signalCount == 0)
                             {
+                                CadenceHelper.DebugLog($"WorkflowWait: no synchronous signals");
                                 break;  // No synchronous signals were called.
                             }
                             else if (workflow.signalIdToStatus.Values.All(status => status.Acknowledged))
                             {
+                                CadenceHelper.DebugLog($"WorkflowWait: all signals acknowledged");
                                 break;  // All signals have been acknowledged
                             }
                         }
 
+CadenceHelper.DebugLog($"WorkflowWait: unlocked and delaying");
                         await Task.Delay(TimeSpan.FromSeconds(0.25));
+CadenceHelper.DebugLog($"WorkflowWait: delay finished");
                     }
+var delta = DateTime.UtcNow - startTime;    // $debug(jefflill): AND THIS TOO!
+CadenceHelper.DebugLog($"WorkflowWait: done waiting [delta={delta}]");
+}
+catch (Exception e)
+{
+    CadenceHelper.DebugLog($"WorkflowWait: {NeonHelper.ExceptionError(e)}");
+    throw;
+}
                 }
             }
         }
@@ -1133,19 +1152,27 @@ namespace Neon.Cadence
                             // The arguments for this signal is the (string) ID of the target
                             // signal being polled for status.
 
+try
+{
+CadenceHelper.DebugLog($"WorkflowBase: query signal received");
                             var syncSignalArgs   = client.DataConverter.FromDataArray(request.QueryArgs, typeof(string));
                             var syncSignalId     = (string) (syncSignalArgs.Length > 0 ? syncSignalArgs[0] : null);
                             var syncSignalStatus = (SyncSignalStatus)null;
 
+CadenceHelper.DebugLog($"WorkflowBase: locking");
                             lock (workflow.signalIdToStatus)
                             {
+CadenceHelper.DebugLog($"WorkflowBase: get status");
                                 if (!workflow.signalIdToStatus.TryGetValue(syncSignalId, out syncSignalStatus))
                                 {
+CadenceHelper.DebugLog($"WorkflowBase: creating status");
                                     syncSignalStatus = new SyncSignalStatus() { Completed = false };
                                 }
+CadenceHelper.DebugLog($"WorkflowBase: got status");
 
                                 if (syncSignalStatus.Completed)
                                 {
+CadenceHelper.DebugLog($"WorkflowBase: signal completed");
                                     // Indicate that the completed signal has reported that status
                                     // to the calling client as well as returned the result, if any.
 
@@ -1153,12 +1180,19 @@ namespace Neon.Cadence
                                     syncSignalStatus.AcknowledgeTimeUtc = DateTime.UtcNow;
                                 }
                             }
+CadenceHelper.DebugLog($"WorkflowBase: returning status");
 
                             return new WorkflowQueryInvokeReply()
                             {
                                 RequestId = request.RequestId,
                                 Result    = client.DataConverter.ToData(syncSignalStatus)
                             };
+                        }
+catch (Exception e)
+{
+    CadenceHelper.DebugLog($"WorkflowBase: {NeonHelper.ExceptionError(e)}");
+    throw;
+}
                     }
 
                     // Handle user queries.

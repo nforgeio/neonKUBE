@@ -95,10 +95,10 @@ namespace TestCadence
 
         private void LogStart(int iteration)
         {
-            //CadenceHelper.DebugLog("");
-            //CadenceHelper.DebugLog("---------------------------------");
-            //CadenceHelper.DebugLog("");
-            //CadenceHelper.DebugLog($"ITERATION: {iteration}");
+            CadenceHelper.DebugLog("");
+            CadenceHelper.DebugLog("---------------------------------");
+            CadenceHelper.DebugLog("");
+            CadenceHelper.DebugLog($"ITERATION: {iteration}");
         }
 
         //---------------------------------------------------------------------
@@ -409,21 +409,28 @@ namespace TestCadence
 
             public async Task RunResultAsync()
             {
+CadenceHelper.DebugLog($"Workflow: start ***************************");
                 resultQueue = await Workflow.NewQueueAsync<SignalRequest<string>>();
 
+CadenceHelper.DebugLog($"Workflow: waiting for signal");
                 var signalRequest = await resultQueue.DequeueAsync();
+CadenceHelper.DebugLog($"Workflow: signal dequeued");
 
                 SignalProcessed = true;
                 Name = signalRequest.Arg<string>("name");
 
+CadenceHelper.DebugLog($"Workflow: returning signal result");
                 await signalRequest.ReturnAsync($"Hello {Name}!");
+CadenceHelper.DebugLog($"Workflow: signal result returned");
             }
 
             public async Task<string> SignalResultAsync(string name)
             {
+CadenceHelper.DebugLog($"Workflow: signal received");
                 var signalRequest = new SignalRequest<string>();
 
                 await resultQueue.EnqueueAsync(signalRequest);
+CadenceHelper.DebugLog($"Workflow: signal enqueued");
                 return null;
             }
         }

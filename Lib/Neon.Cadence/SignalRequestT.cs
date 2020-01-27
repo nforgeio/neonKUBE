@@ -99,12 +99,23 @@ namespace Neon.Cadence
         {
             get
             {
+CadenceHelper.DebugLog($"ReturnAsync: get signal status");
                 if (cachedSignalStatus != null)
                 {
+CadenceHelper.DebugLog($"ReturnAsync: return cached status");
                     return cachedSignalStatus;
                 }
 
+CadenceHelper.DebugLog($"ReturnAsync: fetch status");
+try
+{
                 return cachedSignalStatus = Workflow.Current.GetSignalStatus(SignalId);
+}
+catch (Exception e)
+{
+    CadenceHelper.DebugLog($"ReturnAsync: {NeonHelper.ExceptionError(e)}");
+    throw;
+}
             }
         }
 
@@ -147,12 +158,15 @@ namespace Neon.Cadence
         {
             // This may only be called within a workflow method.
 
+CadenceHelper.DebugLog($"ReturnAsync: called");
             WorkflowBase.CheckCallContext(allowWorkflow: true);
+CadenceHelper.DebugLog($"ReturnAsync: call context OK");
 
             // Save the signal completion and result so a subsequent polling query can retrieve it.
 
             SignalStatus.Result    = Workflow.Current.Client.DataConverter.ToData(result);
             SignalStatus.Completed = true;
+CadenceHelper.DebugLog($"ReturnAsync: result set");
 
             await Task.CompletedTask;
         }

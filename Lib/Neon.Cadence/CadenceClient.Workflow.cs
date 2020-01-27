@@ -951,11 +951,15 @@ namespace Neon.Cadence
 
             // Detect whether the workflow is already closed or wait for it to start running.
 
+CadenceHelper.DebugLog($"SyncSignal: wait for workflow");
             await WaitUntilWorkflowRunningAsync(execution);
+CadenceHelper.DebugLog($"SyncSignal: workflow running");
 
             // Send the signal.
 
+CadenceHelper.DebugLog($"SyncSignal: signal workflow");
             await SignalWorkflowAsync(execution, SignalSync, signalArgs, domain);
+CadenceHelper.DebugLog($"SyncSignal: workflow signaled");
 
             // Poll for the result via queries.
 
@@ -974,11 +978,14 @@ namespace Neon.Cadence
                         //
                         //      https://github.com/nforgeio/neonKUBE/issues/751
 
+CadenceHelper.DebugLog($"SyncSignal: query workflow");
                         rawStatus = await QueryWorkflowAsync(execution, QuerySyncSignal, queryArgs, domain);
+CadenceHelper.DebugLog($"SyncSignal: query returned");
                         status    = DataConverter.FromData<SyncSignalStatus>(rawStatus);
 
                         if (!status.Completed)
                         {
+CadenceHelper.DebugLog($"SyncSignal: timeout");
                             throw new CadenceTimeoutException($"Timeout waiting for reply from signal [{signalName}].");
                         }
 
@@ -986,6 +993,7 @@ namespace Neon.Cadence
                     }
                     catch (EntityNotExistsException)
                     {
+CadenceHelper.DebugLog($"SyncSignal: entity not exists");
                         // Stop polling when the workflow is no longer open.
 
                         return new SyncSignalStatus()
@@ -995,9 +1003,11 @@ namespace Neon.Cadence
                     }
                     catch (Exception e)
                     {
+CadenceHelper.DebugLog($"SyncSignal: {NeonHelper.ExceptionError(e)}");
                         throw;
                     }
                 });
+CadenceHelper.DebugLog($"SyncSignal: exited loop");
 
             // Handle any returned error.
 

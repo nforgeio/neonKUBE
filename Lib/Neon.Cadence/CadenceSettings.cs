@@ -332,12 +332,12 @@ namespace Neon.Cadence
         /// <summary>
         /// <b>EXPERIMENTAL:</b> Specifies the maximum seconds that a workflow will be kept alive after
         /// the workflow method returns to handle any oustanding synchronous signal queries.  This defaults
-        /// to <b>10.0 seconds</b>.
+        /// to <b>30.0 seconds</b>.
         /// </summary>
         [JsonProperty(PropertyName = "MaxWorkflowDelaySeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "maxWorkflowDelaySeconds", ApplyNamingConventions = false)]
-        [DefaultValue(10.0)]
-        public double MaxWorkflowDelaySeconds { get; set; } = 10.0;
+        [DefaultValue(30.0)]
+        public double MaxWorkflowDelaySeconds { get; set; } = 30.0;
 
         /// <summary>
         /// Returns <see cref="MaxWorkflowDelaySeconds"/> as a <see cref="TimeSpan"/>.
