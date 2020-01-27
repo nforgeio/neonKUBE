@@ -504,6 +504,37 @@ namespace TestCommon
                 });
 
             Assert.Equal(6, times.Count);
+
+            // Additional test to verify this serious problem is fixed:
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/762
+            //
+            // We'll wait a bit longer to enure that any (incorrect) deadline computed
+            // by the policy when constructed above does not impact a subsequent run.
+
+            await Task.Delay(TimeSpan.FromSeconds(4));
+
+            times.Clear();
+
+            Assert.Equal(6, policy.MaxAttempts);
+            Assert.Equal(TimeSpan.FromSeconds(0.5), policy.InitialRetryInterval);
+            Assert.Equal(TimeSpan.FromSeconds(4), policy.MaxRetryInterval);
+            Assert.Equal(TimeSpan.FromSeconds(1.5), policy.Timeout);
+
+            await Assert.ThrowsAsync<TransientException>(
+                async () =>
+                {
+                    await policy.InvokeAsync(
+                        async () =>
+                        {
+                            times.Add(DateTime.UtcNow);
+                            await Task.CompletedTask;
+
+                            throw new TransientException();
+                        });
+                });
+
+            Assert.Equal(6, times.Count);
         }
     }
 }
