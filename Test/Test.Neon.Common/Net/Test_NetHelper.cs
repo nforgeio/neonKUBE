@@ -499,11 +499,17 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void GetReachableHosts()
         {
-            //-----------------------------------------------------------------
-            // IP address based hosts.
+            if (!NeonHelper.IsOSX)
+            {
+                // Loopback addresses other than 127.0.0.1 aren't routable by default
+                // on OS/X.  So wse won't run these tests there.
 
-            TestHelper.AssertEquivalent(new string[] { "127.0.0.1", "127.0.0.2", "127.0.0.3" }, NetHelper.GetReachableHosts(new string[] { "127.0.0.1", "127.0.0.2", "127.0.0.3" }).Select(rh => rh.Host));
-            TestHelper.AssertEquivalent(new string[] { "127.0.0.1", "127.0.0.2", "127.0.0.3" }, NetHelper.GetReachableHosts(new string[] { "127.0.0.1", "127.0.0.2", "127.0.0.3" }).Select(rh => rh.Address.ToString()));
+                //-----------------------------------------------------------------
+                // IP address based hosts.
+
+                TestHelper.AssertEquivalent(new string[] { "127.0.0.1", "127.0.0.2", "127.0.0.3" }, NetHelper.GetReachableHosts(new string[] { "127.0.0.1", "127.0.0.2", "127.0.0.3" }).Select(rh => rh.Host));
+                TestHelper.AssertEquivalent(new string[] { "127.0.0.1", "127.0.0.2", "127.0.0.3" }, NetHelper.GetReachableHosts(new string[] { "127.0.0.1", "127.0.0.2", "127.0.0.3" }).Select(rh => rh.Address.ToString()));
+            }
 
             // The [192.0.2.0/24] subnet is never supposed to be routable so we'll use 
             // some addresses in there to simulate offline hosts.
@@ -514,8 +520,8 @@ namespace TestCommon
 
             TestHelper.AssertEquivalent(new string[] { "127.0.0.1" }, NetHelper.GetReachableHosts(new string[] { "127.0.0.1", badIP0, badIP1 }).Select(rh => rh.Host));
             TestHelper.AssertEquivalent(new string[] { "127.0.0.1" }, NetHelper.GetReachableHosts(new string[] { badIP0, "127.0.0.1", badIP1 }).Select(rh => rh.Host));
-            TestHelper.AssertEquivalent(new string[] { "127.0.0.1" }, NetHelper.GetReachableHosts(new string[] { badIP0, badIP1, "127.0.0.1" }).Select(rh => rh.Host));
-
+            TestHelper.AssertEquivalent(new string[] { "127.0.0.1" }, NetHelper.GetReachableHosts(new string[] { badIP0, badIP1, "127.0.0.1" }).Select(rh => rh.Host));      
+            
             // Verify when no hosts are reachable.
 
             Assert.Empty( NetHelper.GetReachableHosts(new string[] { badIP0, badIP1, badIP2 }));
