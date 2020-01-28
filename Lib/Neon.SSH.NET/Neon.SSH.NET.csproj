@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Renci.SshNet</RootNamespace>
-    <Version>1.0.4</Version>
+    <Version>1.1.0</Version>
     <Company>Renci</Company>
     <Product>SSH.NET</Product>
     <Description>SSH.NET is a Secure Shell (SSH) library for .NET, optimized for parallelism.
