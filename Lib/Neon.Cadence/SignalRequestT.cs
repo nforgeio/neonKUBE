@@ -56,12 +56,12 @@ namespace Neon.Cadence
     /// request to a workflow queue your workflow logic is listening on and then return
     /// from the signal method.  The value your return will be ignore in this case and
     /// the actual value returned to the calling client will be specified by your workflow
-    /// logic via a <see cref="ReturnAsync(TResult)"/> call.
+    /// logic via a <see cref="ReplyAsync(TResult)"/> call.
     /// </para>
     /// <para>
     /// Your workflow logic will dequeue the signal request, extract the signal arguments,
     /// casting them to the appropriate types, and then perform any necessary operations
-    /// before calling <see cref="ReturnAsync(TResult)"/> which indicates that signal processing
+    /// before calling <see cref="ReplyAsync(TResult)"/> which indicates that signal processing
     /// is finished was well as specifying the value to be returned as the signal result.
     /// </para>
     /// <para>
@@ -143,7 +143,7 @@ namespace Neon.Cadence
         /// signal is complete as well as specifying the signal result.
         /// </summary>
         /// <param name="result">The value to be returned by the signal.</param>
-        public async Task ReturnAsync(TResult result)
+        public async Task ReplyAsync(TResult result)
         {
             // This may only be called within a workflow method.
 
