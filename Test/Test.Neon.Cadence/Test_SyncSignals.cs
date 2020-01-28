@@ -397,7 +397,7 @@ namespace TestCadence
                 SignalProcessed = true;
                 Name = signalRequest.Arg<string>("name");
 
-                await signalRequest.ReturnAsync();
+                await signalRequest.ReplyAsync();
             }
 
             public async Task SignalVoidAsync(string name)

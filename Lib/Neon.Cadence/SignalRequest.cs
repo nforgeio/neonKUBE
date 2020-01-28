@@ -58,7 +58,7 @@ namespace Neon.Cadence
     /// <para>
     /// Your workflow logic will dequeue the signal request, extract the signal arguments 
     /// cast them to the appropriate types, and then perform any necessary operations.
-    /// Then call <see cref="ReturnAsync()"/> which indicates that signal processing
+    /// Then call <see cref="ReplyAsync()"/> which indicates that signal processing
     /// is finished.
     /// </para>
     /// <para>
@@ -141,7 +141,7 @@ namespace Neon.Cadence
         /// returning to help ensure that the signal result can be delivered back to
         /// the calling client before the workflow terminates.
         /// </summary>
-        public async Task ReturnAsync()
+        public async Task ReplyAsync()
         {
             // This may only be called within a workflow method.
 
