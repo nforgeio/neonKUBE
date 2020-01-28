@@ -20,7 +20,7 @@ This is a full Neon release intended for general consumption.  Note that some pa
 
 ### <img src="https://doc.neonkube.com/media/release.png"/> Neon.Cadence
 
-This package provides a .NET client for the [Uber Cadence](https://cadenceworkflow.io/docs/) workflow platform.  This is still a work in progress and some important features need to be implem ented.  That being said, most functionality is implemented and we're using this in production using Linux containers for a significant project.  This library is tagged as **release** quality, it's actually probably closer to **preview** quality.
+This package provides a .NET client for the [Uber Cadence](https://cadenceworkflow.io/docs/) workflow platform.  This is still a work in progress and some important features need to be implem ented.  That being said, most functionality is implemented and we're using this in production using Linux containers for a significant project.  This library is tagged as **release** quality; it's actually probably closer to **preview** quality.
 
 You can get started: [here](https://doc.neonkube.com/Neon.Cadence-Overview.htm)
 And follow open issues: [here](https://github.com/nforgeio/neonKUBE/labels/cadence)
