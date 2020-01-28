@@ -32,6 +32,20 @@ namespace TestCommon
 {
     public class Test_TempFile
     {
+        private string tempPath;
+
+        public Test_TempFile()
+        {
+            if (NeonHelper.IsWindows)
+            {
+                tempPath = Path.GetFullPath("~\\temp");
+            }
+            else
+            {
+                tempPath = Path.GetFullPath("~/temp");
+            }
+        }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Basic()
@@ -114,9 +128,9 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CustomFolder()
         {
-            var tempFile = new TempFile(folder: "C:\\temp");
+            var tempFile = new TempFile(folder: tempPath);
 
-            Assert.StartsWith("C:\\temp", tempFile.Path);
+            Assert.StartsWith(tempPath, tempFile.Path);
             Assert.EndsWith(".tmp", tempFile.Path);
         }
 
@@ -124,9 +138,9 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CustomFolderAndSuffix()
         {
-            var tempFile = new TempFile(suffix: ".txt", folder: "C:\\temp");
+            var tempFile = new TempFile(suffix: ".txt", folder: tempPath);
 
-            Assert.StartsWith("C:\\temp", tempFile.Path);
+            Assert.StartsWith(tempPath, tempFile.Path);
             Assert.EndsWith(".txt", tempFile.Path);
         }
 
@@ -134,13 +148,13 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CustomRoot()
         {
-            TempFile.Root = "C:\\temp";
+            TempFile.Root = tempPath;
 
             try
             {
                 var tempFile = new TempFile();
 
-                Assert.StartsWith("C:\\temp", tempFile.Path);
+                Assert.StartsWith(tempPath, tempFile.Path);
                 Assert.EndsWith(".tmp", tempFile.Path);
             }
             finally
