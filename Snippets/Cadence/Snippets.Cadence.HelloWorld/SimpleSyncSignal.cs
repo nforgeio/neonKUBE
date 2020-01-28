@@ -27,7 +27,7 @@ namespace Snippets_SimpleSignalWorkflow
 
         public async Task ProcessOrderAsync()
         {
-            // Implements order processing.  This is probably included
+            // Implements order processing.  This is probably includes
             // one or more loops that poll [canCancel] while it's still
             // possible to cancel the order.
         }

@@ -139,32 +139,32 @@
           This works roughly like this:
         </para>
         <list class="ordered">
-          <listitem>
+          <listItem>
             <para>
               Your application calls a synchronous signal stub method.
             </para>
-          </listitem>
-          <listitem>
+          </listItem>
+          <listItem>
             <para>
               The stub polls Cadence for a reasonable period of time to ensure that the
               workflow actually running.
             </para>
-          </listitem>
-          <listitem>
+          </listItem>
+          <listItem>
             <para>
               The stub sends a standard signal to an internal signal method implemented by
               Neon.Cadence.  The signal is dispatched to your synchronous signal method
               where your logic can do its thing and then ultimately returns.
             </para>
-          </listitem>
-          <listitem>
+          </listItem>
+          <listItem>
             <para>
               Neon.Cadence maintains an internal table tracking each synchronous signal
               received.  We track whether or not the your signal method has returned and
               also persist any result there.
             </para>
-          </listitem>
-          <listitem>
+          </listItem>
+          <listItem>
             <para>
               After the client stub has sent the internal signal in step 2, it begins 
               polling the workflow for signal completion by sending queries to an
@@ -173,20 +173,20 @@
               signal method has returned.  At this point, the stub will return to
               the caller.
             </para>
-          </listitem>
+          </listItem>
         </list>
         <para>
           This all is pretty clean, but there are some caveats:
         </para>
         <list class="bullet">
-          <listitem>
+          <listItem>
             <para>
               This is a <legacyBold>Neon-only feature</legacyBold>.  You can not use this to send
               synchronous signals to workflows implemented in other lanmguages like Java or Go
               (they don't support this).
             </para>
-          </listitem>
-          <listitem>
+          </listItem>
+          <listItem>
             <para>
               By default synchronous signals will wait up to 60 seconds for the workflow
               to process a synchronous signal and return.  This relies on your workflow
@@ -194,8 +194,8 @@
               assigning a custom retry policy to 
               <codeEntityReference qualifyHint="false">P:Neon.Cadence.CadenceClient.SyncSignalRetry</codeEntityReference>.
             </para>
-          </listitem>
-          <listitem>
+          </listItem>
+          <listItem>
             <para>
               Workflows that have seen synchronous signals will be delayed for a period
               of time after returning to give the client stub a chance to query for any
@@ -207,13 +207,13 @@
             <para>
               You can customize this timeout via <codeEntityReference qualifyHint="false">P:Neon.Cadence.CadenceSettings.MaxWorkflowDelaySeconds</codeEntityReference>.
             </para>
-          </listitem>
-          <listitem>
+          </listItem>
+          <listItem>
             <para>
               This worflow delay will also add one sleep operation per second the workflow
               is delayed to the history.  Typically, only a handful of these will be recorded.
             </para>
-          </listitem>
+          </listItem>
         </list>
       </content>
     </section>
@@ -237,8 +237,8 @@
         <para>
           This is a partial implementation of an order workflow that provides a synchronous
           order cancellation signal.  Imagine in this case, that the workflow method loops
-          at strategic places in its logic that polls for the signal to set <codeInline>canCancel=true</codeInline>.
-          The workflow logic would also set <codeInline>canCancel=false</codeInline> when
+          at strategic places in its logic polling for the signal to set <codeInline>canCancel=true</codeInline>.
+          The workflow logic also sets <codeInline>canCancel=false</codeInline> when
           cancellation is no longer possible.
         </para>
         <para>
@@ -264,40 +264,40 @@
         <para>
           This (very) partial implementation of an order workflow depicts how a synchronous
           signal can interact with the workflow logic via a queue.  The workflow first
-          creates a queue and then waits for a signal request to be sent from a signal
+          creates a queue and then waits for a signal request to be sent by a signal
           for processing.  Here's how this works:
         </para>
         <list class="ordered">
-          <listitem>
+          <listItem>
             <para>
               When a signal is received, the signal method constructs a <codeEntityReference qualifyHint="false">T:Neon.Cadence.SignalRequest`1</codeEntityReference>
               instance.  Via the magic of ambient state, the signal request class knows that it's within a signal
               method it intializes its <codeEntityReference qualifyHint="false">P:Neon.Cadence.SignalRequest.Args</codeEntityReference>
-              property to the parameters values passed to the signal keyed by parameter name.
+              property to the parameters values passed to the signal.  These are keyed by parameter name.
             </para>
-          </listitem>
-          <listitem>
+          </listItem>
+          <listItem>
             <para>
-              The signal method enqueues the signal request and then returns default value for the
-              signal result or just returns for signals that don't return a result.  Note that the
-              value returned is ignored and the synchronous signal will not actually return to the 
+              The signal method enqueues the signal request and then immediately returns default value 
+              for the signal result or just returns for signals that don't return a result.  Note that
+              the value returned is ignored and the synchronous signal will not actually return to the 
               caller until the workflow logic makes this happen.
             </para>
-          </listitem>
-          <listitem>
+          </listItem>
+          <listItem>
             <para>
               The workflow method dequeues the signal request.  Note how the <codeInline>reason</codeInline>
               signal parameter can be obtained via <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Neon.Cadence.SignalRequest.Arg``1(System.String)</codeEntityReference>.
               You can also reference <codeEntityReference qualifyHint="false">P:Neon.Cadence.SignalRequest`1.Args</codeEntityReference>
               which returns the complete argument dictionary.
             </para>
-          </listitem>
-          <listitem>
+          </listItem>
+          <listItem>
             <para>
               The workflow calls <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Neon.Cadence.SignalRequest`1.ReplyAsync(`0)</codeEntityReference>
               with the signal result when it's time for the signal to return.  Neon.Cadence handles the rest.
             </para>
-          </listitem>
+          </listItem>
         </list>
         <para>
           This is admittedly a bit odd but it's not very complicated and it's probably the
