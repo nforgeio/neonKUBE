@@ -8,9 +8,9 @@
   <ItemGroup>
     <PackageReference Include="CouchbaseNetClient" Version="2.7.15" />
     <PackageReference Include="Linq2Couchbase" Version="1.4.2" />
-    <PackageReference Include="Neon.Cadence" Version="1.0.3" />
-    <PackageReference Include="Neon.Common" Version="1.0.3" />
-    <PackageReference Include="Neon.Couchbase" Version="1.0.3" />
+    <PackageReference Include="Neon.Cadence" Version="1.1.0" />
+    <PackageReference Include="Neon.Common" Version="1.1.0" />
+    <PackageReference Include="Neon.Couchbase" Version="1.1.0" />
   </ItemGroup>
 
   <ItemGroup>
