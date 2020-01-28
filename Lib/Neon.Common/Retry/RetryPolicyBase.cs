@@ -114,7 +114,7 @@ namespace Neon.Retry
         /// timeout (if specified).
         /// </summary>
         /// <param name="delay">The requested delay.</param>
-        /// <param name="sysDeadline">The retry deadline (SYS) computed by <see cref="SysDeadline(TimeSpan?)"/>.</param>
+        /// <param name="sysDeadline">The retry deadline (SYS) computed by <see cref="SysDeadline()"/>.</param>
         /// <returns>The adjusted delay.</returns>
         /// <remarks>
         /// <note>
