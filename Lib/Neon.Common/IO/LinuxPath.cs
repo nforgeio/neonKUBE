@@ -23,6 +23,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Neon.Common;
+
 namespace Neon.IO
 {
     /// <summary>
@@ -32,6 +34,22 @@ namespace Neon.IO
     /// </summary>
     public static class LinuxPath
     {
+        /// <summary>
+        /// Ensures that the path passed is suitable for non-Windows platforms
+        /// by conmverting any backslashes to forward slashes.
+        /// </summary>
+        /// <param name="path">The input path (or <c>null</c>).</param>
+        /// <returns>The normalized path.</returns>
+        private static string Normalize(string path)
+        {
+            if (path == null || NeonHelper.IsWindows)
+            {
+                return path;
+            }
+
+            return path.Replace('\\', '/');
+        }
+
         /// <summary>
         /// Converts a Windows style path to Linux.
         /// </summary>
@@ -53,7 +71,7 @@ namespace Neon.IO
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(extension), nameof(extension));
 
-            return Path.ChangeExtension(path, extension).ToLinux();
+            return Path.ChangeExtension(Normalize(path), extension).ToLinux();
         }
 
         /// <summary>
@@ -77,7 +95,7 @@ namespace Neon.IO
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
 
-            return Path.GetDirectoryName(path).ToLinux();
+            return Path.GetDirectoryName(Normalize(path)).ToLinux();
         }
 
         /// <summary>
@@ -89,7 +107,7 @@ namespace Neon.IO
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
 
-            return Path.GetExtension(path);
+            return Path.GetExtension(Normalize(path));
         }
 
         /// <summary>
@@ -101,7 +119,7 @@ namespace Neon.IO
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
 
-            return Path.GetFileName(path);
+            return Path.GetFileName(Normalize(path));
         }
 
         /// <summary>
@@ -113,7 +131,7 @@ namespace Neon.IO
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
 
-            return Path.GetFileNameWithoutExtension(path);
+            return Path.GetFileNameWithoutExtension(Normalize(path));
         }
 
         /// <summary>
@@ -125,7 +143,7 @@ namespace Neon.IO
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
 
-            return Path.HasExtension(path);
+            return Path.HasExtension(Normalize(path));
         }
 
         /// <summary>
@@ -137,7 +155,7 @@ namespace Neon.IO
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path), nameof(path));
 
-            return path.ToLinux().StartsWith("/");
+            return Normalize(path).ToLinux().StartsWith("/");
         }
     }
 }
