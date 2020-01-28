@@ -44,7 +44,7 @@ namespace TestCadence
 {
     public class Test_SyncSignals : IClassFixture<CadenceFixture>, IDisposable
     {
-        private const int testIterations = 10;
+        private const int testIterations = 2;
 
         private CadenceFixture  fixture;
         private CadenceClient   client;
