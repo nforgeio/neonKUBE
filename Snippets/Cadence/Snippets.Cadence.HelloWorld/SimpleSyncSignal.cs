@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Neon.Cadence;
 using Neon.Common;
 
+#pragma warning disable CS0414 // Field assigned but not used
+
 namespace Snippets_SimpleSignalWorkflow
 {
     #region code
@@ -21,9 +23,9 @@ namespace Snippets_SimpleSignalWorkflow
     [Workflow]
     public class OrderWorkflow : WorkflowBase, IOrderWorkflow
     {
-        private bool    cancelPending  = false;
-        private string  cancelReason   = null;
-        private bool    canCancel      = true;
+        private bool    cancelPending = false;
+        private string  cancelReason  = null;
+        private bool    canCancel     = true;
 
         public async Task ProcessOrderAsync()
         {

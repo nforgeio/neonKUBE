@@ -993,10 +993,6 @@ namespace Neon.Cadence
                             Error = SyncSignalException.GetError<EntityNotExistsException>($"Workflow [workflowID={execution}, RunID={execution.RunId}] not found or is no longer open.")
                         };
                     }
-                    catch (Exception e)
-                    {
-                        throw;
-                    }
                 });
 
             // Handle any returned error.
