@@ -132,7 +132,7 @@
     </section>
 
     <section>
-      <title>Implementation Notes</title>
+      <title>Implementation Overview</title>
       <content>
         <para>
           Neon implements synchronous signals using a combination of standard Cadence signals and queries.
@@ -210,7 +210,7 @@
           </listItem>
           <listItem>
             <para>
-              This worflow delay will also add one sleep operation per second the workflow
+              This workflow delay will also add one sleep operation per second the workflow
               is delayed to the history.  Typically, only a handful of these will be recorded.
             </para>
           </listItem>
@@ -220,7 +220,7 @@
 
     <section>
       <title>Implementing Synchronous Signals</title>
-      <cotent>
+      <content>
         <para>
           Neon supports two approaches to implementing synchronous signal methods.
           For very simple scenarios, your signal method can simply modify the 
@@ -303,7 +303,7 @@
           This is admittedly a bit odd but it's not very complicated and it's probably the
           best we can do until Cadence supports this scenario natively.
         </para>
-      </cotent>
+      </content>
     </section>
 
     <relatedTopics>
