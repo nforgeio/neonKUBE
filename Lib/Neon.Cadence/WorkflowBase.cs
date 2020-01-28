@@ -145,84 +145,6 @@ namespace Neon.Cadence
             public WorkflowMethodMap MethodMap { get; set; }
         }
 
-        /// <summary>
-        /// Defines the local activity that waits for any pending workflow operations 
-        /// (like synchronus signal result delivery) to complete.
-        /// </summary>
-        [ActivityInterface()]
-        public interface IWaitForPendingWorkflowOperationsActivity : IActivity
-        {
-            /// <summary>
-            /// Waits for any pending workflow operations to complete.
-            /// </summary>
-            /// <param name="contextId">Identifies the workflow.</param>
-            /// <param name="maxWait">The maximum time to wait for the operations.</param>
-            /// <returns></returns>
-            [ActivityMethod]
-            Task WaitAsync(long contextId, TimeSpan maxWait);
-        }
-
-        /// <summary>
-        /// Implements the local activity that waits for any pending workflow operations 
-        /// (like synchronus signal result delivery) to complete.
-        /// </summary>
-        public class WaitForPendingWorkflowOperationsActivity : ActivityBase, IWaitForPendingWorkflowOperationsActivity
-        {
-            /// <inheritdoc/>/>
-            [ActivityMethod]
-            public async Task WaitAsync(long contextId, TimeSpan maxWait)
-            {
-                var workflow = GetWorkflow(Activity.Client, contextId);
-
-                // Wait until any synchronous signals have been acknowledged to the
-                // calling client. 
-
-                if (workflow.hasSynchronousSignals)
-                {
-                    var sysDeadline = SysTime.Now + maxWait;
-                    var signalCount = 0;
-
-var startTime = DateTime.UtcNow;    // $debug(jefflill): DELETE THIS!
-
-CadenceHelper.DebugLog($"WorkflowWait: start waiting");
-try
-{
-                    while (SysTime.Now < sysDeadline)
-                    {
-CadenceHelper.DebugLog($"WorkflowWait: locking");
-                        lock (workflow.signalIdToStatus)
-                        {
-CadenceHelper.DebugLog($"WorkflowWait: polling [{DateTime.UtcNow - startTime}]");
-                            signalCount = workflow.signalIdToStatus.Count;
-
-                            if (signalCount == 0)
-                            {
-                                CadenceHelper.DebugLog($"WorkflowWait: no synchronous signals");
-                                break;  // No synchronous signals were called.
-                            }
-                            else if (workflow.signalIdToStatus.Values.All(status => status.Acknowledged))
-                            {
-                                CadenceHelper.DebugLog($"WorkflowWait: all signals acknowledged");
-                                break;  // All signals have been acknowledged
-                            }
-                        }
-
-CadenceHelper.DebugLog($"WorkflowWait: unlocked and delaying");
-                        await Task.Delay(TimeSpan.FromSeconds(0.25));
-CadenceHelper.DebugLog($"WorkflowWait: delay finished");
-                    }
-var delta = DateTime.UtcNow - startTime;    // $debug(jefflill): AND THIS TOO!
-CadenceHelper.DebugLog($"WorkflowWait: done waiting [delta={delta}]");
-}
-catch (Exception e)
-{
-    CadenceHelper.DebugLog($"WorkflowWait: {NeonHelper.ExceptionError(e)}");
-    throw;
-}
-                }
-            }
-        }
-
         //---------------------------------------------------------------------
         // Static members
 
@@ -842,8 +764,6 @@ catch (Exception e)
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private static async Task WaitForPendingWorkflowOperations(WorkflowBase workflow)
         {
-            Covenant.Requires<ArgumentNullException>(workflow != null);
-
             // Right now, the only pending operations can be completed outstanding 
             // synchronous signals that haven't returned their results to the
             // calling client via polled queries.
@@ -856,12 +776,46 @@ catch (Exception e)
                 return;
             }
 
-            // Invoke a local activity that waits for all the outstanding
-            // synchronous signals to be acknowledged.
+            // Wait for a period of time for any signals to be acknowledged.  We're simply going
+            // to loop until all of the signals have been acknowledged, sleeping for 1 second
+            // between checks.
+            //
+            // I originally tried using [MutableSideEffectAsync()] for the polling and using
+            // [Task.DelayAsync()] for the poll delay, but that didn't work because it
+            // appears that Cadence doesn't process queries when MutableSideEffectAsync() 
+            // is running (perhaps this doesn't count as a real decision task).
+            //
+            // The down side of doing it this way is that each of the sleeps will be
+            // recorded to the workflow history.  We'll have to live with that.  I 
+            // expect that we'll only have to poll for a second or two in most 
+            // circumstances anyway.
 
-            var stub = workflow.Workflow.NewLocalActivityStub<IWaitForPendingWorkflowOperationsActivity, WaitForPendingWorkflowOperationsActivity>();
+            var sysDeadline = SysTime.Now + workflow.Workflow.Client.Settings.MaxWorkflowDelay;
+            var signalCount = 0;
 
-            await stub.WaitAsync(workflow.Workflow.ContextId, workflow.Workflow.Client.Settings.MaxWorkflowDelay);
+            while (SysTime.Now < sysDeadline)
+            {
+                // Return TRUE when we're all signals have been acknowledged.
+
+                lock (workflow.signalIdToStatus)
+                {
+                    signalCount = workflow.signalIdToStatus.Count;
+
+                    if (signalCount == 0)
+                    {
+                        break; // No synchronous signals were called.
+                    }
+                    else if (workflow.signalIdToStatus.Values.All(status => status.Acknowledged))
+                    {
+                        break; // All signals have been acknowledged
+                    }
+                }
+
+                // I would have preferred to call [Task.DelayAsync() here but apparently
+                // Cadence doesn't processes queries within [MutableSideEffect()].
+
+                await workflow.Workflow.SleepAsync(TimeSpan.FromSeconds(1));
+            }
         }
 
         /// <summary>
@@ -1152,27 +1106,19 @@ catch (Exception e)
                             // The arguments for this signal is the (string) ID of the target
                             // signal being polled for status.
 
-try
-{
-CadenceHelper.DebugLog($"WorkflowBase: query signal received");
                             var syncSignalArgs   = client.DataConverter.FromDataArray(request.QueryArgs, typeof(string));
                             var syncSignalId     = (string) (syncSignalArgs.Length > 0 ? syncSignalArgs[0] : null);
                             var syncSignalStatus = (SyncSignalStatus)null;
 
-CadenceHelper.DebugLog($"WorkflowBase: locking");
                             lock (workflow.signalIdToStatus)
                             {
-CadenceHelper.DebugLog($"WorkflowBase: get status");
                                 if (!workflow.signalIdToStatus.TryGetValue(syncSignalId, out syncSignalStatus))
                                 {
-CadenceHelper.DebugLog($"WorkflowBase: creating status");
                                     syncSignalStatus = new SyncSignalStatus() { Completed = false };
                                 }
-CadenceHelper.DebugLog($"WorkflowBase: got status");
 
                                 if (syncSignalStatus.Completed)
                                 {
-CadenceHelper.DebugLog($"WorkflowBase: signal completed");
                                     // Indicate that the completed signal has reported that status
                                     // to the calling client as well as returned the result, if any.
 
@@ -1180,19 +1126,12 @@ CadenceHelper.DebugLog($"WorkflowBase: signal completed");
                                     syncSignalStatus.AcknowledgeTimeUtc = DateTime.UtcNow;
                                 }
                             }
-CadenceHelper.DebugLog($"WorkflowBase: returning status");
 
                             return new WorkflowQueryInvokeReply()
                             {
                                 RequestId = request.RequestId,
                                 Result    = client.DataConverter.ToData(syncSignalStatus)
                             };
-                        }
-catch (Exception e)
-{
-    CadenceHelper.DebugLog($"WorkflowBase: {NeonHelper.ExceptionError(e)}");
-    throw;
-}
                     }
 
                     // Handle user queries.
