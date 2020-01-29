@@ -217,175 +217,305 @@ namespace Neon.Web
         /// </summary>
         public bool IsLogCriticalEnabled => GetLogger().IsLogCriticalEnabled;
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs a <b>critical</b> message.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="activityId">Optional activity ID.</param>
         public void Critical(object message, string activityId = null)
         {
             GetLogger().LogCritical(message, activityId ?? this.ActivityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs a <b>critical</b> message along with exception information.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="e">The exception.</param>
+        /// <param name="activityId">Optional activity ID.</param>
         public void Critical(object message, Exception e, string activityId = null)
         {
             GetLogger().LogCritical(message, e, activityId ?? this.ActivityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs a <b>debug</b> message.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="activityId">Optional activity ID.</param>
         public void Debug(object message, string activityId = null)
         {
             GetLogger().LogDebug(message, activityId ?? this.ActivityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs a <b>debug</b> message along with exception information.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="e">The exception.</param>
+        /// <param name="activityId">Optional activity ID.</param>
         public void Debug(object message, Exception e, string activityId = null)
         {
             GetLogger().LogDebug(message, e, activityId ?? this.ActivityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs an <b>error</b> message.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="activityId">Optional activity ID.</param>
         public void Error(object message, string activityId = null)
         {
             GetLogger().LogError(message, activityId ?? this.ActivityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs an <b>error</b> message along with exception information.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="e">The exception.</param>
+        /// <param name="activityId">Optional activity ID.</param>
         public void Error(object message, Exception e, string activityId = null)
         {
             GetLogger().LogError(message, e, activityId ?? this.ActivityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs an <b>info</b> message.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="activityId">Optional activity ID.</param>
         public void Info(object message, string activityId = null)
         {
             GetLogger().LogInfo(message, activityId ?? this.ActivityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs an <b>info</b> message along with exception information.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="e">The exception.</param>
+        /// <param name="activityId">Optional activity ID.</param>
         public void Info(object message, Exception e, string activityId = null)
         {
             GetLogger().LogInfo(message, e, activityId ?? this.ActivityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs a <b>serror</b> message.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="activityId">Optional activity ID.</param>
         public void SError(object message, string activityId = null)
         {
             GetLogger().LogSError(message, activityId ?? this.ActivityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs a <b>serror</b> message along with exception information.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="e">The exception.</param>
+        /// <param name="activityId">Optional activity ID.</param>
         public void SError(object message, Exception e, string activityId = null)
         {
             GetLogger().LogSError(message, e, activityId ?? this.ActivityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs a <b>sinfo</b> message.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="activityId">Optional activity ID.</param>
         public void SInfo(object message, string activityId = null)
         {
             GetLogger().LogSInfo(message, activityId ?? this.ActivityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs a <b>sinfo</b> message along with exception information.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="e">The exception.</param>
+        /// <param name="activityId">Optional activity ID.</param>
         public void SInfo(object message, Exception e, string activityId = null)
         {
             GetLogger().LogSInfo(message, e, activityId ?? this.ActivityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs a <b>warn</b> message.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="activityId">Optional activity ID.</param>
         public void Warn(object message, string activityId = null)
         {
             GetLogger().LogWarn(message, activityId ?? this.ActivityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs a <b>warn</b> message along with exception information.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="e">The exception.</param>
+        /// <param name="activityId">Optional activity ID.</param>
         public void Warn(object message, Exception e, string activityId = null)
         {
             GetLogger().LogWarn(message, e, activityId ?? this.ActivityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Indicates whether logging is enabled for a specific log level.
+        /// </summary>
+        /// <param name="logLevel">The log level.</param>
+        /// <returns><c>true</c> if logging is enabled for <paramref name="logLevel"/>.</returns>
         public bool IsLogLevelEnabled(LogLevel logLevel)
         {
             return GetLogger().IsLogLevelEnabled(logLevel);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs a <b>debug</b> message.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="activityId">The optional activity ID.</param>
         public void LogDebug(object message, string activityId = null)
         {
             GetLogger().LogDebug(message, activityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs an <b>sinfo</b> message.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="activityId">The optional activity ID.</param>
         public void LogSInfo(object message, string activityId = null)
         {
             GetLogger().LogSInfo(message, activityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs an <b>info</b> message.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="activityId">The optional activity ID.</param>
         public void LogInfo(object message, string activityId = null)
         {
             GetLogger().LogInfo(message, activityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs a <b>warn</b> message.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="activityId">The optional activity ID.</param>
         public void LogWarn(object message, string activityId = null)
         {
             GetLogger().LogWarn(message, activityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs an <b>serror</b> message.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="activityId">The optional activity ID.</param>
         public void LogSError(object message, string activityId = null)
         {
             GetLogger().LogSError(message, activityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs an <b>error</b> message.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="activityId">The optional activity ID.</param>
         public void LogError(object message, string activityId = null)
         {
             GetLogger().LogError(message, activityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs a <b>critical</b> message.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="activityId">The optional activity ID.</param>
         public void LogCritical(object message, string activityId = null)
         {
             GetLogger().LogCritical(message, activityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs a <b>debug</b> message along with exception information.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="e">The exception.</param>
+        /// <param name="activityId">The optional activity ID.</param>
         public void LogDebug(object message, Exception e, string activityId = null)
         {
             GetLogger().LogDebug(message, e, activityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs an <b>sinfo</b> message along with exception information.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="e">The exception.</param>
+        /// <param name="activityId">The optional activity ID.</param>
         public void LogSInfo(object message, Exception e, string activityId = null)
         {
             GetLogger().LogSInfo(message, e, activityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs an <b>info</b> message along with exception information.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="e">The exception.</param>
+        /// <param name="activityId">The optional activity ID.</param>
         public void LogInfo(object message, Exception e, string activityId = null)
         {
             GetLogger().LogInfo(message, e, activityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs a <b>warn</b> message along with exception information.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="e">The exception.</param>
+        /// <param name="activityId">The optional activity ID.</param>
         public void LogWarn(object message, Exception e, string activityId = null)
         {
             GetLogger().LogWarn(message, e, activityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs an <b>error</b> message along with exception information.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="e">The exception.</param>
+        /// <param name="activityId">The optional activity ID.</param>
         public void LogError(object message, Exception e, string activityId = null)
         {
             GetLogger().LogError(message, e, activityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs an <b>serror</b> message along with exception information.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="e">The exception.</param>
+        /// <param name="activityId">The optional activity ID.</param>
         public void LogSError(object message, Exception e, string activityId = null)
         {
             GetLogger().LogSError(message, e, activityId);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Logs a <b>critical</b> message along with exception information.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="e">The exception.</param>
+        /// <param name="activityId">The optional activity ID.</param>
         public void LogCritical(object message, Exception e, string activityId = null)
         {
             GetLogger().LogCritical(message, e, activityId);
