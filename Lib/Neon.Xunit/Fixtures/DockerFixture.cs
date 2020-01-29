@@ -424,7 +424,7 @@ namespace Neon.Xunit
             /// <summary>
             /// Returns the service name Docker will assign to a stack service.
             /// </summary>
-            /// <param name="service"></param>
+            /// <param name="service">The stack service.</param>
             /// <returns>The service name.</returns>
             public string GetServiceName(StackService service)
             {

@@ -79,6 +79,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Adds a named <see cref="ITestFixture"/>.
         /// </summary>
+        /// <typeparam name="TFixture">The new fixture type.</typeparam>
         /// <param name="name">The fixture name (case insenstitive).</param>
         /// <param name="subFixture">The subfixture instance.</param>
         /// <param name="action">The optional <see cref="Action"/> to be called when the fixture is initialized.</param>

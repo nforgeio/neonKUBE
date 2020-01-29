@@ -52,6 +52,7 @@ namespace Neon.Kube
         /// Path to a user archive directory.
         /// </summary>
         /// <param name="username">The username.</param>
+        /// <returns>The directory path.</returns>
         public static string Archive(string username) => $"/home/{username}/.archive";
 
         /// <summary>
@@ -68,6 +69,7 @@ namespace Neon.Kube
         /// Path to the user download directory.
         /// </summary>
         /// <param name="username">The username.</param>
+        /// <returns>The directory path.</returns>
         public static string Download(string username) => $"/home/{username}/.download";
 
         /// <summary>
@@ -76,12 +78,14 @@ namespace Neon.Kube
         /// command output files.
         /// </summary>
         /// <param name="username">The username.</param>
+        /// <returns>The directory path.</returns>
         public static string Exec(string username) => $"/home/{username}/.exec";
 
         /// <summary>
         /// Path to a user archive directory.
         /// </summary>
         /// <param name="username">The username.</param>
+        /// <returns>The directory path.</returns>
         public static string Home(string username) => $"/home/{username}";
 
         /// <summary>
@@ -109,6 +113,7 @@ namespace Neon.Kube
         /// Path to a user upload directory.
         /// </summary>
         /// <param name="username">The username.</param>
+        /// <returns>The directory path.</returns>
         public static string Upload(string username) => $"/home/{username}/.upload";
     }
 }

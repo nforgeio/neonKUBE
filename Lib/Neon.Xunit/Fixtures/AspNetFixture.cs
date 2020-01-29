@@ -284,6 +284,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Restarts the web service.
         /// </summary>
+        /// <typeparam name="TStartup">Specifies the web service startup class.</typeparam>
         public void Restart<TStartup>()
             where TStartup : class
         {

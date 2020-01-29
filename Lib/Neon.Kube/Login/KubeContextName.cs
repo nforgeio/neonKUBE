@@ -62,6 +62,7 @@ namespace Neon.Kube
         /// Explictly casts a <see cref="KubeContextName"/> into a <c>string</c>.
         /// </summary>
         /// <param name="name">The context name or <c>null</c>.</param>
+        /// <returns>The converted string.</returns>
         public static explicit operator string(KubeContextName name)
         {
             if (name == null)
@@ -78,6 +79,7 @@ namespace Neon.Kube
         /// Explictly casts a <c>string</c> into a <see cref="KubeContextName"/>.
         /// </summary>
         /// <param name="name">The context name or <c>null</c>.</param>
+        /// <returns>The converted context name.</returns>
         public static explicit operator KubeContextName(string name)
         {
             if (string.IsNullOrEmpty(name))

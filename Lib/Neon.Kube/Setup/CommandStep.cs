@@ -44,6 +44,7 @@ namespace Neon.Kube
         /// <param name="nodeName">The node name.</param>
         /// <param name="command">The Linux command.</param>
         /// <param name="args">The command arguments.</param>
+        /// <returns>The <see cref="CommandStep"/>.</returns>
         public static CommandStep CreateSudo(string nodeName, string command, params object[] args)
         {
             return new CommandStep(nodeName, command, args)
@@ -60,6 +61,7 @@ namespace Neon.Kube
         /// <param name="operationName">The idempotent operation name.</param>
         /// <param name="command">The Linux command.</param>
         /// <param name="args">The command arguments.</param>
+        /// <returns>The <see cref="CommandStep"/>.</returns>
         public static CommandStep CreateIdempotentSudo(string nodeName, string operationName, string command, params object[] args)
         {
             return new CommandStep(nodeName, command, args)
@@ -254,7 +256,7 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         /// <param name="comment">Optional comment text (without a leading <b>#</b>).</param>
-        /// <returns>The command formatted for Bash.</returns>
+        /// <returns>The Bash command string.</returns>
         /// <exception cref="NotSupportedException">
         /// <see cref="ToBash"/> does not support commands with attached files.
         /// </exception>

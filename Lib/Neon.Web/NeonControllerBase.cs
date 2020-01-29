@@ -177,28 +177,44 @@ namespace Neon.Web
             return log = LogManager.Default.GetLogger("Web-" + base.ControllerContext.ActionDescriptor.ControllerName);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Returns the logger's context ID or <c>null</c>.
+        /// </summary>
         public string ContextId => GetLogger().ContextId;
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Returns <c>true</c> if <b>debug</b> logging is enabled.
+        /// </summary>
         public bool IsLogDebugEnabled => GetLogger().IsLogDebugEnabled;
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Returns <c>true</c> if <b>sinfo</b> logging is enabled.
+        /// </summary>
         public bool IsLogSInfoEnabled => GetLogger().IsLogSInfoEnabled;
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Returns <c>true</c> if <b>info</b> logging is enabled.
+        /// </summary>
         public bool IsLogInfoEnabled => GetLogger().IsLogInfoEnabled;
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Returns <c>true</c> if <b>warn</b> logging is enabled.
+        /// </summary>
         public bool IsLogWarnEnabled => GetLogger().IsLogWarnEnabled;
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Returns <c>true</c> if <b>error</b> logging is enabled.
+        /// </summary>
         public bool IsLogErrorEnabled => GetLogger().IsLogErrorEnabled;
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Returns <c>true</c> if <b>serror</b> logging is enabled.
+        /// </summary>
         public bool IsLogSErrorEnabled => GetLogger().IsLogSErrorEnabled;
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Returns <c>true</c> if <b>critical</b> logging is enabled.
+        /// </summary>
         public bool IsLogCriticalEnabled => GetLogger().IsLogCriticalEnabled;
 
         /// <inheritdoc/>

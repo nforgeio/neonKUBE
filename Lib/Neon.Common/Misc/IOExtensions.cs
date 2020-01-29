@@ -55,6 +55,7 @@ namespace System.IO
         /// </summary>
         /// <param name="stream">The stream.</param>
         /// <param name="bytes">The byte array.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task WriteAsync(this Stream stream, byte[] bytes)
         {
             await SyncContext.ClearAsync;
@@ -97,6 +98,7 @@ namespace System.IO
         /// <summary>
         /// Reads all bytes from the current position to the end of the stream.
         /// </summary>
+        /// <param name="stream">The source stream.</param>
         /// <returns>The byte array.</returns>
         public static byte[] ReadToEnd(this Stream stream)
         {
@@ -123,6 +125,7 @@ namespace System.IO
         /// <summary>
         /// Asynchronously reads all bytes from the current position to the end of the stream.
         /// </summary>
+        /// <param name="stream">The source stream.</param>
         /// <returns>The byte array.</returns>
         public static async Task<byte[]> ReadToEndAsync(this Stream stream)
         {

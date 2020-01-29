@@ -46,7 +46,12 @@ namespace Neon.Xunit
             this.count = count;
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Returns the data to be passed to the test theory method an enumeration of
+        /// data arrays, each holding the objects to be passed as a test call.
+        /// </summary>
+        /// <param name="testMethod">Specifies the target test method.</param>
+        /// <returns>The argument arrays.</returns>
         public override IEnumerable<object[]> GetData(MethodInfo testMethod)
         {
             var iterations = new object[count][];

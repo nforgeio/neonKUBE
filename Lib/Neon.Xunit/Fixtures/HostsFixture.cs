@@ -391,7 +391,9 @@ namespace Neon.Xunit
             }
         }
 
-        /// <imheritdoc/>
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Resets the fixture state.
+        /// </summary>
         public override void Reset()
         {
             records.Clear();

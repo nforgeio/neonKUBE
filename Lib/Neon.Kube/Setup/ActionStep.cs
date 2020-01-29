@@ -43,6 +43,7 @@ namespace Neon.Kube
         /// <param name="nodeName">The node name.</param>
         /// <param name="operationName">The idempotent operation name or <c>null</c> if the operation is not idempotent.</param>
         /// <param name="action">The action to be invoked.</param>
+        /// <returns>The <see cref="ActionStep"/>.</returns>
         public static ActionStep Create(string nodeName, string operationName, Action<SshProxy<NodeDefinition>> action)
         {
             return new ActionStep(nodeName, operationName, action);

@@ -263,7 +263,7 @@ namespace Neon.Kube
         /// Returns the <see cref="SshProxy{TMetadata}"/> instance for a named node.
         /// </summary>
         /// <param name="nodeName">The node name.</param>
-        /// <returns>The node proxy instance.</returns>
+        /// <returns>The node definition.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if the name node is not present in the cluster.</exception>
         public SshProxy<NodeDefinition> GetNode(string nodeName)
         {

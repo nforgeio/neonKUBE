@@ -81,6 +81,7 @@ namespace Neon.Kube
         /// <summary>
         /// Creates a <see cref="TextReader"/> over the command's standard output result.
         /// </summary>
+        /// <returns>The <see cref="TextReader"/>.</returns>
         public TextReader OpenOutputTextReader()
         {
             return new StringReader(OutputText);
@@ -94,6 +95,7 @@ namespace Neon.Kube
         /// <summary>
         /// Creates a <see cref="TextReader"/> over the command's standard error result.
         /// </summary>
+        /// <returns>The <see cref="TextReader"/>.</returns>
         public TextReader OpenErrorTextReader()
         {
             return new StringReader(ErrorText);
@@ -110,6 +112,7 @@ namespace Neon.Kube
         /// <summary>
         /// Creates a <see cref="TextReader"/> over the command's standard output and standard error results.
         /// </summary>
+        /// <returns>The <see cref="TextReader"/>.</returns>
         public TextReader OpenAllTextReader()
         {
             return new StringReader(AllText);
@@ -147,7 +150,11 @@ namespace Neon.Kube
             }
         }
 
-        ///<inheritdic/>
+        /// <summary>
+        /// Converts the original command into a Bash command.
+        /// </summary>
+        /// <param name="comment">Optionall specifies a comment string to be included.</param>
+        /// <returns>The Bash command string.</returns>
         public string ToBash(string comment = null)
         {
             if (string.IsNullOrEmpty(comment))

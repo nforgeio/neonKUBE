@@ -407,6 +407,7 @@ namespace Neon.IO
         /// <param name="offset">Offset of the first byte to write.</param>
         /// <param name="count">Number of bytes to read.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
             Write(buffer, offset, count);
@@ -533,6 +534,7 @@ namespace Neon.IO
         /// <c>true</c> if the method will truncate the underlying BlockArray
         /// to the actual length of the stream before returning the array.
         /// </param>
+        /// <returns>The <see cref="BlockArray"/>.</returns>
         public BlockArray ToBlocks(bool truncate)
         {
             blocks.SetExactSize(length);

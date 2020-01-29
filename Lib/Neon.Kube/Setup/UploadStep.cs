@@ -38,6 +38,7 @@ namespace Neon.Kube
         /// <param name="tabStop">Optionally expands TABs into spaces when non-zero.</param>
         /// <param name="outputEncoding">Optionally specifies the output text encoding (defaults to UTF-8).</param>
         /// <param name="permissions">Optionally specifies target file permissions (compatible with the <c>chmod</c> command).</param>
+        /// <returns>The <see cref="UploadStep"/>.</returns>
         public static UploadStep Text(string nodeName, string path, string text, int tabStop = 0, Encoding outputEncoding = null, string permissions = null)
         {
             return new UploadStep(nodeName, path, text, tabStop, outputEncoding, permissions);

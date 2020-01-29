@@ -154,7 +154,7 @@ namespace STAN.Client
         /// <typeparam name="TMessage">The message type.</typeparam>
         /// <param name="connection">The conmnection.</param>
         /// <param name="subject">Subject to publish the message to.</param>
-        /// <param name="data"></param>
+        /// <param name="data">The data being published.</param>
         /// <returns>The task object representing the asynchronous operation, containing the guid.</returns>
         public static async Task<string> PublishAsync<TMessage>(this IStanConnection connection, string subject, TMessage data)
             where TMessage : class, IRoundtripData, new()

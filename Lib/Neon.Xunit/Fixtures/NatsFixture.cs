@@ -172,6 +172,7 @@ namespace Neon.Xunit
         /// Restarts the NATS container to clear any previous state and returns the 
         /// new client connection.
         /// </summary>
+        /// <returns>The new connection.</returns>
         public new IConnection Restart()
         {
             base.Restart();

@@ -299,7 +299,11 @@ namespace Neon.Diagnostics
             }
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Creates a logger.
+        /// </summary>
+        /// <param name="sourceModule">Identifies the source module.</param>
+        /// <returns>The created <see cref="ILogger"/>.</returns>
         public ILogger CreateLogger(string sourceModule)
         {
             return (ILogger)GetLogger(sourceModule);

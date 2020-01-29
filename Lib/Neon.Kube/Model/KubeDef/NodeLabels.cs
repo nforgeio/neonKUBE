@@ -84,6 +84,7 @@ namespace Neon.Kube
         /// <summary>
         /// Constructor.
         /// </summary>
+        /// <param name="node">The node definition.</param>
         public NodeLabels(NodeDefinition node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));

@@ -97,7 +97,10 @@ namespace Neon.Kube
             return Loader.IsCloudEnvironment(environment);
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Ensures that that a cluster definition is valid.
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
         public void Validate(ClusterDefinition clusterDefinition)
         {
             CheckInitialized();

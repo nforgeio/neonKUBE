@@ -131,6 +131,7 @@ namespace Neon.Kube
         /// directories beneath the folder passed.  This also modifies the KUBECONFIG
         /// environment variable to reference the new location.
         /// </summary>
+        /// <param name="folder">Specifies the folder where the state will be persisted.</param>
         public static void SetTestMode(string folder)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folder), nameof(folder));
@@ -290,6 +291,7 @@ namespace Neon.Kube
         /// <summary>
         /// Loads or reloads the <see cref="ClientConfig"/>.
         /// </summary>
+        /// <returns>The client configuration.</returns>
         public static KubeClientConfig LoadClientConfig()
         {
             cachedClientConfig = null;
@@ -1353,7 +1355,7 @@ namespace Neon.Kube
         /// <param name="pod">The pod where the command should run.</param>
         /// <param name="namespace">The namespace where the pod is running.</param>
         /// <param name="command">The command to run.</param>
-        /// <returns></returns>
+        /// <returns>The command result.</returns>
         public async static Task<string> ExecInPod(IKubernetes client, V1Pod pod, string @namespace, string[] command)
         {
             var webSocket = await client.WebSocketNamespacedPodExecAsync(pod.Metadata.Name, @namespace, command, pod.Spec.Containers[0].Name);

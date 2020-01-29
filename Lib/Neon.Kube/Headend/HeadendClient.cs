@@ -330,7 +330,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="chartName">The Helm chart name.</param>
         /// <param name="branch">The branch to get the chart from. Defaults to master.</param>
-        /// <returns></returns>
+        /// <returns>The ZIP file encoded into bytes.</returns>
         public async Task<byte[]> GetHelmChartZipAsync(string chartName, string branch = "master")
         {
             await SyncContext.ClearAsync;
@@ -367,12 +367,12 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// 
+        /// Adds GitHub files from a directory to a ZIP archive.
         /// </summary>
         /// <param name="zip">The zip file.</param>
         /// <param name="directory">The directory to add.</param>
         /// <param name="baseDirectory">The base directory.</param>
-        /// <returns>A zip </returns>
+        /// <returns>The <see cref="ZipArchive"/>.</returns>
         public async Task<ZipArchive> AddGitFilesToZipAsync(ZipArchive zip, string directory, string baseDirectory)
         {
             await SyncContext.ClearAsync;

@@ -1378,6 +1378,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// The caller is responsible for disposing the returned instance.
         /// </note>
         /// </summary>
+        /// <returns>The cloned client.</returns>
         /// <exception cref="SshConnectionException">Thrown if a connection could not be established.</exception>
         public SshClient CloneSshClient()
         {
@@ -1393,6 +1394,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// The caller is responsible for disposing the returned instance.
         /// </note>
         /// </summary>
+        /// <returns>The cloned client.</returns>
         /// <exception cref="SshConnectionException">Thrown if a connection could not be established.</exception>
         public ScpClient CloneScpClient()
         {
@@ -2421,7 +2423,7 @@ echo $? > {cmdFolder}/exit
         /// </summary>
         /// <param name="command">The command.</param>
         /// <param name="args">The arguments.</param>
-        /// <returns>The command string.</returns>
+        /// <returns>The Bash command string.</returns>
         private string ToBash(string command, params object[] args)
         {
             return new CommandBundle(command, args).ToBash();
