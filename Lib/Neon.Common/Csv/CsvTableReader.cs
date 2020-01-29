@@ -110,7 +110,7 @@ namespace Neon.Csv
         /// <summary>
         /// Constructs an instance to read from a CSV string.
         /// </summary>
-        /// <param name="text"></param>
+        /// <param name="text">The CSV text.</param>
         public CsvTableReader(string text)
             : this(new CsvReader(text))
         {

@@ -52,6 +52,7 @@ namespace Neon.Common
         /// <summary>
         /// Returns a double pseudo random number between 0.0 and +1.0
         /// </summary>
+        /// <returns>The random number.</returns>
         public static double PseudoRandomDouble()
         {
             lock (randLock)
@@ -69,6 +70,7 @@ namespace Neon.Common
         /// Returns a double pseudo random number between 0.0 and the specified limit.
         /// </summary>
         /// <param name="limit">The limit.</param>
+        /// <returns>The random number.</returns>
         public static double PseudoRandomDouble(double limit)
         {
             lock (randLock)

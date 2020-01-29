@@ -99,11 +99,6 @@ namespace Neon.Common
     public static class ByteUnits
     {
         /// <summary>
-        /// 
-        /// </summary>
-        public const decimal MilliBytes = (decimal)1e-3;
-        
-        /// <summary>
         /// One KB: 1,000
         /// </summary>
         public const decimal KiloBytes = 1000m;
@@ -217,7 +212,6 @@ namespace Neon.Common
             {
                 switch (unitLabel)
                 {
-                    case "m":   units = MilliBytes; break;
                     case "B":   units = 1;          break;
                     case "K":   units = KiloBytes;  break;
                     case "Ki":  units = KibiBytes;  break;
@@ -275,16 +269,6 @@ namespace Neon.Common
             }
 
             return value;
-        }
-
-        /// <summary>
-        /// Converts a byte count to a string using millibyte units.
-        /// </summary>
-        /// <param name="size">The size.</param>
-        /// <returns>The size in millibytes.</returns>
-        public static string ToMilliByteString(decimal size)
-        {
-            return $"{ToDoubleString(size, MilliBytes)}m";
         }
 
         /// <summary>

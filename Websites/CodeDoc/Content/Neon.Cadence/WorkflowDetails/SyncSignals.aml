@@ -308,8 +308,8 @@
 
     <relatedTopics>
       <codeEntityReference qualifyHint="false">N:Neon.Cadence</codeEntityReference>
-      <codeEntityReference qualifyHint="false">T:Neon.Cadence.SignalInvocation</codeEntityReference>
-      <codeEntityReference qualifyHint="false">T:Neon.Cadence.SignalInvocation`1</codeEntityReference>
+      <codeEntityReference qualifyHint="false">T:Neon.Cadence.SignalRequest</codeEntityReference>
+      <codeEntityReference qualifyHint="false">T:Neon.Cadence.SignalRequest`1</codeEntityReference>
       <codeEntityReference qualifyHint="false">P:Neon.Cadence.SignalMethodAttribute.Synchronous</codeEntityReference>
     </relatedTopics>
   </developerConceptualDocument>

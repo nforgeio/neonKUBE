@@ -422,6 +422,7 @@ namespace Neon.Common
         /// Explicitly casts a <see cref="SemanticVersion"/> into a string.
         /// </summary>
         /// <param name="version">The version input.</param>
+        /// <returns>The version converted to a string.</returns>
         public static explicit operator string(SemanticVersion version)
         {
             if (object.ReferenceEquals(version, null))
@@ -436,6 +437,7 @@ namespace Neon.Common
         /// Explicitly casts a string into a <see cref="SemanticVersion"/>.
         /// </summary>
         /// <param name="version">The version input.</param>
+        /// <returns>The string converted to a <see cref="SemanticVersion"/>.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="version"/> is <c>null</c>.</exception>
         public static explicit operator SemanticVersion(string version)
         {

@@ -72,6 +72,7 @@ namespace Neon.Data
     /// <summary>
     /// Generic interface describing an entity that can be persisted to a database.
     /// </summary>
+    /// <typeparam name="T">Specifies the data type being persisted.</typeparam>
     /// <remarks>
     /// <para>
     /// All entities must implement the <see cref="IPersistableType.__T"/> property such that it returns

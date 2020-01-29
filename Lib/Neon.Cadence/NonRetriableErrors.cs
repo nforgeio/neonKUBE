@@ -36,6 +36,7 @@ namespace Neon.Cadence
         /// Returns the non-retriable error string for a <b>custom error</b>.
         /// </summary>
         /// <param name="reason">The reason string.</param>
+        /// <returns>The error string.</returns>
         public static string Custom(string reason)
         {
             return reason;
@@ -44,6 +45,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Returns the non-retriable error string for a <b>panic error</b>.
         /// </summary>
+        /// <returns>The error string.</returns>
         public static string Panic()
         {
             return "cadenceInternal:Panic";
@@ -52,6 +54,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Returns the non-retriable error string for a <b>generic error</b>.
         /// </summary>
+        /// <returns>The error string.</returns>
         public static string Generic()
         {
             return "cadenceInternal:Generic";
@@ -60,6 +63,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Returns the non-retriable error string for a <b>start-to-close timeout</b>.
         /// </summary>
+        /// <returns>The error string.</returns>
         public static string StartToCloseTimeout()
         {
             return "cadenceInternal:Timeout START_TO_CLOSE";
@@ -68,6 +72,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Returns the non-retriable error string for a <b>heartbeat timeout</b>.
         /// </summary>
+        /// <returns>The error string.</returns>
         public static string HeartbeatTimeout()
         {
             return "cadenceInternal:Timeout HEARTBEAT";

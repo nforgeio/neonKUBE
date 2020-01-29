@@ -141,6 +141,7 @@ namespace Neon.Cadence
         /// returning to help ensure that the signal result can be delivered back to
         /// the calling client before the workflow terminates.
         /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task ReplyAsync()
         {
             // This may only be called within a workflow method.

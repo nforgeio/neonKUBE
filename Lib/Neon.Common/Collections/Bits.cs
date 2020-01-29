@@ -848,7 +848,7 @@ namespace Neon.Collections
         /// Determines if the bitmap passed is equal to the current bitmap.
         /// </summary>
         /// <param name="obj">The instance to be compared.</param>
-        /// <returns></returns>
+        /// <returns><c>true</c> of the bitmaps are equal.</returns>
         public override bool Equals(object obj)
         {
             var bits = obj as Bits;

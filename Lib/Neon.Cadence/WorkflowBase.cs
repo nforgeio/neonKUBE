@@ -1273,7 +1273,10 @@ namespace Neon.Cadence
         /// </summary>
         internal StackTrace StackTrace { get; set; } = null;
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Returns a <see cref="Workflow"/> instance with utilty methods you'll use
+        /// for implementing your workflows.
+        /// </summary>
         public Workflow Workflow { get; set; }
     }
 }

@@ -55,7 +55,10 @@ namespace Neon.Cadence
         /// </summary>
         public WorkflowExecution Execution { get; private set; }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Waits for the workflow to complete.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task GetAsync()
         {
             await SyncContext.ClearAsync;
@@ -96,7 +99,10 @@ namespace Neon.Cadence
         /// </summary>
         public WorkflowExecution Execution { get; private set; }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Waits for the workflow to complete.
+        /// </summary>
+        /// <returns>The workflow result.</returns>
         public async Task<TResult> GetAsync()
         {
             await SyncContext.ClearAsync;

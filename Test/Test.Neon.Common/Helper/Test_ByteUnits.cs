@@ -293,9 +293,6 @@ namespace TestCommon
         [Fact]
         public void Strings()
         {
-            Assert.Equal("500m", ByteUnits.ToMilliByteString(0.5m));
-            Assert.Equal("1000000m", ByteUnits.ToMilliByteString(1000));
-
             Assert.Equal("500", ByteUnits.ToByteString(500));
             Assert.Equal("1000000", ByteUnits.ToByteString(1000000));
 

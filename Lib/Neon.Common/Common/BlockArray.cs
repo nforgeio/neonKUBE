@@ -84,6 +84,8 @@ namespace Neon.Common
         /// <summary>
         /// Implicit cast from and array of Blocks into a BlockArray.
         /// </summary>
+        /// <param name="blocks">The array of blocks to be converted.</param>
+        /// <returns>The <see cref="BlockArray"/>.</returns>
         public static implicit operator BlockArray(Block[] blocks)
         {
             return new BlockArray(blocks);
@@ -727,6 +729,7 @@ namespace Neon.Common
         /// <summary>
         /// Returns an array to the underlying blocks.
         /// </summary>
+        /// <returns>The block array.</returns>
         public Block[] GetBlocks()
         {
             Block[] blocks;

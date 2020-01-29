@@ -548,6 +548,7 @@ namespace Neon.Common
         /// Asynchronously waits for all of the <see cref="Task"/>s passed to complete.
         /// </summary>
         /// <param name="tasks">The tasks to wait on.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task WaitAllAsync(IEnumerable<Task> tasks)
         {
             await SyncContext.ClearAsync;
@@ -562,6 +563,7 @@ namespace Neon.Common
         /// Asynchronously waits for all of the <see cref="Task"/>s passed to complete.
         /// </summary>
         /// <param name="tasks">The tasks to wait on.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public static async Task WaitAllAsync(params Task[] tasks)
         {
             await SyncContext.ClearAsync;
@@ -578,6 +580,7 @@ namespace Neon.Common
         /// <param name="tasks">The tasks being performed.</param>
         /// <param name="timeout">The optional timeout.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TimeoutException">Thrown if the <paramref name="timeout"/> was exceeded.</exception>
         public static async Task WaitAllAsync(IEnumerable<Task> tasks, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
         {
@@ -1277,10 +1280,11 @@ namespace Neon.Common
         private static char[] twoBase64Pads = "==".ToCharArray();
 
         /// <summary>
-        /// 
+        /// Decodes a base64url encoded string.  This is a URL and filename safe base-64 based 
+        /// encoding scheme: <a href="https://tools.ietf.org/html/rfc4648#section-5">RFC6448</a>.
         /// </summary>
-        /// <param name="encoded"></param>
-        /// <returns></returns>
+        /// <param name="encoded">The encoded string.</param>
+        /// <returns>The decoded bytes.</returns>
         public static byte[] Base64UrlDecode(string encoded)
         {
             // $todo(jefflill): 

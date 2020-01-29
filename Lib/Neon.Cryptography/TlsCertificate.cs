@@ -130,6 +130,7 @@ namespace Neon.Cryptography
         /// </summary>
         /// <param name="certPem">The certificate PEM text.</param>
         /// <param name="keyPem">The optional private key PEM text.</param>
+        /// <returns>The parsed <see cref="TlsCertificate"/>.</returns>
         /// <remarks>
         /// <note>
         /// The parts passed must include the <b>-----BEGIN CERTIFICATE-----</b>

@@ -143,6 +143,7 @@ namespace Neon.Cadence
         /// signal is complete as well as specifying the signal result.
         /// </summary>
         /// <param name="result">The value to be returned by the signal.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task ReplyAsync(TResult result)
         {
             // This may only be called within a workflow method.

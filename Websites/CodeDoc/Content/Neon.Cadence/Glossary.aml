@@ -224,7 +224,7 @@
                 workflow actually received the signal.
               </para>
               <para>
-                Workflow signal methods will typically use a <codeEntityReference qualifyHint="false">T:Neon.Cadence.WorkflowQueue</codeEntityReference>
+                Workflow signal methods will typically use a <codeEntityReference qualifyHint="false">T:Neon.Cadence.WorkflowQueue`1</codeEntityReference>
                 to interact with the workflow decision logic.
               </para>
             </entry>

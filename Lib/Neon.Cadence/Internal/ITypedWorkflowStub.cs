@@ -36,6 +36,7 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// Creates an untyped <see cref="WorkflowStub"/> from a typed stub.
         /// </summary>
+        /// <returns>The untyped stub.</returns>
         Task<WorkflowStub> ToUntypedAsync();
 
         /// <summary>

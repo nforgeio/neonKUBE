@@ -397,7 +397,7 @@ namespace Neon.Cadence
         /// <param name="signalName">Specifies the signal name.</param>
         /// <param name="signalArgs">Specifies the signal arguments.</param>
         /// <param name="startArgs">Specifies the workflow start arguments.</param>
-        /// <returns></returns>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task<WorkflowExecution> SignalWithStartAsync(string signalName, object[] signalArgs, object[] startArgs)
         {
             await SyncContext.ClearAsync;

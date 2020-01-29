@@ -78,11 +78,13 @@ namespace Neon.Data
         /// <summary>
         /// Writes the instance as JSON to a <see cref="Stream"/>.
         /// </summary>
+        /// <param name="stream">The output stream.</param>
         void WriteJsonTo(Stream stream);
 
         /// <summary>
         /// Asynchronously writes the instance as JSON to a <see cref="Stream"/>.
         /// </summary>
+        /// <param name="stream">The output stream.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         Task WriteJsonToAsync(Stream stream);
     }

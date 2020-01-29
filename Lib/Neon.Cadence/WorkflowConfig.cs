@@ -36,7 +36,7 @@ namespace Neon.Cadence
         public string TaskList { get; internal set; }
 
         /// <summary>
-        /// 
+        /// Identifies the type of a task list.
         /// </summary>
         public TaskListType TaskListKind { get; internal set; }
 

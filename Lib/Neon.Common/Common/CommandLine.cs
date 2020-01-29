@@ -181,6 +181,7 @@ namespace Neon.Common
         /// instance, dealing with quoted parameters, etc.
         /// </summary>
         /// <param name="input">The argument string.</param>
+        /// <returns>The parsed <see cref="CommandLine"/>.</returns>
         public static CommandLine Parse(string input)
         {
             Covenant.Requires<ArgumentNullException>(input != null, nameof(input));
@@ -240,6 +241,7 @@ namespace Neon.Common
         /// <summary>
         /// Expands the command line by processing items beginning with '@' as input files.
         /// </summary>
+        /// <param name="args">The command line arguments.</param>
         /// <returns>The set of expanded items.</returns>
         /// <remarks>
         /// <para>

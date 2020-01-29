@@ -335,6 +335,7 @@ namespace Neon.Cadence
         /// time method to guarantee determinism when a workflow is replayed.
         /// </note>
         /// </summary>
+        /// <returns>The current workflow time.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
         /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         public async Task<DateTime> UtcNowAsync()
