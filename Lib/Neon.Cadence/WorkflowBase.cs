@@ -462,6 +462,8 @@ namespace Neon.Cadence
                 if (!workflow.signalIdToStatus.TryGetValue(signalId, out var signalStatus))
                 {
                     signalStatus = new SyncSignalStatus();
+
+                    workflow.signalIdToStatus.Add(signalId, signalStatus);
                 }
 
                 return signalStatus;
@@ -945,13 +947,12 @@ namespace Neon.Cadence
                         if (!workflow.signalIdToStatus.TryGetValue(signalCall.SignalId, out var signalStatus))
                         {
                             newSignal    = true;
-                            signalStatus = new SyncSignalStatus()
-                            {
-                                Args = args
-                            };
+                            signalStatus = new SyncSignalStatus();
 
                             workflow.signalIdToStatus.Add(signalCall.SignalId, signalStatus);
                         }
+
+                        signalStatus.Args = args;
                     }
 
                     if (newSignal && signalMethod != null)
