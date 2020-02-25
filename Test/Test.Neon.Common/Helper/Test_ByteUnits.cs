@@ -72,9 +72,6 @@ namespace TestCommon
 
             // Parse whole values.
 
-            Assert.True(ByteUnits.TryParse("1m", out value));
-            Assert.Equal(0.001m, value);
-
             Assert.True(ByteUnits.TryParse("0", out value));
             Assert.Equal(0.0m, value);
 
@@ -104,9 +101,6 @@ namespace TestCommon
 
             // Test fractional values.
 
-            Assert.True(ByteUnits.TryParse("1.5m", out value));
-            Assert.Equal(0.001m * 1.5m, value);
-
             Assert.True(ByteUnits.TryParse("1.5", out value));
             Assert.Equal(1 * 1.5m, value);
 
@@ -129,9 +123,6 @@ namespace TestCommon
             Assert.Equal(ByteUnits.ExbiBytes * 1.5m, value);
 
             // Parse values with a space before the units.
-
-            Assert.True(ByteUnits.TryParse("1 m", out value));
-            Assert.Equal(1.0m * 0.001m, value);
 
             Assert.True(ByteUnits.TryParse("1 Ki", out value));
             Assert.Equal(1.0m * ByteUnits.KibiBytes, value);
@@ -168,11 +159,6 @@ namespace TestCommon
             decimal value;
 
             // Parse whole values.
-            Assert.True(ByteUnits.TryParse("300m", out value));
-            Assert.Equal(0.3m, value);
-
-            Assert.True(ByteUnits.TryParse("4000m", out value));
-            Assert.Equal(4m, value);
 
             Assert.True(ByteUnits.TryParse("0", out value));
             Assert.Equal(0, value);
@@ -237,9 +223,6 @@ namespace TestCommon
             Assert.Equal(ByteUnits.PetaBytes * 1.5m, value);
 
             // Parse values with a space before the units.
-
-            Assert.True(ByteUnits.TryParse("1 m", out value));
-            Assert.Equal(0.001m, value);
 
             Assert.True(ByteUnits.TryParse("1 ", out value));
             Assert.Equal(1, value);
