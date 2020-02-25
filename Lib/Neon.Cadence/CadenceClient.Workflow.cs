@@ -635,7 +635,7 @@ namespace Neon.Cadence
 
             if (!options.TaskStartToCloseTimeout.HasValue)
             {
-                options.TaskStartToCloseTimeout = Settings.WorkflowTaskStartToCloseTimeout;
+                options.TaskStartToCloseTimeout = Settings.WorkflowDecisionTimeout;
             }
 
             var reply = await parentWorkflow.ExecuteNonParallel(

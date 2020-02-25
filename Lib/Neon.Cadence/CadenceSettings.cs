@@ -249,15 +249,15 @@ namespace Neon.Cadence
         /// This must be with the range of <b>1 &lt; value &lt;= 60</b> seconds.
         /// This defaults to <b>10 seconds</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "WorkflowTaskStartToCloseTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "workflowTaskStartToCloseTimeoutSeconds", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "WorkflowDecisionTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "workflowDecisionTimeoutSeconds", ApplyNamingConventions = false)]
         [DefaultValue(10.0)]
-        public double WorkflowTaskStartToCloseTimeoutSeconds { get; set; } = 10.0;
+        public double WorkflowDecisionTimeoutSeconds { get; set; } = 10.0;
 
         /// <summary>
-        /// Returns <see cref="WorkflowTaskStartToCloseTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// Returns <see cref="WorkflowDecisionTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
         /// </summary>
-        internal TimeSpan WorkflowTaskStartToCloseTimeout => TimeSpan.FromSeconds(Math.Min(Math.Max(WorkflowTaskStartToCloseTimeoutSeconds, 1), 60));
+        internal TimeSpan WorkflowDecisionTimeout => TimeSpan.FromSeconds(Math.Min(Math.Max(WorkflowDecisionTimeoutSeconds, 1), 60));
 
         /// <summary>
         /// Specifies what happens when Cadence workflows attempt to reuse workflow IDs.
@@ -538,7 +538,7 @@ namespace Neon.Cadence
                 WorkflowIdReusePolicy                  = this.WorkflowIdReusePolicy,
                 WorkflowScheduleToCloseTimeoutSeconds  = this.WorkflowScheduleToCloseTimeoutSeconds,
                 WorkflowScheduleToStartTimeoutSeconds  = this.WorkflowScheduleToStartTimeoutSeconds,
-                WorkflowTaskStartToCloseTimeoutSeconds = this.WorkflowTaskStartToCloseTimeoutSeconds
+                WorkflowDecisionTimeoutSeconds = this.WorkflowDecisionTimeoutSeconds
             };
         }
     }

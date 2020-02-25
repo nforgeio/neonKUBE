@@ -85,7 +85,7 @@ namespace Neon.Cadence
 
             if (!options.TaskStartToCloseTimeout.HasValue || options.TaskStartToCloseTimeout.Value <= TimeSpan.Zero)
             {
-                options.TaskStartToCloseTimeout = client.Settings.WorkflowTaskStartToCloseTimeout;
+                options.TaskStartToCloseTimeout = client.Settings.WorkflowDecisionTimeout;
             }
 
             if (options.WorkflowIdReusePolicy == Cadence.WorkflowIdReusePolicy.UseDefault)

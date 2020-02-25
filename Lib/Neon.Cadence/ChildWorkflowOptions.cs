@@ -78,7 +78,7 @@ namespace Neon.Cadence
 
             if (!options.TaskStartToCloseTimeout.HasValue || options.TaskStartToCloseTimeout.Value <= TimeSpan.Zero)
             {
-                options.TaskStartToCloseTimeout = client.Settings.WorkflowTaskStartToCloseTimeout;
+                options.TaskStartToCloseTimeout = client.Settings.WorkflowDecisionTimeout;
             }
 
             if (string.IsNullOrEmpty(options.TaskList))
@@ -146,7 +146,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Optionally specifies the decision task timeout for the child workflow.
-        /// This defaults to <see cref="CadenceSettings.WorkflowTaskStartToCloseTimeout"/>.
+        /// This defaults to <see cref="CadenceSettings.WorkflowDecisionTimeout"/>.
         /// </summary>
         public TimeSpan? TaskStartToCloseTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
