@@ -797,7 +797,7 @@ namespace Neon.Cadence
 
             while (SysTime.Now < sysDeadline)
             {
-                // Return TRUE when we're all signals have been acknowledged.
+                // Break when all signals have been acknowledged.
 
                 lock (workflow.signalIdToStatus)
                 {
@@ -812,9 +812,6 @@ namespace Neon.Cadence
                         break; // All signals have been acknowledged
                     }
                 }
-
-                // I would have preferred to call [Task.DelayAsync() here but apparently
-                // Cadence doesn't processes queries within [MutableSideEffect()].
 
                 await workflow.Workflow.SleepAsync(TimeSpan.FromSeconds(1));
             }
@@ -1129,7 +1126,7 @@ namespace Neon.Cadence
 
                                 if (syncSignalStatus.Completed)
                                 {
-                                    // Indicate that the completed signal has reported that status
+                                    // Indicate that the completed signal has reported the status
                                     // to the calling client as well as returned the result, if any.
 
                                     syncSignalStatus.Acknowledged       = true;

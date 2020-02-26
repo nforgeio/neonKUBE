@@ -52,7 +52,7 @@ namespace TestCadence
         /// Controls whether <see cref="CadenceFixture"/> should be configured to leave
         /// the Cadence test container running after the unit tests complete.  This can
         /// be handy during debugging by keeping the Cadence UX around for post test
-        /// invesitigations.
+        /// investigations.
         /// </para>
         /// <note>
         /// This should be disabled for normal CI/CD environments.
