@@ -36,6 +36,13 @@ namespace Snippets_QueuedSignalWorkflow
         public async Task<string> CancelOrderAsync(string reason)
         {
             await queue.EnqueueAsync(new SignalRequest<string>());
+
+            // Throwing this exception indicates to the Cadence client
+            // that the signal result will be sent as a reply from
+            // the workflow code via the [SignalRequest] enqueued
+            // above rather than via a result returned by this
+            // signal method.
+
             throw new WaitForSignalReplyException();
         }
     }

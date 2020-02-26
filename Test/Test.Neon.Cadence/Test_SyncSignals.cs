@@ -544,15 +544,37 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Theory]
+        [InlineData(0)]
+        [InlineData(10)]
+        [InlineData(20)]
+        [InlineData(30)]
+        [InlineData(40)]
+        [InlineData(50)]
+        [InlineData(60)]
+        [InlineData(70)]
+        [InlineData(80)]
+        [InlineData(90)]
+        [InlineData(100)]
+        [InlineData(200)]
+        [InlineData(500)]
+        [InlineData(1000)]
+        [InlineData(2000)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task SyncSignal_WithActivity()
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task SyncSignal_WithActivity(double delayMilliSeconds)
         {
             // Verify that synchronous signals work when the workflow also
-            // executes an activity.
+            // executes an activity.  We're going to have the activity
+            // execute for varying periods of time.
+            //
+            // This test is actually verifying that we fixed this
+            // race condition:
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/769
 
             var stub = client.NewWorkflowStub<ISignalWithActivity>();
-            var task = stub.RunAsync(TimeSpan.FromSeconds(2));
+            var task = stub.RunAsync(TimeSpan.FromMilliseconds(delayMilliSeconds));
 
             var result = await stub.SignalAsync("Jill");
 
