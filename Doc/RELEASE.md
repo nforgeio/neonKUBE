@@ -13,12 +13,14 @@
 
 3. Run all unit tests on Windows in **RELEASE** mode.
 
-4. Public the nuget packages locally and then manually verify that they pass on OS/X:
+4. Close Visual Studio.  It seems to be locking some `obj` directories which prevents the **Snippits** project from building below.
+
+5. Publish the nuget packages locally and then manually verify that they pass on OS/X:
    ```
    neon-nuget-local
    ```
 
-5. Build and publish the Docker images, the nuget packages, code documentation, as well as the full RELEASE build:
+6. Build and publish the Docker images, the nuget packages, code documentation, as well as the full RELEASE build:
    ```
    neon-publish-images -all
    neon-nuget-public
@@ -26,13 +28,13 @@
    neon-release -codedoc
    ```
 
-6. Update the **cadence-samples** solution to reference the new packages and verify that the samples work.
+7. Update the **cadence-samples** solution to reference the new packages and verify that the samples work.
 
-7. Verify that the new release installer works.
+8. Verify that the new release installer works.
 
-8. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: v1.0.0**
+9. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: v1.0.0**
 
-9. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
+10. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
 
   a. Create the release if it doesn't already exist
   b. Set **Tag** to the version with a leading "v" (like **v1.0.0**)
