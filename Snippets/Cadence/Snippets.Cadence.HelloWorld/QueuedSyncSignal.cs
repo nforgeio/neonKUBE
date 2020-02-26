@@ -36,7 +36,7 @@ namespace Snippets_QueuedSignalWorkflow
         public async Task<string> CancelOrderAsync(string reason)
         {
             await queue.EnqueueAsync(new SignalRequest<string>());
-            return default(string);
+            throw new WaitForSignalReplyException();
         }
     }
     #endregion

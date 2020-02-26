@@ -278,10 +278,9 @@
           </listItem>
           <listItem>
             <para>
-              The signal method enqueues the signal request and then immediately returns default value 
-              for the signal result or just returns for signals that don't return a result.  Note that
-              the value returned is ignored and the synchronous signal will not actually return to the 
-              caller until the workflow logic makes this happen.
+              The signal method enqueues the signal request and then throws a <codeEntityReference qualifyHint="false">T:Neon.Cadence.WaitForSignalReplyException</codeEntityReference>.
+              This exception indicates that the workflow logic will handle indicating that the signal has been processed
+              as well as specifying the result, if any.
             </para>
           </listItem>
           <listItem>

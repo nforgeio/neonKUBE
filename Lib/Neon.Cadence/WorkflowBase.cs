@@ -1002,24 +1002,33 @@ namespace Neon.Cadence
                             exception = e;
                         }
 
-                        lock (workflow.signalIdToStatus)
+                        if (exception?.GetType() == typeof(WaitForSignalReplyException))
                         {
-                            if (workflow.signalIdToStatus.TryGetValue(signalCall.SignalId, out var syncSignalStatus))
+                            // This will be thrown by synchronous signal handlers that marshalled
+                            // the signal to the workflow logic.  We're going to ignore the signal
+                            // method result in this case and NOT MARK THE SIGNAL AS COMPLETED.
+                        }
+                        else
+                        {
+                            lock (workflow.signalIdToStatus)
                             {
-                                if (exception == null)
+                                if (workflow.signalIdToStatus.TryGetValue(signalCall.SignalId, out var syncSignalStatus))
                                 {
-                                    syncSignalStatus.Result = client.DataConverter.ToData(result);
+                                    if (exception == null)
+                                    {
+                                        syncSignalStatus.Result = client.DataConverter.ToData(result);
+                                    }
+                                    else
+                                    {
+                                        syncSignalStatus.Error = SyncSignalException.GetError(exception);
+                                    }
+
+                                    syncSignalStatus.Completed = true;
                                 }
                                 else
                                 {
-                                    syncSignalStatus.Error = SyncSignalException.GetError(exception);
+                                    Covenant.Assert(false);
                                 }
-
-                                syncSignalStatus.Completed = true;
-                            }
-                            else
-                            {
-                                Covenant.Assert(false);
                             }
                         }
 

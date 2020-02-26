@@ -405,6 +405,7 @@ namespace TestCadence
                 var signalRequest = new SignalRequest();
 
                 await voidQueue.EnqueueAsync(signalRequest);
+                throw new WaitForSignalReplyException();
             }
 
             public async Task RunResultAsync()
@@ -424,7 +425,7 @@ namespace TestCadence
                 var signalRequest = new SignalRequest<string>();
 
                 await resultQueue.EnqueueAsync(signalRequest);
-                return null;
+                throw new WaitForSignalReplyException();
             }
         }
 
@@ -481,6 +482,83 @@ namespace TestCadence
             Assert.True(QueuedSignal.SignalProcessed);
             Assert.True(result == "Hello Jill!");
             Assert.Equal("Jill", QueuedSignal.Name);
+        }
+
+        //---------------------------------------------------------------------
+
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IDelayActivity : IActivity
+        {
+            [ActivityMethod]
+            Task DelayAsync(TimeSpan delay);
+        }
+
+        [Activity(AutoRegister = true)]
+        public class DelayActivity : ActivityBase, IDelayActivity
+        {
+            public async Task DelayAsync(TimeSpan delay)
+            {
+                await Task.Delay(delay);
+            }
+        }
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface ISignalWithActivity : IWorkflow
+        {
+            [WorkflowMethod(Name = "run")]
+            Task RunAsync(TimeSpan delay);
+
+            [SignalMethod("signal", Synchronous = true)]
+            Task<string> SignalAsync(string name);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class SignalWithActivity : WorkflowBase, ISignalWithActivity
+        {
+            private WorkflowQueue<SignalRequest<string>> signalQueue;
+
+            public async Task RunAsync(TimeSpan delay)
+            {
+                signalQueue = await Workflow.NewQueueAsync<SignalRequest<string>>();
+
+                var stub = Workflow.NewActivityStub<IDelayActivity>();
+
+                await stub.DelayAsync(delay);
+
+                var signalRequest = await signalQueue.DequeueAsync();
+                var name          = signalRequest.Arg<string>("name");
+                var reply         = (string)null;
+
+                if (name != null)
+                {
+                    reply = $"Hello {name}!";
+                }
+
+                await signalRequest.ReplyAsync(reply);
+            }
+
+            public async Task<string> SignalAsync(string name)
+            {
+                await signalQueue.EnqueueAsync(new SignalRequest<string>());
+                throw new WaitForSignalReplyException();
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task SyncSignal_WithActivity()
+        {
+            // Verify that synchronous signals work when the workflow also
+            // executes an activity.
+
+            var stub = client.NewWorkflowStub<ISignalWithActivity>();
+            var task = stub.RunAsync(TimeSpan.FromSeconds(2));
+
+            var result = await stub.SignalAsync("Jill");
+
+            await task;
+
+            Assert.Equal("Hello Jill!", result);
         }
     }
 }
