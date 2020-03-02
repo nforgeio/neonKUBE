@@ -1892,34 +1892,26 @@ func handleWorkflowQueueReadRequest(requestCtx context.Context, request *message
 		return reply
 	}
 
-	timeout := request.GetTimeout()
-	timeoutChannel := workflow.NewChannel(ctx)
-	defer timeoutChannel.Close()
-
-	if timeout > time.Duration(0) {
-		workflow.Go(ctx, func(c workflow.Context) {
-			isReady := false
-			timer := workflow.NewTimer(c, timeout)
-			e := timer.Get(c, &isReady)
-			timeoutChannel.Send(c, e)
-		})
-	}
-
+	// read value from queue
 	var data []byte
 	var isClosed bool
 	var cadenceError *proxyerror.CadenceError
-
-	// read value from queue
+	timeout := request.GetTimeout()
 	s := workflow.NewSelector(ctx)
-	s.AddReceive(timeoutChannel, func(c workflow.Channel, more bool) {
-		var err error
-		c.Receive(ctx, err)
-		if err != nil {
-			cadenceError = proxyerror.NewCadenceError(err, proxyerror.Cancelled)
-		} else {
-			cadenceError = proxyerror.NewCadenceError(fmt.Errorf("Timeout reading from workflow queue: %d", queueID), proxyerror.Timeout)
-		}
-	})
+
+	// check for timeout
+	if timeout > time.Duration(0) {
+		timer := workflow.NewTimer(ctx, timeout)
+		s.AddFuture(timer, func(f workflow.Future) {
+			isReady := false
+			err := f.Get(ctx, &isReady)
+			if err != nil {
+				cadenceError = proxyerror.NewCadenceError(err, proxyerror.Cancelled)
+			} else {
+				cadenceError = proxyerror.NewCadenceError(fmt.Errorf("Timeout reading from workflow queue: %d", queueID), proxyerror.Timeout)
+			}
+		})
+	}
 	s.AddReceive(queue, func(c workflow.Channel, more bool) {
 		c.Receive(ctx, &data)
 		if data == nil {
