@@ -37,8 +37,8 @@ namespace Snippets_QueuedSignalWorkflow
             var signal = await queue.DequeueAsync();
             var reason = signal.Arg<string>("reason");
 
-            // This line actually specifies the result to be be returned
-            // to the external code that sent the synchronous signal.
+            // This line actually specifies the result to be returned
+            // back to the external code that sent the synchronous signal.
 
             await signal.ReplyAsync($"Order cancelled due to: {reason}");
         }
