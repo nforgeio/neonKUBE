@@ -49,6 +49,9 @@ namespace Snippets_QueuedSignalWorkflow
             // magically initializes the [SignalRequest.Args] dictionary
             // with the names and values of the parameters passed to this
             // method.
+            //
+            // Note that the <string> generic parameter here specifies the
+            // result type for this signal method.
 
             var signalRequest = new SignalRequest<string>();
 
