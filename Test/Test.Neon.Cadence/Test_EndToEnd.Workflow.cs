@@ -3508,6 +3508,9 @@ namespace TestCadence
             [WorkflowMethod(Name = "WaitForSignalsAndClose")]
             Task<List<string>> WaitForSignalAndClose(int expectedSignals);
 
+            [WorkflowMethod(Name = "WaitForSignal_TimeoutWithDequeue")]
+            Task<string> WaitForSignal_TimeoutWithDequeue();
+
             [WorkflowMethod(Name = "QueueToSelf-Bytes")]
             Task<string> QueueToSelf_Bytes(int byteCount);
 
@@ -3645,6 +3648,35 @@ namespace TestCadence
                     try
                     {
                         await queue.DequeueAsync(TimeSpan.FromSeconds(1));
+                        return "1: Expected dequeue to timeout";
+                    }
+                    catch (CadenceTimeoutException)
+                    {
+                        return null;    // Expecting this
+                    }
+                    catch (Exception e)
+                    {
+                        return $"2: Unexpected exception: {e.GetType().FullName}: {e.Message}";
+                    }
+                }
+            }
+
+            public async Task<string> WaitForSignal_TimeoutWithDequeue()
+            {
+                // Verifies that [cadence-proxy] honors dequeuing timeouts.
+
+                using (signalQueue = await Workflow.NewQueueAsync<string>())
+                {
+                    try
+                    {
+                        // dequeue first value should come through
+
+                        await signalQueue.DequeueAsync(TimeSpan.FromSeconds(5));
+
+                        // next dequeue should timeout
+
+                        await signalQueue.DequeueAsync(TimeSpan.FromSeconds(10));
+
                         return "1: Expected dequeue to timeout";
                     }
                     catch (CadenceTimeoutException)
@@ -3866,6 +3898,22 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IWorkflowQueueTest>();
 
             Assert.Null(await stub.QueueToSelf_Timeout());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Queue_TimeoutWithDequeue()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that [cadence-proxy] honors dequeue timeouts.
+
+            var stub   = client.NewWorkflowFutureStub<IWorkflowQueueTest>("WaitForSignal_TimeoutWithDequeue");
+            var future = await stub.StartAsync<string>();
+
+            await stub.SignalAsync("signal", "signal: 0");
+
+            Assert.Null(await future.GetAsync());
         }
 
         [Fact]
