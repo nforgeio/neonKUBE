@@ -44,9 +44,17 @@ echo "*** Waiting for Couchbase to start..."
 while : 
 do
     # Give Couchbase a chance to start and then attempt
-    # to initialize the cluster.
+    # to initialize the cluster and node
 
     sleep 1
+
+    couchbase-cli node-init \
+        --cluster localhost:${ADMIN_PORT} \
+        --username=${USERNAME} \
+        --password=${PASSWORD} \
+        --node-init-hostname=localhost
+
+    
     couchbase-cli cluster-init --cluster-name ${CLUSTER_NAME} \
         --cluster-username ${USERNAME} \
         --cluster-password ${PASSWORD} \
