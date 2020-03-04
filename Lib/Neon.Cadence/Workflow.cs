@@ -251,7 +251,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Executes a workflow Cadence related operation, trying to detect
+        /// Executes a Cadence workflow related operation, trying to detect
         /// when an attempt is made to perform more than one operation in 
         /// parallel, which will likely break workflow determinism.
         /// </summary>

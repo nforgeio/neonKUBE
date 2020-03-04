@@ -377,7 +377,7 @@ namespace Neon.Cadence
 
                 // $hack(jefflill): 
                 //
-                // We're going to ignore any errors here to handle:
+                // We're going to ignore any errors here to address:
                 //
                 //      https://github.com/nforgeio/neonKUBE/issues/668
 
@@ -1017,6 +1017,8 @@ namespace Neon.Cadence
                                     }
                                     else
                                     {
+                                        log.LogError(exception);
+
                                         syncSignalStatus.Error = SyncSignalException.GetError(exception);
                                     }
 

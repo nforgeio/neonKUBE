@@ -561,7 +561,6 @@ namespace TestCadence
         [InlineData(1000)]
         [InlineData(2000)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task SyncSignal_WithActivity(double delayMilliSeconds)
         {
             // Verify that synchronous signals work when the workflow also
@@ -581,6 +580,108 @@ namespace TestCadence
             await task;
 
             Assert.Equal("Hello Jill!", result);
+        }
+
+        //---------------------------------------------------------------------
+
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface ISignalBlastDelayActivity : IActivity
+        {
+            [ActivityMethod]
+            Task DelayAsync(TimeSpan delay);
+        }
+
+        [Activity(AutoRegister = true)]
+        public class SignalBlastDelayActivity : ActivityBase, ISignalBlastDelayActivity
+        {
+            public async Task DelayAsync(TimeSpan delay)
+            {
+                await Task.Delay(delay);
+            }
+        }
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface ISignalBlastProcessor : IWorkflow
+        {
+            [WorkflowMethod(Name = "run")]
+            Task RunAsync(TimeSpan delay);
+
+            [SignalMethod("signal", Synchronous = true)]
+            Task<string> SignalAsync(string name);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class SignalBlastProcessor : WorkflowBase, ISignalBlastProcessor
+        {
+            private WorkflowQueue<SignalRequest<string>> signalQueue;
+
+            public async Task RunAsync(TimeSpan delay)
+            {
+                var delayStub = Workflow.NewLocalActivityStub<ISignalBlastDelayActivity, SignalBlastDelayActivity>();
+
+                signalQueue = await Workflow.NewQueueAsync<SignalRequest<string>>(int.MaxValue);
+
+                // Process messages until we get one that passes NULL.
+
+                while (true)
+                {
+                    var signalRequest = await signalQueue.DequeueAsync();
+                    var name          = signalRequest.Arg<string>("name");
+                    var reply         = (string)null;
+
+                    if (name != null)
+                    {
+                        reply = $"Hello {name}!";
+
+                        if (delay > TimeSpan.Zero)
+                        {
+                            await delayStub.DelayAsync(delay);
+                        }
+                    }
+
+                    await signalRequest.ReplyAsync(reply);
+
+                    if (name == null)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            public async Task<string> SignalAsync(string name)
+            {
+                await signalQueue.EnqueueAsync(new SignalRequest<string>());
+                throw new WaitForSignalReplyException();
+            }
+        }
+
+        [Theory]
+        [InlineData(1, 0.0)]
+        [InlineData(10, 1.0)]
+        [InlineData(100, 0.0)]
+        //[InlineData(1000, 0.0)]
+        //[InlineData(2000, 0.0)]
+        //[InlineData(4000, 0.0)]
+        //[InlineData(8000, 0.0)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task SyncSignal_Blast(int count, double delaySeconds)
+        {
+            // Blast a bunch of synchronous signals at a workflow instance
+            // to verify that we've fixed:
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/773
+
+            var stub = client.NewWorkflowStub<ISignalBlastProcessor>();
+            var task = stub.RunAsync(TimeSpan.FromMilliseconds(delaySeconds));
+
+            for (int i = 0; i < count; i++)
+            {
+                Assert.Equal("Hello Jill!", await stub.SignalAsync("Jill"));
+            }
+
+            Assert.Null(await stub.SignalAsync(null));  // Signal the workflow to complete
+
+            await task;
         }
     }
 }
