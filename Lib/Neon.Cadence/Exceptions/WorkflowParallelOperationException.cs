@@ -33,7 +33,7 @@ namespace Neon.Cadence
         /// Consutuctor.
         /// </summary>
         public WorkflowParallelOperationException()
-            : base("Workflows cannot perform multiple operations in parallel.")
+            : base("Workflows cannot perform multiple operations in parallel.  Are you missing an \"await\"?")
         {
         }
     }

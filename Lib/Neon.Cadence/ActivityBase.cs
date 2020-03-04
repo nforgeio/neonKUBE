@@ -699,6 +699,12 @@ namespace Neon.Cadence
 
                     return await InvokeAsync(client, args);
                 }
+                catch (Exception e)
+                {
+                    log.LogError(e);
+
+                    throw;
+                }
                 finally
                 {
                     lock (syncLock)
