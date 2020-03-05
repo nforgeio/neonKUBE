@@ -613,14 +613,14 @@ namespace Couchbase
         /// </summary>
         /// <typeparam name="T">The document type.</typeparam>
         /// <param name="bucket">The bucket.</param>
-        /// <param name="keys">The key.</param>
+        /// <param name="key">The key.</param>
         /// <param name="expiration">The optional new expiry timespan.</param>
         /// <returns>The document.</returns>
-        public static async Task<Document<T>> GetDocumentSafeAsync<T>(this IBucket bucket, string keys, TimeSpan expiration)
+        public static async Task<Document<T>> GetDocumentSafeAsync<T>(this IBucket bucket, string key, TimeSpan expiration)
         {
             await SyncContext.ClearAsync;
 
-            var result = await bucket.GetDocumentAsync<T>(keys);
+            var result = await bucket.GetDocumentAsync<T>(key);
 
             VerifySuccess<T>(result, replicateOrPersist: false);
 
@@ -635,7 +635,7 @@ namespace Couchbase
         /// <param name="bucket">The bucket.</param>
         /// <param name="keys">The keys.</param>
         /// <returns>The documents.</returns>
-        public static async Task<IDocument<T>[]> GetDocumentSafeAsync<T>(this IBucket bucket, IEnumerable<string> keys)
+        public static async Task<IDocument<T>[]> GetDocumentsSafeAsync<T>(this IBucket bucket, IEnumerable<string> keys)
         {
             await SyncContext.ClearAsync;
 
