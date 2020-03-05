@@ -1168,7 +1168,7 @@ namespace Neon.ModelGen
 
                 if (persistedKeyProperty == null)
                 {
-                    Output.Error($"[{dataModel.SourceType.FullName}]: This data model has no property tagged with [PersistabledKey].  Entity classes must tag one property as the database key.");
+                    Output.Error($"[{dataModel.SourceType.FullName}]: This data model has no property tagged with [PersistableKey].  Persistable classes must tag one property as the database key.");
                 }
             }
 
