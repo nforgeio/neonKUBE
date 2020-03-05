@@ -2633,6 +2633,15 @@ namespace Neon.ModelGen
             writer.WriteLine($"        /// Returns the underlying <see cref=\"HttpClient.DefaultRequestHeaders\"/>.");
             writer.WriteLine($"        /// </summary>");
             writer.WriteLine($"        public HttpRequestHeaders DefaultRequestHeaders => client.DefaultRequestHeaders;");
+            writer.WriteLine();
+            writer.WriteLine($"        /// <summary>");
+            writer.WriteLine($"        /// Returns the underlying <see cref=\"HttpClient.DefaultRequestHeaders\"/>.");
+            writer.WriteLine($"        /// </summary>");
+            writer.WriteLine($"        public IRetryPolicy RetryPolicy");
+            writer.WriteLine($"        {{");
+            writer.WriteLine($"            get => this.retryPolicy;");
+            writer.WriteLine($"            set => this.retryPolicy = value ?? global::Neon.Retry.NoRetryPolicy.Instance;");
+            writer.WriteLine($"        }}");
 
             if (hasNonRootClientGroups)
             {
