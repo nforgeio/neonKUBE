@@ -196,6 +196,27 @@ namespace TestModelGen.Couchbase
             Assert.True(Person.SameTypeAs(jack));
             Assert.False(Person.SameTypeAs(city));
             Assert.False(Person.SameTypeAs(null));
+
+            //-----------------------------------------------------------------
+            // Extra credit #3: Try to reproduce: 
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/738
+            //
+            // I was unable to reproduce this.
+
+            var color = new TagColor() { Id = "#FF0000", Name = "red" };
+
+            await bucket.UpsertSafeAsync(color, persistTo: PersistTo.One);
+            await bucket.WaitForIndexerAsync();
+
+            var colors = from doc in context.Query<TagColor>() where doc.Id == "#FF0000" select doc;
+
+            Assert.Single(colors);
+
+            color = colors.First();
+
+            Assert.Equal("#FF0000", color.Id);
+            Assert.Equal("red", color.Name);
         }
 
         [Fact]

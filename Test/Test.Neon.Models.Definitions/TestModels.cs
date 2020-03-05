@@ -148,6 +148,16 @@ namespace Test.Neon.Models.Definitions
         Person Baby { get; set; }
     }
 
+    [Persistable]
+    [DataModel(Name = "TagColor")]
+    public interface TagColor
+    {
+        [PersistableKey]
+        string Id { get; set; }
+
+        string Name { get; set; }
+    }
+
     [ServiceModel]
     [Route("/TestAspNetFixture")]
     public interface TestAspNetFixtureController
