@@ -59,7 +59,7 @@ namespace WinDesktop
         //---------------------------------------------------------------------
         // Instance members
 
-        private const double animationFrameRate = 2;
+        private const double animationFrameRate = 1.4 ;
         private const string headendError       = "Unable to contact the neonKUBE headend service.";
 
         private Icon                appIcon;
@@ -970,6 +970,9 @@ namespace WinDesktop
         private void Menu_Popup(object sender, EventArgs args)
         {
             contextMenu.MenuItems.Clear();
+            
+        
+
 
             // Append submenus for each of the cluster contexts that have
             // neonKUBE extensions.  We're not going to try to manage 
@@ -1080,6 +1083,11 @@ namespace WinDesktop
             contextMenu.MenuItems.Add(new MenuItem("Settings", OnSettingsCommand));
             contextMenu.MenuItems.Add(new MenuItem("Check for Updates", OnCheckForUpdatesCommand) { Enabled = !operationInProgress });
             contextMenu.MenuItems.Add("-");
+
+            // add build version number to menu
+            // having to open up the about screen every time just to see the version number is a bit annyoing
+            contextMenu.MenuItems.Add(new MenuItem($"{Build.ProductName} {Build.ProductVersion}") { Enabled = false });
+
             contextMenu.MenuItems.Add(new MenuItem("Exit", OnExitCommand));
         }
 
