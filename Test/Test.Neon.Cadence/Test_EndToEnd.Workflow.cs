@@ -4495,5 +4495,72 @@ namespace TestCadence
             Assert.True(await stub.RunAsync());
             Assert.Null(Workflow.Current);
         }
+
+        //---------------------------------------------------------------------
+
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IWorkflowActivityIssue755 : IActivity
+        {
+            [ActivityMethod(Name = "Delay")]
+            Task Delay(TimeSpan delay);
+        }
+
+        [Activity(AutoRegister = true)]
+        public class WorkflowActivityIssue755 : ActivityBase, IWorkflowActivityIssue755
+        {
+            public async Task Delay(TimeSpan delay)
+            {
+                await Task.Delay(delay);
+            }
+        }
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IWorkflowIssue755 : IWorkflow
+        {
+            [WorkflowMethod()]
+            Task RunAsync(TimeSpan delay, int activityCount);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowIssue755 : WorkflowBase, IWorkflowIssue755
+        {
+            public async Task RunAsync(TimeSpan delay, int iterations)
+            {
+                var stub = Workflow.NewLocalActivityStub<IWorkflowActivityIssue755, WorkflowActivityIssue755>(
+                    options: new LocalActivityOptions()
+                    {
+                        ScheduleToCloseTimeout = TimeSpan.FromHours(1),
+                        RetryOptions           = new RetryOptions()
+                        {
+                            MaximumAttempts    = 10,
+                            BackoffCoefficient = 2.0,
+                            InitialInterval    = TimeSpan.FromSeconds(1),
+                            MaximumInterval    = TimeSpan.FromSeconds(30),
+                            NonRetriableErrors = new List<string>()
+                        }
+                    });
+
+                for (int i = 0; i < iterations; i++)
+                {
+                    await stub.Delay(delay);
+                }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Issue755()
+        {
+            // Replicating and then verifying the fix for:
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/775
+
+            for (int i = 0; i < 10; i++)
+            {
+                var stub = client.NewWorkflowStub<IWorkflowIssue755>();
+
+                await stub.RunAsync(TimeSpan.FromMilliseconds(10), 1000);
+            }
+        }
     }
 }
