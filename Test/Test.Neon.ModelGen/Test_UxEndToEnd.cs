@@ -535,7 +535,7 @@ namespace TestModelGen.UxAspNet
             // Verify that we can round trip the "Unknown" property.
 
             jObject.Add("Unknown", "very tricky!");
-            jObject.Add("__T", typeof(Person).FullName);
+            jObject.Add("T$$", typeof(Person).FullName);
 
             var person = Person.CreateFrom(jObject.ToString());
 

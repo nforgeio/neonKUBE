@@ -4547,19 +4547,20 @@ namespace TestCadence
             }
         }
 
-        [Fact]
+        [Theory]
+        [InlineData(10, 1000, 0.010)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_Issue755()
+        public async Task Workflow_Issue755(int workflowCount, int activityCount, double delaySeconds)
         {
             // Replicating and then verifying the fix for:
             //
             //      https://github.com/nforgeio/neonKUBE/issues/775
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < workflowCount; i++)
             {
                 var stub = client.NewWorkflowStub<IWorkflowIssue755>();
 
-                await stub.RunAsync(TimeSpan.FromMilliseconds(10), 1000);
+                await stub.RunAsync(TimeSpan.FromMilliseconds(delaySeconds), activityCount);
             }
         }
     }

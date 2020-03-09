@@ -266,13 +266,13 @@ namespace TestModelGen.UxDataModel
             using (var context = new AssemblyContext("Neon.ModelGen.Output", assemblyStream))
             {
                 var data = context.CreateDataWrapper<EmptyPersistableData>();
-                Assert.Equal("{\"__T\":\"TestModelGen.UxDataModel.EmptyPersistableData\"}", data.ToString());
+                Assert.Equal("{\"T$$\":\"TestModelGen.UxDataModel.EmptyPersistableData\"}", data.ToString());
 
                 data = context.CreateDataWrapperFrom<EmptyPersistableData>(data.ToString());
-                Assert.Equal("{\"__T\":\"TestModelGen.UxDataModel.EmptyPersistableData\"}", data.ToString());
+                Assert.Equal("{\"T$$\":\"TestModelGen.UxDataModel.EmptyPersistableData\"}", data.ToString());
 
                 data = context.CreateDataWrapperFrom<EmptyPersistableData>(data.ToJObject());
-                Assert.Equal("{\"__T\":\"TestModelGen.UxDataModel.EmptyPersistableData\"}", data.ToString());
+                Assert.Equal("{\"T$$\":\"TestModelGen.UxDataModel.EmptyPersistableData\"}", data.ToString());
 
                 //-------------------------------------------------------------
                 // Verify Equals():
