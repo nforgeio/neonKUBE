@@ -173,6 +173,7 @@ namespace Neon.ModelGen
         private bool                                generateUx         = false;
         private StringWriter                        writer;
         private HashSet<Type>                       convertableTypes;
+        private string                              typePropertyName;
 
         /// <summary>
         /// Constructs a code generator.
@@ -180,8 +181,9 @@ namespace Neon.ModelGen
         /// <param name="settings">Optional settings.  Reasonable defaults will be used when this is <c>null</c>.</param>
         public ModelGenerator(ModelGeneratorSettings settings = null)
         {
-            this.Settings = settings ?? new ModelGeneratorSettings();
-            this.Output   = new ModelGeneratorOutput();
+            this.Settings         = settings ?? new ModelGeneratorSettings();
+            this.Output           = new ModelGeneratorOutput();
+            this.typePropertyName = settings.V1Compatible ? "__T" : "T$$";
 
             if (string.IsNullOrEmpty(settings.SourceNamespace))
             {
@@ -1168,7 +1170,7 @@ namespace Neon.ModelGen
 
                 if (persistedKeyProperty == null)
                 {
-                    Output.Error($"[{dataModel.SourceType.FullName}]: This data model has no property tagged with [PersistabledKey].  Entity classes must tag one property as the database key.");
+                    Output.Error($"[{dataModel.SourceType.FullName}]: This data model has no property tagged with [PersistableKey].  Persistable classes must tag one property as the database key.");
                 }
             }
 
@@ -1891,10 +1893,10 @@ namespace Neon.ModelGen
                         writer.WriteLine();
                         writer.WriteLine($"            if (!isDerived)");
                         writer.WriteLine($"            {{");
-                        writer.WriteLine($"                property = this.__O.Property(\"__T\");");
+                        writer.WriteLine($"                property = this.__O.Property(\"{typePropertyName}\");");
                         writer.WriteLine($"                if (property == null)");
                         writer.WriteLine($"                {{");
-                        writer.WriteLine($"                    throw new ArgumentNullException(\"[{className}.__T] property is required when deserializing.\");");
+                        writer.WriteLine($"                    throw new ArgumentNullException(\"[{className}.{typePropertyName}] property is required when deserializing.\");");
                         writer.WriteLine($"                }}");
                         writer.WriteLine($"                else");
                         writer.WriteLine($"                {{");
@@ -2007,7 +2009,7 @@ namespace Neon.ModelGen
                     {
                         // Serialize the [__T] property
 
-                        writer.WriteLine($"            this.__O[\"__T\"] = PersistedType;");
+                        writer.WriteLine($"            this.__O[\"{typePropertyName}\"] = PersistedType;");
                     }
 
                     writer.WriteLine();
@@ -2233,8 +2235,10 @@ namespace Neon.ModelGen
 
                         writer.WriteLine();
                         writer.WriteLine($"        /// <summary>");
-                        writer.WriteLine($"        /// Identifies the persisted object type.  \"__T\" is short for \"type\".");
+                        writer.WriteLine($"        /// Identifies the persisted object type.  \"__T\" is short for \"type\".  This is persisted as \"{typePropertyName}\".");
                         writer.WriteLine($"        /// </summary>");
+                        writer.WriteLine($"        [JsonProperty(PropertyName = \"{typePropertyName}\", DefaultValueHandling = DefaultValueHandling.Include, Required = Required.Default, Order = 0)]");
+                        writer.WriteLine($"        [DefaultValue(null)]");
                         writer.WriteLine($"        public string __T");
                         writer.WriteLine($"        {{");
                         writer.WriteLine($"            get");
@@ -2244,7 +2248,7 @@ namespace Neon.ModelGen
                         writer.WriteLine($"                     return cachedT;");
                         writer.WriteLine($"                 }}");
                         writer.WriteLine();
-                        writer.WriteLine($"                 cachedT = (string)__O[\"__T\"];");
+                        writer.WriteLine($"                 cachedT = (string)__O[\"{typePropertyName}\"];");
                         writer.WriteLine();
                         writer.WriteLine($"                 if (cachedT != null)");
                         writer.WriteLine($"                 {{");
@@ -2633,6 +2637,15 @@ namespace Neon.ModelGen
             writer.WriteLine($"        /// Returns the underlying <see cref=\"HttpClient.DefaultRequestHeaders\"/>.");
             writer.WriteLine($"        /// </summary>");
             writer.WriteLine($"        public HttpRequestHeaders DefaultRequestHeaders => client.DefaultRequestHeaders;");
+            writer.WriteLine();
+            writer.WriteLine($"        /// <summary>");
+            writer.WriteLine($"        /// Returns the underlying <see cref=\"HttpClient.DefaultRequestHeaders\"/>.");
+            writer.WriteLine($"        /// </summary>");
+            writer.WriteLine($"        public IRetryPolicy RetryPolicy");
+            writer.WriteLine($"        {{");
+            writer.WriteLine($"            get => this.retryPolicy;");
+            writer.WriteLine($"            set => this.retryPolicy = value ?? global::Neon.Retry.NoRetryPolicy.Instance;");
+            writer.WriteLine($"        }}");
 
             if (hasNonRootClientGroups)
             {

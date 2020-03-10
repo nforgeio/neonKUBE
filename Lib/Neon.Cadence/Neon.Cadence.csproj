@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Cadence</RootNamespace>
-    <Version>1.2.0</Version>
+    <Version>1.2.2</Version>
     <Company>neonFORGE, LLC</Company>
     <Authors>Jeff Lill, John C Burns</Authors>
     <Description>.NET client for Uber Cadence.</Description>

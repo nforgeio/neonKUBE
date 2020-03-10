@@ -377,7 +377,7 @@ namespace Neon.Cadence
 
                 // $hack(jefflill): 
                 //
-                // We're going to ignore any errors here to handle:
+                // We're going to ignore any errors here to address:
                 //
                 //      https://github.com/nforgeio/neonKUBE/issues/668
 
@@ -554,6 +554,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
             Covenant.Requires<ArgumentException>(request.ReplayStatus != InternalReplayStatus.Unspecified, nameof(request));
+CadenceHelper.DebugLog($"Workflow Invoke Message: workflowId={request.WorkflowId} contextId={request.ContextId}");
 
             WorkflowBase            workflow;
             WorkflowRegistration    registration;
@@ -596,7 +597,7 @@ namespace Neon.Cadence
                     isReplaying:        request.ReplayStatus == InternalReplayStatus.Replaying,
                     methodMap:          registration.MethodMap);
 
-            Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information for workflow library code.
+            Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information.
 
             lock (syncLock)
             {
@@ -843,7 +844,7 @@ namespace Neon.Cadence
 
                 if (workflow != null)
                 {
-                    Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information for workflow library code.
+                    Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information.
 
                     var method = workflow.Workflow.MethodMap.GetSignalMethod(request.SignalName);
 
@@ -909,7 +910,7 @@ namespace Neon.Cadence
 
                 if (workflow != null)
                 {
-                    Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information for workflow library code.
+                    Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information.
 
                     // The signal arguments should be just a single [SyncSignalCall] that specifies
                     // the target signal and also includes its encoded arguments.
@@ -1017,6 +1018,8 @@ namespace Neon.Cadence
                                     }
                                     else
                                     {
+                                        log.LogError(exception);
+
                                         syncSignalStatus.Error = SyncSignalException.GetError(exception);
                                     }
 
