@@ -1187,7 +1187,7 @@ namespace Neon.Cadence.Internal
         /// <b>INTERNAL USE ONLY:</b> Appends a line of text to the debug log which is
         /// used internally to debug generated code like stubs.  This works only for
         /// DEBUG builds and hardcodes its output to <b>C:\Temp\cadence-debug.log</b>
-        /// so this only works on Windows.
+        /// so this currently only works on Windows.
         /// </summary>
         /// <param name="line">The line of text to be written.</param>
         public static void DebugLog(string line)

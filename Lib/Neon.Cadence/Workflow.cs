@@ -65,13 +65,14 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Instance members
 
-        private object      syncLock = new object();
-        private int         pendingOperationCount;
-        private long        nextLocalActivityActionId;
-        private long        nextActivityId;
-        private long        nextQueueId;
-        private Random      random;
-        private bool        isReplaying;
+        private object                      syncLock = new object();
+        private int                         pendingOperationCount;
+        private Dictionary<string, string>  pendingOperationStackTraces;
+        private long                        nextLocalActivityActionId;
+        private long                        nextActivityId;
+        private long                        nextQueueId;
+        private Random                      random;
+        private bool                        isReplaying;
 
         /// <summary>
         /// Constructor.
@@ -105,7 +106,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId), nameof(runId));
 
-            this.WorkflowBase                    = parent;
+            this.WorkflowBase              = parent;
             this.ContextId                 = contextId;
             this.pendingOperationCount     = 0;
             this.nextLocalActivityActionId = 0;
@@ -117,6 +118,11 @@ namespace Neon.Cadence
             this.IsReplaying               = isReplaying;
             this.Execution                 = new WorkflowExecution(workflowId, runId);
             this.Logger                    = LogManager.Default.GetLogger(sourceModule: Client.Settings?.ClientIdentity, contextId: runId, () => !IsReplaying || Client.Settings.LogDuringReplay);
+
+            if (client.Settings.Debug)
+            {
+                pendingOperationStackTraces = new Dictionary<string, string>();
+            }
 
             // Initialize the random number generator with a fairly unique
             // seed for the workflow without consuming entropy to obtain
@@ -266,22 +272,62 @@ namespace Neon.Cadence
         /// </remarks>
         internal async Task<TResult> ExecuteNonParallel<TResult>(Func<Task<TResult>> actionAsync)
         {
+            var debugMode = Client.Settings.Debug;
+            
             if (WorkflowBase.CallContext.Value == WorkflowBase.WorkflowCallContext.Entrypoint)
             {
                 // Workflow entry points are restricted to one operation at a time.
 
+                var operationId = string.Empty;
+
+                if (debugMode)
+                {
+                    operationId = Guid.NewGuid().ToString("d");
+                }
+
                 try
                 {
-                    if (Interlocked.Increment(ref pendingOperationCount) > 1)
+                    lock (syncLock)
                     {
-                        throw new WorkflowParallelOperationException();
+                        if (pendingOperationCount > 0)
+                        {
+                            if (debugMode)
+                            {
+                                throw new WorkflowParallelOperationException(pendingOperationStackTraces.Values.ToArray());
+                            }
+                            else
+                            {
+                                throw new WorkflowParallelOperationException();
+                            }
+                        }
+
+                        if (debugMode)
+                        {
+                            pendingOperationStackTraces.Add(operationId, new StackTrace(skipFrames: 1, fNeedFileInfo: true).ToString());
+                        }
+
+                        pendingOperationCount++;
                     }
 
                     return await actionAsync();
                 }
                 finally
                 {
-                    Interlocked.Decrement(ref pendingOperationCount);
+                    lock (syncLock)
+                    {
+                        if (debugMode)
+                        {
+                            lock (pendingOperationStackTraces)
+                            {
+                                if (pendingOperationStackTraces.ContainsKey(operationId))
+                                {
+                                    pendingOperationStackTraces.Remove(operationId);
+                                }
+                            }
+                        }
+
+                        pendingOperationCount--;
+                    }
                 }
             }
             else
