@@ -66,6 +66,7 @@ namespace Neon.Cadence
         // Instance members
 
         private object                      syncLock = new object();
+        private string                      workflowId;
         private int                         pendingOperationCount;
         private Dictionary<string, string>  pendingOperationStackTraces;
         private long                        nextLocalActivityActionId;
@@ -105,8 +106,10 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList), nameof(taskList));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId), nameof(runId));
+CadenceHelper.DebugLog($"Invoke Workflow: workflowId={workflowId} contextId={contextId}");
 
             this.WorkflowBase              = parent;
+            this.workflowId                = workflowId;
             this.ContextId                 = contextId;
             this.pendingOperationCount     = 0;
             this.nextLocalActivityActionId = 0;
@@ -272,6 +275,7 @@ namespace Neon.Cadence
         /// </remarks>
         internal async Task<TResult> ExecuteNonParallel<TResult>(Func<Task<TResult>> actionAsync)
         {
+CadenceHelper.DebugLog($"Execute: workflowId={workflowId} contextId={ContextId}");
             var debugMode = Client.Settings.Debug;
             
             if (WorkflowBase.CallContext.Value == WorkflowBase.WorkflowCallContext.Entrypoint)
@@ -291,6 +295,7 @@ namespace Neon.Cadence
                     {
                         if (pendingOperationCount > 0)
                         {
+CadenceHelper.DebugLog($"Parallel Execution: workflowId={workflowId} contextId={ContextId}");
                             if (debugMode)
                             {
                                 throw new WorkflowParallelOperationException(pendingOperationStackTraces.Values.ToArray());
