@@ -596,7 +596,7 @@ namespace Neon.Cadence
                     isReplaying:        request.ReplayStatus == InternalReplayStatus.Replaying,
                     methodMap:          registration.MethodMap);
 
-            Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information for workflow library code.
+            Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information.
 
             lock (syncLock)
             {
@@ -843,7 +843,7 @@ namespace Neon.Cadence
 
                 if (workflow != null)
                 {
-                    Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information for workflow library code.
+                    Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information.
 
                     var method = workflow.Workflow.MethodMap.GetSignalMethod(request.SignalName);
 
@@ -909,7 +909,7 @@ namespace Neon.Cadence
 
                 if (workflow != null)
                 {
-                    Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information for workflow library code.
+                    Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information.
 
                     // The signal arguments should be just a single [SyncSignalCall] that specifies
                     // the target signal and also includes its encoded arguments.

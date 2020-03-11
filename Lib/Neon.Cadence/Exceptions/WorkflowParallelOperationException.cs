@@ -32,9 +32,22 @@ namespace Neon.Cadence
         /// <summary>
         /// Consutuctor.
         /// </summary>
-        public WorkflowParallelOperationException()
-            : base("Workflows cannot perform multiple operations in parallel.  Are you missing an \"await\"?")
+        /// <param name="otherStackTraces">
+        /// Optionally specifies the stack traces for the other pending operations
+        /// that triggered this exception.
+        /// </param>
+        public WorkflowParallelOperationException(string[] otherStackTraces = null)
+            : base("Workflows cannot perform multiple operations in parallel.  Are you missing an [await]?")
         {
+            this.OtherStackTraces = otherStackTraces;
         }
+
+        /// <summary>
+        /// Returns the stack traces for the other pending operations when <see cref="CadenceSettings.Debug"/>
+        /// is set to <c>true</c>.  You can use this to discover where the other pending operations that
+        /// triggered this exception were initiated.  The current operation stack trace will be available
+        /// as <see cref="Exception.StackTrace"/> property on this exception.
+        /// </summary>
+        public string[] OtherStackTraces { get; private set; }
     }
 }

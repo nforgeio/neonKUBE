@@ -1654,6 +1654,34 @@ namespace Neon.Cadence
 
         /// <summary>
         /// <para>
+        /// <b>INTERNAL USE ONLY:</b> Appends a line of text to the debug log which is
+        /// used internally to debug generated code like stubs.  This hardcodes its
+        /// output to <b>C:\Temp\cadence-debug.log</b> so this currently only works
+        /// on Windows.
+        /// </para>
+        /// <note>
+        /// This method doesn't actually log anything unless <see cref="CadenceSettings.Debug"/>
+        /// is set to <c>true</c>.
+        /// </note>
+        /// </summary>
+        /// <param name="text">The line of text to be written.</param>
+        public void DebugLog(string text)
+        {
+            if (Settings.Debug)
+            {
+                if (!string.IsNullOrEmpty(text) && !text.StartsWith("----"))
+                {
+                    CadenceHelper.DebugLog($"clientId:{ClientId} {text}");
+                }
+                else
+                {
+                    CadenceHelper.DebugLog(text);
+                }
+            }
+        }
+
+        /// <summary>
+        /// <para>
         /// Controls how synchronous signals operations are polled until the signal operation is
         /// completed.  This defaults to something reasonable.
         /// </para>
