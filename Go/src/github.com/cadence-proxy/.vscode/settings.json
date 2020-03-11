@@ -2,10 +2,10 @@
     // Terminals for windows
     "terminal.integrated.shell.windows": "C:\\WINDOWS\\System32\\cmd.exe",
     "terminal.integrated.shellArgs.windows": [
-        "/k", "C:\\Program Files (x86)\\cmder_mini\\vendor\\init.bat", "/noautorun"
+        "/k", "C:\\Program Files\\Cmder\\vendor\\init.bat", "/noautorun"
     ],
     "terminal.integrated.env.windows": {
-        "GOPATH": "C:\\Users\\johnc\\source\\repos\\nforgeio\\neonKUBE\\Go"
+        "GOPATH": "${env:NF_ROOT}\\Go"
     },
 
     "breadcrumbs.enabled": true,
