@@ -1185,20 +1185,20 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Appends a line of text to the debug log which is
-        /// used internally to debug generated code like stubs.  This works only for
-        /// DEBUG builds and hardcodes its output to <b>C:\Temp\cadence-debug.log</b>
-        /// so this currently only works on Windows.
+        /// used internally to debug generated code like stubs.  This hardcodes its
+        /// output to <b>C:\Temp\cadence-debug.log</b> so this currently only works
+        /// on Windows.
         /// </summary>
-        /// <param name="line">The line of text to be written.</param>
-        public static void DebugLog(string line)
+        /// <param name="text">The line of text to be written.</param>
+        public static void DebugLog(string text)
         {
             const string logPath = @"C:\Temp\cadence-debug.log";
 
-            var timestamp = DateTime.Now.ToString(NeonHelper.DateFormatTZ);
-
-            if (!string.IsNullOrEmpty(line) && !line.StartsWith("----"))
+            if (!string.IsNullOrEmpty(text) && !text.StartsWith("----"))
             {
-                line = timestamp + ": " + line;
+                var timestamp = DateTime.Now.ToString(NeonHelper.DateFormatTZ);
+
+                text = $"{timestamp}: {text}";
             }
 
             lock (syncLock)
@@ -1207,13 +1207,13 @@ namespace Neon.Cadence.Internal
                 {
                     Directory.CreateDirectory(Path.GetDirectoryName(logPath));
 
-                    if (line == null)
+                    if (text == null)
                     {
                         File.AppendAllText(logPath, "\r\n");
                     }
                     else
                     {
-                        File.AppendAllText(logPath, line + "\r\n");
+                        File.AppendAllText(logPath, text + "\r\n");
                     }
                 }
             }

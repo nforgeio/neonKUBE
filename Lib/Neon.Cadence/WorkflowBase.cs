@@ -554,7 +554,6 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
             Covenant.Requires<ArgumentException>(request.ReplayStatus != InternalReplayStatus.Unspecified, nameof(request));
-CadenceHelper.DebugLog($"Workflow Invoke Message: workflowId={request.WorkflowId} contextId={request.ContextId}");
 
             WorkflowBase            workflow;
             WorkflowRegistration    registration;

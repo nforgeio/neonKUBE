@@ -293,7 +293,6 @@ namespace Neon.Cadence
                     {
                         if (pendingOperationCount > 0)
                         {
-CadenceHelper.DebugLog($"******* Parallel Execution: workflowId={workflowId} contextId={ContextId}");
                             if (debugMode)
                             {
                                 throw new WorkflowParallelOperationException(pendingOperationStackTraces.Values.ToArray());
