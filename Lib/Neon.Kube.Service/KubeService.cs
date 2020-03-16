@@ -629,7 +629,14 @@ namespace Neon.Kube.Service
             }
             catch (Exception e)
             {
+                // We're gping to consider any exceptions caught here to be errors
+                // and return a non-zero exit code.  The service's [main()] method
+                // can examine the [ExceptionException] property to decide whether
+                // the exception should be considered an error or whether to return
+                // a custom error code.
+
                 ExitException = e;
+                ExitCode      = 1;
 
                 Log.LogError(e);
             }
