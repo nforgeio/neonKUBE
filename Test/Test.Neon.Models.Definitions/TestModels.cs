@@ -62,6 +62,14 @@ namespace Test.Neon.Models.Definitions
         Other = 3
     }
 
+    public enum GenderNotCustom
+    {
+        Unspecified = 0,
+        Male = 1,
+        Female = 2,
+        Other = 3
+    }
+
     [Persistable]
     public interface Person
     {
@@ -71,6 +79,21 @@ namespace Test.Neon.Models.Definitions
         int Age { get; set; }
         Gender Gender { get; set; }
         byte[] Data { get; set; }
+    }
+
+    public interface EnumEntity
+    {
+        Gender Gender { get; set; }
+    }
+
+    public interface EnumNotCustomEntity
+    {
+        GenderNotCustom Gender { get; set; }
+    }
+
+    public interface DateTimeEntity
+    {
+        DateTime Timestamp { get; set; }
     }
 
     [Persistable]

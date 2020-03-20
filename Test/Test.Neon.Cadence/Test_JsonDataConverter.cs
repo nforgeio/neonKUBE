@@ -170,8 +170,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void RoundTripDataWithType()
         {
-            // Verify that we can serialize and deserialize various roundtrip data items
-            // using the non-generic converter.
+            // Verify that we can serialize and deserialize various roundtrip data items.
 
             var     converter = new JsonDataConverter();
             byte[]  contents;
@@ -308,6 +307,57 @@ namespace TestCadence
             Assert.Equal(new DateTime(2019, 7, 17, 12, 0, 0), (DateTime)items[6]);
             Assert.Equal(TimeSpan.FromSeconds(1.5), (TimeSpan)items[7]);
             Assert.Equal(guid, (Guid)items[8]);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void SerializeEnum()
+        {
+            // Verify that Enum values serialize correctly.
+
+            var     converter = new JsonDataConverter();
+            byte[]  contents;
+            string  json;
+
+            // Verify that an enum type with custom [EnumMemver] values
+            // serializes as expected.
+
+            var enumValue = new EnumEntity() { Gender = Gender.Male };
+
+            contents = converter.ToData(enumValue);
+            json     = Encoding.UTF8.GetString(contents);
+
+            Assert.Equal("{\"Gender\":\"male\"}", json);
+
+            // Verify that an enum type without custom [EnumMemver] values
+            // serializes as expected.
+
+            var enumNotCustomValue = new EnumNotCustomEntity() { Gender = GenderNotCustom.Male };
+
+            contents = converter.ToData(enumNotCustomValue);
+            json     = Encoding.UTF8.GetString(contents);
+
+            Assert.Equal("{\"Gender\":\"Male\"}", json);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void SerializeDateTime()
+        {
+            // Verify that DateTime values serialize correctly.
+
+            var     converter = new JsonDataConverter();
+            byte[]  contents;
+            string  json;
+
+            // Verify that DateTime values serialize as expected.
+
+            var value = new DateTimeEntity() { Timestamp = new DateTime(2020, 3, 20, 9, 24, 57, DateTimeKind.Utc) };
+
+            contents = converter.ToData(value);
+            json     = Encoding.UTF8.GetString(contents);
+
+            Assert.Equal("{\"Timestamp\":\"2020-03-20T09:24:57Z\"}", json);
         }
     }
 }
