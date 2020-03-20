@@ -120,22 +120,30 @@ namespace Neon.Common
         /// <param name="e">The exception.</param>
         /// <param name="stackTrace">Optionally include the stack track.</param>
         /// <param name="excludeInner">Optionally exclude information about any inner exception.</param>
+        /// <param name="depth"><b>INTERNAL USE ONLY:</b> Used to prevent infinite recursion when inner exceptions cycle.</param>
         /// <returns>The error string.</returns>
-        public static string ExceptionError(Exception e, bool stackTrace = false, bool excludeInner = false)
+        public static string ExceptionError(Exception e, bool stackTrace = false, bool excludeInner = false, int depth = 0)
         {
             Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
 
             var aggregate = e as AggregateException;
 
-            if (aggregate != null)
+            // Loopie encountered a strange situation where the inner exceptions apparently 
+            // form a cycle which can result in a stack overflow if we keep drilling down.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/737
+            //
+            // We're going to handle this by limiting the recursion depth to 8.
+
+            if (aggregate != null && depth < 4)
             {
                 if (aggregate.InnerException != null)
                 {
-                    return ExceptionError(aggregate.InnerException, stackTrace, excludeInner);
+                    return ExceptionError(aggregate.InnerException, stackTrace, excludeInner, depth++);
                 }
                 else if (aggregate.InnerExceptions.Count > 0)
                 {
-                    return ExceptionError(aggregate.InnerExceptions[0], stackTrace, excludeInner);
+                    return ExceptionError(aggregate.InnerExceptions[0], stackTrace, excludeInner, depth++);
                 }
             }
 
