@@ -342,22 +342,70 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void SerializeFlagsEnum()
+        {
+            var             converter = new JsonDataConverter();
+            byte[]          contents;
+            string          json;
+            EnumFlagsEntity value;
+
+            // Verify uncombined flags.
+
+            value    = new EnumFlagsEntity() { Gender = GenderFlags.Unspecified };
+            contents = converter.ToData(value);
+            json     = Encoding.UTF8.GetString(contents);
+
+            Assert.Equal("{\"Gender\":\"unspecified\"}", json);
+
+            //----------
+
+            value    = new EnumFlagsEntity() { Gender = GenderFlags.Male };
+            contents = converter.ToData(value);
+            json     = Encoding.UTF8.GetString(contents);
+
+            Assert.Equal("{\"Gender\":\"male\"}", json);
+
+            //----------
+
+            value    = new EnumFlagsEntity() { Gender = GenderFlags.Female };
+            contents = converter.ToData(value);
+            json     = Encoding.UTF8.GetString(contents);
+
+            Assert.Equal("{\"Gender\":\"female\"}", json);
+
+            //----------
+
+            value    = new EnumFlagsEntity() { Gender = GenderFlags.Other };
+            contents = converter.ToData(value);
+            json     = Encoding.UTF8.GetString(contents);
+
+            Assert.Equal("{\"Gender\":\"other\"}", json);
+
+            // Verifiy flag combinations
+
+            value    = new EnumFlagsEntity() { Gender = GenderFlags.Male | GenderFlags.Female };
+            contents = converter.ToData(value);
+            json     = Encoding.UTF8.GetString(contents);
+
+            Assert.Equal("{\"Gender\":\"male, female\"}", json);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void SerializeDateTime()
         {
-            // Verify that DateTime values serialize correctly.
+            // Verify that Enum values with the [Flags] attribute serialize correctly.
 
             var     converter = new JsonDataConverter();
             byte[]  contents;
             string  json;
 
-            // Verify that DateTime values serialize as expected.
+            var enumValue = new EnumEntity() { Gender = Gender.Male };
 
-            var value = new DateTimeEntity() { Timestamp = new DateTime(2020, 3, 20, 9, 24, 57, DateTimeKind.Utc) };
+            contents = converter.ToData(enumValue);
+            json = Encoding.UTF8.GetString(contents);
 
-            contents = converter.ToData(value);
-            json     = Encoding.UTF8.GetString(contents);
-
-            Assert.Equal("{\"Timestamp\":\"2020-03-20T09:24:57Z\"}", json);
+            Assert.Equal("{\"Gender\":\"male\"}", json);
         }
     }
 }

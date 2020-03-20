@@ -70,6 +70,22 @@ namespace Test.Neon.Models.Definitions
         Other = 3
     }
 
+    [Flags]
+    public enum GenderFlags
+    {
+        [EnumMember(Value = "unspecified")]
+        Unspecified = 0,
+
+        [EnumMember(Value = "male")]
+        Male = 0x0001,
+
+        [EnumMember(Value = "female")]
+        Female = 0x0002,
+
+        [EnumMember(Value = "other")]
+        Other = 0x0004
+    }
+
     [Persistable]
     public interface Person
     {
@@ -89,6 +105,11 @@ namespace Test.Neon.Models.Definitions
     public interface EnumNotCustomEntity
     {
         GenderNotCustom Gender { get; set; }
+    }
+
+    public interface EnumFlagsEntity
+    {
+        GenderFlags Gender { get; set; }
     }
 
     public interface DateTimeEntity
