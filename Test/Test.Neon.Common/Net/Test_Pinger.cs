@@ -56,9 +56,15 @@ namespace TestCommon
 
                 // The [240.0.0.0/4] subnet is currently reserved and should not
                 // not be routable (and probably never will be).
+                //
+                // NOTE: Note that we don't see [PingExceptions] on OS/X, so we're not 
+                // going to run this test on OS/X.
 
-                await Assert.ThrowsAsync<PingException>(async () => await pinger.SendPingAsync("240.0.0.0"));
-                await Assert.ThrowsAsync<PingException>(async () => await pinger.SendPingAsync(IPAddress.Parse("240.0.0.0")));
+                if (!NeonHelper.IsOSX)
+                {
+                    await Assert.ThrowsAsync<PingException>(async () => await pinger.SendPingAsync("240.0.0.0"));
+                    await Assert.ThrowsAsync<PingException>(async () => await pinger.SendPingAsync(IPAddress.Parse("240.0.0.0")));
+                }
             }
         }
     }
