@@ -53,7 +53,7 @@ namespace TestCommon
             public string Value2 { get; set; }
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Defaults()
         {

@@ -32,7 +32,7 @@ namespace Neon.Xunit
     /// <summary>
     /// <para>
     /// Implements a very lightweight HTTP server suitable for locally
-    /// mocking a service.
+    /// mocking an HTTP based service.
     /// </para>
     /// <note>
     /// This currently runs only on Windows.
