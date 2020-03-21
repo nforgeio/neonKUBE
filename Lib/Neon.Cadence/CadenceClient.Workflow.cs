@@ -975,7 +975,7 @@ namespace Neon.Cadence
                         //      https://github.com/nforgeio/neonKUBE/issues/751
 
                         rawStatus = await QueryWorkflowAsync(execution, QuerySyncSignal, queryArgs, domain);
-                        status    = DataConverter.FromData<SyncSignalStatus>(rawStatus);
+                        status    = JsonDataConverter.Instance.FromData<SyncSignalStatus>(rawStatus);
 
                         if (!status.Completed)
                         {
@@ -1068,7 +1068,7 @@ namespace Neon.Cadence
                         //      https://github.com/nforgeio/neonKUBE/issues/751
 
                         rawStatus = await QueryWorkflowAsync(childExecution.Execution, QuerySyncSignal, queryArgs);
-                        status    = DataConverter.FromData<SyncSignalStatus>(rawStatus);
+                        status    = JsonDataConverter.Instance.FromData<SyncSignalStatus>(rawStatus);
 
                         if (!status.Completed)
                         {

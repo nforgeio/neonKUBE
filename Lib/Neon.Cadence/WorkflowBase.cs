@@ -914,7 +914,7 @@ namespace Neon.Cadence
                     // The signal arguments should be just a single [SyncSignalCall] that specifies
                     // the target signal and also includes its encoded arguments.
 
-                    var signalCallArgs = client.DataConverter.FromDataArray(request.SignalArgs, typeof(SyncSignalCall));
+                    var signalCallArgs = JsonDataConverter.Instance.FromDataArray(request.SignalArgs, typeof(SyncSignalCall));
                     var signalCall     = (SyncSignalCall)signalCallArgs[0];
                     var signalMethod   = workflow.Workflow.MethodMap.GetSignalMethod(signalCall.TargetSignal);
                     var userSignalArgs = client.DataConverter.FromDataArray(signalCall.UserArgs, signalMethod.GetParameterTypes());
@@ -1115,7 +1115,7 @@ namespace Neon.Cadence
                             // The arguments for this signal is the (string) ID of the target
                             // signal being polled for status.
 
-                            var syncSignalArgs   = client.DataConverter.FromDataArray(request.QueryArgs, typeof(string));
+                            var syncSignalArgs   = JsonDataConverter.Instance.FromDataArray(request.QueryArgs, typeof(string));
                             var syncSignalId     = (string) (syncSignalArgs.Length > 0 ? syncSignalArgs[0] : null);
                             var syncSignalStatus = (SyncSignalStatus)null;
 

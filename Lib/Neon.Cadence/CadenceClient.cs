@@ -1388,6 +1388,7 @@ namespace Neon.Cadence
         /// </summary>
         internal CadenceClient()
         {
+            Settings = new CadenceSettings();
         }
 
         /// <summary>
@@ -1395,7 +1396,6 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="settings">The <see cref="CadenceSettings"/>.</param>
         private CadenceClient(CadenceSettings settings)
-            : this()
         {
             Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), nameof(settings));

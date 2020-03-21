@@ -37,12 +37,29 @@ namespace Neon.Cadence
     /// UTF-8 encoded JSON text.
     /// </para>
     /// <note>
+    /// This converter uses the Newtonsoft <a href="https://www.newtonsoft.com/json">JSON.NET</a>
+    /// package so you can decorate your data types with attributes such as <c>[JsonProperty]</c>,
+    /// <c>[JsonIgnore]</c>,... to control how your data is serialized.
+    /// </note>
+    /// <note>
     /// This implementation also supports values that implement <see cref="IRoundtripData"/> to make
     /// it easier to manage data schema changes. 
     /// </note>
     /// </summary>
     public class JsonDataConverter : IDataConverter
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Returns a global <see cref="JsonDataConverter"/> instance.  This is used
+        /// internally by <b>Neon.Cadence</b> library.
+        /// </summary>
+        public static JsonDataConverter Instance { get; } = new JsonDataConverter();
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         /// <inheritdoc/>
         public T FromData<T>(byte[] content)
         {
