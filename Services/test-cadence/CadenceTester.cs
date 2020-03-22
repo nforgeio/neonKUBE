@@ -112,7 +112,7 @@ namespace CadenceTester
                     // Let KubeService know that we're running.
 
                     Log.LogInfo("Ready for work.");
-                    SetRunning();
+                    await SetRunningAsync();
 
                     // Wait for the process terminator to signal that the service is stopping.
 

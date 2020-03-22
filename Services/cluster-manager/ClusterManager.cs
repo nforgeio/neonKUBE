@@ -59,8 +59,7 @@ namespace ClusterManager
         {
             // Let KubeService know that we're running.
 
-            SetRunning();
-            
+            await SetRunningAsync();
             await SetupClusterAsync();
 
             logPurgerInterval = TimeSpan.FromSeconds(int.Parse(GetEnvironmentVariable("LOG_PURGE_INTERVAL") ?? "3600"));
