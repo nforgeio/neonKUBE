@@ -64,6 +64,11 @@ namespace Snippets_QueuedSignalWorkflow
             // that the signal result will be sent as a reply from
             // the workflow code via the [SignalRequest] rather than 
             // via a result returned by this signal method.
+            //
+            // We understand that this is a bit odd, but this is an
+            // experimental feature after all.  The Cadence team is
+            // working on a new feature to handle these scenarios
+            // cleanly.
 
             throw new WaitForSignalReplyException();
         }
