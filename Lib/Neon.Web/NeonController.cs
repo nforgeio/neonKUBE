@@ -184,6 +184,9 @@ namespace Neon.Web
         public bool IsLogDebugEnabled => GetLogger().IsLogDebugEnabled;
 
         /// <inheritdoc/>
+        public bool IsLogTransientEnabled => GetLogger().IsLogTransientEnabled;
+
+        /// <inheritdoc/>
         public bool IsLogSInfoEnabled => GetLogger().IsLogSInfoEnabled;
 
         /// <inheritdoc/>
@@ -223,6 +226,18 @@ namespace Neon.Web
         public void Debug(object message, Exception e, string activityId = null)
         {
             GetLogger().LogDebug(message, e, activityId ?? this.ActivityId);
+        }
+
+        /// <inheritdoc/>
+        public void Transient(object message, string activityId = null)
+        {
+            GetLogger().LogTransient(message, activityId ?? this.ActivityId);
+        }
+
+        /// <inheritdoc/>
+        public void Transient(object message, Exception e, string activityId = null)
+        {
+            GetLogger().LogTransient(message, e, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
@@ -298,6 +313,12 @@ namespace Neon.Web
         }
 
         /// <inheritdoc/>
+        public void LogTransient(object message, string activityId = null)
+        {
+            GetLogger().LogTransient(message, activityId);
+        }
+
+        /// <inheritdoc/>
         public void LogSInfo(object message, string activityId = null)
         {
             GetLogger().LogSInfo(message, activityId);
@@ -337,6 +358,12 @@ namespace Neon.Web
         public void LogDebug(object message, Exception e, string activityId = null)
         {
             GetLogger().LogDebug(message, e, activityId);
+        }
+
+        /// <inheritdoc/>
+        public void LogTransient(object message, Exception e, string activityId = null)
+        {
+            GetLogger().LogTransient(message, e, activityId);
         }
 
         /// <inheritdoc/>

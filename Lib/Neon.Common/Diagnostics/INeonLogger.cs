@@ -42,6 +42,11 @@ namespace Neon.Diagnostics
         bool IsLogDebugEnabled { get; }
 
         /// <summary>
+        /// Returns <c>true</c> if <b>transient</b> logging is enabled.
+        /// </summary>
+        bool IsLogTransientEnabled { get; }
+
+        /// <summary>
         /// Returns <c>true</c> if <b>sinfo</b> logging is enabled.
         /// </summary>
         bool IsLogSInfoEnabled { get; }
@@ -84,6 +89,13 @@ namespace Neon.Diagnostics
         /// <param name="message">The object that will be serialized into the message.</param>
         /// <param name="activityId">The optional activity ID.</param>
         void LogDebug(object message, string activityId = null);
+
+        /// <summary>
+        /// Logs a <b>transient</b> message.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="activityId">The optional activity ID.</param>
+        void LogTransient(object message, string activityId = null);
 
         /// <summary>
         /// Logs an <b>sinfo</b> message.
@@ -134,6 +146,14 @@ namespace Neon.Diagnostics
         /// <param name="e">The exception.</param>
         /// <param name="activityId">The optional activity ID.</param>
         void LogDebug(object message, Exception e, string activityId = null);
+
+        /// <summary>
+        /// Logs a <b>transient</b> message along with exception information.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="e">The exception.</param>
+        /// <param name="activityId">The optional activity ID.</param>
+        void LogTransient(object message, Exception e, string activityId = null);
 
         /// <summary>
         /// Logs an <b>sinfo</b> message along with exception information.
