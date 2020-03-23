@@ -174,7 +174,7 @@ namespace Neon.Xunit
             {
                 // Throw a nicer exception that explains what's happened in more detail.
 
-                throw new TimeoutException($"Service [{Service.Name}]'s [{typeof(TService).Name}.OnRunAsync()] method did not call [{nameof(KubeService.SetRunning)}()] within [{runningTimeout}] indicating that the service is ready.  Ensure that [{nameof(KubeService.SetRunning)}()] is being called or increase the timeout.");
+                throw new TimeoutException($"Service [{Service.Name}]'s [{typeof(TService).Name}.OnRunAsync()] method did not call [{nameof(KubeService.SetRunningAsync)}()] within [{runningTimeout}] indicating that the service is ready.  Ensure that [{nameof(KubeService.SetRunningAsync)}()] is being called or increase the timeout.");
             }
 
             IsRunning = Service.Status == KubeServiceStatus.Running;
@@ -287,7 +287,7 @@ namespace Neon.Xunit
             {
                 // Throw a nicer exception that explains what's happened in more detail.
 
-                throw new TimeoutException($"Service [{Service.Name}]'s [{typeof(TService).Name}.OnRunAsync()] method did not call [{nameof(KubeService.SetRunning)}()] within [{runningTimeout}] indicating that the service is ready.  Ensure that [{nameof(KubeService.SetRunning)}()] is being called or increase the timeout.");
+                throw new TimeoutException($"Service [{Service.Name}]'s [{typeof(TService).Name}.OnRunAsync()] method did not call [{nameof(KubeService.SetRunningAsync)}()] within [{runningTimeout}] indicating that the service is ready.  Ensure that [{nameof(KubeService.SetRunningAsync)}()] is being called or increase the timeout.");
             }
 
             IsRunning = Service.Status == KubeServiceStatus.Running;

@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,22 +42,32 @@ namespace Neon.Kube.Service
         /// <summary>
         /// The service has not been started.
         /// </summary>
+        [EnumMember(Value = "not-started")]
         NotStarted = 0,
 
         /// <summary>
         /// The service is in the process of starting but is not yet 
         /// fully initialized.
         /// </summary>
+        [EnumMember(Value = "starting")]
         Starting,
 
         /// <summary>
         /// The service is running and ready for traffic.
         /// </summary>
+        [EnumMember(Value = "running")]
         Running,
+
+        /// <summary>
+        /// The service is running but is not healthy.
+        /// </summary>
+        [EnumMember(Value = "unhealthy")]
+        Unhealthy,
 
         /// <summary>
         /// The service has terminated.
         /// </summary>
+        [EnumMember(Value = "terminated")]
         Terminated
     }
 }

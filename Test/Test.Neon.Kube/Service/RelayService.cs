@@ -152,7 +152,7 @@ namespace TestKubeService
 
             // Indicate that the service is ready for business.
 
-            SetRunning();
+            await SetRunningAsync();
 
             // Wait for the process terminator to signal that the service is stopping.
 
