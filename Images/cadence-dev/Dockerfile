@@ -68,8 +68,8 @@ RUN apt-get update \
 
 # CASSANDRA INSTALLATION
 RUN apt-get update \
-    && echo "deb http://www.apache.org/dist/cassandra/debian 311x main" | tee -a /etc/apt/sources.list.d/cassandra.sources.list \
-    && curl https://www.apache.org/dist/cassandra/KEYS | apt-key add - \
+    && echo "deb https://downloads.apache.org/cassandra/debian 311x main" | tee -a /etc/apt/sources.list.d/cassandra.sources.list \
+    && curl https://downloads.apache.org/cassandra/KEYS | apt-key add - \
     && apt-get update \
     && apt-get install cassandra -y
 

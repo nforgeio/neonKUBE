@@ -205,7 +205,7 @@ func handleInitializeRequest(requestCtx context.Context, request *messages.Initi
 
 	// set the reply address
 	if internal.DebugPrelaunched {
-		replyAddress = "http://127.0.0.2:5001/"
+		replyAddress = "http://127.0.0.1:5001/"
 	} else {
 		address := *request.GetLibraryAddress()
 		port := request.GetLibraryPort()
