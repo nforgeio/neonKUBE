@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -230,6 +230,8 @@ type EnvelopeV0Responder struct {
 	SeqID int32
 }
 
+// EncodeResponse writes the response to the writer using a non-strict
+// envelope.
 func (r EnvelopeV0Responder) EncodeResponse(v wire.Value, t wire.EnvelopeType, w io.Writer) error {
 	writer := binary.BorrowWriter(w)
 	err := writer.WriteLegacyEnveloped(wire.Envelope{
@@ -248,6 +250,8 @@ type EnvelopeV1Responder struct {
 	SeqID int32
 }
 
+// EncodeResponse writes the response to the writer using a strict, version 1
+// envelope.
 func (r EnvelopeV1Responder) EncodeResponse(v wire.Value, t wire.EnvelopeType, w io.Writer) error {
 	writer := binary.BorrowWriter(w)
 	err := writer.WriteEnveloped(wire.Envelope{

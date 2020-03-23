@@ -3,6 +3,8 @@
 *.xml
 *.swp
 .idea/
+.vscode/
+*.code-workspace
 *.iml
 *.cov
 *.html
@@ -16,3 +18,4 @@ test.log
 .build
 .bins
 .DS_Store
+.gobincache

@@ -507,6 +507,10 @@ func (env *testWorkflowEnvironmentImpl) executeActivity(
 	taskHandler := env.newTestActivityTaskHandler(defaultTestTaskList, env.GetDataConverter())
 	result, err := taskHandler.Execute(defaultTestTaskList, task)
 	if err != nil {
+		if err == context.DeadlineExceeded {
+			env.logger.Debug(fmt.Sprintf("Activity %v timed out", task.ActivityType.Name))
+			return nil, NewTimeoutError(shared.TimeoutTypeStartToClose, context.DeadlineExceeded.Error())
+		}
 		topLine := fmt.Sprintf("activity for %s [panic]:", defaultTestTaskList)
 		st := getStackTraceRaw(topLine, 7, 0)
 		return nil, newPanicError(err.Error(), st)
@@ -533,7 +537,7 @@ func (env *testWorkflowEnvironmentImpl) executeActivity(
 func (env *testWorkflowEnvironmentImpl) executeLocalActivity(
 	activityFn interface{},
 	args ...interface{},
-) (Value, error) {
+) (val Value, err error) {
 	params := executeLocalActivityParams{
 		localActivityOptions: localActivityOptions{
 			ScheduleToCloseTimeoutSeconds: common.Int32Ceil(env.testTimeout.Seconds()),
@@ -611,6 +615,10 @@ func (env *testWorkflowEnvironmentImpl) startMainLoop() {
 func (env *testWorkflowEnvironmentImpl) registerDelayedCallback(f func(), delayDuration time.Duration) {
 	timerCallback := func(result []byte, err error) {
 		f()
+	}
+	if delayDuration == 0 {
+		env.postCallback(f, false)
+		return
 	}
 	mainLoopCallback := func() {
 		env.newTimer(delayDuration, timerCallback, false)
@@ -915,10 +923,18 @@ func (env *testWorkflowEnvironmentImpl) ExecuteActivity(parameters executeActivi
 	go func() {
 		var result interface{}
 		defer func() {
-			if result == nil && recover() == nil {
+			panicErr := recover()
+			if result == nil && panicErr == nil {
 				reason := "activity called runtime.Goexit"
 				result = &shared.RespondActivityTaskFailedRequest{
 					Reason: &reason,
+				}
+			} else if panicErr != nil {
+				reason := errReasonPanic
+				details, _ := env.GetDataConverter().ToData(fmt.Sprintf("%v", panicErr))
+				result = &shared.RespondActivityTaskFailedRequest{
+					Reason:  &reason,
+					Details: details,
 				}
 			}
 			// post activity result to workflow dispatcher
@@ -966,6 +982,9 @@ func (env *testWorkflowEnvironmentImpl) executeActivityWithRetryForTest(
 		var err error
 		result, err = taskHandler.Execute(parameters.TaskListName, task)
 		if err != nil {
+			if err == context.DeadlineExceeded {
+				return err
+			}
 			panic(err)
 		}
 
@@ -976,7 +995,9 @@ func (env *testWorkflowEnvironmentImpl) executeActivityWithRetryForTest(
 			if backoff > 0 {
 				// need a retry
 				waitCh := make(chan struct{})
-				env.postCallback(func() { env.runningCount-- }, false)
+
+				// register the delayed call back first, otherwise other timers may be fired before the retry timer
+				// is enqueued.
 				env.registerDelayedCallback(func() {
 					env.runningCount++
 					task.Attempt = common.Int32Ptr(task.GetAttempt() + 1)
@@ -986,6 +1007,7 @@ func (env *testWorkflowEnvironmentImpl) executeActivityWithRetryForTest(
 					}
 					close(waitCh)
 				}, backoff)
+				env.postCallback(func() { env.runningCount-- }, false)
 
 				<-waitCh
 				continue
@@ -1115,7 +1137,12 @@ func (env *testWorkflowEnvironmentImpl) handleActivityResult(activityID string, 
 		blob = request.Result
 		activityHandle.callback(blob, nil)
 	default:
-		panic(fmt.Sprintf("unsupported respond type %T", result))
+		if result == context.DeadlineExceeded {
+			err = NewTimeoutError(shared.TimeoutTypeStartToClose, context.DeadlineExceeded.Error())
+			activityHandle.callback(nil, err)
+		} else {
+			panic(fmt.Sprintf("unsupported respond type %T", result))
+		}
 	}
 
 	if env.onActivityCompletedListener != nil {
@@ -1714,10 +1741,14 @@ func (env *testWorkflowEnvironmentImpl) SideEffect(f func() ([]byte, error), cal
 func (env *testWorkflowEnvironmentImpl) GetVersion(changeID string, minSupported, maxSupported Version) (retVersion Version) {
 	if mockVersion, ok := env.getMockedVersion(changeID, changeID, minSupported, maxSupported); ok {
 		// GetVersion for changeID is mocked
+		env.UpsertSearchAttributes(createSearchAttributesForChangeVersion(changeID, mockVersion, env.changeVersions))
+		env.changeVersions[changeID] = mockVersion
 		return mockVersion
 	}
 	if mockVersion, ok := env.getMockedVersion(mock.Anything, changeID, minSupported, maxSupported); ok {
 		// GetVersion is mocked with any changeID.
+		env.UpsertSearchAttributes(createSearchAttributesForChangeVersion(changeID, mockVersion, env.changeVersions))
+		env.changeVersions[changeID] = mockVersion
 		return mockVersion
 	}
 
@@ -1726,6 +1757,7 @@ func (env *testWorkflowEnvironmentImpl) GetVersion(changeID string, minSupported
 		validateVersion(changeID, version, minSupported, maxSupported)
 		return version
 	}
+	env.UpsertSearchAttributes(createSearchAttributesForChangeVersion(changeID, maxSupported, env.changeVersions))
 	env.changeVersions[changeID] = maxSupported
 	return maxSupported
 }

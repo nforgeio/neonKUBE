@@ -4,6 +4,103 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.20.2] - 2019-10-17
+### Fixed
+- Added canonical import path directive to avoid checking out ThriftRW at the
+  wrong import path.
+- Package names are now normalized before Go files are generated.
+
+## [1.20.1] - 2019-07-30
+### Fixed
+- Fixed field compilation to allow fields with similar looking names and
+  different casing.
+
+## [1.20.0] - 2019-06-12
+### Changed
+- ThriftRW now generates non-plugin code into a single file.
+- Module data is now provided to ThriftRW plugins when the Module does not
+  contain a service.
+
+## [1.19.1] - 2019-05-16
+### Fixed
+- Fixed a bug that caused invalid code to be generated if two slices of the
+  same type with different `go.type` annotations were encountered in the same
+  Thrift file.
+
+## [1.19.0] - 2019-04-26
+### Added
+- Sets now support a `(go.type = "slice")` annotation to be generated as
+  slices rather than maps.
+
+## [1.18.0] - 2019-03-28
+### Added
+- `Ptr` methods for primititve typedefs.
+
+## [1.17.0] - 2019-03-15
+### Changed
+- Imports in generated code are now always named imports.
+
+## [1.16.1] - 2019-01-23
+### Fixed
+- Bump API Version for ThriftRW plugins because the previous release contained
+  a significant change to the ThriftRW Plugin API.
+
+## [1.16.0] - 2019-01-22
+### Added
+- Expose Thrift file names, package prefix, and Thrift root directory to
+  plugins.
+
+### Fixed
+- plugin: Library version matching was dropped.
+
+## [1.15.0] - 2019-01-14
+### Changed
+-  Generated`Get*` and `IsSet*` methods on structs are now nil-safe.
+
+## [1.14.0] - 2018-10-18
+### Added
+- Structs now include `IsSet*` methods for fields that can be nil.
+
+## [1.13.1] - 2018-10-04
+### Fixed
+- gen/plugin: Fixed a bug where typedefs of structs were mishandled; while they
+  should have been pointers, they were generated without `*` and failed to
+  compile.
+- gen/zap: Fixed a bug where logging nil structs would panic.
+
+## [1.13.0] - 2018-09-10
+### Added
+- gen: Added support for a `go.label` annotation that allows overriding the
+  user-readable string names of enum items and struct fields. This has no
+  effect on the names of the generated Go entities.
+- Generated types now implement `zapcore.ObjectMarshaler` or
+  `zapcore.ArrayMarshaler` where appropriate. This should lead to much faster
+  logging of these objects.
+- Added `go.nolog` annotation for struct fields: Those with
+  this annotation will not be included in Zap logging.
+- gen/enum: `MarshalText` and `UnmarshalText` now round-trips, even if
+  the enum value is unrecognized.
+
+### Fixed
+- ThriftRW now does a bounds-check on field identifiers rather than silently
+  truncating them.
+- gen: Equals methods on generated structs no longer panic if either value is
+  nil.
+- gen: Fixed a bug where `*_Values` functions for empty enums would not be
+  generated.
+- gen: Fixed infinite loop in generated `Equals` methods of specific typedefs.
+
+## [1.12.0] - 2018-06-25
+### Added
+- gen: Added `ThriftPackageImporter` to control import path
+  resolution Thrift files.
+- Structs now include getter functions for all fields. This
+  improves Apache Thrift compatibility.
+- Enums now implement encoding.TextMarshaler.
+
+### Changed
+- gen: `NewGenerator` is now usable from other packages.
+
 ## [1.11.0] - 2018-03-27
 ### Added
 - Plugins now have access to service and function annotations.
@@ -206,6 +303,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Initial release.
 
+[1.20.2]: https://github.com/thriftrw/thriftrw-go/compare/v1.20.1...v1.20.2
+[1.20.1]: https://github.com/thriftrw/thriftrw-go/compare/v1.20.0...v1.20.1
+[1.20.0]: https://github.com/thriftrw/thriftrw-go/compare/v1.19.1...v1.20.0
+[1.19.1]: https://github.com/thriftrw/thriftrw-go/compare/v1.19.0...v1.19.1
+[1.19.0]: https://github.com/thriftrw/thriftrw-go/compare/v1.18.0...v1.19.0
+[1.18.0]: https://github.com/thriftrw/thriftrw-go/compare/v1.17.0...v1.18.0
+[1.17.0]: https://github.com/thriftrw/thriftrw-go/compare/v1.16.1...v1.17.0
+[1.16.1]: https://github.com/thriftrw/thriftrw-go/compare/v1.16.0...v1.16.1
+[1.16.0]: https://github.com/thriftrw/thriftrw-go/compare/v1.15.0...v1.16.0
+[1.15.0]: https://github.com/thriftrw/thriftrw-go/compare/v1.14.0...v1.15.0
+[1.14.0]: https://github.com/thriftrw/thriftrw-go/compare/v1.13.1...v1.14.0
+[1.13.1]: https://github.com/thriftrw/thriftrw-go/compare/v1.13.0...v.13.1
+[1.13.0]: https://github.com/thriftrw/thriftrw-go/compare/v1.12.0...v1.13.0
+[1.12.0]: https://github.com/thriftrw/thriftrw-go/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/thriftrw/thriftrw-go/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/thriftrw/thriftrw-go/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/thriftrw/thriftrw-go/compare/v1.8.0...v1.9.0

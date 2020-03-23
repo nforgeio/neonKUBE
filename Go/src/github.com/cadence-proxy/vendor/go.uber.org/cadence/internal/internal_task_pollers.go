@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/opentracing/opentracing-go"
+	"github.com/pborman/uuid"
 	"github.com/uber-go/tally"
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
 	s "go.uber.org/cadence/.gen/go/shared"
@@ -71,6 +72,7 @@ type (
 		metricsScope tally.Scope
 		logger       *zap.Logger
 
+		stickyUUID                   string
 		disableStickyExecution       bool
 		StickyScheduleToStartTimeout time.Duration
 
@@ -130,20 +132,34 @@ type (
 	localActivityTunnel struct {
 		taskCh   chan *localActivityTask
 		resultCh chan interface{}
+		stopCh   <-chan struct{}
 	}
 )
 
-func (lat *localActivityTunnel) getTask(stopC <-chan struct{}) *localActivityTask {
+func newLocalActivityTunnel(stopCh <-chan struct{}) *localActivityTunnel {
+	return &localActivityTunnel{
+		taskCh:   make(chan *localActivityTask, 1000),
+		resultCh: make(chan interface{}),
+		stopCh:   stopCh,
+	}
+}
+
+func (lat *localActivityTunnel) getTask() *localActivityTask {
 	select {
 	case task := <-lat.taskCh:
 		return task
-	case <-stopC:
+	case <-lat.stopCh:
 		return nil
 	}
 }
 
-func (lat *localActivityTunnel) sendTask(task *localActivityTask) {
-	lat.taskCh <- task
+func (lat *localActivityTunnel) sendTask(task *localActivityTask) bool {
+	select {
+	case lat.taskCh <- task:
+		return true
+	case <-lat.stopCh:
+		return false
+	}
 }
 
 func isClientSideError(err error) bool {
@@ -193,6 +209,7 @@ func (bp *basePoller) doPoll(pollFunc func(ctx context.Context) (interface{}, er
 	}
 }
 
+// newWorkflowTaskPoller creates a new workflow task poller which must have a one to one relationship to workflow worker
 func newWorkflowTaskPoller(
 	taskHandler WorkflowTaskHandler,
 	service workflowserviceclient.Interface,
@@ -207,6 +224,7 @@ func newWorkflowTaskPoller(
 		taskHandler:                  taskHandler,
 		metricsScope:                 params.MetricsScope,
 		logger:                       params.Logger,
+		stickyUUID:                   uuid.New(),
 		disableStickyExecution:       params.DisableStickyExecution,
 		StickyScheduleToStartTimeout: params.StickyScheduleToStartTimeout,
 	}
@@ -361,9 +379,11 @@ func (wtp *workflowTaskPoller) RespondTaskCompleted(completedRequest interface{}
 			case *s.RespondDecisionTaskCompletedRequest:
 				if request.StickyAttributes == nil && !wtp.disableStickyExecution {
 					request.StickyAttributes = &s.StickyExecutionAttributes{
-						WorkerTaskList:                &s.TaskList{Name: common.StringPtr(getWorkerTaskList())},
+						WorkerTaskList:                &s.TaskList{Name: common.StringPtr(getWorkerTaskList(wtp.stickyUUID))},
 						ScheduleToStartTimeoutSeconds: common.Int32Ptr(common.Int32Ceil(wtp.StickyScheduleToStartTimeout.Seconds())),
 					}
+				} else {
+					request.ReturnNewDecisionTask = common.BoolPtr(false)
 				}
 				response, err1 = wtp.service.RespondDecisionTaskCompleted(tchCtx, request, opt...)
 				if err1 != nil {
@@ -372,7 +392,7 @@ func (wtp *workflowTaskPoller) RespondTaskCompleted(completedRequest interface{}
 					})
 				}
 			case *s.RespondQueryTaskCompletedRequest:
-				err1 = wtp.service.RespondQueryTaskCompleted(tchCtx, request)
+				err1 = wtp.service.RespondQueryTaskCompleted(tchCtx, request, opt...)
 				if err1 != nil {
 					traceLog(func() {
 						wtp.logger.Debug("RespondQueryTaskCompleted failed.", zap.Error(err1))
@@ -408,7 +428,7 @@ func newLocalActivityPoller(params workerExecutionParameters, laTunnel *localAct
 }
 
 func (latp *localActivityTaskPoller) PollTask() (interface{}, error) {
-	return latp.laTunnel.getTask(latp.shutdownC), nil
+	return latp.laTunnel.getTask(), nil
 }
 
 func (latp *localActivityTaskPoller) ProcessTask(task interface{}) error {
@@ -444,7 +464,12 @@ func (lath *localActivityTaskHandler) executeLocalActivityTask(task *localActivi
 		rootCtx = context.Background()
 	}
 
+	workflowTypeLocal := task.params.WorkflowInfo.WorkflowType
+
 	ctx := context.WithValue(rootCtx, activityEnvContextKey, &activityEnvironment{
+		workflowType:      &workflowTypeLocal,
+		workflowDomain:    task.params.WorkflowInfo.Domain,
+		taskList:          task.params.WorkflowInfo.TaskListName,
 		activityType:      ActivityType{Name: activityType},
 		activityID:        fmt.Sprintf("%v", task.activityID),
 		workflowExecution: task.params.WorkflowInfo.WorkflowExecution,
@@ -485,6 +510,7 @@ func (lath *localActivityTaskHandler) executeLocalActivityTask(task *localActivi
 		// this is attempt and expire time is before SCHEDULE_TO_CLOSE timeout
 		deadline = task.expireTime
 	}
+
 	ctx, cancel := context.WithDeadline(ctx, deadline)
 	task.Lock()
 	if task.canceled {
@@ -582,7 +608,7 @@ func (wtp *workflowTaskPoller) getNextPollRequest() (request *s.PollForDecisionT
 		wtp.requestLock.Lock()
 		if wtp.stickyBacklog > 0 || wtp.pendingStickyPollCount <= wtp.pendingRegularPollCount {
 			wtp.pendingStickyPollCount++
-			taskListName = getWorkerTaskList()
+			taskListName = getWorkerTaskList(wtp.stickyUUID)
 			taskListKind = s.TaskListKindSticky
 		} else {
 			wtp.pendingRegularPollCount++

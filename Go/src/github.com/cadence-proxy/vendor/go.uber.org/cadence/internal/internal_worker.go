@@ -124,20 +124,23 @@ type (
 		// Task list name to poll.
 		TaskList string
 
-		// Defines how many concurrent poll requests for the task list by this worker.
-		ConcurrentPollRoutineSize int
-
 		// Defines how many concurrent activity executions by this worker.
 		ConcurrentActivityExecutionSize int
 
 		// Defines rate limiting on number of activity tasks that can be executed per second per worker.
 		WorkerActivitiesPerSecond float64
 
+		// MaxConcurrentActivityPollers is the max number of pollers for activity task list
+		MaxConcurrentActivityPollers int
+
 		// Defines how many concurrent decision task executions by this worker.
 		ConcurrentDecisionTaskExecutionSize int
 
 		// Defines rate limiting on number of decision tasks that can be executed per second per worker.
 		WorkerDecisionTasksPerSecond float64
+
+		// MaxConcurrentDecisionPollers is the max number of pollers for decision task list
+		MaxConcurrentDecisionPollers int
 
 		// Defines how many concurrent local activity executions by this worker.
 		ConcurrentLocalActivityExecutionSize int
@@ -294,7 +297,7 @@ func newWorkflowTaskWorkerInternal(
 		params,
 	)
 	worker := newBaseWorker(baseWorkerOptions{
-		pollerCount:       params.ConcurrentPollRoutineSize,
+		pollerCount:       params.MaxConcurrentDecisionPollers,
 		pollerRate:        defaultPollerRate,
 		maxConcurrentTask: params.ConcurrentDecisionTaskExecutionSize,
 		maxTaskPerSecond:  params.WorkerDecisionTasksPerSecond,
@@ -308,10 +311,7 @@ func newWorkflowTaskWorkerInternal(
 	)
 
 	// laTunnel is the glue that hookup 3 parts
-	laTunnel := &localActivityTunnel{
-		taskCh:   make(chan *localActivityTask, 1000),
-		resultCh: make(chan interface{}),
-	}
+	laTunnel := newLocalActivityTunnel(params.WorkerStopChannel)
 
 	// 1) workflow handler will send local activity task to laTunnel
 	if handlerImpl, ok := taskHandler.(*workflowTaskHandlerImpl); ok {
@@ -387,7 +387,7 @@ func newSessionWorker(service workflowserviceclient.Interface,
 	if params.Identity == "" {
 		params.Identity = getWorkerIdentity(params.TaskList)
 	}
-	// For now resourceID is hiden from user so we will always create a unique one for each worker.
+	// For now resourceID is hidden from user so we will always create a unique one for each worker.
 	if params.SessionResourceID == "" {
 		params.SessionResourceID = uuid.New()
 	}
@@ -398,7 +398,7 @@ func newSessionWorker(service workflowserviceclient.Interface,
 	params.TaskList = sessionEnvironment.GetResourceSpecificTasklist()
 	activityWorker := newActivityWorker(service, domain, params, overrides, env, nil)
 
-	params.ConcurrentPollRoutineSize = 1
+	params.MaxConcurrentActivityPollers = 1
 	params.TaskList = creationTasklist
 	creationWorker := newActivityWorker(service, domain, params, overrides, env, sessionEnvironment.GetTokenBucket())
 
@@ -476,7 +476,7 @@ func newActivityTaskWorker(
 
 	base := newBaseWorker(
 		baseWorkerOptions{
-			pollerCount:       workerParams.ConcurrentPollRoutineSize,
+			pollerCount:       workerParams.MaxConcurrentActivityPollers,
 			pollerRate:        defaultPollerRate,
 			maxConcurrentTask: workerParams.ConcurrentActivityExecutionSize,
 			maxTaskPerSecond:  workerParams.WorkerActivitiesPerSecond,
@@ -670,6 +670,8 @@ func (th *hostEnvImpl) getActivityFn(fnName string) (interface{}, bool) {
 }
 
 func (th *hostEnvImpl) getRegisteredActivities() []activity {
+	th.Lock()
+	defer th.Unlock()
 	activities := make([]activity, 0, len(th.activityFuncMap))
 	for _, a := range th.activityFuncMap {
 		activities = append(activities, a)
@@ -1036,10 +1038,23 @@ func (aw *aggregatedWorker) Start() error {
 var binaryChecksum string
 var binaryChecksumLock sync.Mutex
 
+// SetBinaryChecksum set binary checksum
+func SetBinaryChecksum(checksum string) {
+	binaryChecksumLock.Lock()
+	defer binaryChecksumLock.Unlock()
+
+	binaryChecksum = checksum
+}
+
 func initBinaryChecksum() error {
 	binaryChecksumLock.Lock()
 	defer binaryChecksumLock.Unlock()
 
+	return initBinaryChecksumLocked()
+}
+
+// callers MUST hold binaryChecksumLock before calling
+func initBinaryChecksumLocked() error {
 	if len(binaryChecksum) > 0 {
 		return nil
 	}
@@ -1053,7 +1068,9 @@ func initBinaryChecksum() error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		_ = f.Close() // error is unimportant as it is read-only
+	}()
 
 	h := md5.New()
 	if _, err := io.Copy(h, f); err != nil {
@@ -1067,8 +1084,14 @@ func initBinaryChecksum() error {
 }
 
 func getBinaryChecksum() string {
+	binaryChecksumLock.Lock()
+	defer binaryChecksumLock.Unlock()
+
 	if len(binaryChecksum) == 0 {
-		initBinaryChecksum()
+		err := initBinaryChecksumLocked()
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return binaryChecksum
@@ -1097,9 +1120,7 @@ func (aw *aggregatedWorker) Stop() {
 	aw.logger.Info("Stopped Worker")
 }
 
-// aggregatedWorker returns an instance to manage the workers. Use defaultConcurrentPollRoutineSize (which is 2) as
-// poller size. The typical RTT (round-trip time) is below 1ms within data center. And the poll API latency is about 5ms.
-// With 2 poller, we could achieve around 300~400 RPS.
+// aggregatedWorker returns an instance to manage both activity and decision workers
 func newAggregatedWorker(
 	service workflowserviceclient.Interface,
 	domain string,
@@ -1115,13 +1136,14 @@ func newAggregatedWorker(
 
 	workerParams := workerExecutionParameters{
 		TaskList:                             taskList,
-		ConcurrentPollRoutineSize:            defaultConcurrentPollRoutineSize,
 		ConcurrentActivityExecutionSize:      wOptions.MaxConcurrentActivityExecutionSize,
 		WorkerActivitiesPerSecond:            wOptions.WorkerActivitiesPerSecond,
+		MaxConcurrentActivityPollers:         wOptions.MaxConcurrentActivityTaskPollers,
 		ConcurrentLocalActivityExecutionSize: wOptions.MaxConcurrentLocalActivityExecutionSize,
 		WorkerLocalActivitiesPerSecond:       wOptions.WorkerLocalActivitiesPerSecond,
 		ConcurrentDecisionTaskExecutionSize:  wOptions.MaxConcurrentDecisionTaskExecutionSize,
 		WorkerDecisionTasksPerSecond:         wOptions.WorkerDecisionTasksPerSecond,
+		MaxConcurrentDecisionPollers:         wOptions.MaxConcurrentDecisionTaskPollers,
 		Identity:                             wOptions.Identity,
 		MetricsScope:                         wOptions.MetricsScope,
 		Logger:                               wOptions.Logger,
@@ -1233,7 +1255,8 @@ func processTestTags(wOptions *WorkerOptions, ep *workerExecutionParameters) {
 				switch key {
 				case workerOptionsConfigConcurrentPollRoutineSize:
 					if size, err := strconv.Atoi(val); err == nil {
-						ep.ConcurrentPollRoutineSize = size
+						ep.MaxConcurrentActivityPollers = size
+						ep.MaxConcurrentDecisionPollers = size
 					}
 				}
 			}
@@ -1368,11 +1391,17 @@ func augmentWorkerOptions(options WorkerOptions) WorkerOptions {
 	if options.WorkerActivitiesPerSecond == 0 {
 		options.WorkerActivitiesPerSecond = defaultWorkerActivitiesPerSecond
 	}
+	if options.MaxConcurrentActivityTaskPollers <= 0 {
+		options.MaxConcurrentActivityTaskPollers = defaultConcurrentPollRoutineSize
+	}
 	if options.MaxConcurrentDecisionTaskExecutionSize == 0 {
 		options.MaxConcurrentDecisionTaskExecutionSize = defaultMaxConcurrentTaskExecutionSize
 	}
 	if options.WorkerDecisionTasksPerSecond == 0 {
 		options.WorkerDecisionTasksPerSecond = defaultWorkerTaskExecutionRate
+	}
+	if options.MaxConcurrentDecisionTaskPollers <= 0 {
+		options.MaxConcurrentDecisionTaskPollers = defaultConcurrentPollRoutineSize
 	}
 	if options.MaxConcurrentLocalActivityExecutionSize == 0 {
 		options.MaxConcurrentLocalActivityExecutionSize = defaultMaxConcurrentLocalActivityExecutionSize

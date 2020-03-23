@@ -42,7 +42,6 @@ var (
 )
 
 type (
-
 	// Channel must be used instead of native go channel by workflow code.
 	// Use workflow.NewChannel(ctx) method to create Channel instance.
 	Channel interface {
@@ -99,6 +98,10 @@ type (
 		//  if err := f.Get(ctx, &v); err != nil {
 		//      return err
 		//  }
+		//
+		// The valuePtr parameter can be nil when the encoded result value is not needed.
+		// Example:
+		//  err = f.Get(ctx, nil)
 		Get(ctx Context, valuePtr interface{}) error
 
 		// When true Get is guaranteed to not block
@@ -174,10 +177,6 @@ type (
 		// Optional: default is 10s if this is not provided (or if 0 is provided).
 		TaskStartToCloseTimeout time.Duration
 
-		// ChildPolicy defines the behavior of child workflow when parent workflow is terminated.
-		// Optional: default to use ChildWorkflowPolicyAbandon. We currently only support this policy.
-		ChildPolicy ChildWorkflowPolicy
-
 		// WaitForCancellation - Whether to wait for cancelled child workflow to be ended (child workflow can be ended
 		// as: completed/failed/timedout/terminated/canceled)
 		// Optional: default false
@@ -215,23 +214,11 @@ type (
 		// supported when Cadence server is using ElasticSearch). The key and value type must be registered on Cadence server side.
 		// Use GetSearchAttributes API to get valid key and corresponding value type.
 		SearchAttributes map[string]interface{}
+
+		// ParentClosePolicy - Optional policy to decide what to do for the child.
+		// Default is Terminate (if onboarded to this feature)
+		ParentClosePolicy ParentClosePolicy
 	}
-
-	// ChildWorkflowPolicy defines child workflow behavior when parent workflow is terminated.
-	ChildWorkflowPolicy int32
-)
-
-const (
-	// ChildWorkflowPolicyTerminate is policy that will terminate all child workflows when parent workflow is terminated.
-	// TODO: this is not supported yet
-	ChildWorkflowPolicyTerminate ChildWorkflowPolicy = 0
-	// ChildWorkflowPolicyRequestCancel is policy that will send cancel request to all open child workflows when parent
-	// workflow is terminated.
-	// TODO: this is not supported yet
-	ChildWorkflowPolicyRequestCancel ChildWorkflowPolicy = 1
-	// ChildWorkflowPolicyAbandon is policy that will have no impact to child workflow execution when parent workflow is
-	// terminated.
-	ChildWorkflowPolicyAbandon ChildWorkflowPolicy = 2
 )
 
 // RegisterWorkflowOptions consists of options for registering a workflow
@@ -527,7 +514,7 @@ func scheduleLocalActivity(ctx Context, params *executeLocalActivityParams) Futu
 			ctxDone.removeReceiveCallback(cancellationCallback)
 		}
 
-		if lar.err == nil || lar.backoff <= 0 {
+		if lar.err == nil || IsCanceledError(lar.err) || lar.backoff <= 0 {
 			f.Set(lar.result, lar.err)
 			return
 		}
@@ -670,6 +657,7 @@ type WorkflowInfo struct {
 	ParentWorkflowExecution             *WorkflowExecution
 	Memo                                *s.Memo
 	SearchAttributes                    *s.SearchAttributes
+	BinaryChecksum                      *string
 }
 
 // GetWorkflowInfo extracts info of a current workflow from a context.
@@ -844,13 +832,13 @@ func signalExternalWorkflow(ctx Context, workflowID, runID, signalName string, a
 //		   "CustomIntField": 1,
 //		   "CustomBoolField": true,
 //	   }
-//	   worklfow.UpsertSearchAttributes(ctx, attr1)
+//	   workflow.UpsertSearchAttributes(ctx, attr1)
 //
 //	   attr2 := map[string]interface{}{
 //		   "CustomIntField": 2,
 //		   "CustomKeywordField": "seattle",
 //	   }
-//	   worklfow.UpsertSearchAttributes(ctx, attr2)
+//	   workflow.UpsertSearchAttributes(ctx, attr2)
 //   }
 // will eventually have search attributes:
 //   map[string]interface{}{
@@ -860,6 +848,9 @@ func signalExternalWorkflow(ctx Context, workflowID, runID, signalName string, a
 //   }
 // This is only supported when using ElasticSearch.
 func UpsertSearchAttributes(ctx Context, attributes map[string]interface{}) error {
+	if _, ok := attributes[CadenceChangeVersion]; ok {
+		return errors.New("CadenceChangeVersion is a reserved key that cannot be set, please use other key")
+	}
 	return getWorkflowEnvironment(ctx).UpsertSearchAttributes(attributes)
 }
 
@@ -874,13 +865,13 @@ func WithChildWorkflowOptions(ctx Context, cwo ChildWorkflowOptions) Context {
 	wfOptions.workflowID = cwo.WorkflowID
 	wfOptions.executionStartToCloseTimeoutSeconds = common.Int32Ptr(common.Int32Ceil(cwo.ExecutionStartToCloseTimeout.Seconds()))
 	wfOptions.taskStartToCloseTimeoutSeconds = common.Int32Ptr(common.Int32Ceil(cwo.TaskStartToCloseTimeout.Seconds()))
-	wfOptions.childPolicy = cwo.ChildPolicy
 	wfOptions.waitForCancellation = cwo.WaitForCancellation
 	wfOptions.workflowIDReusePolicy = cwo.WorkflowIDReusePolicy
 	wfOptions.retryPolicy = convertRetryPolicy(cwo.RetryPolicy)
 	wfOptions.cronSchedule = cwo.CronSchedule
 	wfOptions.memo = cwo.Memo
 	wfOptions.searchAttributes = cwo.SearchAttributes
+	wfOptions.parentClosePolicy = cwo.ParentClosePolicy
 
 	return ctx1
 }
@@ -903,13 +894,6 @@ func WithWorkflowTaskList(ctx Context, name string) Context {
 func WithWorkflowID(ctx Context, workflowID string) Context {
 	ctx1 := setWorkflowEnvOptionsIfNotExist(ctx)
 	getWorkflowEnvOptions(ctx1).workflowID = workflowID
-	return ctx1
-}
-
-// WithChildPolicy adds a ChildWorkflowPolicy to the context.
-func WithChildPolicy(ctx Context, childPolicy ChildWorkflowPolicy) Context {
-	ctx1 := setWorkflowEnvOptionsIfNotExist(ctx)
-	getWorkflowEnvOptions(ctx1).childPolicy = childPolicy
 	return ctx1
 }
 
@@ -1051,6 +1035,9 @@ func MutableSideEffect(ctx Context, id string, f func(ctx Context) interface{}, 
 
 // DefaultVersion is a version returned by GetVersion for code that wasn't versioned before
 const DefaultVersion Version = -1
+
+// CadenceChangeVersion is used as search attributes key to find workflows with specific change version.
+const CadenceChangeVersion = "CadenceChangeVersion"
 
 // GetVersion is used to safely perform backwards incompatible changes to workflow definitions.
 // It is not allowed to update workflow code while there are workflows running as it is going to break

@@ -44,25 +44,11 @@ type (
 	// ChildWorkflowOptions stores all child workflow specific parameters that will be stored inside of a Context.
 	ChildWorkflowOptions = internal.ChildWorkflowOptions
 
-	// ChildWorkflowPolicy defines child workflow behavior when parent workflow is terminated.
-	ChildWorkflowPolicy = internal.ChildWorkflowPolicy
-
 	// RegisterOptions consists of options for registering a workflow
 	RegisterOptions = internal.RegisterWorkflowOptions
 
 	// Info information about currently executing workflow
 	Info = internal.WorkflowInfo
-)
-
-const (
-	// ChildWorkflowPolicyTerminate is policy that will terminate all child workflows when parent workflow is terminated.
-	ChildWorkflowPolicyTerminate ChildWorkflowPolicy = internal.ChildWorkflowPolicyTerminate
-	// ChildWorkflowPolicyRequestCancel is policy that will send cancel request to all open child workflows when parent
-	// workflow is terminated.
-	ChildWorkflowPolicyRequestCancel ChildWorkflowPolicy = internal.ChildWorkflowPolicyRequestCancel
-	// ChildWorkflowPolicyAbandon is policy that will have no impact to child workflow execution when parent workflow is
-	// terminated.
-	ChildWorkflowPolicyAbandon ChildWorkflowPolicy = internal.ChildWorkflowPolicyAbandon
 )
 
 // Register - registers a workflow function with the framework.
@@ -124,19 +110,25 @@ func ExecuteActivity(ctx Context, activity interface{}, args ...interface{}) Fut
 
 // ExecuteLocalActivity requests to run a local activity. A local activity is like a regular activity with some key
 // differences:
-// * Local activity is scheduled and run by the workflow worker locally.
-// * Local activity does not need Cadence server to schedule activity task and does not rely on activity worker.
-// * No need to register local activity.
-// * The parameter activity to ExecuteLocalActivity() must be a function.
-// * Local activity is for short living activities (usually finishes within seconds).
-// * Local activity cannot heartbeat.
+//
+// • Local activity is scheduled and run by the workflow worker locally.
+//
+// • Local activity does not need Cadence server to schedule activity task and does not rely on activity worker.
+//
+// • No need to register local activity.
+//
+// • The parameter activity to ExecuteLocalActivity() must be a function.
+//
+// • Local activity is for short living activities (usually finishes within seconds).
+//
+// • Local activity cannot heartbeat.
 //
 // Context can be used to pass the settings for this local activity.
 // For now there is only one setting for timeout to be set:
 //  lao := LocalActivityOptions{
-// 	    ScheduleToCloseTimeout: 5 * time.Second,
-// 	}
-//	ctx := WithLocalActivityOptions(ctx, lao)
+//  	ScheduleToCloseTimeout: 5 * time.Second,
+//  }
+//  ctx := WithLocalActivityOptions(ctx, lao)
 // The timeout here should be relative shorter than the DecisionTaskStartToCloseTimeout of the workflow. If you need a
 // longer timeout, you probably should not use local activity and instead should use regular activity. Local activity is
 // designed to be used for short living activities (usually finishes within seconds).
@@ -433,13 +425,13 @@ func GetLastCompletionResult(ctx Context, d ...interface{}) error {
 //		   "CustomIntField": 1,
 //		   "CustomBoolField": true,
 //	   }
-//	   worklfow.UpsertSearchAttributes(ctx, attr1)
+//	   workflow.UpsertSearchAttributes(ctx, attr1)
 //
 //	   attr2 := map[string]interface{}{
 //		   "CustomIntField": 2,
 //		   "CustomKeywordField": "seattle",
 //	   }
-//	   worklfow.UpsertSearchAttributes(ctx, attr2)
+//	   workflow.UpsertSearchAttributes(ctx, attr2)
 //   }
 // will eventually have search attributes:
 //   map[string]interface{}{

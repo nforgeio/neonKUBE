@@ -764,13 +764,16 @@ func (s *UnitTestSuite) TestDomainListReply() {
 
 		werpd := int32(7)
 		em := true
-		abn := "my-bucket"
+		hauri := "huri"
+		vauri := "vuri"
 		domainConfiguration := cadenceshared.DomainConfiguration{
 			WorkflowExecutionRetentionPeriodInDays: &werpd,
 			EmitMetric:                             &em,
-			ArchivalBucketName:                     &abn,
-			ArchivalStatus:                         cadenceshared.ArchivalStatusEnabled.Ptr(),
+			HistoryArchivalURI:                     &hauri,
+			HistoryArchivalStatus:                  cadenceshared.ArchivalStatusEnabled.Ptr(),
 			BadBinaries:                            &badBinaries,
+			VisibilityArchivalStatus:               cadenceshared.ArchivalStatusDisabled.Ptr(),
+			VisibilityArchivalURI:                  &vauri,
 		}
 
 		cn1 := "cluster-name1"
@@ -3586,7 +3589,6 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionReply() {
 			TaskList:                            &tl,
 			ExecutionStartToCloseTimeoutSeconds: &esct,
 			TaskStartToCloseTimeoutSeconds:      &tsct,
-			ChildPolicy:                         cadenceshared.ChildPolicyAbandon.Ptr(),
 		}
 
 		wid := "my-workflow"
@@ -3911,12 +3913,12 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildRequest() {
 		opts := workflow.ChildWorkflowOptions{
 			TaskList:                     "my-tasklist",
 			Domain:                       "my-domain",
-			ChildPolicy:                  workflow.ChildWorkflowPolicyRequestCancel,
+			ParentClosePolicy:            client.ParentClosePolicyAbandon,
 			WorkflowID:                   "my-workflow",
 			ExecutionStartToCloseTimeout: time.Second * 20,
 		}
 		v.SetOptions(&opts)
-		s.Equal(workflow.ChildWorkflowOptions{TaskList: "my-tasklist", Domain: "my-domain", ChildPolicy: workflow.ChildWorkflowPolicyRequestCancel, WorkflowID: "my-workflow", ExecutionStartToCloseTimeout: time.Second * 20}, *v.GetOptions())
+		s.Equal(workflow.ChildWorkflowOptions{TaskList: "my-tasklist", Domain: "my-domain", ParentClosePolicy: client.ParentClosePolicyAbandon, WorkflowID: "my-workflow", ExecutionStartToCloseTimeout: time.Second * 20}, *v.GetOptions())
 
 		v.SetScheduleToStartTimeout(time.Second * 30)
 		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
@@ -3933,7 +3935,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildRequest() {
 	if v, ok := message.(*messages.WorkflowExecuteChildRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-workflow", *v.GetWorkflow())
-		s.Equal(workflow.ChildWorkflowOptions{TaskList: "my-tasklist", Domain: "my-domain", ChildPolicy: workflow.ChildWorkflowPolicyRequestCancel, WorkflowID: "my-workflow", ExecutionStartToCloseTimeout: time.Second * 20}, *v.GetOptions())
+		s.Equal(workflow.ChildWorkflowOptions{TaskList: "my-tasklist", Domain: "my-domain", ParentClosePolicy: client.ParentClosePolicyAbandon, WorkflowID: "my-workflow", ExecutionStartToCloseTimeout: time.Second * 20}, *v.GetOptions())
 		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
 	}
 
@@ -3944,7 +3946,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildRequest() {
 	if v, ok := message.(*messages.WorkflowExecuteChildRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-workflow", *v.GetWorkflow())
-		s.Equal(workflow.ChildWorkflowOptions{TaskList: "my-tasklist", Domain: "my-domain", ChildPolicy: workflow.ChildWorkflowPolicyRequestCancel, WorkflowID: "my-workflow", ExecutionStartToCloseTimeout: time.Second * 20}, *v.GetOptions())
+		s.Equal(workflow.ChildWorkflowOptions{TaskList: "my-tasklist", Domain: "my-domain", ParentClosePolicy: client.ParentClosePolicyAbandon, WorkflowID: "my-workflow", ExecutionStartToCloseTimeout: time.Second * 20}, *v.GetOptions())
 		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
 	}
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -47,6 +47,13 @@ func TypeDefinition(g Generator, spec compile.TypeSpec) error {
 // considered hashable.
 func isHashable(t compile.TypeSpec) bool {
 	return isPrimitiveType(t)
+}
+
+// setUsesMap returns true if the given set type is not annotated with
+// (go.type = "slice") and the value of the set is considered hashable
+// by thriftrw.
+func setUsesMap(spec *compile.SetSpec) bool {
+	return (spec.Annotations[goTypeKey] != sliceType) && isHashable(spec.ValueSpec)
 }
 
 // isPrimitiveType returns true if the given type is a primitive type.
@@ -165,11 +172,11 @@ func typeName(g Generator, spec compile.TypeSpec) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		if !isHashable(s.ValueSpec) {
-			// unhashable type
-			return fmt.Sprintf("[]%s", v), nil
+		// not annotated to be slice and hashable value type
+		if setUsesMap(s) {
+			return fmt.Sprintf("map[%s]struct{}", v), nil
 		}
-		return fmt.Sprintf("map[%s]struct{}", v), nil
+		return fmt.Sprintf("[]%s", v), nil
 	case *compile.EnumSpec, *compile.StructSpec, *compile.TypedefSpec:
 		return g.LookupTypeName(spec)
 	default:
@@ -191,6 +198,13 @@ func readerFuncName(g Generator, spec compile.TypeSpec) string {
 
 func valueListName(g Generator, spec compile.TypeSpec) string {
 	return fmt.Sprintf("_%s_ValueList", g.MangleType(spec))
+}
+
+// zapperName returns the name that should be used for wrapper types that
+// implement zap.ObjectMarshaler or zap.ArrayMarshaler for the provided
+// Thrift type.
+func zapperName(g Generator, spec compile.TypeSpec) string {
+	return fmt.Sprintf("_%s_Zapper", g.MangleType(spec))
 }
 
 // canBeConstant returns true if the given type can be a constant.

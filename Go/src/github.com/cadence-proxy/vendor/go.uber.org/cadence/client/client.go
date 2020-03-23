@@ -65,6 +65,9 @@ type (
 	// QueryWorkflowWithOptionsResponse defines the response to QueryWorkflowWithOptions
 	QueryWorkflowWithOptionsResponse = internal.QueryWorkflowWithOptionsResponse
 
+	// ParentClosePolicy defines the behavior performed on a child workflow when its parent is closed
+	ParentClosePolicy = internal.ParentClosePolicy
+
 	// Client is the client for starting and getting information about a workflow executions as well as
 	// completing activities asynchronously.
 	Client interface {
@@ -215,6 +218,7 @@ type (
 		CompleteActivityByID(ctx context.Context, domain, workflowID, runID, activityID string, result interface{}, err error) error
 
 		// RecordActivityHeartbeat records heartbeat for an activity.
+		// taskToken - is the value of the binary "TaskToken" field of the "ActivityInfo" struct retrieved inside the activity.
 		// details - is the progress you want to record along with heart beat for this activity.
 		// The errors it can return:
 		//	- EntityNotExistsError
@@ -260,6 +264,15 @@ type (
 		//  - BadRequestError
 		//  - InternalServiceError
 		ListWorkflow(ctx context.Context, request *s.ListWorkflowExecutionsRequest) (*s.ListWorkflowExecutionsResponse, error)
+
+		// ListArchivedWorkflow gets archived workflow executions based on query. This API will return BadRequest if Cadence
+		// cluster or target domain is not configured for visibility archival or read is not enabled. The query is basically the SQL WHERE clause.
+		// However, different visibility archivers have different limitations on the query. Please check the documentation of the visibility archiver used
+		// by your domain to see what kind of queries are accept and whether retrieved workflow executions are ordered or not.
+		// The errors it can return:
+		//  - BadRequestError
+		//  - InternalServiceError
+		ListArchivedWorkflow(ctx context.Context, request *s.ListArchivedWorkflowExecutionsRequest) (*s.ListArchivedWorkflowExecutionsResponse, error)
 
 		// ScanWorkflow gets workflow executions based on query. This API only works with ElasticSearch,
 		// and will return BadRequestError when using Cassandra or MySQL. The query is basically the SQL WHERE clause
@@ -373,6 +386,15 @@ const (
 
 	// WorkflowIDReusePolicyRejectDuplicate do not allow start a workflow execution using the same workflow ID at all
 	WorkflowIDReusePolicyRejectDuplicate WorkflowIDReusePolicy = internal.WorkflowIDReusePolicyRejectDuplicate
+)
+
+const (
+	// ParentClosePolicyTerminate means terminating the child workflow
+	ParentClosePolicyTerminate = internal.ParentClosePolicyTerminate
+	// ParentClosePolicyRequestCancel means requesting cancellation on the child workflow
+	ParentClosePolicyRequestCancel = internal.ParentClosePolicyRequestCancel
+	// ParentClosePolicyAbandon means not doing anything on the child workflow
+	ParentClosePolicyAbandon = internal.ParentClosePolicyAbandon
 )
 
 // NewClient creates an instance of a workflow client

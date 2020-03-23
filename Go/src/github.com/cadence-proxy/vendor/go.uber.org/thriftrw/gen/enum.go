@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,7 @@
 package gen
 
 import (
+	"fmt"
 	"strings"
 
 	"go.uber.org/thriftrw/compile"
@@ -53,6 +54,9 @@ func (e *enumGenerator) Reader(g Generator, spec *compile.EnumSpec) (string, err
 }
 
 func enum(g Generator, spec *compile.EnumSpec) error {
+	if err := verifyUniqueEnumItemLabels(spec); err != nil {
+		return err
+	}
 	items := enumUniqueItems(spec.Items)
 
 	// TODO(abg) define an error type in the library for unrecognized enums.
@@ -75,6 +79,7 @@ func enum(g Generator, spec *compile.EnumSpec) error {
 				<- formatDoc .Doc><enumItemName $enumName .> <$enumName> = <.Value>
 			<end>
 			)
+		<end>
 
 		// <$enumName>_Values returns all recognized values of <$enumName>.
 		func <$enumName>_Values() []<$enumName> {
@@ -84,9 +89,9 @@ func enum(g Generator, spec *compile.EnumSpec) error {
 				<end>
 			}
 		}
-		<end>
 
 		<$v := newVar "v">
+		<$value := newVar "value">
 		// UnmarshalText tries to decode <$enumName> from a byte slice
 		// containing its name.
 		<- if .Spec.Items>
@@ -94,18 +99,63 @@ func enum(g Generator, spec *compile.EnumSpec) error {
 		//   var <$v> <$enumName>
 		//   err := <$v>.UnmarshalText([]byte("<(index .Spec.Items 0).Name>"))
 		<- end>
-		func (<$v> *<$enumName>) UnmarshalText(value []byte) error {
-			switch string(value) {
+		func (<$v> *<$enumName>) UnmarshalText(<$value> []byte) error {
+			<- $s := newVar "s" ->
+			<- $val := newVar "val" ->
+			switch <$s> := string(<$value>); <$s> {
 			<- $enum := .Spec ->
 			<range .Spec.Items ->
-				case "<.Name>":
+				case "<enumItemLabelName .>":
 					*<$v> = <enumItemName $enumName .>
 					return nil
 			<end ->
 				default:
-					return <$fmt>.Errorf("unknown enum value %q for %q", value, "<$enumName>")
+					<$val>, err := <$strconv>.ParseInt(<$s>, 10, 32)
+					if err != nil {
+						return <$fmt>.Errorf("unknown enum value %q for %q: %v", <$s>, "<$enumName>", err)
+					}
+					*<$v> = <$enumName>(<$val>)
+					return nil
 			}
 		}
+
+		// MarshalText encodes <$enumName> to text.
+		//
+		// If the enum value is recognized, its name is returned. Otherwise,
+		// its integer value is returned.
+		//
+		// This implements the TextMarshaler interface.
+		func (<$v> <$enumName>) MarshalText() ([]byte, error) {
+			<if len .Spec.Items ->
+				switch int32(<$v>) {
+				<range .UniqueItems ->
+					case <.Value>:
+						return []byte("<enumItemLabelName .>"), nil
+				<end ->
+				}
+			<end ->
+			return []byte(<$strconv>.FormatInt(int64(<$v>), 10)), nil
+		}
+
+		<if not (checkNoZap) ->
+		<- $zapcore := import "go.uber.org/zap/zapcore" ->
+		// MarshalLogObject implements zapcore.ObjectMarshaler, enabling
+		// fast logging of <$enumName>.
+		// Enums are logged as objects, where the value is logged with key "value", and
+		// if this value's name is known, the name is logged with key "name".
+		func (<$v> <$enumName>) MarshalLogObject(enc <$zapcore>.ObjectEncoder) error {
+			enc.AddInt32("value", int32(<$v>))
+			<if len .Spec.Items ->
+				switch int32(<$v>) {
+				<range .UniqueItems ->
+					case <.Value>:
+						enc.AddString("name", "<enumItemLabelName .>")
+				<end ->
+				}
+			<end ->
+			return nil
+		}
+		<- end>
 
 		// Ptr returns a pointer to this enum value.
 		func (<$v> <$enumName>) Ptr() *<$enumName> {
@@ -147,7 +197,7 @@ func enum(g Generator, spec *compile.EnumSpec) error {
 				switch <$w> {
 				<range .UniqueItems ->
 					case <.Value>:
-						return "<.Name>"
+						return "<enumItemLabelName .>"
 				<end ->
 				}
 			<end ->
@@ -172,7 +222,7 @@ func enum(g Generator, spec *compile.EnumSpec) error {
 				switch int32(<$v>) {
 				<range .UniqueItems ->
 					case <.Value>:
-						return ([]byte)("\"<.Name>\""), nil
+						return ([]byte)("\"<enumItemLabelName .>\""), nil
 				<end ->
 				}
 			<end ->
@@ -228,6 +278,8 @@ func enum(g Generator, spec *compile.EnumSpec) error {
 			UniqueItems: items,
 		},
 		TemplateFunc("enumItemName", enumItemName),
+		TemplateFunc("enumItemLabelName", entityLabel),
+		TemplateFunc("checkNoZap", checkNoZap),
 	)
 
 	return wrapGenerateError(spec.Name, err)
@@ -245,6 +297,23 @@ func enumItemName(enumName string, spec *compile.EnumItem) (string, error) {
 			strings.Split(spec.ThriftName(), "_")...)
 	}
 	return enumName + name, err
+}
+
+// verifyUniqueEnumItemLabels verifies that the labels for the enum items in
+// the given enum don't conflict.
+func verifyUniqueEnumItemLabels(spec *compile.EnumSpec) error {
+	items := spec.Items
+	used := make(map[string]compile.EnumItem, len(items))
+	for _, i := range items {
+		itemName := entityLabel(&i)
+		if conflict, isUsed := used[itemName]; isUsed {
+			return fmt.Errorf(
+				"item %q with label %q conflicts with item %q in enum %q",
+				i.Name, itemName, conflict.Name, spec.Name)
+		}
+		used[itemName] = i
+	}
+	return nil
 }
 
 // enumUniqueItems returns a subset of the given list of enum items where

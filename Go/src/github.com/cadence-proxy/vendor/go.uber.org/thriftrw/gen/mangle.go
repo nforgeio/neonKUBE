@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -50,7 +50,12 @@ func (m *mangler) MangleType(spec compile.TypeSpec) string {
 	case *compile.ListSpec:
 		return fmt.Sprintf("List_%s", m.MangleType(s.ValueSpec))
 	case *compile.SetSpec:
-		return fmt.Sprintf("Set_%s", m.MangleType(s.ValueSpec))
+		setType := "slice"
+		if setUsesMap(s) {
+			setType = "map"
+		}
+
+		return fmt.Sprintf("Set_%s_%vType", m.MangleType(s.ValueSpec), setType)
 	}
 
 	// Native primitive types have unique names

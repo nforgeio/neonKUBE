@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -316,7 +316,7 @@ func (rs *ResultSpec) Link(scope Scope) (err error) {
 		if !ok || spec.Type != ast.ExceptionType {
 			return notAnExceptionError{
 				FieldName: exception.ThriftName(),
-				TypeName:  spec.ThriftName(),
+				TypeName:  exception.Type.ThriftName(),
 			}
 		}
 	}
