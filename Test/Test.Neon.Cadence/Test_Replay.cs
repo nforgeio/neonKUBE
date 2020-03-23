@@ -591,7 +591,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.Nop));
         }
 
-        [Fact]
+        [Fact(Skip = "See issue #784")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task GetVersion()
         {
@@ -759,7 +759,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.GetIsSetLastCompletionResult));
         }
 
-        [Fact]
+        [Fact(Skip = "See issue #784")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task ChildWorkflow()
         {
