@@ -91,7 +91,7 @@ namespace TestCadence
         [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface ISyncSignalString : IWorkflow
         {
-            [WorkflowMethod()]
+            [WorkflowMethod]
             Task RunAsync();
 
             [SignalMethod("signal")]
@@ -131,7 +131,7 @@ namespace TestCadence
         [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface ISyncSignalVoid : IWorkflow
         {
-            [WorkflowMethod()]
+            [WorkflowMethod]
             Task RunAsync();
 
             [SignalMethod("signal")]
@@ -170,7 +170,7 @@ namespace TestCadence
         [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IAsyncSignalString : IWorkflow
         {
-            [WorkflowMethod()]
+            [WorkflowMethod]
             Task RunAsync();
 
             [SignalMethod("signal", Synchronous = true)]
@@ -210,7 +210,7 @@ namespace TestCadence
         [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IAsyncSignalVoid : IWorkflow
         {
-            [WorkflowMethod()]
+            [WorkflowMethod]
             Task RunAsync();
 
             [SignalMethod("signal", Synchronous = true)]

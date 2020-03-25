@@ -29,7 +29,7 @@ namespace Neon.Cadence.Internal
 {
     /// <summary>
     /// <b>INTERNAL USE ONLY:</b> Holds information necessary to implement synchronous 
-    /// signals.  This is added used internally for transmitting synchronous signals 
+    /// signals.  This is used internally for transmitting synchronous signals 
     /// to workflows.
     /// </summary>
     public class SyncSignalCall

@@ -4467,7 +4467,7 @@ namespace TestCadence
         [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowAmbientState : IWorkflow
         {
-            [WorkflowMethod()]
+            [WorkflowMethod]
             Task<bool> RunAsync();
         }
 

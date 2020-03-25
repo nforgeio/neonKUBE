@@ -922,7 +922,7 @@ namespace Neon.Cadence
         /// <param name="execution">The <see cref="WorkflowExecution"/>.</param>
         /// <param name="signalName">The target signal name.</param>
         /// <param name="signalId">The globally unique signal transaction ID.</param>
-        /// <param name="signalArgs">Specifies the signal arguments as a byte array.</param>
+        /// <param name="signalArgs">Specifies the <see cref="SyncSignalCall"/> as a single item array and encoded as a byte array.</param>
         /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
         /// <returns>The encoded signal results or <c>null</c> for signals that don't return a result.</returns>
         /// <exception cref="SyncSignalException">Thrown if the target synchronous signal doesn't exist or the workflow is already closed.</exception>
@@ -1015,7 +1015,7 @@ namespace Neon.Cadence
         /// <param name="childExecution">The child workflow execution.</param>
         /// <param name="signalName">The target signal name.</param>
         /// <param name="signalId">The globally unique signal transaction ID.</param>
-        /// <param name="signalArgs">Specifies the signal arguments as an encoded byte array.</param>
+        /// <param name="signalArgs">Specifies the <see cref="SyncSignalCall"/> as a single item array and encoded as a byte array.</param>
         /// <returns>The encoded signal results or <c>null</c> for signals that don't return a result.</returns>
         /// <exception cref="SyncSignalException">Thrown if the target synchronous signal doesn't exist or the workflow is already closed.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>

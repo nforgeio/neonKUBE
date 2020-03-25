@@ -153,14 +153,18 @@ namespace Neon.Cadence
         /// <summary>
         /// Signals the workflow.
         /// </summary>
-        /// <param name="signalName">The signal name.</param>
+        /// <param name="signalName">
+        /// The signal name as defined by the <see cref="SignalMethodAttribute"/>
+        /// decorating the workflow signal method.
+        /// </param>
         /// <param name="args">The signal arguments.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown if the child workflow has not been started.</exception>
         /// <remarks>
         /// <note>
         /// <b>IMPORTANT:</b> You need to take care to ensure that the parameters passed
-        /// are compatible with the target workflow arguments.
+        /// are compatible with the target workflow arguments.  No compile-time type checking
+        /// is performed for this method.
         /// </note>
         /// </remarks>
         public async Task SignalAsync(string signalName, params object[] args)
@@ -169,7 +173,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
-            if (Execution == null)
+            if (execution == null)
             {
                 throw new InvalidOperationException("The stub must be started first.");
             }
@@ -177,14 +181,91 @@ namespace Neon.Cadence
             var reply = (WorkflowSignalReply) await client.CallProxyAsync(
                 new WorkflowSignalRequest()
                 {
-                        WorkflowId = execution.WorkflowId,
-                        RunId      = execution.RunId,
-                        Domain     = options.Domain,
-                        SignalName = signalName,
-                        SignalArgs = client.DataConverter.ToData(args)
+                    WorkflowId = execution.WorkflowId,
+                    RunId      = execution.RunId,
+                    Domain     = options.Domain,
+                    SignalName = signalName,
+                    SignalArgs = client.DataConverter.ToData(args)
                 });
 
             reply.ThrowOnError();
+        }
+
+        /// <summary>
+        /// <b>EXPERIMENTAL:</b> This method synchronously signals the workflow and returns
+        /// only after the workflow has processed received and processed the signal as opposed
+        /// to <see cref="SignalAsync"/> which is fire-and-forget and does not wait for the
+        /// signal to be processed.
+        /// </summary>
+        /// <param name="signalName">
+        /// The signal name as defined by the <see cref="SignalMethodAttribute"/>
+        /// decorating the workflow signal method.
+        /// </param>
+        /// <param name="args">The signal arguments.</param>
+        /// <remarks>
+        /// <note>
+        /// <b>IMPORTANT:</b> You need to take care to ensure that the parameters passed
+        /// are compatible with the target workflow arguments.  No compile-time type checking
+        /// is performed for this method.
+        /// </note>
+        /// </remarks>
+        public async Task SyncSignalAsync(string signalName, params object[] args)
+        {
+            await SyncContext.ClearAsync;
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+
+            if (execution == null)
+            {
+                throw new InvalidOperationException("The stub must be started first.");
+            }
+
+            var signalId        = Guid.NewGuid().ToString("d");
+            var argBytes        = client.DataConverter.ToData(args);
+            var signalCall      = new SyncSignalCall(signalName, signalId, argBytes);
+            var signalCallBytes = client.DataConverter.ToData(new object[] { signalCall });
+
+            await client.SyncSignalWorkflowAsync(execution, signalName, signalId, signalCallBytes, options.Domain);
+        }
+
+        /// <summary>
+        /// <b>EXPERIMENTAL:</b> This method synchronously signals the workflow and returns
+        /// the signal result only after the workflow has processed received and processed the 
+        /// signal as opposed to <see cref="SignalAsync"/> which is fire-and-forget and does 
+        /// not wait for the signal to be processed and cannot return a result.
+        /// </summary>
+        /// <typeparam name="TResult">The signal result type.</typeparam>
+        /// <param name="signalName">
+        /// The signal name as defined by the <see cref="SignalMethodAttribute"/>
+        /// decorating the workflow signal method.
+        /// </param>
+        /// <param name="args">The signal arguments.</param>
+        /// <returns>The signal result.</returns>
+        /// <remarks>
+        /// <note>
+        /// <b>IMPORTANT:</b> You need to take care to ensure that the parameters passed
+        /// are compatible with the target workflow arguments.  No compile-time type checking
+        /// is performed for this method.
+        /// </note>
+        /// </remarks>
+        public async Task<TResult> SyncSignalAsync<TResult>(string signalName, params object[] args)
+        {
+            await SyncContext.ClearAsync;
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+
+            if (execution == null)
+            {
+                throw new InvalidOperationException("The stub must be started first.");
+            }
+
+            var signalId        = Guid.NewGuid().ToString("d");
+            var argBytes        = client.DataConverter.ToData(args);
+            var signalCall      = new SyncSignalCall(signalName, signalId, argBytes);
+            var signalCallBytes = client.DataConverter.ToData(new object[] { signalCall });
+            var resultBytes     = await client.SyncSignalWorkflowAsync(execution, signalName, signalId, signalCallBytes, options.Domain);
+
+            return client.DataConverter.FromData<TResult>(resultBytes);
         }
 
         /// <summary>
@@ -206,7 +287,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryName), nameof(queryName));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
-            if (Execution == null)
+            if (execution == null)
             {
                 throw new InvalidOperationException("The stub must be started first.");
             }
