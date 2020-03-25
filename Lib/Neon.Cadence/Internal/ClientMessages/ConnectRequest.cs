@@ -51,8 +51,7 @@ namespace Neon.Cadence.Internal
         /// network port, formatted like:
         /// </para>
         /// <code>
-        /// my-server.nhive.io:5555
-        /// 1.2.3.4:5555
+        /// my-server.nhive.io:5555,1.2.3.4:5555
         /// </code>
         /// </summary>
         public string Endpoints

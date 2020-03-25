@@ -152,9 +152,9 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Optionally specifies what happens to the child workflow when the parent is terminated.
-        /// This defaults to <see cref="ParentClosePolicy.Abandon"/>.
+        /// This defaults to <see cref="ParentClosePolicy.RequestCancel"/>.
         /// </summary>
-        public ParentClosePolicy ChildPolicy { get; set; } = ParentClosePolicy.Abandon;
+        public ParentClosePolicy ChildPolicy { get; set; } = ParentClosePolicy.RequestCancel;
 
         /// <summary>
         /// Optionally specifies whether to wait for the child workflow to finish for any

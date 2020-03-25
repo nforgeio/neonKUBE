@@ -83,12 +83,12 @@ namespace Neon.Cadence.Internal
         public long TaskStartToCloseTimeout { get; set; } = 10 * CadenceHelper.NanosecondsPerSecond;
 
         /// <summary>
-        /// ChildPolicy defines the behavior of child workflow when parent workflow is terminated.
-        /// Optional: default to use ChildWorkflowPolicyAbandon. We currently only support this policy.
+        /// ChildClosePolicy defines the behavior of child workflow when parent workflow is terminated.
+        /// Optional: default to use ParentClosePolicy.RequestCancel. We currently only support this policy.
         /// </summary>
-        [JsonProperty(PropertyName = "ChildPolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue((int)Cadence.ParentClosePolicy.Abandon)]
-        public int ChildClosePolicy { get; set; } = (int)Cadence.ParentClosePolicy.Abandon;
+        [JsonProperty(PropertyName = "ChildClosePolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue((int)Cadence.ParentClosePolicy.RequestCancel)]
+        public int ChildClosePolicy { get; set; } = (int)Cadence.ParentClosePolicy.RequestCancel;
 
         /// <summary>
         /// WaitForCancellation - Whether to wait for cancelled child workflow to be ended (child workflow can be ended

@@ -81,7 +81,7 @@ namespace TestCadence
                 DebugDisableHeartbeats = CadenceTestHelper.DebugDisableHeartbeats
             };
 
-            if (fixture.Start(settings, keepConnection: true, keepOpen: CadenceTestHelper.KeepCadenceServerOpen) == TestFixtureStatus.Started)
+            if (fixture.Start(settings, image: CadenceTestHelper.CadenceImage, keepConnection: true, keepOpen: CadenceTestHelper.KeepCadenceServerOpen) == TestFixtureStatus.Started)
             {
                 this.fixture = fixture;
                 this.client  = fixture.Client;
@@ -591,7 +591,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.Nop));
         }
 
-        [Fact(Skip = "See issue #784")]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task GetVersion()
         {
@@ -759,7 +759,7 @@ namespace TestCadence
             Assert.True(await stub.RunAsync(ReplayTest.GetIsSetLastCompletionResult));
         }
 
-        [Fact(Skip = "See issue #784")]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task ChildWorkflow()
         {

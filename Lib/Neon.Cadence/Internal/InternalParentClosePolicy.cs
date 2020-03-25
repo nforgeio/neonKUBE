@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    InternalChildClosePolicy.cs
+// FILE:	    InternalParentClosePolicy.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -29,34 +29,24 @@ namespace Neon.Cadence.Internal
     /// <b>INTERNAL USE ONLY:</b> Enumerates the possible child workflow behaviors 
     /// when the parent workflow is closed.
     /// </summary>
-    public enum InternaChildClosePolicy
+    public enum InternalParentClosePolicy
     {
         // WARNING: These definitions must match those defined for [ParentClosePolicy].
 
         /// <summary>
-        /// <para>
         /// All open child workflows will be terminated when parent workflow is terminated.
-        /// </para>
-        /// <note>
-        /// This policy is not implemented.
-        /// </note>
         /// </summary>
         TERMINATE = 0,
 
         /// <summary>
-        /// <para>
         /// Cancel requests will be sent to all open child workflows to all open child 
-        /// workflows when parent workflow is terminated.
-        /// </para>
-        /// <note>
-        /// This policy is not implemented.
-        /// </note>
+        /// workflows when parent workflow is closed.  This is the default policy.
         /// </summary>
         REQUEST_CANCEL = 1,
 
         /// <summary>
         /// Child workflow execution will continue unaffected when parent workflow is
-        /// terminated.  This is the default policy.
+        /// closed.
         /// </summary>
         ABANDON = 2
     }

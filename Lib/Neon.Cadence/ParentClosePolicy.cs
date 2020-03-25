@@ -27,36 +27,26 @@ namespace Neon.Cadence
 {
     /// <summary>
     /// Enumerates the possible child workflow behaviors when the parent
-    /// workflow is terminated.
+    /// workflow is closed.
     /// </summary>
     public enum ParentClosePolicy
     {
-        // WARNING: These definitions must match those defined for [InternalChildClosePolicy].
+        // WARNING: These definitions must match those defined for [InternalParentClosePolicy].
 
         /// <summary>
-        /// <para>
-        /// All open child workflows will be terminated when parent workflow is terminated.
-        /// </para>
-        /// <note>
-        /// This policy is not implemented.
-        /// </note>
+        /// All open child workflows will be terminated when parent workflow is closed.
         /// </summary>
         Terminate = 0,
 
         /// <summary>
-        /// <para>
         /// Cancel requests will be sent to all open child workflows to all open child 
-        /// workflows when parent workflow is terminated.
-        /// </para>
-        /// <note>
-        /// This policy is not implemented.
-        /// </note>
+        /// workflows when parent workflow is closed.    This is the <b>default policy</b>.
         /// </summary>
         RequestCancel = 1,
 
         /// <summary>
-        /// Child workflow execution will continue unaffected when parent workflow is
-        /// terminated.  This is the default policy.
+        /// Child workflow execution will continue unaffected when parent workflow is closed,
+        /// essentially becoming orphaned.
         /// </summary>
         Abandon = 2
     }

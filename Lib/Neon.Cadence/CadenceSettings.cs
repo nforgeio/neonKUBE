@@ -104,8 +104,22 @@ namespace Neon.Cadence
         public string DefaultDomain { get; set; }
 
         /// <summary>
+        /// <para>
         /// Optionally create the <see cref="DefaultDomain"/> if it doesn't already exist.
         /// This defaults to <c>false</c>.
+        /// </para>
+        /// <note>
+        /// Enabling this can be handy for unit testing where you'll likely be starting
+        /// off with a virgin Cadence server when the test start.  We don't recommend
+        /// enabling this for production services.  For production, you should explicitly
+        /// create your domains with suitable setttings such has how long workflow histories
+        /// are to be retained.
+        /// </note>
+        /// <note>
+        /// If the default domain doesn't exist when <see cref="CreateDomain"/><c>=true</c> when a
+        /// connection is established, it will be initialized to retain workflow histories for
+        /// up to <b>7 days</b>.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "CreateDomain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "createDomain", ApplyNamingConventions = false)]

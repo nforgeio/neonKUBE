@@ -42,11 +42,12 @@ namespace Neon.Cadence
 
         // $todo(jefflill):
         //
-        // We need to add support for these addition Cadence GOLANG properties:
+        // We need to add support for these additional Cadence GOLANG properties:
         //
         //      BadBinaries
-        //      ArchivalStatus
+        //      HistoryArchivalStatus
         //      HistoryArchivalUri
+        //      VisibilityArchivalStatus
         //      VisibilityArchivalUri
     }
 }

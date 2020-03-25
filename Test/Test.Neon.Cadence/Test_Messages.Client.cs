@@ -2158,7 +2158,7 @@ namespace TestCadence
                     IsGlobalDomain = true,
                     DomainConfiguration = new InternalDomainConfiguration()
                     {
-                        EmitMetric = true,
+                        EmitMetric                             = true,
                         WorkflowExecutionRetentionPeriodInDays = 30
                     },
                     DomainInfo = new InternalDomainInfo()

@@ -58,7 +58,7 @@ namespace TestCadence
 
             this.fixture = fixture;
 
-            fixture.Start(settings, keepConnection: true, keepOpen: CadenceTestHelper.KeepCadenceServerOpen, noClient: true);
+            fixture.Start(settings, image: CadenceTestHelper.CadenceImage, keepConnection: true, keepOpen: CadenceTestHelper.KeepCadenceServerOpen, noClient: true);
         }
 
         public void Dispose()

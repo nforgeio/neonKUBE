@@ -63,7 +63,7 @@ namespace TestCadence
                 DebugDisableHeartbeats = CadenceTestHelper.DebugDisableHeartbeats
             };
 
-            if (fixture.Start(settings, keepConnection: true, keepOpen: CadenceTestHelper.KeepCadenceServerOpen, noClient: true) == TestFixtureStatus.Started)
+            if (fixture.Start(settings, image: CadenceTestHelper.CadenceImage, keepConnection: true, keepOpen: CadenceTestHelper.KeepCadenceServerOpen, noClient: true) == TestFixtureStatus.Started)
             {
                 this.fixture = fixture;
                 this.client  = fixture.Client = CadenceClient.ConnectAsync(fixture.Settings).Result;

@@ -119,7 +119,7 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 		defer cancel()
 
 		// register the domain
-		retention := int32(30)
+		retention := int32(7)
 		err = clientHelper.RegisterDomain(
 			ctx,
 			&cadenceshared.RegisterDomainRequest{
