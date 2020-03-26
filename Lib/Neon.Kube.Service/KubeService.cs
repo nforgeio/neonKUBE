@@ -49,11 +49,11 @@ namespace Neon.Kube.Service
     /// This class is pretty easy to use.  Simply derive your service class from <see cref="KubeService"/>
     /// and implement the <see cref="OnRunAsync"/> method.  <see cref="OnRunAsync"/> will be called when 
     /// your service is started.  This is where you'll implement your service.  You should perform any
-    /// initialization and then call <see cref="SetRunning"/> to indicate that the service is ready for
+    /// initialization and then call <see cref="SetRunningAsync"/> to indicate that the service is ready for
     /// business.
     /// </para>
     /// <note>
-    /// Note that calling <see cref="SetRunning()"/> after your service has initialized is very important
+    /// Note that calling <see cref="SetRunningAsync()"/> after your service has initialized is very important
     /// because the <b>KubeServiceFixture</b> requires won't allow tests to proceed until the service
     /// indicates that it's ready.  This is necessary to avoid unit test race conditions.
     /// </note>
@@ -796,7 +796,7 @@ namespace Neon.Kube.Service
         /// <returns>The the progam exit code.</returns>
         /// <remarks>
         /// <para>
-        /// Services should perform any required initialization and then must call <see cref="SetRunning()"/>
+        /// Services should perform any required initialization and then must call <see cref="SetRunningAsync()"/>
         /// to indicate that the service should transition into the <see cref="KubeServiceStatus.Running"/>
         /// state.  This is very important because the service test fixture requires the service to be
         /// in the running state before it allows tests to proceed.  This is necessary to avoid unit test 
