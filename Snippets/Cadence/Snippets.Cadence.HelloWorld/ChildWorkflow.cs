@@ -73,6 +73,7 @@ namespace HelloWorld_ChildWorkflow
     [WorkflowInterface(TaskList = "my-tasks")]
     public interface IParentWorkfow : IWorkflow
     {
+        [WorkflowMethod]
         Task DoEmailingAsync(string adminEmail);
     }
 

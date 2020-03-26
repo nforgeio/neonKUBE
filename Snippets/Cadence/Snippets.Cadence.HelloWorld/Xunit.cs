@@ -60,15 +60,20 @@ namespace MyTests
 
             if (fixture.Start(settings, keepConnection: true, keepOpen: true) == TestFixtureStatus.Started)
             {
+                this.fixture = fixture;
+                this.client  = fixture.Client;
+
                 // Register the test workflow and activity implementations
                 // from this assembly and start the worker.
 
                 client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
                 client.StartWorkerAsync("test-tasks").Wait();
             }
-
-            this.fixture = fixture;
-            this.client  = fixture.Client;
+            else
+            {
+                this.fixture = fixture;
+                this.client  = fixture.Client;
+            }
         }
 
         [Fact]
