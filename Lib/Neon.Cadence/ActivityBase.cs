@@ -109,7 +109,6 @@ namespace Neon.Cadence
         // Static members
 
         private static object                                   syncLock     = new object();
-        private static INeonLogger                              log          = LogManager.Default.GetLogger<ActivityBase>();
         private static object[]                                 noArgs       = new object[0];
         private static Dictionary<ActivityKey, ActivityBase>    idToActivity = new Dictionary<ActivityKey, ActivityBase>();
         private static byte[]                                   emptyBytes   = new byte[0];
@@ -491,7 +490,7 @@ namespace Neon.Cadence
             }
             catch (CadenceException e)
             {
-                log.LogError(e);
+                activity.logger.LogError(e);
 
                 return new ActivityInvokeReply()
                 {
@@ -507,7 +506,7 @@ namespace Neon.Cadence
             }
             catch (Exception e)
             {
-                log.LogError(e);
+                activity.logger.LogError(e);
 
                 return new ActivityInvokeReply()
                 {
@@ -541,6 +540,7 @@ namespace Neon.Cadence
         private Type            activityType;
         private MethodInfo      activityMethod;
         private IDataConverter  dataConverter;
+        private INeonLogger     logger;
 
         /// <summary>
         /// Default protected constructor.
@@ -579,6 +579,7 @@ namespace Neon.Cadence
             this.ContextId               = contextId;
             this.CancellationTokenSource = new CancellationTokenSource();
             this.CancellationToken       = CancellationTokenSource.Token;
+            this.logger                  = LogManager.Default.GetLogger(sourceModule: activityType.FullName);
         }
 
         /// <inheritdoc/>
@@ -701,7 +702,7 @@ namespace Neon.Cadence
                 }
                 catch (Exception e)
                 {
-                    log.LogError(e);
+                    logger.LogError(e);
 
                     throw;
                 }
