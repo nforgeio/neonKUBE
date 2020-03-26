@@ -359,7 +359,7 @@ namespace Neon.Cadence
         internal TimeSpan MaxWorkflowDelay => TimeSpan.FromSeconds(MaxWorkflowDelaySeconds);
 
         /// <summary>
-        /// The default maximum time the <see cref="CadenceClient.WaitUntilWorkflowRunningAsync(WorkflowExecution, string, TimeSpan?)"/> method
+        /// The default maximum time the <see cref="CadenceClient.WaitForWorkflowStartAsync(WorkflowExecution, string, TimeSpan?)"/> method
         /// will wait for a workflow to start.  This defaults to <b>30.0 seconds</b>.
         /// </summary>
         [JsonProperty(PropertyName = "MaxWorkflowWaitUntilRunningSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

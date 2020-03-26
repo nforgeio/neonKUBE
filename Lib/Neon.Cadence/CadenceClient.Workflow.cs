@@ -466,7 +466,10 @@ namespace Neon.Cadence
         /// <exception cref="SyncSignalException">Thrown if the workflow is closed or the signal could not be executed for another reason.</exception>
         /// <exception cref="CadenceTimeoutException">Thrown when the workflow did not start running within a reasonable period of time.</exception>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task WaitUntilWorkflowRunningAsync(WorkflowExecution execution, string domain = null, TimeSpan? maxWait = null)
+        /// <remarks>
+        /// This method can be handy when writing non-emulated unit tests.
+        /// </remarks>
+        public async Task WaitForWorkflowStartAsync(WorkflowExecution execution, string domain = null, TimeSpan? maxWait = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
 
@@ -498,7 +501,7 @@ namespace Neon.Cadence
                     }
                     else if (description.Status.IsClosed)
                     {
-                        throw new SyncSignalException($"{typeof(SyncSignalException).FullName}:Wait for workflow [workflowID={execution.WorkflowId}, runID={execution.RunId}] is closed.");
+                        throw new SyncSignalException($"{typeof(SyncSignalException).FullName}: Wait for workflow [workflowID={execution.WorkflowId}, runID={execution.RunId}] failed because the worflow is closed.");
                     }
                     else
                     {
@@ -951,7 +954,7 @@ namespace Neon.Cadence
 
             // Detect whether the workflow is already closed or wait for it to start running.
 
-            await WaitUntilWorkflowRunningAsync(execution);
+            await WaitForWorkflowStartAsync(execution);
 
             // Send the signal.
 
@@ -1044,7 +1047,7 @@ namespace Neon.Cadence
 
             // Detect whether the workflow is already closed or wait for it to start running.
 
-            await WaitUntilWorkflowRunningAsync(childExecution.Execution);
+            await WaitForWorkflowStartAsync(childExecution.Execution);
 
             // Send the signal.
 
