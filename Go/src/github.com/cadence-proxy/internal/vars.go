@@ -56,7 +56,7 @@ var (
 
 	// ErrConnection is the custom error that is thrown when the cadence-proxy
 	// is not able to establish a connection with the cadence server
-	ErrConnection = errors.New("CadenceConnectionError{Messages: Could not establish a connection with the cadence server.}")
+	ErrConnection = errors.New("CadenceConnectionError{Message: Could not establish a connection with the cadence server.}")
 
 	// ErrEntityNotExist is the custom error that is thrown when a cadence
 	// entity cannot be found in the cadence server
