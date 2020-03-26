@@ -567,7 +567,9 @@ namespace Neon.Cadence
 
             var activityTask = new ActivityTask()
             {
-                 // $todo(jefflill): Need to initialize these properties.
+                // $todo(jefflill):
+                //
+                //     https://github.com/nforgeio/neonKUBE/issues/786
             };
 
             this.Client                  = client;
