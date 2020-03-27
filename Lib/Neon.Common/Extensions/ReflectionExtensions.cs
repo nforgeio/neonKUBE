@@ -116,6 +116,37 @@ namespace System
             return false;
         }
 
+
+        /// <summary>
+        /// Determines whether a type inherits from another type.
+        /// </summary>
+        /// <typeparam name="TBase">The required base type.</typeparam>
+        /// <param name="type">The type being tested.</param>
+        /// <returns><c>true</c> if <paramref name="type"/> inherits <paramref name="type"/>.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="type"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// <note>
+        /// This method also returns <c>true</c> when <typeparamref name="TBase"/> is the
+        /// same as <paramref name="type"/>.
+        /// </note>
+        /// </remarks>
+        public static bool Inherits<TBase>(this Type type)
+        {
+            Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
+
+            while (type != null)
+            {
+                if (type == typeof(TBase))
+                {
+                    return true;
+                }
+
+                type = type.BaseType;
+            }
+
+            return false;
+        }
+
         //---------------------------------------------------------------------
         // System.Reflection.Method
 

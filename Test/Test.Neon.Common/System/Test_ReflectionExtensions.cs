@@ -106,6 +106,38 @@ namespace TestCommon
             Assert.Throws<ArgumentException>(() => fooType.Implements<NotFoo>());
         }
 
+        internal class Base0
+        {
+        }
+
+        internal class Base1 : Base0
+        {
+        }
+
+        internal class Base2 : Base1
+        {
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void Type_Inherits()
+        {
+            var base0Type = typeof(Base0);
+            var base1Type = typeof(Base1);
+            var base2Type = typeof(Base2);
+
+            Assert.True(base0Type.Inherits<object>());
+            Assert.True(base0Type.Inherits<Base0>());
+            Assert.True(base1Type.Inherits<Base0>());
+            Assert.True(base2Type.Inherits<Base0>());
+
+            Assert.True(base2Type.Inherits<object>());
+            Assert.True(base2Type.Inherits<Base1>());
+
+            Assert.False(base0Type.Inherits<int>());
+            Assert.False(base0Type.Inherits<Base2>());
+        }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Type_Is()
