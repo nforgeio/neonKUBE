@@ -276,6 +276,9 @@
     <Compile Include="..\Test.Neon.Common\Common\Test_EnvironmentParser.cs">
       <Link>Common\Test_EnvironmentParser.cs</Link>
     </Compile>
+    <Compile Include="..\Test.Neon.Common\Common\Test_ExceptionResult.cs">
+      <Link>Common\Test_ExceptionResult.cs</Link>
+    </Compile>
     <Compile Include="..\Test.Neon.Common\Common\Test_GlobPattern.cs">
       <Link>Common\Test_GlobPattern.cs</Link>
     </Compile>
