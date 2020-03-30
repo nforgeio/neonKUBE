@@ -252,6 +252,10 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
       <ImageId>deployment-simple</ImageId>
       <AlternateText>deployment-simple</AlternateText>
     </Image>
+    <Image Include="media\Neon.Cadence\overview-components.png">
+      <ImageId>overview-components</ImageId>
+      <AlternateText>overview-components</AlternateText>
+    </Image>
     <Image Include="media\neonlogo.png">
       <ImageId>neonlogo</ImageId>
       <AlternateText>neonlogo</AlternateText>

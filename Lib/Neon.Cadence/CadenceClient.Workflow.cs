@@ -192,18 +192,23 @@ namespace Neon.Cadence
         /// </para>
         /// <note>
         /// <para>
-        /// .NET and Java workflows can implement multiple workflow method using attributes
+        /// .NET and Java workflows can implement multiple workflow methods using attributes
         /// and annotations to assign unique names to each.  Each workflow method is actually
         /// registered with Cadence as a distinct workflow type.  Workflow methods with a blank
         /// or <c>null</c> name will simply be registered using the workflow type name.
         /// </para>
         /// <para>
-        /// Workflow methods with a name will be registered using a combination  of the workflow
+        /// Workflow methods with a name will be registered using a combination of the workflow
         /// type name and the method name, using <b>"::"</b> as the separator, like:
         /// </para>
         /// <code>
         /// WORKFLOW-TYPENAME::METHOD-NAME
         /// </code>
+        /// <para>
+        /// GOLANG doesn't support the concept of workflow methods.  GOLANG workflows 
+        /// are just given a simple name which you'll pass here as <paramref name="workflowTypeName"/>
+        /// to make cross platform calls.
+        /// </para>
         /// </note>
         /// </remarks>
         public WorkflowStub NewUntypedWorkflowStub(string workflowTypeName, WorkflowOptions options)
@@ -354,18 +359,23 @@ namespace Neon.Cadence
         /// </para>
         /// <note>
         /// <para>
-        /// .NET and Java workflows can implement multiple workflow method using attributes
+        /// .NET and Java workflows can implement multiple workflow methods using attributes
         /// and annotations to assign unique names to each.  Each workflow method is actually
         /// registered with Cadence as a distinct workflow type.  Workflow methods with a blank
         /// or <c>null</c> name will simply be registered using the workflow type name.
         /// </para>
         /// <para>
-        /// Workflow methods with a name will be registered using a combination  of the workflow
+        /// Workflow methods with a name will be registered using a combination of the workflow
         /// type name and the method name, using <b>"::"</b> as the separator, like:
         /// </para>
         /// <code>
         /// WORKFLOW-TYPENAME::METHOD-NAME
         /// </code>
+        /// <para>
+        /// GOLANG doesn't support the concept of workflow methods.  GOLANG workflows 
+        /// are just given a simple name which you'll pass here as <paramref name="workflowTypeName"/>
+        /// to make cross platform calls.
+        /// </para>
         /// </note>
         /// </remarks>
         public WorkflowStub NewWorkflowStub(string workflowTypeName, WorkflowOptions options = null)
@@ -401,18 +411,23 @@ namespace Neon.Cadence
         /// </para>
         /// <note>
         /// <para>
-        /// .NET and Java workflows can implement multiple workflow method using attributes
+        /// .NET and Java workflows can implement multiple workflow methods using attributes
         /// and annotations to assign unique names to each.  Each workflow method is actually
         /// registered with Cadence as a distinct workflow type.  Workflow methods with a blank
         /// or <c>null</c> name will simply be registered using the workflow type name.
         /// </para>
         /// <para>
-        /// Workflow methods with a name will be registered using a combination  of the workflow
+        /// Workflow methods with a name will be registered using a combination of the workflow
         /// type name and the method name, using <b>"::"</b> as the separator, like:
         /// </para>
         /// <code>
         /// WORKFLOW-TYPENAME::METHOD-NAME
         /// </code>
+        /// <para>
+        /// GOLANG doesn't support the concept of workflow methods.  GOLANG workflows 
+        /// are just given a simple name which you'll pass here as <paramref name="workflowTypeName"/>
+        /// to make cross platform calls.
+        /// </para>
         /// </note>
         /// </remarks>
         public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(WorkflowOptions options = null, string workflowTypeName = null)
