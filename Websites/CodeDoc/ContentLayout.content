@@ -2,7 +2,7 @@
 <Topics>
   <Topic id="6e0122fd-beb8-4334-9fa2-43a79c330dd9" visible="True" title="Welcome to Neon" />
   <Topic id="03e74489-4566-4221-924b-64d2b143816c" visible="True" noFile="true" isExpanded="true" title="Neon.Cadence">
-    <Topic id="b4a13879-cf87-43e2-8b6e-a122d8809d7a" visible="True" isSelected="true" title="Overview" />
+    <Topic id="b4a13879-cf87-43e2-8b6e-a122d8809d7a" visible="True" title="Overview" />
     <Topic id="c169d35c-2fe4-439d-a7f8-298f39e252be" visible="True" title="Glossary" />
     <Topic id="e7611458-d70d-458a-9dfe-09bd8811ec11" visible="True" title="Deployment" />
     <Topic id="53949a06-8a0b-4485-a1eb-e85932121320" visible="True" noFile="true" isExpanded="true" title="Getting started">
@@ -35,6 +35,7 @@
       <Topic id="824a3ec2-5cc2-4fe8-94c1-1038ffbdc5e2" visible="True" title="Unit testing" />
       <Topic id="47f856e1-c10b-4c33-bbca-a02cd79aec9d" visible="True" title="Interop" />
       <Topic id="62735281-ac6d-4ddb-944a-8a4bb70fb180" visible="True" title="Java differences" />
+      <Topic id="b6a8a730-6e6c-4ff4-81b2-d70d22f00fdc" visible="True" noFile="true" isSelected="true" title="Cross-platform" />
     </Topic>
   </Topic>
   <Topic id="febab646-a6fe-4c79-89cd-dadd6d30ad92" visible="True" noFile="true" isExpanded="true" title="Neon.Common">

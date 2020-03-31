@@ -22,6 +22,22 @@
           <codeEntityReference qualifyHint="false">T:Neon.Data.IRoundtripData</codeEntityReference>
           classes.  This is handled by <codeEntityReference qualifyHint="false">T:Neon.Cadence.JsonDataConverter</codeEntityReference>.
         </para>
+        <alert class="note">
+          <para>
+            The default .NET client JSON data serializer is based on the very popular
+            <externalLink>
+              <linkText>Newtonsoft JSON.NET</linkText>
+              <linkUri>https://www.newtonsoft.com/json</linkUri>
+            </externalLink>
+            package.  You can use attributes like <codeInline>[JsonProperty]</codeInline>, <codeInline>JsonIgnore</codeInline>,
+            and <codeInline>[JsonConverter]</codeInline> for fine control over this.  Here's a link
+            to more information:
+            <externalLink>
+              <linkText>JSON.NET Attributes</linkText>
+              <linkUri>https://www.newtonsoft.com/json/help/html/SerializationAttributes.htm</linkUri>
+            </externalLink>
+          </para>
+        </alert>
         <para>
           You can write a custom converter to support XML, protobuf, or whatever.  This may be necessary
           if you need to interoperate with workflows or activities written for another client.  Your new

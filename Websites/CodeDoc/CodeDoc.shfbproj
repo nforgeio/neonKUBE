@@ -177,6 +177,7 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <Folder Include="media\Neon.Cadence" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Content\Neon.Cadence\OtherTopics\CrossPlatform.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\SyncSignals.aml" />
     <None Include="Content\Neon.Kube.Service\Overview.aml" />
     <None Include="Content\Neon.Cadence\ActivityDetails\Basics.aml" />
@@ -187,7 +188,6 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <None Include="Content\Neon.Cadence\OtherTopics\Data serialization.aml" />
     <None Include="Content\Neon.Cadence\OtherTopics\JavaDiff.aml" />
     <None Include="Content\Neon.Cadence\OtherTopics\Logging.aml" />
-    <None Include="Content\Neon.Cadence\OtherTopics\Interop.aml" />
     <None Include="Content\Neon.Cadence\Overview.aml" />
     <None Include="Content\Neon.Cadence\Glossary.aml" />
     <None Include="Content\Neon.Cadence\GettingStarted\BasicWorkflow.aml" />
