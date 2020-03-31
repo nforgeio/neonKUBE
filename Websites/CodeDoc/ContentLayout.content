@@ -29,13 +29,12 @@
       <Topic id="58aa9345-7eb8-4087-9648-6775bc1352e9" visible="True" title="Local Activities" />
       <Topic id="d04a2043-84db-47a7-b38b-302dc702cdb0" visible="True" title="External Completion" />
     </Topic>
-    <Topic id="906729d2-656b-4bd2-a7d9-0beb010a868b" visible="True" noFile="true" isExpanded="true" title="Other Topics">
+    <Topic id="906729d2-656b-4bd2-a7d9-0beb010a868b" visible="True" noFile="true" isExpanded="true" isSelected="true" title="Other Topics">
       <Topic id="907cf0a2-3f54-4c9f-a93f-3e54f5e2f806" visible="True" />
       <Topic id="41335d55-fbda-49f1-9187-fffeafb41352" visible="True" />
       <Topic id="824a3ec2-5cc2-4fe8-94c1-1038ffbdc5e2" visible="True" title="Unit testing" />
-      <Topic id="47f856e1-c10b-4c33-bbca-a02cd79aec9d" visible="True" title="Interop" />
       <Topic id="62735281-ac6d-4ddb-944a-8a4bb70fb180" visible="True" title="Java differences" />
-      <Topic id="b6a8a730-6e6c-4ff4-81b2-d70d22f00fdc" visible="True" noFile="true" isSelected="true" title="Cross-platform" />
+      <Topic id="b6a8a730-6e6c-4ff4-81b2-d70d22f00fdc" visible="True" title="Cross-platform" />
     </Topic>
   </Topic>
   <Topic id="febab646-a6fe-4c79-89cd-dadd6d30ad92" visible="True" noFile="true" isExpanded="true" title="Neon.Common">
