@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 # This script builds the [cadence-proxy] GOLANG executables and writes
-# them to $NF_BUILD.
+# them to: $NF_BUILD.
 #
 # USAGE: powershell -file build-cadence.ps1
 
@@ -28,6 +28,7 @@ $orgDirectory = Get-Location
 
 Set-Location "$projectpath\cmd\cadenceproxy"
 
+# Ensure that the build output folder exists.
 if (!(test-path $buildPath))
 {
     New-Item -ItemType Directory -Force -Path $buildPath

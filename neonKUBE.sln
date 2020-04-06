@@ -218,6 +218,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Go", "Go", "{F91BE5A3-9CBD-
 	ProjectSection(SolutionItems) = preProject
 		Go\build-all.ps1 = Go\build-all.ps1
 		Go\build-cadence-proxy.ps1 = Go\build-cadence-proxy.ps1
+		Go\build-test.ps1 = Go\build-test.ps1
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GoBuilder", "Go\GoBuilder\GoBuilder.csproj", "{C2071335-AFDF-4643-93A2-EAC482E90E73}"
@@ -275,6 +276,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Snippets", "Snippets", "{CB
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Snippets.Cadence.HelloWorld", "Snippets\Cadence\Snippets.Cadence.HelloWorld\Snippets.Cadence.HelloWorld.csproj", "{6B21D400-2F16-4A68-A672-2100E571854D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{F08FAE2A-80B0-43D5-9A1B-14F31D2FAEE3}"
+	ProjectSection(SolutionItems) = preProject
+		Go\test\config.yaml = Go\test\config.yaml
+		Go\test\factory.go = Go\test\factory.go
+		Go\test\main.go = Go\test\main.go
+		Go\test\no-args.go = Go\test\no-args.go
+		Go\test\one-arg.go = Go\test\one-arg.go
+		Go\test\sample_helper.go = Go\test\sample_helper.go
+		Go\test\two-args.go = Go\test\two-args.go
+		Go\test\util.go = Go\test\util.go
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -1383,6 +1396,7 @@ Global
 		{F19FF67A-660D-4B3F-8590-01DE5F14744D} = {5641C82B-E8E5-49AD-8DEE-E574D0D77460}
 		{430BF9EA-698E-401E-B7AC-AABE7353B8AD} = {B6E81450-BC31-43E7-BC9E-83C12654BC07}
 		{6B21D400-2F16-4A68-A672-2100E571854D} = {CB2EDD47-A608-4284-96E3-08E9DC52EFEF}
+		{F08FAE2A-80B0-43D5-9A1B-14F31D2FAEE3} = {EAA2C7EE-0B01-4B2B-80FA-7BF3D03552BA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}

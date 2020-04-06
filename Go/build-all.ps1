@@ -36,6 +36,7 @@ $env:NF_GOROOT = "$env:NF_ROOT\Go"
 
 Set-Location $env:NF_GOROOT
 
-./build-cadence-proxy.ps1 -buildConfig $buildConfig
+& ./build-cadence-proxy.ps1 -buildConfig $buildConfig
+& ./build-test.ps1
 
 Set-Location $orgDirectory
