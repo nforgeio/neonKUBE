@@ -11,8 +11,6 @@ import (
 	"go.uber.org/cadence/workflow"
 )
 
-const taskList = "gotest-args"
-
 func main() {
 
 	// Parse the -wait=<seconds> command line option which specifies
@@ -23,6 +21,26 @@ func main() {
 
 	flag.Int64Var(&waitSeconds, "wait", 10, "Program execution time in seconds.")
 	flag.Parse()
+
+	// Parse the -tasklist=<name> command line option which specifies the 
+	// Cadence tasklist where the workflows and activities will be registered.
+	// This defaults to "tests".
+
+	var taskList string
+
+	flag.StringVar(&taskList, "tasklist", "tests", "Target Cadence task list.")
+	flag.Parse();
+
+	// Parse the -domain=<name> command line option which specifies the 
+	// Cadence domain where the workflows and activities will be registered.
+	// This defaults to "test-domain".
+
+	var domain string
+
+	flag.StringVar(&domain, "domain", "test-domain", "Target Cadence domain.")
+	flag.Parse();
+
+	// Register the workflows and activities and start the worker.
 
 	var h SampleHelper
 
@@ -40,7 +58,7 @@ func main() {
 	workflow.Register(TwoArgsWorkflow)
 	activity.Register(TwoArgsActivity)
 
-	h.StartWorkers("test-domain", taskList, workerOptions)
+	h.StartWorkers(domain, taskList, workerOptions)
 
 	//-----------------------------------------------------
 	// NoArgs
@@ -83,4 +101,8 @@ func main() {
 	// wait time.
 
 	time.Sleep(time.Duration(waitSeconds) * time.Second)
+
+	// Gracefully stop the Cadence worker.
+
+	h.StopWorkers()
 }

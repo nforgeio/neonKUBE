@@ -30,6 +30,7 @@ type (
 		Builder        *WorkflowClientBuilder
 		DataConverter  encoded.DataConverter
 		CtxPropagators []workflow.ContextPropagator
+		Worker         worker.Worker
 	}
 
 	// Configuration for running samples.
@@ -131,12 +132,17 @@ func (h *SampleHelper) SignalWithStartWorkflowWithCtx(ctx context.Context, workf
 
 // StartWorkers starts workflow worker and activity worker based on configured options.
 func (h *SampleHelper) StartWorkers(domainName, groupName string, options worker.Options) {
-	worker := worker.New(h.Service, domainName, groupName, options)
-	err := worker.Start()
+	h.Worker = worker.New(h.Service, domainName, groupName, options)
+	err := h.Worker.Start()
 	if err != nil {
 		h.Logger.Error("Failed to start workers.", zap.Error(err))
 		panic("Failed to start workers")
 	}
+}
+
+// StopWorkers stops workflow worker and activity workers.
+func (h *SampleHelper) StopWorkers() {
+	h.Worker.Stop()
 }
 
 func (h *SampleHelper) QueryWorkflow(workflowID, runID, queryType string, args ...interface{}) {

@@ -298,6 +298,9 @@
     <Compile Include="..\Test.Neon.Cadence\Test_EndToEnd.Error.cs">
       <Link>Test_EndToEnd.Error.cs</Link>
     </Compile>
+    <Compile Include="..\Test.Neon.Cadence\Test_EndToEnd.Interop.cs">
+      <Link>Test_EndToEnd.Interop.cs</Link>
+    </Compile>
     <Compile Include="..\Test.Neon.Cadence\Test_EndToEnd.Stubs.cs">
       <Link>Test_EndToEnd.Stubs.cs</Link>
     </Compile>
