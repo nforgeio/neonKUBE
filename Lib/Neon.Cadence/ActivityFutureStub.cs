@@ -285,7 +285,7 @@ namespace Neon.Cadence
                             ContextId  = parentWorkflow.ContextId,
                             ActivityId = activityId,
                             Activity   = activityTypeName,
-                            Args       = dataConverter.ToData(args),
+                            Args       = CadenceHelper.ArgsToBytes(dataConverter, args),
                             Options    = options.ToInternal(),
                             Domain     = options.Domain
                         });
@@ -357,7 +357,7 @@ namespace Neon.Cadence
                             ContextId  = parentWorkflow.ContextId,
                             ActivityId = activityId,
                             Activity   = activityTypeName,
-                            Args       = dataConverter.ToData(args),
+                            Args       = CadenceHelper.ArgsToBytes(dataConverter, args),
                             Options    = options.ToInternal(),
                             Domain     = options.Domain,
                         });

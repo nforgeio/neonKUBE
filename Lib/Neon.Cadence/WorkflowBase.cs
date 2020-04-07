@@ -681,7 +681,7 @@ namespace Neon.Cadence
 
                 var workflowMethod   = registration.WorkflowMethod;
                 var resultType       = workflowMethod.ReturnType;
-                var args             = client.DataConverter.FromDataArray(request.Args, registration.WorkflowMethodParameterTypes);
+                var args             = CadenceHelper.BytesToArgs(client.DataConverter, request.Args, registration.WorkflowMethodParameterTypes);
                 var serializedResult = emptyBytes;
 
                 if (resultType.IsGenericType)
@@ -849,7 +849,7 @@ namespace Neon.Cadence
 
                     if (method != null)
                     {
-                        await (Task)(method.Invoke(workflow, client.DataConverter.FromDataArray(request.SignalArgs, method.GetParameterTypes())));
+                        await (Task)(method.Invoke(workflow, CadenceHelper.BytesToArgs(client.DataConverter, request.SignalArgs, method.GetParameterTypes())));
 
                         return new WorkflowSignalInvokeReply()
                         {
@@ -914,10 +914,10 @@ namespace Neon.Cadence
                     // The signal arguments should be just a single [SyncSignalCall] that specifies
                     // the target signal and also includes its encoded arguments.
 
-                    var signalCallArgs = JsonDataConverter.Instance.FromDataArray(request.SignalArgs, typeof(SyncSignalCall));
+                    var signalCallArgs = CadenceHelper.BytesToArgs(JsonDataConverter.Instance, request.SignalArgs, new Type[] { typeof(SyncSignalCall) });
                     var signalCall     = (SyncSignalCall)signalCallArgs[0];
                     var signalMethod   = workflow.Workflow.MethodMap.GetSignalMethod(signalCall.TargetSignal);
-                    var userSignalArgs = client.DataConverter.FromDataArray(signalCall.UserArgs, signalMethod.GetParameterTypes());
+                    var userSignalArgs = CadenceHelper.BytesToArgs(client.DataConverter, signalCall.UserArgs, signalMethod.GetParameterTypes());
 
                     Workflow.Current.SignalId = signalCall.SignalId;
 
@@ -1115,7 +1115,7 @@ namespace Neon.Cadence
                             // The arguments for this signal is the (string) ID of the target
                             // signal being polled for status.
 
-                            var syncSignalArgs   = JsonDataConverter.Instance.FromDataArray(request.QueryArgs, typeof(string));
+                            var syncSignalArgs   = CadenceHelper.BytesToArgs(JsonDataConverter.Instance, request.QueryArgs, new Type[] { typeof(string) });
                             var syncSignalId     = (string) (syncSignalArgs.Length > 0 ? syncSignalArgs[0] : null);
                             var syncSignalStatus = (SyncSignalStatus)null;
 
@@ -1158,7 +1158,7 @@ namespace Neon.Cadence
                         {
                             // Query method returns: Task<T>
 
-                            var result = await NeonHelper.GetTaskResultAsObjectAsync((Task)method.Invoke(workflow, client.DataConverter.FromDataArray(request.QueryArgs, methodParameterTypes)));
+                            var result = await NeonHelper.GetTaskResultAsObjectAsync((Task)method.Invoke(workflow, CadenceHelper.BytesToArgs(client.DataConverter, request.QueryArgs, methodParameterTypes)));
 
                             serializedResult = client.DataConverter.ToData(result);
                         }
@@ -1166,7 +1166,7 @@ namespace Neon.Cadence
                         {
                             // Query method returns: Task
 
-                            await (Task)method.Invoke(workflow, client.DataConverter.FromDataArray(request.QueryArgs, methodParameterTypes));
+                            await (Task)method.Invoke(workflow, CadenceHelper.BytesToArgs(client.DataConverter, request.QueryArgs, methodParameterTypes));
                         }
 
                         return new WorkflowQueryInvokeReply()

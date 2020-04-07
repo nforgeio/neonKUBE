@@ -126,7 +126,7 @@ namespace Neon.Cadence
                 throw new InvalidOperationException("Cannot start a future stub more than once.");
             }
 
-            childExecution = await client.StartChildWorkflowAsync(parentWorkflow, WorkflowTypeName, client.DataConverter.ToData(args), Options);
+            childExecution = await client.StartChildWorkflowAsync(parentWorkflow, WorkflowTypeName, CadenceHelper.ArgsToBytes(client.DataConverter, args), Options);
 
             // Create and return the future.
 
@@ -157,7 +157,7 @@ namespace Neon.Cadence
                 throw new InvalidOperationException("Cannot start a future stub more than once.");
             }
 
-            childExecution = await client.StartChildWorkflowAsync(parentWorkflow, WorkflowTypeName, client.DataConverter.ToData(args), Options);
+            childExecution = await client.StartChildWorkflowAsync(parentWorkflow, WorkflowTypeName, CadenceHelper.ArgsToBytes(client.DataConverter, args), Options);
 
             // Create and return the future.
 
@@ -197,7 +197,7 @@ namespace Neon.Cadence
                              ContextId  = parentWorkflow.ContextId,
                              ChildId    = childExecution.ChildId,
                              SignalName = signalName,
-                             SignalArgs = client.DataConverter.ToData(args)
+                             SignalArgs = CadenceHelper.ArgsToBytes(client.DataConverter, args)
                         });
                 });
 
@@ -294,7 +294,7 @@ namespace Neon.Cadence
                 throw new InvalidOperationException("Cannot start a future stub more than once.");
             }
 
-            childExecution = await client.StartChildWorkflowAsync(parentWorkflow, WorkflowTypeName, client.DataConverter.ToData(args), Options);
+            childExecution = await client.StartChildWorkflowAsync(parentWorkflow, WorkflowTypeName, CadenceHelper.ArgsToBytes(client.DataConverter, args), Options);
 
             // Create and return the future.
 
@@ -334,7 +334,7 @@ namespace Neon.Cadence
                              ContextId  = parentWorkflow.ContextId,
                              ChildId    = childExecution.ChildId,
                              SignalName = signalName,
-                             SignalArgs = client.DataConverter.ToData(args)
+                             SignalArgs = CadenceHelper.ArgsToBytes(client.DataConverter, args)
                         });
                 });
 

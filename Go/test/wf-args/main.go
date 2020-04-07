@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"time"
 
 	"github.com/pborman/uuid"
@@ -14,7 +15,14 @@ const taskList = "gotest-args"
 
 func main() {
 
-	runWorkflows := false
+	// Parse the -wait=<seconds> command line option which specifies
+	// how long the program should execute and process workflows and
+	// activities.  This defaults to 10 seconds.
+
+	var waitSeconds int64
+
+	flag.Int64Var(&waitSeconds, "wait", 10, "Program execution time in seconds.")
+	flag.Parse()
 
 	var h SampleHelper
 
@@ -34,54 +42,45 @@ func main() {
 
 	h.StartWorkers("test-domain", taskList, workerOptions)
 
-	if (runWorkflows) {
+	//-----------------------------------------------------
+	// NoArgs
 
-		//-----------------------------------------------------
-		// NoArgs
-
-		workflowOptions := client.StartWorkflowOptions{
-			ID:                              "noArgs_" + uuid.New(),
-			TaskList:                        taskList,
-			ExecutionStartToCloseTimeout:    time.Minute,
-			DecisionTaskStartToCloseTimeout: time.Minute,
-		}
-
-		h.StartWorkflow(workflowOptions, NoArgsWorkflow)
-
-		//-----------------------------------------------------
-		// OneArg
-
-		workflowOptions = client.StartWorkflowOptions{
-			ID:                              "oneArg_" + uuid.New(),
-			TaskList:                        taskList,
-			ExecutionStartToCloseTimeout:    time.Minute,
-			DecisionTaskStartToCloseTimeout: time.Minute,
-		}
-
-		h.StartWorkflow(workflowOptions, OneArgWorkflow, "CADENCE")
-
-		//-----------------------------------------------------
-		// TwoArgs
-
-		workflowOptions = client.StartWorkflowOptions{
-			ID:                              "twoArgs_" + uuid.New(),
-			TaskList:                        taskList,
-			ExecutionStartToCloseTimeout:    time.Minute,
-			DecisionTaskStartToCloseTimeout: time.Minute,
-		}
-
-		h.StartWorkflow(workflowOptions, TwoArgsWorkflow, "JACK", "JILL")
+	workflowOptions := client.StartWorkflowOptions{
+		ID:                              "noArgs_" + uuid.New(),
+		TaskList:                        taskList,
+		ExecutionStartToCloseTimeout:    time.Minute,
+		DecisionTaskStartToCloseTimeout: time.Minute,
 	}
 
+	//h.StartWorkflow(workflowOptions, NoArgsWorkflow)
+
 	//-----------------------------------------------------
-	// Give the workflows a chance to complete or unit tests
-	// a chance to run.
+	// OneArg
 
-	time.Sleep(10 * time.Second)
+	workflowOptions = client.StartWorkflowOptions{
+		ID:                              "oneArg_" + uuid.New(),
+		TaskList:                        taskList,
+		ExecutionStartToCloseTimeout:    time.Minute,
+		DecisionTaskStartToCloseTimeout: time.Minute,
+	}
+
+	//h.StartWorkflow(workflowOptions, OneArgWorkflow, "CADENCE")
+
+	//-----------------------------------------------------
+	// TwoArgs
+
+	workflowOptions = client.StartWorkflowOptions{
+		ID:                              "twoArgs_" + uuid.New(),
+		TaskList:                        taskList,
+		ExecutionStartToCloseTimeout:    time.Minute,
+		DecisionTaskStartToCloseTimeout: time.Minute,
+	}
+
+	h.StartWorkflow(workflowOptions, TwoArgsWorkflow, "JACK", "JILL")
+
+	//-----------------------------------------------------
+	// Process workflows and activities for the specified
+	// wait time.
+
+	time.Sleep(time.Duration(waitSeconds) * time.Second)
 }
-
-//-----------------------------------------------------------
-// set GO111MODULE=on
-// go get go.uber.org/cadence
-// go build -o C:\src\neonKUBE\Build\go-test\wf-args.exe .
-// cp config.yaml C:\src\neonKUBE\Build\go-test\config.yaml

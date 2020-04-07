@@ -116,7 +116,7 @@ namespace Neon.Cadence
             // Start the child workflow and then construct and return the future.
 
             var client    = parentWorkflow.Client;
-            var execution = await client.StartChildWorkflowAsync(parentWorkflow, workflowTypeName, client.DataConverter.ToData(args), options);
+            var execution = await client.StartChildWorkflowAsync(parentWorkflow, workflowTypeName, CadenceHelper.ArgsToBytes(client.DataConverter, args), options);
 
             // Initialize the type-safe stub property such that developers can call
             // any query or signal methods.
@@ -188,7 +188,7 @@ namespace Neon.Cadence
             // Start the child workflow and then construct the future.
 
             var client    = parentWorkflow.Client;
-            var execution = await client.StartChildWorkflowAsync(parentWorkflow, workflowTypeName, client.DataConverter.ToData(args), options);
+            var execution = await client.StartChildWorkflowAsync(parentWorkflow, workflowTypeName, CadenceHelper.ArgsToBytes(client.DataConverter, args), options);
 
             // Initialize the type-safe stub property such that developers can call
             // any query or signal methods.

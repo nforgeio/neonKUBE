@@ -640,7 +640,7 @@ namespace Neon.Cadence
             }
 
             var resultType       = activityMethod.ReturnType;
-            var args             = dataConverter.FromDataArray(argBytes, parameterTypes);
+            var args             = CadenceHelper.BytesToArgs(dataConverter, argBytes, parameterTypes);
             var serializedResult = emptyBytes;
 
             if (resultType.IsGenericType)

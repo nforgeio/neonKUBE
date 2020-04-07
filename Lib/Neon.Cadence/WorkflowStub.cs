@@ -338,7 +338,7 @@ namespace Neon.Cadence
                 throw new InvalidOperationException("Query cannot be sent because the stub doesn't have the workflow execution.");
             }
 
-            var argBytes = client.DataConverter.ToData(args);
+            var argBytes = CadenceHelper.ArgsToBytes(client.DataConverter, args);
 
             return client.DataConverter.FromData<TResult>(await client.QueryWorkflowAsync(Execution, queryType, argBytes, client.ResolveDomain(Options?.Domain)));
         }
@@ -363,7 +363,7 @@ namespace Neon.Cadence
                 throw new InvalidOperationException("Query cannot be sent because the stub doesn't have the workflow execution.");
             }
 
-            var argBytes = client.DataConverter.ToData(args);
+            var argBytes = CadenceHelper.ArgsToBytes(client.DataConverter, args);
 
             return client.DataConverter.FromData(resultType, await client.QueryWorkflowAsync(Execution, queryType, argBytes, client.ResolveDomain(Options?.Domain)));
         }
@@ -386,7 +386,7 @@ namespace Neon.Cadence
                 throw new InvalidOperationException("Signal cannot be sent because the stub doesn't have the workflow execution.");
             }
 
-            var argBytes = client.DataConverter.ToData(args);
+            var argBytes = CadenceHelper.ArgsToBytes(client.DataConverter, args);
 
             await client.SignalWorkflowAsync(Execution, signalName, argBytes, client.ResolveDomain(Options?.Domain));
         }
@@ -405,8 +405,8 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(signalArgs != null, nameof(signalArgs));
             Covenant.Requires<ArgumentNullException>(startArgs != null, nameof(startArgs));
 
-            var signalArgBytes = client.DataConverter.ToData(signalArgs);
-            var startArgBytes  = client.DataConverter.ToData(startArgs);
+            var signalArgBytes = CadenceHelper.ArgsToBytes(client.DataConverter, signalArgs);
+            var startArgBytes  = CadenceHelper.ArgsToBytes(client.DataConverter, startArgs);
 
             return await client.SignalWorkflowWithStartAsync(this.WorkflowTypeName, signalName, signalArgBytes, startArgBytes, this.Options);
         }
@@ -422,7 +422,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
             EnsureNotStarted();
 
-            var argBytes = client.DataConverter.ToData(args);
+            var argBytes = CadenceHelper.ArgsToBytes(client.DataConverter, args);
 
             Execution = await client.StartWorkflowAsync(WorkflowTypeName, argBytes, Options);
 

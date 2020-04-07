@@ -281,12 +281,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{F08FAE2A-8
 	ProjectSection(SolutionItems) = preProject
 		Go\test\config.yaml = Go\test\config.yaml
 		Go\test\factory.go = Go\test\factory.go
-		Go\test\main.go = Go\test\main.go
-		Go\test\no-args.go = Go\test\no-args.go
-		Go\test\one-arg.go = Go\test\one-arg.go
+		Go\test\wf-args\factory.go = Go\test\wf-args\factory.go
+		Go\test\wf-args\go.mod = Go\test\wf-args\go.mod
+		Go\test\wf-args\go.sum = Go\test\wf-args\go.sum
+		Go\test\wf-args\main.go = Go\test\wf-args\main.go
+		Go\test\wf-args\noargs.go = Go\test\wf-args\noargs.go
+		Go\test\wf-args\onearg.go = Go\test\wf-args\onearg.go
 		Go\test\sample_helper.go = Go\test\sample_helper.go
-		Go\test\two-args.go = Go\test\two-args.go
+		Go\test\wf-args\sample_helper.go = Go\test\wf-args\sample_helper.go
+		Go\test\wf-args\twoArgs.go = Go\test\wf-args\twoArgs.go
 		Go\test\util.go = Go\test\util.go
+		Go\test\wf-args\util.go = Go\test\wf-args\util.go
 	EndProjectSection
 EndProject
 Global

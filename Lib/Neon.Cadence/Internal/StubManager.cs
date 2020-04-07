@@ -809,7 +809,7 @@ namespace Neon.Cadence.Internal
                 }
 
                 sbSource.AppendLine();
-                sbSource.AppendLine($"                throw new ContinueAsNewException(this.dataConverter.ToData(___args), this.continueAsNewOptions);");
+                sbSource.AppendLine($"                throw new ContinueAsNewException(CadenceHelper.ArgsToBytes(this.dataConverter, ___args), this.continueAsNewOptions);");
                 sbSource.AppendLine($"            }}");
                 sbSource.AppendLine();
 
@@ -1054,7 +1054,7 @@ namespace Neon.Cadence.Internal
                         sbSource.AppendLine($"            var ___signalId        = Guid.NewGuid().ToString(\"d\");");
                         sbSource.AppendLine($"            var ___argBytes        = {SerializeArgsExpression(details.Method.GetParameters())};");
                         sbSource.AppendLine($"            var ___signalCall      = new SyncSignalCall({StringLiteral(signalAttribute.Name)}, ___signalId, ___argBytes);");
-                        sbSource.AppendLine($"            var ___signalCallBytes = JsonDataConverter.Instance.ToData(new object[] {{ ___signalCall }});");
+                        sbSource.AppendLine($"            var ___signalCallBytes = CadenceHelper.ArgsToBytes(JsonDataConverter.Instance, new object[] {{ ___signalCall }});");
                         sbSource.AppendLine($"            var ___resultBytes     = await ___StubHelper.SyncSignalChildWorkflowAsync(this.client, this.parentWorkflow, this.childExecution, {StringLiteral(CadenceClient.SignalSync)}, ___signalId, ___signalCallBytes);");
 
                         if (details.ReturnType != typeof(void))
@@ -1079,7 +1079,7 @@ namespace Neon.Cadence.Internal
                         sbSource.AppendLine($"            var ___signalId        = Guid.NewGuid().ToString(\"d\");");
                         sbSource.AppendLine($"            var ___argBytes        = {SerializeArgsExpression(details.Method.GetParameters())};");
                         sbSource.AppendLine($"            var ___signalCall      = new SyncSignalCall({StringLiteral(signalAttribute.Name)}, ___signalId, ___argBytes);");
-                        sbSource.AppendLine($"            var ___signalCallBytes = this.dataConverter.ToData(new object[] {{ ___signalCall }});");
+                        sbSource.AppendLine($"            var ___signalCallBytes = CadenceHelper.ArgsToBytes(this.dataConverter, new object[] {{ ___signalCall }});");
                         sbSource.AppendLine($"            var ___resultBytes     = await ___StubHelper.SyncSignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___signalId, ___signalCallBytes, this.domain);");
 
                         if (details.ReturnType != typeof(void))
@@ -1865,7 +1865,7 @@ namespace Neon.Cadence.Internal
                 sb.AppendWithSeparator(arg.Name, ", ");
             }
 
-            return $"this.dataConverter.ToData(new object[] {{ {sb} }})";
+            return $"CadenceHelper.ArgsToBytes(this.dataConverter, new object[] {{ {sb} }})";
         }
 
         /// <summary>

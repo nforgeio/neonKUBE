@@ -21,6 +21,7 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime;
 using System.Runtime.Loader;
@@ -1216,6 +1217,122 @@ namespace Neon.Cadence.Internal
                         File.AppendAllText(logPath, text + "\r\n");
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Serializes an array of argument objects to bytes using
+        /// Cadence argument serialization conventions and the specified <see cref="IDataConverter"/>.
+        /// </summary>
+        /// <param name="converter">The data converter.</param>
+        /// <param name="args">The arguments.</param>
+        /// <returns>The serialized bytes or <c>null</c> when there are no arguments.</returns>
+        /// <remarks>
+        /// <para>
+        /// This method is used to serialize arguments passed to workflows, activities, as 
+        /// well as workflow queries and signals.  For cross-language compatibility,
+        /// this method follows these conventions:
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><b>no arguments:</b></term>
+        ///     <description>
+        ///     Serializes as a <c>null</c> byte array.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>one argument:</b></term>
+        ///     <description>
+        ///     Serializes as the single object converted to bytes using the
+        ///     data converter.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>multiple arguments:</b></term>
+        ///     <description>
+        ///     Serializes as an array of the arguments converted to bytes using
+        ///     the data converter.
+        ///     </description>
+        /// </item>
+        /// </list>
+        /// </remarks>
+        public static byte[] ArgsToBytes(IDataConverter converter, IEnumerable<object> args)
+        {
+            Covenant.Requires<ArgumentNullException>(converter != null, nameof(converter));
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+
+            var argCount = args.Count();
+
+            if (argCount == 0)
+            {
+                return null;
+            }
+            else if (argCount == 1)
+            {
+                return converter.ToData(args.First());
+            }
+            else
+            {
+                return converter.ToData(args);
+            }
+        }
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Deserializes bytes (or <c>null</c>) into an array of arguments
+        /// using Cadence argument conventions and the specified <see cref="IDataConverter"/>.
+        /// </summary>
+        /// <param name="converter">The data converter.</param>
+        /// <param name="bytes">The serialized bytes or <c>null</c> when there are no arguments.</param>
+        /// <param name="argTypes">The expected argument types.</param>
+        /// <returns>The deserialized arguments as an array.</returns>
+        /// <remarks>
+        /// <para>
+        /// This method is used to serialize arguments passed to workflows, activities, as 
+        /// well as workflow queries and signals.  For cross-language compatibility,
+        /// this method follows these conventions:
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><b>no arguments:</b></term>
+        ///     <description>
+        ///     Serializes as a <c>null</c> byte array.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>one argument:</b></term>
+        ///     <description>
+        ///     Serializes as the single object converted to bytes using the
+        ///     data converter.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>multiple arguments:</b></term>
+        ///     <description>
+        ///     Serializes as an array of the arguments converted to bytes using
+        ///     the data converter.
+        ///     </description>
+        /// </item>
+        /// </list>
+        /// </remarks>
+        public static object[] BytesToArgs(IDataConverter converter, byte[] bytes, Type[] argTypes)
+        {
+            Covenant.Requires<ArgumentNullException>(converter != null, nameof(converter));
+            Covenant.Requires<ArgumentNullException>(argTypes != null, nameof(argTypes));
+
+            if (argTypes.Length == 0)
+            {
+                return Array.Empty<object>();
+            }
+
+            Covenant.Requires<ArgumentNullException>(bytes != null, nameof(bytes));
+
+            if (argTypes.Length == 1)
+            {
+                return new object[] { converter.FromData(argTypes[0], bytes) };
+            }
+            else
+            {
+                return converter.FromDataArray(bytes, argTypes);
             }
         }
     }

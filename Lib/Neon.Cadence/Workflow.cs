@@ -436,7 +436,7 @@ namespace Neon.Cadence
             // the workflow with a clean history.
 
             throw new ContinueAsNewException(
-                args:       Client.DataConverter.ToData(args),
+                args:       CadenceHelper.ArgsToBytes(Client.DataConverter, args),
                 workflow:   WorkflowInfo.WorkflowType,
                 domain:     WorkflowInfo.Domain,
                 taskList:   WorkflowInfo.TaskList);
@@ -472,7 +472,7 @@ namespace Neon.Cadence
             // the workflow with a clean history.
 
             throw new ContinueAsNewException(
-                args:                       Client.DataConverter.ToData(args),
+                args:                       CadenceHelper.ArgsToBytes(Client.DataConverter, args),
                 domain:                     options.Domain ?? WorkflowInfo.Domain,
                 taskList:                   options.TaskList ?? WorkflowInfo.TaskList,
                 workflow:                   options.Workflow ?? WorkflowInfo.WorkflowType,

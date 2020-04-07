@@ -977,7 +977,7 @@ namespace Neon.Cadence
 
             // Poll for the result via queries.
 
-            byte[]              queryArgs = DataConverter.ToData(new object[] { signalId });
+            byte[]              queryArgs = CadenceHelper.ArgsToBytes(DataConverter, new object[] { signalId });
             byte[]              rawStatus = null;
             SyncSignalStatus    status    = null;
 
@@ -1070,7 +1070,7 @@ namespace Neon.Cadence
 
             // Poll for the result via queries.
 
-            byte[]              queryArgs = DataConverter.ToData(new object[] { signalId });
+            byte[]              queryArgs = CadenceHelper.ArgsToBytes(DataConverter, new object[] { signalId });
             byte[]              rawStatus = null;
             SyncSignalStatus    status    = null;
 

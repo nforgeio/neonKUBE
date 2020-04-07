@@ -112,7 +112,7 @@ namespace Neon.Cadence
                 throw new InvalidOperationException("Cannot start a future stub more than once.");
             }
 
-            execution = await client.StartWorkflowAsync(workflowTypeName, client.DataConverter.ToData(args), options);
+            execution = await client.StartWorkflowAsync(workflowTypeName, CadenceHelper.ArgsToBytes(client.DataConverter, args), options);
 
             // Create and return the future.
 
@@ -143,7 +143,7 @@ namespace Neon.Cadence
                 throw new InvalidOperationException("Cannot start a future stub more than once.");
             }
 
-            execution = await client.StartWorkflowAsync(workflowTypeName, client.DataConverter.ToData(args), options);
+            execution = await client.StartWorkflowAsync(workflowTypeName, CadenceHelper.ArgsToBytes(client.DataConverter, args), options);
 
             // Create and return the future.
 
@@ -185,7 +185,7 @@ namespace Neon.Cadence
                     RunId      = execution.RunId,
                     Domain     = options.Domain,
                     SignalName = signalName,
-                    SignalArgs = client.DataConverter.ToData(args)
+                    SignalArgs = CadenceHelper.ArgsToBytes(client.DataConverter, args)
                 });
 
             reply.ThrowOnError();
@@ -221,9 +221,9 @@ namespace Neon.Cadence
             }
 
             var signalId        = Guid.NewGuid().ToString("d");
-            var argBytes        = client.DataConverter.ToData(args);
+            var argBytes        = CadenceHelper.ArgsToBytes(client.DataConverter, args);
             var signalCall      = new SyncSignalCall(signalName, signalId, argBytes);
-            var signalCallBytes = client.DataConverter.ToData(new object[] { signalCall });
+            var signalCallBytes = CadenceHelper.ArgsToBytes(client.DataConverter, new object[] { signalCall });
 
             await client.SyncSignalWorkflowAsync(execution, signalName, signalId, signalCallBytes, options.Domain);
         }
@@ -260,9 +260,9 @@ namespace Neon.Cadence
             }
 
             var signalId        = Guid.NewGuid().ToString("d");
-            var argBytes        = client.DataConverter.ToData(args);
+            var argBytes        = CadenceHelper.ArgsToBytes(client.DataConverter, args);
             var signalCall      = new SyncSignalCall(signalName, signalId, argBytes);
-            var signalCallBytes = client.DataConverter.ToData(new object[] { signalCall });
+            var signalCallBytes = CadenceHelper.ArgsToBytes(client.DataConverter, new object[] { signalCall });
             var resultBytes     = await client.SyncSignalWorkflowAsync(execution, signalName, signalId, signalCallBytes, options.Domain);
 
             return client.DataConverter.FromData<TResult>(resultBytes);
@@ -299,7 +299,7 @@ namespace Neon.Cadence
                     RunId      = execution.RunId,
                     Domain     = options.Domain,
                     QueryName  = queryName,
-                    QueryArgs  = client.DataConverter.ToData(args)
+                    QueryArgs  = CadenceHelper.ArgsToBytes(client.DataConverter, args)
                 });
 
             reply.ThrowOnError();

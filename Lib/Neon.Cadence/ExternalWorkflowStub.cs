@@ -95,7 +95,7 @@ namespace Neon.Cadence
             {
                 var dataConverter = Activity.Client.DataConverter;
 
-                await Activity.Client.SignalWorkflowAsync(execution, signalName, dataConverter.ToData(args));
+                await Activity.Client.SignalWorkflowAsync(execution, signalName, CadenceHelper.ArgsToBytes(dataConverter, args));
             }
         }
 
@@ -183,7 +183,7 @@ namespace Neon.Cadence
             }
             else
             {
-                await client.SignalWorkflowAsync(Execution, signalName, client.DataConverter.ToData(args));
+                await client.SignalWorkflowAsync(Execution, signalName, CadenceHelper.ArgsToBytes(client.DataConverter, args));
             }
         }
 
