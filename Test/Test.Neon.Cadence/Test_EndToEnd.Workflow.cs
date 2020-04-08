@@ -89,7 +89,7 @@ namespace TestCadence
             await SyncContext.ClearAsync;
 
             // Verify that we can call a simple workflow that accepts a
-            // parameter and results a result.
+            // parameter and returns a result.
 
             WorkflowWithNoResult.Reset();
 

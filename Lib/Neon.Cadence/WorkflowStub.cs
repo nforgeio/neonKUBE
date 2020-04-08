@@ -428,5 +428,21 @@ namespace Neon.Cadence
 
             return Execution;
         }
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Used internally for unit tests that need to control
+        /// how the workflow arguments are encoded.
+        /// </summary>
+        /// <param name="argBytes">The encoded workflow arguments.</param>
+        /// <returns>The <see cref="WorkflowExecution"/>.</returns>
+        internal async Task<WorkflowExecution> StartAsync(byte[] argBytes)
+        {
+            await SyncContext.ClearAsync;
+            EnsureNotStarted();
+
+            Execution = await client.StartWorkflowAsync(WorkflowTypeName, argBytes, Options);
+
+            return Execution;
+        }
     }
 }

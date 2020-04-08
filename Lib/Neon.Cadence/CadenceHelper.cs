@@ -1328,6 +1328,31 @@ namespace Neon.Cadence.Internal
 
             if (argTypes.Length == 1)
             {
+                // $hack(jefflill):
+                //
+                // This code provides backwards compatibility for workflows, activities,
+                // and client code deployed using Neon.Cadence v1.x.  The older .NET
+                // code always encoded arguments as an array whereas the GOLANG and
+                // Java clients encodes zero arguments as a NULL byte array, single
+                // arguments as just the value, and multiple arguments as an array.
+                //
+                // This hack special-cases [JsonDataConverter] and examines the first
+                // byte of the byte array.  If it's a '[' then the arguments are
+                // encoded the old (incorrect) .NET client way, otherwise it's encoded
+                // using the standard Cadence conventions.
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/793
+
+                if (converter.GetType() == typeof(JsonDataConverter))
+                {
+                    if ((char)bytes[0] == '[')
+                    {
+                        return converter.FromDataArray(bytes, argTypes);
+                    }
+                }
+
+                // Decode using the standard Cadence conventions.
+
                 return new object[] { converter.FromData(argTypes[0], bytes) };
             }
             else

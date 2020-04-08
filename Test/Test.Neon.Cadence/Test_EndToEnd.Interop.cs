@@ -34,6 +34,7 @@ using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Data;
 using Neon.IO;
+using Neon.Tasks;
 using Neon.Xunit;
 using Neon.Xunit.Cadence;
 
@@ -120,6 +121,8 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Interop_Workflow_Untyped()
         {
+            await SyncContext.ClearAsync;
+
             // verify that we can execute a GOLANG workflows using 
             // untyped stubs.
 
@@ -145,6 +148,88 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Interop_Activity_Untyped()
         {
+            await SyncContext.ClearAsync;
+        }
+
+        //---------------------------------------------------------------------
+        // Verify that Neon.Cadence v2+ clients can transparently support the
+        // incorrect v1.x encoded arguments.
+        //
+        //      https://github.com/nforgeio/neonKUBE/issues/793
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IInteropArgsBackwardsCompat : IWorkflow
+        {
+            [WorkflowMethod(Name = "ZeroArgs")]
+            Task<string> ZeroArgsAsync();
+
+            [WorkflowMethod(Name = "OneArg")]
+            Task<string> OneArgAsync(string arg);
+
+            [WorkflowMethod(Name = "TwoArgs")]
+            Task<string> TwoArgsAsync(string arg1, string arg2);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class InteropArgsBackwardsCompat : WorkflowBase, IInteropArgsBackwardsCompat
+        {
+            public async Task<string> ZeroArgsAsync()
+            {
+                return await Task.FromResult("no-args");
+            }
+
+            public async Task<string> OneArgAsync(string arg)
+            {
+                return await Task.FromResult(arg);
+            }
+
+            public async Task<string> TwoArgsAsync(string arg1, string arg2)
+            {
+                return await Task.FromResult(arg1 + arg2);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Interop_ArgsBackwardsCompat()
+        {
+            await SyncContext.ClearAsync;
+
+            // We're going to explicitly encode parameters using the incorrect 
+            // Neon.Cadence v1.x style to verify that the v2+ code supports
+            // it correctly for backwards compatability.
+
+            var options = new WorkflowOptions()
+            {
+                TaskList = CadenceTestHelper.TaskList
+            };
+
+            //---------------------------------------------
+            // Zero arguments:
+
+            var stub      = client.NewUntypedWorkflowStub(CadenceHelper.GetWorkflowTypeName<IInteropArgsBackwardsCompat>("ZeroArgs"), options);
+            var argBytes  = Encoding.UTF8.GetBytes("[]");    // v1.x encoded zero args as an empty array whereas v2+ encodes this as NULL.
+            var execution = await stub.StartAsync(argBytes);
+
+            Assert.Equal("no-args", await stub.GetResultAsync<string>());
+
+            //---------------------------------------------
+            // One argument:
+
+            stub      = client.NewUntypedWorkflowStub(CadenceHelper.GetWorkflowTypeName<IInteropArgsBackwardsCompat>("OneArg"), options);
+            argBytes  = Encoding.UTF8.GetBytes("[\"one-arg\"]");    // v1.x encoded one arg as an array with yhe the are whereas v2+ encodes this as just the arg value.
+            execution = await stub.StartAsync(argBytes);
+
+            Assert.Equal("one-arg", await stub.GetResultAsync<string>());
+
+            //---------------------------------------------
+            // Two arguments:
+
+            stub      = client.NewUntypedWorkflowStub(CadenceHelper.GetWorkflowTypeName<IInteropArgsBackwardsCompat>("TwoArgs"), options);
+            argBytes  = Encoding.UTF8.GetBytes("[\"arg-one:\",\"arg-two\"]");    // v1.x and v2+ both encode this as an array with the two args.
+            execution = await stub.StartAsync(argBytes);
+
+            Assert.Equal("arg-one:arg-two", await stub.GetResultAsync<string>());
         }
     }
 }
