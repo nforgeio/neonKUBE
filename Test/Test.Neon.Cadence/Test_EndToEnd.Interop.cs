@@ -80,40 +80,66 @@ namespace TestCadence
         /// </summary>
         private class WfArgsWorker : IDisposable
         {
-            private Process workerProcess;
+            private Task<ExecuteResponse>   workerTask;
+            private string                  readyFile;
+            private string                  stopFile;
 
             /// <summary>
-            /// Starts the worker application, configuring it to run for 5 seconds
-            /// (by default) which is a bit fragile but should be long enough to 
-            /// complete a typical test case.
+            /// Starts the worker application.
             /// </summary>
-            public WfArgsWorker(int runSeconds = 100000)
+            public WfArgsWorker()
             {
-                var workerExePath = Path.Combine(Environment.GetEnvironmentVariable("NF_BUILD"), "go-test", "wf-args.exe");
+                var goTestDir     = Path.Combine(Environment.GetEnvironmentVariable("NF_BUILD"), "go-test");
+                var workerExePath = Path.Combine(goTestDir, "wf-args.exe");
 
-                workerProcess = Process.Start(workerExePath, $"-domain {CadenceFixture.DefaultDomain} -tasklist {CadenceTestHelper.TaskList} -wait {runSeconds}");
+                // The worker app polls for the existance of a temporary stop file and
+                // exits when one is created.
 
-                // Give the worker a chance to register its workflow and activity implementations.
+                var fileId   = Guid.NewGuid().ToString("d");
+                var tempPath = Path.GetTempPath();
 
-                Thread.Sleep(TimeSpan.FromSeconds(5));
+                tempPath = "C:\\temp";  // debug(jefflil): DELETE THIS!
+
+                readyFile = Path.Combine(tempPath, fileId + ".ready");
+                stopFile  = Path.Combine(tempPath, fileId + ".stop");
+
+                workerTask = NeonHelper.ExecuteCaptureAsync(workerExePath,
+                    new object[]
+                    {
+                        $"-config={Path.Combine(goTestDir, "config.yaml")}",
+                        $"-domain={CadenceFixture.DefaultDomain}", 
+                        $"-tasklist={CadenceTestHelper.TaskList_WfArgs}", 
+                        $"-readyfile={readyFile}",
+                        $"-stopfile={stopFile}"
+                    });
+
+                // Wait for the worker app to signal that it's ready.
+
+                NeonHelper.WaitFor(() => File.Exists(readyFile), TimeSpan.FromSeconds(60));
             }
 
             /// <summary>
-            /// Waits for the worker process to exit.
+            /// Signals the worker application to stop and then waits for the
+            /// process to exit.
             /// </summary>
             public void Dispose()
             {
-                if (workerProcess == null)
+                if (workerTask == null)
                 {
                     throw new ObjectDisposedException(nameof(WfArgsWorker));
                 }
 
-                while (!workerProcess.HasExited)
-                {
-                    Thread.Sleep(TimeSpan.FromMilliseconds(100));
-                }
+                File.WriteAllText(stopFile, "STOP");
 
-                workerProcess = null;
+                var result = workerTask.Result;
+
+                // $debug(jefflill): DELETE THIS!
+                // File.WriteAllText(@"C:\Temp\test.log", result.AllText);
+
+                workerTask = null;
+
+                File.Delete(readyFile);
+                File.Delete(stopFile);
             }
         }
 
@@ -133,14 +159,42 @@ namespace TestCadence
 
                 var options = new WorkflowOptions()
                 {
-                    WorkflowId = "no-args-" + Guid.NewGuid().ToString("d"),
-                    TaskList   = CadenceTestHelper.TaskList
+                    WorkflowId = "NoArgs-" + Guid.NewGuid().ToString("d"),
+                    TaskList = CadenceTestHelper.TaskList_WfArgs
                 };
 
-                var stub      = client.NewUntypedWorkflowStub("NoArgsWorkflow", options);
+                var stub = client.NewUntypedWorkflowStub("main.NoArgsWorkflow", options);
                 var execution = await stub.StartAsync();
 
                 Assert.Equal("Hello there!", await stub.GetResultAsync<string>());
+
+                //-----------------------------------------
+                // One arg:
+
+                options = new WorkflowOptions()
+                {
+                    WorkflowId = "OneArg-" + Guid.NewGuid().ToString("d"),
+                    TaskList   = CadenceTestHelper.TaskList_WfArgs
+                };
+
+                stub      = client.NewUntypedWorkflowStub("main.OneArgWorkflow", options);
+                execution = await stub.StartAsync("JACK");
+
+                Assert.Equal("Hello JACK!", await stub.GetResultAsync<string>());
+
+                //-----------------------------------------
+                // Two Args:
+
+                options = new WorkflowOptions()
+                {
+                    WorkflowId = "TwoArgs-" + Guid.NewGuid().ToString("d"),
+                    TaskList   = CadenceTestHelper.TaskList_WfArgs
+                };
+
+                stub = client.NewUntypedWorkflowStub("main.TwoArgsWorkflow", options);
+                execution = await stub.StartAsync("JACK", "JILL");
+
+                Assert.Equal("Hello JACK & JILL!", await stub.GetResultAsync<string>());
             }
         }
 
@@ -153,7 +207,7 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
         // Verify that Neon.Cadence v2+ clients can transparently support the
-        // incorrect v1.x encoded arguments.
+        // v1.x (incorrectly) encoded arguments.
         //
         //      https://github.com/nforgeio/neonKUBE/issues/793
 

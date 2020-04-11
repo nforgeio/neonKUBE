@@ -16,10 +16,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const (
-	configFile = "config.yaml"
-)
-
 type (
 	// SampleHelper class for workflow sample helper.
 	SampleHelper struct {
@@ -42,15 +38,15 @@ type (
 )
 
 // SetupServiceConfig setup the config for the sample code run
-func (h *SampleHelper) SetupServiceConfig() {
+func (h *SampleHelper) SetupServiceConfig(configPath string) {
 	if h.Service != nil {
 		return
 	}
 
 	// Initialize developer config for running samples
-	configData, err := ioutil.ReadFile(configFile)
+	configData, err := ioutil.ReadFile(configPath)
 	if err != nil {
-		panic(fmt.Sprintf("Failed to log config file: %v, Error: %v", configFile, err))
+		panic(fmt.Sprintf("Config file read failed: %v, Error: %v", configPath, err))
 	}
 
 	if err := yaml.Unmarshal(configData, &h.Config); err != nil {
@@ -87,6 +83,37 @@ func (h *SampleHelper) SetupServiceConfig() {
 	}
 }
 
+// Executes a workflow and waits for it to complete.
+func (h *SampleHelper) ExecuteWorkflow(options client.StartWorkflowOptions, workflow interface{}, args ...interface{})  {
+	workflowClient, err := h.Builder.BuildCadenceClient()
+	if err != nil {
+		h.Logger.Error("Failed to build cadence client.", zap.Error(err))
+		panic(err)
+	}
+
+	ctx := context.Background()
+
+	wr, err := workflowClient.ExecuteWorkflow(ctx, options, workflow, args...)
+	if err != nil {
+		h.Logger.Error("Failed to create workflow", zap.Error(err))
+		panic("Failed to create workflow.")
+
+	} else {
+		h.Logger.Info("Started Workflow", zap.String("RunID", wr.GetRunID()))
+	}
+
+	var result string
+
+	err = wr.Get(ctx, &result)
+	if err != nil {
+		h.Logger.Error("Failed to get result", zap.Error(err))
+		panic("Failed to get result.")
+
+	} else {
+		h.Logger.Info("Result: " + result)
+	}
+}
+
 // StartWorkflow starts a workflow
 func (h *SampleHelper) StartWorkflow(options client.StartWorkflowOptions, workflow interface{}, args ...interface{}) {
 	h.StartWorkflowWithCtx(context.Background(), options, workflow, args...)
@@ -112,7 +139,7 @@ func (h *SampleHelper) StartWorkflowWithCtx(ctx context.Context, options client.
 
 // SignalWithStartWorkflowWithCtx signals workflow and starts it if it's not yet started
 func (h *SampleHelper) SignalWithStartWorkflowWithCtx(ctx context.Context, workflowID string, signalName string, signalArg interface{},
-	options client.StartWorkflowOptions, workflow interface{}, workflowArgs ...interface{}) *workflow.Execution {
+	options client.StartWorkflowOptions, workflow interface{}, workflowArgs ...interface{}) {
 	workflowClient, err := h.Builder.BuildCadenceClient()
 	if err != nil {
 		h.Logger.Error("Failed to build cadence client.", zap.Error(err))
@@ -127,7 +154,6 @@ func (h *SampleHelper) SignalWithStartWorkflowWithCtx(ctx context.Context, workf
 	} else {
 		h.Logger.Info("Signaled and started Workflow", zap.String("WorkflowID", we.ID), zap.String("RunID", we.RunID))
 	}
-	return we
 }
 
 // StartWorkers starts workflow worker and activity worker based on configured options.
@@ -177,6 +203,7 @@ func (h *SampleHelper) SignalWorkflow(workflowID, signal string, data interface{
 		panic("Failed to signal workflow.")
 	}
 }
+
 
 func (h *SampleHelper) CancelWorkflow(workflowID string) {
 	workflowClient, err := h.Builder.BuildCadenceClient()

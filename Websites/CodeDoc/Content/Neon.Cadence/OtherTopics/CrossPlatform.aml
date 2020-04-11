@@ -38,9 +38,11 @@
         <para>
           Cadence has a concept called a <legacyBold>workflow type name</legacyBold>.  This
           is a string used to identify a workflow implementation.  For the GOLANG client, 
-          workflow type names are generally the same as the name of the function implementing
-          the workflow (although custom names may be specified).  The Java and .NET clients 
-          are a bit more complex and allow a workflow type to define multiple workflow
+          workflow type names are generally a combination of the module and name of the function 
+          implementing the workflow; like <legacyBold>main.MyWorkflow</legacyBold> where
+          <legacyBold>main</legacyBold> is the module name and <legacyBold>MyWorkflow</legacyBold>
+          is the workfloy function.  Custom custom names may be also be specified.  The Java and
+          .NET clients  are a bit more complex and allow a workflow type to define multiple workflow
           entry point methods.  For these clients, the workflow type name will be a combination
           of the workflow class and method names (and these may also be customized).
         </para>

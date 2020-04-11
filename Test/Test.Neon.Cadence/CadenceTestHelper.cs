@@ -103,5 +103,11 @@ namespace TestCadence
         /// The Cadence task list to be used for test workers.
         /// </summary>
         public const string TaskList = "tests";
+
+        /// <summary>
+        /// The Cadence task list to be use for interop testing against the
+        /// [wf-args.exe] worker written in GOLANG.
+        /// </summary>
+        public const string TaskList_WfArgs = "wf-args";
     }
 }

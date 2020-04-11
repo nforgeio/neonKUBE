@@ -44,6 +44,10 @@ cp config.yaml "$buildPath\config.yaml"
 Set-Location "$projectPath\wf-args"
 
 echo "Building..." > "$logPath"
+
+$env:GOOS   = "windows"
+$env:GOARCH = "amd64"
+
 go build -o "$buildPath\wf-args.exe" . >> "$logPath" 2>&1
 
 $exitCode = $lastExitCode

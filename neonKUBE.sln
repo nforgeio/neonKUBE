@@ -246,6 +246,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.Cadence", "Lib\Neon.Xunit.Cadence\Neon.Xunit.Cadence.csproj", "{B95E2A73-4711-4601-B792-17D8CA8EDF61}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Cadence", "Test\Test.Neon.Cadence\Test.Neon.Cadence.csproj", "{2FF87DA9-451F-4DCF-91B2-F1A2E0F7C1DA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C2071335-AFDF-4643-93A2-EAC482E90E73} = {C2071335-AFDF-4643-93A2-EAC482E90E73}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Charts", "Charts\Charts.csproj", "{47AA8345-3CE7-49A9-87F8-1A2D175C2804}"
 EndProject
@@ -254,6 +257,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Neon.Cryptography.net", "Test\Test.Neon.Cryptography.net\Test.Neon.Cryptography.net.csproj", "{88C08F44-B79E-46F5-969F-CCE710A5F7FA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Neon.Cadence.net", "Test\Test.Neon.Cadence.net\Test.Neon.Cadence.net.csproj", "{A8DC09A4-DCD3-4482-B1BE-587D77B66E21}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C2071335-AFDF-4643-93A2-EAC482E90E73} = {C2071335-AFDF-4643-93A2-EAC482E90E73}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{9BF7513A-5219-4862-A290-7D2A00589312}"
 EndProject
@@ -287,7 +293,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{F08FAE2A-8
 		Go\test\wf-args\main.go = Go\test\wf-args\main.go
 		Go\test\wf-args\noargs.go = Go\test\wf-args\noargs.go
 		Go\test\wf-args\onearg.go = Go\test\wf-args\onearg.go
-		Go\test\sample_helper.go = Go\test\sample_helper.go
 		Go\test\wf-args\sample_helper.go = Go\test\wf-args\sample_helper.go
 		Go\test\wf-args\twoArgs.go = Go\test\wf-args\twoArgs.go
 		Go\test\wf-args\util.go = Go\test\wf-args\util.go

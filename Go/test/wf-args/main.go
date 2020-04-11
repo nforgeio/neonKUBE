@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"os"
 	"time"
 
 	"github.com/pborman/uuid"
@@ -13,38 +14,55 @@ import (
 
 func main() {
 
-	// Parse the -wait=<seconds> command line option which specifies
-	// how long the program should execute and process workflows and
-	// activities.  This defaults to 10 seconds.
+	test := true
 
-	var waitSeconds int64
+	// Parse the -config=<path> option.  This option is required.
 
-	flag.Int64Var(&waitSeconds, "wait", 10, "Program execution time in seconds.")
-	flag.Parse()
+	var configPath string
 
-	// Parse the -tasklist=<name> command line option which specifies the 
+	flag.StringVar(&configPath, "config", "", "Path to the Cadence Server configuration file.")
+
+	// Parse the -stopfile=<path> command line option which specifies
+	// the path to the file whose existence will stop execution of this
+	// program as well as the -readyfile<path> option which is the
+	// path to the file that will be created after the worker has
+	// been started.
+
+	var stopFile string
+	var readyFile string
+
+	flag.StringVar(&stopFile, "stopfile", "", "Path to the program stop file.")
+	flag.StringVar(&readyFile, "readyfile", "", "Path to the program ready file.")
+
+	// Parse the -tasklist=<name> command line option which specifies the
 	// Cadence tasklist where the workflows and activities will be registered.
-	// This defaults to "tests".
+	// This defaults to "wf-args".
 
 	var taskList string
 
-	flag.StringVar(&taskList, "tasklist", "tests", "Target Cadence task list.")
-	flag.Parse();
+	flag.StringVar(&taskList, "tasklist", "wf-args", "Target Cadence task list.")
 
-	// Parse the -domain=<name> command line option which specifies the 
+	// Parse the -domain=<name> command line option which specifies the
 	// Cadence domain where the workflows and activities will be registered.
 	// This defaults to "test-domain".
 
 	var domain string
 
 	flag.StringVar(&domain, "domain", "test-domain", "Target Cadence domain.")
-	flag.Parse();
+
+	// Parse and verify the command line options.
+
+	flag.Parse()
+
+	if configPath == "" {
+		panic("-config option is required.")
+	}
 
 	// Register the workflows and activities and start the worker.
 
 	var h SampleHelper
 
-	h.SetupServiceConfig()
+	h.SetupServiceConfig(configPath)
 
 	workerOptions := worker.Options{
 		MetricsScope: h.Scope,
@@ -60,49 +78,87 @@ func main() {
 
 	h.StartWorkers(domain, taskList, workerOptions)
 
-	//-----------------------------------------------------
-	// NoArgs
+	if (test) {
 
-	workflowOptions := client.StartWorkflowOptions{
-		ID:                              "noArgs_" + uuid.New(),
-		TaskList:                        taskList,
-		ExecutionStartToCloseTimeout:    time.Minute,
-		DecisionTaskStartToCloseTimeout: time.Minute,
+		//-----------------------------------------------------
+		// NoArgs
+
+		workflowOptions := client.StartWorkflowOptions{
+			ID:                              "TEST:NoArgs-" + uuid.New(),
+			TaskList:                        taskList,
+			ExecutionStartToCloseTimeout:    time.Minute,
+			DecisionTaskStartToCloseTimeout: time.Minute,
+		}
+
+		h.ExecuteWorkflow(workflowOptions, NoArgsWorkflow)
+
+		//-----------------------------------------------------
+		// OneArg
+
+		workflowOptions = client.StartWorkflowOptions{
+			ID:                              "TEST:OneArg-" + uuid.New(),
+			TaskList:                        taskList,
+			ExecutionStartToCloseTimeout:    time.Minute,
+			DecisionTaskStartToCloseTimeout: time.Minute,
+		}
+
+		h.ExecuteWorkflow(workflowOptions, OneArgWorkflow, "CADENCE")
+
+		//-----------------------------------------------------
+		// TwoArgs
+
+		workflowOptions = client.StartWorkflowOptions{
+			ID:                              "TEST:TwoArgs-" + uuid.New(),
+			TaskList:                        taskList,
+			ExecutionStartToCloseTimeout:    time.Minute,
+			DecisionTaskStartToCloseTimeout: time.Minute,
+		}
+		
+		h.ExecuteWorkflow(workflowOptions, TwoArgsWorkflow, "JACK", "JILL")
 	}
 
-	//h.StartWorkflow(workflowOptions, NoArgsWorkflow)
-
 	//-----------------------------------------------------
-	// OneArg
+	// Indicate to the caller that the worker is ready.
 
-	workflowOptions = client.StartWorkflowOptions{
-		ID:                              "oneArg_" + uuid.New(),
-		TaskList:                        taskList,
-		ExecutionStartToCloseTimeout:    time.Minute,
-		DecisionTaskStartToCloseTimeout: time.Minute,
+	if (readyFile != "") {
+
+		f, err := os.Create(readyFile)
+
+		if err != nil {
+			h.Logger.Info("BAD READY FILE: " + readyFile)
+			return
+		}
+
+		f.Close()
 	}
 
-	//h.StartWorkflow(workflowOptions, OneArgWorkflow, "CADENCE")
-
 	//-----------------------------------------------------
-	// TwoArgs
+	// Process workflows and activities until the stop file is
+	// created or for 60 seconds when no stop file was specified.
 
-	workflowOptions = client.StartWorkflowOptions{
-		ID:                              "twoArgs_" + uuid.New(),
-		TaskList:                        taskList,
-		ExecutionStartToCloseTimeout:    time.Minute,
-		DecisionTaskStartToCloseTimeout: time.Minute,
+	if (stopFile != "") {
+
+		h.Logger.Info("STOP FILE: " + stopFile)
+
+		for {
+
+			if _, err := os.Stat(stopFile); err == nil {
+
+				h.Logger.Info("STOP SIGNALLED")
+				break
+			}
+
+			time.Sleep(100 * time.Millisecond)
+		}
+
+	} else {
+
+		h.Logger.Info("NO STOP FILE")
+		time.Sleep(60 * time.Second)
 	}
 
-	h.StartWorkflow(workflowOptions, TwoArgsWorkflow, "JACK", "JILL")
+	// Stop the Cadence worker gracefully.
 
-	//-----------------------------------------------------
-	// Process workflows and activities for the specified
-	// wait time.
-
-	time.Sleep(time.Duration(waitSeconds) * time.Second)
-
-	// Gracefully stop the Cadence worker.
-
+	h.Logger.Info("STOPPING...")
 	h.StopWorkers()
 }

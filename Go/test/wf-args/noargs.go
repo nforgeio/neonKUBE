@@ -9,26 +9,28 @@ import (
 	"go.uber.org/zap"
 )
 
-func NoArgsWorkflow(ctx workflow.Context) error {
+func NoArgsWorkflow(ctx workflow.Context) (string, error) {
 	ao := workflow.ActivityOptions{
 		ScheduleToStartTimeout: time.Minute,
 		StartToCloseTimeout:    time.Minute,
-		HeartbeatTimeout:       time.Second * 20,
+		HeartbeatTimeout:       time.Second * 30,
 	}
 	ctx = workflow.WithActivityOptions(ctx, ao)
 
 	logger := workflow.GetLogger(ctx)
 	logger.Info("NoArg workflow started")
+
 	var activityResult string
+
 	err := workflow.ExecuteActivity(ctx, NoArgsActivity).Get(ctx, &activityResult)
 	if err != nil {
 		logger.Error("Activity failed.", zap.Error(err))
-		return err
+		return "", err
 	}
 
 	logger.Info("Workflow completed.", zap.String("Result", activityResult))
 
-	return nil
+	return activityResult, nil
 }
 
 func NoArgsActivity(ctx context.Context) (string, error) {
