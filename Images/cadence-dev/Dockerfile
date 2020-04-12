@@ -65,8 +65,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         python-setuptools \
         build-essential \
     && rm -rf /var/lib/apt/lists/* \
-    && pip install wheel \
-    && pip install cqlsh
+    && pip install wheel
 
 # NODEJS/NPM INSTALLATION
 RUN apt-get update \
