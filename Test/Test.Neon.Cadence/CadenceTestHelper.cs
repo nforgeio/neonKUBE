@@ -50,8 +50,8 @@ namespace TestCadence
         /// <summary>
         /// Specifies the Cadence server Docker image to be started for unit testing.
         /// </summary>
-        //public const string CadenceImage = "nkubeio/cadence-dev:latest";
-        public const string CadenceImage = "nkubedev/cadence-dev:cadence-v0.11.0";
+        public const string CadenceImage = "nkubeio/cadence-dev:latest";
+        //public const string CadenceImage = "nkubedev/cadence-dev:jeff-v0.11.0";
 
         /// <summary>
         /// <para>
