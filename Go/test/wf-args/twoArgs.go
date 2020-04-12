@@ -18,7 +18,7 @@ func TwoArgsWorkflow(ctx workflow.Context, name1 string, name2 string) (string, 
 	ctx = workflow.WithActivityOptions(ctx, ao)
 
 	logger := workflow.GetLogger(ctx)
-	logger.Info("OneArg workflow started")
+	logger.Info("TwoArgs workflow started")
 
 	var activityResult string
 	
@@ -35,6 +35,6 @@ func TwoArgsWorkflow(ctx workflow.Context, name1 string, name2 string) (string, 
 
 func TwoArgsActivity(ctx context.Context, name1 string, name2 string) (string, error) {
 	logger := activity.GetLogger(ctx)
-	logger.Info("OneArg activity started")
+	logger.Info("TwoArgs activity started")
 	return "Hello " + name1 + " & " + name2 + "!", nil
 }

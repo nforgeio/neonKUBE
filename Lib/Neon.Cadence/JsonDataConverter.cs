@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Runtime.Serialization;
 using System.Text;
 
@@ -50,6 +51,8 @@ namespace Neon.Cadence
     {
         //---------------------------------------------------------------------
         // Static members
+
+        private static byte[] commaBytes = Encoding.UTF8.GetBytes(",");
 
         /// <summary>
         /// Returns a global <see cref="JsonDataConverter"/> instance.  This is used
@@ -152,17 +155,59 @@ namespace Neon.Cadence
         }
 
         /// <inheritdoc/>
-        public byte[] ToData(object value)
+        public byte[] ToData(params object[] values)
         {
-            var roundtripData = value as IRoundtripData;
-
-            if (roundtripData != null)
+            if (values == null || values.Length == 0)
             {
-                return roundtripData.ToBytes();
+                return NeonHelper.JsonSerializeToBytes(null);
+            }
+            else if (values.Length == 1)
+            {
+                var value         = values[0];
+                var roundtripData = value as IRoundtripData;
+
+                if (roundtripData != null)
+                {
+                    return roundtripData.ToBytes();
+                }
+                else
+                {
+                    return NeonHelper.JsonSerializeToBytes(value);
+                }
             }
             else
             {
-                return NeonHelper.JsonSerializeToBytes(value);
+                // This could be more efficient but I don't believe this is ever actually going
+                // to be executed since we're handling argument encoding in CadenceHelper:
+                //
+                //      https://github.com/nforgeio/neonKUBE/issues/797
+
+                using (var output = new MemoryStream())
+                {
+                    output.Write(Encoding.UTF8.GetBytes("["));
+
+                    foreach (var value in values)
+                    {
+                        var     roundtripData = value as IRoundtripData;
+                        byte[]  bytes;
+
+                        if (roundtripData != null)
+                        {
+                            bytes = roundtripData.ToBytes();
+                        }
+                        else
+                        {
+                            bytes = NeonHelper.JsonSerializeToBytes(value);
+                        }
+
+                        output.Write(bytes);
+                        output.Write(commaBytes);
+                    }
+
+                    output.Write(Encoding.UTF8.GetBytes("]"));
+
+                    return output.ToArray();
+                }
             }
         }
     }

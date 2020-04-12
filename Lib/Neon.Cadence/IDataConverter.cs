@@ -58,10 +58,30 @@ namespace Neon.Cadence
         object[] FromDataArray(byte[] content, params Type[] valueTypes);
 
         /// <summary>
-        /// Serializes a single value into a byte array.
+        /// Serializes zero or more values into a byte array.
         /// </summary>
-        /// <param name="value">The value being serialized.</param>
+        /// <param name="values">The value being serialized.</param>
         /// <returns>The serialized bytes.</returns>
-        byte[] ToData(object value);
+        /// <remarks>
+        /// <para><b>Implementation Notes:</b></para>
+        /// <para>
+        /// To maintain compatibility with non .NET clients like GOLANG and Java you'll
+        /// need to follow these conventions:
+        /// </para>
+        /// <list type="bullet">
+        ///     <item>
+        ///     If <paramref name="values"/> is <c>null</c> or empty then just serialize a <c>null</c>.
+        ///     </item>
+        ///     <item>
+        ///     If <paramref name="values"/> includes a single value then just serialize that
+        ///     value; don't wrap it into an array.
+        ///     </item>
+        ///     <item>
+        ///     If <paramref name="values"/> includes more than one value then serialize them
+        ///     as an array.
+        ///     </item>
+        /// </list>
+        /// </remarks>
+        byte[] ToData(params object[] values);
     }
 }
