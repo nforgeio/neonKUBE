@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"strconv"
 
 	"go.uber.org/cadence/encoded"
 	"go.uber.org/cadence/worker"
@@ -83,8 +84,8 @@ func (h *SampleHelper) SetupServiceConfig(configPath string) {
 	}
 }
 
-// Executes a workflow and waits for it to complete.
-func (h *SampleHelper) ExecuteWorkflow(options client.StartWorkflowOptions, workflow interface{}, args ...interface{})  {
+// Executes a workflow returning a string and waits for it to complete.
+func (h *SampleHelper) ExecuteWorkflow(options client.StartWorkflowOptions, workflow interface{}, args ...interface{}) {
 	workflowClient, err := h.Builder.BuildCadenceClient()
 	if err != nil {
 		h.Logger.Error("Failed to build cadence client.", zap.Error(err))
@@ -110,7 +111,52 @@ func (h *SampleHelper) ExecuteWorkflow(options client.StartWorkflowOptions, work
 		panic("Failed to get result.")
 
 	} else {
+
 		h.Logger.Info("Result: " + result)
+	}
+}
+
+// Executes a workflow returning an int array and waits for it to complete.
+func (h *SampleHelper) ExecuteArrayWorkflow(options client.StartWorkflowOptions, workflow interface{}, args ...interface{}) {
+	workflowClient, err := h.Builder.BuildCadenceClient()
+	if err != nil {
+		h.Logger.Error("Failed to build cadence client.", zap.Error(err))
+		panic(err)
+	}
+
+	ctx := context.Background()
+
+	wr, err := workflowClient.ExecuteWorkflow(ctx, options, workflow, args...)
+	if err != nil {
+		h.Logger.Error("Failed to create workflow", zap.Error(err))
+		panic("Failed to create workflow.")
+
+	} else {
+		h.Logger.Info("Started Workflow", zap.String("RunID", wr.GetRunID()))
+	}
+
+	var result []int32
+
+	err = wr.Get(ctx, &result)
+	if err != nil {
+		h.Logger.Error("Failed to get result", zap.Error(err))
+		panic("Failed to get result.")
+
+	} else {
+
+		out := "["
+
+		for i := 0; i < len(result); i++ {
+			if i > 0 {
+				out = out + ", "
+			}
+
+			out = out + strconv.Itoa(int(result[i]))
+		}
+
+		out = out + "]"
+
+		h.Logger.Info("Result: " + out)
 	}
 }
 
@@ -203,7 +249,6 @@ func (h *SampleHelper) SignalWorkflow(workflowID, signal string, data interface{
 		panic("Failed to signal workflow.")
 	}
 }
-
 
 func (h *SampleHelper) CancelWorkflow(workflowID string) {
 	workflowClient, err := h.Builder.BuildCadenceClient()

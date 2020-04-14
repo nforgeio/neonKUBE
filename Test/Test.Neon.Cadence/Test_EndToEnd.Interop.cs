@@ -195,6 +195,38 @@ namespace TestCadence
                 execution = await stub.StartAsync("JACK", "JILL");
 
                 Assert.Equal("Hello JACK & JILL!", await stub.GetResultAsync<string>());
+
+                //-----------------------------------------
+                // One Array Arg:
+
+                options = new WorkflowOptions()
+                {
+                    WorkflowId = "OneArrayArg-" + Guid.NewGuid().ToString("d"),
+                    TaskList   = CadenceTestHelper.TaskList_WfArgs
+                };
+
+                stub = client.NewUntypedWorkflowStub("main.ArrayArgWorkflow", options);
+                execution = await stub.StartAsync(new int[] { 0, 1, 2, 3, 4 });
+
+                var arrayResult = await stub.GetResultAsync<int[]>();
+
+                Assert.Equal(new int[] { 0, 1, 2, 3, 4 }, arrayResult);
+
+                //-----------------------------------------
+                // One Array and a String Arg 
+
+                options = new WorkflowOptions()
+                {
+                    WorkflowId = "OneArrayArgs-" + Guid.NewGuid().ToString("d"),
+                    TaskList = CadenceTestHelper.TaskList_WfArgs
+                };
+
+                stub = client.NewUntypedWorkflowStub("main.ArrayArgsWorkflow", options);
+                execution = await stub.StartAsync(new int[] { 0, 1, 2, 3, 4 }, "test");
+
+                arrayResult = await stub.GetResultAsync<int[]>();
+
+                Assert.Equal(new int[] { 0, 1, 2, 3, 4 }, arrayResult);
             }
         }
 
@@ -203,6 +235,8 @@ namespace TestCadence
         public async Task Interop_Activity_Untyped()
         {
             await SyncContext.ClearAsync;
+
+            throw new NotImplementedException();
         }
 
         //---------------------------------------------------------------------

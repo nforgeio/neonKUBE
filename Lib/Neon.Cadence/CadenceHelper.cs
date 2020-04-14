@@ -25,12 +25,16 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime;
 using System.Runtime.Loader;
+using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Data;
 using Neon.Diagnostics;
+
+using Newtonsoft.Json.Linq;
 
 namespace Neon.Cadence.Internal
 {
@@ -1227,93 +1231,22 @@ namespace Neon.Cadence.Internal
         /// <param name="converter">The data converter.</param>
         /// <param name="args">The arguments.</param>
         /// <returns>The serialized bytes or <c>null</c> when there are no arguments.</returns>
-        /// <remarks>
-        /// <para>
-        /// This method is used to serialize arguments passed to workflows, activities, as 
-        /// well as workflow queries and signals.  For cross-language compatibility,
-        /// this method follows these conventions:
-        /// </para>
-        /// <list type="table">
-        /// <item>
-        ///     <term><b>no arguments:</b></term>
-        ///     <description>
-        ///     Serializes as a <c>null</c> byte array.
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>one argument:</b></term>
-        ///     <description>
-        ///     Serializes as the single object converted to bytes using the
-        ///     data converter.
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>multiple arguments:</b></term>
-        ///     <description>
-        ///     Serializes as an array of the arguments converted to bytes using
-        ///     the data converter.
-        ///     </description>
-        /// </item>
-        /// </list>
-        /// </remarks>
         public static byte[] ArgsToBytes(IDataConverter converter, IEnumerable<object> args)
         {
             Covenant.Requires<ArgumentNullException>(converter != null, nameof(converter));
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
 
-            var argCount = args.Count();
-
-            if (argCount == 0)
-            {
-                return null;
-            }
-            else if (argCount == 1)
-            {
-                return converter.ToData(args.First());
-            }
-            else
-            {
-                return converter.ToData(args);
-            }
+            return converter.ToDataArray(args.ToArray());
         }
 
         /// <summary>
-        /// <b>INTERNAL USE ONLY:</b> Deserializes bytes (or <c>null</c>) into an array of arguments
-        /// using Cadence argument conventions and the specified <see cref="IDataConverter"/>.
+        /// <b>INTERNAL USE ONLY:</b> Deserializes encoded bytes (or <c>null</c>) into an array of 
+        /// arguments using Cadence argument conventions and the specified <see cref="IDataConverter"/>.
         /// </summary>
         /// <param name="converter">The data converter.</param>
         /// <param name="bytes">The serialized bytes or <c>null</c> when there are no arguments.</param>
         /// <param name="argTypes">The expected argument types.</param>
         /// <returns>The deserialized arguments as an array.</returns>
-        /// <remarks>
-        /// <para>
-        /// This method is used to serialize arguments passed to workflows, activities, as 
-        /// well as workflow queries and signals.  For cross-language compatibility,
-        /// this method follows these conventions:
-        /// </para>
-        /// <list type="table">
-        /// <item>
-        ///     <term><b>no arguments:</b></term>
-        ///     <description>
-        ///     Serializes as a <c>null</c> byte array.
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>one argument:</b></term>
-        ///     <description>
-        ///     Serializes as the single object converted to bytes using the
-        ///     data converter.
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>multiple arguments:</b></term>
-        ///     <description>
-        ///     Serializes as an array of the arguments converted to bytes using
-        ///     the data converter.
-        ///     </description>
-        /// </item>
-        /// </list>
-        /// </remarks>
         public static object[] BytesToArgs(IDataConverter converter, byte[] bytes, Type[] argTypes)
         {
             Covenant.Requires<ArgumentNullException>(converter != null, nameof(converter));
@@ -1326,39 +1259,83 @@ namespace Neon.Cadence.Internal
 
             Covenant.Requires<ArgumentNullException>(bytes != null, nameof(bytes));
 
-            if (argTypes.Length == 1)
-            {
-                // $hack(jefflill):
-                //
-                // This code provides backwards compatibility for workflows, activities,
-                // and client code deployed using Neon.Cadence v1.x.  The older .NET
-                // code always encoded arguments as an array whereas the GOLANG and
-                // Java clients encodes zero arguments as a NULL byte array, single
-                // arguments as just the value, and multiple arguments as an array.
-                //
-                // This hack special-cases [JsonDataConverter] and examines the first
-                // byte of the byte array.  If it's a '[' then the arguments are
-                // encoded the old (incorrect) .NET client way, otherwise it's encoded
-                // using the standard Cadence conventions.
-                //
-                //      https://github.com/nforgeio/neonKUBE/issues/793
+            // $todo(jefflill):
+            //
+            // This code implements backwards compatibility for workflows, activities,
+            // and client code deployed using Neon.Cadence v1.x.  The older .NET
+            // code always encodes arguments as an array whereas the GOLANG and
+            // Java default JSON converter encodes zero arguments as a NULL 
+            // otherwise it serializes each argument as JSON one to a line of text
+            // with each line terminated by a NEWLINE (0x0A).
+            //
+            // This hack special-cases [JsonDataConverter] and examines the first
+            // byte of the encoded argument bytes.  If this is '[' and there are no NEWLINEs 
+            // present then the arguments are encoded in the old (incorrect) .NET client v1.x
+            // way, otherwise it's encoded using the standard Cadence conventions.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/793
 
-                if (converter.GetType() == typeof(JsonDataConverter))
+            if (converter.GetType() == typeof(JsonDataConverter) && (char)bytes[0] == '[')
+            {
+                var argText = Encoding.UTF8.GetString(bytes);
+
+                if (argText.IndexOf((char)0x0A) < 0)
                 {
-                    if ((char)bytes[0] == '[')
+                    // Decode the old .NET v1.x format.
+
+                    var jToken = JToken.Parse(Encoding.UTF8.GetString(bytes));
+
+                    if (jToken.Type != JTokenType.Array)
                     {
-                        return converter.FromDataArray(bytes, argTypes);
+                        throw new ArgumentException($"Content encodes a [{jToken.Type}] instead of the expected [{JTokenType.Array}].", nameof(jToken));
                     }
+
+                    var jArray = (JArray)jToken;
+
+                    if (jArray.Count != argTypes.Length)
+                    {
+                        throw new ArgumentException($"Content array length [{jArray.Count}] does not match the expected number of values [{argTypes.Length}].", nameof(jArray));
+                    }
+
+                    var output = new object[argTypes.Length];
+
+                    for (int i = 0; i < argTypes.Length; i++)
+                    {
+                        var type = argTypes[i];
+                        var item = jArray[i];
+
+                        if (type.Implements<IRoundtripData>())
+                        {
+                            switch (item.Type)
+                            {
+                                case JTokenType.Null:
+
+                                    output[i] = null;
+                                    break;
+
+                                case JTokenType.Object:
+
+                                    output[i] = RoundtripDataFactory.CreateFrom(type, (JObject)item);
+                                    break;
+
+                                default:
+
+                                    throw new ArgumentException($"Unexpected [{item.Type}] in JSON array.  Only [{nameof(JTokenType.Object)}] or [{nameof(JTokenType.Null)}] are allowed.", nameof(item));
+                            }
+                        }
+                        else
+                        {
+                            output[i] = item.ToObject(type);
+                        }
+                    }
+
+                    return output;
                 }
-
-                // Decode using the standard Cadence conventions.
-
-                return new object[] { converter.FromData(argTypes[0], bytes) };
             }
-            else
-            {
-                return converter.FromDataArray(bytes, argTypes);
-            }
+
+            // Decode using the standard Cadence conventions.
+
+            return converter.FromDataArray(bytes, argTypes);
         }
     }
 }

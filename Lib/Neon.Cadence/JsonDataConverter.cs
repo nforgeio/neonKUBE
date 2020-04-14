@@ -52,7 +52,9 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static byte[] commaBytes = Encoding.UTF8.GetBytes(",");
+        private static byte[] commaBytes        = Encoding.UTF8.GetBytes(",");
+        private static byte[] newlineBytes     = new byte[] { 0x0A };
+        private static char[] newlineSeparator = new char[] { '\n' };
 
         /// <summary>
         /// Returns a global <see cref="JsonDataConverter"/> instance.  This is used
@@ -101,34 +103,34 @@ namespace Neon.Cadence
         /// <inheritdoc/>
         public object[] FromDataArray(byte[] content, params Type[] valueTypes)
         {
-            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
-            Covenant.Requires<ArgumentNullException>(content.Length > 0, nameof(content));
             Covenant.Requires<ArgumentNullException>(valueTypes != null, nameof(valueTypes));
 
-            var jToken = JToken.Parse(Encoding.UTF8.GetString(content));
-
-            if (jToken.Type != JTokenType.Array)
+            if (valueTypes.Length == 0)
             {
-                throw new ArgumentException($"Content encodes a [{jToken.Type}] instead of the expected [{JTokenType.Array}].", nameof(jToken));
+                return Array.Empty<object>();
             }
 
-            var jArray = (JArray)jToken;
+            Covenant.Requires<ArgumentException>(content.Length > 0, nameof(content));
 
-            if (jArray.Count != valueTypes.Length)
+            var jsonText  = Encoding.UTF8.GetString(content);
+            var jsonLines = jsonText.Split(newlineSeparator, StringSplitOptions.RemoveEmptyEntries);
+
+            if (jsonLines.Length != valueTypes.Length)
             {
-                throw new ArgumentException($"Content array length [{jArray.Count}] does not match the expected number of values [{valueTypes.Length}].", nameof(jArray));
+                throw new ArgumentException($"Number of arguments [{jsonLines.Length}] passed does not match the method parameter count [{valueTypes.Length}].");
             }
 
             var output = new object[valueTypes.Length];
 
             for (int i = 0; i < valueTypes.Length; i++)
             {
-                var type = valueTypes[i];
-                var item = jArray[i];
+                var type   = valueTypes[i];
+                var line   = jsonLines[i];
+                var jToken = JToken.Parse(line);
 
                 if (type.Implements<IRoundtripData>())
                 {
-                    switch (item.Type)
+                    switch (jToken.Type)
                     {
                         case JTokenType.Null:
 
@@ -137,17 +139,18 @@ namespace Neon.Cadence
 
                         case JTokenType.Object:
 
-                            output[i] = RoundtripDataFactory.CreateFrom(type, (JObject)item);
+                            output[i] = RoundtripDataFactory.CreateFrom(type, (JObject)jToken);
                             break;
 
                         default:
 
-                            throw new ArgumentException($"Unexpected [{item.Type}] in JSON array.  Only [{nameof(JTokenType.Object)}] or [{nameof(JTokenType.Null)}] are allowed.", nameof(item));
+                            Covenant.Assert(false, $"Unexpected JSON token [{jToken}].");
+                            break;
                     }
                 }
                 else
                 {
-                    output[i] = item.ToObject(type);
+                    output[i] = NeonHelper.JsonDeserialize(type, line);
                 }
             }
 
@@ -155,56 +158,40 @@ namespace Neon.Cadence
         }
 
         /// <inheritdoc/>
-        public byte[] ToData(params object[] values)
+        public byte[] ToData(object value)
+        {
+            var roundtripData = value as IRoundtripData;
+
+            if (roundtripData != null)
+            {
+                return roundtripData.ToBytes();
+            }
+            else
+            {
+                return NeonHelper.JsonSerializeToBytes(value);
+            }
+        }
+
+        /// <inheritdoc/>
+        public byte[] ToDataArray(object[] values)
         {
             if (values == null || values.Length == 0)
             {
                 return NeonHelper.JsonSerializeToBytes(null);
             }
-            else if (values.Length == 1)
-            {
-                var value         = values[0];
-                var roundtripData = value as IRoundtripData;
-
-                if (roundtripData != null)
-                {
-                    return roundtripData.ToBytes();
-                }
-                else
-                {
-                    return NeonHelper.JsonSerializeToBytes(value);
-                }
-            }
             else
             {
-                // This could be more efficient but I don't believe this is ever actually going
-                // to be executed since we're handling argument encoding in CadenceHelper:
-                //
-                //      https://github.com/nforgeio/neonKUBE/issues/797
+                // The GOLANG and Java client JSON data converters serialize
+                // arguments with each element appearing on separate lines terminated
+                // with a NEWLINE (0x0A).  We're going to do the same to be compatible.
 
                 using (var output = new MemoryStream())
                 {
-                    output.Write(Encoding.UTF8.GetBytes("["));
-
                     foreach (var value in values)
                     {
-                        var     roundtripData = value as IRoundtripData;
-                        byte[]  bytes;
-
-                        if (roundtripData != null)
-                        {
-                            bytes = roundtripData.ToBytes();
-                        }
-                        else
-                        {
-                            bytes = NeonHelper.JsonSerializeToBytes(value);
-                        }
-
-                        output.Write(bytes);
-                        output.Write(commaBytes);
+                        output.Write(ToData(value));
+                        output.Write(newlineBytes);
                     }
-
-                    output.Write(Encoding.UTF8.GetBytes("]"));
 
                     return output.ToArray();
                 }

@@ -75,10 +75,14 @@ func main() {
 	activity.Register(OneArgActivity)
 	workflow.Register(TwoArgsWorkflow)
 	activity.Register(TwoArgsActivity)
+	workflow.Register(ArrayArgWorkflow)
+	activity.Register(ArrayArgActivity)
+	workflow.Register(ArrayArgsWorkflow)
+	activity.Register(ArrayArgsActivity)
 
 	h.StartWorkers(domain, taskList, workerOptions)
 
-	if (test) {
+	if test {
 
 		//-----------------------------------------------------
 		// NoArgs
@@ -113,14 +117,38 @@ func main() {
 			ExecutionStartToCloseTimeout:    time.Minute,
 			DecisionTaskStartToCloseTimeout: time.Minute,
 		}
-		
+
 		h.ExecuteWorkflow(workflowOptions, TwoArgsWorkflow, "JACK", "JILL")
+
+		//-----------------------------------------------------
+		// ArrayArg
+
+		workflowOptions = client.StartWorkflowOptions{
+			ID:                              "TEST:ArrayArg-" + uuid.New(),
+			TaskList:                        taskList,
+			ExecutionStartToCloseTimeout:    time.Minute,
+			DecisionTaskStartToCloseTimeout: time.Minute,
+		}
+
+		h.ExecuteArrayWorkflow(workflowOptions, ArrayArgWorkflow, []int32{0, 1, 2, 3, 4})
+
+		//-----------------------------------------------------
+		// ArrayArgs
+
+		workflowOptions = client.StartWorkflowOptions{
+			ID:                              "TEST:ArrayArgs-" + uuid.New(),
+			TaskList:                        taskList,
+			ExecutionStartToCloseTimeout:    time.Minute,
+			DecisionTaskStartToCloseTimeout: time.Minute,
+		}
+
+		h.ExecuteArrayWorkflow(workflowOptions, ArrayArgsWorkflow, []int32{0, 1, 2, 3, 4}, "test")
 	}
 
 	//-----------------------------------------------------
 	// Indicate to the caller that the worker is ready.
 
-	if (readyFile != "") {
+	if readyFile != "" {
 
 		f, err := os.Create(readyFile)
 
@@ -136,7 +164,7 @@ func main() {
 	// Process workflows and activities until the stop file is
 	// created or for 60 seconds when no stop file was specified.
 
-	if (stopFile != "") {
+	if stopFile != "" {
 
 		h.Logger.Info("STOP FILE: " + stopFile)
 
