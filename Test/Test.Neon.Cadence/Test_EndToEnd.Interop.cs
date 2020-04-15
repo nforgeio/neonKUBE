@@ -238,43 +238,5 @@ namespace TestCadence
 
             throw new NotImplementedException();
         }
-
-        //---------------------------------------------------------------------
-        // Verify that Neon.Cadence v2+ clients can transparently support the
-        // v1.x (incorrectly) encoded arguments.
-        //
-        //      https://github.com/nforgeio/neonKUBE/issues/793
-
-        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
-        public interface IInteropArgsBackwardsCompat : IWorkflow
-        {
-            [WorkflowMethod(Name = "ZeroArgs")]
-            Task<string> ZeroArgsAsync();
-
-            [WorkflowMethod(Name = "OneArg")]
-            Task<string> OneArgAsync(string arg);
-
-            [WorkflowMethod(Name = "TwoArgs")]
-            Task<string> TwoArgsAsync(string arg1, string arg2);
-        }
-
-        [Workflow(AutoRegister = true)]
-        public class InteropArgsBackwardsCompat : WorkflowBase, IInteropArgsBackwardsCompat
-        {
-            public async Task<string> ZeroArgsAsync()
-            {
-                return await Task.FromResult("no-args");
-            }
-
-            public async Task<string> OneArgAsync(string arg)
-            {
-                return await Task.FromResult(arg);
-            }
-
-            public async Task<string> TwoArgsAsync(string arg1, string arg2)
-            {
-                return await Task.FromResult(arg1 + arg2);
-            }
-        }
     }
 }
