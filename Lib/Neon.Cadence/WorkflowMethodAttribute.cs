@@ -58,7 +58,7 @@ namespace Neon.Cadence
         /// and executing a workflow started via the method.  This will look like:
         /// </para>
         /// <code>
-        /// WORKFLOW_TYPENNAME::METHODNAME
+        /// WORKFLOW_TYPENAME::METHODNAME
         /// </code>
         /// <para>
         /// where <b>WORKFLOW_TYPENAME</b> is either the workflow interface's fully qualified 

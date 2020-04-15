@@ -123,7 +123,7 @@ namespace Neon.Cadence
         // because we'll need to remove the entries for clients when they're disposed.
         //
         // Activity type names may also include a second "::" separator with the
-        // activity methof name appended afterwards to handle activity interfaces
+        // activity method name appended afterwards to handle activity interfaces
         // that have multiple methods.  So, valid activity registrations
         // may looks like:
         // 

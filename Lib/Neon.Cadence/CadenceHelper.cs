@@ -245,7 +245,7 @@ namespace Neon.Cadence.Internal
                 // We're going to strip the leading "I" from the unqualified
                 // type name (unless that's the only character).
 
-                fullName = fullName.Substring(0, fullName.Length - name.Length);
+                fullName  = fullName.Substring(0, fullName.Length - name.Length);
                 fullName += name.Substring(1);
             }
 

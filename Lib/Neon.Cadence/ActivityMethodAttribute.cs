@@ -58,10 +58,10 @@ namespace Neon.Cadence
         /// and executing an activity via the method.  This will look like:
         /// </para>
         /// <code>
-        /// ACTIVITY_TYPENNAME::METHODNAME
+        /// ACTIVITY_TYPENAME::METHODNAME
         /// </code>
         /// <para>
-        /// where <b>ACTIVITY_TYPENNAME</b> is either the activity interface's fully qualified 
+        /// where <b>ACTIVITY_TYPENAME</b> is either the activity interface's fully qualified 
         /// name or the name specified by <see cref="ActivityAttribute.Name"/> and 
         /// <b>METHOD_NAME</b> is from <see cref="ActivityMethodAttribute.Name"/>.  This
         /// is the same convention implemented by the Java client.
