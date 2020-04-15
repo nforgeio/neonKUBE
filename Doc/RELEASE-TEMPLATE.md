@@ -156,7 +156,7 @@ Neon components are released using versions compatible with [Semantic Versioning
   </tr>
   <tr>
     <td><img src="https://doc.neonkube.com/media/internal.png"/></td>
-    <td>indicates that the released binary is not intended for general consumption. These are typically referenced by other neonKUBE libaries and tools. </td>
+    <td>indicates that the released binary is not intended for general consumption. These are typically referenced by other neonKUBE libraries and tools. </td>
   </tr>
 </table>
 
