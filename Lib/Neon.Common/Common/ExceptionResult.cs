@@ -123,23 +123,33 @@ namespace Neon.Common
 
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                foreach (var exceptionType in assembly.GetTypes().Where(t => t.Inherits<Exception>()))
+                try
                 {
-                    var defaultConstructor      = exceptionType.GetConstructor(Type.EmptyTypes);
-                    var messageConstructor      = exceptionType.GetConstructor(new Type[] { typeof(string) });
-                    var messageInnerConstructor = exceptionType.GetConstructor(new Type[] { typeof(string), typeof(Exception) });
-
-                    if (defaultConstructor != null || messageConstructor != null || messageInnerConstructor != null)
+                    foreach (var exceptionType in assembly.GetTypes().Where(t => t.Inherits<Exception>()))
                     {
-                        var thrower = new ExceptionThrower()
-                        {
-                            DefaultConstructor      = defaultConstructor,
-                            MessageConstructor      = messageConstructor,
-                            MessageInnerConstructor = messageInnerConstructor
-                        };
+                        var defaultConstructor      = exceptionType.GetConstructor(Type.EmptyTypes);
+                        var messageConstructor      = exceptionType.GetConstructor(new Type[] { typeof(string) });
+                        var messageInnerConstructor = exceptionType.GetConstructor(new Type[] { typeof(string), typeof(Exception) });
 
-                        typeNameToThrower.Add(exceptionType.FullName, thrower);
+                        if (defaultConstructor != null || messageConstructor != null || messageInnerConstructor != null)
+                        {
+                            var thrower = new ExceptionThrower()
+                            {
+                                DefaultConstructor = defaultConstructor,
+                                MessageConstructor = messageConstructor,
+                                MessageInnerConstructor = messageInnerConstructor
+                            };
+
+                            typeNameToThrower.Add(exceptionType.FullName, thrower);
+                        }
                     }
+                }
+                catch (ReflectionTypeLoadException)
+                {
+                    // We can see this for special assemblies.  We're going to ignore
+                    // these assemblies.
+                    //
+                    //      https://github.com/microsoft/vstest/issues/1098      
                 }
             }
         }
