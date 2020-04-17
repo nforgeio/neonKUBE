@@ -219,6 +219,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Go", "Go", "{F91BE5A3-9CBD-
 	ProjectSection(SolutionItems) = preProject
 		Go\build-all.ps1 = Go\build-all.ps1
 		Go\build-cadence-proxy.ps1 = Go\build-cadence-proxy.ps1
+		Go\build-temporal-proxy.ps1 = Go\build-temporal-proxy.ps1
 		Go\build-test.ps1 = Go\build-test.ps1
 	EndProjectSection
 EndProject
@@ -320,6 +321,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "cwf-args", "cwf-args", "{16
 		Go\test\cadence\cwf-args\sample_helper.go = Go\test\cadence\cwf-args\sample_helper.go
 		Go\test\cadence\cwf-args\twoArgs.go = Go\test\cadence\cwf-args\twoArgs.go
 		Go\test\cadence\cwf-args\util.go = Go\test\cadence\cwf-args\util.go
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Temporal", "Lib\Neon.Temporal\Neon.Temporal.csproj", "{A61E6EB7-AFF4-4883-8122-278EAF56142D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C2071335-AFDF-4643-93A2-EAC482E90E73} = {C2071335-AFDF-4643-93A2-EAC482E90E73}
 	EndProjectSection
 EndProject
 Global
@@ -1357,6 +1363,24 @@ Global
 		{6B21D400-2F16-4A68-A672-2100E571854D}.Release|x64.Build.0 = Release|Any CPU
 		{6B21D400-2F16-4A68-A672-2100E571854D}.Release|x86.ActiveCfg = Release|Any CPU
 		{6B21D400-2F16-4A68-A672-2100E571854D}.Release|x86.Build.0 = Release|Any CPU
+		{A61E6EB7-AFF4-4883-8122-278EAF56142D}.CodeDoc|Any CPU.ActiveCfg = CodeDoc|Any CPU
+		{A61E6EB7-AFF4-4883-8122-278EAF56142D}.CodeDoc|Any CPU.Build.0 = CodeDoc|Any CPU
+		{A61E6EB7-AFF4-4883-8122-278EAF56142D}.CodeDoc|x64.ActiveCfg = CodeDoc|Any CPU
+		{A61E6EB7-AFF4-4883-8122-278EAF56142D}.CodeDoc|x64.Build.0 = CodeDoc|Any CPU
+		{A61E6EB7-AFF4-4883-8122-278EAF56142D}.CodeDoc|x86.ActiveCfg = CodeDoc|Any CPU
+		{A61E6EB7-AFF4-4883-8122-278EAF56142D}.CodeDoc|x86.Build.0 = CodeDoc|Any CPU
+		{A61E6EB7-AFF4-4883-8122-278EAF56142D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A61E6EB7-AFF4-4883-8122-278EAF56142D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A61E6EB7-AFF4-4883-8122-278EAF56142D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A61E6EB7-AFF4-4883-8122-278EAF56142D}.Debug|x64.Build.0 = Debug|Any CPU
+		{A61E6EB7-AFF4-4883-8122-278EAF56142D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A61E6EB7-AFF4-4883-8122-278EAF56142D}.Debug|x86.Build.0 = Debug|Any CPU
+		{A61E6EB7-AFF4-4883-8122-278EAF56142D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A61E6EB7-AFF4-4883-8122-278EAF56142D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A61E6EB7-AFF4-4883-8122-278EAF56142D}.Release|x64.ActiveCfg = Release|Any CPU
+		{A61E6EB7-AFF4-4883-8122-278EAF56142D}.Release|x64.Build.0 = Release|Any CPU
+		{A61E6EB7-AFF4-4883-8122-278EAF56142D}.Release|x86.ActiveCfg = Release|Any CPU
+		{A61E6EB7-AFF4-4883-8122-278EAF56142D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1434,6 +1458,7 @@ Global
 		{B755BCE3-2296-4DC6-95DF-621B3EE31FE3} = {DCE108FB-01CD-4768-A37D-229E354905D9}
 		{166FC5A4-9105-4E94-B1EB-567F869850A1} = {DCE108FB-01CD-4768-A37D-229E354905D9}
 		{161A8603-1E04-4E7E-923E-DF2D8D0D3327} = {B755BCE3-2296-4DC6-95DF-621B3EE31FE3}
+		{A61E6EB7-AFF4-4883-8122-278EAF56142D} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}
