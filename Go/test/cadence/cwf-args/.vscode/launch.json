@@ -9,12 +9,12 @@
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "C:\\src\\neonKUBE\\Go\\test\\wf-args",
+            "program": "C:\\src\\neonKUBE\\Go\\test\\cadence\\cwf-args",
             "env": {},
             "args": [
-                "-config=C:\\src\\neonKUBE\\Build\\go-test\\config.yaml",
+                "-config=C:\\src\\neonKUBE\\Build\\go-test\\cadence\\config.yaml",
                 "-domain=test-domain",
-                "-tasklist=tasks",
+                "-tasklist=cwf-args",
                 "-readyfile=C:\\temp\\ready.txt",
                 "-stopfile=C:\\temp\\stop.txt"
             ]

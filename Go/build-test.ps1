@@ -28,27 +28,41 @@ $orgDirectory    = Get-Location
 
 Set-Location $projectPath
 
-# Ensure that the build output folder exists.
+# Ensure that the build output folder exist.
+
 if (!(test-path $buildPath))
 {
     New-Item -ItemType Directory -Force -Path $buildPath
 }
 
+#==============================================================================
+# BUILD CADENCE TESTS
+
+# Ensure that the build output folder exist.
+
+$outputPath = Join-Path -Path $buildPath -ChildPath "cadence"
+
+if (!(test-path $outputPath))
+{
+    New-Item -ItemType Directory -Force -Path $outputPath
+}
+
 # Common Cadence client configuration
 
-cp config.yaml "$buildPath\config.yaml"
+Set-Location "$projectPath\cadence"
+cp config.yaml "$outputPath\config.yaml"
 
 #----------------------------------------------------------
-# wf-args
+# cwf-args
 
-Set-Location "$projectPath\wf-args"
+Set-Location "$projectPath\cadence\cwf-args"
 
-echo "Building..." > "$logPath"
+echo "Building cwf-args" > "$logPath"
 
 $env:GOOS   = "windows"
 $env:GOARCH = "amd64"
 
-go build -o "$buildPath\wf-args.exe" . >> "$logPath" 2>&1
+go build -o "$outputPath\cwf-args.exe" . >> "$logPath" 2>&1
 
 $exitCode = $lastExitCode
 
@@ -63,8 +77,18 @@ echo "Build success" >> "$logPath" 2>&1
 
 Set-Location $orgDirectory
 
+#==============================================================================
+# BUILD TEMPORAL TESTS
+
+# $todo(jefflill): Implement this!
+
+
+
+
 #-----------------------------------------------------------
+# Misc repo config code: (archiving this just in case)
+#
 # set GO111MODULE=on
 # go get go.uber.org/cadence
-# go build -o C:\src\neonKUBE\Build\go-test\wf-args.exe .
-# cp config.yaml C:\src\neonKUBE\Build\go-test\config.yaml
+# go build -o C:\src\neonKUBE\Build\go-test\cadence\cwf-args.exe .
+# cp config.yaml C:\src\neonKUBE\Build\go-test\cadence\config.yaml
