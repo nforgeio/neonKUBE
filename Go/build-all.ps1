@@ -36,7 +36,7 @@ $env:NF_GOROOT = "$env:NF_ROOT\Go"
 
 Set-Location $env:NF_GOROOT
 
-& ./build-cadence-proxy.ps1 -buildConfig $buildConfig
-& ./build-test.ps1
+Start-Process -FilePath powershell.exe -ArgumentList "./build-cadence-proxy.ps1", "-buildConfig $buildConfig" -Wait -NoNewWindow
+Start-Process -FilePath powershell.exe -ArgumentList "./build-test.ps1" -Wait -NoNewWindow
 
 Set-Location $orgDirectory

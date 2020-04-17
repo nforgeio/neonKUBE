@@ -62,3 +62,9 @@ if ($exitCode -ne 0)
 echo "Build success" >> "$logPath" 2>&1
 
 Set-Location $orgDirectory
+
+#-----------------------------------------------------------
+# set GO111MODULE=on
+# go get go.uber.org/cadence
+# go build -o C:\src\neonKUBE\Build\go-test\wf-args.exe .
+# cp config.yaml C:\src\neonKUBE\Build\go-test\config.yaml

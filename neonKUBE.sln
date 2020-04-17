@@ -298,6 +298,24 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{F08FAE2A-8
 		Go\test\wf-args\util.go = Go\test\wf-args\util.go
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{DCE108FB-01CD-4768-A37D-229E354905D9}"
+	ProjectSection(SolutionItems) = preProject
+		Go\test\config.yaml = Go\test\config.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "wf-args", "wf-args", "{2F808B44-050F-4A3B-96EB-8BED385F3D3A}"
+	ProjectSection(SolutionItems) = preProject
+		Go\test\wf-args\arrayArg.go = Go\test\wf-args\arrayArg.go
+		Go\test\wf-args\arrayArgs.go = Go\test\wf-args\arrayArgs.go
+		Go\test\wf-args\factory.go = Go\test\wf-args\factory.go
+		Go\test\wf-args\main.go = Go\test\wf-args\main.go
+		Go\test\wf-args\noargs.go = Go\test\wf-args\noargs.go
+		Go\test\wf-args\onearg.go = Go\test\wf-args\onearg.go
+		Go\test\wf-args\sample_helper.go = Go\test\wf-args\sample_helper.go
+		Go\test\wf-args\twoArgs.go = Go\test\wf-args\twoArgs.go
+		Go\test\wf-args\util.go = Go\test\wf-args\util.go
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		CodeDoc|Any CPU = CodeDoc|Any CPU
@@ -1406,6 +1424,8 @@ Global
 		{430BF9EA-698E-401E-B7AC-AABE7353B8AD} = {B6E81450-BC31-43E7-BC9E-83C12654BC07}
 		{6B21D400-2F16-4A68-A672-2100E571854D} = {CB2EDD47-A608-4284-96E3-08E9DC52EFEF}
 		{F08FAE2A-80B0-43D5-9A1B-14F31D2FAEE3} = {EAA2C7EE-0B01-4B2B-80FA-7BF3D03552BA}
+		{DCE108FB-01CD-4768-A37D-229E354905D9} = {F91BE5A3-9CBD-409B-AE86-D6FD8C09F02D}
+		{2F808B44-050F-4A3B-96EB-8BED385F3D3A} = {DCE108FB-01CD-4768-A37D-229E354905D9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}
