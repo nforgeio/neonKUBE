@@ -40,7 +40,7 @@ using Neon.Xunit.Cadence;
 using Newtonsoft.Json;
 using Xunit;
 
-namespace TestCadence
+namespace TestTemporal
 {
     /// <summary>
     /// These tests prevent the <see cref="CadenceFixture"/> from establishing a client

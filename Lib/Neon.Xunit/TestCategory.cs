@@ -45,6 +45,11 @@ namespace Neon.Xunit
         public const string NeonCadence = "Neon.Cadence";
 
         /// <summary>
+        /// Identifies <b>Neon.Temporal</b> tests.
+        /// </summary>
+        public const string NeonTemporal = "Neon.Temporal";
+
+        /// <summary>
         /// Identifies <b>Neon.ModelGen</b> tests.
         /// </summary>
         public const string NeonModelGen = "Neon.ModelGen";
