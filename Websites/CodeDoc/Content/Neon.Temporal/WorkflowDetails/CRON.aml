@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- topic-filename="Neon.Temporal-Workflow-CRON" -->
+<topic id="fd66b149-f9e7-4ac4-90d6-64c1310b38f3" revisionNumber="1">
+  <developerConceptualDocument
+    xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5"
+    xmlns:xlink="http://www.w3.org/1999/xlink">
+
+    <introduction>
+    </introduction>
+
+    <section>
+      <content>
+        <para>
+          Temporal allows you to execute workflows on a recurring schedule, like a traditional
+          Linux CRON job.  All you need to do is initialize a <codeEntityReference qualifyHint="false">T:Neon.Temporal.WorkflowOptions</codeEntityReference>
+          instance, setting the <codeEntityReference qualifyHint="false">P:Neon.Temporal.ChildWorkflowOptions.CronSchedule</codeEntityReference>
+          string to the schedule.  This string is formatted just like a Linux CRON schedule.  This handy
+          calculator shows how this works:
+          <externalLink>
+            <linkText>https://crontab.guru</linkText>
+            <linkUri>https://crontab.guru</linkUri>
+          </externalLink>
+        </para>
+        <para>
+          Here's how you can start a CRON workflow:
+        </para>
+        <code source="%NF_SNIPPETS%\Temporal\Snippets.Temporal.HelloWorld\CRONWorkflow.cs" region="code" language="c#" tabSize="4"/>
+        <para>
+          This example assumes that a workflow service implementing the <codeInline>ICronWorkflow </codeInline> is
+          already running somewhere.  The program connects to to Temporal and then calls
+          <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Neon.Temporal.TemporalClient.NewWorkflowFutureStub``1(System.String,Neon.Temporal.WorkflowOptions)</codeEntityReference>
+          passing the workflow method name.  In this example, the name is <legacyBold>backup</legacyBold> which matches
+          the name specified by the <codeEntityReference qualifyHint="false">T:Neon.Temporal.WorkflowMethodAttribute</codeEntityReference>
+          tagging the interface method.
+        </para>
+        <alert class="note">
+          <para>
+            Workflow methods that are not tagged with a name, can be specified by passing 
+            <codeInline>null</codeInline> or <codeEntityReference qualifyHint="false">T:System.String.Empty</codeEntityReference>.x
+          </para>
+        </alert>
+        <para>
+          <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Neon.Temporal.TemporalClient.NewWorkflowFutureStub``1(System.String,Neon.Temporal.WorkflowOptions)</codeEntityReference>
+          returns an untyped workflow method stub that doesn't immediately wait for the workflow to complete.  This is useful
+          for situations like starting a CRON workflow or for running multiple workflows in parallel.
+        </para>
+      </content>
+    </section>
+
+    <relatedTopics>
+      <codeEntityReference qualifyHint="false">N:Neon.Temporal</codeEntityReference>
+    </relatedTopics>
+  </developerConceptualDocument>
+</topic>

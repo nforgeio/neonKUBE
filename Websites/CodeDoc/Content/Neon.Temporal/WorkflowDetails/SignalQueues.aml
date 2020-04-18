@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!-- topic-filename="Neon.Cadence-Workflow-Queues" -->
-<topic id="10a488d2-0ed5-4689-b558-35dcd318889b" revisionNumber="1">
+<!-- topic-filename="Neon.Temporal-Workflow-SignalQueues" -->
+<topic id="fef4f5f1-ee69-479c-9321-6586ec5d45f9" revisionNumber="1">
   <developerConceptualDocument
     xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5"
     xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -34,10 +34,10 @@
         <para>
           Steps #2 and #4 are waiting for events from the external restaurant systems which
           themselves may wait for an employee to manually interact with an application.
-          So, how can we do this waiting in a Cadence workflow?
+          So, how can we do this waiting in a Temporal workflow?
         </para>
         <para>
-          There are three ways to wait for an external event in Cadence.  One bad way,
+          There are three ways to wait for an external event in Temporal.  One bad way,
           one inconvienent way, and one supper cool way:
         </para>
         <list class="ordered">
@@ -45,7 +45,7 @@
             <para>
               The bad approach is to simply have your workflow spin in a loop, polling an
               external source via an activity until it sees a status change indicating that the event has
-              occurred.  You'd probably use <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Neon.Cadence.Workflow.SleepAsync(System.TimeSpan)</codeEntityReference>
+              occurred.  You'd probably use <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Neon.Temporal.Workflow.SleepAsync(System.TimeSpan)</codeEntityReference>
               to slow your loop down.
             </para>
             <para>
@@ -60,14 +60,14 @@
               The inconvienent approach is to write an activity that will be completed externally.
               You can accomplish this by obtaining the activity's task token, an opaque byte array
               value that identifies the specific activity, storing this somewhere that will be available
-              to an external system, and then calling <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Neon.Cadence.Activity.DoNotCompleteOnReturn</codeEntityReference>
+              to an external system, and then calling <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Neon.Temporal.Activity.DoNotCompleteOnReturn</codeEntityReference>
               and returning from your activity method.
             </para>
             <para>
               Then you'll need an external system that determines when an event related to the activity
-              happens and then calls <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Neon.Cadence.CadenceClient.ActivityCompleteByTokenAsync(System.String,System.Object,System.String)</codeEntityReference>,
+              happens and then calls <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Neon.Temporal.TemporalClient.ActivityCompleteByTokenAsync(System.String,System.Object,System.String)</codeEntityReference>,
               passing the activity token and the data to be returned by the activity.  The external code
-              may also need to send activity heartbeats to Cadence, depending on the configured heartbeat
+              may also need to send activity heartbeats to Temporal, depending on the configured heartbeat
               timeout.
             </para>
             <para>
@@ -77,7 +77,7 @@
           <listItem>
             <para>
               The better way is just to signal the workflow when the event happens.  You'll define a signal workflow
-              method and use a <codeEntityReference qualifyHint="false">T:Neon.Cadence.WorkflowQueue`1</codeEntityReference>
+              method and use a <codeEntityReference qualifyHint="false">T:Neon.Temporal.WorkflowQueue`1</codeEntityReference>
               to notify your workflow method logic.
             </para>
           </listItem>
@@ -85,7 +85,7 @@
         <para>
           Here's a sample showing how a workflow uses a queue to react to received signals.
         </para>
-        <code source="%NF_SNIPPETS%\Cadence\Snippets.Cadence.HelloWorld\SignalWorkflow.cs" region="code" language="c#" tabSize="4"/>
+        <code source="%NF_SNIPPETS%\Temporal\Snippets.Temporal.HelloWorld\SignalWorkflow.cs" region="code" language="c#" tabSize="4"/>
         <para>
           The workflow above creates a queue and then loops, waiting for signals to be received and 
           be added to to the queue.  It reads these signals, updates its state and returns when it
@@ -99,7 +99,7 @@
     </section>
 
     <relatedTopics>
-      <codeEntityReference qualifyHint="false">N:Neon.Cadence</codeEntityReference>
+      <codeEntityReference qualifyHint="false">N:Neon.Temporal</codeEntityReference>
     </relatedTopics>
   </developerConceptualDocument>
 </topic>

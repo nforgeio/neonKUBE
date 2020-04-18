@@ -1,23 +1,23 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!-- topic-filename="Neon.Cadence-Overview" -->
-<topic id="b4a13879-cf87-43e2-8b6e-a122d8809d7a" revisionNumber="1">
+<!-- topic-filename="Neon.Temporal-Overview" -->
+<topic id="0605d399-be1e-44c7-bc1f-d143bc1a041f" revisionNumber="1">
   <developerConceptualDocument
     xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5"
     xmlns:xlink="http://www.w3.org/1999/xlink">
     
     <introduction>
       <para>
-        The <legacyBold>Neon.Cadence</legacyBold> class library is built for NETStandard 2.0
+        The <legacyBold>Neon.Temporal</legacyBold> class library is built for NETStandard 2.0
         and is capable of connecting to a
         <externalLink>
-          <linkText>Uber Cadence</linkText>
-          <linkUri>https://cadenceworkflow.io/docs/</linkUri>
+          <linkText>Temporal</linkText>
+          <linkUri>https://Temporalworkflow.io/docs/</linkUri>
         </externalLink>
         workflow cluster to manage and implement workflows.
       </para>
       <alert class="warning">
         <para>
-          <legacyBold>Neon.Cadence</legacyBold> currently supports AMD 64-bit Windows, OS/X, and Linux 
+          <legacyBold>Neon.Temporal</legacyBold> currently supports AMD 64-bit Windows, OS/X, and Linux 
           runtime environments only.
         </para>
       </alert>
@@ -26,14 +26,14 @@
     <section address="summary">
       <content>
         <para>
-          Uber Cadence is a wonderful open source solution for developers who need to deploy reliable workflows
+          Temporal is a wonderful open source solution for developers who need to deploy reliable workflows
           for small to highly scaled applications and services.  This isn't the first workflow product, but
           it may be the first one tailored specifically for developers who want to code workflows in a popular
           language as opposed to drawing flow-charts, editing crazy XML workflow definitions, and/or jumping
           through multi-step build hoops.
         </para>
         <para>
-          <legacyBold>Neon.Cadence</legacyBold> combined with Cadence Server lets you implement workflows in
+          <legacyBold>Neon.Temporal</legacyBold> combined with Temporal Server lets you implement workflows in
           any supported .NET language with little friction.  You can even set breakpoints and debug your
           workflows directly in Visual Studio.
         </para>
@@ -47,61 +47,61 @@
       <title>Overview</title>
       <content>
         <para>
-          Cadence is a general purpose platform that can handle workflows that exist for just a moment or two
-          or workflows that run for days months or even years.  Cadence persists the state of running workflows
+          Temporal is a general purpose platform that can handle workflows that exist for just a moment or two
+          or workflows that run for days months or even years.  Temporal persists the state of running workflows
           using the Cassandra or MySQL database to ensure that workflows will execute correctly even in the
-          face of hardware failures.  Cadence and Cassandra can be easily scaled horizontally for fault
-          tolerance and to handle very high loads.  Uber has Cadence deployments that can handle millions
+          face of hardware failures.  Temporal and Cassandra can be easily scaled horizontally for fault
+          tolerance and to handle very high loads.  Uber has Temporal deployments that can handle millions
           of simultaneous workflows.
         </para>
         <para>
-          Here's a video by <legacyBold>Maxim Fateev</legacyBold>, the creator of Cadence, describing what
-          Cadence is and how it works:
+          Here's a video by <legacyBold>Maxim Fateev</legacyBold>, the creator of Temporal, describing what
+          Temporal is and how it works:
         </para>
         <para>
           <externalLink>
-            <linkText>Cadence: The Only Workflow Platform You'll Ever Need</linkText>
+            <linkText>Temporal: The Only Workflow Platform You'll Ever Need</linkText>
             <linkUri>https://www.youtube.com/watch?v=llmsBGKOuWI</linkUri>
           </externalLink>
         </para>
         <para>
-          and here's a link to the Neon Cadence client namespace documentation if you want
+          and here's a link to the Neon Temporal client namespace documentation if you want
           to dive in immediately:
         </para>
         <para>
-          <codeEntityReference qualifyHint="false">N:Neon.Cadence</codeEntityReference>
+          <codeEntityReference qualifyHint="false">N:Neon.Temporal</codeEntityReference>
         </para>
         <para>
           To supplement Maxim's video, we'll discuss how this works at a high-level below so you'll have
           some understanding of the key concepts and how they fit together:
         </para>
         <definitionTable>
-          <definedTerm>Cadence Server</definedTerm>
+          <definedTerm>Temporal Server</definedTerm>
           <definition>
             <para>
               Responsible for coordinating and tracking workflows and activities.  From the perspective of
-              a workflow developer, this includes the Cadence Server itself as well as the database where
-              Cadence perisits its state.  Cadence supports Cassandra for data storage as well as MySQL,
+              a workflow developer, this includes the Temporal Server itself as well as the database where
+              Temporal perisits its state.  Temporal supports Cassandra for data storage as well as MySQL,
               Postgres, as well as a plugin architecture for custom database integrations.  Cassandra is
               free, scalable, and battle tested and is what we've been using for the Neon related projects.
             </para>
             <para>
-              When we use the term <legacBold>Cadence Server</legacBold> this typically includes the 
-              associated database as well.  Production deployments may include multiple Cadence Servers
-              for reliability and scalability.  This may be referred to as a <legacyBold>Cadence Cluster</legacyBold>
-              or perhaps as the <legacyBold>Cadence Server</legacyBold> since the cluster-ness is mostly abstracted
+              When we use the term <legacBold>Temporal Server</legacBold> this typically includes the 
+              associated database as well.  Production deployments may include multiple Temporal Servers
+              for reliability and scalability.  This may be referred to as a <legacyBold>Temporal Cluster</legacyBold>
+              or perhaps as the <legacyBold>Temporal Server</legacyBold> since the cluster-ness is mostly abstracted
               from a workflow author's perspective.
             </para>
           </definition>
-          <definedTerm>Cadence Client</definedTerm>
+          <definedTerm>Temporal Client</definedTerm>
           <definition>
             <para>
-              Provides the APIs for accessing a Cadence Server or Cluster.  This is implemented by
-              <codeEntityReference qualifyHint="false">T:Neon.Cadence.CadenceClient</codeEntityReference>
-              and you'll establish a connection to a Cadencer server by calling
-              <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Neon.Cadence.CadenceClient.ConnectAsync(Neon.Cadence.CadenceSettings)</codeEntityReference>,
+              Provides the APIs for accessing a Temporal Server or Cluster.  This is implemented by
+              <codeEntityReference qualifyHint="false">T:Neon.Temporal.TemporalClient</codeEntityReference>
+              and you'll establish a connection to a Temporalr server by calling
+              <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Neon.Temporal.TemporalClient.ConnectAsync(Neon.Temporal.TemporalSettings)</codeEntityReference>,
               passing settings that specify the IP address or host name for one or more of the
-              Cadence servers in the cluster.
+              Temporal servers in the cluster.
             </para>
             <para>
               Once you have a connection, you can use it to deploy, call, as well as manage workflows
@@ -114,7 +114,7 @@
               A fault-oblivious stateful function that orchestrates activities. A Workflow has full control over 
               which activities are executed, and in which order. A Workflow must not affect the external world 
               directly, only through activities. What makes workflow code a Workflow is that its state is preserved
-              by Cadence. Therefore any failure of a worker process that hosts the workflow code does not affect
+              by Temporal. Therefore any failure of a worker process that hosts the workflow code does not affect
               the workflow execution. The Workflow continues as if these failures did not happen. 
               At the same time, activities can fail any moment for any reason. Because workflow code is fully
               fault-oblivious, it is guaranteed to get notifications about activity failures or timeouts and
@@ -144,8 +144,8 @@
           <definition>
             <para>
               Workers are responsible for actually implementing workflows and activities.  This is code that a workflow
-              developer will write and deploy.  You'll need to establish a connection a Cadence cluster anmd then
-              register your workflow and activity implementations with the cluster.  Then, Cadence will schedule
+              developer will write and deploy.  You'll need to establish a connection a Temporal cluster anmd then
+              register your workflow and activity implementations with the cluster.  Then, Temporal will schedule
               workflows and activities on these workers by instantiating and invoking your workflow and activity
               classes.
             </para>
@@ -160,14 +160,14 @@
             </para>
             <para>
               In legacy workflow platforms, a decision task would be modeled as conditional nodes in a flow chart along
-              with nodes that do something like call a REST API, do a database operation, send an email, etc.  Cadence
+              with nodes that do something like call a REST API, do a database operation, send an email, etc.  Temporal
               is code centric, so a decision task is more of a virtual concept.  It's essentially the bit of logic
               in your workflows between activity calls as well as the built-in APIs.
             </para>
             <para>
-              Cadence maintains a durable history of the results of all activities and built-in APIs so that 
+              Temporal maintains a durable history of the results of all activities and built-in APIs so that 
               any workflow can be rescheduled on a different worker instance and end up in the same state as
-              it had before.  This is central to how Cadence works.
+              it had before.  This is central to how Temporal works.
             </para>
             <para>
               Note that workflow logic must never access or modify global or external state directly.  This includes
@@ -182,7 +182,7 @@
           <definedTerm>Domains and Task Lists</definedTerm>
           <definition>
             <para>
-              Cadence is a multi-tenant service and uses domains to isolate each tenant from any others.  A domain
+              Temporal is a multi-tenant service and uses domains to isolate each tenant from any others.  A domain
               is simply a unique namespace where workflows and activities as well as their worker implementations
               are registered.
             </para>
@@ -197,7 +197,7 @@
               Workflow IDs can be any string including a UUID.
             </para>
             <para>
-              Workflow Run IDs are UUIDs generated by Cadence for each run of a workflow.  Workflows
+              Workflow Run IDs are UUIDs generated by Temporal for each run of a workflow.  Workflows
               are allowed (via configuration) to be able to scheduled multiple times using the same
               Workflow ID.  This is handy when workflow IDs map to business entities.  In this case,
               you can use the Run ID to identify exactly which run of the workflow you're interested in.
@@ -211,11 +211,11 @@
         </mediaLink>
         <para>
           The diagram above depicts how these components fit together.  The two <legacyBold>RED</legacyBold>
-          boxes show the Cadence Cluster (one or more Cadence server instances) along with its backing database.
+          boxes show the Temporal Cluster (one or more Temporal server instances) along with its backing database.
           You'll need to deploy and configure these as outlined here:
           <externalLink>
-            <linkText>Cadence Deployment</linkText>
-            <linkUri>https://github.com/uber/cadence/tree/master/docker</linkUri>
+            <linkText>Temporal Deployment</linkText>
+            <linkUri>https://github.com/uber/Temporal/tree/master/docker</linkUri>
           </externalLink>
         </para>
         <para>
@@ -227,14 +227,14 @@
         <list class="ordered">
           <listItem>
             <para>
-              Deploy and start the Cadence cluster along with its database.
+              Deploy and start the Temporal cluster along with its database.
             </para>
           </listItem>
           <listItem>
             <para>
               Author your workflows and activities as a deployable process.  This is typically just a
               .NET Console application that runs on its own or perhaps as a Docker image in a Kubernetes
-              cluster.  These workers will register their workflow and activity implementations with Cadence
+              cluster.  These workers will register their workflow and activity implementations with Temporal
               under a task list (<legacyBold>Acme-PROD</legacyBold> in this case) to isolate these registrations
               from other cluster users.
             </para>
@@ -248,7 +248,7 @@
           <listItem>
             <para>
             Once one or more workers have registered their workflow/activity implementations and started,
-            the Cadence cluster will be ready to schedule workflow and activity executions on them.
+            the Temporal cluster will be ready to schedule workflow and activity executions on them.
             </para>
           </listItem>
           <listItem>
@@ -261,19 +261,19 @@
           <listItem>
             <para>
               Let's say the application needs to send an email.  The application will need to connect
-              to the Cadence cluster with the <legacyBold>Acme-PROD</legacyBold> task list and invoke
+              to the Temporal cluster with the <legacyBold>Acme-PROD</legacyBold> task list and invoke
               the <legacyBold>Send()</legacyBold> workflow, passing the target address, subject, message,
               and such.
             </para>
           </listItem>
           <listItem>
             <para>
-              Cadence receives the workflow call and persists it to the database.
+              Temporal receives the workflow call and persists it to the database.
             </para>
           </listItem>
           <listItem>
             <para>
-              Cadence then looks for any workers that have registered the workflow implementation.
+              Temporal then looks for any workers that have registered the workflow implementation.
               It chooses one and invokes the workflow there.
             </para>
           </listItem>
@@ -292,7 +292,7 @@
           </listItem>
           <listItem>
             <para>
-              Cadence receives the <legacyBold>Send()</legacyBold> activity call, persists it to the database
+              Temporal receives the <legacyBold>Send()</legacyBold> activity call, persists it to the database
               and then looks for any workers that have registered the activity, chooses one and invokes the
               activity there.  Activity implementations work essentially the same as workflows: an activity
               class will be instantiated and its entry point method will be called.
@@ -300,14 +300,14 @@
           </listItem>
           <listItem>
             <para>
-              The activity sends the message and returns any results to Cadence.  Cadence server persists
+              The activity sends the message and returns any results to Temporal.  Temporal server persists
               the result into the workflow history and then returns the reslt to the workflow.
             </para>
           </listItem>
           <listItem>
             <para>
-              Cadence server returns the activity result to the workflow when then returns its result
-              back to Cadence which records it to the database and then returns the result back to
+              Temporal server returns the activity result to the workflow when then returns its result
+              back to Temporal which records it to the database and then returns the result back to
               the original calling application.
             </para>
           </listItem>
@@ -317,25 +317,25 @@
 
     <relatedTopics>
       <externalLink>
-        <linkText>Cadence: The Only Workflow Platform You'll Ever Need</linkText>
+        <linkText>Temporal: The Only Workflow Platform You'll Ever Need</linkText>
         <linkUri>https://www.youtube.com/watch?v=llmsBGKOuWI</linkUri>
       </externalLink>
       <externalLink>
-        <linkText>.NET Cadence GitHub Repository</linkText>
-        <linkUri>https://github.com/nforgeio/neonKUBE/tree/master/Lib/Neon.Cadence</linkUri>
+        <linkText>.NET Temporal GitHub Repository</linkText>
+        <linkUri>https://github.com/nforgeio/neonKUBE/tree/master/Lib/Neon.Temporal</linkUri>
       </externalLink>
-      <codeEntityReference qualifyHint="false">N:Neon.Cadence</codeEntityReference>
+      <codeEntityReference qualifyHint="false">N:Neon.Temporal</codeEntityReference>
       <externalLink>
-        <linkText>.NET Cadence Open Issues</linkText>
-        <linkUri>https://github.com/nforgeio/neonKUBE/issues?q=is%3Aopen+is%3Aissue+label%3Acadence</linkUri>
-      </externalLink>
-      <externalLink>
-        <linkText>.NET Cadence Samples</linkText>
-        <linkUri>https://github.com/nforgeio/cadence-samples</linkUri>
+        <linkText>.NET Temporal Open Issues</linkText>
+        <linkUri>https://github.com/nforgeio/neonKUBE/issues?q=is%3Aopen+is%3Aissue+label%3ATemporal</linkUri>
       </externalLink>
       <externalLink>
-        <linkText>Uber Cadence</linkText>
-        <linkUri>https://cadenceworkflow.io/docs/</linkUri>
+        <linkText>.NET Temporal Samples</linkText>
+        <linkUri>https://github.com/nforgeio/Temporal-samples</linkUri>
+      </externalLink>
+      <externalLink>
+        <linkText>Uber Temporal</linkText>
+        <linkUri>https://Temporalworkflow.io/docs/</linkUri>
       </externalLink>
     </relatedTopics>
   </developerConceptualDocument>

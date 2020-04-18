@@ -23,10 +23,10 @@ using System.Reflection;
 
 using Neon.Common;
 
-namespace Neon.Xunit.Cadence
+namespace Neon.Xunit.Temporal
 {
     /// <summary>
-    /// This namespace includes the Cadence workflow Xunit test fixture.
+    /// This namespace includes the Temporal workflow Xunit test fixture.
     /// </summary>
     [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NamespaceDoc.cs
+// FILE:	    Program.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -17,19 +17,26 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.Reflection;
+using System.IO;
+using System.Text;
+using System.Threading.Tasks;
 
-using Neon.Common;
-
-namespace Neon.Xunit.Cadence
+namespace Neon.Xunit.Temporal
 {
     /// <summary>
-    /// This namespace includes the Cadence workflow Xunit test fixture.
+    /// We apparently need a main program entry when building with the 
+    /// <b>Microsoft.NET.Sdk.Web</b> SDK.  We'll fake one here.
     /// </summary>
-    [System.Runtime.CompilerServices.CompilerGenerated]
-    class NamespaceDoc
+    internal static class Program
     {
+        /// <summary>
+        /// Fake program entry point.
+        /// </summary>
+        /// <param name="args">Command line arguments.</param>
+        /// <returns>The exit code.</returns>
+        public static int Main(string[] args)
+        {
+            return 0;
+        }
     }
 }

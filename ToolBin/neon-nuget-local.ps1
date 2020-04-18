@@ -79,6 +79,7 @@ SetVersion Neon.Xunit
 SetVersion Neon.Xunit.Cadence
 SetVersion Neon.Xunit.Couchbase
 SetVersion Neon.Xunit.Kube
+SetVersion Neon.Xunit.Temporal
 
 # Build and publish the projects.
 
@@ -108,6 +109,7 @@ Publish Neon.Xunit
 Publish Neon.Xunit.Cadence
 Publish Neon.Xunit.Couchbase
 Publish Neon.Xunit.Kube
+Publish Neon.Xunit.Temporal
 
 # Remove the generated standard nuget packages and replace them with the
 # packages including symbols and source code.
