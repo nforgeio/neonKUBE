@@ -18,7 +18,7 @@
 # This script builds the [cadence-proxy] GOLANG executables and writes
 # them to: $NF_BUILD.
 #
-# USAGE: powershell -file build-cadence.ps1
+# USAGE: powershell -file build-cadence-proxy.ps1
 
 $env:GOPATH   = "$env:NF_ROOT\Go"
 $buildPath    = "$env:NF_BUILD"

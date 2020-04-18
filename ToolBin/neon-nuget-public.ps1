@@ -92,12 +92,14 @@ SetVersion Neon.Kube.XenServer
 SetVersion Neon.ModelGen
 SetVersion Neon.Nats
 SetVersion Neon.SSH.NET
+SetVersion Neon.Temporal
 SetVersion Neon.Web
 SetVersion Neon.XenServer
 SetVersion Neon.Xunit
 SetVersion Neon.Xunit.Cadence
 SetVersion Neon.Xunit.Couchbase
 SetVersion Neon.Xunit.Kube
+SetVersion Neon.Xunit.Temporal
 
 # Build and publish the projects.
 
@@ -120,11 +122,13 @@ Publish Neon.Kube.XenServer
 Publish Neon.ModelGen
 Publish Neon.Nats
 Publish Neon.SSH.NET
+Publish Neon.Temporal
 Publish Neon.Web
 Publish Neon.XenServer
 Publish Neon.Xunit
 Publish Neon.Xunit.Cadence
 Publish Neon.Xunit.Couchbase
 Publish Neon.Xunit.Kube
+Publish Neon.Xunit.Temporal
 
 pause

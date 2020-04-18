@@ -8,7 +8,7 @@
     <introduction>
       <para>
         The <legacyBold>Neon.Cadence</legacyBold> class library is built for NETStandard 2.0
-        and is capable of connecting to an
+        and is capable of connecting to a
         <externalLink>
           <linkText>Uber Cadence</linkText>
           <linkUri>https://cadenceworkflow.io/docs/</linkUri>
@@ -33,7 +33,7 @@
           through multi-step build hoops.
         </para>
         <para>
-          <legacyBold>Neon.Cadence</legacyBold> combined with Uber Cadence lets you implement workflows in
+          <legacyBold>Neon.Cadence</legacyBold> combined with Cadence Server lets you implement workflows in
           any supported .NET language with little friction.  You can even set breakpoints and debug your
           workflows directly in Visual Studio.
         </para>

@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the Cadence test images with Cassandra and Cadence server 
+# Builds the Cadence Server test images including Cassandra 
 # and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.

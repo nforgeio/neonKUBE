@@ -38,7 +38,7 @@ using Neon.Xunit.Cadence;
 using Newtonsoft.Json;
 using Xunit;
 
-namespace TestCadence
+namespace TestTemporal
 {
     public class Test_SignalChecks : IClassFixture<CadenceFixture>, IDisposable
     {

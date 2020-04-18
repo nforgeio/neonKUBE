@@ -38,7 +38,7 @@ using Newtonsoft.Json;
 using Test.Neon.Models;
 using Xunit;
 
-namespace TestCadence
+namespace TestTemporal
 {
     public partial class Test_Messages
     {

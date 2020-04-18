@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Lib\Neon.Common\Neon.Common.csproj" />
+    <ProjectReference Include="..\..\..\Lib\Neon.Temporal\Neon.Temporal.csproj" />
+    <ProjectReference Include="..\..\..\Lib\Neon.Xunit.Temporal\Neon.Xunit.Temporal.csproj" />
+    <ProjectReference Include="..\..\..\Lib\Neon.Xunit\Neon.Xunit.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the cluster-manager images and pushes them to Docker Hub.
+# Builds the test-cadence images and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #

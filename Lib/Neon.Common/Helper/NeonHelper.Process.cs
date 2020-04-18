@@ -695,8 +695,11 @@ namespace Neon.Common
         /// parameter will not be killed in this case.
         /// </note>
         /// </remarks>
-        public static async Task<ExecuteResponse> ExecuteCaptureAsync(string path, object[] args,
-                                                                    TimeSpan? timeout = null, Process process = null)
+        public static async Task<ExecuteResponse> ExecuteCaptureAsync(
+            string      path, 
+            object[]    args,
+            TimeSpan?   timeout = null, 
+            Process     process = null)
         {
             await SyncContext.ClearAsync;
 
@@ -729,8 +732,11 @@ namespace Neon.Common
         /// parameter will not be killed in this case.
         /// </note>
         /// </remarks>
-        public static async Task<ExecuteResponse> ExecuteCaptureAsync(string path, string args, 
-                                                                    TimeSpan? timeout = null, Process process = null)
+        public static async Task<ExecuteResponse> ExecuteCaptureAsync(
+            string      path, 
+            string      args, 
+            TimeSpan?   timeout = null, 
+            Process     process = null)
         {
             await SyncContext.ClearAsync;
 

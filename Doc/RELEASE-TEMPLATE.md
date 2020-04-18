@@ -12,7 +12,12 @@ This is a full Neon release intended for general consumption.  Note that some pa
   <tr>
     <td>Cadence samples:</td>
     <td><a href="https://github.com/nforgeio/cadence-samples">https://github.com/nforgeio/cadence-samples</a></td>
-  </tr></table>
+  </tr>
+  <tr>
+    <td>Temporal samples:</td>
+    <td><a href="https://github.com/nforgeio/temporal-samples">https://github.com/nforgeio/temporal-samples</a></td>
+  </tr>
+</table>
 
 ## Highlights:
 
@@ -72,6 +77,15 @@ This package extends the [NATS Scalabable Messaging Platform](https://nats.io/),
 ### <img src="https://doc.neonkube.com/media/release.png"/> Neon.SSH.NET
 
 This is a semi-clone of the [https://github.com/sshnet/SSH.NET](>https://github.com/sshnet/SSH.NET) project which hasn't been supported for a while.  This fixes this issue [#515: Bugfix for "scp: error: unexpected filename](https://github.com/sshnet/SSH.NET/pull/515) that was preventing us from connecting to modern Linux distributions.
+
+**Changes:** No significant changes for this release.
+
+### <img src="https://doc.neonkube.com/media/preview.png"/> Neon.Temporal
+
+This package provides a .NET client for the [Temporal](https://docs.temporal.io/) workflow platform.  This is still a work in progress.
+
+You can get started: [here](https://doc.neonkube.com/Neon.Temporal-Overview.htm)
+Follow open issues: [here](https://github.com/nforgeio/neonKUBE/labels/temporal)
 
 **Changes:** No significant changes for this release.
 

@@ -15,14 +15,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the cluster cadence-dev images.
+# Builds the cadence-dev Cadence Server test images.
 #
 # Usage: powershell -file build.ps1 REGISTRY VERSION GO-VERSION TAG 
 
 param 
 (
 	[parameter(Mandatory=$true,Position=1)][string] $registry,
-	[parameter(Mandatory=$true,Position=2)][string] $version,       # Cadence version
+	[parameter(Mandatory=$true,Position=2)][string] $version,       # Cadence server version
 	[parameter(Mandatory=$true,Position=3)][string] $goVersion,     # Go version
 	[parameter(Mandatory=$true,Position=4)][string] $uiVersion,     # Cadence ui version
 	[parameter(Mandatory=$true,Position=5)][string] $tag

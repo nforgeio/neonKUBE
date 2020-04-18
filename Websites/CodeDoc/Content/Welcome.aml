@@ -97,18 +97,6 @@
       </content>
     </section>
 
-    <section address="Neon.Common">
-      <title>Neon.Common</title>
-      <content>
-        <para>
-          <mediaLinkInline><image xlink:href="NETStandard2.0"/></mediaLinkInline> This package includes 
-          common code used by the other packages as well as classes that may have direct value for your
-          projects.  This package is designed to be relatively small and is compatible with all .NET 
-          enviromments including Xamarin applications.
-        </para>
-      </content>
-    </section>
-
     <section address="Neon.Cadence">
       <title>Neon.Cadence</title>
       <content>
@@ -123,12 +111,24 @@
         <para>
           Cadence is a superb workflow engine designed for scale and also for developers
           who enjoy spending their time writing code rather than messing with workflow
-          editing software or complex build processes.  The <legacyBold>Neon.Cadence</legacyBold>
+          editing software or complex build workflows.  The <legacyBold>Neon.Cadence</legacyBold>
           client combined with the <legacyBold>Uber Cadence Server</legacyBold>, you'll be
           able to author complex workflows in your favorite .NET language.
         </para>
         <para>
           <legacyBold>Neon.Cadence</legacyBold> is supported on 64-bit computers running Windows, OS/X, or Linux.
+        </para>
+      </content>
+    </section>
+
+    <section address="Neon.Common">
+      <title>Neon.Common</title>
+      <content>
+        <para>
+          <mediaLinkInline><image xlink:href="NETStandard2.0"/></mediaLinkInline> This package includes 
+          common code used by the other packages as well as classes that may have direct value for your
+          projects.  This package is designed to be relatively small and is compatible with all .NET 
+          enviromments including Xamarin applications.
         </para>
       </content>
     </section>
@@ -246,6 +246,30 @@
           repo seems to have gone inactive so we cloned this and hacked a fix to solve our
           immediate problem.  We didn't clone unit tests and we'd rather not sign-on to maintain
           this long-term, but feel free to use this as you wish.
+        </para>
+      </content>
+    </section>
+
+    <section address="Neon.Temporal">
+      <title>Neon.Temporal</title>
+      <content>
+        <para>
+          <mediaLinkInline><image xlink:href="NETStandard2.0"/></mediaLinkInline> This package includes
+          a .NET compatible client for the
+          <externalLink>
+            <linkText>Uber Cadence</linkText>
+            <linkUri>https://docs.temporal.io/</linkUri>
+          </externalLink> workflow engine.
+        </para>
+        <para>
+          Temporal is a superb workflow engine designed for scale and also for developers
+          who enjoy spending their time writing code rather than messing with workflow
+          editing software or complex build workflows.  The <legacyBold>Neon.Temporal</legacyBold>
+          client combined with the <legacyBold>Temporal Server</legacyBold>, you'll be
+          able to author complex workflows in your favorite .NET language.
+        </para>
+        <para>
+          <legacyBold>Neon.Temporal</legacyBold> is supported on 64-bit computers running Windows, OS/X, or Linux.
         </para>
       </content>
     </section>

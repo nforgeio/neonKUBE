@@ -41,14 +41,14 @@ using Neon.Xunit.Cadence;
 using Newtonsoft.Json;
 using Xunit;
 
-namespace TestCadence
+namespace TestTemporal
 {
     public partial class Test_EndToEnd
     {
         // IMPLEMENTATION NOTE:
         // --------------------
         //
-        // These tests launch the [wf-args.exe] GOLANG test executable
+        // These tests launch the [cwf-args.exe] GOLANG test executable
         // which implements three workflows and activities that accept
         // varying numbers of arguments:
         // 
@@ -60,9 +60,9 @@ namespace TestCadence
         //      OneArgActivity  - (1 string arg)    returns "Hello " + arg + "!"
         //      TwoArgsActivity - (2 string args)   returns "Hello " + arg1 + " & " + arg2 + "!"
         // 
-        // [wf-args.exe] is built by the solution and will be located at:
+        // [cwf-args.exe] is built by the solution and will be located at:
         //
-        //      %NF_ROOT%\Build\go-test\wf-args.exe
+        //      %NF_ROOT%\Build\go-test\cadence\cwf-args.exe
         //
         // We need to verify that the .NET client can interop with a workflow
         // written in GOLANG and presumably with workflows written in other 
@@ -75,10 +75,10 @@ namespace TestCadence
 
 
         /// <summary>
-        /// Handles the launching and termination of the GOLANG [wf-args.exe]
+        /// Handles the launching and termination of the GOLANG [cwf-args.exe]
         /// workflow/activity worker.
         /// </summary>
-        private class WfArgsWorker : IDisposable
+        private class CwfArgsWorker : IDisposable
         {
             private Task<ExecuteResponse>   workerTask;
             private string                  readyFile;
@@ -87,10 +87,10 @@ namespace TestCadence
             /// <summary>
             /// Starts the worker application.
             /// </summary>
-            public WfArgsWorker()
+            public CwfArgsWorker()
             {
-                var goTestDir     = Path.Combine(Environment.GetEnvironmentVariable("NF_BUILD"), "go-test");
-                var workerExePath = Path.Combine(goTestDir, "wf-args.exe");
+                var goTestDir     = Path.Combine(Environment.GetEnvironmentVariable("NF_BUILD"), "go-test", "cadence");
+                var workerExePath = Path.Combine(goTestDir, "cwf-args.exe");
 
                 // The worker app polls for the existance of a temporary stop file and
                 // exits when one is created.
@@ -108,7 +108,7 @@ namespace TestCadence
                     {
                         $"-config={Path.Combine(goTestDir, "config.yaml")}",
                         $"-domain={CadenceFixture.DefaultDomain}", 
-                        $"-tasklist={CadenceTestHelper.TaskList_WfArgs}", 
+                        $"-tasklist={CadenceTestHelper.TaskList_CwfArgs}", 
                         $"-readyfile={readyFile}",
                         $"-stopfile={stopFile}"
                     });
@@ -126,15 +126,15 @@ namespace TestCadence
             {
                 if (workerTask == null)
                 {
-                    throw new ObjectDisposedException(nameof(WfArgsWorker));
+                    throw new ObjectDisposedException(nameof(CwfArgsWorker));
                 }
 
                 File.WriteAllText(stopFile, "STOP");
 
                 var result = workerTask.Result;
 
-                // $debug(jefflill): DELETE THIS!
-                // File.WriteAllText(@"C:\Temp\test.log", result.AllText);
+                 //$debug(jefflill): DELETE THIS!
+                 File.WriteAllText(@"C:\Temp\test.log", result.AllText);
 
                 workerTask = null;
 
@@ -152,7 +152,7 @@ namespace TestCadence
             // verify that we can execute a GOLANG workflows using 
             // untyped stubs.
 
-            using (new WfArgsWorker())
+            using (new CwfArgsWorker())
             {
                 //-----------------------------------------
                 // Zero args:
@@ -160,7 +160,7 @@ namespace TestCadence
                 var options = new WorkflowOptions()
                 {
                     WorkflowId = "NoArgs-" + Guid.NewGuid().ToString("d"),
-                    TaskList = CadenceTestHelper.TaskList_WfArgs
+                    TaskList = CadenceTestHelper.TaskList_CwfArgs
                 };
 
                 var stub = client.NewUntypedWorkflowStub("main.NoArgsWorkflow", options);
@@ -174,7 +174,7 @@ namespace TestCadence
                 options = new WorkflowOptions()
                 {
                     WorkflowId = "OneArg-" + Guid.NewGuid().ToString("d"),
-                    TaskList   = CadenceTestHelper.TaskList_WfArgs
+                    TaskList   = CadenceTestHelper.TaskList_CwfArgs
                 };
 
                 stub      = client.NewUntypedWorkflowStub("main.OneArgWorkflow", options);
@@ -188,7 +188,7 @@ namespace TestCadence
                 options = new WorkflowOptions()
                 {
                     WorkflowId = "TwoArgs-" + Guid.NewGuid().ToString("d"),
-                    TaskList   = CadenceTestHelper.TaskList_WfArgs
+                    TaskList   = CadenceTestHelper.TaskList_CwfArgs
                 };
 
                 stub = client.NewUntypedWorkflowStub("main.TwoArgsWorkflow", options);
@@ -202,7 +202,7 @@ namespace TestCadence
                 options = new WorkflowOptions()
                 {
                     WorkflowId = "OneArrayArg-" + Guid.NewGuid().ToString("d"),
-                    TaskList   = CadenceTestHelper.TaskList_WfArgs
+                    TaskList   = CadenceTestHelper.TaskList_CwfArgs
                 };
 
                 stub = client.NewUntypedWorkflowStub("main.ArrayArgWorkflow", options);
@@ -218,7 +218,7 @@ namespace TestCadence
                 options = new WorkflowOptions()
                 {
                     WorkflowId = "OneArrayArgs-" + Guid.NewGuid().ToString("d"),
-                    TaskList = CadenceTestHelper.TaskList_WfArgs
+                    TaskList = CadenceTestHelper.TaskList_CwfArgs
                 };
 
                 stub = client.NewUntypedWorkflowStub("main.ArrayArgsWorkflow", options);

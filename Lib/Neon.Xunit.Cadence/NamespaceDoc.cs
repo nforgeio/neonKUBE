@@ -26,7 +26,7 @@ using Neon.Common;
 namespace Neon.Xunit.Cadence
 {
     /// <summary>
-    /// This namespace includes a Cadence Xunit test fixture.
+    /// This namespace includes the Cadence workflow Xunit test fixture.
     /// </summary>
     [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc

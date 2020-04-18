@@ -40,7 +40,7 @@ using Xunit;
 using Test.Neon.Models;
 using Newtonsoft.Json.Linq;
 
-namespace TestCadence
+namespace TestTemporal
 {
     /// <summary>
     /// Internal unit test helpers.
@@ -106,8 +106,8 @@ namespace TestCadence
 
         /// <summary>
         /// The Cadence task list to be use for interop testing against the
-        /// [wf-args.exe] worker written in GOLANG.
+        /// <b>cwf-args.exe</b> worker written in GOLANG.
         /// </summary>
-        public const string TaskList_WfArgs = "wf-args";
+        public const string TaskList_CwfArgs = "cwf-args";
     }
 }

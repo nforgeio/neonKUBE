@@ -273,6 +273,11 @@ namespace Neon.Net
         /// </summary>
         public const int Cadence = 7933;
 
+        /// <summary>
+        /// Temporal primary cluster port.
+        /// </summary>
+        public const int Temporal = 7933;   // $todo(jefflill): This is probably incorrect!
+
         private static Dictionary<string, int> wellKnownMap;
 
         private struct Map
