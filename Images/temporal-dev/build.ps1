@@ -15,25 +15,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the cadence-dev Cadence Server test images.
+# Builds the cadence-dev Temporal Server test images.
 #
 # Usage: powershell -file build.ps1 REGISTRY VERSION GO-VERSION TAG 
 
 param 
 (
 	[parameter(Mandatory=$true,Position=1)][string] $registry,
-	[parameter(Mandatory=$true,Position=2)][string] $version,       # Cadence server version
+	[parameter(Mandatory=$true,Position=2)][string] $version,       # Temporal server version
 	[parameter(Mandatory=$true,Position=3)][string] $goVersion,     # Go version
-	[parameter(Mandatory=$true,Position=4)][string] $uiVersion,     # Cadence ui version
+	[parameter(Mandatory=$true,Position=4)][string] $uiVersion,     # Temporal ui version
 	[parameter(Mandatory=$true,Position=5)][string] $tag
 )
 
 "   "
 "======================================="
-"* CADENCE-DEV:" + $tag
+"* TEMPORAL-DEV:" + $tag
 "* GO_VERSION:" + $goVersion
-"* CADENCE_VERSION:" + $version
-"* CADENCE_UI_VERSION:" + $uiVersion
+"* TEMPORAL_VERSION:" + $version
+"* TEMPORAL_UI_VERSION:" + $uiVersion
 "======================================="
 
 # Copy the common scripts.

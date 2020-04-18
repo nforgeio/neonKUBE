@@ -4,7 +4,7 @@ This image is intended to be run locally on a developer workstation or build/tes
 
 ## Image Tags
 
-These images are tagged with the Uber Cadence version version plus the image build date and the latest image will be tagged with `:latest`.
+These images are tagged with the Uber Cadence server version plus the image build date and the latest image will be tagged with `:latest`.
 
 ## Description
 

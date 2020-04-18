@@ -1,6 +1,6 @@
-﻿ #------------------------------------------------------------------------------
+﻿#------------------------------------------------------------------------------
 # FILE:         publish.ps1
-# CONTRIBUTOR:  John C Burns
+# CONTRIBUTOR:  Marcus Bowyer
 # COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,8 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the Cadence Server test images including Cassandra 
-# and pushes them to Docker Hub.
+# Builds the test-temporal images and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -24,7 +23,7 @@
 
 param 
 (
-	[switch]$allVersions = $false,
+	  [switch]$allVersions = $false,
     [switch]$nopush = $false
 )
 
@@ -39,19 +38,17 @@ function Build
 	param
 	(
 		[parameter(Mandatory=$true, Position=1)][string] $version,
-		[parameter(Mandatory=$true, Position=2)][string] $goVersion,
-		[parameter(Mandatory=$true, Position=3)][string] $uiVersion,
 		[switch]$latest = $false
 	)
 
-	$registry = GetRegistry "cadence-dev"
+	$registry = GetRegistry "test-cadence"
 	$date     = UtcDate
 	$branch   = GitBranch
 	$tag      = "$branch-$version"
 
 	# Build and publish the images.
 
-	. ./build.ps1 -registry $registry -version $version -goVersion $goVersion -uiVersion $uiVersion -tag $tag
+	. ./build.ps1 -registry $registry -tag $tag
     PushImage "${registry}:$tag"
 
 	if (IsRelease)
@@ -80,7 +77,6 @@ $noImagePush = $nopush
 
 if ($allVersions)
 {
-    Build v0.5.9 -goVersion 1.12.6 -uiVersion 3.3.1 -latest
 }
 
-Build v0.11.0 -goVersion 1.13.6 -uiVersion v3.12.0 -latest
+Build 0.0.1 -latest
