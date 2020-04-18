@@ -11,8 +11,8 @@ require (
 	gopkg.in/yaml.v2 v2.2.8
 )
 
-replace github.com/apache/thrift => github.com/apache/thrift v0.0.0-20190309152529-a9b748bb0e02
-
-replace github.com/opentracing/opentracing-go => github.com/opentracing/opentracing-go v1.1.0
-
-replace github.com/uber-go/mapdecode => github.com/uber-go/mapdecode v1.0.0
+replace (
+	github.com/apache/thrift => github.com/apache/thrift v0.0.0-20190309152529-a9b748bb0e02
+	github.com/opentracing/opentracing-go => github.com/opentracing/opentracing-go v1.1.0
+	github.com/uber-go/mapdecode => github.com/uber-go/mapdecode v1.0.0
+)
