@@ -276,7 +276,7 @@ namespace Neon.Net
         /// <summary>
         /// Temporal primary cluster port.
         /// </summary>
-        public const int Temporal = 7933;   // $todo(jefflill): This is probably incorrect!
+        public const int Temporal = 7233;
 
         private static Dictionary<string, int> wellKnownMap;
 
@@ -346,7 +346,8 @@ namespace Neon.Net
                 new Map("AMQP", AMQP),
                 new Map("RabbitMQAdmin", RabbitMQAdmin),
                 new Map("aptcacherng", AppCacherNg),
-                new Map("cadence", Cadence)
+                new Map("cadence", Cadence),
+                new Map("temporal", Temporal)
             };
 
         wellKnownMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);

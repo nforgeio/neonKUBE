@@ -32,7 +32,7 @@ namespace HelloWorld
             {
                 DefaultDomain = "my-domain",
                 CreateDomain  = true,
-                Servers       = new List<string>() { "temporal://localhost:7933" }
+                HostPort      = "localhost:7933"
             };
 
             using (var client = await TemporalClient.ConnectAsync(settings))

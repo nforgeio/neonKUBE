@@ -22,7 +22,7 @@ namespace Snippets_CrossPlatform
 
                 // Host/port for at least one of the Temporal cluster servers:
 
-                Servers = new List<string>() { "temporal://localhost:7933" }
+                HostPort = "localhost:7933"
             };
 
             using (var client = await TemporalClient.ConnectAsync(settings))

@@ -41,38 +41,30 @@ namespace Neon.Temporal
         /// <summary>
         /// Constructor.
         /// </summary>
-        public TemporalSettings()
+        /// <param name="hostPort">
+        /// Optionally specifies the target server host and port being connected.
+        /// Specifies the Temporal server host and port being connected.  This is typically formatted
+        /// as <b>host:port</b> where <b>host</b> is the IP address or hostname for the
+        /// Temporal server.  Alternatively, this can be formatted as <b>dns:///host:port</b>
+        /// to enable DNS round-robin lookups.  This defaults to <b>localhost:7233</b>.
+        /// </param>
+        public TemporalSettings(string hostPort = "localhost:7233")
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostPort), nameof(hostPort));
+
+            this.HostPort = hostPort;
         }
 
         /// <summary>
-        /// Constructs an instance with server URIs.
+        /// Specifies the Temporal server host and port being connected.  This is typically formatted
+        /// as <b>host:port</b> where <b>host</b> is the IP address or hostname for the
+        /// Temporal server.  Alternatively, this can be formatted as <b>dns:///host:port</b>
+        /// to enable DNS round-robin lookups.  This defaults to <b>localhost:7233</b>.
         /// </summary>
-        /// <param name="servers">Specifies one or more server URIs.</param>
-        public TemporalSettings(params string[] servers)
-        {
-            foreach (var server in servers)
-            {
-                if (!string.IsNullOrEmpty(server))
-                {
-                    this.Servers.Add(server);
-                }
-            }
-        }
-
-        /// <summary>
-        /// One or more Couchbase server URIs.
-        /// </summary>
-        /// <remarks>
-        /// You must specify the URI for at least one operating Couchbase node.  The Couchbase
-        /// client will use this to discover the remaining nodes.  It is a best practice to
-        /// specify multiple nodes in a clustered environment to avoid initial connection
-        /// problems if any single node is down.
-        /// </remarks>
-        [JsonProperty(PropertyName = "Servers", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "servers", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public List<string> Servers { get; set; } = new List<string>();
+        [JsonProperty(PropertyName = "HostPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "hostPort", ApplyNamingConventions = false)]
+        [DefaultValue("localhost:7233")]
+        public string HostPort { get; set; } = "localhost:7233";
 
         /// <summary>
         /// Optionally specifies the port where the client will listen for traffic from the 
@@ -85,7 +77,7 @@ namespace Neon.Temporal
         public int ListenPort { get; set; } = 0;
 
         /// <summary>
-        /// Specifies the default Temporal domain for this client.  This defaults to <c>null</c>.
+        /// Specifies the default Temporal domain for this client.  This defaults to <c>"default"</c>.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -94,14 +86,14 @@ namespace Neon.Temporal
         /// </para>
         /// <para>
         /// The default domain can be overridden for individual method calls by passing a value as the optional <b>domain</b>
-        /// paramater.  You can also leave this setting as <c>null</c> which will require that values be passed to
+        /// paramater.  You can also set this to <c>null</c> which will require that values be passed to
         /// the <b>domain</b> parameters.
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "DefaultDomain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "defaultDomain", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string DefaultDomain { get; set; }
+        [DefaultValue("default")]
+        public string DefaultDomain { get; set; } = "default";
 
         /// <summary>
         /// <para>
@@ -125,6 +117,16 @@ namespace Neon.Temporal
         [YamlMember(Alias = "createDomain", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool CreateDomain { get; set; } = false;
+
+        /// <summary>
+        /// Specifies the Temporal namespace for this client.  Temporal is a multi-tenant system
+        /// and namespaces can be used to isolate workflows between different tenants.
+        /// This defaults to <c>"default"</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Namespace", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "namespace", ApplyNamingConventions = false)]
+        [DefaultValue("default")]
+        public string Namespace { get; set; } = "default";
 
         /// <summary>
         /// Optionally specifies the maximum time the client should wait for synchronous 
@@ -521,38 +523,39 @@ namespace Neon.Temporal
         {
             return new TemporalSettings()
             {
-                ActivityHeartbeatTimeoutSeconds        = this.ActivityHeartbeatTimeoutSeconds,
-                ActivityScheduleToCloseTimeoutSeconds  = this.ActivityScheduleToCloseTimeoutSeconds,
-                ActivityScheduleToStartTimeoutSeconds  = this.ActivityScheduleToStartTimeoutSeconds,
-                ActivityStartToCloseTimeoutSeconds     = this.ActivityStartToCloseTimeoutSeconds,
-                BinaryFolder                           = this.BinaryFolder,
-                ClientIdentity                         = this.ClientIdentity,
-                ClientTimeoutSeconds                   = this.ClientTimeoutSeconds,
-                ConnectRetries                         = this.ConnectRetries,
-                ConnectRetryDelaySeconds               = this.ConnectRetryDelaySeconds,
-                CreateDomain                           = this.CreateDomain,
-                Debug                                  = this.Debug,
-                DebugDisableHandshakes                 = this.DebugDisableHandshakes,
-                DebugDisableHeartbeats                 = this.DebugDisableHeartbeats,
-                DebugHttpTimeout                       = this.DebugHttpTimeout,
-                DebugIgnoreHeartbeats                  = this.DebugIgnoreHeartbeats,
-                DebugIgnoreTimeouts                    = this.DebugIgnoreTimeouts,
-                DebugPrelaunched                       = this.DebugPrelaunched,
-                DefaultDomain                          = this.DefaultDomain,
-                HeartbeatIntervalSeconds               = this.HeartbeatIntervalSeconds,
-                HeartbeatTimeoutSeconds                = this.HeartbeatTimeoutSeconds,
-                ListenPort                             = this.ListenPort,
-                LogTemporal                             = this.LogTemporal,
-                LogTemporalProxy                        = this.LogTemporalProxy,
-                LogDuringReplay                        = this.LogDuringReplay,
-                LogLevel                               = this.LogLevel,
-                ProxyTimeoutSeconds                    = this.ProxyTimeoutSeconds,
-                SecurityToken                          = this.SecurityToken,
-                Servers                                = this.Servers,
-                WorkflowIdReusePolicy                  = this.WorkflowIdReusePolicy,
-                WorkflowScheduleToCloseTimeoutSeconds  = this.WorkflowScheduleToCloseTimeoutSeconds,
-                WorkflowScheduleToStartTimeoutSeconds  = this.WorkflowScheduleToStartTimeoutSeconds,
-                WorkflowDecisionTimeoutSeconds = this.WorkflowDecisionTimeoutSeconds
+                ActivityHeartbeatTimeoutSeconds       = this.ActivityHeartbeatTimeoutSeconds,
+                ActivityScheduleToCloseTimeoutSeconds = this.ActivityScheduleToCloseTimeoutSeconds,
+                ActivityScheduleToStartTimeoutSeconds = this.ActivityScheduleToStartTimeoutSeconds,
+                ActivityStartToCloseTimeoutSeconds    = this.ActivityStartToCloseTimeoutSeconds,
+                BinaryFolder                          = this.BinaryFolder,
+                ClientIdentity                        = this.ClientIdentity,
+                ClientTimeoutSeconds                  = this.ClientTimeoutSeconds,
+                ConnectRetries                        = this.ConnectRetries,
+                ConnectRetryDelaySeconds              = this.ConnectRetryDelaySeconds,
+                CreateDomain                          = this.CreateDomain,
+                Debug                                 = this.Debug,
+                DebugDisableHandshakes                = this.DebugDisableHandshakes,
+                DebugDisableHeartbeats                = this.DebugDisableHeartbeats,
+                DebugHttpTimeout                      = this.DebugHttpTimeout,
+                DebugIgnoreHeartbeats                 = this.DebugIgnoreHeartbeats,
+                DebugIgnoreTimeouts                   = this.DebugIgnoreTimeouts,
+                DebugPrelaunched                      = this.DebugPrelaunched,
+                DefaultDomain                         = this.DefaultDomain,
+                HeartbeatIntervalSeconds              = this.HeartbeatIntervalSeconds,
+                HeartbeatTimeoutSeconds               = this.HeartbeatTimeoutSeconds,
+                HostPort                              = this.HostPort,
+                ListenPort                            = this.ListenPort,
+                LogTemporal                           = this.LogTemporal,
+                LogTemporalProxy                      = this.LogTemporalProxy,
+                LogDuringReplay                       = this.LogDuringReplay,
+                LogLevel                              = this.LogLevel,
+                Namespace                             = this.Namespace,
+                ProxyTimeoutSeconds                   = this.ProxyTimeoutSeconds,
+                SecurityToken                         = this.SecurityToken,
+                WorkflowIdReusePolicy                 = this.WorkflowIdReusePolicy,
+                WorkflowScheduleToCloseTimeoutSeconds = this.WorkflowScheduleToCloseTimeoutSeconds,
+                WorkflowScheduleToStartTimeoutSeconds = this.WorkflowScheduleToStartTimeoutSeconds,
+                WorkflowDecisionTimeoutSeconds        = this.WorkflowDecisionTimeoutSeconds
             };
         }
     }

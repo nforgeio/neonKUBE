@@ -198,10 +198,11 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
-                Assert.Null(message.Endpoints);
+                Assert.Null(message.HostPort);
                 Assert.Null(message.Identity);
                 Assert.Null(message.Domain);
                 Assert.False(message.CreateDomain);
+                Assert.Null(message.Namespace);
                 Assert.Equal(TimeSpan.Zero, message.ClientTimeout);
                 Assert.Equal(0, message.Retries);
                 Assert.Equal(TimeSpan.Zero, message.RetryDelay);
@@ -210,20 +211,22 @@ namespace TestTemporal
 
                 message.ClientId = 444;
                 message.RequestId = 555;
-                message.Endpoints = "1.1.1.1:555,2.2.2.2:5555";
+                message.HostPort = "127.0.0.1:7233";
                 message.Identity = "my-identity";
                 message.ClientTimeout = TimeSpan.FromSeconds(30);
                 message.Domain = "my-domain";
                 message.CreateDomain = true;
+                message.Namespace = "my-namespace";
                 message.Retries = 3;
                 message.RetryDelay = TimeSpan.FromSeconds(2);
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
+                Assert.Equal("127.0.0.1:7233", message.HostPort);
                 Assert.Equal("my-identity", message.Identity);
                 Assert.Equal("my-domain", message.Domain);
                 Assert.True(message.CreateDomain);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal(3, message.Retries);
                 Assert.Equal(TimeSpan.FromSeconds(2), message.RetryDelay);
 
@@ -235,10 +238,11 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
+                Assert.Equal("127.0.0.1:7233", message.HostPort);
                 Assert.Equal("my-identity", message.Identity);
                 Assert.Equal(TimeSpan.FromSeconds(30), message.ClientTimeout);
                 Assert.Equal("my-domain", message.Domain);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.True(message.CreateDomain);
                 Assert.Equal(3, message.Retries);
                 Assert.Equal(TimeSpan.FromSeconds(2), message.RetryDelay);
@@ -249,10 +253,11 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
+                Assert.Equal("127.0.0.1:7233", message.HostPort);
                 Assert.Equal("my-identity", message.Identity);
                 Assert.Equal(TimeSpan.FromSeconds(30), message.ClientTimeout);
                 Assert.Equal("my-domain", message.Domain);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.True(message.CreateDomain);
                 Assert.Equal(3, message.Retries);
                 Assert.Equal(TimeSpan.FromSeconds(2), message.RetryDelay);
@@ -263,10 +268,11 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("1.1.1.1:555,2.2.2.2:5555", message.Endpoints);
+                Assert.Equal("127.0.0.1:7233", message.HostPort);
                 Assert.Equal("my-identity", message.Identity);
                 Assert.Equal(TimeSpan.FromSeconds(30), message.ClientTimeout);
                 Assert.Equal("my-domain", message.Domain);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.True(message.CreateDomain);
                 Assert.Equal(3, message.Retries);
                 Assert.Equal(TimeSpan.FromSeconds(2), message.RetryDelay);
