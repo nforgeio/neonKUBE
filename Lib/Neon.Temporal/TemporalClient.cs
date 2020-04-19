@@ -946,19 +946,10 @@ namespace Neon.Temporal
                     // Send the [ConnectRequest] to the [temporal-proxy] telling it
                     // how to connect to the Temporal cluster.
 
-                    var sbEndpoints = new StringBuilder();
-
-                    foreach (var serverUri in settings.Servers)
-                    {
-                        var uri = new Uri(serverUri, UriKind.Absolute);
-
-                        sbEndpoints.AppendWithSeparator($"{uri.Host}:{uri.Port}", ",");
-                    }
-
                     var connectRequest =
                         new ConnectRequest()
                         {
-                            Endpoints     = sbEndpoints.ToString(),
+                            HostPort      = settings.HostPort,
                             Identity      = settings.ClientIdentity,
                             ClientTimeout = TimeSpan.FromSeconds(30),
                             Domain        = settings.DefaultDomain,
@@ -1403,24 +1394,9 @@ namespace Neon.Temporal
             this.ClientId = Interlocked.Increment(ref nextClientId);
             this.Settings = settings;
 
-            if (settings.Servers == null || settings.Servers.Count == 0)
+            if (string.IsNullOrEmpty(settings.HostPort))
             {
-                throw new ConnectException("No Temporal servers were specified.");
-            }
-
-            foreach (var server in settings.Servers)
-            {
-                try
-                {
-                    if (server == null || !new Uri(server).IsAbsoluteUri)
-                    {
-                        throw new Exception();
-                    }
-                }
-                catch
-                {
-                    throw new ConnectException($"Invalid Temporal server URI: {server}");
-                }
+                throw new ConnectException("No Temporal server was specified.");
             }
 
             if (settings.DebugIgnoreTimeouts)

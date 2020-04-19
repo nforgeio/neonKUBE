@@ -45,19 +45,15 @@ namespace Neon.Temporal.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.ConnectReply;
 
         /// <summary>
-        /// <para>
-        /// The Temporal server network endpoints separated by commas.
-        /// These may include a DNS hostname or IP address with a
-        /// network port, formatted like:
-        /// </para>
-        /// <code>
-        /// my-server.nhive.io:5555,1.2.3.4:5555
-        /// </code>
+        /// Specifies the Temporal server host and port being connected.  This is typically formatted
+        /// as <b>host:port</b> where <b>host</b> is the IP address or hostname for the
+        /// Temporal server.  Alternatively, this can be formatted as <b>dns:///host:port</b>
+        /// to enable DNS round-robin lookups.  This defaults to <b>localhost:7233</b>.
         /// </summary>
-        public string Endpoints
+        public string HostPort
         {
-            get => GetStringProperty(PropertyNames.Endpoints);
-            set => SetStringProperty(PropertyNames.Endpoints, value);
+            get => GetStringProperty(PropertyNames.HostPort);
+            set => SetStringProperty(PropertyNames.HostPort, value);
         }
 
         /// <summary>
@@ -98,6 +94,15 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
+        /// The Temporal namespace to connect.
+        /// </summary>
+        public string Namespace
+        {
+            get => GetStringProperty(PropertyNames.Namespace);
+            set => SetStringProperty(PropertyNames.Namespace, value);
+        }
+
+        /// <summary>
         /// Specifies the number of time the client will attempt to connect
         /// to the Temporal cluster.
         /// </summary>
@@ -133,11 +138,12 @@ namespace Neon.Temporal.Internal
 
             var typedTarget = (ConnectRequest)target;
 
-            typedTarget.Endpoints     = this.Endpoints;
+            typedTarget.HostPort      = this.HostPort;
             typedTarget.Identity      = this.Identity;
             typedTarget.ClientTimeout = this.ClientTimeout;
             typedTarget.Domain        = this.Domain;
             typedTarget.CreateDomain  = this.CreateDomain;
+            typedTarget.Namespace     = this.Namespace;
             typedTarget.Retries       = this.Retries;
             typedTarget.RetryDelay    = this.RetryDelay;
         }

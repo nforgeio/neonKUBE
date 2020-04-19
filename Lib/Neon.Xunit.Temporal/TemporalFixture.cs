@@ -267,13 +267,11 @@ namespace Neon.Xunit.Temporal
 
                 settings = settings ?? new TemporalSettings()
                 {
+                    HostPort      = $"{GetHostInterface(hostInterface, forConnection: true)}:{NetworkPorts.Temporal}",
                     CreateDomain  = true,
                     DefaultDomain = defaultDomain,
                     LogLevel      = logLevel
                 };
-
-                settings.Servers.Clear();
-                settings.Servers.Add($"http://{GetHostInterface(hostInterface, forConnection: true)}:{NetworkPorts.Temporal}");
 
                 this.settings       = settings;
                 this.keepConnection = keepConnection;

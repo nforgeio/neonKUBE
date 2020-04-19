@@ -74,16 +74,16 @@ namespace Neon.Temporal.Internal
         public static PropertyNameUtf8 DomainInfoDescription { get; private set; }                     = new PropertyNameUtf8("DomainInfoDescription");
         public static PropertyNameUtf8 Duration { get; private set; }                                  = new PropertyNameUtf8("Duration");
         public static PropertyNameUtf8 EmitMetrics { get; private set; }                               = new PropertyNameUtf8("EmitMetrics");
-        public static PropertyNameUtf8 Endpoints { get; private set; }                                 = new PropertyNameUtf8("Endpoints");
         public static PropertyNameUtf8 Error { get; private set; }                                     = new PropertyNameUtf8("Error");
         public static PropertyNameUtf8 Execution { get; private set; }                                 = new PropertyNameUtf8("Execution");
         public static PropertyNameUtf8 ExecutionStartToCloseTimeout { get; private set; }              = new PropertyNameUtf8("ExecutionStartToCloseTimeout");
         public static PropertyNameUtf8 FailoverVersion { get; private set; }                           = new PropertyNameUtf8("FailoverVersion");
         public static PropertyNameUtf8 ForceReplay { get; private set; }                               = new PropertyNameUtf8("ForceReplay");
-        public static PropertyNameUtf8 FromTemporal { get; private set; }                               = new PropertyNameUtf8("FromTemporal");
+        public static PropertyNameUtf8 FromTemporal { get; private set; }                              = new PropertyNameUtf8("FromTemporal");
         public static PropertyNameUtf8 FutureOperationId { get; private set; }                         = new PropertyNameUtf8("FutureOperationId");
         public static PropertyNameUtf8 HasDetails { get; private set; }                                = new PropertyNameUtf8("HasDetails");
         public static PropertyNameUtf8 HasResult { get; private set; }                                 = new PropertyNameUtf8("HasResult");
+        public static PropertyNameUtf8 HostPort { get; private set; }                                  = new PropertyNameUtf8("HostPort");
         public static PropertyNameUtf8 Identity { get; private set; }                                  = new PropertyNameUtf8("Identity");
         public static PropertyNameUtf8 Info { get; private set; }                                      = new PropertyNameUtf8("Info");
         public static PropertyNameUtf8 IsCancellable { get; private set; }                             = new PropertyNameUtf8("IsCancellable");
@@ -101,6 +101,7 @@ namespace Neon.Temporal.Internal
         public static PropertyNameUtf8 MutableId { get; private set; }                                 = new PropertyNameUtf8("MutableId");
         public static PropertyNameUtf8 NextPageToken { get; private set; }                             = new PropertyNameUtf8("NextPageToken");
         public static PropertyNameUtf8 Name { get; private set; }                                      = new PropertyNameUtf8("Name");
+        public static PropertyNameUtf8 Namespace { get; private set; }                                 = new PropertyNameUtf8("Namespace");
         public static PropertyNameUtf8 NoBlock { get; private set; }                                   = new PropertyNameUtf8("NoBlock");
         public static PropertyNameUtf8 Options { get; private set; }                                   = new PropertyNameUtf8("Options");
         public static PropertyNameUtf8 OwnerEmail { get; private set; }                                = new PropertyNameUtf8("OwnerEmail");

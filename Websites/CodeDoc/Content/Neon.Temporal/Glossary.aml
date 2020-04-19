@@ -114,51 +114,6 @@
           <row>
             <entry>
               <para>
-                <legacyBold>TaskList</legacyBold>
-              </para>
-            </entry>
-            <entry>
-              <para>
-                The workflow and activities you develop will need to be hosted in a
-                workflow service that you'll write.  This can be a simple as a Console
-                application that registers the workflows and activities it implements
-                with the Temporal cluster.  You'll need to specify the domain where the
-                workflows and activities will be hosted by Temporal and also a
-                <legacyBold>task list</legacyBold> string.
-              </para>
-              <para>
-                Temporal uses the task list you specify to identify all instances of
-                a workflow service running such that work can be distributed to across
-                these services.
-              </para>
-              <alert class="important">
-                <para>
-                  All instances of your workflow should implement <legacyBold>exact same workflows and activities</legacyBold>
-                  because Temporal doesn't track exactly which workflows and activities are exposed
-                  by each workflow service instance.  Temporal assumes that all service instances
-                  registered with same task list can execute any of the registered workflows
-                  and activities.
-                </para>
-                <para>
-                  For example, say you have workflow-A and workflow-B running on server-0 and then workflow-B
-                  and workflow-C running on server-1, and both of these registered with task lisk MYTASKS.
-                  Then you execute workflow A.  Temporal may attempt execute it on server-1 but this will
-                  fail, because workflow-A isn't implemented there.  Temporal is smart and will retry by
-                  selecting another worker registered for MYTASKS until it finds a worker that can handle
-                  it (or the workflow times out).
-                </para>
-                <para>
-                  So Temporal will typically recover and execte the workflow or activity but recognize that
-                  there may be some delay.  You should also keep this in the back of your mind when you're
-                  thinking about how workflow services should be upgraded (e.g. all at once, rolling update,...)
-                </para>
-              </alert>
-            </entry>
-          </row>
-
-          <row>
-            <entry>
-              <para>
                 <legacyBold>Event History</legacyBold>
               </para>
             </entry>
@@ -169,6 +124,31 @@
                 cluster database.  This is the secret that allows developers
                 to author workflows as basic code when under the covers, the
                 workflow is essentially a state machine.
+              </para>
+            </entry>
+          </row>
+
+          <row>
+            <entry>
+              <para>
+                <legacyBold>Namespace</legacyBold>
+              </para>
+            </entry>
+            <entry>
+              <para>
+                Temporal is is a multi tenant service. The unit of isolation is called a namespace. 
+                Each namespace acts as a namespace for task list names as well as workflow Ids.
+                For example, when a workflow is started, it is started in a specific namespace. 
+                Temporal guarantees a unique workflow Id within a namespace, and supports running
+                workflow executions to use the same workflow Id if they are in different namespaces.
+              </para>
+              <para>
+                Various configuration options like retention period or archival destination are
+                configured per namespace as well through a special CRUD API or through the Temporal CLI.
+                In the multi-cluster deployment, namespace is a unit of fail-over. 
+                Each namespace can only be active on a single Temporal cluster at a time. 
+                However, different namespaces can be active in different clusters and can fail-over
+                independently.
               </para>
             </entry>
           </row>
@@ -227,6 +207,51 @@
                 Workflow signal methods will typically use a <codeEntityReference qualifyHint="false">T:Neon.Temporal.WorkflowQueue`1</codeEntityReference>
                 to interact with the workflow decision logic.
               </para>
+            </entry>
+          </row>
+
+          <row>
+            <entry>
+              <para>
+                <legacyBold>TaskList</legacyBold>
+              </para>
+            </entry>
+            <entry>
+              <para>
+                The workflow and activities you develop will need to be hosted in a
+                workflow service that you'll write.  This can be a simple as a Console
+                application that registers the workflows and activities it implements
+                with the Temporal cluster.  You'll need to specify the domain where the
+                workflows and activities will be hosted by Temporal and also a
+                <legacyBold>task list</legacyBold> string.
+              </para>
+              <para>
+                Temporal uses the task list you specify to identify all instances of
+                a workflow service running such that work can be distributed to across
+                these services.
+              </para>
+              <alert class="important">
+                <para>
+                  All instances of your workflow should implement <legacyBold>exact same workflows and activities</legacyBold>
+                  because Temporal doesn't track exactly which workflows and activities are exposed
+                  by each workflow service instance.  Temporal assumes that all service instances
+                  registered with same task list can execute any of the registered workflows
+                  and activities.
+                </para>
+                <para>
+                  For example, say you have workflow-A and workflow-B running on server-0 and then workflow-B
+                  and workflow-C running on server-1, and both of these registered with task lisk MYTASKS.
+                  Then you execute workflow A.  Temporal may attempt execute it on server-1 but this will
+                  fail, because workflow-A isn't implemented there.  Temporal is smart and will retry by
+                  selecting another worker registered for MYTASKS until it finds a worker that can handle
+                  it (or the workflow times out).
+                </para>
+                <para>
+                  So Temporal will typically recover and execte the workflow or activity but recognize that
+                  there may be some delay.  You should also keep this in the back of your mind when you're
+                  thinking about how workflow services should be upgraded (e.g. all at once, rolling update,...)
+                </para>
+              </alert>
             </entry>
           </row>
 

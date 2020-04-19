@@ -61,10 +61,10 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// One or more Couchbase server URIs.
+        /// One or more Cadence server URIs.
         /// </summary>
         /// <remarks>
-        /// You must specify the URI for at least one operating Couchbase node.  The Couchbase
+        /// You must specify the URI for at least one operating Cadence node.  The Cadence
         /// client will use this to discover the remaining nodes.  It is a best practice to
         /// specify multiple nodes in a clustered environment to avoid initial connection
         /// problems if any single node is down.
