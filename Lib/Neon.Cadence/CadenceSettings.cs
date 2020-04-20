@@ -94,7 +94,7 @@ namespace Neon.Cadence
         /// </para>
         /// <para>
         /// The default domain can be overridden for individual method calls by passing a value as the optional <b>domain</b>
-        /// paramater.  You can also leave this setting as <c>null</c> which will require that values be passed to
+        /// parameter.  You can also leave this setting as <c>null</c> which will require that values be passed to
         /// the <b>domain</b> parameters.
         /// </para>
         /// </remarks>

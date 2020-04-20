@@ -102,7 +102,7 @@ namespace Neon.Cadence
             /// <summary>
             /// The activity method parameter types.
             /// </summary>
-            public Type[] ActivityMethodParamaterTypes { get; set; }
+            public Type[] ActivityMethodParameterTypes { get; set; }
         }
 
         //---------------------------------------------------------------------
@@ -265,7 +265,7 @@ namespace Neon.Cadence
                                 ActivityType                 = activityType,
                                 ActivityConstructor          = constructor,
                                 ActivityMethod               = method,
-                                ActivityMethodParamaterTypes = method.GetParameterTypes()
+                                ActivityMethodParameterTypes = method.GetParameterTypes()
                             };
                     }
                 }
