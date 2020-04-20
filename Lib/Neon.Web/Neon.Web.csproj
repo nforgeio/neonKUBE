@@ -21,7 +21,7 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageTags>web</PackageTags>
     <Configurations>Debug;Release;CodeDoc</Configurations>
-    <PackageIconUrl>https://doc.neonkube.com/images/nuget-icon.png</PackageIconUrl>
+    <PackageIcon>nuget-icon.png</PackageIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -58,10 +58,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\LICENSE">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
+    <None Include="..\nuget-icon.png" Pack="true" PackagePath=""/>
+    <None Include="..\..\LICENSE" Pack="True" PackagePath=""/>
   </ItemGroup>
 
 </Project>

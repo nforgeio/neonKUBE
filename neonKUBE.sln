@@ -31,6 +31,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{4442F1
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lib", "Lib", "{DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}"
+	ProjectSection(SolutionItems) = preProject
+		Lib\nuget-icon.png = Lib\nuget-icon.png
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Common", "Lib\Neon.Common\Neon.Common.csproj", "{8D3BD5BA-AAF6-4233-879F-69A63EB6CDA1}"
 EndProject
