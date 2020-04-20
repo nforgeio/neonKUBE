@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Temporal</RootNamespace>
-    <Version>2.0.0</Version>
+    <Version>2.0.0-preview</Version>
     <Company>neonFORGE, LLC</Company>
     <Authors>Jeff Lill, John C Burns</Authors>
     <Description>.NET client for Uber Temporal.</Description>
@@ -23,7 +23,7 @@
     <AssemblyName>Neon.Temporal</AssemblyName>
     <PreserveCompilationContext>true</PreserveCompilationContext>
     <Configurations>Debug;Release;CodeDoc</Configurations>
-    <PackageIconUrl>https://doc.neonkube.com/images/nuget-icon.png</PackageIconUrl>
+    <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageTags>temporal cadence workflow agent</PackageTags>
   </PropertyGroup>
 
@@ -67,10 +67,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\LICENSE">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
+    <None Include="..\nuget-icon.png" Pack="true" PackagePath=""/>
+    <None Include="..\..\LICENSE" Pack="True" PackagePath=""/>
   </ItemGroup>
 
   <ItemGroup>
