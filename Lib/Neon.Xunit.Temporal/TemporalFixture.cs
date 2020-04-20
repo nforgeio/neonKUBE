@@ -124,7 +124,7 @@ namespace Neon.Xunit.Temporal
         /// <remarks>
         /// <note>
         /// Some of the <paramref name="settings"/> properties will be ignored including 
-        /// <see cref="TemporalSettings.Servers"/>.  This will be replaced by the local
+        /// <see cref="TemporalSettings.HostPort"/>.  This will be replaced by the local
         /// endpoint for the Temporal container.  Also, the fixture will connect to the 
         /// <b>default</b> Temporal domain by default (unless another is specified).
         /// </note>
