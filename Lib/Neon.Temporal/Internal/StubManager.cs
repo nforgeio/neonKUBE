@@ -592,7 +592,7 @@ namespace Neon.Temporal.Internal
             sbSource.AppendLine($"        //-----------------------------------------------------------------");
             sbSource.AppendLine($"        // Implementation");
             sbSource.AppendLine();
-            sbSource.AppendLine($"        private TemporalClient         client;");
+            sbSource.AppendLine($"        private TemporalClient        client;");
             sbSource.AppendLine($"        private IDataConverter        dataConverter;");
             sbSource.AppendLine($"        private Workflow              parentWorkflow;");
             sbSource.AppendLine($"        private string                workflowTypeName;");
@@ -1543,7 +1543,7 @@ namespace Neon.Temporal.Internal
             sbSource.AppendLine($"        //-----------------------------------------------------------------");
             sbSource.AppendLine($"        // Implementation");
             sbSource.AppendLine();
-            sbSource.AppendLine($"        private TemporalClient                     client;");
+            sbSource.AppendLine($"        private TemporalClient                    client;");
             sbSource.AppendLine($"        private IDataConverter                    dataConverter;");
             sbSource.AppendLine($"        private Workflow                          workflow;");
             sbSource.AppendLine($"        private bool                              isLocal;");

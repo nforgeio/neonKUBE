@@ -108,7 +108,7 @@ namespace Neon.Temporal.Internal
             typedTarget.ActivityId = this.ActivityId;
             typedTarget.Args       = this.Args;
             typedTarget.Options    = this.Options;
-            typedTarget.Namespace     = this.Namespace;
+            typedTarget.Namespace  = this.Namespace;
         }
     }
 }

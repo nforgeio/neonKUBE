@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainStatus.cs
+// FILE:	    NamespaceAlreadyExistsException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -16,40 +16,33 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.Serialization;
 
-using Neon.Common;
-using Neon.Temporal;
 using Neon.Temporal.Internal;
 
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Indicates a Temporal namespace status.
+    /// Thrown when a Temporal namespace already exists.
     /// </summary>
-    public enum DomainStatus
+    public class NamespaceAlreadyExistsException : TemporalException
     {
         /// <summary>
-        /// The namespace is registered and active.
+        /// Constructor.
         /// </summary>
-        [EnumMember(Value = "REGISTERED")]
-        Registered = 0,
+        /// <param name="message">Optionally specifies a message.</param>
+        /// <param name="innerException">Optionally specifies an inner exception.</param>
+        public NamespaceAlreadyExistsException(string message = null, Exception innerException = null)
+            : base(message, innerException)
+        {
+        }
 
-        /// <summary>
-        /// The namespace is closed for new workflows but will remain
-        /// until already running workflows are completed and the
-        /// history retention period for the last executed workflow
-        /// has been satisified.
-        /// </summary>
-        [EnumMember(Value = "DEPRECATED")]
-        Deprecated,
+        /// <inheritdoc/>
+        internal override string TemporalError => "NamespaceAlreadyExistsError";
 
-        /// <summary>
-        /// The namespace is deleted.
-        /// </summary>
-        [EnumMember(Value = "DELETED")]
-        Deleted
+        /// <inheritdoc/>
+        internal override TemporalErrorTypes TemporalErrorType => TemporalErrorTypes.Custom;
+
+        /// <inheritdoc/>
+        internal override string Reason => TemporalError;
     }
 }

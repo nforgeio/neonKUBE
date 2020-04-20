@@ -130,48 +130,48 @@ namespace TestTemporal
             //-----------------------------------------------------------------
             // RegisterDomain:
 
-            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.RegisterDomainAsync(name: null));
-            await Assert.ThrowsAsync<ArgumentException>(async () => await client.RegisterDomainAsync(name: "domain-0", retentionDays: -1));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await client.RegisterNamespaceAsync(name: null));
+            await Assert.ThrowsAsync<ArgumentException>(async () => await client.RegisterNamespaceAsync(name: "domain-0", retentionDays: -1));
 
-            await client.RegisterDomainAsync("domain-0", "this is domain-0", "jeff@lilltek.com", retentionDays: 14);
-            await Assert.ThrowsAsync<DomainAlreadyExistsException>(async () => await client.RegisterDomainAsync(name: "domain-0"));
+            await client.RegisterNamespaceAsync("domain-0", "this is domain-0", "jeff@lilltek.com", retentionDays: 14);
+            await Assert.ThrowsAsync<NamespaceAlreadyExistsException>(async () => await client.RegisterNamespaceAsync(name: "domain-0"));
 
             //-----------------------------------------------------------------
             // DescribeDomain:
 
-            var domainDescribeReply = await client.DescribeDomainAsync("domain-0");
+            var domainDescribeReply = await client.DescribeNamespaceAsync("domain-0");
 
             Assert.False(domainDescribeReply.Configuration.EmitMetrics);
             Assert.Equal(14, domainDescribeReply.Configuration.RetentionDays);
-            Assert.Equal("domain-0", domainDescribeReply.DomainInfo.Name);
-            Assert.Equal("this is domain-0", domainDescribeReply.DomainInfo.Description);
-            Assert.Equal("jeff@lilltek.com", domainDescribeReply.DomainInfo.OwnerEmail);
-            Assert.Equal(DomainStatus.Registered, domainDescribeReply.DomainInfo.Status);
+            Assert.Equal("domain-0", domainDescribeReply.NamespaceInfo.Name);
+            Assert.Equal("this is domain-0", domainDescribeReply.NamespaceInfo.Description);
+            Assert.Equal("jeff@lilltek.com", domainDescribeReply.NamespaceInfo.OwnerEmail);
+            Assert.Equal(NamespaceStatus.Registered, domainDescribeReply.NamespaceInfo.Status);
 
-            await Assert.ThrowsAsync<EntityNotExistsException>(async () => await client.DescribeDomainAsync("does-not-exist"));
+            await Assert.ThrowsAsync<EntityNotExistsException>(async () => await client.DescribeNamespaceAsync("does-not-exist"));
 
             //-----------------------------------------------------------------
             // UpdateDomain:
 
-            var updateDomainRequest = new UpdateDomainRequest();
+            var updateDomainRequest = new UpdateNamespaceRequest();
 
             updateDomainRequest.Options.EmitMetrics    = true;
             updateDomainRequest.Options.RetentionDays  = 77;
-            updateDomainRequest.DomainInfo.OwnerEmail  = "foo@bar.com";
-            updateDomainRequest.DomainInfo.Description = "new description";
+            updateDomainRequest.NamespaceInfo.OwnerEmail  = "foo@bar.com";
+            updateDomainRequest.NamespaceInfo.Description = "new description";
 
-            await client.UpdateDomainAsync("domain-0", updateDomainRequest);
+            await client.UpdateNamespaceAsync("domain-0", updateDomainRequest);
 
-            domainDescribeReply = await client.DescribeDomainAsync("domain-0");
+            domainDescribeReply = await client.DescribeNamespaceAsync("domain-0");
 
             Assert.True(domainDescribeReply.Configuration.EmitMetrics);
             Assert.Equal(77, domainDescribeReply.Configuration.RetentionDays);
-            Assert.Equal("domain-0", domainDescribeReply.DomainInfo.Name);
-            Assert.Equal("new description", domainDescribeReply.DomainInfo.Description);
-            Assert.Equal("foo@bar.com", domainDescribeReply.DomainInfo.OwnerEmail);
-            Assert.Equal(DomainStatus.Registered, domainDescribeReply.DomainInfo.Status);
+            Assert.Equal("domain-0", domainDescribeReply.NamespaceInfo.Name);
+            Assert.Equal("new description", domainDescribeReply.NamespaceInfo.Description);
+            Assert.Equal("foo@bar.com", domainDescribeReply.NamespaceInfo.OwnerEmail);
+            Assert.Equal(NamespaceStatus.Registered, domainDescribeReply.NamespaceInfo.Status);
 
-            await Assert.ThrowsAsync<EntityNotExistsException>(async () => await client.UpdateDomainAsync("does-not-exist", updateDomainRequest));
+            await Assert.ThrowsAsync<EntityNotExistsException>(async () => await client.UpdateNamespaceAsync("does-not-exist", updateDomainRequest));
         }
 
         [Fact]
@@ -199,53 +199,53 @@ namespace TestTemporal
                     retentionDays = 30;
                 }
 
-                await client.RegisterDomainAsync($"my-domain-{i}", $"This is my-domain-{i}", $"jeff-{i}@lilltek.com", retentionDays: retentionDays);
+                await client.RegisterNamespaceAsync($"my-namespace-{i}", $"This is my-namespace-{i}", $"jeff-{i}@lilltek.com", retentionDays: retentionDays);
             }
 
             // List all of the domains in one page.
 
-            var domainPage = await client.ListDomainsAsync(testDomainCount * 2);
+            var domainPage = await client.ListNamespacesAsync(testDomainCount * 2);
 
             Assert.NotNull(domainPage);
-            Assert.True(domainPage.Domains.Count >= testDomainCount + 1);
+            Assert.True(domainPage.Namespaces.Count >= testDomainCount + 1);
             Assert.Null(domainPage.NextPageToken);
 
             // Verify that we listed the default domain as well as the 
             // domains we just registered.
 
-            Assert.Contains(domainPage.Domains, d => d.DomainInfo.Name == client.Settings.DefaulNamespace);
+            Assert.Contains(domainPage.Namespaces, d => d.NamespaceInfo.Name == client.Settings.DefaulNamespace);
 
             for (int i = 0; i < testDomainCount; i++)
             {
-                Assert.Contains(domainPage.Domains, d => d.DomainInfo.Name == $"my-domain-{i}");
+                Assert.Contains(domainPage.Namespaces, d => d.NamespaceInfo.Name == $"my-namespace-{i}");
             }
 
             // Verify some of the domain fields for the domains we just registered.
 
-            foreach (var domain in domainPage.Domains)
+            foreach (var domain in domainPage.Namespaces)
             {
-                if (!domain.DomainInfo.Name.StartsWith("my-domain-"))
+                if (!domain.NamespaceInfo.Name.StartsWith("my-namespace-"))
                 {
                     continue;
                 }
 
-                var p  = domain.DomainInfo.Name.LastIndexOf('-');
-                var id = int.Parse(domain.DomainInfo.Name.Substring(p + 1));
+                var p  = domain.NamespaceInfo.Name.LastIndexOf('-');
+                var id = int.Parse(domain.NamespaceInfo.Name.Substring(p + 1));
 
-                Assert.Equal($"This is my-domain-{id}", domain.DomainInfo.Description);
-                Assert.Equal($"jeff-{id}@lilltek.com", domain.DomainInfo.OwnerEmail);
-                Assert.Equal(DomainStatus.Registered, domain.DomainInfo.Status);
+                Assert.Equal($"This is my-namespace-{id}", domain.NamespaceInfo.Description);
+                Assert.Equal($"jeff-{id}@lilltek.com", domain.NamespaceInfo.OwnerEmail);
+                Assert.Equal(NamespaceStatus.Registered, domain.NamespaceInfo.Status);
                 Assert.True(((7 + id) == domain.Configuration.RetentionDays) || (30 == domain.Configuration.RetentionDays));
             }
 
             // List all of the domains, one to each page of results.
 
-            var domainCount   = domainPage.Domains.Count;
+            var domainCount   = domainPage.Namespaces.Count;
             var nextPageToken = (byte[])null;
 
             for (int i = 0; i < domainCount; i++)
             {
-                domainPage    = await client.ListDomainsAsync(1, nextPageToken);
+                domainPage    = await client.ListNamespacesAsync(1, nextPageToken);
                 nextPageToken = domainPage.NextPageToken;
 
                 Assert.NotNull(domainPage);

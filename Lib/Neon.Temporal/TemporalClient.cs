@@ -94,13 +94,13 @@ namespace Neon.Temporal
     /// by defaut, but you can customize this if desired.
     /// </para>
     /// <para>
-    /// Temporal supports the concept of domains and task lists.  Domains and task lists are
+    /// Temporal supports the concept of namespaces and task lists.  These are
     /// used to organize workflows and activities.  Workflows and activities essentially 
     /// reside in a registered namespace, which is essentially just a namespace specified by
     /// a string.  The combination of a namespace along with a workflow or activity type name
     /// must be unique within a Temporal cluster.  Once you have a connected <see cref="TemporalClient"/>,
-    /// you can create and manage Temporal domains via methods like <see cref="RegisterDomainAsync(string, string, string, int, bool)"/>,
-    /// <see cref="DescribeDomainAsync(string)"/>, and <see cref="UpdateDomainAsync(string, UpdateDomainRequest)"/>.
+    /// you can create and manage Temporal namespaces via methods like <see cref="RegisterNamespaceAsync(string, string, string, int, bool)"/>,
+    /// <see cref="DescribeNamespaceAsync(string)"/>, and <see cref="UpdateNamespaceAsync(string, UpdateNamespaceRequest)"/>.
     /// Domains can be used provide isolated areas for different teams and/or different environments
     /// (e.g. production, staging, and test).  We discuss task lists in detail further below.
     /// </para>

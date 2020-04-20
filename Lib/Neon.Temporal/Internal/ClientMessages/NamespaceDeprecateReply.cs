@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainAlreadyExistsException.cs
+// FILE:	    NamespaceDeprecateReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -16,33 +16,42 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 
-using Neon.Temporal.Internal;
+using Neon.Common;
+using Neon.Temporal;
 
-namespace Neon.Temporal
+namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// Thrown when a Temporal namespace already exists.
+    /// <b>proxy --> client:</b> Answers a <see cref="NamespaceDeprecateRequest"/>.
     /// </summary>
-    public class DomainAlreadyExistsException : TemporalException
+    [InternalProxyMessage(InternalMessageTypes.NamespaceDeprecateReply)]
+    internal class NamespaceDeprecateReply : ProxyReply
     {
         /// <summary>
-        /// Constructor.
+        /// Default constructor.
         /// </summary>
-        /// <param name="message">Optionally specifies a message.</param>
-        /// <param name="innerException">Optionally specifies an inner exception.</param>
-        public DomainAlreadyExistsException(string message = null, Exception innerException = null)
-            : base(message, innerException)
+        public NamespaceDeprecateReply()
         {
+            Type = InternalMessageTypes.NamespaceDeprecateReply;
         }
 
         /// <inheritdoc/>
-        internal override string TemporalError => "DomainAlreadyExistsError";
+        internal override ProxyMessage Clone()
+        {
+            var clone = new NamespaceDeprecateReply();
+
+            CopyTo(clone);
+
+            return clone;
+        }
 
         /// <inheritdoc/>
-        internal override TemporalErrorTypes TemporalErrorType => TemporalErrorTypes.Custom;
-
-        /// <inheritdoc/>
-        internal override string Reason => TemporalError;
+        protected override void CopyTo(ProxyMessage target)
+        {
+            base.CopyTo(target);
+        }
     }
 }

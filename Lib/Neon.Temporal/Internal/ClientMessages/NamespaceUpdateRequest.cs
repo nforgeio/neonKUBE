@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainUpdateRequest.cs
+// FILE:	    NamespaceUpdateRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -27,19 +27,19 @@ namespace Neon.Temporal.Internal
     /// <summary>
     /// <b>client --> proxy:</b> Requests the details for a named namespace.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.DomainUpdateRequest)]
-    internal class DomainUpdateRequest : ProxyRequest
+    [InternalProxyMessage(InternalMessageTypes.NamespaceUpdateRequest)]
+    internal class NamespaceUpdateRequest : ProxyRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public DomainUpdateRequest()
+        public NamespaceUpdateRequest()
         {
-            Type = InternalMessageTypes.DomainUpdateRequest;
+            Type = InternalMessageTypes.NamespaceUpdateRequest;
         }
 
         /// <inheritdoc/>
-        public override InternalMessageTypes ReplyType => InternalMessageTypes.DomainUpdateReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.NamespaceUpdateReply;
 
         /// <summary>
         /// The target Temporal namespace name.
@@ -98,7 +98,7 @@ namespace Neon.Temporal.Internal
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new DomainUpdateRequest();
+            var clone = new NamespaceUpdateRequest();
 
             CopyTo(clone);
 
@@ -110,7 +110,7 @@ namespace Neon.Temporal.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (DomainUpdateRequest)target;
+            var typedTarget = (NamespaceUpdateRequest)target;
 
             typedTarget.Name                       = this.Name;
             typedTarget.ConfigurationEmitMetrics   = this.ConfigurationEmitMetrics;

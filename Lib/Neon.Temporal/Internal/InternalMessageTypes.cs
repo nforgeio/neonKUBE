@@ -77,32 +77,32 @@ namespace Neon.Temporal.Internal
         /// <summary>
         /// <b>client --> proxy:</b> Requests that the proxy register a Temporal namespace.
         /// </summary>
-        DomainRegisterRequest = 7,
+        NamespaceRegisterRequest = 7,
 
         /// <summary>
-        /// <b>proxy --> client:</b> Sent in response to a <see cref="DomainRegisterRequest"/> message.
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="NamespaceRegisterRequest"/> message.
         /// </summary>
-        DomainRegisterReply = 8,
+        NamespaceRegisterReply = 8,
 
         /// <summary>
         /// <b>client --> proxy:</b> Requests that the proxy return the details for a Temporal namespace.
         /// </summary>
-        DomainDescribeRequest = 9,
+        NamespaceDescribeRequest = 9,
 
         /// <summary>
-        /// <b>proxy --> client:</b> Sent in response to a <see cref="DomainDescribeRequest"/> message.
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="NamespaceDescribeRequest"/> message.
         /// </summary>
-        DomainDescribeReply = 10,
+        NamespaceDescribeReply = 10,
 
         /// <summary>
         /// <b>client --> proxy:</b> Requests that the proxy update a Temporal namespace.
         /// </summary>
-        DomainUpdateRequest = 11,
+        NamespaceUpdateRequest = 11,
 
         /// <summary>
-        /// <b>proxy --> client:</b> Sent in response to a <see cref="DomainUpdateRequest"/> message.
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="NamespaceUpdateRequest"/> message.
         /// </summary>
-        DomainUpdateReply = 12,
+        NamespaceUpdateReply = 12,
 
         /// <summary>
         /// <b>client --> proxy:</b> Sent periodically (every second) by the client to the
@@ -163,12 +163,12 @@ namespace Neon.Temporal.Internal
         /// <summary>
         /// <b>client --> proxy:</b> Requests that the proxy deprecate a Temporal namespace.
         /// </summary>
-        DomainDeprecateRequest = 23,
+        NamespaceDeprecateRequest = 23,
 
         /// <summary>
-        /// <b>proxy --> client:</b> Sent in response to a <see cref="DomainDeprecateRequest"/> message.
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="NamespaceDeprecateRequest"/> message.
         /// </summary>
-        DomainDeprecateReply = 24,
+        NamespaceDeprecateReply = 24,
 
         /// <summary>
         ///  <b>client --> proxy:</b> Sent to have the proxy disconnect from a Temporal cluster.
@@ -192,14 +192,14 @@ namespace Neon.Temporal.Internal
         LogReply = 28,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Sent to list the Temporal domains.
+        /// <b>client --> proxy:</b> Sent to list the Temporal namespaces.
         /// </summary>
-        DomainListRequest = 29,
+        NamespaceListRequest = 29,
 
         /// <summary>
-        /// <b>proxy --> client:</b> Sent in response to a <see cref="DomainListRequest"/> message.
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="NamespaceListRequest"/> message.
         /// </summary>
-        DomainListReply = 30,
+        NamespaceListReply = 30,
 
         /// <summary>
         /// <b>client --> proxy:</b> Sent to obtain details for a task list.

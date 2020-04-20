@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainRegisterReply.cs
+// FILE:	    NamespaceNotActiveException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -16,42 +16,33 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 
-using Neon.Common;
-using Neon.Temporal;
+using Neon.Temporal.Internal;
 
-namespace Neon.Temporal.Internal
+namespace Neon.Temporal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="DomainRegisterRequest"/>.
+    /// Thrown when a Temporal namespace has been deprecated.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.DomainRegisterReply)]
-    internal class DomainRegisterReply : ProxyReply
+    public class NamespaceNotActiveException : TemporalException
     {
         /// <summary>
-        /// Default constructor.
+        /// Constructor.
         /// </summary>
-        public DomainRegisterReply()
+        /// <param name="message">Optionally specifies a message.</param>
+        /// <param name="innerException">Optionally specifies an inner exception.</param>
+        public NamespaceNotActiveException(string message = null, Exception innerException = null)
+            : base(message, innerException)
         {
-            Type = InternalMessageTypes.DomainRegisterReply;
         }
 
         /// <inheritdoc/>
-        internal override ProxyMessage Clone()
-        {
-            var clone = new DomainRegisterReply();
-
-            CopyTo(clone);
-
-            return clone;
-        }
+        internal override string TemporalError => "NamespaceNotActiveError";
 
         /// <inheritdoc/>
-        protected override void CopyTo(ProxyMessage target)
-        {
-            base.CopyTo(target);
-        }
+        internal override TemporalErrorTypes TemporalErrorType => TemporalErrorTypes.Custom;
+
+        /// <inheritdoc/>
+        internal override string Reason => TemporalError;
     }
 }

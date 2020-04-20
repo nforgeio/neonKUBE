@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    InternalDomainConfiguration.cs
+// FILE:	    InternalNamespaceConfiguration.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -29,7 +29,7 @@ namespace Neon.Temporal.Internal
     /// <summary>
     /// <b>INTERNAL USE ONLY:</b> Describes a Temporal namespace configuration.
     /// </summary>
-    internal class InternalDomainConfiguration
+    internal class InternalNamespaceConfiguration
     {
         /// <summary>
         /// Determines how long  workflow executions are retained.
@@ -81,12 +81,12 @@ namespace Neon.Temporal.Internal
         public string VisibilityArchivalUri { get; set; }
 
         /// <summary>
-        /// Converts the internal instance into a public <see cref="DomainConfiguration"/>.
+        /// Converts the internal instance into a public <see cref="NamespaceConfiguration"/>.
         /// </summary>
         /// <returns>The converted instance.</returns>
-        public DomainConfiguration ToPublic()
+        public NamespaceConfiguration ToPublic()
         {
-            return new DomainConfiguration()
+            return new NamespaceConfiguration()
             {
                 RetentionDays = this.WorkflowExecutionRetentionPeriodInDays,
                 EmitMetrics   = this.EmitMetric,

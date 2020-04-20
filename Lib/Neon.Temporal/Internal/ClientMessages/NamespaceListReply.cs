@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainListReply.cs
+// FILE:	    NamespaceListReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,30 +25,30 @@ using Neon.Temporal;
 namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="DomainListRequest"/>.
+    /// <b>proxy --> client:</b> Answers a <see cref="NamespaceListRequest"/>.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.DomainListReply)]
-    internal class DomainListReply : ProxyReply
+    [InternalProxyMessage(InternalMessageTypes.NamespaceListReply)]
+    internal class NamespaceListReply : ProxyReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public DomainListReply()
+        public NamespaceListReply()
         {
-            Type = InternalMessageTypes.DomainListReply;
+            Type = InternalMessageTypes.NamespaceListReply;
         }
 
         /// <summary>
-        /// Lists information about the Temporal domains.
+        /// Lists information about the Temporal namespaces.
         /// </summary>
-        public List<InternalDescribeDomainResponse> Domains
+        public List<InternalDescribeNamespaceResponse> Namespaces
         {
-            get => GetJsonProperty<List<InternalDescribeDomainResponse>>(PropertyNames.Domains);
-            set => SetJsonProperty<List<InternalDescribeDomainResponse>>(PropertyNames.Domains, value);
+            get => GetJsonProperty<List<InternalDescribeNamespaceResponse>>(PropertyNames.Namespaces);
+            set => SetJsonProperty<List<InternalDescribeNamespaceResponse>>(PropertyNames.Namespaces, value);
         }
 
         /// <summary>
-        /// Returns an opaque token that can be used in a subsequent <see cref="DomainListRequest"/>
+        /// Returns an opaque token that can be used in a subsequent <see cref="NamespaceListRequest"/>
         /// to obtain the next page of results.  This will be <c>null</c> when there are no
         /// remaining results.  This should be considered to be an opaque value.
         /// </summary>
@@ -61,7 +61,7 @@ namespace Neon.Temporal.Internal
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new DomainListReply();
+            var clone = new NamespaceListReply();
 
             CopyTo(clone);
 
@@ -73,9 +73,9 @@ namespace Neon.Temporal.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (DomainListReply)target;
+            var typedTarget = (NamespaceListReply)target;
 
-            typedTarget.Domains       = this.Domains;
+            typedTarget.Namespaces    = this.Namespaces;
             typedTarget.NextPageToken = this.NextPageToken;
         }
     }

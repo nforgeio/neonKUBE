@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    UpdateDomainRequest.cs
+// FILE:	    UpdateNamespaceRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -28,7 +28,7 @@ namespace Neon.Temporal
     /// <summary>
     /// Holds the changes to be made to a Temporal namespace.
     /// </summary>
-    public class UpdateDomainRequest
+    public class UpdateNamespaceRequest
     {
         /// <summary>
         /// The namespace name.
@@ -38,11 +38,11 @@ namespace Neon.Temporal
         /// <summary>
         /// The updated basic namespace properties.
         /// </summary>
-        public UpdateDomainInfo DomainInfo { get; set; } = new UpdateDomainInfo();
+        public UpdateNamespaceInfo NamespaceInfo { get; set; } = new UpdateNamespaceInfo();
 
         /// <summary>
         /// The updated namespace options.
         /// </summary>
-        public DomainConfiguration Options { get; set; } = new DomainConfiguration();
+        public NamespaceConfiguration Options { get; set; } = new NamespaceConfiguration();
     }
 }

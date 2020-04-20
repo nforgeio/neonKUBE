@@ -95,10 +95,10 @@ namespace Neon.Temporal.Internal
 
             var typedTarget = (ActivityExecuteRequest)target;
 
-            typedTarget.Activity = this.Activity;
-            typedTarget.Args     = this.Args;
-            typedTarget.Options  = this.Options;
-            typedTarget.Namespace   = this.Namespace;
+            typedTarget.Activity  = this.Activity;
+            typedTarget.Args      = this.Args;
+            typedTarget.Options   = this.Options;
+            typedTarget.Namespace = this.Namespace;
         }
     }
 }

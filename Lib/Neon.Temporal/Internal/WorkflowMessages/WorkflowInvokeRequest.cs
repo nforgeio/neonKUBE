@@ -141,7 +141,7 @@ namespace Neon.Temporal.Internal
 
             typedTarget.Name                         = this.Name;
             typedTarget.Args                         = this.Args;
-            typedTarget.Namespace                       = this.Namespace;
+            typedTarget.Namespace                    = this.Namespace;
             typedTarget.WorkflowId                   = this.WorkflowId;
             typedTarget.RunId                        = this.RunId;
             typedTarget.WorkflowType                 = this.WorkflowType;

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainInfo.cs
+// FILE:	    InternalRegisterNamespaceRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -21,14 +21,13 @@ using System.ComponentModel;
 
 using Neon.Common;
 using Neon.Temporal;
-using Neon.Temporal.Internal;
 
-namespace Neon.Temporal
+namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// Information about a Temporal namespace.
+    /// Namespace registration details.
     /// </summary>
-    public class DomainInfo
+    internal class InternalRegisterNamespaceRequest
     {
         /// <summary>
         /// The namespace name.
@@ -36,12 +35,7 @@ namespace Neon.Temporal
         public string Name { get; set; }
 
         /// <summary>
-        /// The namespace status.
-        /// </summary>
-        public DomainStatus Status { get; set; }
-
-        /// <summary>
-        /// Ths namespace description.
+        /// The namespace description.
         /// </summary>
         public string Description { get; set; }
 
@@ -49,5 +43,21 @@ namespace Neon.Temporal
         /// The namespace owner's email address.
         /// </summary>
         public string OwnerEmail { get; set; }
+
+        /// <summary>
+        /// The number of days to retain the history for workflowws
+        /// completed in this namespace.  This defaults to <b>7 days</b>.
+        /// </summary>
+        public int RetentionDays { get; set; } = 7;
+
+        /// <summary>
+        /// Enables metric generation.  This defaults to <c>false.</c>
+        /// </summary>
+        public bool EmitMetrics { get; set; }
+
+        /// <summary>
+        /// Optional security token.
+        /// </summary>
+        public string SecurityToken { get; set; }
     }
 }

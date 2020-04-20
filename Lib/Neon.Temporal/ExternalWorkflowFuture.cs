@@ -37,7 +37,7 @@ namespace Neon.Temporal
     public class ExternalWorkflowFuture : IAsyncFuture
     {
         private bool            completed = false;
-        private TemporalClient   client;
+        private TemporalClient  client;
 
         /// <summary>
         /// Constructor.
@@ -81,7 +81,7 @@ namespace Neon.Temporal
     public class ExternalWorkflowFuture<TResult> : IAsyncFuture<TResult>
     {
         private bool            completed = false;
-        private TemporalClient   client;
+        private TemporalClient  client;
 
         /// <summary>
         /// Constructor.

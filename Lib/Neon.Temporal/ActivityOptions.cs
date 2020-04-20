@@ -206,7 +206,7 @@ namespace Neon.Temporal
         {
             return new ActivityOptions()
             {
-                Namespace                 = this.Namespace,
+                Namespace              = this.Namespace,
                 HeartbeatTimeout       = this.HeartbeatTimeout,
                 RetryOptions           = this.RetryOptions,
                 ScheduleToCloseTimeout = this.ScheduleToCloseTimeout,

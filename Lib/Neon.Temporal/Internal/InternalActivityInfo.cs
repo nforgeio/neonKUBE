@@ -45,7 +45,7 @@ namespace Neon.Temporal.Internal
         /// <summary>
         /// The parent workflow namespace.
         /// </summary>
-        public string WorkflowDomain { get; set; }
+        public string WorkflowNamespace { get; set; }
 
         /// <summary>
         /// The parent workflow execution details.
@@ -102,8 +102,8 @@ namespace Neon.Temporal.Internal
             {
                 TaskToken           = this.TaskToken,
                 WorkflowTypeName    = this.WorkflowType?.Name,
-                WorkflowDomain      = this.WorkflowDomain,
-                WorkflowExecution         = this.WorkflowExecution.ToPublic(),
+                WorkflowNamespace   = this.WorkflowNamespace,
+                WorkflowExecution   = this.WorkflowExecution.ToPublic(),
                 ActivityId          = this.ActivityId,
                 ActivityTypeName    = this.ActivityType?.Name,
                 TaskList            = this.TaskList,

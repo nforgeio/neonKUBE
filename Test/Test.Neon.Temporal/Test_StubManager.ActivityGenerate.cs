@@ -97,7 +97,7 @@ namespace TestTemporal
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public void Generate_ActivityEntryVoidWithOptions()
         {
-            Assert.NotNull(StubManager.NewActivityStub<IActivityEntryVoidWithArgs>(client, new DummyWorkflow().Workflow, options: new ActivityOptions() { Namespace = "my-domain" }));
+            Assert.NotNull(StubManager.NewActivityStub<IActivityEntryVoidWithArgs>(client, new DummyWorkflow().Workflow, options: new ActivityOptions() { Namespace = "my-namespace" }));
             Assert.NotNull(StubManager.NewLocalActivityStub<IActivityEntryVoidWithArgs, ActivityEntryVoidWithArgs>(client, new DummyWorkflow().Workflow, options: new LocalActivityOptions()));
         }
 

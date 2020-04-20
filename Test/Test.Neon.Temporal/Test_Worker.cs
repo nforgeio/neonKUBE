@@ -81,7 +81,7 @@ namespace TestTemporal
         {
             await SyncContext.ClearAsync;
 
-            await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+            await client.RegisterNamespaceAsync("test-domain", ignoreDuplicates: true);
 
             // Verify that creating workers with the same attributes actually
             // return the pre-existing instance with an incremented reference

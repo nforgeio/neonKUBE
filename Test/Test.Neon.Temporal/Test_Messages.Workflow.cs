@@ -72,11 +72,11 @@ namespace TestTemporal
                 message.ClientId = 444;
                 message.RequestId = 555;
                 message.Name = "Foo";
-                message.Namespace = "my-domain";
+                message.Namespace = "my-namespace";
 
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("Foo", message.Name);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -87,7 +87,7 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("Foo", message.Name);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
 
                 // Clone()
 
@@ -96,7 +96,7 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("Foo", message.Name);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -105,7 +105,7 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("Foo", message.Name);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
             }
         }
 
@@ -202,7 +202,7 @@ namespace TestTemporal
                 message.ClientId = 444;
                 message.RequestId = 555;
                 message.ContextId = 666;
-                message.Namespace = "my-domain";
+                message.Namespace = "my-namespace";
                 message.Workflow = "Foo";
                 message.Args = new byte[] { 0, 1, 2, 3, 4 };
                 message.Options = new InternalStartWorkflowOptions() { TaskList = "my-list", ExecutionStartToCloseTimeout = GoTimeSpan.Parse("100s").Ticks };
@@ -210,7 +210,7 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("Foo", message.Workflow);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskList);
@@ -225,7 +225,7 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("Foo", message.Workflow);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskList);
@@ -238,7 +238,7 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("Foo", message.Workflow);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskList);
@@ -251,7 +251,7 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal(666, message.ContextId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("Foo", message.Workflow);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskList);
@@ -370,7 +370,7 @@ namespace TestTemporal
                 message.ReplayStatus = InternalReplayStatus.Replaying;
                 message.Name = "Foo";
                 message.Args = new byte[] { 0, 1, 2, 3, 4 };
-                message.Namespace = "my-domain";
+                message.Namespace = "my-namespace";
                 message.WorkflowId = "my-workflowid";
                 message.RunId = "my-runid";
                 message.WorkflowType = "my-workflowtype";
@@ -381,7 +381,7 @@ namespace TestTemporal
                 Assert.Equal(666, message.ContextId);
                 Assert.Equal(InternalReplayStatus.Replaying, message.ReplayStatus);
                 Assert.Equal("Foo", message.Name);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-workflowid", message.WorkflowId);
                 Assert.Equal("my-runid", message.RunId);
                 Assert.Equal("my-workflowtype", message.WorkflowType);
@@ -399,7 +399,7 @@ namespace TestTemporal
                 message.ReplayStatus = InternalReplayStatus.Replaying;
                 Assert.Equal("Foo", message.Name);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-workflowid", message.WorkflowId);
                 Assert.Equal("my-runid", message.RunId);
                 Assert.Equal("my-workflowtype", message.WorkflowType);
@@ -415,7 +415,7 @@ namespace TestTemporal
                 message.ReplayStatus = InternalReplayStatus.Replaying;
                 Assert.Equal("Foo", message.Name);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-workflowid", message.WorkflowId);
                 Assert.Equal("my-runid", message.RunId);
                 Assert.Equal("my-workflowtype", message.WorkflowType);
@@ -431,7 +431,7 @@ namespace TestTemporal
                 message.ReplayStatus = InternalReplayStatus.Replaying;
                 Assert.Equal("Foo", message.Name);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-workflowid", message.WorkflowId);
                 Assert.Equal("my-runid", message.RunId);
                 Assert.Equal("my-workflowtype", message.WorkflowType);
@@ -486,7 +486,7 @@ namespace TestTemporal
                 message.ContinueAsNewStartToCloseTimeout = 4000;
                 message.ContinueAsNewWorkflow = "my-workflow";
                 message.ContinueAsNewTaskList = "my-tasklist";
-                message.ContinueAsNewNamespace = "my-domain";
+                message.ContinueAsNewNamespace = "my-namespace";
                 message.ForceReplay = true;
 
                 Assert.Equal(444, message.ClientId);
@@ -498,7 +498,7 @@ namespace TestTemporal
                 Assert.Equal(1000, message.ContinueAsNewExecutionStartToCloseTimeout);
                 Assert.Equal("my-workflow", message.ContinueAsNewWorkflow);
                 Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
-                Assert.Equal("my-domain", message.ContinueAsNewNamespace);
+                Assert.Equal("my-namespace", message.ContinueAsNewNamespace);
                 Assert.True(message.ForceReplay);
 
                 stream.SetLength(0);
@@ -519,7 +519,7 @@ namespace TestTemporal
                 Assert.Equal(4000, message.ContinueAsNewStartToCloseTimeout);
                 Assert.Equal("my-workflow", message.ContinueAsNewWorkflow);
                 Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
-                Assert.Equal("my-domain", message.ContinueAsNewNamespace);
+                Assert.Equal("my-namespace", message.ContinueAsNewNamespace);
                 Assert.True(message.ForceReplay);
 
                 // Clone()
@@ -538,7 +538,7 @@ namespace TestTemporal
                 Assert.Equal(4000, message.ContinueAsNewStartToCloseTimeout);
                 Assert.Equal("my-workflow", message.ContinueAsNewWorkflow);
                 Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
-                Assert.Equal("my-domain", message.ContinueAsNewNamespace);
+                Assert.Equal("my-namespace", message.ContinueAsNewNamespace);
                 Assert.True(message.ForceReplay);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
@@ -557,7 +557,7 @@ namespace TestTemporal
                 Assert.Equal(4000, message.ContinueAsNewStartToCloseTimeout);
                 Assert.Equal("my-workflow", message.ContinueAsNewWorkflow);
                 Assert.Equal("my-tasklist", message.ContinueAsNewTaskList);
-                Assert.Equal("my-domain", message.ContinueAsNewNamespace);
+                Assert.Equal("my-namespace", message.ContinueAsNewNamespace);
                 Assert.True(message.ForceReplay);
             }
         }
@@ -594,13 +594,13 @@ namespace TestTemporal
                 message.RequestId = 555;
                 message.WorkflowId = "666";
                 message.RunId = "777";
-                message.Namespace = "my-domain";
+                message.Namespace = "my-namespace";
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -612,7 +612,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
 
                 // Clone()
 
@@ -622,7 +622,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -632,7 +632,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
             }
         }
 
@@ -730,7 +730,7 @@ namespace TestTemporal
                 message.RequestId = 555;
                 message.WorkflowId = "666";
                 message.RunId = "777";
-                message.Namespace = "my-domain";
+                message.Namespace = "my-namespace";
                 message.Reason = "my-reason";
                 message.Details = new byte[] { 0, 1, 2, 3, 4 };
 
@@ -738,7 +738,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-reason", message.Reason);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Details);
 
@@ -752,7 +752,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-reason", message.Reason);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Details);
 
@@ -764,7 +764,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-reason", message.Reason);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Details);
 
@@ -776,7 +776,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-reason", message.Reason);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Details);
             }
@@ -876,7 +876,7 @@ namespace TestTemporal
                 message.RequestId = 555;
                 message.WorkflowId = "666";
                 message.RunId = "777";
-                message.Namespace = "my-domain";
+                message.Namespace = "my-namespace";
                 message.SignalName = "my-signal";
                 message.SignalArgs = new byte[] { 0, 1, 2, 3, 4 };
 
@@ -884,7 +884,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
 
@@ -898,7 +898,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
 
@@ -910,7 +910,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
 
@@ -922,7 +922,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
             }
@@ -1024,7 +1024,7 @@ namespace TestTemporal
                 message.RequestId = 555;
                 message.Workflow = "my-workflow";
                 message.WorkflowId = "666";
-                message.Namespace = "my-domain";
+                message.Namespace = "my-namespace";
                 message.SignalName = "my-signal";
                 message.SignalArgs = new byte[] { 0, 1, 2, 3, 4 };
                 message.Options = new InternalStartWorkflowOptions() { TaskList = "my-tasklist", WorkflowIdReusePolicy = (int)WorkflowIdReusePolicy.AllowDuplicate };
@@ -1034,7 +1034,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-workflow", message.Workflow);
                 Assert.Equal("666", message.WorkflowId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
                 Assert.Equal("my-tasklist", message.Options.TaskList);
@@ -1051,7 +1051,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-workflow", message.Workflow);
                 Assert.Equal("666", message.WorkflowId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
                 Assert.Equal("my-tasklist", message.Options.TaskList);
@@ -1066,7 +1066,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-workflow", message.Workflow);
                 Assert.Equal("666", message.WorkflowId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
                 Assert.Equal("my-tasklist", message.Options.TaskList);
@@ -1081,7 +1081,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-workflow", message.Workflow);
                 Assert.Equal("666", message.WorkflowId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
                 Assert.Equal("my-tasklist", message.Options.TaskList);
@@ -1194,7 +1194,7 @@ namespace TestTemporal
                 message.RequestId = 555;
                 message.WorkflowId = "666";
                 message.RunId = "777";
-                message.Namespace = "my-domain";
+                message.Namespace = "my-namespace";
                 message.QueryName = "my-query";
                 message.QueryArgs = new byte[] { 0, 1, 2, 3, 4 };
 
@@ -1202,7 +1202,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-query", message.QueryName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.QueryArgs);
 
@@ -1216,7 +1216,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-query", message.QueryName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.QueryArgs);
 
@@ -1228,7 +1228,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-query", message.QueryName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.QueryArgs);
 
@@ -1240,7 +1240,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-query", message.QueryName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.QueryArgs);
             }
@@ -1488,13 +1488,13 @@ namespace TestTemporal
                 message.RequestId = 555;
                 message.WorkflowId = "666";
                 message.RunId = "777";
-                message.Namespace = "my-domain";
+                message.Namespace = "my-namespace";
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -1506,7 +1506,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
 
                 // Clone()
 
@@ -1516,7 +1516,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -1526,7 +1526,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
             }
         }
 
@@ -1558,7 +1558,7 @@ namespace TestTemporal
                     CloseTime           = 4000,
                     WorkflowCloseStatus = (InternalWorkflowCloseStatus)InternalWorkflowCloseStatus.CONTINUED_AS_NEW,
                     HistoryLength       = 5000,
-                    ParentDomainId      = "parent-domain",
+                    ParentNamespaceId      = "parent-domain",
                     ParentExecution     = new InternalWorkflowExecution2() { ID = "parent-id", RunID = "parent-runid" },
                     ExecutionTime       = 6000,
 
@@ -1636,7 +1636,7 @@ namespace TestTemporal
             Assert.Equal(expected.WorkflowExecutionInfo.CloseTime, info.CloseTime);
             Assert.Equal(expected.WorkflowExecutionInfo.WorkflowCloseStatus, info.WorkflowCloseStatus);
             Assert.Equal(expected.WorkflowExecutionInfo.HistoryLength, info.HistoryLength);
-            Assert.Equal(expected.WorkflowExecutionInfo.ParentDomainId, info.ParentDomainId);
+            Assert.Equal(expected.WorkflowExecutionInfo.ParentNamespaceId, info.ParentNamespaceId);
 
             Assert.NotNull(info.ParentExecution);
             Assert.Equal(expected.WorkflowExecutionInfo.ParentExecution.ID, info.ParentExecution.ID);
@@ -1786,13 +1786,13 @@ namespace TestTemporal
                 message.RequestId = 555;
                 message.WorkflowId = "666";
                 message.RunId = "777";
-                message.Namespace = "my-domain";
+                message.Namespace = "my-namespace";
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -1804,7 +1804,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
 
                 // Clone()
 
@@ -1814,7 +1814,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -1824,7 +1824,7 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("666", message.WorkflowId);
                 Assert.Equal("777", message.RunId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
             }
         }
 
@@ -2807,7 +2807,7 @@ namespace TestTemporal
                 var options = new InternalChildWorkflowOptions()
                 {
                     TaskList                     = "my-tasklist",
-                    Namespace                       = "my-domain",
+                    Namespace                       = "my-namespace",
                     ChildClosePolicy             = (int)InternalParentClosePolicy.REQUEST_CANCEL,
                     CronSchedule                 = "* 12 * * *",
                     WorkflowID                   = "my-workflow",

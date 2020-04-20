@@ -25,7 +25,7 @@ using Neon.Temporal;
 namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// <b>client --> proxy:</b> Requests a list of the Temporal domains.
+    /// <b>client --> proxy:</b> Requests a list of the Temporal namespaces.
     /// </summary>
     [InternalProxyMessage(InternalMessageTypes.DescribeTaskListRequest)]
     internal class DescribeTaskListRequest : ProxyRequest

@@ -76,7 +76,7 @@ namespace Neon.Temporal.Internal
 
             var typedTarget = (WorkflowRegisterRequest)target;
 
-            typedTarget.Name   = this.Name;
+            typedTarget.Name      = this.Name;
             typedTarget.Namespace = this.Namespace;
         }
     }

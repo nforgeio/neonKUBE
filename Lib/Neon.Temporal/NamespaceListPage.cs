@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    InternalRegisterDomainRequest.cs
+// FILE:	    NamespaceListPage.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -21,43 +21,26 @@ using System.ComponentModel;
 
 using Neon.Common;
 using Neon.Temporal;
+using Neon.Temporal.Internal;
 
-namespace Neon.Temporal.Internal
+namespace Neon.Temporal
 {
     /// <summary>
-    /// Namespace registration details.
+    /// Holds a page of namespace information listed from Temporal.
     /// </summary>
-    internal class InternalRegisterDomainRequest
+    public class NamespaceListPage
     {
         /// <summary>
-        /// The namespace name.
+        /// Lists the namespace information.
         /// </summary>
-        public string Name { get; set; }
+        public List<NamespaceDescription> Namespaces { get; set; }
 
         /// <summary>
-        /// The namespace description.
+        /// Indicates that there's at least one more page of namespace information
+        /// to be returned from Temporal when this is not <c>null</c>.  Otherwise,
+        /// this is an opaque token that may be passed to <see cref="TemporalClient.ListNamespacesAsync(int, byte[])"/>
+        /// to retrieve the next page of namespace information.
         /// </summary>
-        public string Description { get; set; }
-
-        /// <summary>
-        /// The namespace owner's email address.
-        /// </summary>
-        public string OwnerEmail { get; set; }
-
-        /// <summary>
-        /// The number of days to retain the history for workflowws
-        /// completed in this namespace.  This defaults to <b>7 days</b>.
-        /// </summary>
-        public int RetentionDays { get; set; } = 7;
-
-        /// <summary>
-        /// Enables metric generation.  This defaults to <c>false.</c>
-        /// </summary>
-        public bool EmitMetrics { get; set; }
-
-        /// <summary>
-        /// Optional security token.
-        /// </summary>
-        public string SecurityToken { get; set; }
+        public byte[] NextPageToken { get; set; }
     }
 }

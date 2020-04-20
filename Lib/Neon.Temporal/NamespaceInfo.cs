@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainDeprecateReply.cs
+// FILE:	    NamespaceInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -21,37 +21,33 @@ using System.ComponentModel;
 
 using Neon.Common;
 using Neon.Temporal;
+using Neon.Temporal.Internal;
 
-namespace Neon.Temporal.Internal
+namespace Neon.Temporal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="DomainDeprecateRequest"/>.
+    /// Information about a Temporal namespace.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.DomainDeprecateReply)]
-    internal class DomainDeprecateReply : ProxyReply
+    public class NamespaceInfo
     {
         /// <summary>
-        /// Default constructor.
+        /// The namespace name.
         /// </summary>
-        public DomainDeprecateReply()
-        {
-            Type = InternalMessageTypes.DomainDeprecateReply;
-        }
+        public string Name { get; set; }
 
-        /// <inheritdoc/>
-        internal override ProxyMessage Clone()
-        {
-            var clone = new DomainDeprecateReply();
+        /// <summary>
+        /// The namespace status.
+        /// </summary>
+        public NamespaceStatus Status { get; set; }
 
-            CopyTo(clone);
+        /// <summary>
+        /// Ths namespace description.
+        /// </summary>
+        public string Description { get; set; }
 
-            return clone;
-        }
-
-        /// <inheritdoc/>
-        protected override void CopyTo(ProxyMessage target)
-        {
-            base.CopyTo(target);
-        }
+        /// <summary>
+        /// The namespace owner's email address.
+        /// </summary>
+        public string OwnerEmail { get; set; }
     }
 }

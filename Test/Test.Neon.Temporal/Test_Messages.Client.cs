@@ -214,7 +214,7 @@ namespace TestTemporal
                 message.HostPort = "127.0.0.1:7233";
                 message.Identity = "my-identity";
                 message.ClientTimeout = TimeSpan.FromSeconds(30);
-                message.Namespace = "my-domain";
+                message.Namespace = "my-namespace";
                 message.CreateNamespace = true;
                 message.Namespace = "my-namespace";
                 message.Retries = 3;
@@ -224,9 +224,8 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("127.0.0.1:7233", message.HostPort);
                 Assert.Equal("my-identity", message.Identity);
-                Assert.Equal("my-domain", message.Namespace);
-                Assert.True(message.CreateNamespace);
                 Assert.Equal("my-namespace", message.Namespace);
+                Assert.True(message.CreateNamespace);
                 Assert.Equal(3, message.Retries);
                 Assert.Equal(TimeSpan.FromSeconds(2), message.RetryDelay);
 
@@ -241,7 +240,6 @@ namespace TestTemporal
                 Assert.Equal("127.0.0.1:7233", message.HostPort);
                 Assert.Equal("my-identity", message.Identity);
                 Assert.Equal(TimeSpan.FromSeconds(30), message.ClientTimeout);
-                Assert.Equal("my-domain", message.Namespace);
                 Assert.Equal("my-namespace", message.Namespace);
                 Assert.True(message.CreateNamespace);
                 Assert.Equal(3, message.Retries);
@@ -256,7 +254,6 @@ namespace TestTemporal
                 Assert.Equal("127.0.0.1:7233", message.HostPort);
                 Assert.Equal("my-identity", message.Identity);
                 Assert.Equal(TimeSpan.FromSeconds(30), message.ClientTimeout);
-                Assert.Equal("my-domain", message.Namespace);
                 Assert.Equal("my-namespace", message.Namespace);
                 Assert.True(message.CreateNamespace);
                 Assert.Equal(3, message.Retries);
@@ -271,7 +268,6 @@ namespace TestTemporal
                 Assert.Equal("127.0.0.1:7233", message.HostPort);
                 Assert.Equal("my-identity", message.Identity);
                 Assert.Equal(TimeSpan.FromSeconds(30), message.ClientTimeout);
-                Assert.Equal("my-domain", message.Namespace);
                 Assert.Equal("my-namespace", message.Namespace);
                 Assert.True(message.CreateNamespace);
                 Assert.Equal(3, message.Retries);
@@ -341,13 +337,13 @@ namespace TestTemporal
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public void Test_DomainDescribeRequest()
         {
-            DomainDescribeRequest message;
+            NamespaceDescribeRequest message;
 
             using (var stream = new MemoryStream())
             {
-                message = new DomainDescribeRequest();
+                message = new NamespaceDescribeRequest();
 
-                Assert.Equal(InternalMessageTypes.DomainDescribeReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.NamespaceDescribeReply, message.ReplyType);
 
                 // Empty message.
 
@@ -355,7 +351,7 @@ namespace TestTemporal
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainDescribeRequest>(stream);
+                message = ProxyMessage.Deserialize<NamespaceDescribeRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
@@ -365,29 +361,29 @@ namespace TestTemporal
 
                 message.ClientId = 444;
                 message.RequestId = 555;
-                message.Name = "my-domain";
+                message.Name = "my-namespace";
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-domain", message.Name);
+                Assert.Equal("my-namespace", message.Name);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainDescribeRequest>(stream);
+                message = ProxyMessage.Deserialize<NamespaceDescribeRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-domain", message.Name);
+                Assert.Equal("my-namespace", message.Name);
 
                 // Clone()
 
-                message = (DomainDescribeRequest)message.Clone();
+                message = (NamespaceDescribeRequest)message.Clone();
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-domain", message.Name);
+                Assert.Equal("my-namespace", message.Name);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -395,7 +391,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-domain", message.Name);
+                Assert.Equal("my-namespace", message.Name);
             }
         }
 
@@ -403,11 +399,11 @@ namespace TestTemporal
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public void Test_DomainDescribeReply()
         {
-            DomainDescribeReply message;
+            NamespaceDescribeReply message;
 
             using (var stream = new MemoryStream())
             {
-                message = new DomainDescribeReply();
+                message = new NamespaceDescribeReply();
 
                 // Empty message.
 
@@ -415,17 +411,17 @@ namespace TestTemporal
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainDescribeReply>(stream);
+                message = ProxyMessage.Deserialize<NamespaceDescribeReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
                 Assert.False(message.ConfigurationEmitMetrics);
                 Assert.Equal(0, message.ConfigurationRetentionDays);
-                Assert.Null(message.DomainInfoName);
-                Assert.Null(message.DomainInfoDescription);
-                Assert.Equal(DomainStatus.Registered, message.DomainInfoStatus);
-                Assert.Null(message.DomainInfoOwnerEmail);
+                Assert.Null(message.NamespaceInfoName);
+                Assert.Null(message.NamespaceInfoDescription);
+                Assert.Equal(NamespaceStatus.Registered, message.NamespaceInfoStatus);
+                Assert.Null(message.NamespaceInfoOwnerEmail);
 
                 // Round-trip
 
@@ -434,50 +430,50 @@ namespace TestTemporal
                 message.Error = new TemporalError("MyError");
                 message.ConfigurationEmitMetrics = true;
                 message.ConfigurationRetentionDays = 7;
-                message.DomainInfoName = "my-name";
-                message.DomainInfoDescription = "my-description";
-                message.DomainInfoStatus = DomainStatus.Deprecated;
-                message.DomainInfoOwnerEmail = "joe@bloe.com";
+                message.NamespaceInfoName = "my-name";
+                message.NamespaceInfoDescription = "my-description";
+                message.NamespaceInfoStatus = NamespaceStatus.Deprecated;
+                message.NamespaceInfoOwnerEmail = "joe@bloe.com";
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.True(message.ConfigurationEmitMetrics);
                 Assert.Equal(7, message.ConfigurationRetentionDays);
-                Assert.Equal("my-name", message.DomainInfoName);
-                Assert.Equal("my-description", message.DomainInfoDescription);
-                Assert.Equal(DomainStatus.Deprecated, message.DomainInfoStatus);
-                Assert.Equal("joe@bloe.com", message.DomainInfoOwnerEmail);
+                Assert.Equal("my-name", message.NamespaceInfoName);
+                Assert.Equal("my-description", message.NamespaceInfoDescription);
+                Assert.Equal(NamespaceStatus.Deprecated, message.NamespaceInfoStatus);
+                Assert.Equal("joe@bloe.com", message.NamespaceInfoOwnerEmail);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainDescribeReply>(stream);
+                message = ProxyMessage.Deserialize<NamespaceDescribeReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.True(message.ConfigurationEmitMetrics);
                 Assert.Equal(7, message.ConfigurationRetentionDays);
-                Assert.Equal("my-name", message.DomainInfoName);
-                Assert.Equal("my-description", message.DomainInfoDescription);
-                Assert.Equal(DomainStatus.Deprecated, message.DomainInfoStatus);
-                Assert.Equal("joe@bloe.com", message.DomainInfoOwnerEmail);
+                Assert.Equal("my-name", message.NamespaceInfoName);
+                Assert.Equal("my-description", message.NamespaceInfoDescription);
+                Assert.Equal(NamespaceStatus.Deprecated, message.NamespaceInfoStatus);
+                Assert.Equal("joe@bloe.com", message.NamespaceInfoOwnerEmail);
 
                 // Clone()
 
-                message = (DomainDescribeReply)message.Clone();
+                message = (NamespaceDescribeReply)message.Clone();
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.True(message.ConfigurationEmitMetrics);
                 Assert.Equal(7, message.ConfigurationRetentionDays);
-                Assert.Equal("my-name", message.DomainInfoName);
-                Assert.Equal("my-description", message.DomainInfoDescription);
-                Assert.Equal(DomainStatus.Deprecated, message.DomainInfoStatus);
-                Assert.Equal("joe@bloe.com", message.DomainInfoOwnerEmail);
+                Assert.Equal("my-name", message.NamespaceInfoName);
+                Assert.Equal("my-description", message.NamespaceInfoDescription);
+                Assert.Equal(NamespaceStatus.Deprecated, message.NamespaceInfoStatus);
+                Assert.Equal("joe@bloe.com", message.NamespaceInfoOwnerEmail);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -488,10 +484,10 @@ namespace TestTemporal
                 Assert.Equal("MyError", message.Error.String);
                 Assert.True(message.ConfigurationEmitMetrics);
                 Assert.Equal(7, message.ConfigurationRetentionDays);
-                Assert.Equal("my-name", message.DomainInfoName);
-                Assert.Equal("my-description", message.DomainInfoDescription);
-                Assert.Equal(DomainStatus.Deprecated, message.DomainInfoStatus);
-                Assert.Equal("joe@bloe.com", message.DomainInfoOwnerEmail);
+                Assert.Equal("my-name", message.NamespaceInfoName);
+                Assert.Equal("my-description", message.NamespaceInfoDescription);
+                Assert.Equal(NamespaceStatus.Deprecated, message.NamespaceInfoStatus);
+                Assert.Equal("joe@bloe.com", message.NamespaceInfoOwnerEmail);
             }
         }
 
@@ -499,13 +495,13 @@ namespace TestTemporal
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public void Test_DomainRegisterRequest()
         {
-            DomainRegisterRequest message;
+            NamespaceRegisterRequest message;
 
             using (var stream = new MemoryStream())
             {
-                message = new DomainRegisterRequest();
+                message = new NamespaceRegisterRequest();
 
-                Assert.Equal(InternalMessageTypes.DomainRegisterReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.NamespaceRegisterReply, message.ReplyType);
 
                 // Empty message.
 
@@ -513,7 +509,7 @@ namespace TestTemporal
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainRegisterRequest>(stream);
+                message = ProxyMessage.Deserialize<NamespaceRegisterRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
@@ -527,7 +523,7 @@ namespace TestTemporal
 
                 message.ClientId = 444;
                 message.RequestId = 555;
-                message.Name = "my-domain";
+                message.Name = "my-namespace";
                 message.Description = "my-description";
                 message.OwnerEmail = "my-email";
                 message.EmitMetrics = true;
@@ -535,7 +531,7 @@ namespace TestTemporal
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-domain", message.Name);
+                Assert.Equal("my-namespace", message.Name);
                 Assert.Equal("my-description", message.Description);
                 Assert.Equal("my-email", message.OwnerEmail);
                 Assert.True(message.EmitMetrics);
@@ -545,11 +541,11 @@ namespace TestTemporal
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainRegisterRequest>(stream);
+                message = ProxyMessage.Deserialize<NamespaceRegisterRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-domain", message.Name);
+                Assert.Equal("my-namespace", message.Name);
                 Assert.Equal("my-description", message.Description);
                 Assert.Equal("my-email", message.OwnerEmail);
                 Assert.True(message.EmitMetrics);
@@ -557,11 +553,11 @@ namespace TestTemporal
 
                 // Clone()
 
-                message = (DomainRegisterRequest)message.Clone();
+                message = (NamespaceRegisterRequest)message.Clone();
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-domain", message.Name);
+                Assert.Equal("my-namespace", message.Name);
                 Assert.Equal("my-description", message.Description);
                 Assert.Equal("my-email", message.OwnerEmail);
                 Assert.True(message.EmitMetrics);
@@ -573,7 +569,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-domain", message.Name);
+                Assert.Equal("my-namespace", message.Name);
                 Assert.Equal("my-description", message.Description);
                 Assert.Equal("my-email", message.OwnerEmail);
                 Assert.True(message.EmitMetrics);
@@ -585,11 +581,11 @@ namespace TestTemporal
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public void Test_DomainRegisterReply()
         {
-            DomainRegisterReply message;
+            NamespaceRegisterReply message;
 
             using (var stream = new MemoryStream())
             {
-                message = new DomainRegisterReply();
+                message = new NamespaceRegisterReply();
 
                 // Empty message.
 
@@ -597,7 +593,7 @@ namespace TestTemporal
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainRegisterReply>(stream);
+                message = ProxyMessage.Deserialize<NamespaceRegisterReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
@@ -617,7 +613,7 @@ namespace TestTemporal
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainRegisterReply>(stream);
+                message = ProxyMessage.Deserialize<NamespaceRegisterReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -625,7 +621,7 @@ namespace TestTemporal
 
                 // Clone()
 
-                message = (DomainRegisterReply)message.Clone();
+                message = (NamespaceRegisterReply)message.Clone();
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -645,13 +641,13 @@ namespace TestTemporal
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public void Test_DomainUpdateRequest()
         {
-            DomainUpdateRequest message;
+            NamespaceUpdateRequest message;
 
             using (var stream = new MemoryStream())
             {
-                message = new DomainUpdateRequest();
+                message = new NamespaceUpdateRequest();
 
-                Assert.Equal(InternalMessageTypes.DomainUpdateReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.NamespaceUpdateReply, message.ReplyType);
 
                 // Empty message.
 
@@ -659,7 +655,7 @@ namespace TestTemporal
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainUpdateRequest>(stream);
+                message = ProxyMessage.Deserialize<NamespaceUpdateRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
@@ -691,7 +687,7 @@ namespace TestTemporal
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainUpdateRequest>(stream);
+                message = ProxyMessage.Deserialize<NamespaceUpdateRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -703,7 +699,7 @@ namespace TestTemporal
 
                 // Clone()
 
-                message = (DomainUpdateRequest)message.Clone();
+                message = (NamespaceUpdateRequest)message.Clone();
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -731,11 +727,11 @@ namespace TestTemporal
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public void Test_DomainUpdateReply()
         {
-            DomainUpdateReply message;
+            NamespaceUpdateReply message;
 
             using (var stream = new MemoryStream())
             {
-                message = new DomainUpdateReply();
+                message = new NamespaceUpdateReply();
 
                 // Empty message.
 
@@ -743,7 +739,7 @@ namespace TestTemporal
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainUpdateReply>(stream);
+                message = ProxyMessage.Deserialize<NamespaceUpdateReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
@@ -762,7 +758,7 @@ namespace TestTemporal
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainUpdateReply>(stream);
+                message = ProxyMessage.Deserialize<NamespaceUpdateReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -770,7 +766,7 @@ namespace TestTemporal
 
                 // Clone()
 
-                message = (DomainUpdateReply)message.Clone();
+                message = (NamespaceUpdateReply)message.Clone();
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -1173,13 +1169,13 @@ namespace TestTemporal
 
                 message.ClientId = 444;
                 message.RequestId = 555;
-                message.Namespace = "my-domain";
+                message.Namespace = "my-namespace";
                 message.TaskList = "my-tasks";
                 message.Options = new InternalWorkerOptions() { Identity = "my-identity", MaxConcurrentActivityExecutionSize = 1234 };
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-tasks", message.TaskList);
                 Assert.Equal("my-identity", message.Options.Identity);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
@@ -1192,7 +1188,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-tasks", message.TaskList);
                 Assert.Equal("my-identity", message.Options.Identity);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
@@ -1203,7 +1199,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-tasks", message.TaskList);
                 Assert.Equal("my-identity", message.Options.Identity);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
@@ -1214,7 +1210,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-domain", message.Namespace);
+                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-tasks", message.TaskList);
                 Assert.Equal("my-identity", message.Options.Identity);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
@@ -1628,13 +1624,13 @@ namespace TestTemporal
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public void Test_DomainDeprecateRequest()
         {
-            DomainDeprecateRequest message;
+            NamespaceDeprecateRequest message;
 
             using (var stream = new MemoryStream())
             {
-                message = new DomainDeprecateRequest();
+                message = new NamespaceDeprecateRequest();
 
-                Assert.Equal(InternalMessageTypes.DomainDeprecateReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.NamespaceDeprecateReply, message.ReplyType);
 
                 // Empty message.
 
@@ -1642,7 +1638,7 @@ namespace TestTemporal
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainDeprecateRequest>(stream);
+                message = ProxyMessage.Deserialize<NamespaceDeprecateRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
@@ -1653,32 +1649,32 @@ namespace TestTemporal
 
                 message.ClientId = 444;
                 message.RequestId = 555;
-                message.Name = "my-domain";
+                message.Name = "my-namespace";
                 message.SecurityToken = "my-token";
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-domain", message.Name);
+                Assert.Equal("my-namespace", message.Name);
                 Assert.Equal("my-token", message.SecurityToken);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainDeprecateRequest>(stream);
+                message = ProxyMessage.Deserialize<NamespaceDeprecateRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-domain", message.Name);
+                Assert.Equal("my-namespace", message.Name);
                 Assert.Equal("my-token", message.SecurityToken);
 
                 // Clone()
 
-                message = (DomainDeprecateRequest)message.Clone();
+                message = (NamespaceDeprecateRequest)message.Clone();
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-domain", message.Name);
+                Assert.Equal("my-namespace", message.Name);
                 Assert.Equal("my-token", message.SecurityToken);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
@@ -1687,7 +1683,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-domain", message.Name);
+                Assert.Equal("my-namespace", message.Name);
                 Assert.Equal("my-token", message.SecurityToken);
             }
         }
@@ -1696,11 +1692,11 @@ namespace TestTemporal
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public void Test_DomainDeprecateReply()
         {
-            DomainDeprecateReply message;
+            NamespaceDeprecateReply message;
 
             using (var stream = new MemoryStream())
             {
-                message = new DomainDeprecateReply();
+                message = new NamespaceDeprecateReply();
 
                 // Empty message.
 
@@ -1708,7 +1704,7 @@ namespace TestTemporal
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainDeprecateReply>(stream);
+                message = ProxyMessage.Deserialize<NamespaceDeprecateReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
@@ -1726,14 +1722,14 @@ namespace TestTemporal
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainDeprecateReply>(stream);
+                message = ProxyMessage.Deserialize<NamespaceDeprecateReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
 
                 // Clone()
 
-                message = (DomainDeprecateReply)message.Clone();
+                message = (NamespaceDeprecateReply)message.Clone();
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -1996,13 +1992,13 @@ namespace TestTemporal
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public void Test_DomainListRequest()
         {
-            DomainListRequest message;
+            NamespaceListRequest message;
 
             using (var stream = new MemoryStream())
             {
-                message = new DomainListRequest();
+                message = new NamespaceListRequest();
 
-                Assert.Equal(InternalMessageTypes.DomainListReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.NamespaceListReply, message.ReplyType);
 
                 // Empty message.
 
@@ -2010,7 +2006,7 @@ namespace TestTemporal
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainListRequest>(stream);
+                message = ProxyMessage.Deserialize<NamespaceListRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
@@ -2033,7 +2029,7 @@ namespace TestTemporal
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainListRequest>(stream);
+                message = ProxyMessage.Deserialize<NamespaceListRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -2042,7 +2038,7 @@ namespace TestTemporal
 
                 // Clone()
 
-                message = (DomainListRequest)message.Clone();
+                message = (NamespaceListRequest)message.Clone();
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -2061,19 +2057,19 @@ namespace TestTemporal
         }
 
         /// <summary>
-        /// Returns an <see cref="InternalDomainInfo"/> instance for testing purposes.
+        /// Returns an <see cref="InternalNamespaceInfo"/> instance for testing purposes.
         /// </summary>
         /// <returns>The test info.</returns>
-        private InternalDomainInfo GetTestDomainInfo()
+        private InternalNamespaceInfo GetTestDomainInfo()
         {
             var data = new Dictionary<string, byte[]>();
 
             data.Add("test", new byte[] { 0, 1, 2, 3, 4 });
 
-            return new InternalDomainInfo()
+            return new InternalNamespaceInfo()
             {
-                Name         = "my-domain",
-                DomainStatus = DomainStatus.Deprecated,
+                Name         = "my-namespace",
+                NamespaceStatus = NamespaceStatus.Deprecated,
                 Description  = "Test domain",
                 OwnerEmail   = "jeff@lilltek.com",
                 Data         = data,
@@ -2082,14 +2078,14 @@ namespace TestTemporal
         }
 
         /// <summary>
-        /// Validates an <see cref="InternalDomainInfo"/> instance for testing purposes.
+        /// Validates an <see cref="InternalNamespaceInfo"/> instance for testing purposes.
         /// </summary>
         /// <param name="info">The domain info.</param>
-        private void ValidateTestDomainInfo(InternalDomainInfo info)
+        private void ValidateTestDomainInfo(InternalNamespaceInfo info)
         {
             Assert.NotNull(info);
-            Assert.Equal("my-domain", info.Name);
-            Assert.Equal(DomainStatus.Deprecated, info.DomainStatus);
+            Assert.Equal("my-namespace", info.Name);
+            Assert.Equal(NamespaceStatus.Deprecated, info.NamespaceStatus);
             Assert.Equal("jeff@lilltek.com", info.OwnerEmail);
             Assert.Single(info.Data);
             Assert.Equal("test", info.Data.First().Key);
@@ -2098,10 +2094,10 @@ namespace TestTemporal
         }
 
         /// <summary>
-        /// Returns an <see cref="InternalDomainConfiguration"/> for testing purposes.
+        /// Returns an <see cref="InternalNamespaceConfiguration"/> for testing purposes.
         /// </summary>
         /// <returns></returns>
-        private InternalDomainConfiguration GetTestDomainConfiguration()
+        private InternalNamespaceConfiguration GetTestDomainConfiguration()
         {
             var badBinariesMap = new Dictionary<string, InternalBadBinaryInfo>();
 
@@ -2118,7 +2114,7 @@ namespace TestTemporal
                 Binaries = badBinariesMap
             };
 
-            return new InternalDomainConfiguration()
+            return new InternalNamespaceConfiguration()
             {
                 WorkflowExecutionRetentionPeriodInDays = 30,
                 EmitMetric                             = true,
@@ -2131,10 +2127,10 @@ namespace TestTemporal
         }
 
         /// <summary>
-        /// Validates a test <see cref="InternalDomainConfiguration"/>.
+        /// Validates a test <see cref="InternalNamespaceConfiguration"/>.
         /// </summary>
         /// <param name="config">The domain config.</param>
-        private void ValidateTestDomainConfiguration(InternalDomainConfiguration config)
+        private void ValidateTestDomainConfiguration(InternalNamespaceConfiguration config)
         {
             Assert.NotNull(config);
             Assert.Equal(30, config.WorkflowExecutionRetentionPeriodInDays);
@@ -2154,24 +2150,24 @@ namespace TestTemporal
         /// <summary>
         /// Returns a list of test domain information.
         /// </summary>
-        private List<InternalDescribeDomainResponse> GetTestDomains()
+        private List<InternalDescribeNamespaceResponse> GetTestDomains()
         {
-            var list = new List<InternalDescribeDomainResponse>();
+            var list = new List<InternalDescribeNamespaceResponse>();
 
             list.Add(
-                new InternalDescribeDomainResponse()
+                new InternalDescribeNamespaceResponse()
                 {
-                    IsGlobalDomain = true,
-                    DomainConfiguration = new InternalDomainConfiguration()
+                    IsGlobalNamespace = true,
+                    NamespaceConfiguration = new InternalNamespaceConfiguration()
                     {
                         EmitMetric                             = true,
                         WorkflowExecutionRetentionPeriodInDays = 30
                     },
-                    DomainInfo = new InternalDomainInfo()
+                    NamespaceInfo = new InternalNamespaceInfo()
                     {
-                        Name         = "my-domain",
+                        Name         = "my-namespace",
                         Description  = "This is my domain",
-                        DomainStatus = DomainStatus.Deprecated,
+                        NamespaceStatus = NamespaceStatus.Deprecated,
                         OwnerEmail   = "jeff@lilltek.com"
 
                         // $todo(jefflill): Currently ignoring
@@ -2188,35 +2184,35 @@ namespace TestTemporal
         /// Verifies that a test domain list is valid.
         /// </summary>
         /// <param name="domains">The test domains.</param>
-        private void ValidateTestDomains(List<InternalDescribeDomainResponse> domains)
+        private void ValidateTestDomains(List<InternalDescribeNamespaceResponse> domains)
         {
             Assert.NotNull(domains);
             Assert.Single(domains);
 
             var domain = domains.First();
 
-            Assert.True(domain.IsGlobalDomain);
+            Assert.True(domain.IsGlobalNamespace);
             
-            Assert.NotNull(domain.DomainConfiguration);
-            Assert.True(domain.DomainConfiguration.EmitMetric);
-            Assert.Equal(30, domain.DomainConfiguration.WorkflowExecutionRetentionPeriodInDays);
+            Assert.NotNull(domain.NamespaceConfiguration);
+            Assert.True(domain.NamespaceConfiguration.EmitMetric);
+            Assert.Equal(30, domain.NamespaceConfiguration.WorkflowExecutionRetentionPeriodInDays);
 
-            Assert.NotNull(domain.DomainInfo);
-            Assert.Equal("my-domain", domain.DomainInfo.Name);
-            Assert.Equal("This is my domain", domain.DomainInfo.Description);
-            Assert.Equal(DomainStatus.Deprecated, domain.DomainInfo.DomainStatus);
-            Assert.Equal("jeff@lilltek.com", domain.DomainInfo.OwnerEmail);
+            Assert.NotNull(domain.NamespaceInfo);
+            Assert.Equal("my-namespace", domain.NamespaceInfo.Name);
+            Assert.Equal("This is my domain", domain.NamespaceInfo.Description);
+            Assert.Equal(NamespaceStatus.Deprecated, domain.NamespaceInfo.NamespaceStatus);
+            Assert.Equal("jeff@lilltek.com", domain.NamespaceInfo.OwnerEmail);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public void Test_DomainListReply()
         {
-            DomainListReply message;
+            NamespaceListReply message;
 
             using (var stream = new MemoryStream())
             {
-                message = new DomainListReply();
+                message = new NamespaceListReply();
 
                 // Empty message.
 
@@ -2224,12 +2220,12 @@ namespace TestTemporal
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainListReply>(stream);
+                message = ProxyMessage.Deserialize<NamespaceListReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Error);
-                Assert.Null(message.Domains);
+                Assert.Null(message.Namespaces);
                 Assert.Null(message.NextPageToken);
 
                 // Round-trip
@@ -2237,31 +2233,31 @@ namespace TestTemporal
                 message.ClientId      = 444;
                 message.RequestId     = 555;
                 message.NextPageToken = new byte[] { 5, 6, 7, 8, 9 };
-                message.Domains       = GetTestDomains();
+                message.Namespaces       = GetTestDomains();
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                ValidateTestDomains(message.Domains);
+                ValidateTestDomains(message.Namespaces);
                 Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DomainListReply>(stream);
+                message = ProxyMessage.Deserialize<NamespaceListReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                ValidateTestDomains(message.Domains);
+                ValidateTestDomains(message.Namespaces);
                 Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
 
                 // Clone()
 
-                message = (DomainListReply)message.Clone();
+                message = (NamespaceListReply)message.Clone();
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                ValidateTestDomains(message.Domains);
+                ValidateTestDomains(message.Namespaces);
                 Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
 
                 // Echo the message via the associated [temporal-proxy] and verify.
@@ -2270,7 +2266,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                ValidateTestDomains(message.Domains);
+                ValidateTestDomains(message.Namespaces);
                 Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
             }
         }

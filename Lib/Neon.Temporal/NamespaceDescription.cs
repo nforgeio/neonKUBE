@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainConfiguration.cs
+// FILE:	    NamespaceDescription.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -26,28 +26,23 @@ using Neon.Temporal.Internal;
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Domain configuration options.
+    /// Information returned by <see cref="TemporalClient.DescribeNamespaceAsync(string)"/>.
     /// </summary>
-    public class DomainConfiguration
+    public class NamespaceDescription
     {
         /// <summary>
-        /// The workflow history retention period in days.
+        /// The namespace information.
         /// </summary>
-        public int RetentionDays { get; set; }
+        public NamespaceInfo NamespaceInfo { get; set; }
 
         /// <summary>
-        /// Enables metrics for workflows and activities running in the namespace.
+        /// The namespace configuration.
         /// </summary>
-        public bool EmitMetrics { get; set; }
+        public NamespaceConfiguration Configuration { get; set; }
 
-        // $todo(jefflill):
-        //
-        // We need to add support for these additional Temporal GOLANG properties:
-        //
-        //      BadBinaries
-        //      HistoryArchivalStatus
-        //      HistoryArchivalUri
-        //      VisibilityArchivalStatus
-        //      VisibilityArchivalUri
+        /// <summary>
+        /// Indicates whether the namespace is global.
+        /// </summary>
+        public bool IsGlobalNamespace { get; set; }
     }
 }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainDeprecateRequest.cs
+// FILE:	    NamespaceRegisterRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,27 +32,63 @@ namespace Neon.Temporal.Internal
     /// <summary>
     /// <b>client --> proxy:</b> Requests that the proxy register a Temporal namespace.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.DomainDeprecateRequest)]
-    internal class DomainDeprecateRequest : ProxyRequest
+    [InternalProxyMessage(InternalMessageTypes.NamespaceRegisterRequest)]
+    internal class NamespaceRegisterRequest : ProxyRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public DomainDeprecateRequest()
+        public NamespaceRegisterRequest()
         {
-            Type = InternalMessageTypes.DomainDeprecateRequest;
+            Type = InternalMessageTypes.NamespaceRegisterRequest;
         }
 
         /// <inheritdoc/>
-        public override InternalMessageTypes ReplyType => InternalMessageTypes.DomainDeprecateReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.NamespaceRegisterReply;
 
         /// <summary>
-        /// Name of the namespace to be depreciated.
+        /// Name for the new namespace.
         /// </summary>
         public string Name
         {
             get => GetStringProperty(PropertyNames.Name);
             set => SetStringProperty(PropertyNames.Name, value);
+        }
+
+        /// <summary>
+        /// Human readable description for the namespace.
+        /// </summary>
+        public string Description
+        {
+            get => GetStringProperty(PropertyNames.Description);
+            set => SetStringProperty(PropertyNames.Description, value);
+        }
+
+        /// <summary>
+        /// Owner email address.
+        /// </summary>
+        public string OwnerEmail
+        {
+            get => GetStringProperty(PropertyNames.OwnerEmail);
+            set => SetStringProperty(PropertyNames.OwnerEmail, value);
+        }
+
+        /// <summary>
+        /// Enable metrics.
+        /// </summary>
+        public bool EmitMetrics
+        {
+            get => GetBoolProperty(PropertyNames.EmitMetrics);
+            set => SetBoolProperty(PropertyNames.EmitMetrics, value);
+        }
+
+        /// <summary>
+        /// The complete workflow history retention period in days.
+        /// </summary>
+        public int RetentionDays
+        {
+            get => GetIntProperty(PropertyNames.RetentionDays);
+            set => SetIntProperty(PropertyNames.RetentionDays, value);
         }
 
         /// <summary>
@@ -67,7 +103,7 @@ namespace Neon.Temporal.Internal
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new DomainDeprecateRequest();
+            var clone = new NamespaceRegisterRequest();
 
             CopyTo(clone);
 
@@ -79,9 +115,13 @@ namespace Neon.Temporal.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (DomainDeprecateRequest)target;
+            var typedTarget = (NamespaceRegisterRequest)target;
 
             typedTarget.Name          = this.Name;
+            typedTarget.Description   = this.Description;
+            typedTarget.OwnerEmail    = this.OwnerEmail;
+            typedTarget.EmitMetrics   = this.EmitMetrics;
+            typedTarget.RetentionDays = this.RetentionDays;
             typedTarget.SecurityToken = this.SecurityToken;
         }
     }

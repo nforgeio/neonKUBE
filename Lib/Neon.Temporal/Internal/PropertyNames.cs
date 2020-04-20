@@ -54,7 +54,7 @@ namespace Neon.Temporal.Internal
         public static PropertyNameUtf8 ContextId { get; private set; }                                 = new PropertyNameUtf8("ContextId");
         public static PropertyNameUtf8 ContinueAsNew { get; private set; }                             = new PropertyNameUtf8("ContinueAsNew");
         public static PropertyNameUtf8 ContinueAsNewArgs { get; private set; }                         = new PropertyNameUtf8("ContinueAsNewArgs");
-        public static PropertyNameUtf8 ContinueAsNewDomain { get; private set; }                       = new PropertyNameUtf8("ContinueAsNewDomain");
+        public static PropertyNameUtf8 ContinueAsNewNamespace { get; private set; }                    = new PropertyNameUtf8("ContinueAsNewNamespace");
         public static PropertyNameUtf8 ContinueAsNewExecutionStartToCloseTimeout { get; private set; } = new PropertyNameUtf8("ContinueAsNewExecutionStartToCloseTimeout");
         public static PropertyNameUtf8 ContinueAsNewScheduleToCloseTimeout { get; private set; }       = new PropertyNameUtf8("ContinueAsNewScheduleToCloseTimeout");
         public static PropertyNameUtf8 ContinueAsNewScheduleToStartTimeout { get; private set; }       = new PropertyNameUtf8("ContinueAsNewScheduleToStartTimeout");
@@ -65,12 +65,6 @@ namespace Neon.Temporal.Internal
         public static PropertyNameUtf8 Data { get; private set; }                                      = new PropertyNameUtf8("Data");
         public static PropertyNameUtf8 Description { get; private set; }                               = new PropertyNameUtf8("Description");
         public static PropertyNameUtf8 Details { get; private set; }                                   = new PropertyNameUtf8("Details");
-        public static PropertyNameUtf8 Domains { get; private set; }                                   = new PropertyNameUtf8("Domains");
-        public static PropertyNameUtf8 DomainInfo { get; private set; }                                = new PropertyNameUtf8("DomainInfo");
-        public static PropertyNameUtf8 DomainInfoName { get; private set; }                            = new PropertyNameUtf8("DomainInfoName");
-        public static PropertyNameUtf8 DomainInfoOwnerEmail { get; private set; }                      = new PropertyNameUtf8("DomainInfoOwnerEmail");
-        public static PropertyNameUtf8 DomainInfoStatus { get; private set; }                          = new PropertyNameUtf8("DomainInfoStatus");
-        public static PropertyNameUtf8 DomainInfoDescription { get; private set; }                     = new PropertyNameUtf8("DomainInfoDescription");
         public static PropertyNameUtf8 Duration { get; private set; }                                  = new PropertyNameUtf8("Duration");
         public static PropertyNameUtf8 EmitMetrics { get; private set; }                               = new PropertyNameUtf8("EmitMetrics");
         public static PropertyNameUtf8 Error { get; private set; }                                     = new PropertyNameUtf8("Error");
@@ -88,7 +82,7 @@ namespace Neon.Temporal.Internal
         public static PropertyNameUtf8 IsCancellable { get; private set; }                             = new PropertyNameUtf8("IsCancellable");
         public static PropertyNameUtf8 IsClosed { get; private set; }                                  = new PropertyNameUtf8("IsClosed");
         public static PropertyNameUtf8 IsFull { get; private set; }                                    = new PropertyNameUtf8("IsFull");
-        public static PropertyNameUtf8 IsGlobalDomain { get; private set; }                            = new PropertyNameUtf8("IsGlobalDomain");
+        public static PropertyNameUtf8 IsGlobalNamespace { get; private set; }                         = new PropertyNameUtf8("IsGlobalNamespace");
         public static PropertyNameUtf8 IsWorkflow { get; private set; }                                = new PropertyNameUtf8("IsWorkflow");
         public static PropertyNameUtf8 Length { get; private set; }                                    = new PropertyNameUtf8("Length");
         public static PropertyNameUtf8 LibraryAddress { get; private set; }                            = new PropertyNameUtf8("LibraryAddress");
@@ -101,6 +95,12 @@ namespace Neon.Temporal.Internal
         public static PropertyNameUtf8 NextPageToken { get; private set; }                             = new PropertyNameUtf8("NextPageToken");
         public static PropertyNameUtf8 Name { get; private set; }                                      = new PropertyNameUtf8("Name");
         public static PropertyNameUtf8 Namespace { get; private set; }                                 = new PropertyNameUtf8("Namespace");
+        public static PropertyNameUtf8 Namespaces { get; private set; }                                = new PropertyNameUtf8("Namespaces");
+        public static PropertyNameUtf8 NamespaceInfo { get; private set; }                             = new PropertyNameUtf8("NamespaceInfo");
+        public static PropertyNameUtf8 NamespaceInfoName { get; private set; }                         = new PropertyNameUtf8("NamespaceInfoName");
+        public static PropertyNameUtf8 NamespaceInfoOwnerEmail { get; private set; }                   = new PropertyNameUtf8("NamespaceInfoOwnerEmail");
+        public static PropertyNameUtf8 NamespaceInfoStatus { get; private set; }                       = new PropertyNameUtf8("NamespaceInfoStatus");
+        public static PropertyNameUtf8 NamespaceInfoDescription { get; private set; }                  = new PropertyNameUtf8("NamespaceInfoDescription");
         public static PropertyNameUtf8 NoBlock { get; private set; }                                   = new PropertyNameUtf8("NoBlock");
         public static PropertyNameUtf8 Options { get; private set; }                                   = new PropertyNameUtf8("Options");
         public static PropertyNameUtf8 OwnerEmail { get; private set; }                                = new PropertyNameUtf8("OwnerEmail");

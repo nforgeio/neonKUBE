@@ -43,7 +43,7 @@ namespace Neon.Temporal
     /// <typeparam name="WorkflowInterface">Specifies the workflow interface.</typeparam>
     public class WorkflowFutureStub<WorkflowInterface>
     {
-        private TemporalClient       client;
+        private TemporalClient      client;
         private WorkflowOptions     options;
         private string              workflowTypeName;
         private WorkflowExecution   execution;
@@ -183,7 +183,7 @@ namespace Neon.Temporal
                 {
                     WorkflowId = execution.WorkflowId,
                     RunId      = execution.RunId,
-                    Namespace     = options.Namespace,
+                    Namespace  = options.Namespace,
                     SignalName = signalName,
                     SignalArgs = TemporalHelper.ArgsToBytes(client.DataConverter, args)
                 });
@@ -297,7 +297,7 @@ namespace Neon.Temporal
                 {
                     WorkflowId = execution.WorkflowId,
                     RunId      = execution.RunId,
-                    Namespace     = options.Namespace,
+                    Namespace  = options.Namespace,
                     QueryName  = queryName,
                     QueryArgs  = TemporalHelper.ArgsToBytes(client.DataConverter, args)
                 });

@@ -79,7 +79,7 @@ namespace Neon.Temporal
         /// </summary>
         public const int DefaultCapacity = 100;
 
-        private TemporalClient       client;
+        private TemporalClient      client;
         private long                contextId;
         private long                queueId;
         private int                 capacity;

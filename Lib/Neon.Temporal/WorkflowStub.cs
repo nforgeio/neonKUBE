@@ -149,7 +149,7 @@ namespace Neon.Temporal
         //---------------------------------------------------------------------
         // Instance members
 
-        private TemporalClient   client;
+        private TemporalClient  client;
         private bool            withinWorkflow;
 
         /// <summary>

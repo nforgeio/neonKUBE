@@ -76,9 +76,9 @@ namespace Neon.Temporal.Internal
         /// <summary>
         /// Identifies the namespace where the parent workflow is running.
         /// </summary>
-        [JsonProperty(PropertyName = "ParentDomainId", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "ParentNamespaceId", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public string ParentDomainId { get; set; }
+        public string ParentNamespaceId { get; set; }
 
         /// <summary>
         /// Identfies the parent workflow.
@@ -149,7 +149,7 @@ namespace Neon.Temporal.Internal
                 TypeName            = this.WorkflowType.Name,
                 WorkflowCloseStatus = (WorkflowExecutionCloseStatus)this.WorkflowCloseStatus,
                 HistoryLength       = this.HistoryLength,
-                ParentDomain        = this.ParentDomainId,
+                ParentNamespace     = this.ParentNamespaceId,
                 ExecutionTime       = ComputeExecutionTime(),
                 Memo                = this.Memo?.Fields
             };

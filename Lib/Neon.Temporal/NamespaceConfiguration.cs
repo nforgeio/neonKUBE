@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    UpdateDomainInfo.cs
+// FILE:	    NamespaceConfiguration.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -26,18 +26,28 @@ using Neon.Temporal.Internal;
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Holds the changes to be made to a Temporal namespace's basic properties.
+    /// Namespace configuration options.
     /// </summary>
-    public class UpdateDomainInfo
+    public class NamespaceConfiguration
     {
         /// <summary>
-        /// The updated namespace description.
+        /// The workflow history retention period in days.
         /// </summary>
-        public string Description { get; set; }
+        public int RetentionDays { get; set; }
 
         /// <summary>
-        /// The updated namespace owner email address.
+        /// Enables metrics for workflows and activities running in the namespace.
         /// </summary>
-        public string OwnerEmail { get; set; }
+        public bool EmitMetrics { get; set; }
+
+        // $todo(jefflill):
+        //
+        // We need to add support for these additional Temporal GOLANG properties:
+        //
+        //      BadBinaries
+        //      HistoryArchivalStatus
+        //      HistoryArchivalUri
+        //      VisibilityArchivalStatus
+        //      VisibilityArchivalUri
     }
 }

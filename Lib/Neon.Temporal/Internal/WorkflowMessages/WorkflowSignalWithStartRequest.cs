@@ -125,7 +125,7 @@ namespace Neon.Temporal.Internal
 
             typedTarget.Workflow     = this.Workflow;
             typedTarget.WorkflowId   = this.WorkflowId;
-            typedTarget.Namespace       = this.Namespace;
+            typedTarget.Namespace    = this.Namespace;
             typedTarget.SignalName   = this.SignalName;
             typedTarget.SignalArgs   = this.SignalArgs;
             typedTarget.Options      = this.Options;

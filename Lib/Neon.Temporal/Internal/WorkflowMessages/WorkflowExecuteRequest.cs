@@ -94,10 +94,10 @@ namespace Neon.Temporal.Internal
 
             var typedTarget = (WorkflowExecuteRequest)target;
 
-            typedTarget.Args     = this.Args;
-            typedTarget.Workflow = this.Workflow;
-            typedTarget.Options  = this.Options;
-            typedTarget.Namespace   = this.Namespace;
+            typedTarget.Args      = this.Args;
+            typedTarget.Workflow  = this.Workflow;
+            typedTarget.Options   = this.Options;
+            typedTarget.Namespace = this.Namespace;
         }
     }
 }

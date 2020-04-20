@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TemporalClient.Domain.cs
+// FILE:	    TemporalClient.Namespace.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -34,20 +34,20 @@ namespace Neon.Temporal
         // Temporal namespace related operations.
 
         /// <summary>
-        /// Registers a Temporal namespace using the <see cref="InternalRegisterDomainRequest"/> information passed.
+        /// Registers a Temporal namespace using the <see cref="InternalRegisterNamespaceRequest"/> information passed.
         /// </summary>
         /// <param name="request">The namespace properties.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="DomainAlreadyExistsException">Thrown if the namespace already exists.</exception>
+        /// <exception cref="NamespaceAlreadyExistsException">Thrown if the namespace already exists.</exception>
         /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Temporal cluster problems.</exception>
         /// <exception cref="ServiceBusyException">Thrown when Temporal is too busy.</exception>
-        private async Task RegisterDomainAsync(InternalRegisterDomainRequest request)
+        private async Task RegisterNamespaceAsync(InternalRegisterNamespaceRequest request)
         {
             EnsureNotDisposed();
 
-            var domainRegisterRequest =
-                new DomainRegisterRequest()
+            var namespaceRegisterRequest =
+                new NamespaceRegisterRequest()
                 {
                     Name          = request.Name,
                     Description   = request.Description,
@@ -56,7 +56,7 @@ namespace Neon.Temporal
                     SecurityToken = request.SecurityToken
                 };
 
-            var reply = await CallProxyAsync(domainRegisterRequest);
+            var reply = await CallProxyAsync(namespaceRegisterRequest);
 
             reply.ThrowOnError();
         }
@@ -77,11 +77,11 @@ namespace Neon.Temporal
         /// to <c>false</c>.
         /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="DomainAlreadyExistsException">Thrown if the namespace already exists.</exception>
+        /// <exception cref="NamespaceAlreadyExistsException">Thrown if the namespace already exists.</exception>
         /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Temporal cluster problems.</exception>
         /// <exception cref="ServiceBusyException">Thrown when Temporal is too busy.</exception>
-        public async Task RegisterDomainAsync(string name, string description = null, string ownerEmail = null, int retentionDays = 7, bool ignoreDuplicates = false)
+        public async Task RegisterNamespaceAsync(string name, string description = null, string ownerEmail = null, int retentionDays = 7, bool ignoreDuplicates = false)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
@@ -91,8 +91,8 @@ namespace Neon.Temporal
 
             try
             {
-                await RegisterDomainAsync(
-                    new InternalRegisterDomainRequest()
+                await RegisterNamespaceAsync(
+                    new InternalRegisterNamespaceRequest()
                     {
                         Name          = name,
                         Description   = description,
@@ -101,7 +101,7 @@ namespace Neon.Temporal
                         SecurityToken = Settings.SecurityToken
                     });
             }
-            catch (DomainAlreadyExistsException)
+            catch (NamespaceAlreadyExistsException)
             {
                 if (!ignoreDuplicates)
                 {
@@ -114,38 +114,38 @@ namespace Neon.Temporal
         /// Describes the named Temporal namespace.
         /// </summary>
         /// <param name="name">The namespace name.</param>
-        /// <returns>The <see cref="DomainDescription"/>.</returns>
+        /// <returns>The <see cref="NamespaceDescription"/>.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the named namespace does not exist.</exception>
         /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Temporal cluster problems.</exception>
         /// <exception cref="ServiceBusyException">Thrown when Temporal is too busy.</exception>
-        public async Task<DomainDescription> DescribeDomainAsync(string name)
+        public async Task<NamespaceDescription> DescribeNamespaceAsync(string name)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             EnsureNotDisposed();
 
-            var domainDescribeRequest =
-                new DomainDescribeRequest()
+            var namespaceDescribeRequest =
+                new NamespaceDescribeRequest()
                 {
                     Name = name,
                 };
 
-            var reply = (DomainDescribeReply)await CallProxyAsync(domainDescribeRequest);
+            var reply = (NamespaceDescribeReply)await CallProxyAsync(namespaceDescribeRequest);
 
             reply.ThrowOnError();
 
-            return new DomainDescription()
+            return new NamespaceDescription()
             {
-                DomainInfo = new DomainInfo()
+                NamespaceInfo = new NamespaceInfo()
                 {
-                    Description = reply.DomainInfoDescription,
-                    Name        = reply.DomainInfoName,
-                    OwnerEmail  = reply.DomainInfoOwnerEmail,
-                    Status      = reply.DomainInfoStatus
+                    Description = reply.NamespaceInfoDescription,
+                    Name        = reply.NamespaceInfoName,
+                    OwnerEmail  = reply.NamespaceInfoOwnerEmail,
+                    Status      = reply.NamespaceInfoStatus
                 },
 
-                Configuration = new DomainConfiguration()
+                Configuration = new NamespaceConfiguration()
                 {
                     EmitMetrics   = reply.ConfigurationEmitMetrics,
                     RetentionDays = reply.ConfigurationRetentionDays
@@ -157,34 +157,34 @@ namespace Neon.Temporal
         /// Describes a Temporal namespace by UUID.
         /// </summary>
         /// <param name="uuid">The namespace ID.</param>
-        /// <returns>The <see cref="DomainDescription"/>.</returns>
-        public async Task<DomainDescription> DescribeDomainByIdAsync(string uuid)
+        /// <returns>The <see cref="NamespaceDescription"/>.</returns>
+        public async Task<NamespaceDescription> DescribeNamespaceByIdAsync(string uuid)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uuid), nameof(uuid));
             EnsureNotDisposed();
 
-            var domainDescribeRequest =
-                new DomainDescribeRequest()
+            var namespaceDescribeRequest =
+                new NamespaceDescribeRequest()
                 {
                     Uuid = uuid,
                 };
 
-            var reply = (DomainDescribeReply)await CallProxyAsync(domainDescribeRequest);
+            var reply = (NamespaceDescribeReply)await CallProxyAsync(namespaceDescribeRequest);
 
             reply.ThrowOnError();
 
-            return new DomainDescription()
+            return new NamespaceDescription()
             {
-                DomainInfo = new DomainInfo()
+                NamespaceInfo = new NamespaceInfo()
                 {
-                    Description = reply.DomainInfoDescription,
-                    Name        = reply.DomainInfoName,
-                    OwnerEmail  = reply.DomainInfoOwnerEmail,
-                    Status      = reply.DomainInfoStatus
+                    Description = reply.NamespaceInfoDescription,
+                    Name        = reply.NamespaceInfoName,
+                    OwnerEmail  = reply.NamespaceInfoOwnerEmail,
+                    Status      = reply.NamespaceInfoStatus
                 },
 
-                Configuration = new DomainConfiguration()
+                Configuration = new NamespaceConfiguration()
                 {
                     EmitMetrics   = reply.ConfigurationEmitMetrics,
                     RetentionDays = reply.ConfigurationRetentionDays
@@ -198,65 +198,65 @@ namespace Neon.Temporal
         /// <param name="name">Identifies the target namespace.</param>
         /// <param name="request">The updated namespace information.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task UpdateDomainAsync(string name, UpdateDomainRequest request)
+        public async Task UpdateNamespaceAsync(string name, UpdateNamespaceRequest request)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
             Covenant.Requires<ArgumentNullException>(request.Options != null, nameof(request));
-            Covenant.Requires<ArgumentNullException>(request.DomainInfo != null, nameof(request));
+            Covenant.Requires<ArgumentNullException>(request.NamespaceInfo != null, nameof(request));
             EnsureNotDisposed();
 
-            var domainUpdateRequest 
-                = new DomainUpdateRequest()
+            var namespaceUpdateRequest =
+                new NamespaceUpdateRequest()
                 {
                     Name                       = name,
-                    UpdatedInfoDescription     = request.DomainInfo.Description,
-                    UpdatedInfoOwnerEmail      = request.DomainInfo.OwnerEmail,
+                    UpdatedInfoDescription     = request.NamespaceInfo.Description,
+                    UpdatedInfoOwnerEmail      = request.NamespaceInfo.OwnerEmail,
                     ConfigurationEmitMetrics   = request.Options.EmitMetrics,
                     ConfigurationRetentionDays = request.Options.RetentionDays,
                     SecurityToken              = Settings.SecurityToken
                 };
 
-            var reply = await CallProxyAsync(domainUpdateRequest);
+            var reply = await CallProxyAsync(namespaceUpdateRequest);
 
             reply.ThrowOnError();
         }
 
         /// <summary>
-        /// Lists the Temporal domains.
+        /// Lists the Temporal namespaces.
         /// </summary>
         /// <param name="pageSize">
-        /// The maximum number of domains to be returned.  This must be
+        /// The maximum number of namespaces to be returned.  This must be
         /// greater than or equal to one.
         /// </param>
         /// <param name="nextPageToken">
         /// Optionally specifies an opaque token that can be used to retrieve subsequent
-        /// pages of domains.
+        /// pages of namespaces.
         /// </param>
-        /// <returns>A <see cref="DomainListPage"/> with the domains.</returns>
+        /// <returns>A <see cref="NamespaceListPage"/> with the namespaces.</returns>
         /// <remarks>
         /// <para>
         /// This method can be used to retrieve one or more pages of namespace
         /// results.  You'll pass <paramref name="pageSize"/> as the maximum number
-        /// of domains to be returned per page.  The <see cref="DomainListPage"/>
-        /// returned will list the domains and if there are more domains waiting
+        /// of namespaces to be returned per page.  The <see cref="NamespaceListPage"/>
+        /// returned will list the namespaces and if there are more namespaces waiting
         /// to be returned, will return token that can be used in a subsequent
         /// call to retrieve the next page of results.
         /// </para>
         /// <note>
-        /// <see cref="DomainListPage.NextPageToken"/> will be set to <c>null</c>
+        /// <see cref="NamespaceListPage.NextPageToken"/> will be set to <c>null</c>
         /// when there are no more result pages remaining.
         /// </note>
         /// </remarks>
-        public async Task<DomainListPage> ListDomainsAsync(int pageSize, byte[] nextPageToken = null)
+        public async Task<NamespaceListPage> ListNamespacesAsync(int pageSize, byte[] nextPageToken = null)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentException>(pageSize >= 1, nameof(pageSize));
             EnsureNotDisposed();
 
-            var reply = (DomainListReply)await CallProxyAsync(
-                new DomainListRequest()
+            var reply = (NamespaceListReply)await CallProxyAsync(
+                new NamespaceListRequest()
                 {
                      PageSize      = pageSize,
                      NextPageToken = nextPageToken
@@ -264,11 +264,11 @@ namespace Neon.Temporal
 
             reply.ThrowOnError();
 
-            var domains = new List<DomainDescription>(reply.Domains.Count);
+            var namespaces = new List<NamespaceDescription>(reply.Namespaces.Count);
 
-            foreach (var domain in reply.Domains)
+            foreach (var @namespace in reply.Namespaces)
             {
-                domains.Add(domain.ToPublic());
+                namespaces.Add(@namespace.ToPublic());
             }
 
             nextPageToken = reply.NextPageToken;
@@ -278,9 +278,9 @@ namespace Neon.Temporal
                 nextPageToken = null;
             }
 
-            return new DomainListPage()
+            return new NamespaceListPage()
             { 
-                Domains       = domains,
+                Namespaces    = namespaces,
                 NextPageToken = nextPageToken
             };
         }

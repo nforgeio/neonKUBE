@@ -134,8 +134,8 @@ namespace Neon.Temporal.Internal
         /// </summary>
         public string ContinueAsNewNamespace
         {
-            get => GetStringProperty(PropertyNames.ContinueAsNewDomain);
-            set => SetStringProperty(PropertyNames.ContinueAsNewDomain, value);
+            get => GetStringProperty(PropertyNames.ContinueAsNewNamespace);
+            set => SetStringProperty(PropertyNames.ContinueAsNewNamespace, value);
         }
 
         /// <summary>

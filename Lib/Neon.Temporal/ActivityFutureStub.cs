@@ -359,7 +359,7 @@ namespace Neon.Temporal
                             Activity   = activityTypeName,
                             Args       = TemporalHelper.ArgsToBytes(dataConverter, args),
                             Options    = options.ToInternal(),
-                            Namespace     = options.Namespace,
+                            Namespace  = options.Namespace,
                         });
                 });
 

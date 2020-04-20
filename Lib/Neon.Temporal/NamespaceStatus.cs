@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainUpdateReply.cs
+// FILE:	    Namespacetatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,40 +18,38 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.Serialization;
 
 using Neon.Common;
 using Neon.Temporal;
+using Neon.Temporal.Internal;
 
-namespace Neon.Temporal.Internal
+namespace Neon.Temporal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="DomainDescribeRequest"/>.
+    /// Indicates a Temporal namespace status.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.DomainUpdateReply)]
-    internal class DomainUpdateReply : ProxyReply
+    public enum NamespaceStatus
     {
         /// <summary>
-        /// Default constructor.
+        /// The namespace is registered and active.
         /// </summary>
-        public DomainUpdateReply()
-        {
-            Type = InternalMessageTypes.DomainUpdateReply;
-        }
+        [EnumMember(Value = "REGISTERED")]
+        Registered = 0,
 
-        /// <inheritdoc/>
-        internal override ProxyMessage Clone()
-        {
-            var clone = new DomainUpdateReply();
+        /// <summary>
+        /// The namespace is closed for new workflows but will remain
+        /// until already running workflows are completed and the
+        /// history retention period for the last executed workflow
+        /// has been satisified.
+        /// </summary>
+        [EnumMember(Value = "DEPRECATED")]
+        Deprecated,
 
-            CopyTo(clone);
-
-            return clone;
-        }
-
-        /// <inheritdoc/>
-        protected override void CopyTo(ProxyMessage target)
-        {
-            base.CopyTo(target);
-        }
+        /// <summary>
+        /// The namespace is deleted.
+        /// </summary>
+        [EnumMember(Value = "DELETED")]
+        Deleted
     }
 }

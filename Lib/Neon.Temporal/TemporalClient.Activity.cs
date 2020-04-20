@@ -257,7 +257,7 @@ namespace Neon.Temporal
             var reply = (ActivityCompleteReply)await CallProxyAsync(
                 new ActivityCompleteRequest()
                 {
-                    Namespace    = ResolveNamespace(@namespace),
+                    Namespace = ResolveNamespace(@namespace),
                     TaskToken = Convert.FromBase64String(taskToken),
                     Error     = new TemporalError(new CancelledException("Cancelled"))
                 });
@@ -283,7 +283,7 @@ namespace Neon.Temporal
             var reply = (ActivityCompleteReply)await CallProxyAsync(
                 new ActivityCompleteRequest()
                 {
-                    Namespace     = ResolveNamespace(@namespace),
+                    Namespace  = ResolveNamespace(@namespace),
                     WorkflowId = execution.WorkflowId,
                     RunId      = execution.RunId,
                     ActivityId = activityId,
@@ -311,7 +311,7 @@ namespace Neon.Temporal
             var reply = (ActivityCompleteReply)await CallProxyAsync(
                 new ActivityCompleteRequest()
                 {
-                    Namespace    = ResolveNamespace(@namespace),
+                    Namespace = ResolveNamespace(@namespace),
                     TaskToken = Convert.FromBase64String(taskToken),
                     Error     = new TemporalError(error)
                 });
@@ -339,7 +339,7 @@ namespace Neon.Temporal
             var reply = (ActivityCompleteReply)await CallProxyAsync(
                 new ActivityCompleteRequest()
                 {
-                    Namespace     = ResolveNamespace(@namespace),
+                    Namespace  = ResolveNamespace(@namespace),
                     WorkflowId = execution.WorkflowId,
                     RunId      = execution.RunId,
                     ActivityId = activityId,

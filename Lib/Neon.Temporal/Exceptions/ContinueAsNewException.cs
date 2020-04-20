@@ -77,7 +77,7 @@ namespace Neon.Temporal
         public ContinueAsNewException(
             byte[]          args                    = null,
             string          workflow                = null,
-            string          @namespace                  = null,
+            string          @namespace              = null,
             string          taskList                = null,
             TimeSpan        executionToStartTimeout = default,
             TimeSpan        scheduleToCloseTimeout  = default,
@@ -110,7 +110,7 @@ namespace Neon.Temporal
             if (options != null)
             {
                 this.Workflow                     = options.Workflow;
-                this.Namespace                       = options.Namespace;
+                this.Namespace                    = options.Namespace;
                 this.TaskList                     = options.TaskList;
                 this.ExecutionStartToCloseTimeout = options.ExecutionStartToCloseTimeout;
                 this.ScheduleToStartTimeout       = options.ScheduleToStartTimeout;

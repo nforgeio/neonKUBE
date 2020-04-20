@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainListPage.cs
+// FILE:	    UpdateNamespaceInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -26,21 +26,18 @@ using Neon.Temporal.Internal;
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Holds a page of namespace information listed from Temporal.
+    /// Holds the changes to be made to a Temporal namespace's basic properties.
     /// </summary>
-    public class DomainListPage
+    public class UpdateNamespaceInfo
     {
         /// <summary>
-        /// Lists the namespace information.
+        /// The updated namespace description.
         /// </summary>
-        public List<DomainDescription> Domains { get; set; }
+        public string Description { get; set; }
 
         /// <summary>
-        /// Indicates that there's at least one more page of namespace information
-        /// to be returned from Temporal when this is not <c>null</c>.  Otherwise,
-        /// this is an opaque token that may be passed to <see cref="TemporalClient.ListDomainsAsync(int, byte[])"/>
-        /// to retrieve the next page of namespace information.
+        /// The updated namespace owner email address.
         /// </summary>
-        public byte[] NextPageToken { get; set; }
+        public string OwnerEmail { get; set; }
     }
 }

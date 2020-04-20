@@ -59,7 +59,7 @@ namespace TestTemporal
                     client:             new TemporalClient(),
                     contextId:          1,
                     workflowTypeName:   typeof(DummyWorkflow).FullName,
-                    @namespace:             "my-domain",
+                    @namespace:             "my-namespace",
                     taskList:           "my-tasklist",
                     workflowId:         "my-workflow-id",
                     runId:              "my-run-id",

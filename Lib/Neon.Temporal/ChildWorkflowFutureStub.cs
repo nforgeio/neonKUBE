@@ -51,7 +51,7 @@ namespace Neon.Temporal
     public class ChildWorkflowFutureStub
     {
         private Workflow            parentWorkflow;
-        private TemporalClient       client;
+        private TemporalClient      client;
         private ChildExecution      childExecution;
 
         /// <summary>
@@ -219,7 +219,7 @@ namespace Neon.Temporal
     public class UntypedChildWorkflowFutureStub<TResult>
     {
         private Workflow            parentWorkflow;
-        private TemporalClient       client;
+        private TemporalClient      client;
         private ChildExecution      childExecution;
 
         /// <summary>

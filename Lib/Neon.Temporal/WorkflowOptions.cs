@@ -288,7 +288,7 @@ namespace Neon.Temporal
         {
             return new WorkflowOptions()
             {
-                Namespace                  = this.Namespace,
+                Namespace               = this.Namespace,
                 TaskList                = this.TaskList,
                 CronSchedule            = this.CronSchedule,
                 ScheduleToCloseTimeout  = this.ScheduleToCloseTimeout,

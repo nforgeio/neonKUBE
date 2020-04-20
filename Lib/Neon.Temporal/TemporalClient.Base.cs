@@ -136,8 +136,8 @@ namespace Neon.Temporal
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList), nameof(taskList), "Workers must be started with a non-empty workflow.");
             EnsureNotDisposed();
 
-            options  = options ?? new WorkerOptions();
-            @namespace   = ResolveNamespace(@namespace);
+            options    = options ?? new WorkerOptions();
+            @namespace = ResolveNamespace(@namespace);
 
             WorkerMode  mode = options.Mode;
             Worker      worker;
@@ -180,9 +180,9 @@ namespace Neon.Temporal
                     var reply = (NewWorkerReply)(await CallProxyAsync(
                         new NewWorkerRequest()
                         {
-                            Namespace   = ResolveNamespace(@namespace),
-                            TaskList = taskList,
-                            Options  = options.ToInternal()
+                            Namespace = ResolveNamespace(@namespace),
+                            TaskList  = taskList,
+                            Options   = options.ToInternal()
                         }));
 
                     reply.ThrowOnError();

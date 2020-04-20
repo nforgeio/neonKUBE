@@ -88,7 +88,7 @@ namespace Neon.Temporal.Internal
 
             typedTarget.WorkflowId = this.WorkflowId;
             typedTarget.RunId      = this.RunId;
-            typedTarget.Namespace     = this.Namespace;
+            typedTarget.Namespace  = this.Namespace;
         }
     }
 }

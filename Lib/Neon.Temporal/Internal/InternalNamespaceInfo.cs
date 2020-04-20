@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    InternalDomainInfo.cs
+// FILE:	    InternalNamespaceInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -29,7 +29,7 @@ namespace Neon.Temporal.Internal
     /// <summary>
     /// <b>INTERNAL USE ONLY:</b> Describes a Temporal namespace.
     /// </summary>
-    internal class InternalDomainInfo
+    internal class InternalNamespaceInfo
     {
         /// <summary>
         /// The namespace name.
@@ -42,8 +42,8 @@ namespace Neon.Temporal.Internal
         /// The namespace status.
         /// </summary>
         [JsonProperty(PropertyName = "status", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(DomainStatus.Registered)]
-        public DomainStatus DomainStatus { get; set; }
+        [DefaultValue(NamespaceStatus.Registered)]
+        public NamespaceStatus NamespaceStatus { get; set; }
 
         /// <summary>
         /// The namespace description.
@@ -75,22 +75,22 @@ namespace Neon.Temporal.Internal
         public string Uuid { get; set; }
 
         /// <summary>
-        /// Converts the internal instance into a public <see cref="DomainInfo"/>.
+        /// Converts the internal instance into a public <see cref="NamespaceInfo"/>.
         /// </summary>
-        /// <returns>The converted <see cref="DomainInfo"/>.</returns>
-        public DomainInfo ToPublic()
+        /// <returns>The converted <see cref="NamespaceInfo"/>.</returns>
+        public NamespaceInfo ToPublic()
         {
-            // $todo(jefflill): DomainInfo doesn't currently include these properties:
+            // $todo(jefflill): NamespaceInfo doesn't currently include these properties:
             //
             //  Data
             //  Uuid    
 
-            return new DomainInfo()
+            return new NamespaceInfo()
             {
                 Description = this.Description,
                 Name        = this.Name,
                 OwnerEmail  = this.OwnerEmail,
-                Status      = this.DomainStatus
+                Status      = this.NamespaceStatus
             };
         }
     }

@@ -78,10 +78,10 @@ namespace Neon.Temporal
         public long HistoryLength { get; internal set; }
 
         /// <summary>
-        /// Identifies the domain where the parent workflow is running
+        /// Identifies the namespece where the parent workflow is running
         /// (or <c>null</c>).
         /// </summary>
-        public string ParentDomain { get; internal set; }
+        public string ParentNamespace { get; internal set; }
 
         /// <summary>
         /// Identfies the parent workflow (or <c>null</c>).

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainDescribeRequest.cs
+// FILE:	    NamespaceListRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,54 +25,47 @@ using Neon.Temporal;
 namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// <b>client --> proxy:</b> Requests the details for a named namespace.
+    /// <b>client --> proxy:</b> Requests a list of the Temporal namespaces.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.DomainDescribeRequest)]
-    internal class DomainDescribeRequest : ProxyRequest
+    [InternalProxyMessage(InternalMessageTypes.NamespaceListRequest)]
+    internal class NamespaceListRequest : ProxyRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public DomainDescribeRequest()
+        public NamespaceListRequest()
         {
-            Type = InternalMessageTypes.DomainDescribeRequest;
+            Type = InternalMessageTypes.NamespaceListRequest;
         }
 
         /// <inheritdoc/>
-        public override InternalMessageTypes ReplyType => InternalMessageTypes.DomainDescribeReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.NamespaceListReply;
 
         /// <summary>
-        /// <para>
-        /// The target Temporal namespace name. (or <c>null</c>).
-        /// </para>
-        /// <note>
-        /// One of <see cref="Name"/> or <see cref="Uuid"/> must be non-null and non-empty.
-        /// </note>
+        /// Specifies the maximum number of items to be returned in the reponse.
         /// </summary>
-        public string Name
+        public int PageSize
         {
-            get => GetStringProperty(PropertyNames.Name);
-            set => SetStringProperty(PropertyNames.Name, value);
+            get => GetIntProperty(PropertyNames.PageSize);
+            set => SetIntProperty(PropertyNames.PageSize, value);
         }
-
+        
         /// <summary>
-        /// <para>
-        /// The target Temporal namespace UUID (or <c>null</c>).
-        /// </para>
-        /// <note>
-        /// One of <see cref="Name"/> or <see cref="Uuid"/> must be non-null and non-empty.
-        /// </note>
+        /// Optionally specifies the next page of results.  This will be <c>null</c>
+        /// for the first page of results and can be set to the the value returned
+        /// as <see cref="NamespaceListReply.NextPageToken"/> to retrieve the next page
+        /// of results.  This should be considered to be an opaque value.
         /// </summary>
-        public string Uuid
+        public byte[] NextPageToken
         {
-            get => GetStringProperty(PropertyNames.Uuid);
-            set => SetStringProperty(PropertyNames.Uuid, value);
+            get => GetBytesProperty(PropertyNames.NextPageToken);
+            set => SetBytesProperty(PropertyNames.NextPageToken, value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new DomainDescribeRequest();
+            var clone = new NamespaceListRequest();
 
             CopyTo(clone);
 
@@ -84,10 +77,10 @@ namespace Neon.Temporal.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (DomainDescribeRequest)target;
+            var typedTarget = (NamespaceListRequest)target;
 
-            typedTarget.Name = this.Name;
-            typedTarget.Uuid = this.Uuid;
+            typedTarget.PageSize      = this.PageSize;
+            typedTarget.NextPageToken = this.NextPageToken;
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainDescribeReply.cs
+// FILE:	    NamespaceDescribeReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,53 +25,53 @@ using Neon.Temporal;
 namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="DomainDescribeRequest"/>.
+    /// <b>proxy --> client:</b> Answers a <see cref="NamespaceDescribeRequest"/>.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.DomainDescribeReply)]
-    internal class DomainDescribeReply : ProxyReply
+    [InternalProxyMessage(InternalMessageTypes.NamespaceDescribeReply)]
+    internal class NamespaceDescribeReply : ProxyReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public DomainDescribeReply()
+        public NamespaceDescribeReply()
         {
-            Type = InternalMessageTypes.DomainDescribeReply;
+            Type = InternalMessageTypes.NamespaceDescribeReply;
         }
 
         /// <summary>
         /// The namespace name.
         /// </summary>
-        public string DomainInfoName
+        public string NamespaceInfoName
         {
-            get => GetStringProperty(PropertyNames.DomainInfoName);
-            set => SetStringProperty(PropertyNames.DomainInfoName, value);
+            get => GetStringProperty(PropertyNames.NamespaceInfoName);
+            set => SetStringProperty(PropertyNames.NamespaceInfoName, value);
         }
 
         /// <summary>
         /// Human readable description for the namespace.
         /// </summary>
-        public string DomainInfoDescription
+        public string NamespaceInfoDescription
         {
-            get => GetStringProperty(PropertyNames.DomainInfoDescription);
-            set => SetStringProperty(PropertyNames.DomainInfoDescription, value);
+            get => GetStringProperty(PropertyNames.NamespaceInfoDescription);
+            set => SetStringProperty(PropertyNames.NamespaceInfoDescription, value);
         }
 
         /// <summary>
         /// The namespace status.
         /// </summary>
-        public DomainStatus DomainInfoStatus
+        public NamespaceStatus NamespaceInfoStatus
         {
-            get => GetEnumProperty<DomainStatus>(PropertyNames.DomainInfoStatus);
-            set => SetEnumProperty<DomainStatus>(PropertyNames.DomainInfoStatus, value);
+            get => GetEnumProperty<NamespaceStatus>(PropertyNames.NamespaceInfoStatus);
+            set => SetEnumProperty<NamespaceStatus>(PropertyNames.NamespaceInfoStatus, value);
         }
 
         /// <summary>
         /// Owner email address.
         /// </summary>
-        public string DomainInfoOwnerEmail
+        public string NamespaceInfoOwnerEmail
         {
-            get => GetStringProperty(PropertyNames.DomainInfoOwnerEmail);
-            set => SetStringProperty(PropertyNames.DomainInfoOwnerEmail, value);
+            get => GetStringProperty(PropertyNames.NamespaceInfoOwnerEmail);
+            set => SetStringProperty(PropertyNames.NamespaceInfoOwnerEmail, value);
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace Neon.Temporal.Internal
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new DomainDescribeReply();
+            var clone = new NamespaceDescribeReply();
 
             CopyTo(clone);
 
@@ -107,14 +107,14 @@ namespace Neon.Temporal.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (DomainDescribeReply)target;
+            var typedTarget = (NamespaceDescribeReply)target;
 
             typedTarget.ConfigurationRetentionDays = this.ConfigurationRetentionDays;
             typedTarget.ConfigurationEmitMetrics   = this.ConfigurationEmitMetrics;
-            typedTarget.DomainInfoName             = this.DomainInfoName;
-            typedTarget.DomainInfoDescription      = this.DomainInfoDescription;
-            typedTarget.DomainInfoStatus           = this.DomainInfoStatus;
-            typedTarget.DomainInfoOwnerEmail       = this.DomainInfoOwnerEmail;
+            typedTarget.NamespaceInfoName          = this.NamespaceInfoName;
+            typedTarget.NamespaceInfoDescription   = this.NamespaceInfoDescription;
+            typedTarget.NamespaceInfoStatus        = this.NamespaceInfoStatus;
+            typedTarget.NamespaceInfoOwnerEmail    = this.NamespaceInfoOwnerEmail;
         }
     }
 }

@@ -103,7 +103,7 @@ namespace Neon.Temporal
         // Implementation
 
         private Workflow        parentWorkflow;
-        private TemporalClient   client;
+        private TemporalClient  client;
         private string          @namespace;
 
         /// <summary>

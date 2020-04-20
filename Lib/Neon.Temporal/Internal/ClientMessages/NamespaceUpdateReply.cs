@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DomainDescription.cs
+// FILE:	    NamespaceUpdateReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -21,28 +21,37 @@ using System.ComponentModel;
 
 using Neon.Common;
 using Neon.Temporal;
-using Neon.Temporal.Internal;
 
-namespace Neon.Temporal
+namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// Information returned by <see cref="TemporalClient.DescribeDomainAsync(string)"/>.
+    /// <b>proxy --> client:</b> Answers a <see cref="NamespaceDescribeRequest"/>.
     /// </summary>
-    public class DomainDescription
+    [InternalProxyMessage(InternalMessageTypes.NamespaceUpdateReply)]
+    internal class NamespaceUpdateReply : ProxyReply
     {
         /// <summary>
-        /// The namespace information.
+        /// Default constructor.
         /// </summary>
-        public DomainInfo DomainInfo { get; set; }
+        public NamespaceUpdateReply()
+        {
+            Type = InternalMessageTypes.NamespaceUpdateReply;
+        }
 
-        /// <summary>
-        /// The namespace configuration.
-        /// </summary>
-        public DomainConfiguration Configuration { get; set; }
+        /// <inheritdoc/>
+        internal override ProxyMessage Clone()
+        {
+            var clone = new NamespaceUpdateReply();
 
-        /// <summary>
-        /// Indicates whether the namespace is global.
-        /// </summary>
-        public bool IsGlobalDomain { get; set; }
+            CopyTo(clone);
+
+            return clone;
+        }
+
+        /// <inheritdoc/>
+        protected override void CopyTo(ProxyMessage target)
+        {
+            base.CopyTo(target);
+        }
     }
 }

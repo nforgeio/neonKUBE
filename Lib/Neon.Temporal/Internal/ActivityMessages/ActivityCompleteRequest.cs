@@ -122,7 +122,7 @@ namespace Neon.Temporal.Internal
             var typedTarget = (ActivityCompleteRequest)target;
 
             typedTarget.TaskToken  = this.TaskToken;
-            typedTarget.Namespace     = this.Namespace;
+            typedTarget.Namespace  = this.Namespace;
             typedTarget.WorkflowId = this.WorkflowId;
             typedTarget.RunId      = this.RunId;
             typedTarget.ActivityId = this.ActivityId;

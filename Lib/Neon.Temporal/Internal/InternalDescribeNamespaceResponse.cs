@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    InternalDescribeDomainResponse.cs
+// FILE:	    InternalDescribeNamespaceResponse.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -29,45 +29,40 @@ namespace Neon.Temporal.Internal
     /// <summary>
     /// <b>INTERNAL USE ONLY:</b> Describes a Temporal namespace.
     /// </summary>
-    internal class InternalDescribeDomainResponse
+    internal class InternalDescribeNamespaceResponse
     {
         /// <summary>
         /// The namespace information.
         /// </summary>
-        [JsonProperty(PropertyName = "domainInfo", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "namespaceInfo", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public InternalDomainInfo DomainInfo { get; set; }
+        public InternalNamespaceInfo NamespaceInfo { get; set; }
 
         /// <summary>
         /// The namespace configuration.
         /// </summary>
         [JsonProperty(PropertyName = "configuration", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public InternalDomainConfiguration DomainConfiguration { get; set; }
+        public InternalNamespaceConfiguration NamespaceConfiguration { get; set; }
 
         /// <summary>
         /// Indicates whether the namespace is global.
         /// </summary>
-        [JsonProperty(PropertyName = "isGlobalDomain", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "isGlobalNamespace", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(false)]
-        public bool IsGlobalDomain;
-
-        // $todo(jefflill): Ignorning:
-        //
-        //  DomainReplicationConfiguration 
-        //  FailoverVersion
+        public bool IsGlobalNamespace;
 
         /// <summary>
-        /// Converts the internal instance into a public <see cref="DomainDescription"/>.
+        /// Converts the internal instance into a public <see cref="NamespaceDescription"/>.
         /// </summary>
-        /// <returns>The converted <see cref="DomainDescription"/>.</returns>
-        public DomainDescription ToPublic()
+        /// <returns>The converted <see cref="NamespaceDescription"/>.</returns>
+        public NamespaceDescription ToPublic()
         {
-            return new DomainDescription()
+            return new NamespaceDescription()
             {
-                DomainInfo     = this.DomainInfo.ToPublic(),
-                Configuration  = this.DomainConfiguration.ToPublic(),
-                IsGlobalDomain = this.IsGlobalDomain
+                NamespaceInfo     = this.NamespaceInfo.ToPublic(),
+                Configuration     = this.NamespaceConfiguration.ToPublic(),
+                IsGlobalNamespace = this.IsGlobalNamespace
             };
         }
     }
