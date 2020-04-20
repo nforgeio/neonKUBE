@@ -27,18 +27,18 @@ using Neon.Temporal.Internal;
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Indicates a Temporal domain status.
+    /// Indicates a Temporal namespace status.
     /// </summary>
     public enum DomainStatus
     {
         /// <summary>
-        /// The domain is registered and active.
+        /// The namespace is registered and active.
         /// </summary>
         [EnumMember(Value = "REGISTERED")]
         Registered = 0,
 
         /// <summary>
-        /// The domain is closed for new workflows but will remain
+        /// The namespace is closed for new workflows but will remain
         /// until already running workflows are completed and the
         /// history retention period for the last executed workflow
         /// has been satisified.
@@ -47,7 +47,7 @@ namespace Neon.Temporal
         Deprecated,
 
         /// <summary>
-        /// The domain is deleted.
+        /// The namespace is deleted.
         /// </summary>
         [EnumMember(Value = "DELETED")]
         Deleted

@@ -78,8 +78,8 @@ namespace HelloWorld_MultiStep
 
             var settings = new TemporalSettings()
             {
-                DefaultDomain = "my-domain",
-                CreateDomain  = true,
+                DefaulNamespace = "my-domain",
+                CreateNamespace  = true,
                 HostPort      = "localhost:7933"
             };
 

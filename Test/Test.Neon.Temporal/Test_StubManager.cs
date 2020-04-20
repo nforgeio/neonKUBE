@@ -59,7 +59,7 @@ namespace TestTemporal
                     client:             new TemporalClient(),
                     contextId:          1,
                     workflowTypeName:   typeof(DummyWorkflow).FullName,
-                    domain:             "my-domain",
+                    @namespace:             "my-domain",
                     taskList:           "my-tasklist",
                     workflowId:         "my-workflow-id",
                     runId:              "my-run-id",
@@ -79,7 +79,7 @@ namespace TestTemporal
         {
             var settings = new TemporalSettings()
             {
-                DefaultDomain   = TemporalFixture.DefaultDomain,
+                DefaulNamespace   = TemporalFixture.DefaultDomain,
                 LogLevel        = TemporalTestHelper.LogLevel,
                 Debug           = TemporalTestHelper.Debug,
             };

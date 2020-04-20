@@ -46,7 +46,7 @@ namespace Neon.Temporal
         /// for identifying the workflow implementation in Temporal.  This defaults
         /// to the fully qualified <typeparamref name="TWorkflow"/> type name.
         /// </param>
-        /// <param name="domain">Optionally overrides the default client domain.</param>
+        /// <param name="namespace">Optionally overrides the default client namespace.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown if another workflow class has already been registered for <paramref name="workflowTypeName"/>.</exception>
         /// <exception cref="WorkflowWorkerStartedException">
@@ -58,7 +58,7 @@ namespace Neon.Temporal
         /// Be sure to register all of your workflow implementations before starting workers.
         /// </note>
         /// </remarks>
-        public async Task RegisterWorkflowAsync<TWorkflow>(string workflowTypeName = null, string domain = null)
+        public async Task RegisterWorkflowAsync<TWorkflow>(string workflowTypeName = null, string @namespace = null)
             where TWorkflow : WorkflowBase
         {
             await SyncContext.ClearAsync;
@@ -78,7 +78,7 @@ namespace Neon.Temporal
                 workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowType, workflowType.GetCustomAttribute<WorkflowAttribute>());
             }
 
-            await WorkflowBase.RegisterAsync(this, workflowType, workflowTypeName, ResolveDomain(domain));
+            await WorkflowBase.RegisterAsync(this, workflowType, workflowTypeName, ResolveNamespace(@namespace));
 
             lock (registeredWorkflowTypes)
             {
@@ -93,7 +93,7 @@ namespace Neon.Temporal
         /// them with Temporal.
         /// </summary>
         /// <param name="assembly">The target assembly.</param>
-        /// <param name="domain">Optionally overrides the default client domain.</param>
+        /// <param name="namespace">Optionally overrides the default client namespace.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TypeLoadException">
         /// Thrown for types tagged by <see cref="WorkflowAttribute"/> that are not 
@@ -109,7 +109,7 @@ namespace Neon.Temporal
         /// Be sure to register all of your workflow implementations before starting workers.
         /// </note>
         /// </remarks>
-        public async Task RegisterAssemblyWorkflowsAsync(Assembly assembly, string domain = null)
+        public async Task RegisterAssemblyWorkflowsAsync(Assembly assembly, string @namespace = null)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(assembly != null, nameof(assembly));
@@ -123,7 +123,7 @@ namespace Neon.Temporal
                 {
                     var workflowTypeName = TemporalHelper.GetWorkflowTypeName(type, workflowAttribute);
 
-                    await WorkflowBase.RegisterAsync(this, type, workflowTypeName, ResolveDomain(domain));
+                    await WorkflowBase.RegisterAsync(this, type, workflowTypeName, ResolveNamespace(@namespace));
 
                     lock (registeredWorkflowTypes)
                     {
@@ -300,7 +300,7 @@ namespace Neon.Temporal
         /// <typeparam name="TWorkflowInterface">Identifies the workflow interface.</typeparam>
         /// <param name="workflowId">Specifies the workflow ID.</param>
         /// <param name="runId">Optionally specifies the workflow's run ID.</param>
-        /// <param name="domain">Optionally specifies a domain that </param>
+        /// <param name="namespace">Optionally specifies a namespace that </param>
         /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflowInterface"/>.</returns>
         /// <remarks>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
@@ -308,14 +308,14 @@ namespace Neon.Temporal
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
-        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(string workflowId, string runId = null, string domain = null)
+        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(string workflowId, string runId = null, string @namespace = null)
             where TWorkflowInterface : class
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
             TemporalHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             EnsureNotDisposed();
 
-            return StubManager.NewWorkflowStub<TWorkflowInterface>(this, workflowId, runId, domain);
+            return StubManager.NewWorkflowStub<TWorkflowInterface>(this, workflowId, runId, @namespace);
         }
 
         /// <summary>
@@ -444,23 +444,23 @@ namespace Neon.Temporal
         /// </summary>
         /// <param name="workflowId">The workflow ID.</param>
         /// <param name="runid">Optionally specifies the run ID.</param>
-        /// <param name="domain">Optionally specifies the domain.</param>
+        /// <param name="namespace">Optionally specifies the namespace.</param>
         /// <returns>The <see cref="WorkflowDescription"/></returns>
         /// <exception cref="EntityNotExistsException">Thrown if the workflow does not exist.</exception>
-        public async Task<WorkflowDescription> DescribeWorkflowExecutionAsync(string workflowId, string runid = null, string domain = null)
+        public async Task<WorkflowDescription> DescribeWorkflowExecutionAsync(string workflowId, string runid = null, string @namespace = null)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
             EnsureNotDisposed();
 
-            domain = ResolveDomain(domain);
+            @namespace = ResolveNamespace(@namespace);
 
             var reply = (WorkflowDescribeExecutionReply)await CallProxyAsync(
                 new WorkflowDescribeExecutionRequest()
                 {
                     WorkflowId = workflowId,
                     RunId      = runid ?? string.Empty,
-                    Domain     = domain
+                    Namespace  = @namespace
                 });
 
             reply.ThrowOnError();
@@ -472,7 +472,7 @@ namespace Neon.Temporal
         /// Waits for a resonable period of time for Temporal to start a workflow.
         /// </summary>
         /// <param name="execution">Identifies the target workflow.</param>
-        /// <param name="domain">Optional domain.</param>
+        /// <param name="namespace">Optional namespace.</param>
         /// <param name="maxWait">
         /// Optionally overrides <see cref="TemporalSettings.MaxWorkflowWaitUntilRunningSeconds"/> to
         /// specify a custom maximum wait time.  The default setting is <b>30 seconds</b>.
@@ -484,7 +484,7 @@ namespace Neon.Temporal
         /// <remarks>
         /// This method can be handy when writing non-emulated unit tests.
         /// </remarks>
-        public async Task WaitForWorkflowStartAsync(WorkflowExecution execution, string domain = null, TimeSpan? maxWait = null)
+        public async Task WaitForWorkflowStartAsync(WorkflowExecution execution, string @namespace = null, TimeSpan? maxWait = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
 
@@ -508,7 +508,7 @@ namespace Neon.Temporal
             await retry.InvokeAsync(
                 async () =>
                 {
-                    var description = await DescribeWorkflowExecutionAsync(execution.WorkflowId, execution.RunId, domain);
+                    var description = await DescribeWorkflowExecutionAsync(execution.WorkflowId, execution.RunId, @namespace);
 
                     if (description.Status.IsRunning)
                     {
@@ -565,10 +565,10 @@ namespace Neon.Temporal
             var reply = (WorkflowExecuteReply)await CallProxyAsync(
                 new WorkflowExecuteRequest()
                 {
-                    Workflow = workflowTypeName,
-                    Domain   = options.Domain,
-                    Args     = args,
-                    Options  = options.ToInternal()
+                    Workflow  = workflowTypeName,
+                    Namespace = options.Namespace,
+                    Args      = args,
+                    Options   = options.ToInternal()
                 });
 
             reply.ThrowOnError();
@@ -583,12 +583,12 @@ namespace Neon.Temporal
         /// completes if it is still running.
         /// </summary>
         /// <param name="execution">Identifies the workflow execution.</param>
-        /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
+        /// <param name="namespace">Optionally specifies the namespace.  This defaults to the client namespace.</param>
         /// <returns>The workflow result encoded as bytes or <c>null</c>.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Temporal problems.</exception>
-        internal async Task<byte[]> GetWorkflowResultAsync(WorkflowExecution execution, string domain = null)
+        internal async Task<byte[]> GetWorkflowResultAsync(WorkflowExecution execution, string @namespace = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
@@ -598,7 +598,7 @@ namespace Neon.Temporal
                 {
                     WorkflowId = execution.WorkflowId,
                     RunId      = execution.RunId,
-                    Domain     = ResolveDomain(domain)
+                    Namespace  = ResolveNamespace(@namespace)
                 });
 
             reply.ThrowOnError();
@@ -713,12 +713,12 @@ namespace Neon.Temporal
         /// Returns the current state of a running workflow.
         /// </summary>
         /// <param name="execution">Identifies the workflow execution.</param>
-        /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
+        /// <param name="namespace">Optionally specifies the namespace.  This defaults to the client namespace.</param>
         /// <returns>A <see cref="WorkflowDescription"/>.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Temporal problems.</exception>
-        internal async Task<WorkflowDescription> DescribeWorkflowAsync(WorkflowExecution execution, string domain = null)
+        internal async Task<WorkflowDescription> DescribeWorkflowAsync(WorkflowExecution execution, string @namespace = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
@@ -728,7 +728,7 @@ namespace Neon.Temporal
                 {
                     WorkflowId = execution.WorkflowId,
                     RunId      = execution.RunId,
-                    Domain     = ResolveDomain(domain)
+                    Namespace  = ResolveNamespace(@namespace)
                 });
 
             reply.ThrowOnError();
@@ -740,12 +740,12 @@ namespace Neon.Temporal
         /// Cancels a workflow if it has not already finished.
         /// </summary>
         /// <param name="execution">Identifies the running workflow.</param>
-        /// <param name="domain">Optionally identifies the domain.  This defaults to the client domain.</param>
+        /// <param name="namespace">Optionally identifies the namespace.  This defaults to the client namespace.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Temporal problems.</exception>
-        internal async Task CancelWorkflowAsync(WorkflowExecution execution, string domain = null)
+        internal async Task CancelWorkflowAsync(WorkflowExecution execution, string @namespace = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
@@ -755,7 +755,7 @@ namespace Neon.Temporal
                 {
                     WorkflowId = execution.WorkflowId,
                     RunId      = execution.RunId,
-                    Domain     = ResolveDomain(domain)
+                    Namespace  = ResolveNamespace(@namespace)
                 });
 
             reply.ThrowOnError();
@@ -767,12 +767,12 @@ namespace Neon.Temporal
         /// <param name="execution">Identifies the running workflow.</param>
         /// <param name="reason">Optionally specifies an error reason string.</param>
         /// <param name="details">Optionally specifies additional details as a byte array.</param>
-        /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
+        /// <param name="namespace">Optionally specifies the namespace.  This defaults to the client namespace.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Temporal problems.</exception>
-        public async Task TerminateWorkflowAsync(WorkflowExecution execution, string reason = null, byte[] details = null, string domain = null)
+        public async Task TerminateWorkflowAsync(WorkflowExecution execution, string reason = null, byte[] details = null, string @namespace = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
@@ -782,7 +782,7 @@ namespace Neon.Temporal
                 {
                     WorkflowId = execution.WorkflowId,
                     RunId      = execution.RunId,
-                    Domain     = ResolveDomain(domain),
+                    Namespace  = ResolveNamespace(@namespace),
                     Reason     = reason,
                     Details    = details
                 });
@@ -797,11 +797,11 @@ namespace Neon.Temporal
         /// <param name="execution">The <see cref="WorkflowExecution"/>.</param>
         /// <param name="signalName">Identifies the signal.</param>
         /// <param name="signalArgs">Optionally specifies the signal arguments as a byte array.</param>
-        /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
+        /// <param name="namespace">Optionally specifies the namespace.  This defaults to the client namespace.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Temporal problems.</exception>
-        internal async Task SignalWorkflowAsync(WorkflowExecution execution, string signalName, byte[] signalArgs = null, string domain = null)
+        internal async Task SignalWorkflowAsync(WorkflowExecution execution, string signalName, byte[] signalArgs = null, string @namespace = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
@@ -813,7 +813,7 @@ namespace Neon.Temporal
                     SignalName = signalName,
                     SignalArgs = signalArgs,
                     RunId      = execution.RunId,
-                    Domain     = ResolveDomain(domain)
+                    Namespace  = ResolveNamespace(@namespace)
                 });
 
             reply.ThrowOnError();
@@ -829,7 +829,7 @@ namespace Neon.Temporal
         /// <param name="startArgs">Optionally specifies the workflow arguments.</param>
         /// <param name="options">Optionally specifies the options to be used for starting the workflow when required.</param>
         /// <returns>The <see cref="WorkflowExecution"/>.</returns>
-        /// <exception cref="EntityNotExistsException">Thrown if the domain does not exist.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the namespace does not exist.</exception>
         /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Temporal problems.</exception>
         internal async Task<WorkflowExecution> SignalWorkflowWithStartAsync(string workflowTypeName, string signalName, byte[] signalArgs, byte[] startArgs, WorkflowOptions options)
@@ -849,7 +849,7 @@ namespace Neon.Temporal
                     SignalName   = signalName,
                     SignalArgs   = signalArgs,
                     WorkflowArgs = startArgs,
-                    Domain       = options.Domain
+                    Namespace    = options.Namespace
                 });
 
             reply.ThrowOnError();
@@ -864,11 +864,11 @@ namespace Neon.Temporal
         /// <param name="execution">The <see cref="WorkflowExecution"/>.</param>
         /// <param name="queryType">Identifies the query.</param>
         /// <param name="queryArgs">Optionally specifies the query arguments encoded as a byte array.</param>
-        /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
+        /// <param name="namespace">Optionally specifies the namespace.  This defaults to the client namespace.</param>
         /// <returns>The query result encoded as a byte array.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Temporal problems.</exception>
-        internal async Task<byte[]> QueryWorkflowAsync(WorkflowExecution execution, string queryType, byte[] queryArgs = null, string domain = null)
+        internal async Task<byte[]> QueryWorkflowAsync(WorkflowExecution execution, string queryType, byte[] queryArgs = null, string @namespace = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(queryType), nameof(queryType));
@@ -881,7 +881,7 @@ namespace Neon.Temporal
                     QueryName  = queryType,
                     QueryArgs  = queryArgs,
                     RunId      = execution.RunId,
-                    Domain     = ResolveDomain(domain)
+                    Namespace  = ResolveNamespace(@namespace)
                 });
 
             reply.ThrowOnError();
@@ -904,7 +904,7 @@ namespace Neon.Temporal
         /// <param name="signalName">Specifies the signal name.</param>
         /// <param name="signalArgs">Specifies the signal arguments as an encoded byte array.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="EntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the named namespace does not exist.</exception>
         /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Temporal cluster problems.</exception>
         /// <exception cref="ServiceBusyException">Thrown when Temporal is too busy.</exception>
@@ -941,7 +941,7 @@ namespace Neon.Temporal
         /// <param name="signalName">The target signal name.</param>
         /// <param name="signalId">The globally unique signal transaction ID.</param>
         /// <param name="signalArgs">Specifies the <see cref="SyncSignalCall"/> as a single item array and encoded as a byte array.</param>
-        /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
+        /// <param name="namespace">Optionally specifies the namespace.  This defaults to the client canespace.</param>
         /// <returns>The encoded signal results or <c>null</c> for signals that don't return a result.</returns>
         /// <exception cref="SyncSignalException">Thrown if the target synchronous signal doesn't exist or the workflow is already closed.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Temporal problems.</exception>
@@ -959,7 +959,7 @@ namespace Neon.Temporal
         /// encoded as the encoded in <paramref name="signalArgs"/>.
         /// </note>
         /// </remarks>
-        internal async Task<byte[]> SyncSignalWorkflowAsync(WorkflowExecution execution, string signalName, string signalId, byte[] signalArgs, string domain = null)
+        internal async Task<byte[]> SyncSignalWorkflowAsync(WorkflowExecution execution, string signalName, string signalId, byte[] signalArgs, string @namespace = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalName), nameof(signalName));
@@ -973,7 +973,7 @@ namespace Neon.Temporal
 
             // Send the signal.
 
-            await SignalWorkflowAsync(execution, SignalSync, signalArgs, domain);
+            await SignalWorkflowAsync(execution, SignalSync, signalArgs, @namespace);
 
             // Poll for the result via queries.
 
@@ -992,7 +992,7 @@ namespace Neon.Temporal
                         //
                         //      https://github.com/nforgeio/neonKUBE/issues/751
 
-                        rawStatus = await QueryWorkflowAsync(execution, QuerySyncSignal, queryArgs, domain);
+                        rawStatus = await QueryWorkflowAsync(execution, QuerySyncSignal, queryArgs, @namespace);
                         status    = JsonDataConverter.Instance.FromData<SyncSignalStatus>(rawStatus);
 
                         if (!status.Completed)

@@ -43,16 +43,16 @@ namespace Neon.Temporal
         /// <param name="client">The parent client.</param>
         /// <param name="mode">Identifies whether the worker will process activities, workflows, or both.</param>
         /// <param name="workerId">The ID of the worker as tracked by the <b>temporal-proxy</b>.</param>
-        /// <param name="domain">The Temporal domain where the worker is registered.</param>
+        /// <param name="namespace">The Temporal namespace where the worker is registered.</param>
         /// <param name="taskList">The Temporal task list.</param>
-        internal Worker(TemporalClient client, WorkerMode mode, long workerId, string domain, string taskList)
+        internal Worker(TemporalClient client, WorkerMode mode, long workerId, string @namespace, string taskList)
         {
-            this.Client   = client;
-            this.Mode     = mode;
-            this.WorkerId = workerId;
-            this.Domain   = domain;
-            this.Tasklist = taskList;
-            this.RefCount = 0;
+            this.Client    = client;
+            this.Mode      = mode;
+            this.WorkerId  = workerId;
+            this.Namespace = @namespace;
+            this.Tasklist  = taskList;
+            this.RefCount  = 0;
         }
 
         /// <inheritdoc/>
@@ -95,9 +95,9 @@ namespace Neon.Temporal
         internal long WorkerId { get; private set; }
 
         /// <summary>
-        /// Returns the Temporal domain where the worker is registered.
+        /// Returns the Temporal namespace where the worker is registered.
         /// </summary>
-        internal string Domain { get; private set; }
+        internal string Namespace { get; private set; }
 
         /// <summary>
         /// Returns the Temporal task list.

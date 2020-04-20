@@ -62,12 +62,12 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// Identifies the target domain.
+        /// Identifies the target namespace.
         /// </summary>
-        public string Domain
+        public string Namespace
         {
-            get => GetStringProperty(PropertyNames.Domain);
-            set => SetStringProperty(PropertyNames.Domain, value);
+            get => GetStringProperty(PropertyNames.Namespace);
+            set => SetStringProperty(PropertyNames.Namespace, value);
         }
 
         /// <summary>
@@ -125,7 +125,7 @@ namespace Neon.Temporal.Internal
 
             typedTarget.Workflow     = this.Workflow;
             typedTarget.WorkflowId   = this.WorkflowId;
-            typedTarget.Domain       = this.Domain;
+            typedTarget.Namespace       = this.Namespace;
             typedTarget.SignalName   = this.SignalName;
             typedTarget.SignalArgs   = this.SignalArgs;
             typedTarget.Options      = this.Options;

@@ -294,12 +294,12 @@ namespace Neon.Temporal
         /// <param name="client">The associated client.</param>
         /// <param name="workflowType">The workflow implementation type.</param>
         /// <param name="workflowTypeName">The name used to identify the implementation.</param>
-        /// <param name="domain">Specifies the target domain.</param>
+        /// <param name="namespace">Specifies the target namnespace.</param>
         /// <exception cref="InvalidOperationException">Thrown if a different workflow class has already been registered for <paramref name="workflowTypeName"/>.</exception>
-        internal static async Task RegisterAsync(TemporalClient client, Type workflowType, string workflowTypeName, string domain)
+        internal static async Task RegisterAsync(TemporalClient client, Type workflowType, string workflowTypeName, string @namespace)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain), nameof(domain));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
             TemporalHelper.ValidateWorkflowImplementation(workflowType);
 
             var methodMap = WorkflowMethodMap.Create(workflowType);
@@ -371,8 +371,8 @@ namespace Neon.Temporal
                 var reply = (WorkflowRegisterReply)await client.CallProxyAsync(
                     new WorkflowRegisterRequest()
                     {
-                        Name   = GetWorkflowTypeNameFromKey(workflowTypeKey),
-                        Domain = client.ResolveDomain(domain)
+                        Name      = GetWorkflowTypeNameFromKey(workflowTypeKey),
+                        Namespace = client.ResolveNamespace(@namespace)
                     });
 
                 // $hack(jefflill): 
@@ -589,7 +589,7 @@ namespace Neon.Temporal
                     client:             client, 
                     contextId:          contextId,
                     workflowTypeName:   request.WorkflowType,
-                    domain:             request.Domain,
+                    @namespace:         request.Namespace,
                     taskList:           request.TaskList,
                     workflowId:         request.WorkflowId,
                     runId:              request.RunId,
@@ -722,7 +722,7 @@ namespace Neon.Temporal
                     ContinueAsNew                             = true,
                     ContinueAsNewArgs                         = e.Args,
                     ContinueAsNewWorkflow                     = e.Workflow,
-                    ContinueAsNewDomain                       = e.Domain,
+                    ContinueAsNewNamespace                    = e.Namespace,
                     ContinueAsNewTaskList                     = e.TaskList,
                     ContinueAsNewExecutionStartToCloseTimeout = TemporalHelper.ToTemporal(e.ExecutionStartToCloseTimeout),
                     ContinueAsNewScheduleToCloseTimeout       = TemporalHelper.ToTemporal(e.ScheduleToCloseTimeout),

@@ -42,7 +42,7 @@ namespace Neon.Temporal
         public string WorkflowTypeName { get; internal set; }
 
         /// <summary>
-        /// The parent workflow domain.
+        /// The parent workflow namespace.
         /// </summary>
         public string WorkflowDomain { get; internal set; }
 

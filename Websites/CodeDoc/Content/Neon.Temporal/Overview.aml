@@ -179,10 +179,10 @@
               next.  This can be increased to a maximum of 60 seconds via configuration.
             </para>
           </definition>
-          <definedTerm>Domains and Task Lists</definedTerm>
+          <definedTerm>Namespaces and Task Lists</definedTerm>
           <definition>
             <para>
-              Temporal is a multi-tenant service and uses domains to isolate each tenant from any others.  A domain
+              Temporal is a multi-tenant service and uses namespaces to isolate each tenant from any others.  A namespace
               is simply a unique namespace where workflows and activities as well as their worker implementations
               are registered.
             </para>

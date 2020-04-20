@@ -287,7 +287,7 @@ namespace Neon.Temporal
                             Activity   = activityTypeName,
                             Args       = TemporalHelper.ArgsToBytes(dataConverter, args),
                             Options    = options.ToInternal(),
-                            Domain     = options.Domain
+                            Namespace  = options.Namespace
                         });
                 });
 
@@ -359,7 +359,7 @@ namespace Neon.Temporal
                             Activity   = activityTypeName,
                             Args       = TemporalHelper.ArgsToBytes(dataConverter, args),
                             Options    = options.ToInternal(),
-                            Domain     = options.Domain,
+                            Namespace     = options.Namespace,
                         });
                 });
 

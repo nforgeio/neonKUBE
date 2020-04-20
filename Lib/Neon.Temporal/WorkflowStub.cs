@@ -278,7 +278,7 @@ namespace Neon.Temporal
                 throw new InvalidOperationException("The stub can't cancel the workflow because it doesn't have the workflow execution.");
             }
 
-            await client.CancelWorkflowAsync(Execution, client.ResolveDomain(Options?.Domain));
+            await client.CancelWorkflowAsync(Execution, client.ResolveNamespace(Options?.Namespace));
         }
 
         /// <summary>
@@ -296,7 +296,7 @@ namespace Neon.Temporal
                 throw new InvalidOperationException("The stub can't obtain the workflow result because it doesn't have the workflow execution.");
             }
 
-            return client.DataConverter.FromData<TResult>(await client.GetWorkflowResultAsync(Execution, client.ResolveDomain(Options?.Domain)));
+            return client.DataConverter.FromData<TResult>(await client.GetWorkflowResultAsync(Execution, client.ResolveNamespace(Options?.Namespace)));
         }
 
         /// <summary>
@@ -316,7 +316,7 @@ namespace Neon.Temporal
                 throw new InvalidOperationException("The stub can't obtain the workflow result because it doesn't have the workflow execution.");
             }
 
-            return client.DataConverter.FromData(resultType, await client.GetWorkflowResultAsync(Execution, client.ResolveDomain(Options?.Domain)));
+            return client.DataConverter.FromData(resultType, await client.GetWorkflowResultAsync(Execution, client.ResolveNamespace(Options?.Namespace)));
         }
 
         /// <summary>
@@ -340,7 +340,7 @@ namespace Neon.Temporal
 
             var argBytes = TemporalHelper.ArgsToBytes(client.DataConverter, args);
 
-            return client.DataConverter.FromData<TResult>(await client.QueryWorkflowAsync(Execution, queryType, argBytes, client.ResolveDomain(Options?.Domain)));
+            return client.DataConverter.FromData<TResult>(await client.QueryWorkflowAsync(Execution, queryType, argBytes, client.ResolveNamespace(Options?.Namespace)));
         }
 
         /// <summary>
@@ -365,7 +365,7 @@ namespace Neon.Temporal
 
             var argBytes = TemporalHelper.ArgsToBytes(client.DataConverter, args);
 
-            return client.DataConverter.FromData(resultType, await client.QueryWorkflowAsync(Execution, queryType, argBytes, client.ResolveDomain(Options?.Domain)));
+            return client.DataConverter.FromData(resultType, await client.QueryWorkflowAsync(Execution, queryType, argBytes, client.ResolveNamespace(Options?.Namespace)));
         }
 
         /// <summary>
@@ -388,7 +388,7 @@ namespace Neon.Temporal
 
             var argBytes = TemporalHelper.ArgsToBytes(client.DataConverter, args);
 
-            await client.SignalWorkflowAsync(Execution, signalName, argBytes, client.ResolveDomain(Options?.Domain));
+            await client.SignalWorkflowAsync(Execution, signalName, argBytes, client.ResolveNamespace(Options?.Namespace));
         }
 
         /// <summary>

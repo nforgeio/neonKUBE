@@ -70,9 +70,9 @@ namespace Neon.Temporal
             this.WorkflowTypeName = workflowTypeName;
             this.Options          = ChildWorkflowOptions.Normalize(client, options);
 
-            if (string.IsNullOrEmpty(Options.Domain))
+            if (string.IsNullOrEmpty(Options.Namespace))
             {
-                Options.Domain = parentWorkflow.WorkflowInfo.Domain;
+                Options.Namespace = parentWorkflow.WorkflowInfo.Namespace;
             }
         }
 
@@ -238,9 +238,9 @@ namespace Neon.Temporal
             this.WorkflowTypeName = workflowTypeName;
             this.Options          = ChildWorkflowOptions.Normalize(client, options);
 
-            if (string.IsNullOrEmpty(Options.Domain))
+            if (string.IsNullOrEmpty(Options.Namespace))
             {
-                Options.Domain = parentWorkflow.WorkflowInfo.Domain;
+                Options.Namespace = parentWorkflow.WorkflowInfo.Namespace;
             }
         }
 

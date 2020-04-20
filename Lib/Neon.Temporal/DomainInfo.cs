@@ -26,27 +26,27 @@ using Neon.Temporal.Internal;
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Information about a Temporal domain.
+    /// Information about a Temporal namespace.
     /// </summary>
     public class DomainInfo
     {
         /// <summary>
-        /// The domain name.
+        /// The namespace name.
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// The domain status.
+        /// The namespace status.
         /// </summary>
         public DomainStatus Status { get; set; }
 
         /// <summary>
-        /// Ths domain description.
+        /// Ths namespace description.
         /// </summary>
         public string Description { get; set; }
 
         /// <summary>
-        /// The domain owner's email address.
+        /// The namespace owner's email address.
         /// </summary>
         public string OwnerEmail { get; set; }
     }

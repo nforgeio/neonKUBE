@@ -59,9 +59,9 @@ namespace Neon.Temporal
                 options = options.Clone();
             }
 
-            if (string.IsNullOrEmpty(options.Domain))
+            if (string.IsNullOrEmpty(options.Namespace))
             {
-                options.Domain = client.Settings.DefaultDomain;
+                options.Namespace = client.Settings.DefaulNamespace;
             }
 
             if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
@@ -124,10 +124,10 @@ namespace Neon.Temporal
         public string TaskList { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies the target domain.  This defaults to the parent 
-        /// workflow's domain.
+        /// Optionally specifies the target namespace.  This defaults to the parent 
+        /// workflow's namespace.
         /// </summary>
-        public string Domain { get; set; } = null;
+        public string Namespace { get; set; } = null;
 
         /// <summary>
         /// Optionally specifies the end-to-end timeout for the activity.  The 
@@ -206,7 +206,7 @@ namespace Neon.Temporal
         {
             return new ActivityOptions()
             {
-                Domain                 = this.Domain,
+                Namespace                 = this.Namespace,
                 HeartbeatTimeout       = this.HeartbeatTimeout,
                 RetryOptions           = this.RetryOptions,
                 ScheduleToCloseTimeout = this.ScheduleToCloseTimeout,

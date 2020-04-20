@@ -129,10 +129,10 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// Optionally overrides the current workflow's domain for the restarted
+        /// Optionally overrides the current workflow's namespace for the restarted
         /// workflow when this value is not <c>null</c>.
         /// </summary>
-        public string ContinueAsNewDomain
+        public string ContinueAsNewNamespace
         {
             get => GetStringProperty(PropertyNames.ContinueAsNewDomain);
             set => SetStringProperty(PropertyNames.ContinueAsNewDomain, value);
@@ -172,7 +172,7 @@ namespace Neon.Temporal.Internal
             typedTarget.ContinueAsNewArgs                         = this.ContinueAsNewArgs;
             typedTarget.ContinueAsNewExecutionStartToCloseTimeout = this.ContinueAsNewExecutionStartToCloseTimeout;
             typedTarget.ContinueAsNewTaskList                     = this.ContinueAsNewTaskList;
-            typedTarget.ContinueAsNewDomain                       = this.ContinueAsNewDomain;
+            typedTarget.ContinueAsNewNamespace                       = this.ContinueAsNewNamespace;
             typedTarget.ContinueAsNewWorkflow                     = this.ContinueAsNewWorkflow;
             typedTarget.ContinueAsNewScheduleToCloseTimeout       = this.ContinueAsNewScheduleToCloseTimeout;
             typedTarget.ContinueAsNewScheduleToStartTimeout       = this.ContinueAsNewScheduleToStartTimeout;

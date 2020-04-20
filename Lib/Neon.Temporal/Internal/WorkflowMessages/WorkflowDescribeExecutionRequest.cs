@@ -61,12 +61,12 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// Optionally identifies the target domain when <see cref="RunId"/> isn't passed.
+        /// Optionally identifies the target namespace when <see cref="RunId"/> isn't passed.
         /// </summary>
-        public string Domain
+        public string Namespace
         {
-            get => GetStringProperty(PropertyNames.Domain);
-            set => SetStringProperty(PropertyNames.Domain, value);
+            get => GetStringProperty(PropertyNames.Namespace);
+            set => SetStringProperty(PropertyNames.Namespace, value);
         }
 
         /// <inheritdoc/>
@@ -88,7 +88,7 @@ namespace Neon.Temporal.Internal
 
             typedTarget.WorkflowId = this.WorkflowId;
             typedTarget.RunId      = this.RunId;
-            typedTarget.Domain     = this.Domain;
+            typedTarget.Namespace     = this.Namespace;
         }
     }
 }

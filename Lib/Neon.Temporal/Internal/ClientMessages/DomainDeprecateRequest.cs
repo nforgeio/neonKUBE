@@ -30,7 +30,7 @@ using Neon.Temporal;
 namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// <b>client --> proxy:</b> Requests that the proxy register a Temporal domain.
+    /// <b>client --> proxy:</b> Requests that the proxy register a Temporal namespace.
     /// </summary>
     [InternalProxyMessage(InternalMessageTypes.DomainDeprecateRequest)]
     internal class DomainDeprecateRequest : ProxyRequest
@@ -47,7 +47,7 @@ namespace Neon.Temporal.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.DomainDeprecateReply;
 
         /// <summary>
-        /// Name of the domain to be depreciated.
+        /// Name of the namespace to be depreciated.
         /// </summary>
         public string Name
         {

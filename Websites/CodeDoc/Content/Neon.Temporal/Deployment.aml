@@ -75,17 +75,17 @@
         </mediaLink>
         <para>
           Temporal supports multi-tenancy by allowing workflow and activity implementations to isolated
-          into multiple domains.  Domains are simply a name that can be used to separate workflows much
+          into multiple namespaces.  Namespaces are simply a name that can be used to separate workflows much
           like namespaces can be used to separate pods running in a Kubernetes cluster.  It's common
-          to deploy a Temporal cluster that defines domains for different teams running workflows on the
-          cluster and even for individual users.  Temporal can support thousands of domains.
+          to deploy a Temporal cluster that defines namespaces for different teams running workflows on the
+          cluster and even for individual users.  Temporal can support thousands of namespaces.
         </para>
         <mediaLink>
           <caption></caption>
           <image xlink:href="deployment-multi-tenant"/>
         </mediaLink>
         <para>
-          The diagram above depicts three Temporal domains, each with its own set of worker services 
+          The diagram above depicts three Temporal namespaces, each with its own set of worker services 
           processing workflows and activities.  In these situations, it's common for a central team
           to manage the Temporal/Cassandra servers with each tenant team managing their own servers
           hosting their workflow services.

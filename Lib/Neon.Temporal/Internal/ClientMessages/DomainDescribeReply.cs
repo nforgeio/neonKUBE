@@ -39,7 +39,7 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// The domain name.
+        /// The namespace name.
         /// </summary>
         public string DomainInfoName
         {
@@ -48,7 +48,7 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// Human readable description for the domain.
+        /// Human readable description for the namespace.
         /// </summary>
         public string DomainInfoDescription
         {
@@ -57,7 +57,7 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// The domain status.
+        /// The namespace status.
         /// </summary>
         public DomainStatus DomainInfoStatus
         {

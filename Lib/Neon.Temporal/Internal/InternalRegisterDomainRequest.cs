@@ -25,28 +25,28 @@ using Neon.Temporal;
 namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// Domain registration details.
+    /// Namespace registration details.
     /// </summary>
     internal class InternalRegisterDomainRequest
     {
         /// <summary>
-        /// The domain name.
+        /// The namespace name.
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// The domain description.
+        /// The namespace description.
         /// </summary>
         public string Description { get; set; }
 
         /// <summary>
-        /// The domain owner's email address.
+        /// The namespace owner's email address.
         /// </summary>
         public string OwnerEmail { get; set; }
 
         /// <summary>
         /// The number of days to retain the history for workflowws
-        /// completed in this domain.  This defaults to <b>7 days</b>.
+        /// completed in this namespace.  This defaults to <b>7 days</b>.
         /// </summary>
         public int RetentionDays { get; set; } = 7;
 

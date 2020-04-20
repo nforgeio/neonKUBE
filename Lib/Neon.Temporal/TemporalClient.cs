@@ -96,8 +96,8 @@ namespace Neon.Temporal
     /// <para>
     /// Temporal supports the concept of domains and task lists.  Domains and task lists are
     /// used to organize workflows and activities.  Workflows and activities essentially 
-    /// reside in a registered domain, which is essentially just a namespace specified by
-    /// a string.  The combination of a domain along with a workflow or activity type name
+    /// reside in a registered namespace, which is essentially just a namespace specified by
+    /// a string.  The combination of a namespace along with a workflow or activity type name
     /// must be unique within a Temporal cluster.  Once you have a connected <see cref="TemporalClient"/>,
     /// you can create and manage Temporal domains via methods like <see cref="RegisterDomainAsync(string, string, string, int, bool)"/>,
     /// <see cref="DescribeDomainAsync(string)"/>, and <see cref="UpdateDomainAsync(string, UpdateDomainRequest)"/>.
@@ -106,7 +106,7 @@ namespace Neon.Temporal
     /// </para>
     /// <para>
     /// Temporal workers are started to indicate that the current process can execute workflows
-    /// and activities from a Temporal domain, and optionally a task list (discussed further below).
+    /// and activities from a Temporal namespace, and optionally a task list (discussed further below).
     /// You'll call <see cref="StartWorkerAsync(string, WorkerOptions, string)"/> to indicate
     /// that Temporal can begin scheduling workflow and activity executions from the current client.
     /// </para>
@@ -160,7 +160,7 @@ namespace Neon.Temporal
     /// Next you'll need to start workflow and/or activity workers.  These indicate to Temporal that 
     /// the current process implements specific workflow and activity types.  You'll call
     /// <see cref="StartWorkerAsync(string, WorkerOptions, string)"/>.  You can customize the
-    /// Temporal domain and task list the worker will listen on as well as whether activities,
+    /// Temporal namespace and task list the worker will listen on as well as whether activities,
     /// workflows, or both are to be processed.
     /// </para>
     /// <para>
@@ -882,14 +882,14 @@ namespace Neon.Temporal
         /// <returns>The connected <see cref="TemporalClient"/>.</returns>
         /// <remarks>
         /// <note>
-        /// The <see cref="TemporalSettings"/> passed must specify a <see cref="TemporalSettings.DefaultDomain"/>.
+        /// The <see cref="TemporalSettings"/> passed must specify a <see cref="TemporalSettings.DefaulNamespace"/>.
         /// </note>
         /// </remarks>
         public static async Task<TemporalClient> ConnectAsync(TemporalSettings settings)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), nameof(settings), "You must specifiy a non-empty default Temporal domain.");
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaulNamespace), nameof(settings), "You must specifiy a non-empty default Temporal namespace.");
 
             var client = new TemporalClient(settings);
 
@@ -949,11 +949,11 @@ namespace Neon.Temporal
                     var connectRequest =
                         new ConnectRequest()
                         {
-                            HostPort      = settings.HostPort,
-                            Identity      = settings.ClientIdentity,
-                            ClientTimeout = TimeSpan.FromSeconds(30),
-                            Domain        = settings.DefaultDomain,
-                            CreateDomain  = settings.CreateDomain
+                            HostPort        = settings.HostPort,
+                            Identity        = settings.ClientIdentity,
+                            ClientTimeout   = TimeSpan.FromSeconds(30),
+                            Namespace       = settings.DefaulNamespace,
+                            CreateNamespace = settings.CreateNamespace
                         };
 
                     client.CallProxyAsync(connectRequest).Result.ThrowOnError();
@@ -1389,7 +1389,7 @@ namespace Neon.Temporal
         private TemporalClient(TemporalSettings settings)
         {
             Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), nameof(settings));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaulNamespace), nameof(settings));
 
             this.ClientId = Interlocked.Increment(ref nextClientId);
             this.Settings = settings;
@@ -1743,28 +1743,28 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Returns the Temporal domain to be referenced for an operation.  If <paramref name="domain"/>
-        /// is not <c>null</c> or empty then that will be returned otherwise the  <see cref="TemporalSettings.DefaultDomain"/>
-        /// will be returned.  Note that one of <paramref name="domain"/> or the default domain must
+        /// Returns the Temporal namespace to be referenced for an operation.  If <paramref name="namespace"/>
+        /// is not <c>null</c> or empty then that will be returned otherwise the  <see cref="TemporalSettings.DefaulNamespace"/>
+        /// will be returned.  Note that one of <paramref name="namespace"/> or the default namespace must
         /// be non-empty.
         /// </summary>
-        /// <param name="domain">The specific domain to use or null/empty.</param>
-        /// <returns>The domain to be referenced.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="domain"/> and the default domain are both null or empty.</exception>
-        internal string ResolveDomain(string domain)
+        /// <param name="namespace">The specific namespace to use or null/empty.</param>
+        /// <returns>The namespace to be referenced.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="namespace"/> and the default namespace are both null or empty.</exception>
+        internal string ResolveNamespace(string @namespace)
         {
             EnsureNotDisposed();
 
-            if (!string.IsNullOrEmpty(domain))
+            if (!string.IsNullOrEmpty(@namespace))
             {
-                return domain;
+                return @namespace;
             }
-            else if (!string.IsNullOrEmpty(Settings.DefaultDomain))
+            else if (!string.IsNullOrEmpty(Settings.DefaulNamespace))
             {
-                return Settings.DefaultDomain;
+                return Settings.DefaulNamespace;
             }
 
-            throw new ArgumentNullException(nameof(domain),$"One of [{nameof(domain)}] parameter or the client's default domain (specified as [{nameof(TemporalClient)}.{nameof(TemporalClient.Settings)}.{nameof(TemporalSettings.DefaultDomain)}]) must be non-empty.");
+            throw new ArgumentNullException(nameof(@namespace),$"One of [{nameof(@namespace)}] parameter or the client's default namespace (specified as [{nameof(TemporalClient)}.{nameof(TemporalClient.Settings)}.{nameof(TemporalSettings.DefaulNamespace)}]) must be non-empty.");
         }
 
         /// <summary>

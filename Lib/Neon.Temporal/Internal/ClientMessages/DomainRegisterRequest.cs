@@ -30,7 +30,7 @@ using Neon.Temporal;
 namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// <b>client --> proxy:</b> Requests that the proxy register a Temporal domain.
+    /// <b>client --> proxy:</b> Requests that the proxy register a Temporal namespace.
     /// </summary>
     [InternalProxyMessage(InternalMessageTypes.DomainRegisterRequest)]
     internal class DomainRegisterRequest : ProxyRequest
@@ -47,7 +47,7 @@ namespace Neon.Temporal.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.DomainRegisterReply;
 
         /// <summary>
-        /// Name for the new domain.
+        /// Name for the new namespace.
         /// </summary>
         public string Name
         {
@@ -56,7 +56,7 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// Human readable description for the domain.
+        /// Human readable description for the namespace.
         /// </summary>
         public string Description
         {

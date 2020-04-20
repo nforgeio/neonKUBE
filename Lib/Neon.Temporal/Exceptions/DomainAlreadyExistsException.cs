@@ -22,7 +22,7 @@ using Neon.Temporal.Internal;
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Thrown when a Temporal domain already exists.
+    /// Thrown when a Temporal namespace already exists.
     /// </summary>
     public class DomainAlreadyExistsException : TemporalException
     {

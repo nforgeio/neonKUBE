@@ -32,9 +32,9 @@ namespace Neon.Temporal
     public class WorkflowInfo
     {
         /// <summary>
-        /// Returns the workflow domain.
+        /// Returns the workflow namespace.
         /// </summary>
-        public string Domain { get; internal set; }
+        public string Namespace { get; internal set; }
 
         /// <summary>
         /// Returns the workflow ID.

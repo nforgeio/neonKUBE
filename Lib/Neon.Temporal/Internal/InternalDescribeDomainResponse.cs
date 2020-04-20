@@ -27,26 +27,26 @@ using Newtonsoft.Json;
 namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Describes a Temporal domain.
+    /// <b>INTERNAL USE ONLY:</b> Describes a Temporal namespace.
     /// </summary>
     internal class InternalDescribeDomainResponse
     {
         /// <summary>
-        /// The domain information.
+        /// The namespace information.
         /// </summary>
         [JsonProperty(PropertyName = "domainInfo", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public InternalDomainInfo DomainInfo { get; set; }
 
         /// <summary>
-        /// The domain configuration.
+        /// The namespace configuration.
         /// </summary>
         [JsonProperty(PropertyName = "configuration", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public InternalDomainConfiguration DomainConfiguration { get; set; }
 
         /// <summary>
-        /// Indicates whether the domain is global.
+        /// Indicates whether the namespace is global.
         /// </summary>
         [JsonProperty(PropertyName = "isGlobalDomain", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(false)]

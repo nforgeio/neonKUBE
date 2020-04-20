@@ -39,9 +39,9 @@ namespace MyTests
         {
             var settings = new TemporalSettings()
             {
-                DefaultDomain = "test-domain",
+                DefaulNamespace = "test-domain",
                 LogLevel      = LogLevel.Info,
-                CreateDomain  = true            // <-- this ensures that the default domain exists
+                CreateNamespace  = true            // <-- this ensures that the default domain exists
             };
 
             // This starts/restarts the [nforgeio/temporal-dev] container for the first test

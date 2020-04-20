@@ -2365,7 +2365,7 @@ namespace TestTemporal
             /// <param name="info"></param>
             public WorkflowInfoTest(WorkflowInfo info)
             {
-                this.Domain       = info.Domain;
+                this.Domain       = info.Namespace;
                 this.WorkflowId   = info.WorkflowId;
                 this.RunId        = info.RunId;
                 this.WorkflowType = info.WorkflowType;
@@ -2413,14 +2413,14 @@ namespace TestTemporal
 
             var options = new WorkflowOptions()
             {
-                Domain     = client.Settings.DefaultDomain,
+                Namespace     = client.Settings.DefaulNamespace,
                 WorkflowId = "my-workflow-id"
             };
 
             var stub = client.NewWorkflowStub<IWorkflowInfo>(options: options, workflowTypeName: "my-workflow-info-type");
             var info = await stub.GetWorkflowInfoAsync();
 
-            Assert.Equal(options.Domain, info.Domain);
+            Assert.Equal(options.Namespace, info.Domain);
             Assert.NotEmpty(info.RunId);
             Assert.Equal(TemporalTestHelper.TaskList, info.TaskList);
             Assert.Equal(options.WorkflowId, info.WorkflowId);

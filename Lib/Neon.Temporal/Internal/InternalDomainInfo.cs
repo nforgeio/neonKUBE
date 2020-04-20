@@ -27,40 +27,40 @@ using Neon.Temporal;
 namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Describes a Temporal domain.
+    /// <b>INTERNAL USE ONLY:</b> Describes a Temporal namespace.
     /// </summary>
     internal class InternalDomainInfo
     {
         /// <summary>
-        /// The domain name.
+        /// The namespace name.
         /// </summary>
         [JsonProperty(PropertyName = "name", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string Name { get; set; }
 
         /// <summary>
-        /// The domain status.
+        /// The namespace status.
         /// </summary>
         [JsonProperty(PropertyName = "status", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(DomainStatus.Registered)]
         public DomainStatus DomainStatus { get; set; }
 
         /// <summary>
-        /// The domain description.
+        /// The namespace description.
         /// </summary>
         [JsonProperty(PropertyName = "description", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string Description { get; set; }
 
         /// <summary>
-        /// The email address for the domain owner.
+        /// The email address for the namespace owner.
         /// </summary>
         [JsonProperty(PropertyName = "ownerEmail", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string OwnerEmail { get; set; }
 
         /// <summary>
-        /// A dictionary of named byte data that can be attached to domain
+        /// A dictionary of named byte data that can be attached to namespace
         /// and that can be used for any purpose.
         /// </summary>
         [JsonProperty(PropertyName = "data", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -68,7 +68,7 @@ namespace Neon.Temporal.Internal
         public Dictionary<string, byte[]> Data;
 
         /// <summary>
-        /// The domain's globally unique ID.
+        /// The namespace's globally unique ID.
         /// </summary>
         [JsonProperty(PropertyName = "uuid", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]

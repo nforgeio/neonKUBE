@@ -50,7 +50,7 @@
             <para>
               Initializes the connection settings to connect Cadence running on the local machine, configuring <legacyBold>my-domain</legacyBold>
               as the default domain where your workflows and activities will be registered and run, and indicating that the default domain
-              should be created it it doesn't already exist (handy for testing).
+              should be created when it doesn't already exist (handy for testing).
             </para>
           </listItem>
           <listItem>

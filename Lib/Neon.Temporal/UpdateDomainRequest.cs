@@ -26,22 +26,22 @@ using Neon.Temporal.Internal;
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Holds the changes to be made to a Temporal domain.
+    /// Holds the changes to be made to a Temporal namespace.
     /// </summary>
     public class UpdateDomainRequest
     {
         /// <summary>
-        /// The domain name.
+        /// The namespace name.
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// The updated basic domain properties.
+        /// The updated basic namespace properties.
         /// </summary>
         public UpdateDomainInfo DomainInfo { get; set; } = new UpdateDomainInfo();
 
         /// <summary>
-        /// The updated domain options.
+        /// The updated namespace options.
         /// </summary>
         public DomainConfiguration Options { get; set; } = new DomainConfiguration();
     }

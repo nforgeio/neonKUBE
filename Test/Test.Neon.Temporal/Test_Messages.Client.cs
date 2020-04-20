@@ -200,8 +200,8 @@ namespace TestTemporal
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.HostPort);
                 Assert.Null(message.Identity);
-                Assert.Null(message.Domain);
-                Assert.False(message.CreateDomain);
+                Assert.Null(message.Namespace);
+                Assert.False(message.CreateNamespace);
                 Assert.Null(message.Namespace);
                 Assert.Equal(TimeSpan.Zero, message.ClientTimeout);
                 Assert.Equal(0, message.Retries);
@@ -214,8 +214,8 @@ namespace TestTemporal
                 message.HostPort = "127.0.0.1:7233";
                 message.Identity = "my-identity";
                 message.ClientTimeout = TimeSpan.FromSeconds(30);
-                message.Domain = "my-domain";
-                message.CreateDomain = true;
+                message.Namespace = "my-domain";
+                message.CreateNamespace = true;
                 message.Namespace = "my-namespace";
                 message.Retries = 3;
                 message.RetryDelay = TimeSpan.FromSeconds(2);
@@ -224,8 +224,8 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("127.0.0.1:7233", message.HostPort);
                 Assert.Equal("my-identity", message.Identity);
-                Assert.Equal("my-domain", message.Domain);
-                Assert.True(message.CreateDomain);
+                Assert.Equal("my-domain", message.Namespace);
+                Assert.True(message.CreateNamespace);
                 Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal(3, message.Retries);
                 Assert.Equal(TimeSpan.FromSeconds(2), message.RetryDelay);
@@ -241,9 +241,9 @@ namespace TestTemporal
                 Assert.Equal("127.0.0.1:7233", message.HostPort);
                 Assert.Equal("my-identity", message.Identity);
                 Assert.Equal(TimeSpan.FromSeconds(30), message.ClientTimeout);
-                Assert.Equal("my-domain", message.Domain);
+                Assert.Equal("my-domain", message.Namespace);
                 Assert.Equal("my-namespace", message.Namespace);
-                Assert.True(message.CreateDomain);
+                Assert.True(message.CreateNamespace);
                 Assert.Equal(3, message.Retries);
                 Assert.Equal(TimeSpan.FromSeconds(2), message.RetryDelay);
 
@@ -256,9 +256,9 @@ namespace TestTemporal
                 Assert.Equal("127.0.0.1:7233", message.HostPort);
                 Assert.Equal("my-identity", message.Identity);
                 Assert.Equal(TimeSpan.FromSeconds(30), message.ClientTimeout);
-                Assert.Equal("my-domain", message.Domain);
+                Assert.Equal("my-domain", message.Namespace);
                 Assert.Equal("my-namespace", message.Namespace);
-                Assert.True(message.CreateDomain);
+                Assert.True(message.CreateNamespace);
                 Assert.Equal(3, message.Retries);
                 Assert.Equal(TimeSpan.FromSeconds(2), message.RetryDelay);
 
@@ -271,9 +271,9 @@ namespace TestTemporal
                 Assert.Equal("127.0.0.1:7233", message.HostPort);
                 Assert.Equal("my-identity", message.Identity);
                 Assert.Equal(TimeSpan.FromSeconds(30), message.ClientTimeout);
-                Assert.Equal("my-domain", message.Domain);
+                Assert.Equal("my-domain", message.Namespace);
                 Assert.Equal("my-namespace", message.Namespace);
-                Assert.True(message.CreateDomain);
+                Assert.True(message.CreateNamespace);
                 Assert.Equal(3, message.Retries);
                 Assert.Equal(TimeSpan.FromSeconds(2), message.RetryDelay);
             }
@@ -1165,7 +1165,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
-                Assert.Null(message.Domain);
+                Assert.Null(message.Namespace);
                 Assert.Null(message.TaskList);
                 Assert.Null(message.Options);
 
@@ -1173,13 +1173,13 @@ namespace TestTemporal
 
                 message.ClientId = 444;
                 message.RequestId = 555;
-                message.Domain = "my-domain";
+                message.Namespace = "my-domain";
                 message.TaskList = "my-tasks";
                 message.Options = new InternalWorkerOptions() { Identity = "my-identity", MaxConcurrentActivityExecutionSize = 1234 };
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-domain", message.Domain);
+                Assert.Equal("my-domain", message.Namespace);
                 Assert.Equal("my-tasks", message.TaskList);
                 Assert.Equal("my-identity", message.Options.Identity);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
@@ -1192,7 +1192,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-domain", message.Domain);
+                Assert.Equal("my-domain", message.Namespace);
                 Assert.Equal("my-tasks", message.TaskList);
                 Assert.Equal("my-identity", message.Options.Identity);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
@@ -1203,7 +1203,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-domain", message.Domain);
+                Assert.Equal("my-domain", message.Namespace);
                 Assert.Equal("my-tasks", message.TaskList);
                 Assert.Equal("my-identity", message.Options.Identity);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
@@ -1214,7 +1214,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-domain", message.Domain);
+                Assert.Equal("my-domain", message.Namespace);
                 Assert.Equal("my-tasks", message.TaskList);
                 Assert.Equal("my-identity", message.Options.Identity);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);

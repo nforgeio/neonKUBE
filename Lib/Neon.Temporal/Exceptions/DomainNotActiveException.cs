@@ -22,7 +22,7 @@ using Neon.Temporal.Internal;
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Thrown when a Temporal domain has been deprecated.
+    /// Thrown when a Temporal namespace has been deprecated.
     /// </summary>
     public class DomainNotActiveException : TemporalException
     {

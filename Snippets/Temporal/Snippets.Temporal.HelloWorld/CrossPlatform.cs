@@ -18,7 +18,7 @@ namespace Snippets_CrossPlatform
                 // client connected below (this can be overridden for specific
                 // operations.
 
-                DefaultDomain = "Acme-PROD",
+                DefaulNamespace = "Acme-PROD",
 
                 // Host/port for at least one of the Temporal cluster servers:
 

@@ -52,12 +52,12 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// The domain hosting the Temporal workflow.
+        /// The namespace hosting the Temporal workflow.
         /// </summary>
-        public string Domain
+        public string Namespace
         {
-            get => GetStringProperty(PropertyNames.Domain);
-            set => SetStringProperty(PropertyNames.Domain, value);
+            get => GetStringProperty(PropertyNames.Namespace);
+            set => SetStringProperty(PropertyNames.Namespace, value);
         }
 
         /// <summary>
@@ -96,7 +96,7 @@ namespace Neon.Temporal.Internal
             var typedTarget = (NewWorkerRequest)target;
 
             typedTarget.Name     = this.Name;
-            typedTarget.Domain   = this.Domain;
+            typedTarget.Namespace   = this.Namespace;
             typedTarget.TaskList = this.TaskList;
             typedTarget.Options  = this.Options;
         }

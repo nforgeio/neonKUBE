@@ -77,56 +77,46 @@ namespace Neon.Temporal
         public int ListenPort { get; set; } = 0;
 
         /// <summary>
-        /// Specifies the default Temporal domain for this client.  This defaults to <c>"default"</c>.
+        /// Specifies the default Temporal namespace for this client.  This defaults to <c>"default"</c>.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Specifying a default domain can be convienent for many scenarios, especially for those where
-        /// the application workflows and activities are restricted to a single domain (which is pretty common).
+        /// Specifying a default namespace can be convienent for many scenarios, especially for those where
+        /// the application workflows and activities are restricted to a single namespace (which is pretty common).
         /// </para>
         /// <para>
-        /// The default domain can be overridden for individual method calls by passing a value as the optional <b>domain</b>
-        /// paramater.  You can also set this to <c>null</c> which will require that values be passed to
-        /// the <b>domain</b> parameters.
+        /// The default namespace can be overridden for individual method calls by passing a value as the optional <b>@namespace</b>
+        /// parameter.  You can also set this to <c>null</c> which will require that values be passed to
+        /// the <b>@namespace</b> parameters.
         /// </para>
         /// </remarks>
-        [JsonProperty(PropertyName = "DefaultDomain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "defaultDomain", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "DefaultNamespace", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultNamespace", ApplyNamingConventions = false)]
         [DefaultValue("default")]
-        public string DefaultDomain { get; set; } = "default";
+        public string DefaulNamespace { get; set; } = "default";
 
         /// <summary>
         /// <para>
-        /// Optionally create the <see cref="DefaultDomain"/> if it doesn't already exist.
+        /// Optionally create the <see cref="DefaulNamespace"/> if it doesn't already exist.
         /// This defaults to <c>false</c>.
         /// </para>
         /// <note>
         /// Enabling this can be handy for unit testing where you'll likely be starting
         /// off with a virgin Temporal server when the test start.  We don't recommend
         /// enabling this for production services.  For production, you should explicitly
-        /// create your domains with suitable setttings such has how long workflow histories
+        /// create your namespaces with suitable setttings such has how long workflow histories
         /// are to be retained.
         /// </note>
         /// <note>
-        /// If the default domain doesn't exist when <see cref="CreateDomain"/><c>=true</c> when a
+        /// If the default namespace doesn't exist when <see cref="CreateNamespace"/><c>=true</c> when a
         /// connection is established, it will be initialized to retain workflow histories for
         /// up to <b>7 days</b>.
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "CreateDomain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "createDomain", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "CreateNamespace", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "createNamespace", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool CreateDomain { get; set; } = false;
-
-        /// <summary>
-        /// Specifies the Temporal namespace for this client.  Temporal is a multi-tenant system
-        /// and namespaces can be used to isolate workflows between different tenants.
-        /// This defaults to <c>"default"</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "Namespace", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "namespace", ApplyNamingConventions = false)]
-        [DefaultValue("default")]
-        public string Namespace { get; set; } = "default";
+        public bool CreateNamespace { get; set; } = false;
 
         /// <summary>
         /// Optionally specifies the maximum time the client should wait for synchronous 
@@ -532,7 +522,7 @@ namespace Neon.Temporal
                 ClientTimeoutSeconds                  = this.ClientTimeoutSeconds,
                 ConnectRetries                        = this.ConnectRetries,
                 ConnectRetryDelaySeconds              = this.ConnectRetryDelaySeconds,
-                CreateDomain                          = this.CreateDomain,
+                CreateNamespace                          = this.CreateNamespace,
                 Debug                                 = this.Debug,
                 DebugDisableHandshakes                = this.DebugDisableHandshakes,
                 DebugDisableHeartbeats                = this.DebugDisableHeartbeats,
@@ -540,7 +530,7 @@ namespace Neon.Temporal
                 DebugIgnoreHeartbeats                 = this.DebugIgnoreHeartbeats,
                 DebugIgnoreTimeouts                   = this.DebugIgnoreTimeouts,
                 DebugPrelaunched                      = this.DebugPrelaunched,
-                DefaultDomain                         = this.DefaultDomain,
+                DefaulNamespace                         = this.DefaulNamespace,
                 HeartbeatIntervalSeconds              = this.HeartbeatIntervalSeconds,
                 HeartbeatTimeoutSeconds               = this.HeartbeatTimeoutSeconds,
                 HostPort                              = this.HostPort,
@@ -549,7 +539,6 @@ namespace Neon.Temporal
                 LogTemporalProxy                      = this.LogTemporalProxy,
                 LogDuringReplay                       = this.LogDuringReplay,
                 LogLevel                              = this.LogLevel,
-                Namespace                             = this.Namespace,
                 ProxyTimeoutSeconds                   = this.ProxyTimeoutSeconds,
                 SecurityToken                         = this.SecurityToken,
                 WorkflowIdReusePolicy                 = this.WorkflowIdReusePolicy,

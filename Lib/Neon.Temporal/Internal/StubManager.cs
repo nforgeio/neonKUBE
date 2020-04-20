@@ -194,7 +194,7 @@ namespace Neon.Temporal.Internal
             private static MethodInfo       syncSignalWorkflowAsync;                // from: TemporalClient
             private static MethodInfo       syncSignalChildWorkflowAsync;           // from: TemporalClient
             private static MethodInfo       queryWorkflowAsync;                     // from: TemporalClient
-            private static MethodInfo       resolveDomain;                          // from: TemporalClient
+            private static MethodInfo       resolveNamespace;                       // from: TemporalClient
             private static MethodInfo       newWorkflowStub;                        // from: TemporalClient
             private static MethodInfo       executeActivityAsync;                   // from: Workflow
             private static MethodInfo       executeLocalActivityAsync;              // from: Workflow
@@ -223,7 +223,7 @@ namespace Neon.Temporal.Internal
                 syncSignalWorkflowAsync               = NeonHelper.GetMethod(clientType, ""SyncSignalWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(string), typeof(byte[]), typeof(string));
                 syncSignalChildWorkflowAsync          = NeonHelper.GetMethod(clientType, ""SyncSignalChildWorkflowAsync"", typeof(Workflow), typeof(ChildExecution), typeof(string), typeof(string), typeof(byte[]));
                 queryWorkflowAsync                    = NeonHelper.GetMethod(clientType, ""QueryWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
-                resolveDomain                         = NeonHelper.GetMethod(clientType, ""ResolveDomain"", typeof(string));
+                resolveNamespace                      = NeonHelper.GetMethod(clientType, ""ResolveNamespace"", typeof(string));
                 newWorkflowStub                       = NeonHelper.GetMethod(clientType, ""NewWorkflowStub"", typeof(string), typeof(WorkflowOptions));
                 executeActivityAsync                  = NeonHelper.GetMethod(workflowType, ""ExecuteActivityAsync"", typeof(string), typeof(byte[]), typeof(ActivityOptions));
                 executeLocalActivityAsync             = NeonHelper.GetMethod(workflowType, ""ExecuteLocalActivityAsync"", typeof(Type), typeof(ConstructorInfo), typeof(MethodInfo), typeof(byte[]), typeof(LocalActivityOptions));
@@ -242,9 +242,9 @@ namespace Neon.Temporal.Internal
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task<byte[]> GetWorkflowResultAsync(TemporalClient client, WorkflowExecution execution, string domain)
+            public static async Task<byte[]> GetWorkflowResultAsync(TemporalClient client, WorkflowExecution execution, string @namespace)
             {
-                return await (Task<byte[]>)getWorkflowResultAsync.Invoke(client, new object[] { execution, domain });
+                return await (Task<byte[]>)getWorkflowResultAsync.Invoke(client, new object[] { execution, @namespace });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
@@ -260,27 +260,27 @@ namespace Neon.Temporal.Internal
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task<WorkflowDescription> DescribeWorkflowAsync(TemporalClient client, WorkflowExecution execution, string domain)
+            public static async Task<WorkflowDescription> DescribeWorkflowAsync(TemporalClient client, WorkflowExecution execution, string @namespace)
             {
-                return await (Task<WorkflowDescription>)describeWorkflowAsync.Invoke(client, new object[] { execution, domain });
+                return await (Task<WorkflowDescription>)describeWorkflowAsync.Invoke(client, new object[] { execution, @namespace });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task CancelWorkflowAsync(TemporalClient client, WorkflowExecution execution, string domain)
+            public static async Task CancelWorkflowAsync(TemporalClient client, WorkflowExecution execution, string @namespace)
             {
-                await (Task)cancelWorkflowAsync.Invoke(client, new object[] { execution, domain });
+                await (Task)cancelWorkflowAsync.Invoke(client, new object[] { execution, @namespace });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task TerminateWorkflowAsync(TemporalClient client, WorkflowExecution execution, string reason, byte[] details, string domain)
+            public static async Task TerminateWorkflowAsync(TemporalClient client, WorkflowExecution execution, string reason, byte[] details, string @namespace)
             {
-                await (Task)terminateWorkflowAsync.Invoke(client, new object[] { execution, reason, details, domain });
+                await (Task)terminateWorkflowAsync.Invoke(client, new object[] { execution, reason, details, @namespace });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task SignalWorkflowAsync(TemporalClient client, WorkflowExecution execution, string signalName, byte[] signalArgs, string domain)
+            public static async Task SignalWorkflowAsync(TemporalClient client, WorkflowExecution execution, string signalName, byte[] signalArgs, string @namespace)
             {
-                await (Task)signalWorkflowAsync.Invoke(client, new object[] { execution, signalName, signalArgs, domain });
+                await (Task)signalWorkflowAsync.Invoke(client, new object[] { execution, signalName, signalArgs, @namespace });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
@@ -290,15 +290,15 @@ namespace Neon.Temporal.Internal
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task<byte[]> QueryWorkflowAsync(TemporalClient client, WorkflowExecution execution, string queryType, byte[] queryArgs, string domain)
+            public static async Task<byte[]> QueryWorkflowAsync(TemporalClient client, WorkflowExecution execution, string queryType, byte[] queryArgs, string @namespace)
             {
-                return await (Task<byte[]>)queryWorkflowAsync.Invoke(client, new object[] { execution, queryType, queryArgs, domain });
+                return await (Task<byte[]>)queryWorkflowAsync.Invoke(client, new object[] { execution, queryType, queryArgs, @namespace });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task<byte[]> SyncSignalWorkflowAsync(TemporalClient client, WorkflowExecution execution, string signalName, string signalId, byte[] signalArgs, string domain)
+            public static async Task<byte[]> SyncSignalWorkflowAsync(TemporalClient client, WorkflowExecution execution, string signalName, string signalId, byte[] signalArgs, string @namespace)
             {
-                return await (Task<byte[]>)syncSignalWorkflowAsync.Invoke(client, new object[] { execution, signalName, signalId, signalArgs, domain });
+                return await (Task<byte[]>)syncSignalWorkflowAsync.Invoke(client, new object[] { execution, signalName, signalId, signalArgs, @namespace });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
@@ -308,9 +308,9 @@ namespace Neon.Temporal.Internal
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static string ResolveDomain(TemporalClient client, string domain)
+            public static string resolveNamespace(TemporalClient client, string @namespace)
             {
-                return (string)resolveDomain.Invoke(client, new object[] { domain });
+                return (string)resolveNamespace.Invoke(client, new object[] { @namespace });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
@@ -600,7 +600,7 @@ namespace Neon.Temporal.Internal
             sbSource.AppendLine($"        private bool                  isChild;");
             sbSource.AppendLine($"        private WorkflowOptions       options;");
             sbSource.AppendLine($"        private ChildWorkflowOptions  childOptions;");
-            sbSource.AppendLine($"        private string                domain;");
+            sbSource.AppendLine($"        private string                @namespace;");
             sbSource.AppendLine($"        private bool                  hasStarted;");
             sbSource.AppendLine($"        private WorkflowExecution     execution;");
             sbSource.AppendLine($"        private string                workflowId;");
@@ -618,7 +618,7 @@ namespace Neon.Temporal.Internal
             sbSource.AppendLine($"            this.dataConverter     = dataConverter;");
             sbSource.AppendLine($"            this.workflowTypeName  = workflowTypeName;");
             sbSource.AppendLine($"            this.options           = options;");
-            sbSource.AppendLine($"            this.domain            = ___StubHelper.ResolveDomain(client, options.Domain);");
+            sbSource.AppendLine($"            this.@namespace        = ___StubHelper.resolveNamespace(client, options.Namespace);");
             sbSource.AppendLine($"            this.interfaceType     = interfaceType;");
             sbSource.AppendLine($"            this.executingEvent    = new AsyncManualResetEvent(initialState: false);");
             sbSource.AppendLine($"        }}");
@@ -626,27 +626,27 @@ namespace Neon.Temporal.Internal
             // Generate the constructor used to connect to an existing external workflow by IDs.
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public {stubClassName}(TemporalClient client, IDataConverter dataConverter, string workflowId, string runId = null, string domain = null)");
+            sbSource.AppendLine($"        public {stubClassName}(TemporalClient client, IDataConverter dataConverter, string workflowId, string runId = null, string @namespace = null)");
             sbSource.AppendLine($"        {{");
             sbSource.AppendLine($"            this.client         = client;");
             sbSource.AppendLine($"            this.dataConverter  = dataConverter;");
             sbSource.AppendLine($"            this.hasStarted     = true;");
             sbSource.AppendLine($"            this.execution      = new WorkflowExecution(workflowId, runId);");
-            sbSource.AppendLine($"            this.domain         = ___StubHelper.ResolveDomain(client, domain);");
+            sbSource.AppendLine($"            this.@namespace     = ___StubHelper.resolveNamespace(client, @namespace);");
             sbSource.AppendLine($"            this.executingEvent = new AsyncManualResetEvent(initialState: true);");
             sbSource.AppendLine($"        }}");
 
             // Generate the constructor used to attach to an existing workflow by execution.
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public {stubClassName}(TemporalClient client, IDataConverter dataConverter, WorkflowExecution execution, string domain)");
+            sbSource.AppendLine($"        public {stubClassName}(TemporalClient client, IDataConverter dataConverter, WorkflowExecution execution, string @namespace)");
             sbSource.AppendLine($"        {{");
             sbSource.AppendLine($"            this.client         = client;");
             sbSource.AppendLine($"            this.dataConverter  = dataConverter;");
             sbSource.AppendLine($"            this.hasStarted     = true;");
             sbSource.AppendLine($"            this.execution      = execution;");
             sbSource.AppendLine($"            this.workflowId     = execution.WorkflowId;");
-            sbSource.AppendLine($"            this.domain         = ___StubHelper.ResolveDomain(client, domain);");
+            sbSource.AppendLine($"            this.@namespace     = ___StubHelper.resolveNamespace(client, @namespace);");
             sbSource.AppendLine($"            this.executingEvent = new AsyncManualResetEvent(initialState: true);");
             sbSource.AppendLine($"        }}");
 
@@ -661,7 +661,7 @@ namespace Neon.Temporal.Internal
             sbSource.AppendLine($"            this.workflowTypeName = workflowTypeName;");
             sbSource.AppendLine($"            this.isChild          = true;");
             sbSource.AppendLine($"            this.childOptions     = options;");
-            sbSource.AppendLine($"            this.domain           = this.childOptions.Domain;");
+            sbSource.AppendLine($"            this.@namespace       = this.childOptions.Namespace;");
             sbSource.AppendLine($"            this.interfaceType    = interfaceType;");
             sbSource.AppendLine($"            this.executingEvent   = new AsyncManualResetEvent(initialState: false);");
             sbSource.AppendLine($"        }}");
@@ -706,17 +706,17 @@ namespace Neon.Temporal.Internal
             sbSource.AppendLine($"            this.executingEvent = new AsyncManualResetEvent(initialState: true);");
             sbSource.AppendLine($"        }}");
 
-            // Generate the constructor used to create an external child workflow stub by workflow ID and domain.
+            // Generate the constructor used to create an external child workflow stub by workflow ID and namespace.
 
             sbSource.AppendLine();
-            sbSource.AppendLine($"        public {stubClassName}(TemporalClient client, IDataConverter dataConverter, Workflow parentWorkflow, string workflowId, string domain)");
+            sbSource.AppendLine($"        public {stubClassName}(TemporalClient client, IDataConverter dataConverter, Workflow parentWorkflow, string workflowId, string @namespace)");
             sbSource.AppendLine($"        {{");
             sbSource.AppendLine($"            this.client         = client;");
             sbSource.AppendLine($"            this.dataConverter  = dataConverter;");
             sbSource.AppendLine($"            this.parentWorkflow = parentWorkflow;");
             sbSource.AppendLine($"            this.hasStarted     = true;");
             sbSource.AppendLine($"            this.workflowId     = workflowId;");
-            sbSource.AppendLine($"            this.domain         = domain;");
+            sbSource.AppendLine($"            this.@namespace     = @namespace;");
             sbSource.AppendLine($"            this.executingEvent = new AsyncManualResetEvent(initialState: true);");
             sbSource.AppendLine($"        }}");
 
@@ -996,7 +996,7 @@ namespace Neon.Temporal.Internal
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            executingEvent.Set();");
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            ___resultBytes = await ___StubHelper.GetWorkflowResultAsync(this.client, this.execution, this.domain);");
+                    sbSource.AppendLine($"            ___resultBytes = await ___StubHelper.GetWorkflowResultAsync(this.client, this.execution, this.@namespace);");
 
                     if (!details.IsVoid)
                     {
@@ -1080,7 +1080,7 @@ namespace Neon.Temporal.Internal
                         sbSource.AppendLine($"            var ___argBytes        = {SerializeArgsExpression(details.Method.GetParameters())};");
                         sbSource.AppendLine($"            var ___signalCall      = new SyncSignalCall({StringLiteral(signalAttribute.Name)}, ___signalId, ___argBytes);");
                         sbSource.AppendLine($"            var ___signalCallBytes = TemporalHelper.ArgsToBytes(this.dataConverter, new object[] {{ ___signalCall }});");
-                        sbSource.AppendLine($"            var ___resultBytes     = await ___StubHelper.SyncSignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___signalId, ___signalCallBytes, this.domain);");
+                        sbSource.AppendLine($"            var ___resultBytes     = await ___StubHelper.SyncSignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___signalId, ___signalCallBytes, this.@namespace);");
 
                         if (details.ReturnType != typeof(void))
                         {
@@ -1093,7 +1093,7 @@ namespace Neon.Temporal.Internal
                     {
                         sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
                         sbSource.AppendLine();
-                        sbSource.AppendLine($"            await ___StubHelper.SignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___argBytes, this.domain);");
+                        sbSource.AppendLine($"            await ___StubHelper.SignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___argBytes, this.@namespace);");
                     }
                 }
 
@@ -1125,7 +1125,7 @@ namespace Neon.Temporal.Internal
                 {
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
-                    sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.QueryWorkflowAsync(this.client, this.childExecution.Execution, {StringLiteral(details.QueryMethodAttribute.Name)}, ___argBytes, this.domain);");
+                    sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.QueryWorkflowAsync(this.client, this.childExecution.Execution, {StringLiteral(details.QueryMethodAttribute.Name)}, ___argBytes, this.@namespace);");
 
                     if (!details.IsVoid)
                     {
@@ -1137,7 +1137,7 @@ namespace Neon.Temporal.Internal
                 {
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
-                    sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.QueryWorkflowAsync(this.client, this.execution, {StringLiteral(details.QueryMethodAttribute.Name)}, ___argBytes, this.domain);");
+                    sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.QueryWorkflowAsync(this.client, this.execution, {StringLiteral(details.QueryMethodAttribute.Name)}, ___argBytes, this.@namespace);");
 
                     if (!details.IsVoid)
                     {
@@ -1241,9 +1241,9 @@ namespace Neon.Temporal.Internal
         /// <param name="client">The associated <see cref="TemporalClient"/>.</param>
         /// <param name="workflowId">Specifies the workflow ID.</param>
         /// <param name="runId">Optionally specifies the workflow's run ID.</param>
-        /// <param name="domain">Optionally specifies a domain that </param>
+        /// <param name="namespace">Optionally specifies a namespace override.</param>
         /// <returns>The stub instance.</returns>
-        public static TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(TemporalClient client, string workflowId, string runId = null, string domain = null)
+        public static TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(TemporalClient client, string workflowId, string runId = null, string @namespace = null)
             where TWorkflowInterface : class
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
@@ -1255,7 +1255,7 @@ namespace Neon.Temporal.Internal
 
             var stub = GetWorkflowStub(typeof(TWorkflowInterface), isChild: false);
 
-            return (TWorkflowInterface)stub.Create(client, client.DataConverter, workflowId, runId, domain);
+            return (TWorkflowInterface)stub.Create(client, client.DataConverter, workflowId, runId, @namespace);
         }
 
         /// <summary>
@@ -1357,23 +1357,23 @@ namespace Neon.Temporal.Internal
 
         /// <summary>
         /// Creates a dynamically generated external stub for an existing child workflow using the
-        /// workflow ID and optional domain.
+        /// workflow ID and optional namespace.
         /// </summary>
         /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
         /// <param name="client">The associated <see cref="TemporalClient"/>.</param>
         /// <param name="parentWorkflow">The parent workflow.</param>
         /// <param name="workflowId">The child workflow ID.</param>
-        /// <param name="domain">Optionally overrides the parent workflow domain.</param>
+        /// <param name="namespace">Optionally overrides the parent workflow namespace.</param>
         /// <returns>The stub instance.</returns>
         /// <exception cref="WorkflowTypeException">Thrown when there are problems with the <typeparamref name="TWorkflowInterface"/>.</exception>
-        public static TWorkflowInterface NewChildWorkflowStubById<TWorkflowInterface>(TemporalClient client, Workflow parentWorkflow, string workflowId, string domain = null)
+        public static TWorkflowInterface NewChildWorkflowStubById<TWorkflowInterface>(TemporalClient client, Workflow parentWorkflow, string workflowId, string @namespace = null)
             where TWorkflowInterface : class
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
 
-            domain = domain ?? parentWorkflow.WorkflowInfo.Domain;
+            @namespace = @namespace ?? parentWorkflow.WorkflowInfo.Namespace;
 
             var workflowInterface = typeof(TWorkflowInterface);
             var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
@@ -1382,7 +1382,7 @@ namespace Neon.Temporal.Internal
 
             var stub = GetWorkflowStub(typeof(TWorkflowInterface), isChild: true);
 
-            return (TWorkflowInterface)stub.Create(client, client.DataConverter, parentWorkflow, workflowId, domain);
+            return (TWorkflowInterface)stub.Create(client, client.DataConverter, parentWorkflow, workflowId, @namespace);
         }
 
         /// <summary>
@@ -1549,7 +1549,7 @@ namespace Neon.Temporal.Internal
             sbSource.AppendLine($"        private bool                              isLocal;");
             sbSource.AppendLine($"        private string                            activityTypeName;");
             sbSource.AppendLine($"        private ActivityOptions                   options;");
-            sbSource.AppendLine($"        private string                            domain;");
+            sbSource.AppendLine($"        private string                            @namespace;");
             sbSource.AppendLine($"        private Type                              activityInterface;");
             sbSource.AppendLine($"        private Type                              activityType;");
             sbSource.AppendLine($"        private ConstructorInfo                   activityConstructor;");
@@ -1568,7 +1568,7 @@ namespace Neon.Temporal.Internal
             sbSource.AppendLine($"            this.activityInterface = interfaceType;");
             sbSource.AppendLine($"            this.activityTypeName  = activityTypeName;");
             sbSource.AppendLine($"            this.options           = ___StubHelper.NormalizeOptions(client, options, interfaceType);");
-            sbSource.AppendLine($"            this.domain            = options.Domain;");
+            sbSource.AppendLine($"            this.@namespace        = options.Namespace;");
             sbSource.AppendLine($"        }}");
 
             // Generate the constructor for local activity stubs.

@@ -75,31 +75,22 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// The default Temporal domain.
-        /// </summary>
-        public string Domain
-        {
-            get => GetStringProperty(PropertyNames.Domain);
-            set => SetStringProperty(PropertyNames.Domain, value);
-        }
-
-        /// <summary>
-        /// Indicates whether the Temporal domain should be created if it
-        /// doesn't already exist.
-        /// </summary>
-        public bool CreateDomain
-        {
-            get => GetBoolProperty(PropertyNames.CreateDomain);
-            set => SetBoolProperty(PropertyNames.CreateDomain, value);
-        }
-
-        /// <summary>
-        /// The Temporal namespace to connect.
+        /// The default Temporal namespace.
         /// </summary>
         public string Namespace
         {
             get => GetStringProperty(PropertyNames.Namespace);
             set => SetStringProperty(PropertyNames.Namespace, value);
+        }
+
+        /// <summary>
+        /// Indicates whether the Temporal <see cref="Namespace"/> should be created 
+        /// when it doesn't already exist.
+        /// </summary>
+        public bool CreateNamespace
+        {
+            get => GetBoolProperty(PropertyNames.CreateNamespace);
+            set => SetBoolProperty(PropertyNames.CreateNamespace, value);
         }
 
         /// <summary>
@@ -141,9 +132,8 @@ namespace Neon.Temporal.Internal
             typedTarget.HostPort      = this.HostPort;
             typedTarget.Identity      = this.Identity;
             typedTarget.ClientTimeout = this.ClientTimeout;
-            typedTarget.Domain        = this.Domain;
-            typedTarget.CreateDomain  = this.CreateDomain;
-            typedTarget.Namespace     = this.Namespace;
+            typedTarget.Namespace        = this.Namespace;
+            typedTarget.CreateNamespace  = this.CreateNamespace;
             typedTarget.Retries       = this.Retries;
             typedTarget.RetryDelay    = this.RetryDelay;
         }

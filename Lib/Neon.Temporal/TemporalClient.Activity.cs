@@ -44,7 +44,7 @@ namespace Neon.Temporal
         /// for identifying the activity implementation in Temporal.  This defaults
         /// to the fully qualified <typeparamref name="TActivity"/> type name.
         /// </param>
-        /// <param name="domain">Optionally overrides the default client domain.</param>
+        /// <param name="namespace">Optionally overrides the default client namespace.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown if a different activity class has already been registered for <paramref name="activityTypeName"/>.</exception>
         /// <exception cref="ActivityWorkerStartedException">
@@ -56,7 +56,7 @@ namespace Neon.Temporal
         /// Be sure to register all of your activity implementations before starting workers.
         /// </note>
         /// </remarks>
-        public async Task RegisterActivityAsync<TActivity>(string activityTypeName = null, string domain = null)
+        public async Task RegisterActivityAsync<TActivity>(string activityTypeName = null, string @namespace = null)
             where TActivity : ActivityBase
         {
             await SyncContext.ClearAsync;
@@ -76,7 +76,7 @@ namespace Neon.Temporal
                 activityTypeName = TemporalHelper.GetActivityTypeName(activityType, activityType.GetCustomAttribute<ActivityAttribute>());
             }
 
-            await ActivityBase.RegisterAsync(this, activityType, activityTypeName, ResolveDomain(domain));
+            await ActivityBase.RegisterAsync(this, activityType, activityTypeName, ResolveNamespace(@namespace));
 
             lock (registeredActivityTypes)
             {
@@ -90,7 +90,7 @@ namespace Neon.Temporal
         /// registers them with Temporal.
         /// </summary>
         /// <param name="assembly">The target assembly.</param>
-        /// <param name="domain">Optionally overrides the default client domain.</param>
+        /// <param name="namespace">Optionally overrides the default client namespace.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TypeLoadException">
         /// Thrown for types tagged by <see cref="ActivityAttribute"/> that are not 
@@ -106,7 +106,7 @@ namespace Neon.Temporal
         /// Be sure to register all of your activity implementations before starting workers.
         /// </note>
         /// </remarks>
-        public async Task RegisterAssemblyActivitiesAsync(Assembly assembly, string domain = null)
+        public async Task RegisterAssemblyActivitiesAsync(Assembly assembly, string @namespace = null)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(assembly != null, nameof(assembly));
@@ -125,7 +125,7 @@ namespace Neon.Temporal
                 {
                     var activityTypeName = TemporalHelper.GetActivityTypeName(type, activityAttribute);
 
-                    await ActivityBase.RegisterAsync(this, type, activityTypeName, ResolveDomain(domain));
+                    await ActivityBase.RegisterAsync(this, type, activityTypeName, ResolveNamespace(@namespace));
 
                     lock (registeredActivityTypes)
                     {
@@ -140,9 +140,9 @@ namespace Neon.Temporal
         /// </summary>
         /// <param name="taskToken">The opaque base-64 encoded activity task token.</param>
         /// <param name="details">Optional heartbeart details.</param>
-        /// <param name="domain">Optionally overrides the default <see cref="TemporalClient"/> domain.</param>
+        /// <param name="namespace">Optionally overrides the default <see cref="TemporalClient"/> namespace.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task ActivityHeartbeatByTokenAsync(string taskToken, object details = null, string domain = null)
+        public async Task ActivityHeartbeatByTokenAsync(string taskToken, object details = null, string @namespace = null)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken), nameof(taskToken));
@@ -151,7 +151,7 @@ namespace Neon.Temporal
             var reply = (ActivityRecordHeartbeatReply)await CallProxyAsync(
                 new ActivityRecordHeartbeatRequest()
                 {
-                    Domain    = ResolveDomain(domain),
+                    Namespace = ResolveNamespace(@namespace),
                     TaskToken = Convert.FromBase64String(taskToken),
                     Details   = GetClient(ClientId).DataConverter.ToData(details)
                 });
@@ -165,9 +165,9 @@ namespace Neon.Temporal
         /// <param name="execution">The workflow execution.</param>
         /// <param name="activityId">The activity ID.</param>
         /// <param name="details">Optional heartbeart details.</param>
-        /// <param name="domain">Optionally overrides the default <see cref="TemporalClient"/> domain.</param>
+        /// <param name="namespace">Optionally overrides the default <see cref="TemporalClient"/> namespace.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task ActivityHeartbeatByIdAsync(WorkflowExecution execution, string activityId, object details = null, string domain = null)
+        public async Task ActivityHeartbeatByIdAsync(WorkflowExecution execution, string activityId, object details = null, string @namespace = null)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
@@ -177,7 +177,7 @@ namespace Neon.Temporal
             var reply = (ActivityRecordHeartbeatReply)await CallProxyAsync(
                 new ActivityRecordHeartbeatRequest()
                 {
-                    Domain     = ResolveDomain(domain),
+                    Namespace  = ResolveNamespace(@namespace),
                     WorkflowId = execution.WorkflowId,
                     RunId      = execution.RunId,
                     ActivityId = activityId,
@@ -191,11 +191,11 @@ namespace Neon.Temporal
         /// Used to externally complete an activity identified by task token.
         /// </summary>
         /// <param name="taskToken">The opaque base-64 encoded activity task token.</param>
-        /// <param name="domain">Optionally overrides the default <see cref="TemporalClient"/> domain.</param>
+        /// <param name="namespace">Optionally overrides the default <see cref="TemporalClient"/> namespace.</param>
         /// <param name="result">Passed as the activity result for activity success.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task ActivityCompleteByTokenAsync(string taskToken, object result = null, string domain = null)
+        public async Task ActivityCompleteByTokenAsync(string taskToken, object result = null, string @namespace = null)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken), nameof(taskToken));
@@ -204,7 +204,7 @@ namespace Neon.Temporal
             var reply = (ActivityCompleteReply)await CallProxyAsync(
                 new ActivityCompleteRequest()
                 {
-                    Domain    = ResolveDomain(domain),
+                    Namespace = ResolveNamespace(@namespace),
                     TaskToken = Convert.FromBase64String(taskToken),
                     Result    = GetClient(ClientId).DataConverter.ToData(result)
                 });
@@ -218,10 +218,10 @@ namespace Neon.Temporal
         /// <param name="execution">The workflow execution.</param>
         /// <param name="activityId">The activity ID.</param>
         /// <param name="result">Passed as the activity result for activity success.</param>
-        /// <param name="domain">Optionally overrides the default <see cref="TemporalClient"/> domain.</param>
+        /// <param name="namespace">Optionally overrides the default <see cref="TemporalClient"/> namespace.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task ActivityCompleteByIdAsync(WorkflowExecution execution, string activityId, object result = null, string domain = null)
+        public async Task ActivityCompleteByIdAsync(WorkflowExecution execution, string activityId, object result = null, string @namespace = null)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
@@ -231,7 +231,7 @@ namespace Neon.Temporal
             var reply = (ActivityCompleteReply)await CallProxyAsync(
                 new ActivityCompleteRequest()
                 {
-                    Domain     = ResolveDomain(domain),
+                    Namespace  = ResolveNamespace(@namespace),
                     WorkflowId = execution.WorkflowId,
                     RunId      = execution.RunId,
                     ActivityId = activityId,
@@ -245,10 +245,10 @@ namespace Neon.Temporal
         /// Used to externally cancel an activity identified by task token.
         /// </summary>
         /// <param name="taskToken">The opaque base-64 encoded activity task token.</param>
-        /// <param name="domain">Optionally overrides the default <see cref="TemporalClient"/> domain.</param>
+        /// <param name="namespace">Optionally overrides the default <see cref="TemporalClient"/> namespace.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task ActivityCancelByTokenAsync(string taskToken, string domain = null)
+        public async Task ActivityCancelByTokenAsync(string taskToken, string @namespace = null)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken), nameof(taskToken));
@@ -257,7 +257,7 @@ namespace Neon.Temporal
             var reply = (ActivityCompleteReply)await CallProxyAsync(
                 new ActivityCompleteRequest()
                 {
-                    Domain    = ResolveDomain(domain),
+                    Namespace    = ResolveNamespace(@namespace),
                     TaskToken = Convert.FromBase64String(taskToken),
                     Error     = new TemporalError(new CancelledException("Cancelled"))
                 });
@@ -270,10 +270,10 @@ namespace Neon.Temporal
         /// </summary>
         /// <param name="execution">The workflow execution.</param>
         /// <param name="activityId">The activity ID.</param>
-        /// <param name="domain">Optionally overrides the default <see cref="TemporalClient"/> domain.</param>
+        /// <param name="namespace">Optionally overrides the default <see cref="TemporalClient"/> namespace.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task ActivityCancelByIdAsync(WorkflowExecution execution, string activityId, string domain = null)
+        public async Task ActivityCancelByIdAsync(WorkflowExecution execution, string activityId, string @namespace = null)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
@@ -283,7 +283,7 @@ namespace Neon.Temporal
             var reply = (ActivityCompleteReply)await CallProxyAsync(
                 new ActivityCompleteRequest()
                 {
-                    Domain     = ResolveDomain(domain),
+                    Namespace     = ResolveNamespace(@namespace),
                     WorkflowId = execution.WorkflowId,
                     RunId      = execution.RunId,
                     ActivityId = activityId,
@@ -298,10 +298,10 @@ namespace Neon.Temporal
         /// </summary>
         /// <param name="taskToken">The opaque base-64 encoded activity task token.</param>
         /// <param name="error">Specifies the activity error.</param>
-        /// <param name="domain">Optionally overrides the default <see cref="TemporalClient"/> domain.</param>
+        /// <param name="namespace">Optionally overrides the default <see cref="TemporalClient"/> namespace.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task ActivityErrorByTokenAsync(string taskToken, Exception error, string domain = null)
+        public async Task ActivityErrorByTokenAsync(string taskToken, Exception error, string @namespace = null)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken), nameof(taskToken));
@@ -311,7 +311,7 @@ namespace Neon.Temporal
             var reply = (ActivityCompleteReply)await CallProxyAsync(
                 new ActivityCompleteRequest()
                 {
-                    Domain    = ResolveDomain(domain),
+                    Namespace    = ResolveNamespace(@namespace),
                     TaskToken = Convert.FromBase64String(taskToken),
                     Error     = new TemporalError(error)
                 });
@@ -325,10 +325,10 @@ namespace Neon.Temporal
         /// <param name="execution">The workflowm execution.</param>
         /// <param name="activityId">The activity ID.</param>
         /// <param name="error">Specifies the activity error.</param>
-        /// <param name="domain">Optionally overrides the default <see cref="TemporalClient"/> domain.</param>
+        /// <param name="namespace">Optionally overrides the default <see cref="TemporalClient"/> namespace.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="EntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task ActivityErrorByIdAsync(WorkflowExecution execution, string activityId, Exception error, string domain = null)
+        public async Task ActivityErrorByIdAsync(WorkflowExecution execution, string activityId, Exception error, string @namespace = null)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
@@ -339,7 +339,7 @@ namespace Neon.Temporal
             var reply = (ActivityCompleteReply)await CallProxyAsync(
                 new ActivityCompleteRequest()
                 {
-                    Domain     = ResolveDomain(domain),
+                    Namespace     = ResolveNamespace(@namespace),
                     WorkflowId = execution.WorkflowId,
                     RunId      = execution.RunId,
                     ActivityId = activityId,

@@ -31,14 +31,14 @@ namespace Neon.Temporal
     public partial class TemporalClient
     {
         //---------------------------------------------------------------------
-        // Temporal domain related operations.
+        // Temporal namespace related operations.
 
         /// <summary>
-        /// Registers a Temporal domain using the <see cref="InternalRegisterDomainRequest"/> information passed.
+        /// Registers a Temporal namespace using the <see cref="InternalRegisterDomainRequest"/> information passed.
         /// </summary>
-        /// <param name="request">The domain properties.</param>
+        /// <param name="request">The namespace properties.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="DomainAlreadyExistsException">Thrown if the domain already exists.</exception>
+        /// <exception cref="DomainAlreadyExistsException">Thrown if the namespace already exists.</exception>
         /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Temporal cluster problems.</exception>
         /// <exception cref="ServiceBusyException">Thrown when Temporal is too busy.</exception>
@@ -62,22 +62,22 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Registers a Temporal domain using the specified parameters.
+        /// Registers a Temporal namespace using the specified parameters.
         /// </summary>
-        /// <param name="name">The domain name.</param>
+        /// <param name="name">The namespace name.</param>
         /// <param name="description">Optionally specifies a description.</param>
         /// <param name="ownerEmail">Optionally specifies the owner's email address.</param>
         /// <param name="retentionDays">
         /// Optionally specifies the number of days to retain the history for workflows 
-        /// completed in this domain.  This defaults to <b>7 days</b> and may be as long
+        /// completed in this namespace.  This defaults to <b>7 days</b> and may be as long
         /// as <b>30 days</b>.
         /// </param>
         /// <param name="ignoreDuplicates">
-        /// Optionally ignore duplicate domain registrations.  This defaults
+        /// Optionally ignore duplicate namespace registrations.  This defaults
         /// to <c>false</c>.
         /// </param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="DomainAlreadyExistsException">Thrown if the domain already exists.</exception>
+        /// <exception cref="DomainAlreadyExistsException">Thrown if the namespace already exists.</exception>
         /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Temporal cluster problems.</exception>
         /// <exception cref="ServiceBusyException">Thrown when Temporal is too busy.</exception>
@@ -111,11 +111,11 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Describes the named Temporal domain.
+        /// Describes the named Temporal namespace.
         /// </summary>
-        /// <param name="name">The domain name.</param>
+        /// <param name="name">The namespace name.</param>
         /// <returns>The <see cref="DomainDescription"/>.</returns>
-        /// <exception cref="EntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the named namespace does not exist.</exception>
         /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Temporal cluster problems.</exception>
         /// <exception cref="ServiceBusyException">Thrown when Temporal is too busy.</exception>
@@ -154,9 +154,9 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Describes a Temporal domain by UUID.
+        /// Describes a Temporal namespace by UUID.
         /// </summary>
-        /// <param name="uuid">The domain ID.</param>
+        /// <param name="uuid">The namespace ID.</param>
         /// <returns>The <see cref="DomainDescription"/>.</returns>
         public async Task<DomainDescription> DescribeDomainByIdAsync(string uuid)
         {
@@ -193,10 +193,10 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Updates the named Temporal domain.
+        /// Updates the named Temporal namespace.
         /// </summary>
-        /// <param name="name">Identifies the target domain.</param>
-        /// <param name="request">The updated domain information.</param>
+        /// <param name="name">Identifies the target namespace.</param>
+        /// <param name="request">The updated namespace information.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task UpdateDomainAsync(string name, UpdateDomainRequest request)
         {
@@ -237,7 +237,7 @@ namespace Neon.Temporal
         /// <returns>A <see cref="DomainListPage"/> with the domains.</returns>
         /// <remarks>
         /// <para>
-        /// This method can be used to retrieve one or more pages of domain
+        /// This method can be used to retrieve one or more pages of namespace
         /// results.  You'll pass <paramref name="pageSize"/> as the maximum number
         /// of domains to be returned per page.  The <see cref="DomainListPage"/>
         /// returned will list the domains and if there are more domains waiting

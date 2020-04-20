@@ -31,17 +31,17 @@ namespace Neon.Temporal
     public class DomainDescription
     {
         /// <summary>
-        /// The domain information.
+        /// The namespace information.
         /// </summary>
         public DomainInfo DomainInfo { get; set; }
 
         /// <summary>
-        /// The domain configuration.
+        /// The namespace configuration.
         /// </summary>
         public DomainConfiguration Configuration { get; set; }
 
         /// <summary>
-        /// Indicates whether the domain is global.
+        /// Indicates whether the namespace is global.
         /// </summary>
         public bool IsGlobalDomain { get; set; }
     }

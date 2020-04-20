@@ -53,10 +53,10 @@ namespace Neon.Temporal.Internal
         /// <summary>
         /// Identifies the target workflow.
         /// </summary>
-        public string Domain
+        public string Namespace
         {
-            get => GetStringProperty(PropertyNames.Domain);
-            set => SetStringProperty(PropertyNames.Domain, value);
+            get => GetStringProperty(PropertyNames.Namespace);
+            set => SetStringProperty(PropertyNames.Namespace, value);
         }
 
         /// <inheritdoc/>
@@ -77,7 +77,7 @@ namespace Neon.Temporal.Internal
             var typedTarget = (WorkflowRegisterRequest)target;
 
             typedTarget.Name   = this.Name;
-            typedTarget.Domain = this.Domain;
+            typedTarget.Namespace = this.Namespace;
         }
     }
 }

@@ -82,7 +82,7 @@ namespace Neon.Temporal
         /// <param name="client">The associated client.</param>
         /// <param name="contextId">The workflow's context ID.</param>
         /// <param name="workflowTypeName">The workflow type name.</param>
-        /// <param name="domain">The hosting domain.</param>
+        /// <param name="namespace">The hosting namespace.</param>
         /// <param name="taskList">The hosting task list.</param>
         /// <param name="workflowId">The workflow ID.</param>
         /// <param name="runId">The current workflow run ID.</param>
@@ -93,7 +93,7 @@ namespace Neon.Temporal
             TemporalClient       client, 
             long                contextId, 
             string              workflowTypeName, 
-            string              domain, 
+            string              @namespace, 
             string              taskList,
             string              workflowId, 
             string              runId, 
@@ -102,7 +102,7 @@ namespace Neon.Temporal
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain), nameof(domain));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList), nameof(taskList));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId), nameof(runId));
@@ -141,7 +141,7 @@ namespace Neon.Temporal
             this.WorkflowInfo = new WorkflowInfo()
             {
                 WorkflowType = workflowTypeName,
-                Domain       = domain,
+                Namespace    = @namespace,
                 TaskList     = taskList,
                 WorkflowId   = workflowId,
                 RunId        = runId,
@@ -438,7 +438,7 @@ namespace Neon.Temporal
             throw new ContinueAsNewException(
                 args:       TemporalHelper.ArgsToBytes(Client.DataConverter, args),
                 workflow:   WorkflowInfo.WorkflowType,
-                domain:     WorkflowInfo.Domain,
+                @namespace: WorkflowInfo.Namespace,
                 taskList:   WorkflowInfo.TaskList);
         }
 
@@ -473,7 +473,7 @@ namespace Neon.Temporal
 
             throw new ContinueAsNewException(
                 args:                       TemporalHelper.ArgsToBytes(Client.DataConverter, args),
-                domain:                     options.Domain ?? WorkflowInfo.Domain,
+                @namespace:                 options.Namespace ?? WorkflowInfo.Namespace,
                 taskList:                   options.TaskList ?? WorkflowInfo.TaskList,
                 workflow:                   options.Workflow ?? WorkflowInfo.WorkflowType,
                 executionToStartTimeout:    options.ExecutionStartToCloseTimeout,
@@ -1445,20 +1445,20 @@ namespace Neon.Temporal
 
         /// <summary>
         /// Creates a workflow client stub that can be used communicate with an
-        /// existing workflow identified by a workflow ID and optional domain.
+        /// existing workflow identified by a workflow ID and optional namespace.
         /// </summary>
         /// <param name="workflowId">Identifies the workflow.</param>
-        /// <param name="domain">Optionally overrides the parent workflow domain.</param>
+        /// <param name="namespace">Optionally overrides the parent workflow namespace.</param>
         /// <returns>The workflow stub.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the associated Temporal client is disposed.</exception>
         /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
-        public ExternalWorkflowStub NewExternalWorkflowStub(string workflowId, string domain = null)
+        public ExternalWorkflowStub NewExternalWorkflowStub(string workflowId, string @namespace = null)
         {
             Client.EnsureNotDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
-            return new ExternalWorkflowStub(Client, new WorkflowExecution(workflowId), domain);
+            return new ExternalWorkflowStub(Client, new WorkflowExecution(workflowId), @namespace);
         }
 
         /// <summary>
@@ -1733,11 +1733,11 @@ namespace Neon.Temporal
         /// workflow identified by its <see cref="WorkflowExecution"/>.
         /// </summary>
         /// <param name="execution">The target <see cref="WorkflowExecution"/>.</param>
-        /// <param name="domain">Optionally specifies the target domain.  This defaults to the parent workflow's domain.</param>
+        /// <param name="namespace">Optionally specifies the target namespace.  This defaults to the parent workflow's namespace.</param>
         /// <returns>The <see cref="ExternalWorkflowStub"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the associated Temporal client is disposed.</exception>
         /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
-        public ExternalWorkflowStub NewUntypedExternalWorkflowStub(WorkflowExecution execution, string domain = null)
+        public ExternalWorkflowStub NewUntypedExternalWorkflowStub(WorkflowExecution execution, string @namespace = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             Client.EnsureNotDisposed();
@@ -1752,11 +1752,11 @@ namespace Neon.Temporal
         /// workflow identified by its workflow ID.
         /// </summary>
         /// <param name="workflowId">The target workflow ID.</param>
-        /// <param name="domain">Optionally specifies the target domain.  This defaults to the parent workflow's domain.</param>
+        /// <param name="namespace">Optionally specifies the target namespace.  This defaults to the parent workflow's namespace.</param>
         /// <returns>The <see cref="ExternalWorkflowStub"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the associated Temporal client is disposed.</exception>
         /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
-        public ExternalWorkflowStub NewUntypedExternalWorkflowStub(string workflowId, string domain = null)
+        public ExternalWorkflowStub NewUntypedExternalWorkflowStub(string workflowId, string @namespace = null)
         {
             Client.EnsureNotDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true);
@@ -2121,7 +2121,7 @@ namespace Neon.Temporal
         /// if the child workflow did not complete successfully.
         /// </exception>
         /// <exception cref="ObjectDisposedException">Thrown if the associated Temporal client is disposed.</exception>
-        /// <exception cref="EntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the named namespace does not exist.</exception>
         /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Temporal cluster problems.</exception>
         /// <exception cref="ServiceBusyException">Thrown when Temporal is too busy.</exception>
@@ -2162,7 +2162,7 @@ namespace Neon.Temporal
                         Activity  = activityTypeName,
                         Args      = args,
                         Options   = options.ToInternal(),
-                        Domain    = options.Domain,
+                        Namespace = options.Namespace,
                     }));
 
             reply.ThrowOnError();
@@ -2219,7 +2219,7 @@ namespace Neon.Temporal
         /// <paramref name="activityMethod"/> method.
         /// </remarks>
         /// <exception cref="ObjectDisposedException">Thrown if the associated Temporal client is disposed.</exception>
-        /// <exception cref="EntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the named namespace does not exist.</exception>
         /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Temporal cluster problems.</exception>
         /// <exception cref="ServiceBusyException">Thrown when Temporal is too busy.</exception>

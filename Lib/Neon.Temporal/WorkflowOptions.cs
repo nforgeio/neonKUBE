@@ -68,9 +68,9 @@ namespace Neon.Temporal
                 options = options.Clone();
             }
 
-            if (string.IsNullOrEmpty(options.Domain))
+            if (string.IsNullOrEmpty(options.Namespace))
             {
-                options.Domain = client.Settings.DefaultDomain;
+                options.Namespace = client.Settings.DefaulNamespace;
             }
 
             if (!options.ScheduleToCloseTimeout.HasValue || options.ScheduleToCloseTimeout.Value <= TimeSpan.Zero)
@@ -126,9 +126,9 @@ namespace Neon.Temporal
         public string WorkflowId { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies the target domain overriding the default client domain.
+        /// Optionally specifies the target namespace overriding the default client namespace.
         /// </summary>
-        public string Domain { get; set; } = null;
+        public string Namespace { get; set; } = null;
 
         /// <summary>
         /// Optionally specifies the target task list overriding the default client task list
@@ -288,7 +288,7 @@ namespace Neon.Temporal
         {
             return new WorkflowOptions()
             {
-                Domain                  = this.Domain,
+                Namespace                  = this.Namespace,
                 TaskList                = this.TaskList,
                 CronSchedule            = this.CronSchedule,
                 ScheduleToCloseTimeout  = this.ScheduleToCloseTimeout,

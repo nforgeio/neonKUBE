@@ -107,16 +107,16 @@ namespace Neon.Temporal.Internal
         /// <param name="client">The associated <see cref="TemporalClient"/>.</param>
         /// <param name="dataConverter">The data converter.</param>
         /// <param name="workflowId">Specifies the workflow ID.</param>
-        /// <param name="domain">Optionally specifies the workflow run ID.</param>
-        /// <param name="runId">Optionally specifies the domain.</param>
+        /// <param name="runId">Optionally specifies the workflow run ID.</param>
+        /// <param name="namespace">Optionally specifies the namespace.</param>
         /// <returns>The workflow stub as an <see cref="object"/>.</returns>
-        public object Create(TemporalClient client, IDataConverter dataConverter, string workflowId, string runId = null, string domain = null)
+        public object Create(TemporalClient client, IDataConverter dataConverter, string workflowId, string runId = null, string @namespace = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(dataConverter != null, nameof(dataConverter));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
 
-            return externalConstructor.Invoke(new object[] { client, dataConverter, workflowId, runId, domain });
+            return externalConstructor.Invoke(new object[] { client, dataConverter, workflowId, runId, @namespace });
         }
 
         /// <summary>
@@ -180,22 +180,22 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// Creates a stub for an existing child workflow specified by its workflow ID and optional domain.
+        /// Creates a stub for an existing child workflow specified by its workflow ID and optional namespace.
         /// </summary>
         /// <param name="client">The associated <see cref="TemporalClient"/>.</param>
         /// <param name="dataConverter">The data converter.</param>
         /// <param name="parentWorkflow">The parent workflow.</param>
         /// <param name="workflowId">The workflow ID.</param>
-        /// <param name="domain">Optionally overrides the default client domain.</param>
+        /// <param name="namespace">Optionally overrides the default client namespace.</param>
         /// <returns>The workflow stub as an <see cref="object"/>.</returns>
-        public object Create(TemporalClient client, IDataConverter dataConverter,  Workflow parentWorkflow, string workflowId, string domain = null)
+        public object Create(TemporalClient client, IDataConverter dataConverter,  Workflow parentWorkflow, string workflowId, string @namespace = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(dataConverter != null, nameof(dataConverter));
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
 
-            return childWorkflowIdConstructor.Invoke(new object[] { client, dataConverter, parentWorkflow, workflowId, domain });
+            return childWorkflowIdConstructor.Invoke(new object[] { client, dataConverter, parentWorkflow, workflowId, @namespace });
         }
 
         /// <summary>

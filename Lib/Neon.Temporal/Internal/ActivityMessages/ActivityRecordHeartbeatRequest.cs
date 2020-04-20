@@ -47,7 +47,7 @@ namespace Neon.Temporal.Internal
         /// non-null, indicating that the activity heartbeat is being sent externally.
         /// </para>
         /// <note>
-        /// Only one of <see cref="TaskToken"/> or <see cref="Domain"/> may be non-null
+        /// Only one of <see cref="TaskToken"/> or <see cref="Namespace"/> may be non-null
         /// within a given message.
         /// </note>
         /// </summary>
@@ -64,14 +64,14 @@ namespace Neon.Temporal.Internal
         /// </para>
         /// </summary>
         /// <note>
-        /// Only one of <see cref="TaskToken"/> or <see cref="Domain"/> may be non-null
+        /// Only one of <see cref="TaskToken"/> or <see cref="Namespace"/> may be non-null
         /// within a given message.  The <see cref="WorkflowId"/> and <see cref="RunId"/>
-        /// will be valid only when <see cref="Domain"/> is non-null.
+        /// will be valid only when <see cref="Namespace"/> is non-null.
         /// </note>
-        public string Domain
+        public string Namespace
         {
-            get => GetStringProperty(PropertyNames.Domain);
-            set => SetStringProperty(PropertyNames.Domain, value);
+            get => GetStringProperty(PropertyNames.Namespace);
+            set => SetStringProperty(PropertyNames.Namespace, value);
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace Neon.Temporal.Internal
         /// The target workflow ID.
         /// </para>
         /// <note>
-        /// This is required when <see cref="Domain"/> is non-null.
+        /// This is required when <see cref="Namespace"/> is non-null.
         /// </note>
         /// </summary>
         public string WorkflowId
@@ -93,7 +93,7 @@ namespace Neon.Temporal.Internal
         /// The target run ID.
         /// </para>
         /// <note>
-        /// This is optional when <see cref="Domain"/> is non-null.
+        /// This is optional when <see cref="Namespace"/> is non-null.
         /// </note>
         /// </summary>
         public string RunId
@@ -138,7 +138,7 @@ namespace Neon.Temporal.Internal
             var typedTarget = (ActivityRecordHeartbeatRequest)target;
 
             typedTarget.TaskToken  = this.TaskToken;
-            typedTarget.Domain     = this.Domain;
+            typedTarget.Namespace     = this.Namespace;
             typedTarget.WorkflowId = this.WorkflowId;
             typedTarget.RunId      = this.RunId;
             typedTarget.ActivityId = this.ActivityId;

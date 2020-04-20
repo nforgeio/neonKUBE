@@ -59,7 +59,7 @@ namespace Neon.Temporal
         /// <see cref="RegisterAssemblyActivitiesAsync(Assembly, string)"/>,
         /// </summary>
         /// <param name="assembly">The target assembly.</param>
-        /// <param name="domain">Optionally overrides the default client domain.</param>
+        /// <param name="namespace">Optionally overrides the default client namespace.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TypeLoadException">
         /// Thrown for types tagged by <see cref="WorkflowAttribute"/> that are not 
@@ -80,22 +80,22 @@ namespace Neon.Temporal
         /// Be sure to register all of your workflow implementations before starting workers.
         /// </note>
         /// </remarks>
-        public async Task RegisterAssemblyAsync(Assembly assembly, string domain = null)
+        public async Task RegisterAssemblyAsync(Assembly assembly, string @namespace = null)
         {
             await SyncContext.ClearAsync;
             EnsureNotDisposed();
             
-            await RegisterAssemblyWorkflowsAsync(assembly, domain);
-            await RegisterAssemblyActivitiesAsync(assembly, domain);
+            await RegisterAssemblyWorkflowsAsync(assembly, @namespace);
+            await RegisterAssemblyActivitiesAsync(assembly, @namespace);
         }
 
         /// <summary>
         /// Signals Temporal that the application is capable of executing workflows and/or activities for a specific
-        /// domain and task list.
+        /// namespace and task list.
         /// </summary>
         /// <param name="taskList">Specifies the task list implemented by the worker.  This must not be empty.</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
-        /// <param name="domain">Optionally overrides the default <see cref="TemporalClient"/> domain.</param>
+        /// <param name="namespace">Optionally overrides the default <see cref="TemporalClient"/> namespace.</param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="taskList"/> is <c>null</c> or empty.</exception>
         /// <exception cref="InvalidOperationException">
@@ -109,7 +109,7 @@ namespace Neon.Temporal
         /// <para>
         /// Your workflow application will need to call this method so that Temporal will know
         /// that it can schedule activities to run within the current process.  You'll need
-        /// to specify the target Temporal domain and task list.
+        /// to specify the target Temporal namespace and task list.
         /// </para>
         /// <para>
         /// You may also specify an optional <see cref="WorkerOptions"/> parameter as well
@@ -121,7 +121,7 @@ namespace Neon.Temporal
         /// It's a best practice to call <see cref="Dispose()"/> just before the a worker process
         /// terminates, but this is optional.  Advanced worker implementation that need to change
         /// their configuration over time can also call <see cref="Dispose()"/> to stop workers
-        /// for specific domains and task lists.
+        /// for specific namespaces and task lists.
         /// </para>
         /// <note>
         /// The Temporal GOLANG client does not appear to support starting a worker with a given
@@ -130,14 +130,14 @@ namespace Neon.Temporal
         /// and throws an <see cref="InvalidOperationException"/> when a restart is attempted.
         /// </note>
         /// </remarks>
-        public async Task<Worker> StartWorkerAsync(string taskList, WorkerOptions options = null, string domain = null)
+        public async Task<Worker> StartWorkerAsync(string taskList, WorkerOptions options = null, string @namespace = null)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList), nameof(taskList), "Workers must be started with a non-empty workflow.");
             EnsureNotDisposed();
 
             options  = options ?? new WorkerOptions();
-            domain   = ResolveDomain(domain);
+            @namespace   = ResolveNamespace(@namespace);
 
             WorkerMode  mode = options.Mode;
             Worker      worker;
@@ -147,7 +147,7 @@ namespace Neon.Temporal
                 using (await workerRegistrationMutex.AcquireAsync())
                 {
                     // Ensure that we haven't already registered a worker for the
-                    // specified activity, domain, and task list.  We'll just increment
+                    // specified activity, namespace, and task list.  We'll just increment
                     // the reference count for the existing worker and return it 
                     // in this case.
                     //
@@ -162,7 +162,7 @@ namespace Neon.Temporal
                     // throw an exception because Temporal doesn't support recreating
                     // a worker with the same parameters on the same client.
 
-                    worker = workers.Values.SingleOrDefault(wf => wf.Mode == mode && wf.Domain == domain && wf.Tasklist == taskList);
+                    worker = workers.Values.SingleOrDefault(wf => wf.Mode == mode && wf.Namespace == @namespace && wf.Tasklist == taskList);
 
                     if (worker != null)
                     {
@@ -180,14 +180,14 @@ namespace Neon.Temporal
                     var reply = (NewWorkerReply)(await CallProxyAsync(
                         new NewWorkerRequest()
                         {
-                            Domain   = ResolveDomain(domain),
+                            Namespace   = ResolveNamespace(@namespace),
                             TaskList = taskList,
                             Options  = options.ToInternal()
                         }));
 
                     reply.ThrowOnError();
 
-                    worker = new Worker(this, mode, reply.WorkerId, domain, taskList);
+                    worker = new Worker(this, mode, reply.WorkerId, @namespace, taskList);
                     workers.Add(reply.WorkerId, worker);
                 }
             }
@@ -257,22 +257,22 @@ namespace Neon.Temporal
         /// Indicates whether to return information for decision (AKA workflow pollers)
         /// or activity pollers.
         /// </param>
-        /// <param name="domain">Optionally specifies the Temporal domain.</param>
+        /// <param name="namespace">Optionally specifies the Temporal namespace.</param>
         /// <returns>The <see cref="TaskListDescription"/> for the pollers.</returns>
-        public async Task<TaskListDescription> DescribeTaskListAsync(string taskList, TaskListType taskListType, string domain = null)
+        public async Task<TaskListDescription> DescribeTaskListAsync(string taskList, TaskListType taskListType, string @namespace = null)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
             EnsureNotDisposed();
 
-            domain = ResolveDomain(domain);
+            @namespace = ResolveNamespace(@namespace);
 
             var reply = (DescribeTaskListReply)await CallProxyAsync(
                 new DescribeTaskListRequest()
                 {
                     Name         = taskList,
                     TaskListType = taskListType,
-                    Domain       = domain
+                    Namespace    = @namespace
                 });
 
             reply.ThrowOnError();

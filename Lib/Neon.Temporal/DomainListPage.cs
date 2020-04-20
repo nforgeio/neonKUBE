@@ -26,20 +26,20 @@ using Neon.Temporal.Internal;
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Holds a page of domain information listed from Temporal.
+    /// Holds a page of namespace information listed from Temporal.
     /// </summary>
     public class DomainListPage
     {
         /// <summary>
-        /// Lists the domain information.
+        /// Lists the namespace information.
         /// </summary>
         public List<DomainDescription> Domains { get; set; }
 
         /// <summary>
-        /// Indicates that there's at least one more page of domain information
+        /// Indicates that there's at least one more page of namespace information
         /// to be returned from Temporal when this is not <c>null</c>.  Otherwise,
         /// this is an opaque token that may be passed to <see cref="TemporalClient.ListDomainsAsync(int, byte[])"/>
-        /// to retrieve the next page of domain information.
+        /// to retrieve the next page of namespace information.
         /// </summary>
         public byte[] NextPageToken { get; set; }
     }

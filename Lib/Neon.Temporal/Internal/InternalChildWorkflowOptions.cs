@@ -45,12 +45,12 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// Domain of the child workflow.
-        /// Optional: the current workflow (parent)'s domain will be used if this is not provided.
+        /// Namespace of the child workflow.
+        /// Optional: the current workflow (parent)'s namespace will be used if this is not provided.
         /// </summary>
-        [JsonProperty(PropertyName = "Domain", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Namespace", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public string Domain { get; set; } = null;
+        public string Namespace { get; set; } = null;
 
         /// <summary>
         /// WorkflowID of the child workflow to be scheduled.

@@ -75,7 +75,7 @@ namespace Neon.Temporal.Internal
         TerminateReply = 6,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Requests that the proxy register a Temporal domain.
+        /// <b>client --> proxy:</b> Requests that the proxy register a Temporal namespace.
         /// </summary>
         DomainRegisterRequest = 7,
 
@@ -85,7 +85,7 @@ namespace Neon.Temporal.Internal
         DomainRegisterReply = 8,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Requests that the proxy return the details for a Temporal domain.
+        /// <b>client --> proxy:</b> Requests that the proxy return the details for a Temporal namespace.
         /// </summary>
         DomainDescribeRequest = 9,
 
@@ -95,7 +95,7 @@ namespace Neon.Temporal.Internal
         DomainDescribeReply = 10,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Requests that the proxy update a Temporal domain.
+        /// <b>client --> proxy:</b> Requests that the proxy update a Temporal namespace.
         /// </summary>
         DomainUpdateRequest = 11,
 
@@ -129,7 +129,7 @@ namespace Neon.Temporal.Internal
 
         /// <summary>
         /// <b>client --> proxy:</b> Indicates that the application is capable of handling workflows
-        /// and activities within a specific Temporal domain and task lisk.
+        /// and activities within a specific Temporal namespace and task lisk.
         /// </summary>
         NewWorkerRequest = 17,
 
@@ -161,7 +161,7 @@ namespace Neon.Temporal.Internal
         PingReply = 22,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Requests that the proxy deprecate a Temporal domain.
+        /// <b>client --> proxy:</b> Requests that the proxy deprecate a Temporal namespace.
         /// </summary>
         DomainDeprecateRequest = 23,
 

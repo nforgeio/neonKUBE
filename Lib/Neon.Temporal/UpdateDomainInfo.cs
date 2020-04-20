@@ -26,17 +26,17 @@ using Neon.Temporal.Internal;
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Holds the changes to be made to a Temporal domain's basic properties.
+    /// Holds the changes to be made to a Temporal namespace's basic properties.
     /// </summary>
     public class UpdateDomainInfo
     {
         /// <summary>
-        /// The updated domain description.
+        /// The updated namespace description.
         /// </summary>
         public string Description { get; set; }
 
         /// <summary>
-        /// The updated domain owner's email address.
+        /// The updated namespace owner email address.
         /// </summary>
         public string OwnerEmail { get; set; }
     }

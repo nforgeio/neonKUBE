@@ -102,7 +102,7 @@ namespace Neon.Temporal
             /// <summary>
             /// The activity method parameter types.
             /// </summary>
-            public Type[] ActivityMethodParamaterTypes { get; set; }
+            public Type[] ActivityMethodParameterTypes { get; set; }
         }
 
         //---------------------------------------------------------------------
@@ -190,13 +190,13 @@ namespace Neon.Temporal
         /// <param name="client">The associated client.</param>
         /// <param name="activityType">The activity type.</param>
         /// <param name="activityTypeName">The name used to identify the implementation.</param>
-        /// <param name="domain">Specifies the target domain.</param>
+        /// <param name="namespace">Specifies the target namespace.</param>
         /// <returns><c>true</c> if the activity was already registered.</returns>
         /// <exception cref="InvalidOperationException">Thrown if a different activity class has already been registered for <paramref name="activityTypeName"/>.</exception>
-        internal async static Task RegisterAsync(TemporalClient client, Type activityType, string activityTypeName, string domain)
+        internal async static Task RegisterAsync(TemporalClient client, Type activityType, string activityTypeName, string @namespace)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain), nameof(domain));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
             TemporalHelper.ValidateActivityImplementation(activityType);
 
             var constructor = activityType.GetConstructor(Type.EmptyTypes);
@@ -265,7 +265,7 @@ namespace Neon.Temporal
                                 ActivityType                 = activityType,
                                 ActivityConstructor          = constructor,
                                 ActivityMethod               = method,
-                                ActivityMethodParamaterTypes = method.GetParameterTypes()
+                                ActivityMethodParameterTypes = method.GetParameterTypes()
                             };
                     }
                 }
@@ -273,8 +273,8 @@ namespace Neon.Temporal
                 var reply = (ActivityRegisterReply)await client.CallProxyAsync(
                     new ActivityRegisterRequest()
                     {
-                        Name   = GetActivityTypeNameFromKey(activityTypeKey),
-                        Domain = client.ResolveDomain(domain)
+                        Name      = GetActivityTypeNameFromKey(activityTypeKey),
+                        Namespace = client.ResolveNamespace(@namespace)
                     });
 
                 // $hack(jefflill): 

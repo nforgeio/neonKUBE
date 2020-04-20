@@ -112,7 +112,7 @@
           Here's a code snippit demonstrating how to invoke a GOLANG workflow that sends an email.
           The workflow accepts three string arguments like: <codeInline>bool SendEmail(string to, string subject, string body)</codeInline>
           and returns <codeInline>true</codeInline> on success.  The workflow type name registered
-          <legacyBold>SendEmail</legacyBold> in the <legacyBold>Acme-PROD</legacyBold> domain 
+          <legacyBold>SendEmail</legacyBold> in the <legacyBold>Acme-PROD</legacyBold> namespace 
           by the GOLANG implementation as <legacyBold>"SendEmail"</legacyBold>:
         </para>
         <code source="%NF_SNIPPETS%\Temporal\Snippets.Temporal.HelloWorld\CrossPlatform.cs" region="code_untyped" language="c#" tabSize="4"/>

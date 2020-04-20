@@ -61,11 +61,10 @@ namespace Neon.Temporal.Internal
         public static PropertyNameUtf8 ContinueAsNewStartToCloseTimeout { get; private set; }          = new PropertyNameUtf8("ContinueAsNewStartToCloseTimeout");
         public static PropertyNameUtf8 ContinueAsNewTaskList { get; private set; }                     = new PropertyNameUtf8("ContinueAsNewTaskList");
         public static PropertyNameUtf8 ContinueAsNewWorkflow { get; private set; }                     = new PropertyNameUtf8("ContinueAsNewWorkflow");
-        public static PropertyNameUtf8 CreateDomain { get; private set; }                              = new PropertyNameUtf8("CreateDomain");
+        public static PropertyNameUtf8 CreateNamespace { get; private set; }                           = new PropertyNameUtf8("CreateNamespace");
         public static PropertyNameUtf8 Data { get; private set; }                                      = new PropertyNameUtf8("Data");
         public static PropertyNameUtf8 Description { get; private set; }                               = new PropertyNameUtf8("Description");
         public static PropertyNameUtf8 Details { get; private set; }                                   = new PropertyNameUtf8("Details");
-        public static PropertyNameUtf8 Domain { get; private set; }                                    = new PropertyNameUtf8("Domain");
         public static PropertyNameUtf8 Domains { get; private set; }                                   = new PropertyNameUtf8("Domains");
         public static PropertyNameUtf8 DomainInfo { get; private set; }                                = new PropertyNameUtf8("DomainInfo");
         public static PropertyNameUtf8 DomainInfoName { get; private set; }                            = new PropertyNameUtf8("DomainInfoName");

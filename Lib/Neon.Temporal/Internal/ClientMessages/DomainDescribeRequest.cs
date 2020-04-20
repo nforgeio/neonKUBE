@@ -25,7 +25,7 @@ using Neon.Temporal;
 namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// <b>client --> proxy:</b> Requests the details for a named domain.
+    /// <b>client --> proxy:</b> Requests the details for a named namespace.
     /// </summary>
     [InternalProxyMessage(InternalMessageTypes.DomainDescribeRequest)]
     internal class DomainDescribeRequest : ProxyRequest
@@ -43,7 +43,7 @@ namespace Neon.Temporal.Internal
 
         /// <summary>
         /// <para>
-        /// The target Temporal domain name. (or <c>null</c>).
+        /// The target Temporal namespace name. (or <c>null</c>).
         /// </para>
         /// <note>
         /// One of <see cref="Name"/> or <see cref="Uuid"/> must be non-null and non-empty.
@@ -57,7 +57,7 @@ namespace Neon.Temporal.Internal
 
         /// <summary>
         /// <para>
-        /// The target Temporal domain UUID (or <c>null</c>).
+        /// The target Temporal namespace UUID (or <c>null</c>).
         /// </para>
         /// <note>
         /// One of <see cref="Name"/> or <see cref="Uuid"/> must be non-null and non-empty.

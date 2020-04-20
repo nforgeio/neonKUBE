@@ -36,7 +36,7 @@ namespace Neon.Temporal
         public int RetentionDays { get; set; }
 
         /// <summary>
-        /// Enables metrics for workflows and activities running in the domain.
+        /// Enables metrics for workflows and activities running in the namespace.
         /// </summary>
         public bool EmitMetrics { get; set; }
 

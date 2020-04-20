@@ -76,31 +76,6 @@
           <row>
             <entry>
               <para>
-                <legacyBold>Domain</legacyBold>
-              </para>
-            </entry>
-            <entry>
-              <para>
-                A Temporal cluster is designed to support multi-tenant deployments.  Temporal
-                handles workflow and activity state as well as the assignment of work to
-                tenant supplied workers.  Temporal organizes workflows and activities into
-                domains.  Every domain has a name as well as a handful configuration
-                settings.  Typical deployments will assign workflows and activities by
-                the organization managing these or also by the operation category.
-              </para>
-              <para>
-                For a Temporal cluster supporting multiple teams you could create a
-                domain named for each team.  If these teams need to run test workflows,
-                you could create new domains with the team name plus <legacyBold>-test</legacyBold>.
-                Temporal domain capacity is close to being unconstrained, so you could even
-                create separate domains for each of your developers if needed.
-              </para>
-            </entry>
-          </row>
-
-          <row>
-            <entry>
-              <para>
                 <legacyBold>External Workflow</legacyBold>
               </para>
             </entry>
@@ -221,7 +196,7 @@
                 The workflow and activities you develop will need to be hosted in a
                 workflow service that you'll write.  This can be a simple as a Console
                 application that registers the workflows and activities it implements
-                with the Temporal cluster.  You'll need to specify the domain where the
+                with the Temporal cluster.  You'll need to specify the namespace where the
                 workflows and activities will be hosted by Temporal and also a
                 <legacyBold>task list</legacyBold> string.
               </para>
@@ -364,7 +339,7 @@
               </para>
               <alert address="important">
                 <para>
-                  A Workflow IDs uniquely identify workflows within a Temporal domain.
+                  A Workflow IDs uniquely identify workflows within a Temporal namespace.
                 </para>
               </alert>
             </entry>

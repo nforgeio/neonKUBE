@@ -173,14 +173,14 @@
           <row>
             <entry>
               <para>
-                <legacyBold>default domain</legacyBold>
+                <legacyBold>default namespace</legacyBold>
               </para>
             </entry>
             <entry>
               <para>
-                The .NET client can optionally be configured with a default Temporal domain and this domain
-                will be assumed when the domain isn't specified for an operation.  We added this as a convienence
-                for the common situation where all workflow service operations are constrained to a single domain.
+                The .NET client can optionally be configured with a default Temporal namespace and this namespace
+                will be assumed when the namespace isn't specified for an operation.  We added this as a convienence
+                for the common situation where all workflow service operations are constrained to a single namespace.
               </para>
             </entry>
           </row>

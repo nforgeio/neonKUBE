@@ -104,22 +104,22 @@ namespace Neon.Temporal
 
         private Workflow        parentWorkflow;
         private TemporalClient   client;
-        private string          domain;
+        private string          @namespace;
 
         /// <summary>
         /// Internal constructor for use outside of a workflow.
         /// </summary>
         /// <param name="client">Specifies the associated client.</param>
         /// <param name="execution">Specifies the target workflow execution.</param>
-        /// <param name="domain">Optionally specifies the target domain (defaults to the client's default domain).</param>
-        internal ExternalWorkflowStub(TemporalClient client, WorkflowExecution execution, string domain = null)
+        /// <param name="namespace">Optionally specifies the target namespace (defaults to the client's default namespace).</param>
+        internal ExternalWorkflowStub(TemporalClient client, WorkflowExecution execution, string @namespace = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
 
-            this.client    = client;
-            this.domain    = client.ResolveDomain(domain);
-            this.Execution = execution;
+            this.client     = client;
+            this.@namespace = client.ResolveNamespace(@namespace);
+            this.Execution  = execution;
         }
 
         /// <summary>
@@ -127,15 +127,15 @@ namespace Neon.Temporal
         /// </summary>
         /// <param name="parentWorkflow">Specifies the parent workflow.</param>
         /// <param name="execution">Specifies the target workflow execution.</param>
-        /// <param name="domain">Optionally specifies the target domain (defaults to the client's default domain).</param>
-        internal ExternalWorkflowStub(Workflow parentWorkflow, WorkflowExecution execution, string domain = null)
+        /// <param name="namespace">Optionally specifies the target namespace (defaults to the client's default namespace).</param>
+        internal ExternalWorkflowStub(Workflow parentWorkflow, WorkflowExecution execution, string @namespace = null)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
 
             this.parentWorkflow = parentWorkflow;
             this.client         = parentWorkflow.Client;
-            this.domain         = client.ResolveDomain(domain);
+            this.@namespace     = client.ResolveNamespace(@namespace);
             this.Execution      = execution;
         }
 
@@ -159,7 +159,7 @@ namespace Neon.Temporal
             }
             else
             {
-                await client.CancelWorkflowAsync(Execution, domain);
+                await client.CancelWorkflowAsync(Execution, @namespace);
             }
         }
 
@@ -203,7 +203,7 @@ namespace Neon.Temporal
             }
             else
             {
-                await client.GetWorkflowResultAsync(Execution, domain);
+                await client.GetWorkflowResultAsync(Execution, @namespace);
             }
         }
 
@@ -225,7 +225,7 @@ namespace Neon.Temporal
             }
             else
             {
-                return client.DataConverter.FromData<TResult>(await client.GetWorkflowResultAsync(Execution, domain));
+                return client.DataConverter.FromData<TResult>(await client.GetWorkflowResultAsync(Execution, @namespace));
             }
         }
     }

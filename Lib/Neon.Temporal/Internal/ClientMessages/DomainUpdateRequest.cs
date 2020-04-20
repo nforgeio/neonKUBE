@@ -25,7 +25,7 @@ using Neon.Temporal;
 namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// <b>client --> proxy:</b> Requests the details for a named domain.
+    /// <b>client --> proxy:</b> Requests the details for a named namespace.
     /// </summary>
     [InternalProxyMessage(InternalMessageTypes.DomainUpdateRequest)]
     internal class DomainUpdateRequest : ProxyRequest
@@ -42,7 +42,7 @@ namespace Neon.Temporal.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.DomainUpdateReply;
 
         /// <summary>
-        /// The target Temporal domain name.
+        /// The target Temporal namespace name.
         /// </summary>
         public string Name
         {

@@ -27,7 +27,7 @@ using Newtonsoft.Json;
 namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Describes a Temporal domain configuration.
+    /// <b>INTERNAL USE ONLY:</b> Describes a Temporal namespace configuration.
     /// </summary>
     internal class InternalDomainConfiguration
     {

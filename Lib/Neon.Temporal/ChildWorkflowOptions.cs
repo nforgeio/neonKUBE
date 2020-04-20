@@ -118,7 +118,7 @@ namespace Neon.Temporal
         /// be explicitly set to a non-empty value.
         /// </para>
         /// </remarks>
-        public string Domain { get; set; } = null;
+        public string Namespace { get; set; } = null;
 
         /// <summary>
         /// Optionally specifies the workflow ID to assign to the child workflow.
@@ -245,8 +245,8 @@ namespace Neon.Temporal
         {
             return new InternalChildWorkflowOptions()
             {
-                Domain                       = this.Domain,
-                ChildClosePolicy                  = (int)this.ChildPolicy,
+                Namespace                    = this.Namespace,
+                ChildClosePolicy             = (int)this.ChildPolicy,
                 CronSchedule                 = this.CronSchedule,
                 ExecutionStartToCloseTimeout = TemporalHelper.ToTemporal(this.ScheduleToCloseTimeout.Value),
                 RetryPolicy                  = this.RetryOptions?.ToInternal(),
@@ -266,7 +266,7 @@ namespace Neon.Temporal
         {
             return new ChildWorkflowOptions()
             {
-                Domain                       = this.Domain,
+                Namespace                    = this.Namespace,
                 CronSchedule                 = this.CronSchedule,
                 ChildPolicy                  = this.ChildPolicy,
                 ScheduleToCloseTimeout       = this.ScheduleToCloseTimeout,
@@ -289,7 +289,7 @@ namespace Neon.Temporal
         {
             return new WorkflowOptions()
             {
-                Domain                  = this.Domain,
+                Namespace               = this.Namespace,
                 Memo                    = null,
                 RetryOptions            = this.RetryOptions,
                 ScheduleToCloseTimeout  = this.ScheduleToCloseTimeout,

@@ -183,7 +183,7 @@ namespace Neon.Temporal
                 {
                     WorkflowId = execution.WorkflowId,
                     RunId      = execution.RunId,
-                    Domain     = options.Domain,
+                    Namespace     = options.Namespace,
                     SignalName = signalName,
                     SignalArgs = TemporalHelper.ArgsToBytes(client.DataConverter, args)
                 });
@@ -225,7 +225,7 @@ namespace Neon.Temporal
             var signalCall      = new SyncSignalCall(signalName, signalId, argBytes);
             var signalCallBytes = TemporalHelper.ArgsToBytes(client.DataConverter, new object[] { signalCall });
 
-            await client.SyncSignalWorkflowAsync(execution, signalName, signalId, signalCallBytes, options.Domain);
+            await client.SyncSignalWorkflowAsync(execution, signalName, signalId, signalCallBytes, options.Namespace);
         }
 
         /// <summary>
@@ -263,7 +263,7 @@ namespace Neon.Temporal
             var argBytes        = TemporalHelper.ArgsToBytes(client.DataConverter, args);
             var signalCall      = new SyncSignalCall(signalName, signalId, argBytes);
             var signalCallBytes = TemporalHelper.ArgsToBytes(client.DataConverter, new object[] { signalCall });
-            var resultBytes     = await client.SyncSignalWorkflowAsync(execution, signalName, signalId, signalCallBytes, options.Domain);
+            var resultBytes     = await client.SyncSignalWorkflowAsync(execution, signalName, signalId, signalCallBytes, options.Namespace);
 
             return client.DataConverter.FromData<TResult>(resultBytes);
         }
@@ -297,7 +297,7 @@ namespace Neon.Temporal
                 {
                     WorkflowId = execution.WorkflowId,
                     RunId      = execution.RunId,
-                    Domain     = options.Domain,
+                    Namespace     = options.Namespace,
                     QueryName  = queryName,
                     QueryArgs  = TemporalHelper.ArgsToBytes(client.DataConverter, args)
                 });

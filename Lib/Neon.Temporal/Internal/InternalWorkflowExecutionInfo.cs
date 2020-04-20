@@ -74,7 +74,7 @@ namespace Neon.Temporal.Internal
         public long HistoryLength { get; set; }
 
         /// <summary>
-        /// Identifies the domain where the parent workflow is running.
+        /// Identifies the namespace where the parent workflow is running.
         /// </summary>
         [JsonProperty(PropertyName = "ParentDomainId", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]

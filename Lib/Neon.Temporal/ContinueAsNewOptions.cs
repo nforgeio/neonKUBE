@@ -69,9 +69,9 @@ namespace Neon.Temporal
         public string TaskList { get; set; }
 
         /// <summary>
-        /// Optionally overrides the current workflow's domain when restarting.
+        /// Optionally overrides the current workflow's namespace when restarting.
         /// </summary>
-        public string Domain { get; set; }
+        public string Namespace { get; set; }
 
         /// <summary>
         /// Optionally overrides the current workflow's retry options when restarting.

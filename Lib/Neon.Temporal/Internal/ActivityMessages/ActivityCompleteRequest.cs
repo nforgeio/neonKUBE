@@ -51,12 +51,12 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// The target domain.
+        /// The target namespace.
         /// </summary>
-        public string Domain
+        public string Namespace
         {
-            get => GetStringProperty(PropertyNames.Domain);
-            set => SetStringProperty(PropertyNames.Domain, value);
+            get => GetStringProperty(PropertyNames.Namespace);
+            set => SetStringProperty(PropertyNames.Namespace, value);
         }
 
         /// <summary>
@@ -122,7 +122,7 @@ namespace Neon.Temporal.Internal
             var typedTarget = (ActivityCompleteRequest)target;
 
             typedTarget.TaskToken  = this.TaskToken;
-            typedTarget.Domain     = this.Domain;
+            typedTarget.Namespace     = this.Namespace;
             typedTarget.WorkflowId = this.WorkflowId;
             typedTarget.RunId      = this.RunId;
             typedTarget.ActivityId = this.ActivityId;
