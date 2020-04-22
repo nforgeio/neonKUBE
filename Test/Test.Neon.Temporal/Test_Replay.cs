@@ -497,14 +497,14 @@ namespace TestTemporal
                         if (firstPass)
                         {
                             firstPass     = false;
-                            originalValue = await Workflow.IsSetLastCompletionResultAsync();
+                            originalValue = await Workflow.HasLastCompletionResultAsync();
 
                             await DecisionAsync();
                             await Workflow.ForceReplayAsync();
                         }
                         else
                         {
-                            success = originalValue.Equals(await Workflow.IsSetLastCompletionResultAsync());
+                            success = originalValue.Equals(await Workflow.HasLastCompletionResultAsync());
                             success = success && Workflow.IsReplaying;
 
                             await DecisionAsync();

@@ -1279,7 +1279,7 @@ namespace Neon.Temporal
         /// <returns><c>true</c> if the a previous CRON workflow run returned a result.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the associated Temporal client is disposed.</exception>
         /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
-        public async Task<bool> IsSetLastCompletionResultAsync()
+        public async Task<bool> HasLastCompletionResultAsync()
         {
             await SyncContext.ClearAsync;
             Client.EnsureNotDisposed();

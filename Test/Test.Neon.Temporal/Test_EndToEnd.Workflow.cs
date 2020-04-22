@@ -500,7 +500,7 @@ namespace TestTemporal
                 var activity   = Workflow.NewActivityStub<ICronActivity>();
                 var callNumber = 0;
 
-                if (await Workflow.IsSetLastCompletionResultAsync())
+                if (await Workflow.HasLastCompletionResultAsync())
                 {
                     callNumber = await Workflow.GetLastCompletionResultAsync<int>();
                 }
