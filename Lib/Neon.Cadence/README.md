@@ -2,7 +2,7 @@
 ============
 
 ---
-**NOTE:** We're going to be deprecating support for Uber Cadence in the near future and will be transitioning to the new fork created by [temporal.io](https://temporal.io/).
+**NOTE:** We're going to be **deprecating support for Uber Cadence in the near future** and will be transitioning to the new fork created by [temporal.io](https://temporal.io/).
 
 [temporal.io](https://temporal.io/) was founded by **Maxim Fateev** who started the Cadence effort over at Uber as well as the Simple Workflow Foundation (SWF) project over at Amazon AWS.  We expect to see most if not all significant future advancements for this platform comming from Temporal.
 
