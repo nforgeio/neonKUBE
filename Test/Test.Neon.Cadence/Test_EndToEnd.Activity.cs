@@ -39,7 +39,7 @@ using Neon.Xunit.Cadence;
 using Newtonsoft.Json;
 using Xunit;
 
-namespace TestTemporal
+namespace TestCadence
 {
     public partial class Test_EndToEnd
     {

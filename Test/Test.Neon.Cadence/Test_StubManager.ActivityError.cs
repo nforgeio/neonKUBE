@@ -40,7 +40,7 @@ using Xunit;
 using Test.Neon.Models;
 using Newtonsoft.Json.Linq;
 
-namespace TestTemporal
+namespace TestCadence
 {
     public partial class Test_StubManager
     {
