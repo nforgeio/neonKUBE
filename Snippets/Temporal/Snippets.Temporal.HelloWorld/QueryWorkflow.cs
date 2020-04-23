@@ -51,7 +51,7 @@ namespace Snippets_QueryWorkflow
         {
             var settings = new TemporalSettings()
             {
-                DefaulNamespace = "my-domain",
+                DefaulNamespace = "ny-namespace",
                 CreateNamespace  = true,
                 HostPort      = "localhost:7933"
             };

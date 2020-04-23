@@ -26,6 +26,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using Neon.Common;
 using Neon.Data;
 using Neon.IO;
@@ -46,12 +48,19 @@ namespace TestTemporal
         private static readonly TimeSpan allowedVariation = TimeSpan.FromSeconds(10);
         private static readonly TimeSpan workflowTimeout  = TimeSpan.FromSeconds(20);
 
-        private TemporalFixture  fixture;
-        private TemporalClient   client;
-        private HttpClient      proxyClient;
+        private TemporalFixture     fixture;
+        private TemporalClient      client;
+        private HttpClient          proxyClient;
 
         public Test_EndToEnd(TemporalFixture fixture)
         {
+            // Setup a service for an activity dependency injection test.
+
+            NeonHelper.ServiceContainer.Clear();
+            NeonHelper.ServiceContainer.AddSingleton(typeof(ActivityDependency), new ActivityDependency() { Hello = "World!" });
+
+            // Initialize the Cadence fixture.
+
             var settings = new TemporalSettings()
             {
                 DefaulNamespace          = TemporalFixture.DefaultDomain,
@@ -86,6 +95,8 @@ namespace TestTemporal
 
         public void Dispose()
         {
+            NeonHelper.ServiceContainer.Clear();
+
             if (proxyClient != null)
             {
                 proxyClient.Dispose();

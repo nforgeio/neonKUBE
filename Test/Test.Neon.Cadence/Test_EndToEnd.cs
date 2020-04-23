@@ -26,6 +26,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
@@ -52,6 +54,13 @@ namespace TestCadence
 
         public Test_EndToEnd(CadenceFixture fixture)
         {
+            // Setup a service for an activity dependency injection test.
+
+            NeonHelper.ServiceContainer.Clear();
+            NeonHelper.ServiceContainer.AddSingleton(typeof(ActivityDependency), new ActivityDependency() { Hello = "World!" });
+
+            // Initialize the Cadence fixture.
+
             var settings = new CadenceSettings()
             {
                 DefaultDomain          = CadenceFixture.DefaultDomain,
@@ -86,6 +95,8 @@ namespace TestCadence
 
         public void Dispose()
         {
+            NeonHelper.ServiceContainer.Clear();
+
             if (proxyClient != null)
             {
                 proxyClient.Dispose();

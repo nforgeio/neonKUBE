@@ -53,7 +53,9 @@ namespace Neon.Cadence
         /// </exception>
         /// <remarks>
         /// <note>
-        /// Be sure to register all of your activity implementations before starting workers.
+        /// Be sure to register all services you will be injecting into activities via
+        /// <see cref="NeonHelper.ServiceContainer"/> before you call this as well as 
+        /// registering of your activity implementations before starting workers.
         /// </note>
         /// </remarks>
         public async Task RegisterActivityAsync<TActivity>(string activityTypeName = null, string domain = null)
@@ -103,7 +105,9 @@ namespace Neon.Cadence
         /// </exception>
         /// <remarks>
         /// <note>
-        /// Be sure to register all of your activity implementations before starting workers.
+        /// Be sure to register all services you will be injecting into activities via
+        /// <see cref="NeonHelper.ServiceContainer"/> before you call this as well as 
+        /// registering of your activity implementations before starting workers.
         /// </note>
         /// </remarks>
         public async Task RegisterAssemblyActivitiesAsync(Assembly assembly, string domain = null)

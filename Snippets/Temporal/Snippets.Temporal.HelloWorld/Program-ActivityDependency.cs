@@ -1,20 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Mail;
-using System.Threading.Tasks;
-
-using Neon.Common;
-using Neon.Temporal;
-
-namespace HelloWorld_MultiStep
+﻿namespace HelloWorld_ActivityDependency
 {
     #region code
+    using System;
+    using System.Collections.Generic;
+    using System.Net.Mail;
+    using System.Threading.Tasks;
+
+    using Microsoft.Extensions.DependencyInjection;
+
+    using Neon.Common;
+    using Neon.Temporal;
+
+    // An instance of this class will be injected into the activity.
+
+    public class MailSettings
+    {
+        public string MailServer { get; set; }
+    }
+
     [ActivityInterface(TaskList = "my-tasks")]
     public interface IEmailActivity : IActivity
     {
-        [ActivityMethod(Name = "get-email-list")]
-        Task<List<string>> GetEmailListAsync();
-
         [ActivityMethod(Name = "send-message")]
         Task SendMessageAsync(string email, string messageText);
     }
@@ -22,29 +28,26 @@ namespace HelloWorld_MultiStep
     [Activity(AutoRegister = true)]
     public class EmailActivity : ActivityBase, IEmailActivity
     {
-        public async Task<List<string>> GetEmailListAsync()
+        private MailSettings settings;
+
+        public EmailActivity(MailSettings settings)
         {
-            // Pretend that this activity is querying a database or REST API to
-            // obtain the email list.
+            // The [settings] parameter was injected into this activity
+            // instance.  We'll save it to a local field so it will
+            // be available to all of the activity methods.
 
-            var list = new List<string>();
-
-            list.Add("jeff@my-company.com");
-            list.Add("jill@my-company.com");
-            list.Add("jack@my-company.com");
-            list.Add("nancy@my-company.com");
-
-            return await Task.FromResult(list);
+            this.settings = settings;
         }
 
         public async Task SendMessageAsync(string email, string messageText)
         {
-            var smtp    = new SmtpClient("mail.my-company.com");
+            var smtp    = new SmtpClient(settings.MailServer);   // Connect using the injected settings
             var message = new MailMessage("bot@my-company.com", email);
 
             message.Body = messageText;
 
             smtp.Send(message);
+            await Task.CompletedTask;
         }
     }
 
@@ -55,32 +58,26 @@ namespace HelloWorld_MultiStep
         Task SendMessagesAsync();
     }
 
-    [Workflow(AutoRegister = true)]
-    public class EmailWorkflow : WorkflowBase, IEmailWorkflow
-    {
-        public async Task SendMessagesAsync()
-        {
-            var activityStub = Workflow.NewActivityStub<IEmailActivity>();
-            var emailList    = await activityStub.GetEmailListAsync();
-
-            foreach (var email in emailList)
-            {
-                await activityStub.SendMessageAsync(email, "This is a test message.");
-            }
-        }
-    }
-
     public static class Program
     {
         public static async Task Main(string[] args)
         {
+            // Configure the settings name such that they will be injected
+            // into the email activity when it's constructed.
+            //
+            // Note that we did this before calling RegisterAssemblyAsync() below.
+            // Dependencies added after activities have been registered will be
+            // ignored.
+
+            NeonHelper.ServiceContainer.AddSingleton(typeof(MailSettings), new MailSettings() { MailServer = "mail.my-company.com" });
+
             // Connect to Temporal
 
             var settings = new TemporalSettings()
             {
                 DefaulNamespace = "ny-namespace",
                 CreateNamespace  = true,
-                HostPort      = "localhost:7933"
+                HostPort         = "localhost:7933"
             };
 
             using (var client = await TemporalClient.ConnectAsync(settings))

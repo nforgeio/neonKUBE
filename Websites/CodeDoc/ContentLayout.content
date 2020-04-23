@@ -28,6 +28,7 @@
       <Topic id="6ed1f1f9-cfde-40ed-81d9-e8bfe259f925" visible="True" title="Basics" />
       <Topic id="58aa9345-7eb8-4087-9648-6775bc1352e9" visible="True" title="Local activities" />
       <Topic id="d04a2043-84db-47a7-b38b-302dc702cdb0" visible="True" title="External completion" />
+      <Topic id="b33f3181-8295-4546-b51d-553342717095" visible="True" noFile="true" title="Dependency Injection" />
     </Topic>
     <Topic id="906729d2-656b-4bd2-a7d9-0beb010a868b" visible="True" noFile="true" isExpanded="true" title="Other Topics">
       <Topic id="907cf0a2-3f54-4c9f-a93f-3e54f5e2f806" visible="True" />
@@ -46,6 +47,7 @@
       <Topic id="a5cdc2a2-6f6d-4717-b2a4-deeefb8d55e6" visible="True" title="Basic activity" />
       <Topic id="4d8eef4e-c18c-4de6-9d22-dec9c1bfa586" visible="True" title="Multi-step workflows" />
       <Topic id="509a142d-94b5-4bf5-ad04-0863b3209e7b" visible="True" title="Temporal samples" />
+      <Topic id="f90ba0cc-4ae6-4b65-9e0e-fcd1e29eff9f" visible="True" noFile="true" isSelected="true" title="Dependency Injection" />
     </Topic>
     <Topic id="f72c845d-1f58-4fc4-ba73-5e1b3aee901f" visible="True" noFile="true" isExpanded="true" title="Workflow details">
       <Topic id="7377a962-2a8a-498b-b9ad-2de58541bccb" visible="True" title="Coding rules" />
@@ -58,7 +60,7 @@
       <Topic id="fef4f5f1-ee69-479c-9321-6586ec5d45f9" visible="True" title="Signals &amp; queues" />
       <Topic id="1284aec5-7464-4243-aa38-75366c26a031" visible="True" title="Synchronous signals" />
       <Topic id="397dcfd2-0d7a-4148-b2a5-372f77807184" visible="True" title="Continue as new" />
-      <Topic id="fd66b149-f9e7-4ac4-90d6-64c1310b38f3" visible="True" isSelected="true" title="Distributed CRON" />
+      <Topic id="fd66b149-f9e7-4ac4-90d6-64c1310b38f3" visible="True" title="Distributed CRON" />
     </Topic>
     <Topic id="9ee0d1de-e2b7-4d41-945c-53ffdaf1d2e1" visible="True" noFile="true" isExpanded="true" title="Activity details">
       <Topic id="e2732a69-7898-45c6-9eb4-a6be3f10a497" visible="True" title="Basics" />

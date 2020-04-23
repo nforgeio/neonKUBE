@@ -280,6 +280,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Test.Neon.Temporal\ActivityDependency.cs">
+      <Link>ActivityDependency.cs</Link>
+    </Compile>
     <Compile Include="..\Test.Neon.Temporal\AssemblyInfo.cs">
       <Link>AssemblyInfo.cs</Link>
     </Compile>

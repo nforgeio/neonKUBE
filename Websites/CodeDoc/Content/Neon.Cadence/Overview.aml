@@ -17,8 +17,8 @@
       </para>
       <alert class="warning">
         <para>
-          <legacyBold>Neon.Cadence</legacyBold> currently supports AMD 64-bit Windows, OS/X, and Linux 
-          runtime environments only.
+          <legacyBold>Neon.Cadence</legacyBold> currently supports AMD 64-bit Windows, OS/X, and Linux
+          runtime environments only.  32-bit and ARM platforms are not supported.
         </para>
       </alert>
     </introduction>

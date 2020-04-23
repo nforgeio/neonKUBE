@@ -1103,5 +1103,67 @@ namespace TestCadence
 
             // await Assert.ThrowsAsync<CadenceCancelledException>(async () => await task);
         }
+
+        //---------------------------------------------------------------------
+
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IActivityWithDependency : IActivity
+        {
+            [ActivityMethod]
+            Task<bool> RunAsync();
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ActivityWithDependency : ActivityBase, IActivityWithDependency
+        {
+            private ActivityDependency dependency;
+
+            public ActivityWithDependency(ActivityDependency dependency)
+            {
+                this.dependency = dependency;
+            }
+
+            public async Task<bool> RunAsync()
+            {
+                return await Task.FromResult(dependency != null && dependency.Hello == "World!");
+            }
+        }
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IActivityWorkflowWithDependency : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<bool> RunAsync();
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class ActivityWorkflowWithDependency : WorkflowBase, IActivityWorkflowWithDependency
+        {
+            public async Task<bool> RunAsync()
+            {
+                var stub = Workflow.NewActivityStub<IActivityWithDependency>();
+
+                return await stub.RunAsync();
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_WithDependency()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that depdency injection works for activities.  Note that the
+            // Test_EndToEnd constructor has configured a singleton ActivityDependency
+            // instance with NeonHelper.ServiceContainer.  The workflow will invoke
+            // an activity that expects this instance to be passed to the constructor.
+            //
+            // The activity and calling workflow return TRUE when the dependency
+            // is passed correctly.
+            
+            var stub = client.NewWorkflowStub<IActivityWorkflowWithDependency>();
+
+            Assert.True(await stub.RunAsync());
+        }
     }
 }

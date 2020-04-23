@@ -30,7 +30,7 @@ namespace HelloWorld
 
             var settings = new TemporalSettings()
             {
-                DefaulNamespace = "my-domain",
+                DefaulNamespace = "ny-namespace",
                 CreateNamespace  = true,
                 HostPort      = "localhost:7933"
             };

@@ -6,6 +6,12 @@
     xmlns:xlink="http://www.w3.org/1999/xlink">
     
     <introduction>
+      <alert class="warning">
+        <para>
+          <legacyBold>Neon.Temporal</legacyBold> is still under construction and 
+          <legacyBold>is not ready for any kind of use.</legacyBold>
+        </para>
+      </alert>
       <para>
         The <legacyBold>Neon.Temporal</legacyBold> class library is built for NETStandard 2.0
         and is capable of connecting to a
@@ -18,7 +24,7 @@
       <alert class="warning">
         <para>
           <legacyBold>Neon.Temporal</legacyBold> currently supports AMD 64-bit Windows, OS/X, and Linux 
-          runtime environments only.
+          runtime environments only.  32-bit and ARM platforms are not supported.
         </para>
       </alert>
     </introduction>
