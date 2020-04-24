@@ -103,6 +103,7 @@ namespace Neon.Temporal
         /// Thrown if an activity worker has already been started for the client.  You must
         /// register activity implementations before starting workers.
         /// </exception>
+        /// <remarks>
         /// <note>
         /// Be sure to register all services you will be injecting into activities via
         /// <see cref="NeonHelper.ServiceContainer"/> before you call this as well as 
