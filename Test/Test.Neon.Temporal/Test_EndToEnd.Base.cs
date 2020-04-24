@@ -276,9 +276,8 @@ namespace TestTemporal
             var description = await client.DescribeTaskListAsync(TemporalTestHelper.TaskList, TaskListType.Decision);
 
             Assert.NotNull(description);
-            Assert.Single(description.Pollers);
 
-            var poller = description.Pollers.First();
+            var poller = description.Pollers.Single(p => p.Identity == TemporalTestHelper.ClientIdentity);
 
             // We're just going to verify that the poller last access time
             // looks reasonable.  This was way off earlier due to not deserializing

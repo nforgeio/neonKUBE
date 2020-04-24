@@ -29,7 +29,7 @@ using Xunit;
 namespace Neon.Xunit.Temporal
 {
     /// <summary>
-    /// Used to run the Docker <b>nkubeio/temporal-dev</b> container on 
+    /// Used to run the Docker <b>nkubeio/;-dev</b> container on 
     /// the current machine as a test fixture while tests are being performed 
     /// and then deletes the container when the fixture is disposed.
     /// </summary>

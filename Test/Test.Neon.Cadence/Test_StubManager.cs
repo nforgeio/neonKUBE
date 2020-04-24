@@ -79,9 +79,10 @@ namespace TestCadence
         {
             var settings = new CadenceSettings()
             {
-                DefaultDomain   = CadenceFixture.DefaultDomain,
-                LogLevel        = CadenceTestHelper.LogLevel,
-                Debug           = CadenceTestHelper.Debug,
+                DefaultDomain  = CadenceFixture.DefaultDomain,
+                LogLevel       = CadenceTestHelper.LogLevel,
+                Debug          = CadenceTestHelper.Debug,
+                ClientIdentity = CadenceTestHelper.ClientIdentity
             };
 
             fixture.Start(settings, keepConnection: true);

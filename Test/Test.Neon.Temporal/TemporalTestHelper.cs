@@ -109,5 +109,10 @@ namespace TestTemporal
         /// <b>cwf-args.exe</b> worker written in GOLANG.
         /// </summary>
         public const string TaskList_CwfArgs = "cwf-args";
+
+        /// <summary>
+        /// Identifies the test clients.
+        /// </summary>
+        public const string ClientIdentity = "unit-test";
     }
 }
