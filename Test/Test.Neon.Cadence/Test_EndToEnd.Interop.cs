@@ -163,7 +163,7 @@ namespace TestCadence
                     TaskList = CadenceTestHelper.TaskList_CwfArgs
                 };
 
-                var stub = client.NewUntypedWorkflowStub("main.NoArgsWorkflow", options);
+                var stub      = client.NewUntypedWorkflowStub("main.NoArgsWorkflow", options);
                 var execution = await stub.StartAsync();
 
                 Assert.Equal("Hello there!", await stub.GetResultAsync<string>());
@@ -191,7 +191,7 @@ namespace TestCadence
                     TaskList   = CadenceTestHelper.TaskList_CwfArgs
                 };
 
-                stub = client.NewUntypedWorkflowStub("main.TwoArgsWorkflow", options);
+                stub      = client.NewUntypedWorkflowStub("main.TwoArgsWorkflow", options);
                 execution = await stub.StartAsync("JACK", "JILL");
 
                 Assert.Equal("Hello JACK & JILL!", await stub.GetResultAsync<string>());
@@ -205,7 +205,7 @@ namespace TestCadence
                     TaskList   = CadenceTestHelper.TaskList_CwfArgs
                 };
 
-                stub = client.NewUntypedWorkflowStub("main.ArrayArgWorkflow", options);
+                stub      = client.NewUntypedWorkflowStub("main.ArrayArgWorkflow", options);
                 execution = await stub.StartAsync(new int[] { 0, 1, 2, 3, 4 });
 
                 var arrayResult = await stub.GetResultAsync<int[]>();
@@ -221,12 +221,84 @@ namespace TestCadence
                     TaskList = CadenceTestHelper.TaskList_CwfArgs
                 };
 
-                stub = client.NewUntypedWorkflowStub("main.ArrayArgsWorkflow", options);
+                stub      = client.NewUntypedWorkflowStub("main.ArrayArgsWorkflow", options);
                 execution = await stub.StartAsync(new int[] { 0, 1, 2, 3, 4 }, "test");
 
                 arrayResult = await stub.GetResultAsync<int[]>();
 
                 Assert.Equal(new int[] { 0, 1, 2, 3, 4 }, arrayResult);
+
+                //-----------------------------------------
+                // Workflow that returns just an error:
+
+                // Verify that things work when the workflow DOESN'T return an error.
+
+                options = new WorkflowOptions()
+                {
+                    WorkflowId = "ErrorWorkflow-NOERROR-" + Guid.NewGuid().ToString("d"),
+                    TaskList   = CadenceTestHelper.TaskList_CwfArgs
+                };
+
+                stub      = client.NewUntypedWorkflowStub("main.ErrorWorkflow", options);
+                execution = await stub.StartAsync("");
+
+                await stub.GetResultAsync();
+
+                // Verify that things work when the workflow DOES return an error.
+
+                options = new WorkflowOptions()
+                {
+                    WorkflowId = "ErrorWorkflow-ERROR-" + Guid.NewGuid().ToString("d"),
+                    TaskList   = CadenceTestHelper.TaskList_CwfArgs
+                };
+
+                stub      = client.NewUntypedWorkflowStub("main.ErrorWorkflow", options);
+                execution = await stub.StartAsync("error message");
+
+                try
+                {
+                    await stub.GetResultAsync();
+                }
+                catch (Exception e)
+                {
+                    Assert.Equal("error message", e.Message);
+                }
+
+                //-----------------------------------------
+                // Workflow that returns a string or an error:
+
+                // Verify that things work when the workflow DOESN'T return an error.
+
+                options = new WorkflowOptions()
+                {
+                    WorkflowId = "StringErrorWorkflow-NOERROR-" + Guid.NewGuid().ToString("d"),
+                    TaskList   = CadenceTestHelper.TaskList_CwfArgs
+                };
+
+                stub      = client.NewUntypedWorkflowStub("main.StringErrorWorkflow", options);
+                execution = await stub.StartAsync("JEFF", "");
+
+                Assert.Equal("Hello JEFF!", await stub.GetResultAsync<string>());
+
+                // Verify that things work when the workflow DOES return an error.
+
+                options = new WorkflowOptions()
+                {
+                    WorkflowId = "StringErrorWorkflow-ERROR-" + Guid.NewGuid().ToString("d"),
+                    TaskList   = CadenceTestHelper.TaskList_CwfArgs
+                };
+
+                stub      = client.NewUntypedWorkflowStub("main.ErrorWorkflow", options);
+                execution = await stub.StartAsync("", "error message");
+
+                try
+                {
+                    await stub.GetResultAsync<string>();
+                }
+                catch (Exception e)
+                {
+                    Assert.Equal("error message", e.Message);
+                }
             }
         }
 

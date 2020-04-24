@@ -79,6 +79,8 @@ func main() {
 	activity.Register(ArrayArgActivity)
 	workflow.Register(ArrayArgsWorkflow)
 	activity.Register(ArrayArgsActivity)
+	workflow.Register(ErrorWorkflow)
+	workflow.Register(StringErrorWorkflow)
 
 	h.StartWorkers(domain, taskList, workerOptions)
 
@@ -143,10 +145,49 @@ func main() {
 		}
 
 		h.ExecuteArrayWorkflow(workflowOptions, ArrayArgsWorkflow, []int32{0, 1, 2, 3, 4}, "test")
+
+		//-----------------------------------------------------
+		// Error Tests
+
+		workflowOptions = client.StartWorkflowOptions{
+			ID:                              "TEST:ErrTest-NOERROR-" + uuid.New(),
+			TaskList:                        taskList,
+			ExecutionStartToCloseTimeout:    time.Minute,
+			DecisionTaskStartToCloseTimeout: time.Minute,
+		}
+
+		h.ExecuteErrorWorkflow(workflowOptions, ErrorWorkflow, "")
+
+		workflowOptions = client.StartWorkflowOptions{
+			ID:                              "TEST:ErrTest-ERROR-" + uuid.New(),
+			TaskList:                        taskList,
+			ExecutionStartToCloseTimeout:    time.Minute,
+			DecisionTaskStartToCloseTimeout: time.Minute,
+		}
+
+		h.ExecuteErrorWorkflow(workflowOptions, ErrorWorkflow, "error-message")
+
+		workflowOptions = client.StartWorkflowOptions{
+			ID:                              "TEST:ResultErrTest-RESULT-" + uuid.New(),
+			TaskList:                        taskList,
+			ExecutionStartToCloseTimeout:    time.Minute,
+			DecisionTaskStartToCloseTimeout: time.Minute,
+		}
+
+		h.ExecuteStringErrorWorkflow(workflowOptions, StringErrorWorkflow, "CADENCE", "")
+
+		workflowOptions = client.StartWorkflowOptions{
+			ID:                              "TEST:ResultErrTest-ERROR-" + uuid.New(),
+			TaskList:                        taskList,
+			ExecutionStartToCloseTimeout:    time.Minute,
+			DecisionTaskStartToCloseTimeout: time.Minute,
+		}
+
+		h.ExecuteStringErrorWorkflow(workflowOptions, StringErrorWorkflow, "", "error message")
 	}
 
 	//-----------------------------------------------------
-	// Indicate to the caller that the worker is ready.
+	// Indicate to the calling unit test that the worker is ready.
 
 	if readyFile != "" {
 

@@ -54,11 +54,6 @@ namespace TestCadence
 
         public Test_EndToEnd(CadenceFixture fixture)
         {
-            // Setup a service for an activity dependency injection test.
-
-            NeonHelper.ServiceContainer.Clear();
-            NeonHelper.ServiceContainer.AddSingleton(typeof(ActivityDependency), new ActivityDependency() { Hello = "World!" });
-
             // Initialize the Cadence fixture.
 
             var settings = new CadenceSettings()
@@ -76,6 +71,14 @@ namespace TestCadence
                 this.fixture     = fixture;
                 this.client      = fixture.Client;
                 this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
+
+                // Setup a service for activity dependency injection testing if it doesn't
+                // already exist.
+
+                if (NeonHelper.ServiceContainer.GetService<ActivityDependency>() == null)
+                {
+                    NeonHelper.ServiceContainer.AddSingleton(typeof(ActivityDependency), new ActivityDependency() { Hello = "World!" });
+                }
 
                 // Auto register the test workflow and activity implementations.
 
@@ -95,8 +98,6 @@ namespace TestCadence
 
         public void Dispose()
         {
-            NeonHelper.ServiceContainer.Clear();
-
             if (proxyClient != null)
             {
                 proxyClient.Dispose();
