@@ -80,9 +80,11 @@ This is a semi-clone of the [https://github.com/sshnet/SSH.NET](>https://github.
 
 **Changes:** No significant changes for this release.
 
-### <img src="https://doc.neonkube.com/media/preview.png"/> Neon.Temporal
+### <img src="https://doc.neonkube.com/media/alpha.png"/> Neon.Temporal
 
-This package provides a .NET client for the [Temporal](https://docs.temporal.io/) workflow platform.  This is still a work in progress.
+**WARNING: This is under construction and is not ready for general use.**
+
+This package provides a .NET client for the [Temporal](https://docs.temporal.io/) workflow platform.
 
 You can get started: [here](https://doc.neonkube.com/Neon.Temporal-Overview.htm)
 Follow open issues: [here](https://github.com/nforgeio/neonKUBE/labels/temporal)
@@ -116,6 +118,14 @@ This package includes a fixture for running Couchbase locally as a Docker contai
 ### <img src="https://doc.neonkube.com/media/alpha.png"/> Neon.Xunit.Kube
 
 This package is currently used internally for neonKUBE related unit testing.
+
+**Changes:** No significant changes for this release.
+
+### <img src="https://doc.neonkube.com/media/alpha.png"/> Neon.Xunit.Temporal
+
+**WARNING: This is under construction and is not ready for general use.**
+
+This package includes a fixture for running Temporal locally as a Docker container during for unit tests.
 
 **Changes:** No significant changes for this release.
 
