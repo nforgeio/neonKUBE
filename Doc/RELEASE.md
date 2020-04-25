@@ -28,7 +28,9 @@
    neon-release -codedoc
    ```
 
-7. Update the **cadence-samples** solution to reference the new packages and verify that the samples work.
+7. Update sample repos:
+   a. Update the **cadence-samples** solution to reference the new packages and verify that the samples work.
+   b. Update the **temporal-samples** solution to reference the new packages and verify that the samples work.
 
 8. Verify that the new release installer works.
 
