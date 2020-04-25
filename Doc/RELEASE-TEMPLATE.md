@@ -115,7 +115,7 @@ This package includes a fixture for running Couchbase locally as a Docker contai
 
 **Changes:** No significant changes for this release.
 
-### <img src="https://doc.neonkube.com/media/alpha.png"/> Neon.Xunit.Kube
+### <img src="https://doc.neonkube.com/media/internal.png"/> Neon.Xunit.Kube
 
 This package is currently used internally for neonKUBE related unit testing.
 
