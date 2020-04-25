@@ -41,7 +41,7 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry = GetRegistry "test-cadence"
+	$registry = GetRegistry "test-temporal"
 	$date     = UtcDate
 	$branch   = GitBranch
 	$tag      = "$branch-$version"

@@ -1,5 +1,5 @@
 ﻿//------------------------------------------------------------------------------
-// FILE:         CadenceTester.cs
+// FILE:         TemporalTester.cs
 // CONTRIBUTOR:  Marcus Bowyer
 // COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 
@@ -11,22 +11,22 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-using Neon.Cadence;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube.Service;
 using Neon.Service;
+using Neon.Temporal;
 
-namespace CadenceService
+namespace TemporalService
 {
-    public partial class CadenceTester : KubeService
+    public partial class TemporalTester : KubeService
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="serviceMap">The service map.</param>
         /// <param name="name">The service name.</param>
-        public CadenceTester(ServiceMap serviceMap, string name)
+        public TemporalTester(ServiceMap serviceMap, string name)
             : base(serviceMap, name, ThisAssembly.Git.Branch, ThisAssembly.Git.Commit, ThisAssembly.Git.IsDirty)
         {
         }
@@ -42,47 +42,34 @@ namespace CadenceService
         {
             // Verify the environment variables.
 
-            var settings = new CadenceSettings();
-            var servers  = GetEnvironmentVariable("CADENCE_SERVERS");
-            var domain   = GetEnvironmentVariable("CADENCE_DOMAIN");
-            var taskList = GetEnvironmentVariable("CADENCE_TASKLIST");
-            var error    = false;
+            var settings   = new TemporalSettings();
+            var hostPort   = GetEnvironmentVariable("TEMPORAL_HOSTPORT");
+            var @namespace = GetEnvironmentVariable("TEMPORAL_NAMESPACE");
+            var taskList   = GetEnvironmentVariable("TEMPORAL_TASKLIST");
+            var error      = false;
 
-            Log.LogInfo(() => $"CADENCE_SERVERS:  {servers}");
-            Log.LogInfo(() => $"CADENCE_DOMAIN:   {domain}");
-            Log.LogInfo(() => $"CADENCE_TASKLIST: {taskList}");
+            Log.LogInfo(() => $"TEMPORAL_HOSTPORT:  {hostPort}");
+            Log.LogInfo(() => $"TEMPORAL_NAMESPACE: {@namespace}");
+            Log.LogInfo(() => $"TEMPORAL_TASKLIST:  {taskList}");
 
-            if (string.IsNullOrEmpty(servers))
+            if (string.IsNullOrEmpty(hostPort))
             {
                 error = true;
-                Log.LogError("The [CADENCE_SERVERS] environment variable is required.");
+                Log.LogError("The [TEMPORAL_HOSTPORT] environment variable is required.");
             }
 
-            try
-            {
-                foreach (var item in servers.Split(','))
-                {
-                    var uri = new Uri(item.Trim(), UriKind.Absolute);
+            settings.HostPort = hostPort;
 
-                    settings.Servers.Add(uri.ToString());
-                }
-            }
-            catch
+            if (string.IsNullOrEmpty(@namespace))
             {
                 error = true;
-                Log.LogError(() => $"One or more URIs are invalid: CADENCE_SERVERS={servers}");
-            }
-
-            if (string.IsNullOrEmpty(domain))
-            {
-                error = true;
-                Log.LogError("The [CADENCE_DOMAIN] environment variable is required.");
+                Log.LogError("The [TEMPORAL_NAMESPACE] environment variable is required.");
             }
 
             if (string.IsNullOrEmpty(taskList))
             {
                 error = true;
-                Log.LogError("The [CADENCE_TASKLIST] environment variable is required.");
+                Log.LogError("The [TEMPORAL_TASKLIST] environment variable is required.");
             }
 
             if (error)
@@ -90,13 +77,13 @@ namespace CadenceService
                 return 1;
             }
 
-            // Connect to Cadence and register the workflows and activities.
+            // Connect to Temporal and register the workflows and activities.
 
-            Log.LogInfo("Connecting to Cadence.");
+            Log.LogInfo("Connecting to Temporal.");
 
-            settings.DefaultDomain = domain;
+            settings.DefaulNamespace = @namespace;
 
-            using (var client = await CadenceClient.ConnectAsync(settings))
+            using (var client = await TemporalClient.ConnectAsync(settings))
             {
                 // Register the workflows.
 

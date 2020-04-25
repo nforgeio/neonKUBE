@@ -55,7 +55,7 @@ namespace TestTemporal
         {
             var settings = new TemporalSettings()
             {
-                DefaulNamespace          = TemporalFixture.DefaultDomain,
+                DefaulNamespace          = TemporalFixture.DefaultNamespace,
                 LogLevel               = TemporalTestHelper.LogLevel,
                 CreateNamespace           = true,
                 Debug                  = TemporalTestHelper.Debug,

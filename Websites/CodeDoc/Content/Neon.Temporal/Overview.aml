@@ -11,6 +11,13 @@
           <legacyBold>Neon.Temporal</legacyBold> is still under construction and 
           <legacyBold>is not ready for any kind of use.</legacyBold>
         </para>
+        <para>
+          Temporal is a fork of the popular Uber Cadence workflow platform.  This fork is
+          maintained by the creators of Uber Cadence as well as Amazon Simple Workflow Foundation
+          (SWF) and we expect that Temporal will be where we'll see continuted advances.
+          We plan on deprecating <legacyBold>Neon.Cadence</legacyBold> in the near future
+          in favor of Temporal.
+        </para>
       </alert>
       <para>
         The <legacyBold>Neon.Temporal</legacyBold> class library is built for NETStandard 2.0

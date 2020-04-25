@@ -11,7 +11,7 @@ using Neon.Common;
 using Neon.Kube;
 using Neon.Service;
 
-namespace CadenceService
+namespace TemporalService
 {
     /// <summary>
     /// The program entrypoint.
@@ -23,21 +23,21 @@ namespace CadenceService
     /// </para>
     /// <list type="table">
     /// <item>
-    ///     <term><b>CADENCE_SERVERS</b>/term>
+    ///     <term><b>TEMPORAL_ENDPOINT</b>/term>
     ///     <description>
-    ///     <i>required</i>: Comma separated HTTP/HTTPS URIs to one or more Cadence cluster servers.
+    ///     <i>required</i>: The Temporal cluster endpoint.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>CADENCE_DOMAIN</b>/term>
+    ///     <term><b>TEMPORAL_NAMESPACE</b>/term>
     ///     <description>
-    ///     <i>required</i>: Specifies the Cadence domain where the workflows will be registered.
+    ///     <i>required</i>: Specifies the Temporal namespace where the workflows will be registered.
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>CADENCE_TASKLIST</b>/term>
+    ///     <term><b>TEMPORAL_TASKLIST</b>/term>
     ///     <description>
-    ///     <i>required</i>: Specifies the Cadence task list for the registered workflows.
+    ///     <i>required</i>: Specifies the Temporal task list for the registered workflows.
     ///     </description>
     /// </item>
     /// <item>
@@ -61,7 +61,7 @@ namespace CadenceService
         /// </remarks>
         public static void Main(string[] args)
         {
-            new CadenceTester(NeonServiceMap.Production, NeonServices.TestCadence).RunAsync().Wait();
+            new TemporalTester(NeonServiceMap.Production, NeonServices.TestTemporal).RunAsync().Wait();
         }
     }
 }

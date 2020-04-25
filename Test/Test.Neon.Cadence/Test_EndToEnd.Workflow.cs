@@ -4347,6 +4347,8 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Container()
         {
+            const string taskList = "test-cadence-container";
+
             await SyncContext.ClearAsync;
 
             // Start the [nkubeio/test-cadence:latest] Docker image locally, having it
@@ -4408,7 +4410,7 @@ namespace TestCadence
                     "--name", "test-cadence",
                     "--env", $"CADENCE_SERVERS=cadence://{ipAddress}:7933",
                     "--env", $"CADENCE_DOMAIN={CadenceFixture.DefaultDomain}",
-                    "--env", $"CADENCE_TASKLIST={CadenceTestHelper.TaskList}",
+                    "--env", $"CADENCE_TASKLIST={taskList}",
                     testCadenceImage
                 });
 
@@ -4434,7 +4436,7 @@ namespace TestCadence
                         new WorkflowOptions()
                         {
                             WorkflowId = $"busywork-{Guid.NewGuid().ToString("d")}",
-                            TaskList   = CadenceTestHelper.TaskList
+                            TaskList   = taskList
                         });
 
                     pending.Add(stub.DoItAsync(workflowIterations, sleepTime, $"workflow-{i}"));

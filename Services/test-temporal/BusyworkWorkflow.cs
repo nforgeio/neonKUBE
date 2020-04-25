@@ -10,15 +10,15 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Neon.Cadence;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube.Service;
 using Neon.Service;
+using Neon.Temporal;
 
-using Test.Neon.Models.Cadence;
+using Test.Neon.Models.Temporal;
 
-namespace CadenceService
+namespace TemporalService
 {
     [Workflow(AutoRegister = true)]
     public class BusyworkWorkflow : WorkflowBase, IBusyworkWorkflow
