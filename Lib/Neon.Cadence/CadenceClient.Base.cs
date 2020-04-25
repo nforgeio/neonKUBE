@@ -178,7 +178,8 @@ namespace Neon.Cadence
                         return worker;
                     }
 
-                    options = options ?? new WorkerOptions();
+                    options          = options ?? new WorkerOptions();
+                    options.Identity = this.Settings.ClientIdentity;
 
                     var reply = (NewWorkerReply)(await CallProxyAsync(
                         new NewWorkerRequest()

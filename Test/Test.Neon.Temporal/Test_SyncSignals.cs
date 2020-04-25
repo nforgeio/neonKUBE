@@ -46,9 +46,9 @@ namespace TestTemporal
     {
         private const int testIterations = 2;
 
-        private TemporalFixture  fixture;
-        private TemporalClient   client;
-        private HttpClient      proxyClient;
+        private TemporalFixture     fixture;
+        private TemporalClient      client;
+        private HttpClient          proxyClient;
 
         public Test_SyncSignals(TemporalFixture fixture)
         {

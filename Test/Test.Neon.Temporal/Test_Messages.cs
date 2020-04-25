@@ -55,9 +55,9 @@ namespace TestTemporal
         //---------------------------------------------------------------------
         // Implementation
 
-        private TemporalFixture  fixture;
-        private TemporalClient   client;
-        private HttpClient      proxyClient;
+        private TemporalFixture     fixture;
+        private TemporalClient      client;
+        private HttpClient          proxyClient;
 
         public Test_Messages(TemporalFixture fixture)
         {

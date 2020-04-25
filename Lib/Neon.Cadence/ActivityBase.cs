@@ -370,11 +370,18 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
-            var activity = (ActivityBase)ActivatorUtilities.CreateInstance(NeonHelper.ServiceContainer, invokeInfo.ActivityType);
+            try
+            {
+                var activity = (ActivityBase)ActivatorUtilities.CreateInstance(NeonHelper.ServiceContainer, invokeInfo.ActivityType);
 
-            activity.Initialize(client, invokeInfo.ActivityType, invokeInfo.ActivityMethod, client.DataConverter, contextId);
+                activity.Initialize(client, invokeInfo.ActivityType, invokeInfo.ActivityMethod, client.DataConverter, contextId);
 
-            return activity;
+                return activity;
+            }
+            catch (Exception e)
+            {
+                throw;
+            }
         }
 
         /// <summary>
