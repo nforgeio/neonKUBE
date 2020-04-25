@@ -2413,7 +2413,7 @@ namespace TestTemporal
 
             var options = new WorkflowOptions()
             {
-                Namespace     = client.Settings.DefaulNamespace,
+                Namespace  = client.Settings.DefaultNamespace,
                 WorkflowId = "my-workflow-id"
             };
 

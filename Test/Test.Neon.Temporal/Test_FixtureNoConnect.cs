@@ -55,9 +55,9 @@ namespace TestTemporal
         {
             var settings = new TemporalSettings()
             {
-                DefaulNamespace          = TemporalFixture.DefaultNamespace,
+                DefaultNamespace       = TemporalFixture.DefaultNamespace,
                 LogLevel               = TemporalTestHelper.LogLevel,
-                CreateNamespace           = true,
+                CreateNamespace        = true,
                 Debug                  = TemporalTestHelper.Debug,
                 DebugPrelaunched       = TemporalTestHelper.DebugPrelaunched,
                 DebugDisableHeartbeats = TemporalTestHelper.DebugDisableHeartbeats,

@@ -212,18 +212,18 @@ namespace Neon.Xunit.Temporal
         /// </note>
         /// </remarks>
         public void StartAsComposed(
-            TemporalSettings    settings        = null,
-            string              image           = "nkubeio/temporal-dev:latest",
-            string              name            = "temporal-dev",
-            string[]            env             = null,
-            string              defaultNamespace   = DefaultNamespace,
-            LogLevel            logLevel        = LogLevel.None,
-            bool                keepConnection  = false,
-            bool                keepOpen        = false,
-            string              hostInterface   = null,
-            bool                noClient        = false,
-            bool                noReset         = false,
-            bool                emulateProxy    = false)
+            TemporalSettings    settings         = null,
+            string              image            = "nkubeio/temporal-dev:latest",
+            string              name             = "temporal-dev",
+            string[]            env              = null,
+            string              defaultNamespace = DefaultNamespace,
+            LogLevel            logLevel         = LogLevel.None,
+            bool                keepConnection   = false,
+            bool                keepOpen         = false,
+            string              hostInterface    = null,
+            bool                noClient         = false,
+            bool                noReset          = false,
+            bool                emulateProxy     = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image), nameof(image));
 
@@ -267,10 +267,10 @@ namespace Neon.Xunit.Temporal
 
                 settings = settings ?? new TemporalSettings()
                 {
-                    HostPort      = $"{GetHostInterface(hostInterface, forConnection: true)}:{NetworkPorts.Temporal}",
+                    HostPort         = $"{GetHostInterface(hostInterface, forConnection: true)}:{NetworkPorts.Temporal}",
                     CreateNamespace  = true,
-                    DefaulNamespace = defaultNamespace,
-                    LogLevel      = logLevel
+                    DefaultNamespace = defaultNamespace,
+                    LogLevel         = logLevel
                 };
 
                 this.settings       = settings;

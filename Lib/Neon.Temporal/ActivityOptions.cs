@@ -61,7 +61,7 @@ namespace Neon.Temporal
 
             if (string.IsNullOrEmpty(options.Namespace))
             {
-                options.Namespace = client.Settings.DefaulNamespace;
+                options.Namespace = client.Settings.DefaultNamespace;
             }
 
             if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)

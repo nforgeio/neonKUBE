@@ -210,10 +210,10 @@ namespace TestTemporal
             Assert.True(domainPage.Namespaces.Count >= testDomainCount + 1);
             Assert.Null(domainPage.NextPageToken);
 
-            // Verify that we listed the default domain as well as the 
+            // Verify that we listed the default namespace as well as the 
             // domains we just registered.
 
-            Assert.Contains(domainPage.Namespaces, d => d.NamespaceInfo.Name == client.Settings.DefaulNamespace);
+            Assert.Contains(domainPage.Namespaces, d => d.NamespaceInfo.Name == client.Settings.DefaultNamespace);
 
             for (int i = 0; i < testDomainCount; i++)
             {

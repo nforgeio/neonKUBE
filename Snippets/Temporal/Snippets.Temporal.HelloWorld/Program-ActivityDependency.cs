@@ -75,7 +75,7 @@
 
             var settings = new TemporalSettings()
             {
-                DefaulNamespace = "ny-namespace",
+                DefaultNamespace = "my-namespace",
                 CreateNamespace  = true,
                 HostPort         = "localhost:7933"
             };

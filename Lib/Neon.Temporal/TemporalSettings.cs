@@ -93,11 +93,11 @@ namespace Neon.Temporal
         [JsonProperty(PropertyName = "DefaultNamespace", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "defaultNamespace", ApplyNamingConventions = false)]
         [DefaultValue("default")]
-        public string DefaulNamespace { get; set; } = "default";
+        public string DefaultNamespace { get; set; } = "default";
 
         /// <summary>
         /// <para>
-        /// Optionally create the <see cref="DefaulNamespace"/> if it doesn't already exist.
+        /// Optionally create the <see cref="DefaultNamespace"/> if it doesn't already exist.
         /// This defaults to <c>false</c>.
         /// </para>
         /// <note>
@@ -530,7 +530,7 @@ namespace Neon.Temporal
                 DebugIgnoreHeartbeats                 = this.DebugIgnoreHeartbeats,
                 DebugIgnoreTimeouts                   = this.DebugIgnoreTimeouts,
                 DebugPrelaunched                      = this.DebugPrelaunched,
-                DefaulNamespace                       = this.DefaulNamespace,
+                DefaultNamespace                      = this.DefaultNamespace,
                 HeartbeatIntervalSeconds              = this.HeartbeatIntervalSeconds,
                 HeartbeatTimeoutSeconds               = this.HeartbeatTimeoutSeconds,
                 HostPort                              = this.HostPort,

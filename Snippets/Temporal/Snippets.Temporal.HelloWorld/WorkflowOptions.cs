@@ -30,9 +30,9 @@ namespace HelloWorld_WorkflowOptions
 
             var settings = new TemporalSettings()
             {
-                DefaulNamespace = "ny-namespace",
+                DefaultNamespace = "my-namespace",
                 CreateNamespace  = true,
-                HostPort      = "localhost:7933"
+                HostPort         = "localhost:7933"
             };
 
             using (var client = await TemporalClient.ConnectAsync(settings))
