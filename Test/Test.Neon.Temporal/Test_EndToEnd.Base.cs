@@ -306,7 +306,7 @@ namespace TestTemporal
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public async Task Base_DescribeWorkflowAsync()
+        public async Task Base_DescribeWorkflowExecutionAsync()
         {
             await SyncContext.ClearAsync;
 
@@ -324,7 +324,7 @@ namespace TestTemporal
 
             await stub.RunAsync();
 
-            var description = await client.DescribeWorkflowAsync(new WorkflowExecution(workflowId));
+            var description = await client.DescribeWorkflowExecutionAsync(new WorkflowExecution(workflowId));
 
             Assert.NotNull(description);
 
