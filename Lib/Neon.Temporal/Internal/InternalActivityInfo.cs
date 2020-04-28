@@ -100,18 +100,18 @@ namespace Neon.Temporal.Internal
         {
             return new ActivityTask()
             {
-                TaskToken           = this.TaskToken,
-                WorkflowTypeName    = this.WorkflowType?.Name,
-                WorkflowNamespace   = this.WorkflowNamespace,
-                WorkflowExecution   = this.WorkflowExecution.ToPublic(),
-                ActivityId          = this.ActivityId,
-                ActivityTypeName    = this.ActivityType?.Name,
-                TaskList            = this.TaskList,
-                HeartbeatTimeout    = TimeSpan.FromTicks(this.HeartbeatTimeout / 100),
-                ScheduledTimeUtc    = TemporalHelper.ParseTemporalTimestamp(this.ScheduledTimestamp),
-                StartedTimeUtc      = TemporalHelper.ParseTemporalTimestamp(this.StartedTimestamp),
-                DeadlineTimeUtc     = TemporalHelper.ParseTemporalTimestamp(this.Deadline),
-                Attempt             = this.Attempt
+                TaskToken         = this.TaskToken,
+                WorkflowTypeName  = this.WorkflowType?.Name,
+                WorkflowNamespace = this.WorkflowNamespace,
+                WorkflowExecution = this.WorkflowExecution.ToPublic(),
+                ActivityId        = this.ActivityId,
+                ActivityTypeName  = this.ActivityType?.Name,
+                TaskList          = this.TaskList,
+                HeartbeatTimeout  = TimeSpan.FromTicks(this.HeartbeatTimeout / 100),
+                ScheduledTimeUtc  = TemporalHelper.ParseTemporalTimestamp(this.ScheduledTimestamp),
+                StartedTimeUtc    = TemporalHelper.ParseTemporalTimestamp(this.StartedTimestamp),
+                DeadlineTimeUtc   = TemporalHelper.ParseTemporalTimestamp(this.Deadline),
+                Attempt           = this.Attempt
             };
         }
     }

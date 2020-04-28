@@ -100,18 +100,18 @@ namespace Neon.Cadence.Internal
         {
             return new ActivityTask()
             {
-                TaskToken           = this.TaskToken,
-                WorkflowTypeName    = this.WorkflowType?.Name,
-                WorkflowDomain      = this.WorkflowDomain,
-                WorkflowExecution   = this.WorkflowExecution.ToPublic(),
-                ActivityId          = this.ActivityId,
-                ActivityTypeName    = this.ActivityType?.Name,
-                TaskList            = this.TaskList,
-                HeartbeatTimeout    = TimeSpan.FromTicks(this.HeartbeatTimeout / 100),
-                ScheduledTimeUtc    = CadenceHelper.ParseCadenceTimestamp(this.ScheduledTimestamp),
-                StartedTimeUtc      = CadenceHelper.ParseCadenceTimestamp(this.StartedTimestamp),
-                DeadlineTimeUtc     = CadenceHelper.ParseCadenceTimestamp(this.Deadline),
-                Attempt             = this.Attempt
+                TaskToken         = this.TaskToken,
+                WorkflowTypeName  = this.WorkflowType?.Name,
+                WorkflowDomain    = this.WorkflowDomain,
+                WorkflowExecution = this.WorkflowExecution.ToPublic(),
+                ActivityId        = this.ActivityId,
+                ActivityTypeName  = this.ActivityType?.Name,
+                TaskList          = this.TaskList,
+                HeartbeatTimeout  = TimeSpan.FromTicks(this.HeartbeatTimeout / 100),
+                ScheduledTimeUtc  = CadenceHelper.ParseCadenceTimestamp(this.ScheduledTimestamp),
+                StartedTimeUtc    = CadenceHelper.ParseCadenceTimestamp(this.StartedTimestamp),
+                DeadlineTimeUtc   = CadenceHelper.ParseCadenceTimestamp(this.Deadline),
+                Attempt           = this.Attempt
             };
         }
     }
