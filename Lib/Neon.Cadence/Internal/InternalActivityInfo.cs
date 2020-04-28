@@ -103,7 +103,7 @@ namespace Neon.Cadence.Internal
                 TaskToken           = this.TaskToken,
                 WorkflowTypeName    = this.WorkflowType?.Name,
                 WorkflowDomain      = this.WorkflowDomain,
-                WorkflowExecution         = this.WorkflowExecution.ToPublic(),
+                WorkflowExecution   = this.WorkflowExecution.ToPublic(),
                 ActivityId          = this.ActivityId,
                 ActivityTypeName    = this.ActivityType?.Name,
                 TaskList            = this.TaskList,
