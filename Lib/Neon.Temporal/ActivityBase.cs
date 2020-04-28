@@ -517,6 +517,7 @@ namespace Neon.Temporal
         // Instance members
 
         private Type            activityType;
+        private ActivityTask    activityTask;
         private MethodInfo      activityMethod;
         private IDataConverter  dataConverter;
         private INeonLogger     logger;
@@ -544,15 +545,7 @@ namespace Neon.Temporal
             Covenant.Requires<ArgumentNullException>(dataConverter != null, nameof(dataConverter));
             TemporalHelper.ValidateActivityImplementation(activityType);
 
-            var activityTask = new ActivityTask()
-            {
-                // $todo(jefflill):
-                //
-                //     https://github.com/nforgeio/neonKUBE/issues/786
-            };
-
             this.Client                  = client;
-            this.ActivityTask            = activityTask;
             this.Activity                = new Activity(this);
             this.activityType            = activityType;
             this.activityMethod          = activityMethod;
@@ -593,9 +586,28 @@ namespace Neon.Temporal
         internal bool IsLocal => !ContextId.HasValue;
 
         /// <summary>
+        /// <para>
         /// Returns additional information about the activity and the workflow that executed it.
+        /// </para>
+        /// <note>
+        /// For local activity executions, this property will return an <see cref="ActivityTask"/>
+        /// instance with all properties initialized to their default values.
+        /// </note>
         /// </summary>
-        internal ActivityTask ActivityTask { get; private set; }
+        internal ActivityTask ActivityTask
+        {
+            get
+            {
+                if (activityTask == null)
+                {
+                    activityTask = new ActivityTask();
+                }
+
+                return activityTask;
+            }
+
+            set => activityTask = value;
+        }
 
         /// <summary>
         /// Indicates that the activity will be completed externally.
