@@ -311,9 +311,14 @@ namespace Neon.Cadence.Internal
 
                 var name = workflowMethodAttribute.Name ?? string.Empty;
 
+                if (name == string.Empty && workflowMethodAttribute.IsFullName)
+                {
+                    throw new WorkflowTypeException($"Workflow method [{workflowInterface.FullName}.{method.Name}()] specifies [WorkflowMethod(Name = \"\", IsFullName=true)]  Fully qualified names cannot be NULL or blank.");
+                }
+
                 if (workflowNames.Contains(name))
                 {
-                    throw new WorkflowTypeException($"Multiple workflow methods are tagged by [WorkflowMethod(Name = \"{name}\")].");
+                    throw new WorkflowTypeException($"Multiple workflow [{workflowInterface.FullName}] methods are tagged by [WorkflowMethod(Name = \"{name}\")].");
                 }
 
                 workflowNames.Add(name);
@@ -361,7 +366,7 @@ namespace Neon.Cadence.Internal
 
                 if (signalNames.Contains(name))
                 {
-                    throw new WorkflowTypeException($"Multiple signal methods are tagged by [SignalMethod(name:\"{name}\")].");
+                    throw new WorkflowTypeException($"Multiple interface [{workflowInterface.FullName}] signal methods are tagged by [SignalMethod(name:\"{name}\")].");
                 }
 
                 signalNames.Add(name);
@@ -382,14 +387,14 @@ namespace Neon.Cadence.Internal
 
                 if (!(CadenceHelper.IsTask(method.ReturnType) || CadenceHelper.IsTaskT(method.ReturnType)))
                 {
-                    throw new WorkflowTypeException($"Workflow query method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                    throw new WorkflowTypeException($"Workflow interface query method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                 }
 
                 var name = queryMethodAttribute.Name ?? string.Empty;
 
                 if (queryNames.Contains(name))
                 {
-                    throw new WorkflowTypeException($"Multiple query methods are tagged by [QueryMethod(name:\"{name}\")].");
+                    throw new WorkflowTypeException($"Multiple interface [{workflowInterface.FullName}] query methods are tagged by [QueryMethod(name:\"{name}\")].");
                 }
 
                 queryNames.Add(name);
@@ -1118,7 +1123,11 @@ namespace Neon.Cadence.Internal
 
             var workflowTypeName = CadenceHelper.GetWorkflowTypeName(workflowInterface, workflowAttribute);
 
-            if (!string.IsNullOrEmpty(methodAttribute.Name))
+            if (methodAttribute.IsFullName)
+            {
+                workflowTypeName = methodAttribute.Name;
+            }
+            else if (!string.IsNullOrEmpty(methodAttribute.Name))
             {
                 workflowTypeName += $"::{methodAttribute.Name}";
             }

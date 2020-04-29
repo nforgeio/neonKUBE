@@ -830,7 +830,14 @@ namespace Neon.Cadence.Internal
                     }
                     else
                     {
-                        sbSource.AppendLine($"            var ___workflowTypeName = $\"{{this.workflowTypeName}}::{details.WorkflowMethodAttribute.Name}\";");
+                        if (details.WorkflowMethodAttribute.IsFullName)
+                        {
+                            sbSource.AppendLine($"            var ___workflowTypeName = $\"{details.WorkflowMethodAttribute.Name}\";");
+                        }
+                        else
+                        {
+                            sbSource.AppendLine($"            var ___workflowTypeName = $\"{{this.workflowTypeName}}::{details.WorkflowMethodAttribute.Name}\";");
+                        }
                     }
 
                     sbSource.AppendLine($"            var ___options          = this.childOptions ?? new ChildWorkflowOptions();");
@@ -926,7 +933,14 @@ namespace Neon.Cadence.Internal
                     }
                     else
                     {
-                        sbSource.AppendLine($"            var ___workflowTypeName = $\"{{this.workflowTypeName}}::{details.WorkflowMethodAttribute.Name}\";");
+                        if (details.WorkflowMethodAttribute.IsFullName)
+                        {
+                            sbSource.AppendLine($"            var ___workflowTypeName = $\"{details.WorkflowMethodAttribute.Name}\";");
+                        }
+                        else
+                        {
+                            sbSource.AppendLine($"            var ___workflowTypeName = $\"{{this.workflowTypeName}}::{details.WorkflowMethodAttribute.Name}\";");
+                        }
                     }
 
                     sbSource.AppendLine($"            var ___options          = this.options ?? new WorkflowOptions();");

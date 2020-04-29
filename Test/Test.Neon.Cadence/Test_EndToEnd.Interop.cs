@@ -143,6 +143,8 @@ namespace TestCadence
             }
         }
 
+        //---------------------------------------------------------------------
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Interop_Workflow_Untyped()
@@ -160,7 +162,7 @@ namespace TestCadence
                 var options = new WorkflowOptions()
                 {
                     WorkflowId = "NoArgs-" + Guid.NewGuid().ToString("d"),
-                    TaskList = CadenceTestHelper.TaskList_CwfArgs
+                    TaskList   = CadenceTestHelper.TaskList_CwfArgs
                 };
 
                 var stub      = client.NewUntypedWorkflowStub("main.NoArgsWorkflow", options);
@@ -309,6 +311,55 @@ namespace TestCadence
             await SyncContext.ClearAsync;
 
             throw new NotImplementedException();
+        }
+
+        //---------------------------------------------------------------------
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList_CwfArgs)]
+        public interface IGoWorkflow : IWorkflow
+        {
+            [WorkflowMethod(Name = "main.NoArgsWorkflow", IsFullName = true)]
+            Task<string> NoArgsAsync();
+
+            [WorkflowMethod(Name = "main.OneArgWorkflow", IsFullName = true)]
+            Task<string> OneArgAsync(string name);
+
+            [WorkflowMethod(Name = "main.TwoArgsWorkflow", IsFullName = true)]
+            Task<string> TwoArgsAsync(string name1, string name2);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Interop_Workflow_FullName()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that we can can used a typed workflow stub to interoperate 
+            // with a GOLANG workflow using a non-standard workflow type name.
+
+            using (new CwfArgsWorker())
+            {
+                //-----------------------------------------
+                // Zero args:
+
+                var stub = client.NewWorkflowStub<IGoWorkflow>();
+
+                Assert.Equal("Hello there!", await stub.NoArgsAsync());
+
+                //-----------------------------------------
+                // One arg:
+
+                stub = client.NewWorkflowStub<IGoWorkflow>();
+
+                Assert.Equal("Hello JACK!", await stub.OneArgAsync("JACK"));
+
+                //-----------------------------------------
+                // Two Args:
+
+                stub = client.NewWorkflowStub<IGoWorkflow>();
+
+                Assert.Equal("Hello JACK & JILL!", await stub.TwoArgsAsync("JACK", "JILL"));
+            }
         }
     }
 }
