@@ -24,106 +24,155 @@
 #
 # ARGUMENTS:
 #
-#   VERSION         - The Cadence version to be built (AKA its GitHub tag)
+#   VERSION         - The Temporal version to be built (AKA its GitHub tag)
 #   GO_VERSION      - The Go version required
-#   UI_VERSION      - The Cadence-web version to be built (AKA its GitHub tag)
+#   UI_VERSION      - The Temporal-web version to be built (AKA its GitHub tag)
 
-# Build cadence binaries
+# Build temporal binaries
+
 ARG  GO_VERSION
 FROM golang:$GO_VERSION as builder
 ARG  VERSION
 
-# get and compile cadence-server
-RUN go get -u github.com/golang/dep/cmd/dep \
-    && go get -u golang.org/x/lint/golint \
-    && git clone https://github.com/uber/cadence.git /go/src/github.com/uber/cadence \
-    && cd /go/src/github.com/uber/cadence \
-    && git checkout tags/$VERSION && make bins
+# get and compile temporal-server
 
-# Final Cadence image
-# open-jdk-8 debian9 stretch
-FROM openjdk:8-jdk-stretch
+COPY ./.gitmodules_temporal /
+
+RUN apt-get update && apt-get install -y protobuf-compiler \
+    && git clone https://github.com/temporalio/temporal.git /go/src/github.com/temporalio/temporal \
+    && rm -f /go/src/github.com/temporalio/temporal/.gitmodules \ 
+    && cd /go/src/github.com/temporalio/temporal \
+    && git checkout tags/$VERSION \
+    && cp /.gitmodules_temporal /go/src/github.com/temporalio/temporal/.gitmodules \
+    && CGO_ENABLED=0 make
+    
+# Download dockerize
+
+FROM alpine:3.11 AS dockerize
+
+RUN apk add --no-cache openssl
+
+ENV DOCKERIZE_VERSION v0.6.1
+RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && echo "**** fix for host id mapping error ****" \
+    && chown root:root /usr/local/bin/dockerize
+
+# Build Temporal UI
+
+FROM node:8.17.0-jessie as temporal-web-builder
 ARG UI_VERSION
-
-# Export ENV variable
-ENV CADENCE_HOME /cadence
-ENV UI_HOME /usr/cadence-web
-ENV NODE_VERSION=10.x
+WORKDIR /usr
 ENV NODE_ENV=production
-ENV TZ=UTC
+ENV NPM_CONFIG_PRODUCTION=true
+
+COPY ./.gitmodules_temporal_web /
+
+# Clone and build the temporal 
+# frontend UI
+
+RUN git clone https://github.com/temporalio/temporal-web.git \
+    && cd temporal-web \
+    && git checkout $UI_VERSION \
+    && rm -f .gitmodules \
+    && cp /.gitmodules_temporal_web .gitmodules \
+    && make
+
+# Install app dependencies
+# build the app
+# move all app files into ./app
+
+WORKDIR /usr/temporal-web
+RUN npm install --production \
+    && npm run build-production \
+    && mkdir app && mv package.json server.js webpack.config.js server dist node_modules temporal-proto ./app \
+    && mkdir -p ./app/protobuf/src && mv protobuf/src ./app/protobuf
+
+# Ubuntu16.04 base image
+
+FROM nkubedev/ubuntu-16.04 AS ubuntu
+ENV NODE_VERSION=8.x
 
 # BASIC COMMON LIBRARY INSTALLATIONS
 # CQLSH installation
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
         gettext-base \
-        gnupg \
-        wget \
-        tcpdump \
-        netcat \
+        openjdk-8-jdk \
+        python2.7 \
         python-pip \
-        curl \
         python-setuptools \
-        build-essential \
     && rm -rf /var/lib/apt/lists/* \
-    && pip install wheel
+    && pip install wheel \
+    && pip install cqlsh
 
-# NODEJS/NPM INSTALLATION
-RUN apt-get update \
-    && curl -sL https://deb.nodesource.com/setup_$NODE_VERSION | bash - \
-    && apt-get install -y nodejs
+# cassandra installation
 
-# CASSANDRA INSTALLATION
 RUN apt-get update \
     && echo "deb https://downloads.apache.org/cassandra/debian 311x main" | tee -a /etc/apt/sources.list.d/cassandra.sources.list \
     && curl https://downloads.apache.org/cassandra/KEYS | apt-key add - \
     && apt-get update \
-    && apt-get install cassandra -y
+    && apt-get install cassandra -y \
+    && rm -f /etc/cassandra/cassandra.yaml
 
-# Delete default cassandra config file
-RUN mkdir /cadence \ 
-    && mv /usr/sbin/cassandra /cadence \
-    && rm -f /etc/cassandra/cassandra.yaml 
+# NODEJS/NPM INSTALLATION
 
-# Clone and build the cadence 
-# frontend UI
-RUN git clone https://github.com/uber/cadence-web.git /usr/cadence-web \
-    && cd /usr/cadence-web \
-    && git checkout tags/$UI_VERSION
+RUN apt-get update \
+    && curl -sL https://deb.nodesource.com/setup_$NODE_VERSION | bash - \
+    && apt-get install -y nodejs
 
+# set up nsswitch.conf for Go's "netgo" implementation
+# https://github.com/gliderlabs/docker-alpine/issues/367#issuecomment-424546457
+RUN test ! -e /etc/nsswitch.conf & echo 'hosts: files dns' > /etc/nsswitch.conf
 
+SHELL ["/bin/bash", "-c"]
 
-# Tell to expose ports
-EXPOSE 7933 7934 7935 7939 9042 8088
+# Final Temporal image
 
-# copy over local cassandra/cadence configuration files, 
-# cadence entrypoint script, and 
+FROM ubuntu as temporal-dev
+ENV TEMPORAL_HOME /etc/temporal
+ENV UI_HOME /etc/temporal-web
+ENV TZ=UTC
+ENV NODE_ENV=production
+
+RUN mkdir $TEMPORAL_HOME \ 
+    && mkdir $UI_HOME
+
+# copy over necessary temporal files and schemas from the builder
+
+COPY --from=dockerize /usr/local/bin/dockerize                                     /usr/local/bin
+COPY --from=builder /go/src/github.com/temporalio/temporal/temporal-cassandra-tool /usr/local/bin
+COPY --from=builder /go/src/github.com/temporalio/temporal/temporal-sql-tool       /usr/local/bin
+COPY --from=builder /go/src/github.com/temporalio/temporal/tctl                    /usr/local/bin
+COPY --from=builder /go/src/github.com/temporalio/temporal/temporal-server         /usr/local/bin
+COPY --from=builder /go/src/github.com/temporalio/temporal/schema/                 $TEMPORAL_HOME/schema/
+COPY --from=temporal-web-builder /usr/temporal-web/app/                            $UI_HOME
+
+# copy over local cassandra/temporal configuration files, 
+# temporal entrypoint script, and 
 # cassandra setup script
-COPY ./entrypoint.sh $CADENCE_HOME/entrypoint.sh
-COPY ./config_template.yaml $CADENCE_HOME/config/docker_template_cassandra.yaml
-COPY ./cassandra.yaml /etc/cassandra/cassandra_template.yaml
-COPY ./setup.sh $CADENCE_HOME/setup.sh
 
-# copy over necessary cadence files and schemas from the builder
-COPY --from=builder /go/src/github.com/uber/cadence/cadence-cassandra-tool /cadence
-COPY --from=builder /go/src/github.com/uber/cadence/cadence                /cadence
-COPY --from=builder /go/src/github.com/uber/cadence/cadence-server         /cadence
-COPY --from=builder /go/src/github.com/uber/cadence/schema/                /cadence/schema/
-
-# change working dir to /usr/cadence-web
-# Install cadence ui 
-# app dependencies
-
-WORKDIR $UI_HOME
-RUN npm install --production --unsafe-perm \
-    && npm run build-production
+COPY ./entrypoint.sh        /docker-entrypoint.sh
+COPY ./config_template.yaml $TEMPORAL_HOME/config/config_template.yaml
+COPY ./cassandra.yaml       /etc/cassandra/cassandra_template.yaml
+COPY ./setup.sh             /setup.sh
+COPY ./start.sh             /start.sh
+COPY ./start-temporal.sh    /start-temporal.sh
+COPY ./start-temporal-ui.sh /start-temporal-ui.sh
 
 # change working dir to /cadence
 # Change permissions of start scripts 
 # Start cassandra and setup schema
-WORKDIR $CADENCE_HOME
-RUN chmod a+x entrypoint.sh \
+
+RUN chmod a+x docker-entrypoint.sh \
     && chmod a+x setup.sh \
-    && /bin/bash setup.sh $CADENCE_HOME
+    && /bin/bash setup.sh $TEMPORAL_HOME
+
+ENV SERVICES="history,matching,frontend,worker"
 
 # Docker entrypiont
-ENTRYPOINT ./entrypoint.sh $CADENCE_HOME $UI_HOME
+
+EXPOSE 7233 7234 7235 7239 9042 8088
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD /start.sh

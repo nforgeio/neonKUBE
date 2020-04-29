@@ -14,11 +14,11 @@ This image combines Temporal server and its backing Cassendra database and is in
 
 You can start this container locally via:
 ```
-docker run -d --name temporal-dev -p 7933-7939:7933-7939 -p 8088:8088 nkubeio/temporal-dev:latest
+docker run -d --name temporal-dev -p 7233-7239:7923-7239 -p 8088:8088 nkubeio/temporal-dev:latest
 ```
 
 ## Notes
 
 **Exposed Ports**: 
-* Temporal Ports: `7933-7939`,`8088`
+* Temporal Ports: `7233-7239`,`8088`
 * Cassandra Ports: `9042`
