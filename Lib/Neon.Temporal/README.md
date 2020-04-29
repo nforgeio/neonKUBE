@@ -15,4 +15,4 @@ You can get started with this here: [Neon.Temporal](https://doc.neonkube.com/Neo
 
 You can get started with Cadence for .NET here: [Neon.Cadence](https://doc.neonkube.com/Neon.Cadence-Overview.htm)
 
-Once **Neon.Temporal** is usable, we're planning on deprecating **Neon.Cadence** to focus our efforts on Temporal, where we believe most future important innovations will happen.
+Once **Neon.Temporal** is usable, we're planning on deprecating **Neon.Cadence** to focus our efforts on Temporal.
