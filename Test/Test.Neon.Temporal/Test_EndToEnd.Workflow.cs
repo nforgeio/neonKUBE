@@ -500,7 +500,7 @@ namespace TestTemporal
                 var activity   = Workflow.NewActivityStub<ICronActivity>();
                 var callNumber = 0;
 
-                if (await Workflow.IsSetLastCompletionResultAsync())
+                if (await Workflow.HasLastCompletionResultAsync())
                 {
                     callNumber = await Workflow.GetLastCompletionResultAsync<int>();
                 }
@@ -2413,7 +2413,7 @@ namespace TestTemporal
 
             var options = new WorkflowOptions()
             {
-                Namespace     = client.Settings.DefaulNamespace,
+                Namespace  = client.Settings.DefaultNamespace,
                 WorkflowId = "my-workflow-id"
             };
 
@@ -4347,6 +4347,8 @@ namespace TestTemporal
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_Container()
         {
+            const string taskList = "test-temporal-container";
+
             await SyncContext.ClearAsync;
 
             // Start the [nkubeio/test-temporal:latest] Docker image locally, having it
@@ -4406,9 +4408,9 @@ namespace TestTemporal
                     "run",
                     "--detach", 
                     "--name", "test-temporal",
-                    "--env", $"TEMPORAL_SERVERS=temporal://{ipAddress}:7933",
-                    "--env", $"TEMPORA_DOMAIN={TemporalFixture.DefaultDomain}",
-                    "--env", $"TEMPORA_TASKLIST={TemporalTestHelper.TaskList}",
+                    "--env", $"TEMPORAL_HOSTPORT={ipAddress}:7933",
+                    "--env", $"TEMPORAL_NAMESPACE={TemporalFixture.DefaultNamespace}",
+                    "--env", $"TEMPORAL_TASKLIST={taskList}",
                     testTemporalImage
                 });
 
@@ -4434,7 +4436,7 @@ namespace TestTemporal
                         new WorkflowOptions()
                         {
                             WorkflowId = $"busywork-{Guid.NewGuid().ToString("d")}",
-                            TaskList   = TemporalTestHelper.TaskList
+                            TaskList   = taskList
                         });
 
                     pending.Add(stub.DoItAsync(workflowIterations, sleepTime, $"workflow-{i}"));

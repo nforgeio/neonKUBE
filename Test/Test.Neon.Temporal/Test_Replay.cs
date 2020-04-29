@@ -73,12 +73,13 @@ namespace TestTemporal
         {
             var settings = new TemporalSettings()
             {
-                DefaulNamespace          = TemporalFixture.DefaultDomain,
+                DefaultNamespace       = TemporalFixture.DefaultNamespace,
                 LogLevel               = TemporalTestHelper.LogLevel,
-                CreateNamespace           = true,
+                CreateNamespace        = true,
                 Debug                  = TemporalTestHelper.Debug,
                 DebugPrelaunched       = TemporalTestHelper.DebugPrelaunched,
-                DebugDisableHeartbeats = TemporalTestHelper.DebugDisableHeartbeats
+                DebugDisableHeartbeats = TemporalTestHelper.DebugDisableHeartbeats,
+                ClientIdentity         = TemporalTestHelper.ClientIdentity
             };
 
             if (fixture.Start(settings, image: TemporalTestHelper.TemporalImage, keepConnection: true, keepOpen: TemporalTestHelper.KeepTemporalServerOpen) == TestFixtureStatus.Started)
@@ -497,14 +498,14 @@ namespace TestTemporal
                         if (firstPass)
                         {
                             firstPass     = false;
-                            originalValue = await Workflow.IsSetLastCompletionResultAsync();
+                            originalValue = await Workflow.HasLastCompletionResultAsync();
 
                             await DecisionAsync();
                             await Workflow.ForceReplayAsync();
                         }
                         else
                         {
-                            success = originalValue.Equals(await Workflow.IsSetLastCompletionResultAsync());
+                            success = originalValue.Equals(await Workflow.HasLastCompletionResultAsync());
                             success = success && Workflow.IsReplaying;
 
                             await DecisionAsync();

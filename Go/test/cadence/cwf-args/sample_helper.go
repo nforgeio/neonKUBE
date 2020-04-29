@@ -160,6 +160,62 @@ func (h *SampleHelper) ExecuteArrayWorkflow(options client.StartWorkflowOptions,
 	}
 }
 
+// Executes a workflow the returns an error and waits for it to complete.
+func (h *SampleHelper) ExecuteErrorWorkflow(options client.StartWorkflowOptions, workflow interface{}, args ...interface{}) {
+	workflowClient, err := h.Builder.BuildCadenceClient()
+	if err != nil {
+		h.Logger.Error("Failed to build cadence client.", zap.Error(err))
+		panic(err)
+	}
+
+	ctx := context.Background()
+
+	wr, err := workflowClient.ExecuteWorkflow(ctx, options, workflow, args...)
+	if err != nil {
+		h.Logger.Error("Failed to create workflow", zap.Error(err))
+		panic("Failed to create workflow.")
+
+	} else {
+		h.Logger.Info("Started Workflow", zap.String("RunID", wr.GetRunID()))
+	}
+
+	err = wr.Get(ctx, nil)
+
+	if err != nil {
+		h.Logger.Info("Error:  " + err.Error())
+	}
+}
+
+// Executes a workflow returning a string and an error and waits for it to complete.
+func (h *SampleHelper) ExecuteStringErrorWorkflow(options client.StartWorkflowOptions, workflow interface{}, args ...interface{}) {
+	workflowClient, err := h.Builder.BuildCadenceClient()
+	if err != nil {
+		h.Logger.Error("Failed to build cadence client.", zap.Error(err))
+		panic(err)
+	}
+
+	ctx := context.Background()
+
+	wr, err := workflowClient.ExecuteWorkflow(ctx, options, workflow, args...)
+	if err != nil {
+		h.Logger.Error("Failed to create workflow", zap.Error(err))
+		panic("Failed to create workflow.")
+
+	} else {
+		h.Logger.Info("Started Workflow", zap.String("RunID", wr.GetRunID()))
+	}
+
+	var result string
+
+	err = wr.Get(ctx, &result)
+
+	if err == nil {
+		h.Logger.Info("Result: " + result)
+	} else {
+		h.Logger.Info("Error:  " + err.Error())
+	}
+}
+
 // StartWorkflow starts a workflow
 func (h *SampleHelper) StartWorkflow(options client.StartWorkflowOptions, workflow interface{}, args ...interface{}) {
 	h.StartWorkflowWithCtx(context.Background(), options, workflow, args...)

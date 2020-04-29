@@ -39,7 +39,7 @@ using Xunit;
 using Test.Neon.Models;
 using Newtonsoft.Json.Linq;
 
-namespace TestTemporal
+namespace TestCadence
 {
     public partial class Test_StubManager : IClassFixture<CadenceFixture>, IDisposable
     {
@@ -79,9 +79,10 @@ namespace TestTemporal
         {
             var settings = new CadenceSettings()
             {
-                DefaultDomain   = CadenceFixture.DefaultDomain,
-                LogLevel        = CadenceTestHelper.LogLevel,
-                Debug           = CadenceTestHelper.Debug,
+                DefaultDomain  = CadenceFixture.DefaultDomain,
+                LogLevel       = CadenceTestHelper.LogLevel,
+                Debug          = CadenceTestHelper.Debug,
+                ClientIdentity = CadenceTestHelper.ClientIdentity
             };
 
             fixture.Start(settings, keepConnection: true);

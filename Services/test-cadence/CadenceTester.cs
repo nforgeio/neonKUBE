@@ -17,7 +17,7 @@ using Neon.Diagnostics;
 using Neon.Kube.Service;
 using Neon.Service;
 
-namespace CadenceTester
+namespace CadenceService
 {
     public partial class CadenceTester : KubeService
     {

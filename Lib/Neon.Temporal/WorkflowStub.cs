@@ -137,7 +137,6 @@ namespace Neon.Temporal
         /// </summary>
         /// <param name="stub">The source typed workflow stub.</param>
         /// <returns>The <see cref="WorkflowStub"/>.</returns>
-        /// 
         public static async Task<WorkflowStub> FromTypedAsync(object stub)
         {
             Covenant.Requires<ArgumentNullException>(stub != null, nameof(stub));
@@ -282,7 +281,26 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Attempts to retrieve the associated workflow result.
+        /// Waits for the workflow to complete or throws an error exception.  Use this for 
+        /// workflows that don't return a result.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task GetResultAsync()
+        {
+            await SyncContext.ClearAsync;
+            EnsureStarted();
+
+            if (Execution == null)
+            {
+                throw new InvalidOperationException("The stub can't obtain the workflow result because it doesn't have the workflow execution.");
+            }
+
+            await client.GetWorkflowResultAsync(Execution, client.ResolveNamespace(Options?.Namespace));
+        }
+
+        /// <summary>
+        /// Waits for the workflow to complete and then returns the result or throws
+        /// an error exception.  This override accepts the result type as a type parameter.
         /// </summary>
         /// <typeparam name="TResult">The result type.</typeparam>
         /// <returns>The result.</returns>
@@ -300,8 +318,8 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Attempts to retrieve the associated workflow result specifying 
-        /// expected result type as a parameter.
+        /// Waits for the workflow to complete and then returns the result or throws
+        /// an error exception.  This override accepts the result type as a normal parameter.
         /// </summary>
         /// <param name="resultType">Specifies the result type.</param>
         /// <returns>The result as a <c>dynamic</c>.</returns>

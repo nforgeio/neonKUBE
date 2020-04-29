@@ -248,7 +248,7 @@ catch [Exception] {{
                 //
                 // Powershell is returning [exitcode=0] even if there was an error and
                 // we called the [exit 1] statement.  I'm going to work around this for
-                // now by checking the error outport stream as well.
+                // now by checking the error output stream as well.
 
                 if (result.ExitCode != 0 || result.ErrorText.Length > 0)
                 {

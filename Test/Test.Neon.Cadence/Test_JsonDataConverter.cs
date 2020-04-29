@@ -39,7 +39,7 @@ using Xunit;
 using Test.Neon.Models;
 using Newtonsoft.Json.Linq;
 
-namespace TestTemporal
+namespace TestCadence
 {
     public class Test_JsonDataConverter
     {

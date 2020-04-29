@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Kube</RootNamespace>
     <Authors>Jeff Lill</Authors>
-    <Version>2.0.0-internal</Version>
+    <Version>2.0.1-internal</Version>
     <Company>neonFORGE, LLC</Company>
     <Product>neonKUBE</Product>
     <Description>neonKUBE AWS Hosting.</Description>

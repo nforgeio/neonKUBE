@@ -639,7 +639,7 @@ namespace Neon.HyperV
 
             try
             {
-                var adapters      = powershell.ExecuteJson($"{hyperVNamespace}Get-NetAdapter");
+                var adapters      = powershell.ExecuteJson($"Get-NetAdapter");
                 var targetAdapter = (string)null;
 
                 foreach (dynamic adapter in adapters)

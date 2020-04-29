@@ -68,7 +68,11 @@ namespace Neon.Temporal
         /// <inheritdoc/>
         public T FromData<T>(byte[] content)
         {
-            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
+            if (content == null)
+            {
+                return default(T);
+            }
+
             Covenant.Requires<ArgumentNullException>(content.Length > 0, nameof(content));
 
             var type = typeof(T);
@@ -87,7 +91,12 @@ namespace Neon.Temporal
         public object FromData(Type type, byte[] content)
         {
             Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
-            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
+
+            if (content == null)
+            {
+                return null;
+            }
+
             Covenant.Requires<ArgumentNullException>(content.Length > 0, nameof(content));
 
             if (type.Implements<IRoundtripData>())

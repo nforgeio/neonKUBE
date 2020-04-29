@@ -14,11 +14,11 @@ namespace Snippets_CrossPlatform
 #region code_untyped
             var settings = new TemporalSettings()
             {
-                // This specifies the default domain for operations initiated by the
+                // This specifies the default namespace for operations initiated by the
                 // client connected below (this can be overridden for specific
-                // operations.
+                // operations).
 
-                DefaulNamespace = "Acme-PROD",
+                DefaultNamespace = "Acme-PROD",
 
                 // Host/port for at least one of the Temporal cluster servers:
 

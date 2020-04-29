@@ -185,6 +185,7 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <Folder Include="media\Neon.Temporal" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Content\Neon.Cadence\ActivityDetails\DendencyInjection.aml" />
     <None Include="Content\Neon.Cadence\OtherTopics\CrossPlatform.aml" />
     <None Include="Content\Neon.Cadence\WorkflowDetails\SyncSignals.aml" />
     <None Include="Content\Neon.Kube.Service\Overview.aml" />
@@ -220,6 +221,7 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <None Include="Content\Neon.NATS\Overview.aml" />
     <None Include="Content\Neon.SSH.NET\Overview.aml" />
     <None Include="Content\Neon.Temporal\ActivityDetails\Basics.aml" />
+    <None Include="Content\Neon.Temporal\ActivityDetails\DendencyInjection.aml" />
     <None Include="Content\Neon.Temporal\ActivityDetails\ExternalCompletion.aml" />
     <None Include="Content\Neon.Temporal\ActivityDetails\Local.aml" />
     <None Include="Content\Neon.Temporal\Deployment.aml" />

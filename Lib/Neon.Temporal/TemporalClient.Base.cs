@@ -77,7 +77,10 @@ namespace Neon.Temporal
         /// </exception>
         /// <remarks>
         /// <note>
-        /// Be sure to register all of your workflow implementations before starting workers.
+        /// Be sure to register all services you will be injecting into activities via
+        /// <see cref="NeonHelper.ServiceContainer"/> before you call this as well as 
+        /// registering of your activity and workflow implementations before starting 
+        /// workers.
         /// </note>
         /// </remarks>
         public async Task RegisterAssemblyAsync(Assembly assembly, string @namespace = null)
@@ -175,7 +178,8 @@ namespace Neon.Temporal
                         return worker;
                     }
 
-                    options = options ?? new WorkerOptions();
+                    options          = options ?? new WorkerOptions();
+                    options.Identity = this.Settings.ClientIdentity;
 
                     var reply = (NewWorkerReply)(await CallProxyAsync(
                         new NewWorkerRequest()

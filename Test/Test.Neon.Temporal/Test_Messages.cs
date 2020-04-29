@@ -55,19 +55,20 @@ namespace TestTemporal
         //---------------------------------------------------------------------
         // Implementation
 
-        private TemporalFixture  fixture;
-        private TemporalClient   client;
-        private HttpClient      proxyClient;
+        private TemporalFixture     fixture;
+        private TemporalClient      client;
+        private HttpClient          proxyClient;
 
         public Test_Messages(TemporalFixture fixture)
         {
             var settings = new TemporalSettings()
             {
-                DefaulNamespace          = TemporalFixture.DefaultDomain,
+                DefaultNamespace       = TemporalFixture.DefaultNamespace,
                 LogLevel               = TemporalTestHelper.LogLevel,
                 Debug                  = TemporalTestHelper.Debug,
                 DebugPrelaunched       = TemporalTestHelper.DebugPrelaunched,
-                DebugDisableHeartbeats = TemporalTestHelper.DebugDisableHeartbeats
+                DebugDisableHeartbeats = TemporalTestHelper.DebugDisableHeartbeats,
+                ClientIdentity         = TemporalTestHelper.ClientIdentity
             };
 
             fixture.Start(settings, keepConnection: true);

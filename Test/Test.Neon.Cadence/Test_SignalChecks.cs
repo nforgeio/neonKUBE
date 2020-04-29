@@ -38,7 +38,7 @@ using Neon.Xunit.Cadence;
 using Newtonsoft.Json;
 using Xunit;
 
-namespace TestTemporal
+namespace TestCadence
 {
     public class Test_SignalChecks : IClassFixture<CadenceFixture>, IDisposable
     {
@@ -60,7 +60,8 @@ namespace TestTemporal
                 CreateDomain           = true,
                 Debug                  = CadenceTestHelper.Debug,
                 DebugPrelaunched       = CadenceTestHelper.DebugPrelaunched,
-                DebugDisableHeartbeats = CadenceTestHelper.DebugDisableHeartbeats
+                DebugDisableHeartbeats = CadenceTestHelper.DebugDisableHeartbeats,
+                ClientIdentity         = CadenceTestHelper.ClientIdentity
             };
 
             if (fixture.Start(settings, image: CadenceTestHelper.CadenceImage, keepConnection: true, keepOpen: CadenceTestHelper.KeepCadenceServerOpen) == TestFixtureStatus.Started)

@@ -61,7 +61,7 @@ namespace Neon.Temporal
 
             if (string.IsNullOrEmpty(options.Namespace))
             {
-                options.Namespace = client.Settings.DefaulNamespace;
+                options.Namespace = client.Settings.DefaultNamespace;
             }
 
             if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
@@ -156,13 +156,13 @@ namespace Neon.Temporal
         public TimeSpan HeartbeatTimeout { get; set; }
 
         /// <summary>
-        /// Optionally specifies that the cancelled activities won't be consider to be
-        /// finished until that actually complete.  This defaults to <c>false</c>.
+        /// Optionally specifies that the cancelled activities won't be considered to be
+        /// finished until they actually complete.  This defaults to <c>false</c>.
         /// </summary>
         public bool WaitForCancellation { get; set; }
 
         /// <summary>
-        /// Optionally specifies the activity retry policy.  The default value is <c>null</c> which specifies
+        /// Optionally specifies the activity retry policy.  The default value is <c>null</c> which indicates
         /// that there will be no retry attempts.
         /// </summary>
         /// <remarks>

@@ -210,10 +210,10 @@ namespace TestTemporal
             Assert.True(domainPage.Namespaces.Count >= testDomainCount + 1);
             Assert.Null(domainPage.NextPageToken);
 
-            // Verify that we listed the default domain as well as the 
+            // Verify that we listed the default namespace as well as the 
             // domains we just registered.
 
-            Assert.Contains(domainPage.Namespaces, d => d.NamespaceInfo.Name == client.Settings.DefaulNamespace);
+            Assert.Contains(domainPage.Namespaces, d => d.NamespaceInfo.Name == client.Settings.DefaultNamespace);
 
             for (int i = 0; i < testDomainCount; i++)
             {
@@ -276,9 +276,8 @@ namespace TestTemporal
             var description = await client.DescribeTaskListAsync(TemporalTestHelper.TaskList, TaskListType.Decision);
 
             Assert.NotNull(description);
-            Assert.Single(description.Pollers);
 
-            var poller = description.Pollers.First();
+            var poller = description.Pollers.Single(p => p.Identity == TemporalTestHelper.ClientIdentity);
 
             // We're just going to verify that the poller last access time
             // looks reasonable.  This was way off earlier due to not deserializing

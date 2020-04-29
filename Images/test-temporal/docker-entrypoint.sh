@@ -13,4 +13,4 @@ PATH=${PATH}:/
 
 # Launch the service.
 
-exec test-cadence
+exec test-temporal

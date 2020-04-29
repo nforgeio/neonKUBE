@@ -24,6 +24,8 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
@@ -90,11 +92,6 @@ namespace Neon.Cadence
             public Type ActivityType { get; set; }
             
             /// <summary>
-            /// The activity constructor.
-            /// </summary>
-            public ConstructorInfo ActivityConstructor { get; set; }
-
-            /// <summary>
             /// The activity entry point method.
             /// </summary>
             public MethodInfo ActivityMethod { get; set; }
@@ -111,7 +108,6 @@ namespace Neon.Cadence
         private static object                                   syncLock     = new object();
         private static object[]                                 noArgs       = new object[0];
         private static Dictionary<ActivityKey, ActivityBase>    idToActivity = new Dictionary<ActivityKey, ActivityBase>();
-        private static byte[]                                   emptyBytes   = new byte[0];
 
         // This dictionary is used to map activity type names to the target activity
         // type, constructor, and entry point method.  Note that these mappings are 
@@ -199,13 +195,6 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain), nameof(domain));
             CadenceHelper.ValidateActivityImplementation(activityType);
 
-            var constructor = activityType.GetConstructor(Type.EmptyTypes);
-
-            if (constructor == null)
-            {
-                throw new ArgumentException($"Activity type [{activityType.FullName}] does not have a default constructor.", nameof(activityType));
-            }
-
             // We need to register each activity method that implements an activity interface method
             // with the same signature that that was tagged by [ActivityMethod].
             //
@@ -263,7 +252,6 @@ namespace Neon.Cadence
                             new ActivityRegistration()
                             {
                                 ActivityType                 = activityType,
-                                ActivityConstructor          = constructor,
                                 ActivityMethod               = method,
                                 ActivityMethodParameterTypes = method.GetParameterTypes()
                             };
@@ -318,15 +306,6 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName), nameof(activityTypeName));
 
             var info = new ActivityRegistration();
-
-            // Locate the constructor.
-
-            info.ActivityConstructor = activityType.GetConstructor(Type.EmptyTypes);
-
-            if (info.ActivityConstructor == null)
-            {
-                throw new ArgumentException($"Activity type [{activityType.FullName}] does not have a default constructor.", nameof(activityType));
-            }
 
             // Locate the target method.  Note that the activity type name will be
             // formatted like:
@@ -391,7 +370,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
-            var activity = (ActivityBase)(invokeInfo.ActivityConstructor.Invoke(noArgs));
+            var activity = (ActivityBase)ActivatorUtilities.CreateInstance(NeonHelper.ServiceContainer, invokeInfo.ActivityType);
 
             activity.Initialize(client, invokeInfo.ActivityType, invokeInfo.ActivityMethod, client.DataConverter, contextId);
 
@@ -538,6 +517,7 @@ namespace Neon.Cadence
         // Instance members
 
         private Type            activityType;
+        private ActivityTask    activityTask;
         private MethodInfo      activityMethod;
         private IDataConverter  dataConverter;
         private INeonLogger     logger;
@@ -565,15 +545,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(dataConverter != null, nameof(dataConverter));
             CadenceHelper.ValidateActivityImplementation(activityType);
 
-            var activityTask = new ActivityTask()
-            {
-                // $todo(jefflill):
-                //
-                //     https://github.com/nforgeio/neonKUBE/issues/786
-            };
-
             this.Client                  = client;
-            this.ActivityTask            = activityTask;
             this.Activity                = new Activity(this);
             this.activityType            = activityType;
             this.activityMethod          = activityMethod;
@@ -614,9 +586,28 @@ namespace Neon.Cadence
         internal bool IsLocal => !ContextId.HasValue;
 
         /// <summary>
+        /// <para>
         /// Returns additional information about the activity and the workflow that executed it.
+        /// </para>
+        /// <note>
+        /// For local activity executions, this property will return an <see cref="ActivityTask"/>
+        /// instance with all properties initialized to their default values.
+        /// </note>
         /// </summary>
-        internal ActivityTask ActivityTask { get; private set; }
+        internal ActivityTask ActivityTask
+        {
+            get
+            {
+                if (activityTask == null)
+                {
+                    activityTask = new ActivityTask();
+                }
+
+                return activityTask;
+            }
+
+            set => activityTask = value;
+        }
 
         /// <summary>
         /// Indicates that the activity will be completed externally.
@@ -641,7 +632,7 @@ namespace Neon.Cadence
 
             var resultType       = activityMethod.ReturnType;
             var args             = CadenceHelper.BytesToArgs(dataConverter, argBytes, parameterTypes);
-            var serializedResult = emptyBytes;
+            var serializedResult = Array.Empty<byte>();
 
             if (resultType.IsGenericType)
             {

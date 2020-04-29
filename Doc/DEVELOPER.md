@@ -192,11 +192,15 @@ Follow the steps below to configure a development or test workstation:
     mkdir nforgeio.github.io
     git clone https://github.com/nforgeio/nforgeio.github.io.git
     ```
-    * You'll also need to clone the **nforgeio/cadence-samples** repo.  This hosts the Cadence samples which are referenced by the code documention.  The cloned folder must be named **cadence-samples** and be located in the same parent directory as your main neonKUBE repo: 
+    * You'll also need to clone the **nforgeio/cadence-samples** and **nforgio/temporal-samples** repos.  These hosts the Cadence and Temporals samples which are referenced by the code documention.  The cloned folders must be named **cadence-samples** and **temporal-samples** and be located in the same parent directory as your main neonKUBE repo: 
     ```
     cd "%NF_ROOT%\.."
     mkdir cadence-samples
     git clone https://github.com/nforgeio/cadence-samples.git
+    cd "%NF_ROOT%\.."
+
+    mkdir temporal-samples
+    git clone https://github.com/nforgeio/temporal-samples.git
     ```
 
 30. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.

@@ -319,12 +319,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "cwf-args", "cwf-args", "{16
 	ProjectSection(SolutionItems) = preProject
 		Go\test\cadence\cwf-args\arrayArg.go = Go\test\cadence\cwf-args\arrayArg.go
 		Go\test\cadence\cwf-args\arrayArgs.go = Go\test\cadence\cwf-args\arrayArgs.go
+		Go\test\cadence\cwf-args\errTest.go = Go\test\cadence\cwf-args\errTest.go
 		Go\test\cadence\cwf-args\factory.go = Go\test\cadence\cwf-args\factory.go
 		Go\test\cadence\cwf-args\go.mod = Go\test\cadence\cwf-args\go.mod
 		Go\test\cadence\cwf-args\go.sum = Go\test\cadence\cwf-args\go.sum
 		Go\test\cadence\cwf-args\main.go = Go\test\cadence\cwf-args\main.go
-		Go\test\cadence\cwf-args\noargs.go = Go\test\cadence\cwf-args\noargs.go
-		Go\test\cadence\cwf-args\onearg.go = Go\test\cadence\cwf-args\onearg.go
+		Go\test\cadence\cwf-args\noArgs.go = Go\test\cadence\cwf-args\noArgs.go
+		Go\test\cadence\cwf-args\oneArg.go = Go\test\cadence\cwf-args\oneArg.go
 		Go\test\cadence\cwf-args\sample_helper.go = Go\test\cadence\cwf-args\sample_helper.go
 		Go\test\cadence\cwf-args\twoArgs.go = Go\test\cadence\cwf-args\twoArgs.go
 		Go\test\cadence\cwf-args\util.go = Go\test\cadence\cwf-args\util.go
@@ -344,6 +345,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Models.Temporal", "Test\Test.Neon.Models.Temporal\Test.Neon.Models.Temporal.csproj", "{FCA5010A-0CC8-4C22-8284-F63C592E94FD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Neon.Temporal.net", "Test\Test.Neon.Temporal.net\Test.Neon.Temporal.net.csproj", "{3F538D6C-2477-4969-A8C4-EB8E1588BB9C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test-temporal", "Services\test-temporal\test-temporal.csproj", "{5B0F0129-3826-49C4-885E-25738DE9980B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -1488,6 +1491,24 @@ Global
 		{3F538D6C-2477-4969-A8C4-EB8E1588BB9C}.Release|x64.Build.0 = Release|Any CPU
 		{3F538D6C-2477-4969-A8C4-EB8E1588BB9C}.Release|x86.ActiveCfg = Release|Any CPU
 		{3F538D6C-2477-4969-A8C4-EB8E1588BB9C}.Release|x86.Build.0 = Release|Any CPU
+		{5B0F0129-3826-49C4-885E-25738DE9980B}.CodeDoc|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B0F0129-3826-49C4-885E-25738DE9980B}.CodeDoc|Any CPU.Build.0 = Debug|Any CPU
+		{5B0F0129-3826-49C4-885E-25738DE9980B}.CodeDoc|x64.ActiveCfg = Debug|Any CPU
+		{5B0F0129-3826-49C4-885E-25738DE9980B}.CodeDoc|x64.Build.0 = Debug|Any CPU
+		{5B0F0129-3826-49C4-885E-25738DE9980B}.CodeDoc|x86.ActiveCfg = Debug|Any CPU
+		{5B0F0129-3826-49C4-885E-25738DE9980B}.CodeDoc|x86.Build.0 = Debug|Any CPU
+		{5B0F0129-3826-49C4-885E-25738DE9980B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B0F0129-3826-49C4-885E-25738DE9980B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B0F0129-3826-49C4-885E-25738DE9980B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5B0F0129-3826-49C4-885E-25738DE9980B}.Debug|x64.Build.0 = Debug|Any CPU
+		{5B0F0129-3826-49C4-885E-25738DE9980B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5B0F0129-3826-49C4-885E-25738DE9980B}.Debug|x86.Build.0 = Debug|Any CPU
+		{5B0F0129-3826-49C4-885E-25738DE9980B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B0F0129-3826-49C4-885E-25738DE9980B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B0F0129-3826-49C4-885E-25738DE9980B}.Release|x64.ActiveCfg = Release|Any CPU
+		{5B0F0129-3826-49C4-885E-25738DE9980B}.Release|x64.Build.0 = Release|Any CPU
+		{5B0F0129-3826-49C4-885E-25738DE9980B}.Release|x86.ActiveCfg = Release|Any CPU
+		{5B0F0129-3826-49C4-885E-25738DE9980B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1571,6 +1592,7 @@ Global
 		{C5C65936-A1DA-462A-9E9B-21A414A1F5E4} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
 		{FCA5010A-0CC8-4C22-8284-F63C592E94FD} = {5641C82B-E8E5-49AD-8DEE-E574D0D77460}
 		{3F538D6C-2477-4969-A8C4-EB8E1588BB9C} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
+		{5B0F0129-3826-49C4-885E-25738DE9980B} = {9BF7513A-5219-4862-A290-7D2A00589312}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}

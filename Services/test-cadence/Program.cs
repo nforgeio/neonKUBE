@@ -11,7 +11,7 @@ using Neon.Common;
 using Neon.Kube;
 using Neon.Service;
 
-namespace CadenceTester
+namespace CadenceService
 {
     /// <summary>
     /// The program entrypoint.

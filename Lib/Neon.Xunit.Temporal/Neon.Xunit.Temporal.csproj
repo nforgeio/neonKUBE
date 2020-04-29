@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Xunit.Temporal</RootNamespace>
-    <Version>2.0.0-preview</Version>
+    <Version>2.0.1-alpha</Version>
     <Authors>Jeff Lill</Authors>
     <Company>neonFORGE, LLC</Company>
     <Description>Neon neonKUBE Xunit related extensions for Uber Temporal.</Description>

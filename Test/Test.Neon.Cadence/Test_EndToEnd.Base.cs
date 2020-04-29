@@ -40,7 +40,7 @@ using Neon.Xunit.Cadence;
 using Newtonsoft.Json;
 using Xunit;
 
-namespace TestTemporal
+namespace TestCadence
 {
     public partial class Test_EndToEnd
     {
@@ -276,9 +276,8 @@ namespace TestTemporal
             var description = await client.DescribeTaskListAsync(CadenceTestHelper.TaskList, TaskListType.Decision);
 
             Assert.NotNull(description);
-            Assert.Single(description.Pollers);
 
-            var poller = description.Pollers.First();
+            var poller = description.Pollers.Single(p => p.Identity == CadenceTestHelper.ClientIdentity);
 
             // We're just going to verify that the poller last access time
             // looks reasonable.  This was way off earlier due to not deserializing

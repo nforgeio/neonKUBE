@@ -18,7 +18,7 @@ using Neon.Service;
 
 using Test.Neon.Models.Cadence;
 
-namespace CadenceTester
+namespace CadenceService
 {
     [Workflow(AutoRegister = true)]
     public class BusyworkWorkflow : WorkflowBase, IBusyworkWorkflow

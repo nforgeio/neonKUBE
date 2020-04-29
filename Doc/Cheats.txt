@@ -1,14 +1,17 @@
 # HOME: tiny
+neon logout
 neon login rm --force root@home-tiny
 neon cluster prepare %NF_ROOT%/devops/home/tiny.cluster.yaml --unredacted
 neon cluster setup --unredacted root@home-tiny
 
 # HOME: small
+neon logout
 neon login rm --force root@home-small
 neon cluster prepare %NF_ROOT%/devops/home/small.cluster.yaml --unredacted
 neon cluster setup --unredacted root@home-small
 
 # HOME: large
+neon logout
 neon login rm --force root@home-large
 neon cluster prepare %NF_ROOT%/devops/home/large.cluster.yaml --unredacted
 neon cluster setup --unredacted root@home-large
@@ -19,6 +22,7 @@ neon cluster prepare %NF_ROOT%/devops/wrt/jeff-small.cluster.yaml --unredacted
 neon cluster setup --unredacted root@wrt-jeff-small
 
 # OFFICE
+neon logout
 neon login rm --force root@office-tiny
 neon cluster prepare %NF_ROOT%/devops/office/tiny.cluster.yaml --unredacted
 neon cluster setup --unredacted root@office-tiny

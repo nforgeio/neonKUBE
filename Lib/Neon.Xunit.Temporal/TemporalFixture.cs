@@ -29,7 +29,7 @@ using Xunit;
 namespace Neon.Xunit.Temporal
 {
     /// <summary>
-    /// Used to run the Docker <b>nkubeio/temporal-dev</b> container on 
+    /// Used to run the Docker <b>nkubeio/;-dev</b> container on 
     /// the current machine as a test fixture while tests are being performed 
     /// and then deletes the container when the fixture is disposed.
     /// </summary>
@@ -62,9 +62,9 @@ namespace Neon.Xunit.Temporal
         private bool                noReset;
 
         /// <summary>
-        /// The default domain configured for <see cref="TemporalFixture"/> clients.
+        /// The default namespace configured for <see cref="TemporalFixture"/> clients.
         /// </summary>
-        public const string DefaultDomain = "test-domain";
+        public const string DefaultNamespace = "test-namespace";
 
         /// <summary>
         /// Constructs the fixture.
@@ -87,7 +87,7 @@ namespace Neon.Xunit.Temporal
         /// <param name="image">Optionally specifies the Temporal container image (defaults to <b>nkubeio/temporal-dev:latest</b>).</param>
         /// <param name="name">Optionally specifies the Temporal container name (defaults to <c>temporal-dev</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Temporal container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
-        /// <param name="defaultDomain">Optionally specifies the default domain for the fixture's client.  This defaults to <b>test-domain</b>.</param>
+        /// <param name="defaultNamespace">Optionally specifies the default namespace for the fixture's client.  This defaults to <b>test-namespace</b>.</param>
         /// <param name="logLevel">Specifies the Temporal log level.  This defaults to <see cref="LogLevel.None"/>.</param>
         /// <param name="keepConnection">
         /// Optionally specifies that a new Temporal connection <b>should not</b> be established for each
@@ -126,7 +126,7 @@ namespace Neon.Xunit.Temporal
         /// Some of the <paramref name="settings"/> properties will be ignored including 
         /// <see cref="TemporalSettings.HostPort"/>.  This will be replaced by the local
         /// endpoint for the Temporal container.  Also, the fixture will connect to the 
-        /// <b>default</b> Temporal domain by default (unless another is specified).
+        /// <b>default</b> Temporal namespace by default (unless another is specified).
         /// </note>
         /// <note>
         /// A fresh Temporal client <see cref="Client"/> will be established every time this
@@ -135,18 +135,18 @@ namespace Neon.Xunit.Temporal
         /// </note>
         /// </remarks>
         public TestFixtureStatus Start(
-            TemporalSettings    settings        = null,
-            string              image           = "nkubeio/temporal-dev:latest",
-            string              name            = "temporal-dev",
-            string[]            env             = null,
-            string              defaultDomain   = DefaultDomain,
-            LogLevel            logLevel        = LogLevel.None,
-            bool                keepConnection  = false,
-            bool                keepOpen        = false,
-            string              hostInterface   = null,
-            bool                noClient        = false,
-            bool                noReset         = false,
-            bool                emulateProxy    = false)
+            TemporalSettings    settings         = null,
+            string              image            = "nkubeio/temporal-dev:latest",
+            string              name             = "temporal-dev",
+            string[]            env              = null,
+            string              defaultNamespace = DefaultNamespace,
+            LogLevel            logLevel         = LogLevel.None,
+            bool                keepConnection   = false,
+            bool                keepOpen         = false,
+            string              hostInterface    = null,
+            bool                noClient         = false,
+            bool                noReset          = false,
+            bool                emulateProxy     = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image), nameof(image));
 
@@ -154,17 +154,17 @@ namespace Neon.Xunit.Temporal
                 () =>
                 {
                     StartAsComposed(
-                        settings:        settings, 
-                        image:           image, 
-                        name:            name, 
-                        env:             env, 
-                        defaultDomain:   defaultDomain, 
-                        logLevel:        logLevel,
-                        keepConnection:  keepConnection,
-                        keepOpen:        keepOpen, 
-                        noClient:        noClient, 
-                        noReset:         noReset,
-                        emulateProxy:    emulateProxy);
+                        settings:         settings, 
+                        image:            image, 
+                        name:             name, 
+                        env:              env, 
+                        defaultNamespace: defaultNamespace, 
+                        logLevel:         logLevel,
+                        keepConnection:   keepConnection,
+                        keepOpen:         keepOpen, 
+                        noClient:         noClient, 
+                        noReset:          noReset,
+                        emulateProxy:     emulateProxy);
                 });
         }
 
@@ -175,7 +175,7 @@ namespace Neon.Xunit.Temporal
         /// <param name="image">Optionally specifies the Temporal container image (defaults to <b>nkubeio/temporal-dev:latest</b>).</param>
         /// <param name="name">Optionally specifies the Temporal container name (defaults to <c>cb-test</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Temporal container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
-        /// <param name="defaultDomain">Optionally specifies the default domain for the fixture's client.  This defaults to <b>test-domain</b>.</param>
+        /// <param name="defaultNamespace">Optionally specifies the default namespace for the fixture's client.  This defaults to <b>test-namespace</b>.</param>
         /// <param name="logLevel">Specifies the Temporal log level.  This defaults to <see cref="LogLevel.None"/>.</param>
         /// <param name="keepConnection">
         /// Optionally specifies that a new Temporal connection <b>should not</b> be established for each
@@ -212,18 +212,18 @@ namespace Neon.Xunit.Temporal
         /// </note>
         /// </remarks>
         public void StartAsComposed(
-            TemporalSettings    settings        = null,
-            string              image           = "nkubeio/temporal-dev:latest",
-            string              name            = "temporal-dev",
-            string[]            env             = null,
-            string              defaultDomain   = DefaultDomain,
-            LogLevel            logLevel        = LogLevel.None,
-            bool                keepConnection  = false,
-            bool                keepOpen        = false,
-            string              hostInterface   = null,
-            bool                noClient        = false,
-            bool                noReset         = false,
-            bool                emulateProxy    = false)
+            TemporalSettings    settings         = null,
+            string              image            = "nkubeio/temporal-dev:latest",
+            string              name             = "temporal-dev",
+            string[]            env              = null,
+            string              defaultNamespace = DefaultNamespace,
+            LogLevel            logLevel         = LogLevel.None,
+            bool                keepConnection   = false,
+            bool                keepOpen         = false,
+            string              hostInterface    = null,
+            bool                noClient         = false,
+            bool                noReset          = false,
+            bool                emulateProxy     = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image), nameof(image));
 
@@ -267,10 +267,10 @@ namespace Neon.Xunit.Temporal
 
                 settings = settings ?? new TemporalSettings()
                 {
-                    HostPort      = $"{GetHostInterface(hostInterface, forConnection: true)}:{NetworkPorts.Temporal}",
+                    HostPort         = $"{GetHostInterface(hostInterface, forConnection: true)}:{NetworkPorts.Temporal}",
                     CreateNamespace  = true,
-                    DefaulNamespace = defaultDomain,
-                    LogLevel      = logLevel
+                    DefaultNamespace = defaultNamespace,
+                    LogLevel         = logLevel
                 };
 
                 this.settings       = settings;

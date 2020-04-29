@@ -36,7 +36,7 @@ using Neon.Xunit.Cadence;
 using Newtonsoft.Json;
 using Xunit;
 
-namespace TestTemporal
+namespace TestCadence
 {
     public sealed partial class Test_Messages : IClassFixture<CadenceFixture>, IDisposable
     {
@@ -67,7 +67,8 @@ namespace TestTemporal
                 LogLevel               = CadenceTestHelper.LogLevel,
                 Debug                  = CadenceTestHelper.Debug,
                 DebugPrelaunched       = CadenceTestHelper.DebugPrelaunched,
-                DebugDisableHeartbeats = CadenceTestHelper.DebugDisableHeartbeats
+                DebugDisableHeartbeats = CadenceTestHelper.DebugDisableHeartbeats,
+                ClientIdentity         = CadenceTestHelper.ClientIdentity
             };
 
             fixture.Start(settings, keepConnection: true);

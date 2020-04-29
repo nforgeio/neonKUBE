@@ -46,20 +46,21 @@ namespace TestTemporal
     {
         private const int testIterations = 2;
 
-        private TemporalFixture  fixture;
-        private TemporalClient   client;
-        private HttpClient      proxyClient;
+        private TemporalFixture     fixture;
+        private TemporalClient      client;
+        private HttpClient          proxyClient;
 
         public Test_SyncSignals(TemporalFixture fixture)
         {
             var settings = new TemporalSettings()
             {
-                DefaulNamespace          = TemporalFixture.DefaultDomain,
+                DefaultNamespace       = TemporalFixture.DefaultNamespace,
                 LogLevel               = TemporalTestHelper.LogLevel,
-                CreateNamespace           = true,
+                CreateNamespace        = true,
                 Debug                  = TemporalTestHelper.Debug,
                 DebugPrelaunched       = TemporalTestHelper.DebugPrelaunched,
-                DebugDisableHeartbeats = TemporalTestHelper.DebugDisableHeartbeats
+                DebugDisableHeartbeats = TemporalTestHelper.DebugDisableHeartbeats,
+                ClientIdentity         = TemporalTestHelper.ClientIdentity
             };
 
             if (fixture.Start(settings, image: TemporalTestHelper.TemporalImage, keepConnection: true, keepOpen: TemporalTestHelper.KeepTemporalServerOpen) == TestFixtureStatus.Started)

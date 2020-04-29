@@ -83,7 +83,7 @@ namespace Neon.Temporal.Internal
         {
             var error = this.Error;
 
-            if (error != null)
+            if (error != null && !string.IsNullOrEmpty(error.String))
             {
                 throw error.ToException();
             }

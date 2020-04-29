@@ -26,6 +26,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using Neon.Common;
 using Neon.Data;
 using Neon.IO;
@@ -46,20 +48,31 @@ namespace TestTemporal
         private static readonly TimeSpan allowedVariation = TimeSpan.FromSeconds(10);
         private static readonly TimeSpan workflowTimeout  = TimeSpan.FromSeconds(20);
 
-        private TemporalFixture  fixture;
-        private TemporalClient   client;
-        private HttpClient      proxyClient;
+        private TemporalFixture     fixture;
+        private TemporalClient      client;
+        private HttpClient          proxyClient;
 
         public Test_EndToEnd(TemporalFixture fixture)
         {
+            // Setup a service for activity dependency injection testing if it doesn't
+            // already exist.
+
+            if (NeonHelper.ServiceContainer.GetService<ActivityDependency>() == null)
+            {
+                NeonHelper.ServiceContainer.AddSingleton(typeof(ActivityDependency), new ActivityDependency() { Hello = "World!" });
+            }
+
+            // Initialize the Cadence fixture.
+
             var settings = new TemporalSettings()
             {
-                DefaulNamespace          = TemporalFixture.DefaultDomain,
+                DefaultNamespace       = TemporalFixture.DefaultNamespace,
                 LogLevel               = TemporalTestHelper.LogLevel,
-                CreateNamespace           = true,
+                CreateNamespace        = true,
                 Debug                  = TemporalTestHelper.Debug,
                 DebugPrelaunched       = TemporalTestHelper.DebugPrelaunched,
-                DebugDisableHeartbeats = TemporalTestHelper.DebugDisableHeartbeats
+                DebugDisableHeartbeats = TemporalTestHelper.DebugDisableHeartbeats,
+                ClientIdentity         = TemporalTestHelper.ClientIdentity
             };
 
             if (fixture.Start(settings, image: TemporalTestHelper.TemporalImage, keepConnection: true, keepOpen: TemporalTestHelper.KeepTemporalServerOpen) == TestFixtureStatus.Started)

@@ -71,17 +71,18 @@ namespace TestTemporal
         //---------------------------------------------------------------------
         // Implementation
 
-        private TemporalFixture  fixture;
-        private TemporalClient   client;
-        private HttpClient      proxyClient;
+        private TemporalFixture     fixture;
+        private TemporalClient      client;
+        private HttpClient          proxyClient;
 
         public Test_StubManager(TemporalFixture fixture)
         {
             var settings = new TemporalSettings()
             {
-                DefaulNamespace   = TemporalFixture.DefaultDomain,
-                LogLevel        = TemporalTestHelper.LogLevel,
-                Debug           = TemporalTestHelper.Debug,
+                DefaultNamespace = TemporalFixture.DefaultNamespace,
+                LogLevel         = TemporalTestHelper.LogLevel,
+                Debug            = TemporalTestHelper.Debug,
+                ClientIdentity   = TemporalTestHelper.ClientIdentity
             };
 
             fixture.Start(settings, keepConnection: true);

@@ -54,9 +54,9 @@ namespace HelloWorld_BasicActivity_2
 
             var settings = new TemporalSettings()
             {
-                DefaulNamespace = "my-domain",
+                DefaultNamespace = "my-namespace",
                 CreateNamespace  = true,
-                HostPort      = "localhost:7933"
+                HostPort         = "localhost:7933"
             };
 
             using (var client = await TemporalClient.ConnectAsync(settings))

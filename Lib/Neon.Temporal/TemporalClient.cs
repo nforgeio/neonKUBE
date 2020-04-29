@@ -61,18 +61,23 @@ namespace Neon.Temporal
     /// easy to do.
     /// </para>
     /// <para>
-    /// First, you'll need to know the URI of at least one of the Temporal cluster
-    /// nodes.  Temporal listens on port <b>79133</b> by default so you cluster URIs
-    /// will typically look like: <b>http://TEMPORAL-NODE:7933</b>.
+    /// Temporal clusters interacts with client APIs via gRPC on <b>port 7233</b> (by default).
+    /// Server nodes are typically configured behind a TCP load balancer or a DNS
+    /// name is configured such that it returns the IP addresses for each server
+    /// node.  The <see cref="TemporalSettings.HostPort"/> property is used to 
+    /// specify how to connect to the cluster.  For single node clusters or clusters
+    /// behind a load balancer, you'll typically specify <b>HOST:7233</b> where
+    /// <b>HOST</b> is the DNS name or IP address for the node.
     /// </para>
-    /// <note>
-    /// For production clusters with multiple Temporal nodes, you should specify
-    /// multiple URIs when connecting just in case the one of the nodes may be
-    /// offline for some reason.
-    /// </note>
+    /// <para>
+    /// Alternatively, if you've configured DNS to return IP addresses for each cluster node,
+    /// you can specify <b>dns:///host:port</b>.  In this case, the client will 
+    /// round-robin between the node addresses returned to locate healthy nodes
+    /// to communicate with.
+    /// </para>
     /// <para>
     /// To establish a connection, you'll construct a <see cref="TemporalSettings"/>
-    /// and add your node URIs to the <see cref="TemporalSettings.Servers"/> list
+    /// and add your cluster endpoint to the <see cref="TemporalSettings.HostPort"/>
     /// and then call the static <see cref="TemporalClient.ConnectAsync(TemporalSettings)"/>
     /// method to obtain a connected <see cref="TemporalClient"/>.  You'll use this
     /// for registering workflows and activities types as well as the workers that
@@ -882,14 +887,14 @@ namespace Neon.Temporal
         /// <returns>The connected <see cref="TemporalClient"/>.</returns>
         /// <remarks>
         /// <note>
-        /// The <see cref="TemporalSettings"/> passed must specify a <see cref="TemporalSettings.DefaulNamespace"/>.
+        /// The <see cref="TemporalSettings"/> passed must specify a <see cref="TemporalSettings.DefaultNamespace"/>.
         /// </note>
         /// </remarks>
         public static async Task<TemporalClient> ConnectAsync(TemporalSettings settings)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaulNamespace), nameof(settings), "You must specifiy a non-empty default Temporal namespace.");
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultNamespace), nameof(settings), "You must specifiy a non-empty default Temporal namespace.");
 
             var client = new TemporalClient(settings);
 
@@ -952,7 +957,7 @@ namespace Neon.Temporal
                             HostPort        = settings.HostPort,
                             Identity        = settings.ClientIdentity,
                             ClientTimeout   = TimeSpan.FromSeconds(30),
-                            Namespace       = settings.DefaulNamespace,
+                            Namespace       = settings.DefaultNamespace,
                             CreateNamespace = settings.CreateNamespace
                         };
 
@@ -1389,7 +1394,7 @@ namespace Neon.Temporal
         private TemporalClient(TemporalSettings settings)
         {
             Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaulNamespace), nameof(settings));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultNamespace), nameof(settings));
 
             this.ClientId = Interlocked.Increment(ref nextClientId);
             this.Settings = settings;
@@ -1744,7 +1749,7 @@ namespace Neon.Temporal
 
         /// <summary>
         /// Returns the Temporal namespace to be referenced for an operation.  If <paramref name="namespace"/>
-        /// is not <c>null</c> or empty then that will be returned otherwise the  <see cref="TemporalSettings.DefaulNamespace"/>
+        /// is not <c>null</c> or empty then that will be returned otherwise the  <see cref="TemporalSettings.DefaultNamespace"/>
         /// will be returned.  Note that one of <paramref name="namespace"/> or the default namespace must
         /// be non-empty.
         /// </summary>
@@ -1759,12 +1764,12 @@ namespace Neon.Temporal
             {
                 return @namespace;
             }
-            else if (!string.IsNullOrEmpty(Settings.DefaulNamespace))
+            else if (!string.IsNullOrEmpty(Settings.DefaultNamespace))
             {
-                return Settings.DefaulNamespace;
+                return Settings.DefaultNamespace;
             }
 
-            throw new ArgumentNullException(nameof(@namespace),$"One of [{nameof(@namespace)}] parameter or the client's default namespace (specified as [{nameof(TemporalClient)}.{nameof(TemporalClient.Settings)}.{nameof(TemporalSettings.DefaulNamespace)}]) must be non-empty.");
+            throw new ArgumentNullException(nameof(@namespace),$"One of [{nameof(@namespace)}] parameter or the client's default namespace (specified as [{nameof(TemporalClient)}.{nameof(TemporalClient.Settings)}.{nameof(TemporalSettings.DefaultNamespace)}]) must be non-empty.");
         }
 
         /// <summary>

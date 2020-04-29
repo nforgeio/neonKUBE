@@ -41,20 +41,21 @@ namespace TestTemporal
 {
     public partial class Test_RegistrationError : IClassFixture<TemporalFixture>, IDisposable
     {
-        private TemporalFixture  fixture;
-        private TemporalClient   client;
-        private HttpClient      proxyClient;
+        private TemporalFixture     fixture;
+        private TemporalClient      client;
+        private HttpClient          proxyClient;
 
         public Test_RegistrationError(TemporalFixture fixture)
         {
             var settings = new TemporalSettings()
             {
-                DefaulNamespace          = TemporalFixture.DefaultDomain,
+                DefaultNamespace       = TemporalFixture.DefaultNamespace,
                 LogLevel               = TemporalTestHelper.LogLevel,
-                CreateNamespace           = true,
+                CreateNamespace        = true,
                 Debug                  = TemporalTestHelper.Debug,
                 DebugPrelaunched       = TemporalTestHelper.DebugPrelaunched,
-                DebugDisableHeartbeats = TemporalTestHelper.DebugDisableHeartbeats
+                DebugDisableHeartbeats = TemporalTestHelper.DebugDisableHeartbeats,
+                ClientIdentity         = TemporalTestHelper.ClientIdentity
             };
 
             if (fixture.Start(settings, image: TemporalTestHelper.TemporalImage, keepConnection: true, keepOpen: TemporalTestHelper.KeepTemporalServerOpen) == TestFixtureStatus.Started)
