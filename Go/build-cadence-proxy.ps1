@@ -82,11 +82,9 @@ if ($exitCode -ne 0)
 # Compress the binaries to the [Neon.Cadence] project where they'll
 # be embedded as binary resources.
 $neonCadenceResourceFolder = "$env:NF_ROOT\Lib\Neon.Cadence\Resources"
-neon-build gzip "$buildPath\cadence-proxy.linux"   "$neonCadenceResourceFolder\cadence-proxy.linux.gz"
-neon-build gzip "$buildPath\cadence-proxy.osx"     "$neonCadenceResourceFolder\cadence-proxy.osx.gz"
-neon-build gzip "$buildPath\cadence-proxy.win.exe" "$neonCadenceResourceFolder\cadence-proxy.win.exe.gz"
-
-#---------------------------------------------------------------------
+neon-build gzip "$buildPath\cadence-proxy.linux"   "$neonCadenceResourceFolder\cadence-proxy.linux.gz"   > "$logPath" 2>&1
+neon-build gzip "$buildPath\cadence-proxy.osx"     "$neonCadenceResourceFolder\cadence-proxy.osx.gz"     > "$logPath" 2>&1
+neon-build gzip "$buildPath\cadence-proxy.win.exe" "$neonCadenceResourceFolder\cadence-proxy.win.exe.gz" > "$logPath" 2>&1
 
 # Return to the original directory
 Set-Location $orgDirectory

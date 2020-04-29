@@ -31,7 +31,7 @@
       <alert class="warning">
         <para>
           <legacyBold>Neon.Temporal</legacyBold> currently supports AMD 64-bit Windows, OS/X, and Linux 
-          runtime environments only.  32-bit and ARM platforms are not supported.
+          runtime environments only.  32-bit and ARM platforms are not currently supported.
         </para>
       </alert>
     </introduction>
