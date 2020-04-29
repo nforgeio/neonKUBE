@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash -ex
 
 # Original code: Copyright (c) 2017 Uber Technologies, Inc.
 # Modifications: Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
@@ -20,21 +20,11 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-   
-export HOST_IP=`hostname -i`
 
-if [ "$BIND_ON_LOCALHOST" == true ] || [ "$BIND_ON_IP" == "127.0.0.1" ]; then
-    export BIND_ON_IP="127.0.0.1"
-    export HOST_IP="127.0.0.1"
-elif [ -z "$BIND_ON_IP" ]; then
-    # not binding to localhost and bind_on_ip is empty - use default host ip addr
-    export BIND_ON_IP=$HOST_IP
-elif [ "$BIND_ON_IP" != "0.0.0.0" ]; then
-    # binding to a user specified addr, make sure HOST_IP also uses the same addr
-    export HOST_IP=$BIND_ON_IP
-fi
+# inject environment variables into the .yaml config files
 
-# this env variable is deprecated
-export BIND_ON_LOCALHOST=false
+dockerize -template /etc/temporal/config/config_template.yaml:/etc/temporal/config/docker.yaml
 
-exec "$@"
+# start the frontend
+
+exec temporal-server --root $TEMPORAL_HOME --env docker start --services=$SERVICES

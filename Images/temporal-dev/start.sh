@@ -21,36 +21,27 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-TEMPORAL_HOME=$1
-DB=${DB:-cassandra}
-RF=${RF:-1}
-
 # cassandra env
 
+export CASSANDRA_SEEDS="127.0.0.1"
+export LOG_LEVEL="${LOG_LEVEL:-info}"
+export NUM_HISTORY_SHARDS=${NUM_HISTORY_SHARDS:-4}
 export KEYSPACE="${KEYSPACE:-temporal}"
 export VISIBILITY_KEYSPACE="${VISIBILITY_KEYSPACE:-temporal_visibility}"
-export CASSANDRA_SEEDS="127.0.0.1"
+export CASSANDRA_CONSISTENCY="${CASSANDRA_CONSISTENCY:-One}"
 
-setup_schema() {
-    echo 'setup cassandra schema'
+# tctl env
 
-    # cassandra schema
+export TEMPORAL_CLI_ADDRESS="$BIND_ON_IP:7233"
+export DEFAULT_NAMESPACE=${DEFAULT_NAMESPACE:-default}
+export DEFAULT_NAMESPACE_RETENTION=${DEFAULT_NAMESPACE_RETENTION:-1}
 
-    SCHEMA_DIR=$TEMPORAL_HOME/schema/cassandra/temporal/versioned
-    temporal-cassandra-tool --ep $CASSANDRA_SEEDS create -k $KEYSPACE --rf $RF
-    temporal-cassandra-tool --ep $CASSANDRA_SEEDS -k $KEYSPACE setup-schema -v 0.0
-    temporal-cassandra-tool --ep $CASSANDRA_SEEDS -k $KEYSPACE update-schema -d $SCHEMA_DIR
-    
-    # visibility schema
+# ui
 
-    VISIBILITY_SCHEMA_DIR=$TEMPORAL_HOME/schema/cassandra/visibility/versioned
-    temporal-cassandra-tool --ep $CASSANDRA_SEEDS create -k $VISIBILITY_KEYSPACE --rf $RF
-    temporal-cassandra-tool --ep $CASSANDRA_SEEDS -k $VISIBILITY_KEYSPACE setup-schema -v 0.0
-    temporal-cassandra-tool --ep $CASSANDRA_SEEDS -k $VISIBILITY_KEYSPACE update-schema -d $VISIBILITY_SCHEMA_DIR
-}
+export TEMPORAL_GRPC_ENDPOINT="$BIND_ON_IP:7233"
+export TEMPORAL_WEB_PORT="8088"
 
 start_cassandra() {
-    envsubst < /etc/cassandra/cassandra_template.yaml > /etc/cassandra/cassandra.yaml
     cassandra -R
 }
 
@@ -63,14 +54,27 @@ wait_for_cassandra() {
     echo 'cassandra started'
 }
 
-# start cassandra,
-# wait for it to complete startup,
-# set up the schema
+register_default_namespace() {
+    echo "Temporal CLI Address: $TEMPORAL_CLI_ADDRESS"
+    sleep 5
+    echo "Registering default namespace: $DEFAULT_NAMESPACE"
+    until tctl --ns $DEFAULT_NAMESPACE namespace describe < /dev/null; do
+        echo "Default namespace $DEFAULT_NAMESPACE not found.  Creating..."
+        sleep 1
+        tctl --ns $DEFAULT_NAMESPACE namespace register --rd $DEFAULT_NAMESPACE_RETENTION --desc "Default namespace for Temporal Server"
+    done
+    echo "Default namespace registration complete."
+}
 
+# start cassandra,
+# wait for it to complete startup
+# register the default namespace in background
+
+init_env
 start_cassandra
 wait_for_cassandra
-setup_schema
+register_default_namespace &
 
-# sleep for 1 second to make sure that all writes have been completed
+# start the temporal server and ui
 
-sleep 1
+bash /start-temporal.sh & bash /start-temporal-ui.sh

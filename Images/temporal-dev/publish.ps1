@@ -15,8 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the Temporal Server test images including Cassandra
-# and pushes them to Docker Hub.
+# Builds the Temporal Server test images, Cassandra,
+# and the temporal-web ui and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -80,7 +80,7 @@ $noImagePush = $nopush
 
 if ($allVersions)
 {
-    Build v0.5.9 -goVersion 1.12.6 -uiVersion 3.3.1 -latest
+    Build v0.21.1 -goVersion 1.14 -uiVersion master -latest
 }
 
-Build v0.11.0 -goVersion 1.13.6 -uiVersion v3.12.0 -latest
+Build v0.21.1 -goVersion 1.14 -uiVersion master -latest
