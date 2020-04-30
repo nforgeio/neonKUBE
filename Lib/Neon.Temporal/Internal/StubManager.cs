@@ -1652,7 +1652,14 @@ namespace Neon.Temporal.Internal
                 }
                 else
                 {
-                    sbSource.AppendLine($"                var ___activityTypeName = $\"{{this.activityTypeName}}::{details.ActivityMethodAttribute.Name}\";");
+                    if (details.ActivityMethodAttribute.IsFullName)
+                    {
+                        sbSource.AppendLine($"                var ___activityTypeName = $\"{details.ActivityMethodAttribute.Name}\";");
+                    }
+                    else
+                    {
+                        sbSource.AppendLine($"                var ___activityTypeName = $\"{{this.activityTypeName}}::{details.ActivityMethodAttribute.Name}\";");
+                    }
                 }
 
                 sbSource.AppendLine($"                var ___options          = this.options.Clone();");

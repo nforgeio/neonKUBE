@@ -143,6 +143,38 @@ namespace TestTemporal
             }
         }
 
+        /// <summary>
+        /// Partial definition of for a GOLANG workflow.
+        /// </summary>
+        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList_CwfArgs)]
+        public interface IGoWorkflow : IWorkflow
+        {
+            [WorkflowMethod(Name = "main.NoArgsWorkflow", IsFullName = true)]
+            Task<string> NoArgsAsync();
+
+            [WorkflowMethod(Name = "main.OneArgWorkflow", IsFullName = true)]
+            Task<string> OneArgAsync(string name);
+
+            [WorkflowMethod(Name = "main.TwoArgsWorkflow", IsFullName = true)]
+            Task<string> TwoArgsAsync(string name1, string name2);
+        }
+
+        /// <summary>
+        /// Partial definition of for a GOLANG activity.
+        /// </summary>
+        [ActivityInterface(TaskList = TemporalTestHelper.TaskList_CwfArgs)]
+        public interface IGoActivity : IActivity
+        {
+            [WorkflowMethod(Name = "main.NoArgsActivity", IsFullName = true)]
+            Task<string> NoArgsAsync();
+
+            [WorkflowMethod(Name = "main.OneArgActivity", IsFullName = true)]
+            Task<string> OneArgAsync(string name);
+
+            [WorkflowMethod(Name = "main.TwoArgsActivity", IsFullName = true)]
+            Task<string> TwoArgsAsync(string name1, string name2);
+        }
+
         //---------------------------------------------------------------------
 
         [Fact]
@@ -243,28 +275,88 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList_CwfArgs)]
-        public interface IGoWorkflow : IWorkflow
-        {
-            [WorkflowMethod(Name = "main.NoArgsWorkflow", IsFullName = true)]
-            Task<string> NoArgsAsync();
-
-            [WorkflowMethod(Name = "main.OneArgWorkflow", IsFullName = true)]
-            Task<string> OneArgAsync(string name);
-
-            [WorkflowMethod(Name = "main.TwoArgsWorkflow", IsFullName = true)]
-            Task<string> TwoArgsAsync(string name1, string name2);
-        }
-
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Interop_Workflow_FullName()
+        public async Task Interop_Workflow_StubFullName()
         {
             await SyncContext.ClearAsync;
 
             // Verify that we can can used a typed workflow stub to interoperate 
             // with a GOLANG workflow using a non-standard workflow type name.
+
+            using (new TwfArgsWorker())
+            {
+                //-----------------------------------------
+                // Zero args:
+
+                var stub = client.NewWorkflowStub<IGoWorkflow>();
+
+                Assert.Equal("Hello there!", await stub.NoArgsAsync());
+
+                //-----------------------------------------
+                // One arg:
+
+                stub = client.NewWorkflowStub<IGoWorkflow>();
+
+                Assert.Equal("Hello JACK!", await stub.OneArgAsync("JACK"));
+
+                //-----------------------------------------
+                // Two Args:
+
+                stub = client.NewWorkflowStub<IGoWorkflow>();
+
+                Assert.Equal("Hello JACK & JILL!", await stub.TwoArgsAsync("JACK", "JILL"));
+            }
+        }
+
+        //---------------------------------------------------------------------
+
+        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        public interface IGoActivityTester : IWorkflow
+        {
+            [WorkflowMethod(Name = "NoArgsWorkflow")]
+            Task<string> NoArgsAsync();
+
+            [WorkflowMethod(Name = "OneArgWorkflow")]
+            Task<string> OneArgAsync(string name);
+
+            [WorkflowMethod(Name = "TwoArgsWorkflow")]
+            Task<string> TwoArgsAsync(string name1, string name2);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class GoActivityTester : WorkflowBase, IGoActivityTester
+        {
+            public async Task<string> NoArgsAsync()
+            {
+                var stub = Workflow.NewActivityStub<IGoActivity>();
+
+                return await stub.NoArgsAsync();
+            }
+
+            public async Task<string> OneArgAsync(string name)
+            {
+                var stub = Workflow.NewActivityStub<IGoActivity>();
+
+                return await stub.OneArgAsync(name);
+            }
+
+            public async Task<string> TwoArgsAsync(string name1, string name2)
+            {
+                var stub = Workflow.NewActivityStub<IGoActivity>();
+
+                return await stub.TwoArgsAsync(name1, name2);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Interop_Activity_StubFullName()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that we can use a typed activity stub to interoperate 
+            // with a GOLANG activity using a non-standard activity type name.
 
             using (new TwfArgsWorker())
             {

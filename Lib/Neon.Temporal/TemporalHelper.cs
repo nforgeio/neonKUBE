@@ -313,7 +313,7 @@ namespace Neon.Temporal.Internal
 
                 if (name == string.Empty && workflowMethodAttribute.IsFullName)
                 {
-                    throw new WorkflowTypeException($"Workflow method [{workflowInterface.FullName}.{method.Name}()] specifies [WorkflowMethod(Name = \"\", IsFullName=true)]  Fully qualified names cannot be NULL or blank.");
+                    throw new WorkflowTypeException($"Workflow method [{workflowInterface.FullName}.{method.Name}()] specifies [WorkflowMethod(Name = \"\", IsFullName=true)].  Fully qualified names cannot be NULL or blank.");
                 }
 
                 if (workflowNames.Contains(name))
@@ -1123,7 +1123,11 @@ namespace Neon.Temporal.Internal
 
             var workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowInterface, workflowAttribute);
 
-            if (!string.IsNullOrEmpty(methodAttribute.Name))
+            if (methodAttribute.IsFullName)
+            {
+                workflowTypeName = methodAttribute.Name;
+            }
+            else if (!string.IsNullOrEmpty(methodAttribute.Name))
             {
                 workflowTypeName += $"::{methodAttribute.Name}";
             }

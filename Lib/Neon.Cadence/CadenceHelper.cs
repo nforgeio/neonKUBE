@@ -313,7 +313,7 @@ namespace Neon.Cadence.Internal
 
                 if (name == string.Empty && workflowMethodAttribute.IsFullName)
                 {
-                    throw new WorkflowTypeException($"Workflow method [{workflowInterface.FullName}.{method.Name}()] specifies [WorkflowMethod(Name = \"\", IsFullName=true)]  Fully qualified names cannot be NULL or blank.");
+                    throw new WorkflowTypeException($"Workflow method [{workflowInterface.FullName}.{method.Name}()] specifies [WorkflowMethod(Name = \"\", IsFullName=true)].  Fully qualified names cannot be NULL or blank.");
                 }
 
                 if (workflowNames.Contains(name))
@@ -565,6 +565,11 @@ namespace Neon.Cadence.Internal
                 }
 
                 var name = activityMethodAttribute.Name ?? string.Empty;
+
+                if (name == string.Empty && activityMethodAttribute.IsFullName)
+                {
+                    throw new WorkflowTypeException($"Activity method [{activityInterface.FullName}.{method.Name}()] specifies [ActivityMethod(Name = \"\", IsFullName=true)].  Fully qualified names cannot be NULL or blank.");
+                }
 
                 if (activityNames.Contains(name))
                 {
@@ -1046,7 +1051,11 @@ namespace Neon.Cadence.Internal
 
             var activityTypeName = CadenceHelper.GetActivityTypeName(activityInterface, activityAttribute);
 
-            if (!string.IsNullOrEmpty(methodAttribute.Name))
+            if (methodAttribute.IsFullName)
+            {
+                activityTypeName = methodAttribute.Name;
+            }
+            else if (!string.IsNullOrEmpty(methodAttribute.Name))
             {
                 activityTypeName += $"::{methodAttribute.Name}";
             }
