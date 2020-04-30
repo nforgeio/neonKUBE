@@ -98,8 +98,6 @@ namespace TestCadence
                 var fileId   = Guid.NewGuid().ToString("d");
                 var tempPath = Path.GetTempPath();
 
-                tempPath = "C:\\temp";  // debug(jefflil): DELETE THIS!
-
                 readyFile = Path.Combine(tempPath, fileId + ".ready");
                 stopFile  = Path.Combine(tempPath, fileId + ".stop");
 
