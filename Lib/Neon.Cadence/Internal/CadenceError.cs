@@ -166,23 +166,19 @@ namespace Neon.Cadence.Internal
         /// <param name="type">The new type.</param>
         internal void SetErrorType(CadenceErrorTypes type)
         {
-            string typeString;
-
             switch (type)
             {
-                case CadenceErrorTypes.Cancelled:   typeString = "cancelled";   break;
-                case CadenceErrorTypes.Custom:      typeString = "custom";      break;
-                case CadenceErrorTypes.Generic:     typeString = "generic";     break;
-                case CadenceErrorTypes.Panic:       typeString = "panic";       break;
-                case CadenceErrorTypes.Terminated:  typeString = "terminated";  break;
-                case CadenceErrorTypes.Timeout:     typeString = "timeout";     break;
+                case CadenceErrorTypes.Cancelled:   Type = "cancelled";   break;
+                case CadenceErrorTypes.Custom:      Type = "custom";      break;
+                case CadenceErrorTypes.Generic:     Type = "generic";     break;
+                case CadenceErrorTypes.Panic:       Type = "panic";       break;
+                case CadenceErrorTypes.Terminated:  Type = "terminated";  break;
+                case CadenceErrorTypes.Timeout:     Type = "timeout";     break;
 
                 default:
 
                     throw new NotImplementedException();
             }
-
-            Type = typeString;
         }
 
         /// <summary>

@@ -166,23 +166,19 @@ namespace Neon.Temporal.Internal
         /// <param name="type">The new type.</param>
         internal void SetErrorType(TemporalErrorTypes type)
         {
-            string typeString;
-
             switch (type)
             {
-                case TemporalErrorTypes.Cancelled:   typeString = "cancelled";   break;
-                case TemporalErrorTypes.Custom:      typeString = "custom";      break;
-                case TemporalErrorTypes.Generic:     typeString = "generic";     break;
-                case TemporalErrorTypes.Panic:       typeString = "panic";       break;
-                case TemporalErrorTypes.Terminated:  typeString = "terminated";  break;
-                case TemporalErrorTypes.Timeout:     typeString = "timeout";     break;
+                case TemporalErrorTypes.Cancelled:  Type = "cancelled";   break;
+                case TemporalErrorTypes.Custom:     Type = "custom";      break;
+                case TemporalErrorTypes.Generic:    Type = "generic";     break;
+                case TemporalErrorTypes.Panic:      Type = "panic";       break;
+                case TemporalErrorTypes.Terminated: Type = "terminated";  break;
+                case TemporalErrorTypes.Timeout:    Type = "timeout";     break;
 
                 default:
 
                     throw new NotImplementedException();
             }
-
-            Type = typeString;
         }
 
         /// <summary>
