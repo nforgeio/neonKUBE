@@ -27,7 +27,7 @@ namespace Snippets_CrossPlatform
 
             using (var client = await TemporalClient.ConnectAsync(settings))
             {
-                // Create an untyped stub for the new workflow.
+                // Create an untyped stub for the remote workflow.
 
                 var stub = client.NewUntypedWorkflowStub("SendEmail");
 
@@ -58,5 +58,50 @@ namespace Snippets_CrossPlatform
             }
 #endregion
         }
+
+#region code_typed
+        [WorkflowInterface]
+        public interface IMailer : IWorkflow
+        {
+            [WorkflowMethod(Name = "SendEmail", IsFullName = true)]
+            Task<bool> SendEmail(string recipient, string subject, string body);
+        }
+
+        public static async Task Main(params string[] args)
+        {
+            var settings = new TemporalSettings()
+            {
+                // This specifies the default namespace for operations initiated by the
+                // client connected below (this can be overridden for specific
+                // operations).
+
+                DefaultNamespace = "Acme-PROD",
+
+                // Host/port for at least one of the Temporal cluster servers:
+
+                HostPort = "localhost:7933"
+            };
+
+            using (var client = await TemporalClient.ConnectAsync(settings))
+            {
+                // Create a typed stub for the remote workflow.
+
+                var stub = client.NewWorkflowStub<IMailer>();
+
+                // Execute the workflow.
+
+                var success = await stub.SendEmail("jeff@lilltek.com", "Test subject", "This is a test email.");
+
+                if (success)
+                {
+                    Console.WriteLine("Email SENT!");
+                }
+                else
+                {
+                    Console.WriteLine("Email FAILED!");
+                }
+            }
+        }
+#endregion
     }
 }
