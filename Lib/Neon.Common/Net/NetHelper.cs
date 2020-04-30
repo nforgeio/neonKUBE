@@ -873,9 +873,9 @@ namespace Neon.Net
         /// <remarks>
         /// <para>
         /// This works via a somewhat fragile heuristic.  We list all network interfaces,
-        /// filter out those that are loopback, Hyper-V virtual switches, TAP interfaces,
-        /// as well as any that aren't up and then return the highest speed interface
-        /// from any conforming interfaces left.
+        /// filter out those that are loopback, TAP interfaces, as well as any that aren't 
+        /// up and then return the highest speed interface from any conforming interfaces 
+        /// remaining.
         /// </para>
         /// <para>
         /// This may not work as expected for machines with multiple active connections
@@ -892,10 +892,9 @@ namespace Neon.Net
                 .FirstOrDefault(
                     netInterface =>
                     {
-                        // Filter out loopback interfaces, Hyper-V virtual switches, TAP interfaces and interfaces that aren't up.
+                        // Filter out loopback interfaces, TAP interfaces and interfaces that aren't up.
 
                         if (netInterface.NetworkInterfaceType == NetworkInterfaceType.Loopback || 
-                            netInterface.Description.Contains("Hyper-V") ||
                             netInterface.Description.StartsWith("TAP-") ||
                             netInterface.OperationalStatus != OperationalStatus.Up)
                         {
