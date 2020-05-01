@@ -90,7 +90,7 @@ namespace Neon.Temporal
         /// <param name="methodMap">Maps the workflow signal and query methods.</param>
         internal Workflow(
             WorkflowBase        parent,
-            TemporalClient       client, 
+            TemporalClient      client, 
             long                contextId, 
             string              workflowTypeName, 
             string              @namespace, 
@@ -1370,6 +1370,44 @@ namespace Neon.Temporal
         }
 
         /// <summary>
+        /// Creates an untyped client stub that can be used to launch one or more activity
+        /// instances using a specific activity type name.  This is typically used to launch
+        /// activities written in other languages.
+        /// </summary>
+        /// <param name="activityTypeName">Specifies the target activity type name.</param>
+        /// <param name="options">Optionally specifies the activity options.</param>
+        /// <returns>The untyped <see cref="ActivityStub"/> you'll use to execute the activity.</returns>
+        /// <remarks>
+        /// <para>
+        /// <paramref name="activityTypeName"/> specifies the target activity implementation type name and optionally,
+        /// the specific activity method to be called for activity interfaces that have multiple methods.  For
+        /// activity methods tagged by <c>ActivityMethod]</c>[ with specifying a name, the activity type name will default
+        /// to the fully qualified interface type name or the custom type name specified by <see cref="ActivityAttribute.Name"/>.
+        /// </para>
+        /// <para>
+        /// For activity methods with <see cref="ActivityMethodAttribute.Name"/> specified, the activity type will
+        /// look like:
+        /// </para>
+        /// <code>
+        /// ACTIVITY-TYPE-NAME::METHOD-NAME
+        /// </code>
+        /// <note>
+        /// You may need to customize activity type name when interoperating with activities written
+        /// in other languages.  See <a href="https://doc.neonkube.com/Neon.Cadence-CrossPlatform.htm">Cadence Cross-Platform</a>
+        /// for more information.
+        /// </note>
+        /// </remarks>
+        public ActivityStub NewExternalActivityStub(string activityTypeName, ActivityOptions options = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName), nameof(activityTypeName));
+            Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
+            SetStackTrace();
+
+            return new ActivityStub(Client, this, activityTypeName, options);
+        }
+
+        /// <summary>
         /// Creates a workflow client stub that can be used to launch, signal, and query child
         /// workflows via the type-safe workflow interface methods.
         /// </summary>
@@ -2131,28 +2169,7 @@ namespace Neon.Temporal
             Client.EnsureNotDisposed();
             SetStackTrace(skipFrames: 3);
 
-            options = options ?? new ActivityOptions();
-            options = options.Clone();
-
-            if (options.HeartbeatTimeout <= TimeSpan.Zero)
-            {
-                options.HeartbeatTimeout = Client.Settings.ActivityHeartbeatTimeout;
-            }
-
-            if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
-            {
-                options.ScheduleToCloseTimeout = Client.Settings.WorkflowScheduleToStartTimeout;
-            }
-
-            if (options.ScheduleToStartTimeout <= TimeSpan.Zero)
-            {
-                options.ScheduleToStartTimeout = Client.Settings.WorkflowScheduleToStartTimeout;
-            }
-
-            if (options.StartToCloseTimeout <= TimeSpan.Zero)
-            {
-                options.StartToCloseTimeout = Client.Settings.WorkflowScheduleToCloseTimeout;
-            }
+            options = ActivityOptions.Normalize(Client, options);
 
             var reply = await ExecuteNonParallel(
                 async () => (ActivityExecuteReply)await Client.CallProxyAsync(

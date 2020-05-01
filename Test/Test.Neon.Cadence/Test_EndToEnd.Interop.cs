@@ -89,6 +89,14 @@ namespace TestCadence
             /// </summary>
             public CwfArgsWorker()
             {
+                // Kill any running [cwf-args.exe] processes.
+
+                foreach (var cwfProcess in Process.GetProcesses()
+                    .Where(p => p.ProcessName.Equals("cwf-args", StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    cwfProcess.Kill();
+                }
+
                 var goTestDir     = Path.Combine(Environment.GetEnvironmentVariable("NF_BUILD"), "go-test", "cadence");
                 var workerExePath = Path.Combine(goTestDir, "cwf-args.exe");
 
@@ -334,13 +342,80 @@ namespace TestCadence
             }
         }
 
+        //---------------------------------------------------------------------
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IGoUntypedActivityTester : IWorkflow
+        {
+            [WorkflowMethod(Name = "NoArgsWorkflow")]
+            Task<string> NoArgsAsync();
+
+            [WorkflowMethod(Name = "OneArgWorkflow")]
+            Task<string> OneArgAsync(string name);
+
+            [WorkflowMethod(Name = "TwoArgsWorkflow")]
+            Task<string> TwoArgsAsync(string name1, string name2);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class GoUntypedActivityTester : WorkflowBase, IGoUntypedActivityTester
+        {
+            private ActivityOptions options = new ActivityOptions() { TaskList = CadenceTestHelper.TaskList_CwfArgs };
+
+            public async Task<string> NoArgsAsync()
+            {
+                var stub = Workflow.NewExternalActivityStub("main.NoArgsActivity", options);
+
+                return await stub.ExecuteAsync<string>();
+            }
+
+            public async Task<string> OneArgAsync(string name)
+            {
+                var stub = Workflow.NewExternalActivityStub("main.OneArgActivity", options);
+
+                return await stub.ExecuteAsync<string>(name);
+            }
+
+            public async Task<string> TwoArgsAsync(string name1, string name2)
+            {
+                var stub = Workflow.NewExternalActivityStub("main.TwoArgsActivity", options);
+
+                return await stub.ExecuteAsync<string>(name1, name2);
+            }
+        }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Interop_Activity_Untyped()
         {
             await SyncContext.ClearAsync;
 
-            throw new NotImplementedException();
+            // Verify that we can use a untyped activity stub to interoperate 
+            // with GOLANG activities using a non-standard activity type name.
+
+            using (new CwfArgsWorker())
+            {
+                //-----------------------------------------
+                // Zero args:
+
+                var stub = client.NewWorkflowStub<IGoUntypedActivityTester>();
+
+                Assert.Equal("Hello there!", await stub.NoArgsAsync());
+
+                //-----------------------------------------
+                // One arg:
+
+                stub = client.NewWorkflowStub<IGoUntypedActivityTester>();
+
+                Assert.Equal("Hello JACK!", await stub.OneArgAsync("JACK"));
+
+                //-----------------------------------------
+                // Two Args:
+
+                stub = client.NewWorkflowStub<IGoUntypedActivityTester>();
+
+                Assert.Equal("Hello JACK & JILL!", await stub.TwoArgsAsync("JACK", "JILL"));
+            }
         }
 
         //---------------------------------------------------------------------
