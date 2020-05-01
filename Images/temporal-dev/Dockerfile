@@ -43,8 +43,10 @@ RUN apt-get update && apt-get install -y protobuf-compiler \
     && rm -f /go/src/github.com/temporalio/temporal/.gitmodules \ 
     && cd /go/src/github.com/temporalio/temporal \
     && git checkout tags/$VERSION \
-    && cp /.gitmodules_temporal /go/src/github.com/temporalio/temporal/.gitmodules \
-    && CGO_ENABLED=0 make
+    && cp /.gitmodules_temporal /go/src/github.com/temporalio/temporal/.gitmodules 
+
+WORKDIR /go/src/github.com/temporalio/temporal
+RUN CGO_ENABLED=0 make install
     
 # Download dockerize
 
@@ -76,8 +78,10 @@ RUN git clone https://github.com/temporalio/temporal-web.git \
     && cd temporal-web \
     && git checkout $UI_VERSION \
     && rm -f .gitmodules \
-    && cp /.gitmodules_temporal_web .gitmodules \
-    && make
+    && cp /.gitmodules_temporal_web .gitmodules
+
+WORKDIR /usr/temporal-web    
+RUN make
 
 # Install app dependencies
 # build the app
