@@ -66,13 +66,12 @@ namespace Neon.Temporal
         /// <b>METHOD_NAME</b> is from <see cref="ActivityMethodAttribute.Name"/>.  This
         /// is the same convention implemented by the Java client.
         /// </para>
-        /// <note>
-        /// Some implications of this scheme are that we'll need to register multiple activity
-        /// types for each activity interface when there are multiple entry points (one per
-        /// method) and that external activity invocations will need to explicitly specify
-        /// activity types that include the method name when one is specified to the target
-        /// method.
-        /// </note>
+        /// <para>
+        /// Sometimes it's useful to be able to specify a workflow type name that doesn't
+        /// follow the convention above, for example to interoperate with workflows written
+        /// in another language..  You can do this by setting <see cref="Name"/> to the
+        /// required workflow type name and then setting <see cref="IsFullName"/><c>=true</c>.
+        /// </para>
         /// </remarks>
         public string Name
         {
@@ -92,6 +91,22 @@ namespace Neon.Temporal
                 }
             }
         }
+
+        /// <summary>
+        /// <para>
+        /// Optionally indicates that <see cref="Name"/> holds the fully qualified type name for
+        /// the workflow and that the .NET client will not add a prefix to <see cref="Name"/>
+        /// when registering the workflow.
+        /// </para>
+        /// <para>
+        /// This is useful when interoperating with workflows written in another language by
+        /// providing a way to specify a specific workflow type name. 
+        /// </para>
+        /// <note>
+        /// <see cref="Name"/> cannot be <c>null</c> or empty when this is <c>true</c>.
+        /// </note>
+        /// </summary>
+        public bool IsFullName { get; set; } = false;
 
         /// <summary>
         /// <para>

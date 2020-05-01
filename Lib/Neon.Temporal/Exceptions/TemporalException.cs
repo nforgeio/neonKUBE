@@ -39,7 +39,7 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Returns Temporal GOLANG client's error string corresponding to the
+        /// Returns the Temporal GOLANG client's error string corresponding to the
         /// exception or <c>null</c> when the exception does not map to an
         /// error string.
         /// </summary>

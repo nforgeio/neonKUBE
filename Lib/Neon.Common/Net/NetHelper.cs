@@ -870,6 +870,18 @@ namespace Neon.Net
         /// Returns a routable (non-loopback) IPv4 address for the current machine.
         /// </summary>
         /// <returns>The IP address or <c>null</c> if there doesn't appear to be a connected network interface.</returns>
+        /// <remarks>
+        /// <para>
+        /// This works via a somewhat fragile heuristic.  We list all network interfaces,
+        /// filter out those that are loopback, TAP interfaces, as well as any that aren't 
+        /// up and then return the highest speed interface from any conforming interfaces 
+        /// remaining.
+        /// </para>
+        /// <para>
+        /// This may not work as expected for machines with multiple active connections
+        /// to different networks.
+        /// </para>
+        /// </remarks>
         public static IPAddress GetRoutableIpAddress()
         {
             // Look for an active non-loopback interface with the best speed
@@ -880,10 +892,10 @@ namespace Neon.Net
                 .FirstOrDefault(
                     netInterface =>
                     {
-                        // Filter out loopback interfaces, Hyper-V virtual switches and interfaces that aren't up.
+                        // Filter out loopback interfaces, TAP interfaces and interfaces that aren't up.
 
                         if (netInterface.NetworkInterfaceType == NetworkInterfaceType.Loopback || 
-                            netInterface.Description.Contains("Hyper-V") ||
+                            netInterface.Description.StartsWith("TAP-") ||
                             netInterface.OperationalStatus != OperationalStatus.Up)
                         {
                             return false;

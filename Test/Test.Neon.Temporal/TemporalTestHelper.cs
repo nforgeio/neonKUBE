@@ -106,9 +106,9 @@ namespace TestTemporal
 
         /// <summary>
         /// The Temporal task list to be use for interop testing against the
-        /// <b>cwf-args.exe</b> worker written in GOLANG.
+        /// <b>twf-args.exe</b> worker written in GOLANG.
         /// </summary>
-        public const string TaskList_CwfArgs = "cwf-args";
+        public const string TaskList_TwfArgs = "twf-args";
 
         /// <summary>
         /// Identifies the test clients.

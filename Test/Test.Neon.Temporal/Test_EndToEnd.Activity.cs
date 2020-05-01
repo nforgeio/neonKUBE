@@ -1021,7 +1021,7 @@ namespace TestTemporal
             var task     = stub.RunAsync();
             var activity = ActivityExternalCompletion.WaitForActivity();
 
-            await client.ActivityErrorByTokenAsync(activity.Task.TaskToken, new Exception("error"));
+            await client.ActivityErrorByTokenAsync(activity.Task.TaskToken, new Exception("external activity failed"));
 
             try
             {
@@ -1029,7 +1029,8 @@ namespace TestTemporal
             }
             catch (Exception e)
             {
-                // $todo(jefflill): Verify the exception
+                Assert.IsType<Exception>(e);
+                Assert.Equal("external activity failed", e.Message);
             }
         }
 
@@ -1048,7 +1049,7 @@ namespace TestTemporal
             var task     = stub.RunAsync();
             var activity = ActivityExternalCompletion.WaitForActivity();
 
-            await client.ActivityErrorByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId, new Exception("error"));
+            await client.ActivityErrorByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId, new Exception("external activity failed"));
 
             try
             {
@@ -1056,7 +1057,8 @@ namespace TestTemporal
             }
             catch (Exception e)
             {
-                // $todo(jefflill): Verify the exception
+                Assert.IsType<Exception>(e);
+                Assert.Equal("external activity failed", e.Message);
             }
         }
 
