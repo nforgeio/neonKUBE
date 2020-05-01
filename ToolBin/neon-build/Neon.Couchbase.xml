@@ -231,11 +231,11 @@
             </summary>
             <typeparam name="T">The document type.</typeparam>
             <param name="bucket">The bucket.</param>
-            <param name="keys">The key.</param>
+            <param name="key">The key.</param>
             <param name="expiration">The optional new expiry timespan.</param>
             <returns>The document.</returns>
         </member>
-        <member name="M:Couchbase.CouchbaseExtensions.GetDocumentSafeAsync``1(Couchbase.Core.IBucket,System.Collections.Generic.IEnumerable{System.String})">
+        <member name="M:Couchbase.CouchbaseExtensions.GetDocumentsSafeAsync``1(Couchbase.Core.IBucket,System.Collections.Generic.IEnumerable{System.String})">
             <summary>
             Gets a set of documents, throwing an exception if any document does not exist or there
             was another error.

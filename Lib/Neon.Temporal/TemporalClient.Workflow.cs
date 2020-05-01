@@ -468,6 +468,33 @@ namespace Neon.Temporal
             return reply.Details.ToPublic();
         }
 
+
+        /// <summary>
+        /// Returns the current state of a running workflow.
+        /// </summary>
+        /// <param name="execution">Identifies the workflow execution.</param>
+        /// <param name="namespace">Optionally specifies the namespace.  This defaults to the client namespace.</param>
+        /// <returns>A <see cref="WorkflowDescription"/>.</returns>
+        /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
+        /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
+        /// <exception cref="InternalServiceException">Thrown for internal Temporal problems.</exception>
+        public async Task<WorkflowDescription> DescribeWorkflowExecutionAsync(WorkflowExecution execution, string @namespace = null)
+        {
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
+            EnsureNotDisposed();
+
+            var reply = (WorkflowDescribeExecutionReply)await CallProxyAsync(
+                new WorkflowDescribeExecutionRequest()
+                {
+                    WorkflowId = execution.WorkflowId,
+                    RunId      = execution.RunId,
+                    Namespace  = ResolveNamespace(@namespace)
+                });
+
+            reply.ThrowOnError();
+
+            return reply.Details.ToPublic();
+        }
         /// <summary>
         /// Waits for a resonable period of time for Temporal to start a workflow.
         /// </summary>
@@ -707,33 +734,6 @@ namespace Neon.Temporal
             parentWorkflow.UpdateReplay(reply);
 
             return reply.Result;
-        }
-
-        /// <summary>
-        /// Returns the current state of a running workflow.
-        /// </summary>
-        /// <param name="execution">Identifies the workflow execution.</param>
-        /// <param name="namespace">Optionally specifies the namespace.  This defaults to the client namespace.</param>
-        /// <returns>A <see cref="WorkflowDescription"/>.</returns>
-        /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
-        /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
-        /// <exception cref="InternalServiceException">Thrown for internal Temporal problems.</exception>
-        internal async Task<WorkflowDescription> DescribeWorkflowAsync(WorkflowExecution execution, string @namespace = null)
-        {
-            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
-            EnsureNotDisposed();
-
-            var reply = (WorkflowDescribeExecutionReply)await CallProxyAsync(
-                new WorkflowDescribeExecutionRequest()
-                {
-                    WorkflowId = execution.WorkflowId,
-                    RunId      = execution.RunId,
-                    Namespace  = ResolveNamespace(@namespace)
-                });
-
-            reply.ThrowOnError();
-
-            return reply.Details.ToPublic();
         }
 
         /// <summary>

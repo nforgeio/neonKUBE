@@ -82,11 +82,9 @@ if ($exitCode -ne 0)
 # Compress the binaries to the [Neon.Temporal] project where they'll
 # be embedded as binary resources.
 $neonTemporalResourceFolder = "$env:NF_ROOT\Lib\Neon.Temporal\Resources"
-neon-build gzip "$buildPath\temporal-proxy.linux"   "$neonTemporalResourceFolder\temporal-proxy.linux.gz"
-neon-build gzip "$buildPath\temporal-proxy.osx"     "$neonTemporalResourceFolder\temporal-proxy.osx.gz"
-neon-build gzip "$buildPath\temporal-proxy.win.exe" "$neonTemporalResourceFolder\temporal-proxy.win.exe.gz"
-
-#---------------------------------------------------------------------
+neon-build gzip "$buildPath\temporal-proxy.linux"   "$neonTemporalResourceFolder\temporal-proxy.linux.gz"   > "$logPath" 2>&1
+neon-build gzip "$buildPath\temporal-proxy.osx"     "$neonTemporalResourceFolder\temporal-proxy.osx.gz"     > "$logPath" 2>&1
+neon-build gzip "$buildPath\temporal-proxy.win.exe" "$neonTemporalResourceFolder\temporal-proxy.win.exe.gz" > "$logPath" 2>&1
 
 # Return to the original directory
 Set-Location $orgDirectory

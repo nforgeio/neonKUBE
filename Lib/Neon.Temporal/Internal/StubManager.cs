@@ -185,7 +185,7 @@ namespace Neon.Temporal.Internal
             private static MethodInfo       getWorkflowResultAsync;                 // from: TemporalClient
             private static MethodInfo       startChildWorkflowAsync;                // from: TemporalClient
             private static MethodInfo       getChildWorkflowResultAsync;            // from: TemporalClient
-            private static MethodInfo       describeWorkflowAsync;                  // from: TemporalClient
+            private static MethodInfo       describeWorkflowExecutionAsync;         // from: TemporalClient
             private static MethodInfo       cancelWorkflowAsync;                    // from: TemporalClient
             private static MethodInfo       terminateWorkflowAsync;                 // from: TemporalClient
             private static MethodInfo       signalWorkflowAsync;                    // from: TemporalClient
@@ -214,7 +214,7 @@ namespace Neon.Temporal.Internal
                 getWorkflowResultAsync                = NeonHelper.GetMethod(clientType, ""GetWorkflowResultAsync"", typeof(WorkflowExecution), typeof(string));
                 startChildWorkflowAsync               = NeonHelper.GetMethod(clientType, ""StartChildWorkflowAsync"", typeof(Workflow), typeof(string), typeof(byte[]), typeof(ChildWorkflowOptions));
                 getChildWorkflowResultAsync           = NeonHelper.GetMethod(clientType, ""GetChildWorkflowResultAsync"", typeof(Workflow), typeof(ChildExecution));
-                describeWorkflowAsync                 = NeonHelper.GetMethod(clientType, ""DescribeWorkflowAsync"", typeof(WorkflowExecution), typeof(string));
+                describeWorkflowExecutionAsync        = NeonHelper.GetMethod(clientType, ""DescribeWorkflowExecutionAsync"", typeof(WorkflowExecution), typeof(string));
                 cancelWorkflowAsync                   = NeonHelper.GetMethod(clientType, ""CancelWorkflowAsync"", typeof(WorkflowExecution), typeof(string));
                 terminateWorkflowAsync                = NeonHelper.GetMethod(clientType, ""TerminateWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
                 signalWorkflowAsync                   = NeonHelper.GetMethod(clientType, ""SignalWorkflowAsync"", typeof(WorkflowExecution), typeof(string), typeof(byte[]), typeof(string));
@@ -260,9 +260,9 @@ namespace Neon.Temporal.Internal
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            public static async Task<WorkflowDescription> DescribeWorkflowAsync(TemporalClient client, WorkflowExecution execution, string @namespace)
+            public static async Task<WorkflowDescription> DescribeWorkflowExecutionAsync(TemporalClient client, WorkflowExecution execution, string @namespace)
             {
-                return await (Task<WorkflowDescription>)describeWorkflowAsync.Invoke(client, new object[] { execution, @namespace });
+                return await (Task<WorkflowDescription>)describeWorkflowExecutionAsync.Invoke(client, new object[] { execution, @namespace });
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]

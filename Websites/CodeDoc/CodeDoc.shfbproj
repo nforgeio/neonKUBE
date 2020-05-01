@@ -71,7 +71,7 @@
     </FeedbackEMailLinkText>
     <CatalogProductId>VS</CatalogProductId>
     <CatalogVersion>100</CatalogVersion>
-    <VendorName>neonFORGE</VendorName>
+    <VendorName>neonFORGE LLC</VendorName>
     <ProductTitle>neonKUBE</ProductTitle>
     <TocOrder>-1</TocOrder>
     <TocParentId>-1</TocParentId>
@@ -89,7 +89,7 @@
 Report any issues at: &amp;lt%3ba href=&amp;quot%3bhttps://github.com/nforgeio/neonKUBE&amp;quot%3b&amp;gt%3bhttps://github.com/nforgeio/neonKUBE&amp;lt%3b/a&amp;gt%3b</FooterText>
     <CopyrightText>Copyright %28c%29 2005-2020 by neonFORGE, LLC.  All rights reserved.</CopyrightText>
     <ProjectSummary>&amp;lt%3bp&amp;gt%3b
-The Neon class libraries organizes classes in several namespaces.  Most classes are defined in &amp;lt%3bb&amp;gt%3bNeon.%2a&amp;lt%3b/b&amp;gt%3b namespaces but we do define some extension methods within non-Neon namespaces so they&amp;#39%3bll for convienence.
+The Neon class libraries organizes classes in several namespaces.  Most classes are defined in &amp;lt%3bb&amp;gt%3bNeon.%2a&amp;lt%3b/b&amp;gt%3b namespaces but we do define some extension methods within non-Neon namespaces for ease of use.
 &amp;lt%3b/p&amp;gt%3b
 &amp;lt%3bp&amp;gt%3b
 &amp;lt%3bb&amp;gt%3bNOTE:&amp;lt%3b/b&amp;gt%3b You should avoid using any types in namespaces ending with &amp;lt%3bb&amp;gt%3bInternal&amp;lt%3b.b&amp;gt%3b.  These types are reserved for internal use an we reserve the right to change or remove these without notice.

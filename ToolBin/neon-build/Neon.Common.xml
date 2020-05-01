@@ -405,7 +405,7 @@
             Determines if the bitmap passed is equal to the current bitmap.
             </summary>
             <param name="obj">The instance to be compared.</param>
-            <returns></returns>
+            <returns><c>true</c> of the bitmaps are equal.</returns>
         </member>
         <member name="M:Neon.Collections.Bits.GetHashCode">
             <summary>
@@ -604,6 +604,8 @@
             <summary>
             Implicit cast from and array of Blocks into a BlockArray.
             </summary>
+            <param name="blocks">The array of blocks to be converted.</param>
+            <returns>The <see cref="T:Neon.Common.BlockArray"/>.</returns>
         </member>
         <member name="M:Neon.Common.BlockArray.#ctor">
             <summary>
@@ -785,6 +787,7 @@
             <summary>
             Returns an array to the underlying blocks.
             </summary>
+            <returns>The block array.</returns>
         </member>
         <member name="M:Neon.Common.BlockArray.GetBlock(System.Int32)">
             <summary>
@@ -835,6 +838,39 @@
             A new set of Block objects will be returned but they
             will point to the same underlying buffers.
             </remarks>
+        </member>
+        <member name="T:Neon.Common.CatchAllException">
+            <summary>
+            <para>
+            Thrown by <see cref="M:Neon.Common.ExceptionResult.ThrowOnError"/> and <see cref="T:Neon.Common.ExceptionResult`1"/>
+            when the type for the exception identified by <see cref="P:Neon.Common.ExceptionResult.ExceptionType"/> doesn't
+            exist in the current <see cref="T:System.AppDomain"/>.
+            </para>
+            <para>
+            This can happen when a remote process throws an exception from an assembly it references but
+            is not referenced by the calling process.  In these cases, you'll need to catch this exception
+            and then examine the <see cref="P:Neon.Common.CatchAllException.ExceptionType"/> property to identify the exception and potentially
+            the <see cref="P:System.Exception.Message"/> property as well.
+            </para>
+            </summary>
+        </member>
+        <member name="M:Neon.Common.CatchAllException.#ctor(System.Exception)">
+            <summary>
+            Constructs an instance from the exception passed.
+            </summary>
+            <param name="e">The exception being wrapped.</param>
+        </member>
+        <member name="M:Neon.Common.CatchAllException.#ctor(System.String,System.String)">
+            <summary>
+            Constructs an instance from an exception type name and an optional message.
+            </summary>
+            <param name="exceptionType">The fully qualified exception type name.</param>
+            <param name="message">The optional exception message.</param>
+        </member>
+        <member name="P:Neon.Common.CatchAllException.ExceptionType">
+            <summary>
+            Returns the fully qualified name of the wrapped exception type.
+            </summary>
         </member>
         <member name="T:Neon.Common.CommandLine">
             <summary>
@@ -953,11 +989,13 @@
             instance, dealing with quoted parameters, etc.
             </summary>
             <param name="input">The argument string.</param>
+            <returns>The parsed <see cref="T:Neon.Common.CommandLine"/>.</returns>
         </member>
         <member name="M:Neon.Common.CommandLine.ExpandFiles(System.String[])">
             <summary>
             Expands the command line by processing items beginning with '@' as input files.
             </summary>
+            <param name="args">The command line arguments.</param>
             <returns>The set of expanded items.</returns>
             <remarks>
             <para>
@@ -1466,6 +1504,119 @@
             <exception cref="T:System.Collections.Generic.KeyNotFoundException">Thrown if the variable does not exists and <paramref name="required"/>=<c>true</c>.</exception>
             <exception cref="T:System.FormatException">Thrown if the variable could not be parsed or the <paramref name="validator"/> returned an error.</exception>
         </member>
+        <member name="T:Neon.Common.ExceptionResult">
+            <summary>
+            Used to marshal a possible exception from a remote process to the local caller.
+            Use this type for remote methods that return <c>void</c> or the derived
+            <see cref="T:Neon.Common.ExceptionResult`1"/> type for remote methods that return
+            a result.
+            </summary>
+            <remarks>
+            <note>
+            This is typically be used internally by frameworks like <b>Neon.Cadence</b> to
+            bring exception handling functionality when calling remote processes (like
+            workflows and activities in that case).
+            </note>
+            <para>
+            This works by setting the <see cref="P:Neon.Common.ExceptionResult.ExceptionType"/> property to the fully qualified
+            name of the exception type and <see cref="P:Neon.Common.ExceptionResult.ExceptionMessage"/> to the exception message
+            (which may be <c>null</c>) in the remote process and then serializing the instance 
+            to JSON or some other format to be transmitted back to the caller.
+            </para>
+            <para>
+            The local caller will then call <see cref="M:Neon.Common.ExceptionResult.ThrowOnError"/> which will attempt to rethrow
+            the exception with the same <see cref="P:Neon.Common.ExceptionResult.ExceptionType"/>.  This is accomplished by reflecting
+            all assemblies currently loaded in the <see cref="T:System.AppDomain"/> looking for exception
+            types.  Exception types that have a default constructor or constructors with a string
+            message parameter or a message and inner exception message parameters will be 
+            cached internally in a dictionary that maps the type name to the exception type.
+            </para>
+            <para>
+            If <see cref="M:Neon.Common.ExceptionResult.ThrowOnError"/> can locate a local exception type that has a conforming
+            constructor, then that exception type will be thrown with the <see cref="P:Neon.Common.ExceptionResult.ExceptionMessage"/>.
+            A <see cref="T:Neon.Common.CatchAllException"/> will be thrown instead, if a conforming local
+            exception doesn't exist.
+            </para>
+            </remarks>
+        </member>
+        <member name="F:Neon.Common.ExceptionResult.ExceptionThrower.DefaultConstructor">
+            <summary>
+            Set to the local exception's default constructor (if any).
+            </summary>
+        </member>
+        <member name="F:Neon.Common.ExceptionResult.ExceptionThrower.MessageConstructor">
+            <summary>
+            Set to the local exception's constructor that accepts a single string message argument (if any).
+            </summary>
+        </member>
+        <member name="F:Neon.Common.ExceptionResult.ExceptionThrower.MessageInnerConstructor">
+            <summary>
+            Set to the local exception's constructor that accepts tring message and
+            inner exception arguments (if any).
+            </summary>
+        </member>
+        <member name="M:Neon.Common.ExceptionResult.ExceptionThrower.Throw(System.String)">
+            <summary>
+            Throws a local exception type, including the message passed.
+            </summary>
+            <param name="message"></param>
+        </member>
+        <member name="M:Neon.Common.ExceptionResult.#cctor">
+            <summary>
+            Static constructor.
+            </summary>
+        </member>
+        <member name="M:Neon.Common.ExceptionResult.#ctor">
+            <summary>
+            Default constructor.
+            </summary>
+        </member>
+        <member name="M:Neon.Common.ExceptionResult.#ctor(System.Exception)">
+            <summary>
+            Constructs an instance from an exception.
+            </summary>
+            <param name="e">The source exception.</param>
+        </member>
+        <member name="P:Neon.Common.ExceptionResult.ExceptionType">
+            <summary>
+            The fully qualified name of the exception type to be rethrown or <c>null</c>
+            when there was no error.
+            </summary>
+        </member>
+        <member name="P:Neon.Common.ExceptionResult.ExceptionMessage">
+            <summary>
+            Optionally specifies the exception message when <see cref="P:Neon.Common.ExceptionResult.ExceptionType"/> is not <c>null</c>.
+            </summary>
+        </member>
+        <member name="M:Neon.Common.ExceptionResult.ThrowOnError">
+            <summary>
+            This method does nothing in <see cref="P:Neon.Common.ExceptionResult.ExceptionType"/> is <c>null</c> or empty, otherwise
+            it attempts to throw the local exception type with the same name as <see cref="P:Neon.Common.ExceptionResult.ExceptionType"/>
+            and if that's not possible, it'll throw a <see cref="T:Neon.Common.CatchAllException"/> including
+            the type name for the exception and message.
+            </summary>
+        </member>
+        <member name="T:Neon.Common.ExceptionResult`1">
+            <summary>
+            Used to marshal a possible exception from a remote process to the local caller.
+            Use this type for remote methods that return a result or the base
+            <see cref="T:Neon.Common.ExceptionResult"/> type for remote methods that return
+            <c>void</c>.
+            </summary>
+            <typeparam name="TResult"></typeparam>
+        </member>
+        <member name="M:Neon.Common.ExceptionResult`1.#ctor">
+            <summary>
+            Default constructor.
+            </summary>
+        </member>
+        <member name="P:Neon.Common.ExceptionResult`1.Result">
+            <summary>
+            The operation result.  This is returned when the base class
+            <see cref="P:Neon.Common.ExceptionResult.ExceptionType"/> is not <c>null</c>
+            or empty.
+            </summary>
+        </member>
         <member name="T:Neon.Common.GlobPattern">
             <summary>
             Implements a very simple glob matcher inspired by the GitHub <c>.gitignore</c> patterns
@@ -1717,12 +1868,14 @@
             Explicitly casts a <see cref="T:Neon.Common.SemanticVersion"/> into a string.
             </summary>
             <param name="version">The version input.</param>
+            <returns>The version converted to a string.</returns>
         </member>
         <member name="M:Neon.Common.SemanticVersion.op_Explicit(System.String)~Neon.Common.SemanticVersion">
             <summary>
             Explicitly casts a string into a <see cref="T:Neon.Common.SemanticVersion"/>.
             </summary>
             <param name="version">The version input.</param>
+            <returns>The string converted to a <see cref="T:Neon.Common.SemanticVersion"/>.</returns>
             <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="version"/> is <c>null</c>.</exception>
         </member>
         <member name="M:Neon.Common.SemanticVersion.#ctor">
@@ -2586,13 +2739,14 @@
             <param name="input">The input string or <c>null</c>.</param>
             <returns>The input string with converted line endings.</returns>
         </member>
-        <member name="M:Neon.Common.NeonHelper.ExceptionError(System.Exception,System.Boolean,System.Boolean)">
+        <member name="M:Neon.Common.NeonHelper.ExceptionError(System.Exception,System.Boolean,System.Boolean,System.Int32)">
             <summary>
             Returns a string representation of an exception suitable for logging.
             </summary>
             <param name="e">The exception.</param>
             <param name="stackTrace">Optionally include the stack track.</param>
             <param name="excludeInner">Optionally exclude information about any inner exception.</param>
+            <param name="depth"><b>INTERNAL USE ONLY:</b> Used to prevent infinite recursion when inner exceptions cycle.</param>
             <returns>The error string.</returns>
         </member>
         <member name="M:Neon.Common.NeonHelper.ThreadRun(System.Action)">
@@ -2715,12 +2869,14 @@
             Asynchronously waits for all of the <see cref="T:System.Threading.Tasks.Task"/>s passed to complete.
             </summary>
             <param name="tasks">The tasks to wait on.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
         </member>
         <member name="M:Neon.Common.NeonHelper.WaitAllAsync(System.Threading.Tasks.Task[])">
             <summary>
             Asynchronously waits for all of the <see cref="T:System.Threading.Tasks.Task"/>s passed to complete.
             </summary>
             <param name="tasks">The tasks to wait on.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
         </member>
         <member name="M:Neon.Common.NeonHelper.WaitAllAsync(System.Collections.Generic.IEnumerable{System.Threading.Tasks.Task},System.Nullable{System.TimeSpan},System.Threading.CancellationToken)">
             <summary>
@@ -2729,6 +2885,7 @@
             <param name="tasks">The tasks being performed.</param>
             <param name="timeout">The optional timeout.</param>
             <param name="cancellationToken">The optional cancellation token.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
             <exception cref="T:System.TimeoutException">Thrown if the <paramref name="timeout"/> was exceeded.</exception>
         </member>
         <member name="M:Neon.Common.NeonHelper.JTokenEquals(Newtonsoft.Json.Linq.JToken,Newtonsoft.Json.Linq.JToken)">
@@ -2877,10 +3034,11 @@
         </member>
         <member name="M:Neon.Common.NeonHelper.Base64UrlDecode(System.String)">
             <summary>
-            
+            Decodes a base64url encoded string.  This is a URL and filename safe base-64 based 
+            encoding scheme: <a href="https://tools.ietf.org/html/rfc4648#section-5">RFC6448</a>.
             </summary>
-            <param name="encoded"></param>
-            <returns></returns>
+            <param name="encoded">The encoded string.</param>
+            <returns>The decoded bytes.</returns>
         </member>
         <member name="M:Neon.Common.NeonHelper.GetAssemblyFolder(System.Reflection.Assembly)">
             <summary>
@@ -3460,12 +3618,14 @@
             <summary>
             Returns a double pseudo random number between 0.0 and +1.0
             </summary>
+            <returns>The random number.</returns>
         </member>
         <member name="M:Neon.Common.NeonHelper.PseudoRandomDouble(System.Double)">
             <summary>
             Returns a double pseudo random number between 0.0 and the specified limit.
             </summary>
             <param name="limit">The limit.</param>
+            <returns>The random number.</returns>
         </member>
         <member name="M:Neon.Common.NeonHelper.PseudoRandomInt(System.Int32)">
             <summary>
@@ -3748,11 +3908,6 @@
             </list>
             </summary>
         </member>
-        <member name="F:Neon.Common.ByteUnits.MilliBytes">
-            <summary>
-            
-            </summary>
-        </member>
         <member name="F:Neon.Common.ByteUnits.KiloBytes">
             <summary>
             One KB: 1,000
@@ -3829,13 +3984,6 @@
             <param name="text">The value being parsed.</param>
             <returns>The parsed value.</returns>
             <exception cref="T:System.FormatException">Thrown if the value cannot be parsed.</exception>
-        </member>
-        <member name="M:Neon.Common.ByteUnits.ToMilliByteString(System.Decimal)">
-            <summary>
-            Converts a byte count to a string using millibyte units.
-            </summary>
-            <param name="size">The size.</param>
-            <returns>The size in millibytes.</returns>
         </member>
         <member name="M:Neon.Common.ByteUnits.ToByteString(System.Decimal)">
             <summary>
@@ -4224,7 +4372,7 @@
             <summary>
             Constructs an instance to read from a CSV string.
             </summary>
-            <param name="text"></param>
+            <param name="text">The CSV text.</param>
         </member>
         <member name="M:Neon.Csv.CsvTableReader.Dispose">
             <summary>
@@ -4644,6 +4792,7 @@
             <summary>
             Generic interface describing an entity that can be persisted to a database.
             </summary>
+            <typeparam name="T">Specifies the data type being persisted.</typeparam>
             <remarks>
             <para>
             All entities must implement the <see cref="P:Neon.Data.IPersistableType.__T"/> property such that it returns
@@ -4710,11 +4859,13 @@
             <summary>
             Writes the instance as JSON to a <see cref="T:System.IO.Stream"/>.
             </summary>
+            <param name="stream">The output stream.</param>
         </member>
         <member name="M:Neon.Data.IRoundtripData.WriteJsonToAsync(System.IO.Stream)">
             <summary>
             Asynchronously writes the instance as JSON to a <see cref="T:System.IO.Stream"/>.
             </summary>
+            <param name="stream">The output stream.</param>
             <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
         </member>
         <member name="T:Neon.Data.NamespaceDoc">
@@ -4869,6 +5020,7 @@
             </summary>
             <param name="persistedType">The entity type string.</param>
             <param name="args">Arguments identifying the entity.</param>
+            <returns>The generated database key.</returns>
         </member>
         <member name="M:Neon.Data.RoundtripDataHelper.DeepClone(Newtonsoft.Json.Linq.JObject)">
             <summary>
@@ -5002,6 +5154,11 @@
             Returns <c>true</c> if <b>debug</b> logging is enabled.
             </summary>
         </member>
+        <member name="P:Neon.Diagnostics.INeonLogger.IsLogTransientEnabled">
+            <summary>
+            Returns <c>true</c> if <b>transient</b> logging is enabled.
+            </summary>
+        </member>
         <member name="P:Neon.Diagnostics.INeonLogger.IsLogSInfoEnabled">
             <summary>
             Returns <c>true</c> if <b>sinfo</b> logging is enabled.
@@ -5042,6 +5199,13 @@
         <member name="M:Neon.Diagnostics.INeonLogger.LogDebug(System.Object,System.String)">
             <summary>
             Logs a <b>debug</b> message.
+            </summary>
+            <param name="message">The object that will be serialized into the message.</param>
+            <param name="activityId">The optional activity ID.</param>
+        </member>
+        <member name="M:Neon.Diagnostics.INeonLogger.LogTransient(System.Object,System.String)">
+            <summary>
+            Logs a <b>transient</b> message.
             </summary>
             <param name="message">The object that will be serialized into the message.</param>
             <param name="activityId">The optional activity ID.</param>
@@ -5091,6 +5255,14 @@
         <member name="M:Neon.Diagnostics.INeonLogger.LogDebug(System.Object,System.Exception,System.String)">
             <summary>
             Logs a <b>debug</b> message along with exception information.
+            </summary>
+            <param name="message">The object that will be serialized into the message.</param>
+            <param name="e">The exception.</param>
+            <param name="activityId">The optional activity ID.</param>
+        </member>
+        <member name="M:Neon.Diagnostics.INeonLogger.LogTransient(System.Object,System.Exception,System.String)">
+            <summary>
+            Logs a <b>transient</b> message along with exception information.
             </summary>
             <param name="message">The object that will be serialized into the message.</param>
             <param name="e">The exception.</param>
@@ -5282,6 +5454,16 @@
             This method is intended mostly to enable the efficient use of interpolated C# strings.
             </remarks>
         </member>
+        <member name="M:Neon.Diagnostics.LogExtensions.LogTransient(Neon.Diagnostics.INeonLogger,System.Func{System.Object})">
+            <summary>
+            Logs a transient message retrieved via a message function.
+            </summary>
+            <param name="log">The log.</param>
+            <param name="messageFunc">The message function.</param>
+            <remarks>
+            This method is intended mostly to enable the efficient use of interpolated C# strings.
+            </remarks>
+        </member>
         <member name="M:Neon.Diagnostics.LogExtensions.LogInfo(Neon.Diagnostics.INeonLogger,System.Func{System.Object})">
             <summary>
             Logs an informational message retrieved via a message function.
@@ -5325,6 +5507,13 @@
         <member name="M:Neon.Diagnostics.LogExtensions.LogDebug(Neon.Diagnostics.INeonLogger,System.Exception)">
             <summary>
             Logs a debug exception.
+            </summary>
+            <param name="log">The log.</param>
+            <param name="e">The exception.</param>
+        </member>
+        <member name="M:Neon.Diagnostics.LogExtensions.LogTransient(Neon.Diagnostics.INeonLogger,System.Exception)">
+            <summary>
+            Logs a transient exception.
             </summary>
             <param name="log">The log.</param>
             <param name="e">The exception.</param>
@@ -5404,6 +5593,12 @@
             <summary>
             Describes a non-error security operation or condition, such as a 
             a successful login or authentication.
+            </summary>
+        </member>
+        <member name="F:Neon.Diagnostics.LogLevel.Transient">
+            <summary>
+            Indicates a transient error, typically logged by <see cref="T:Neon.Retry.IRetryPolicy"/>
+            implementations.
             </summary>
         </member>
         <member name="F:Neon.Diagnostics.LogLevel.Debug">
@@ -5519,7 +5714,11 @@
             <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         </member>
         <member name="M:Neon.Diagnostics.LogManager.CreateLogger(System.String)">
-            <inheritdoc/>
+            <summary>
+            Creates a logger.
+            </summary>
+            <param name="sourceModule">Identifies the source module.</param>
+            <returns>The created <see cref="T:Microsoft.Extensions.Logging.ILogger"/>.</returns>
         </member>
         <member name="T:Neon.Diagnostics.LogRecorder">
             <summary>
@@ -5559,6 +5758,9 @@
         <member name="P:Neon.Diagnostics.LogRecorder.IsLogDebugEnabled">
             <inheritdoc/>
         </member>
+        <member name="P:Neon.Diagnostics.LogRecorder.IsLogTransientEnabled">
+            <inheritdoc/>
+        </member>
         <member name="P:Neon.Diagnostics.LogRecorder.IsLogSInfoEnabled">
             <inheritdoc/>
         </member>
@@ -5583,6 +5785,9 @@
         <member name="M:Neon.Diagnostics.LogRecorder.LogDebug(System.Object,System.String)">
             <inheritdoc/>
         </member>
+        <member name="M:Neon.Diagnostics.LogRecorder.LogTransient(System.Object,System.String)">
+            <inheritdoc/>
+        </member>
         <member name="M:Neon.Diagnostics.LogRecorder.LogSInfo(System.Object,System.String)">
             <inheritdoc/>
         </member>
@@ -5602,6 +5807,9 @@
             <inheritdoc/>
         </member>
         <member name="M:Neon.Diagnostics.LogRecorder.LogDebug(System.Object,System.Exception,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.LogRecorder.LogTransient(System.Object,System.Exception,System.String)">
             <inheritdoc/>
         </member>
         <member name="M:Neon.Diagnostics.LogRecorder.LogSInfo(System.Object,System.Exception,System.String)">
@@ -5643,6 +5851,9 @@
             <inheritdoc/>
         </member>
         <member name="P:Neon.Diagnostics.NeonLogger.IsLogDebugEnabled">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Diagnostics.NeonLogger.IsLogTransientEnabled">
             <inheritdoc/>
         </member>
         <member name="P:Neon.Diagnostics.NeonLogger.IsLogErrorEnabled">
@@ -5723,6 +5934,12 @@
             <inheritdoc/>
         </member>
         <member name="M:Neon.Diagnostics.NeonLogger.LogDebug(System.Object,System.Exception,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.NeonLogger.LogTransient(System.Object,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.NeonLogger.LogTransient(System.Object,System.Exception,System.String)">
             <inheritdoc/>
         </member>
         <member name="M:Neon.Diagnostics.NeonLogger.LogError(System.Object,System.String)">
@@ -5819,6 +6036,9 @@
         <member name="P:Neon.Diagnostics.NeonLoggerShim.IsLogDebugEnabled">
             <inheritdoc/>
         </member>
+        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsLogTransientEnabled">
+            <inheritdoc/>
+        </member>
         <member name="P:Neon.Diagnostics.NeonLoggerShim.IsLogErrorEnabled">
             <inheritdoc/>
         </member>
@@ -5863,6 +6083,9 @@
         <member name="M:Neon.Diagnostics.NeonLoggerShim.LogDebug(System.Object,System.String)">
             <inheritdoc/>
         </member>
+        <member name="M:Neon.Diagnostics.NeonLoggerShim.LogTransient(System.Object,System.String)">
+            <inheritdoc/>
+        </member>
         <member name="M:Neon.Diagnostics.NeonLoggerShim.LogSInfo(System.Object,System.String)">
             <inheritdoc/>
         </member>
@@ -5882,6 +6105,9 @@
             <inheritdoc/>
         </member>
         <member name="M:Neon.Diagnostics.NeonLoggerShim.LogDebug(System.Object,System.Exception,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.NeonLoggerShim.LogTransient(System.Object,System.Exception,System.String)">
             <inheritdoc/>
         </member>
         <member name="M:Neon.Diagnostics.NeonLoggerShim.LogSInfo(System.Object,System.Exception,System.String)">
@@ -6086,6 +6312,7 @@
             <param name="offset">Offset of the first byte to write.</param>
             <param name="count">Number of bytes to read.</param>
             <param name="cancellationToken">The cancellation token.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
         </member>
         <member name="M:Neon.IO.BlockStream.Flush">
             <summary>
@@ -6152,6 +6379,7 @@
             <c>true</c> if the method will truncate the underlying BlockArray
             to the actual length of the stream before returning the array.
             </param>
+            <returns>The <see cref="T:Neon.Common.BlockArray"/>.</returns>
         </member>
         <member name="M:Neon.IO.BlockStream.ToArray">
             <summary>
@@ -6205,6 +6433,14 @@
             this class is oriented towards handling Linux-style paths on
             a remote (possibly a Windows) machine.
             </summary>
+        </member>
+        <member name="M:Neon.IO.LinuxPath.Normalize(System.String)">
+            <summary>
+            Ensures that the path passed is suitable for non-Windows platforms
+            by conmverting any backslashes to forward slashes.
+            </summary>
+            <param name="path">The input path (or <c>null</c>).</param>
+            <returns>The normalized path.</returns>
         </member>
         <member name="M:Neon.IO.LinuxPath.ToLinux(System.String)">
             <summary>
@@ -8990,6 +9226,11 @@
             Uber Cadence primary cluster port.
             </summary>
         </member>
+        <member name="F:Neon.Net.NetworkPorts.Temporal">
+            <summary>
+            Temporal primary cluster port.
+            </summary>
+        </member>
         <member name="M:Neon.Net.NetworkPorts.TryParse(System.String,System.Int32@)">
             <summary>
             Attempts to parse an integer or well known port name from a string
@@ -9205,7 +9446,7 @@
             Returns the maximum intervaL between action retry attempts. 
             </summary>
         </member>
-        <member name="M:Neon.Retry.ExponentialRetryPolicy.Clone">
+        <member name="M:Neon.Retry.ExponentialRetryPolicy.Clone(System.Func{System.Exception,System.Boolean})">
             <inheritdoc/>
         </member>
         <member name="M:Neon.Retry.ExponentialRetryPolicy.InvokeAsync(System.Func{System.Threading.Tasks.Task})">
@@ -9226,10 +9467,14 @@
             maximum time the policy will continue retrying the operation.
             </summary>
         </member>
-        <member name="M:Neon.Retry.IRetryPolicy.Clone">
+        <member name="M:Neon.Retry.IRetryPolicy.Clone(System.Func{System.Exception,System.Boolean})">
             <summary>
             Returns a copy of the retry policy.
             </summary>
+            <param name="transientDetector">
+            Optionally specifies a replacement transient detector function 
+            that will be set in the cloned policy.
+            </param>
             <returns>The policy copy.</returns>
         </member>
         <member name="M:Neon.Retry.IRetryPolicy.InvokeAsync(System.Func{System.Threading.Tasks.Task})">
@@ -9320,7 +9565,7 @@
             Returns the fixed interval between action retry attempts.
             </summary>
         </member>
-        <member name="M:Neon.Retry.LinearRetryPolicy.Clone">
+        <member name="M:Neon.Retry.LinearRetryPolicy.Clone(System.Func{System.Exception,System.Boolean})">
             <inheritdoc/>
         </member>
         <member name="M:Neon.Retry.LinearRetryPolicy.InvokeAsync(System.Func{System.Threading.Tasks.Task})">
@@ -9352,7 +9597,7 @@
         <member name="P:Neon.Retry.NoRetryPolicy.Timeout">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Retry.NoRetryPolicy.Clone">
+        <member name="M:Neon.Retry.NoRetryPolicy.Clone(System.Func{System.Exception,System.Boolean})">
             <inheritdoc/>
         </member>
         <member name="M:Neon.Retry.NoRetryPolicy.InvokeAsync(System.Func{System.Threading.Tasks.Task})">
@@ -9376,7 +9621,7 @@
         <member name="P:Neon.Retry.RetryPolicy.Timeout">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Retry.RetryPolicy.Clone">
+        <member name="M:Neon.Retry.RetryPolicy.Clone(System.Func{System.Exception,System.Boolean})">
             <inheritdoc/>
         </member>
         <member name="M:Neon.Retry.RetryPolicy.InvokeAsync(System.Func{System.Threading.Tasks.Task})">
@@ -9387,7 +9632,7 @@
         </member>
         <member name="M:Neon.Retry.RetryPolicy.LogTransient(System.Exception)">
             <summary>
-            Logs a transient exception that is going to be retried if logging
+            Logs a transient exception that will be retried if logging
             is enabled.
             </summary>
             <param name="e">The exception.</param>
@@ -9417,12 +9662,12 @@
             Constructor.
             </summary>
             <param name="sourceModule">Optionally enables transient error logging by identifying the source module (defaults to <c>null</c>).</param>
-            <param name="timeout">Optionally specifies the maximum time the operation should be retried (defaults to no limit).</param>
+            <param name="timeout">Optionally specifies the maximum time the operation will be retried (defaults to unconstrained)</param>
         </member>
         <member name="P:Neon.Retry.RetryPolicyBase.Timeout">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Retry.RetryPolicyBase.Clone">
+        <member name="M:Neon.Retry.RetryPolicyBase.Clone(System.Func{System.Exception,System.Boolean})">
             <inheritdoc/>
         </member>
         <member name="M:Neon.Retry.RetryPolicyBase.InvokeAsync(System.Func{System.Threading.Tasks.Task})">
@@ -9431,20 +9676,31 @@
         <member name="M:Neon.Retry.RetryPolicyBase.InvokeAsync``1(System.Func{System.Threading.Tasks.Task{``0}})">
             <inheritdoc/>
         </member>
+        <member name="P:Neon.Retry.RetryPolicyBase.SourceModule">
+            <summary>
+            Returns the source module.
+            </summary>
+        </member>
         <member name="M:Neon.Retry.RetryPolicyBase.LogTransient(System.Exception)">
             <summary>
-            Logs a transient exception that is going to be retried if logging
+            Logs a transient exception that will be retried if logging
             is enabled.
             </summary>
             <param name="e">The exception.</param>
         </member>
-        <member name="M:Neon.Retry.RetryPolicyBase.AdjustDelay(System.TimeSpan)">
+        <member name="M:Neon.Retry.RetryPolicyBase.SysDeadline">
+            <summary>
+            Computes the time (SYS) after which the operation should not be retried.
+            </summary>
+        </member>
+        <member name="M:Neon.Retry.RetryPolicyBase.AdjustDelay(System.TimeSpan,System.DateTime)">
             <summary>
             Adjusts the delay <see cref="T:System.TimeSpan"/> passed to ensure such
             that delaying the next retry won't exceed the overall retry
             timeout (if specified).
             </summary>
             <param name="delay">The requested delay.</param>
+            <param name="sysDeadline">The retry deadline (SYS) computed by <see cref="M:Neon.Retry.RetryPolicyBase.SysDeadline"/>.</param>
             <returns>The adjusted delay.</returns>
             <remarks>
             <note>
@@ -9663,6 +9919,11 @@
         <member name="F:Neon.Service.NeonServices.TestCadence">
             <summary>
             Non-production service used to test Cadence running in a Linux container.
+            </summary>
+        </member>
+        <member name="F:Neon.Service.NeonServices.TestTemporal">
+            <summary>
+            Non-production service used to test Temporal running in a Linux container.
             </summary>
         </member>
         <member name="T:Neon.Service.ServiceApiContact">
@@ -11603,23 +11864,6 @@
             </para>
             </remarks>
         </member>
-        <member name="M:Neon.Time.SysTime.#cctor">
-            <summary>
-            Static constructor.
-            </summary>
-        </member>
-        <member name="M:Neon.Time.SysTime.Reset">
-            <summary>
-            Used by Unit tests to reset the timer class to its initial value.
-            </summary>
-        </member>
-        <member name="M:Neon.Time.SysTime.OnTimer(System.Object)">
-            <summary>
-            This will be called on 5 minute intervals to ensure that we catch
-            tickcount rollovers and increment the msi field appropriately.
-            </summary>
-            <param name="state">Not used.</param>
-        </member>
         <member name="M:Neon.Time.SysTime.GetTime">
             <summary>
             Returns the current time relative to time the system started.
@@ -11681,6 +11925,11 @@
             bias between the local and external clocks are adjusted.
             </note>
             </remarks>
+        </member>
+        <member name="M:Neon.Time.SysTime.Reset">
+            <summary>
+            Used by Unit tests to reset the timer class to its initial value.
+            </summary>
         </member>
         <member name="T:Neon.Time.TimeOfDay">
             <summary>
@@ -12457,6 +12706,21 @@
             <param name="targetType">Identifies the type we're matching.</param>
             <returns><c>true</c> if <paramref name="type"/> inherits or is <paramref name="targetType"/>.</returns>
         </member>
+        <member name="M:System.ReflectionExtensions.Inherits``1(System.Type)">
+            <summary>
+            Determines whether a type inherits from another type.
+            </summary>
+            <typeparam name="TBase">The required base type.</typeparam>
+            <param name="type">The type being tested.</param>
+            <returns><c>true</c> if <paramref name="type"/> inherits <paramref name="type"/>.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown if <paramref name="type"/> is <c>null</c>.</exception>
+            <remarks>
+            <note>
+            This method also returns <c>true</c> when <typeparamref name="TBase"/> is the
+            same as <paramref name="type"/>.
+            </note>
+            </remarks>
+        </member>
         <member name="M:System.ReflectionExtensions.GetParameterTypes(System.Reflection.MethodInfo)">
             <summary>
             Returns the array of types for a method's parameters.
@@ -12617,6 +12881,7 @@
             </summary>
             <param name="stream">The stream.</param>
             <param name="bytes">The byte array.</param>
+            <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
         </member>
         <member name="M:System.IO.IOExtensions.ReadBytes(System.IO.Stream,System.Int32)">
             <summary>
@@ -12635,12 +12900,14 @@
             <summary>
             Reads all bytes from the current position to the end of the stream.
             </summary>
+            <param name="stream">The source stream.</param>
             <returns>The byte array.</returns>
         </member>
         <member name="M:System.IO.IOExtensions.ReadToEndAsync(System.IO.Stream)">
             <summary>
             Asynchronously reads all bytes from the current position to the end of the stream.
             </summary>
+            <param name="stream">The source stream.</param>
             <returns>The byte array.</returns>
         </member>
         <member name="M:System.IO.IOExtensions.DeflateTo(System.IO.Stream,System.IO.Stream)">
