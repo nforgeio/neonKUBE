@@ -462,5 +462,43 @@ namespace Neon.Cadence
 
             return Execution;
         }
+
+        /// <summary>
+        /// Executes the associated workflow and waits for it to complete.
+        /// </summary>
+        /// <param name="args">The workflow arguments.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task ExecutesAsync(params object[] args)
+        {
+            await SyncContext.ClearAsync;
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+            EnsureNotStarted();
+
+            var argBytes = CadenceHelper.ArgsToBytes(client.DataConverter, args);
+
+            Execution = await client.StartWorkflowAsync(WorkflowTypeName, argBytes, Options);
+
+            await GetResultAsync();
+        }
+
+        /// <summary>
+        /// Executes the associated workflow and waits for it to complete,
+        /// returning the workflow result.
+        /// </summary>
+        /// <typeparam name="TResult">The workflow result type.</typeparam>
+        /// <param name="args">The workflow arguments.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task<TResult> ExecutesAsync<TResult>(params object[] args)
+        {
+            await SyncContext.ClearAsync;
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+            EnsureNotStarted();
+
+            var argBytes = CadenceHelper.ArgsToBytes(client.DataConverter, args);
+
+            Execution = await client.StartWorkflowAsync(WorkflowTypeName, argBytes, Options);
+
+            return await GetResultAsync<TResult>();
+        }
     }
 }
