@@ -842,7 +842,7 @@ namespace Neon.Temporal
 
                 // These event handlers intentionally ignore the process output because
                 // we don't want it to get mixed in with the application's output
-                // streams which will often be used fo streaming application log data
+                // streams which will often be used for streaming application log data
                 // or for other purposes.
                 //
                 // [temporal-proxy] is already transmitting log information to the
