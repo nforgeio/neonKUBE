@@ -32,11 +32,13 @@ using Neon.Temporal.Internal;
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Used to execute an untyped activity in parallel with other activities, child
+    /// Used to execute a typed activity in parallel with other activities, child
     /// workflows or other operations.  Instances are created via 
-    /// <see cref="Workflow.NewActivityFutureStub(string, ActivityOptions)"/>.
+    /// <see cref="Workflow.NewActivityFutureStub{TActivityInterface}(string, ActivityOptions)"/>.
     /// </summary>
-    public class ActivityFutureStub
+    /// <typeparam name="TActivityInterface">Specifies the activity interface.</typeparam>
+    public class ActivityFutureStub<TActivityInterface>
+        where TActivityInterface : class
     {
         //---------------------------------------------------------------------
         // Private types
@@ -140,26 +142,71 @@ namespace Neon.Temporal
         // Implementation
 
         private Workflow            parentWorkflow;
-        private string              activityTypeName;
+        private MethodInfo          targetMethod;
         private ActivityOptions     options;
+        private string              activityTypeName;
         private bool                hasStarted;
 
         /// <summary>
         /// Internal constructor.
         /// </summary>
         /// <param name="parentWorkflow">The associated parent workflow.</param>
-        /// <param name="activityTypeName">
-        /// Specifies the target activity type name.
+        /// <param name="methodName">
+        /// Optionally identifies the target activity method by the name specified in
+        /// the <c>[ActivityMethod]</c> attribute tagging the method.  Pass a <c>null</c>
+        /// or empty string to target the default method.
         /// </param>
         /// <param name="options">The activity options or <c>null</c>.</param>
-        internal ActivityFutureStub(Workflow parentWorkflow, string activityTypeName, ActivityOptions options = null)
+        internal ActivityFutureStub(Workflow parentWorkflow, string methodName = null, ActivityOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName), nameof(activityTypeName));
 
-            this.parentWorkflow   = parentWorkflow;
-            this.activityTypeName = activityTypeName;
-            this.hasStarted       = false;
+            var activityInterface = typeof(TActivityInterface);
+
+            TemporalHelper.ValidateActivityInterface(activityInterface);
+
+            this.parentWorkflow = parentWorkflow;
+            this.hasStarted     = false;
+
+            var activityTarget  = TemporalHelper.GetActivityTarget(activityInterface, methodName);
+            var methodAttribute = activityTarget.MethodAttribute;
+
+            activityTypeName    = activityTarget.ActivityTypeName;
+            targetMethod        = activityTarget.TargetMethod;
+
+            if (options == null)
+            {
+                options = new ActivityOptions();
+            }
+            else
+            {
+                options = options.Clone();
+            }
+
+            if (string.IsNullOrEmpty(options.TaskList))
+            {
+                options.TaskList = methodAttribute.TaskList;
+            }
+
+            if (options.HeartbeatTimeout <= TimeSpan.Zero)
+            {
+                options.HeartbeatTimeout = TimeSpan.FromSeconds(methodAttribute.HeartbeatTimeoutSeconds);
+            }
+
+            if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
+            {
+                options.ScheduleToCloseTimeout = TimeSpan.FromSeconds(methodAttribute.ScheduleToCloseTimeoutSeconds);
+            }
+
+            if (options.ScheduleToStartTimeout <= TimeSpan.Zero)
+            {
+                options.ScheduleToStartTimeout = TimeSpan.FromSeconds(methodAttribute.ScheduleToStartTimeoutSeconds);
+            }
+
+            if (options.StartToCloseTimeout <= TimeSpan.Zero)
+            {
+                options.StartToCloseTimeout = TimeSpan.FromSeconds(methodAttribute.StartToCloseTimeoutSeconds);
+            }
 
             this.options = ActivityOptions.Normalize(parentWorkflow.Client, options);
         }
@@ -191,7 +238,38 @@ namespace Neon.Temporal
                 throw new InvalidOperationException("Cannot start a future stub more than once.");
             }
 
+            var parameters = targetMethod.GetParameters();
+
+            if (parameters.Length != args.Length)
+            {
+                throw new ArgumentException($"Invalid number of parameters: [{parameters.Length}] expected but [{args.Length}] were passed.", nameof(parameters));
+            }
+
             hasStarted = true;
+
+            // Cast the input parameters to the target types so that developers won't need to expicitly
+            // cast things like integers into longs, floats into doubles, etc.
+
+            for (int i = 0; i < args.Length; i++)
+            {
+                args[i] = TemporalHelper.ConvertArg(parameters[i].ParameterType, args[i]);
+            }
+
+            // Validate the return type.
+
+            var resultType = targetMethod.ReturnType;
+
+            if (resultType == typeof(Task))
+            {
+                throw new ArgumentException($"Activity method [{nameof(TActivityInterface)}.{targetMethod.Name}()] does not return [void].", nameof(TActivityInterface));
+            }
+
+            resultType = resultType.GenericTypeArguments.First();
+
+            if (!resultType.IsAssignableFrom(typeof(TResult)))
+            {
+                throw new ArgumentException($"Activity method [{nameof(TActivityInterface)}.{targetMethod.Name}()] returns [{resultType.FullName}] which is not compatible with [{nameof(TResult)}].", nameof(TActivityInterface));
+            }
 
             // Start the activity.
 
@@ -248,7 +326,22 @@ namespace Neon.Temporal
                 throw new InvalidOperationException("Cannot start a future stub more than once.");
             }
 
+            var parameters = targetMethod.GetParameters();
+
+            if (parameters.Length != args.Length)
+            {
+                throw new ArgumentException($"Invalid number of parameters: [{parameters.Length}] expected but [{args.Length}] were passed.", nameof(parameters));
+            }
+
             hasStarted = true;
+
+            // Cast the input parameters to the target types so that developers won't need to expicitly
+            // cast things like integers into longs, floats into doubles, etc.
+
+            for (int i = 0; i < args.Length; i++)
+            {
+                args[i] = TemporalHelper.ConvertArg(parameters[i].ParameterType, args[i]);
+            }
 
             // Start the activity.
 

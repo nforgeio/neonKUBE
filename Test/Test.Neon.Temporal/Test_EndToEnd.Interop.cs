@@ -306,9 +306,20 @@ namespace TestTemporal
 
             public async Task<string> TwoArgsAsync(string name1, string name2)
             {
-                var stub = Workflow.NewExternalActivityStub("main.TwoArgsActivity", options);
+                // Test an untyped future stub that returns no value.  We're
+                // essentially verifying that this doesn't barf.
 
-                return await stub.ExecuteAsync<string>(name1, name2);
+                var future1Stub = Workflow.NewActivityFutureStub("main.TwoArgsActivity", options);
+                var future1     = await future1Stub.StartAsync("JACK", "JILL");
+
+                await future1.GetAsync();
+
+                // Now test an a future stub that returns a value.
+
+                var future2Stub = Workflow.NewActivityFutureStub("main.TwoArgsActivity", options);
+                var future2     = await future2Stub.StartAsync<string>("JACK", "JILL");
+
+                return await future2.GetAsync();
             }
         }
 

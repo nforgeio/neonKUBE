@@ -1525,7 +1525,7 @@ namespace Neon.Temporal
         ///     Local activities are always scheduled to executed within the current process.
         ///     </item>
         ///     <item>
-        ///     Local activity types do not need to be registered and local activities.
+        ///     Local activity types do not need to be registered with the worker.
         ///     </item>
         ///     <item>
         ///     Local activities must complete within the <see cref="WorkflowOptions.TaskStartToCloseTimeout"/>.
@@ -1629,10 +1629,10 @@ namespace Neon.Temporal
         ///     public Task MainAsync()
         ///     {
         ///         var stub1  = Workflow.NewChildWorkflowFutureStub&lt;IMyWorkflow&gt;("child");
-        ///         var future = await stub1.StartAsync("FOO");         // Starting the child with param: "FOO"
+        ///         var future = await stub1.StartAsync$lt;string&gt;("FOO");   // Starting the child with param: "FOO"
         ///         var stub2  = Workflow.NewChildWorkflowStub&lt;IMyWorkflow&gt;();
-        ///         var value2 = await stub2.DoChildWorkflow("BAR");    // This returns: "BAR"
-        ///         var value1 = (int)await future.GetAsync();          // This returns: "FOO"
+        ///         var value2 = await stub2.DoChildWorkflow("BAR");            // This returns: "BAR"
+        ///         var value1 = await future.GetAsync();                       // This returns: "FOO"
         ///     }
         ///     
         ///     public Task&lt;string&gt; ChildAsync(string arg)
@@ -1856,7 +1856,7 @@ namespace Neon.Temporal
         ///         var stub     = Workflow.NewActivityStub&lt;IMyActivity&gt;();
         ///         var fooTask  = stub.FooActivity("FOO");
         ///         var barValue = await stub.BarActivityAsync("BAR");
-        ///         var fiiValue = await fooTask;
+        ///         var fooValue = await fooTask;
         ///     }
         /// }
         /// </code>
@@ -1905,10 +1905,10 @@ namespace Neon.Temporal
         ///     public Task MainAsync()
         ///     {
         ///         var fooStub  = Workflow.NewActivityFutureStub("foo");
-        ///         var future   = fooStub.StartAsync("FOO");
+        ///         var future   = fooStub.StartAsync&lt;string&gt;("FOO");
         ///         var barStub  = Workflow.NewActivityStub&lt;IMyActivity&gt;();
         ///         var barValue = await barStub.BarAsync("BAR");   // Returns: "BAR"
-        ///         var fooValue = (int)await future.GetAsync();    // Returns: "FOO"
+        ///         var fooValue = await future.GetAsync();         // Returns: "FOO"
         ///     }
         /// }
         /// </code>
@@ -1943,6 +1943,145 @@ namespace Neon.Temporal
             options = ActivityOptions.Normalize(Client, options, typeof(TActivityInterface));
 
             return new ActivityFutureStub<TActivityInterface>(this, methodName, options);
+        }
+
+
+        /// <summary>
+        /// Creates a specialized untyped stub suitable for starting and running an activity in parallel
+        /// with other workflow operations such as child workflows or activities.  This is typically
+        /// used for executing activities written in another language.
+        /// </summary>
+        /// <param name="activityTypeName">Specifies the target activity type name.</param>
+        /// <param name="options">Optionally specifies the activity options.</param>
+        /// <returns>The new untyped <see cref="ActivityFutureStub"/>.</returns>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
+        /// <remarks>
+        /// <para>
+        /// Sometimes workflows need to run activities written in other languages in parallel with other
+        /// child workflows or activities.  Although the standard stubs return a <see cref="Task"/> or <see cref="Task{T}"/>,
+        /// workflow developers are required to immediately <c>await</c> every call to these stubs to 
+        /// ensure that the workflow will execute consistently when replayed from history.  This 
+        /// means that you must not do something like this:
+        /// </para>
+        /// <code language="C#">
+        /// public interface IMyActivity : IActivity
+        /// {
+        ///     [ActivityMethod(Name = "activity-1"]
+        ///     Task&lt;string&gt; FooActivityAsync(string arg);
+        ///     
+        ///     [ActivityMethod(Name = "activity-2"]
+        ///     Task&lt;string&gt; BarActivityAsync(string arg);
+        /// }
+        /// 
+        /// public MyActivity : ActivityBase, IMyActivity
+        /// {
+        ///     public Task&lt;string&gt; FooActivityAsync(string arg)
+        ///     {
+        ///         await Task.FromResult(arg);
+        ///     }
+        ///     
+        ///     public Task&lt;string&gt; BarActivityAsync(string arg)
+        ///     {
+        ///         await Task.FromResult(arg);
+        ///     }
+        /// }
+        ///
+        /// public class MyWorkflow : WorkflowBase, IMyWorkflow
+        /// {
+        ///     [WorkflowMethod]
+        ///     public Task MainAsync()
+        ///     {
+        ///         var stub     = Workflow.NewActivityStub("MyActivity::FooActivityAsync");
+        ///         var fooTask  = stub.StartAsync&lt;string&gt;("FOO");
+        ///         var barStub  = Workflow.NewActivityStub&lt;IMyActivity&gt;();
+        ///         var barValue = await barStub.BarActivityAsync("BAR");
+        ///         var fooValue = await fooTask;
+        ///     }
+        /// }
+        /// </code>
+        /// <para>
+        /// The <c>MainAsync()</c> workflow method here starts an activity but doesn't immediately
+        /// <c>await</c> it.  It then runs another activity in parallel and then after the second 
+        /// activity returns, the workflow awaits the first activity.  This pattern is not supported 
+        /// by <b>Neon.Cadence</b> because all workflow related operations need to be immediately
+        /// awaited to ensure that operations will complete in a consistent order when workflows 
+        /// are replayed.
+        /// </para>
+        /// <note>
+        /// The reason for this restriction is related to how the current <b>Neon.Cadence</b> implementation
+        /// uses an embedded GOLANG Cadence client to actually communicate with a Cadence cluster.  This
+        /// may be relaxed in the future if/when we implement native support for the Cadence protocol.
+        /// </note>
+        /// <para>
+        /// A correct implementation would look something like this:
+        /// </para>
+        /// <code language="C#">
+        /// public interface IMyActivity : IActivity
+        /// {
+        ///     [ActivityMethod(Name = "foo"]
+        ///     Task&lt;string&gt; FooAsync(string arg);
+        ///     
+        ///     [ActivityMethod(Name = "bar"]
+        ///     Task&lt;string&gt; BarAsync(string arg);
+        /// }
+        /// 
+        /// public MyActivity : ActivityBase, IMyActivity
+        /// {
+        ///     public Task&lt;string&gt; FooAsync(string arg)
+        ///     {
+        ///         await Task.FromResult(arg);
+        ///     }
+        ///     
+        ///     public Task&lt;string&gt; BarAsync(string arg)
+        ///     {
+        ///         await Task.FromResult(arg);
+        ///     }
+        /// }
+        ///
+        /// public class MyWorkflow : WorkflowBase, IMyWorkflow
+        /// {
+        ///     [WorkflowMethod]
+        ///     public Task MainAsync()
+        ///     {
+        ///         var fooStub  = Workflow.NewActivityFutureStub("foo");
+        ///         var future   = await fooStub.StartAsync&lt;string&gt;("FOO");
+        ///         var barStub  = Workflow.NewActivityStub&lt;IMyActivity&gt;();
+        ///         var barValue = await barStub.BarAsync("BAR");   // Returns: "BAR"
+        ///         var fooValue = await future.GetAsync();         // Returns: "FOO"
+        ///     }
+        /// }
+        /// </code>
+        /// <para>
+        /// Here we call <see cref="NewActivityFutureStub(string, ActivityOptions)"/> specifying
+        /// <b>"foo"</b> as the workflow method name.  This matches the <c>[ActivityMethod(Name = "foo")]</c> decorating
+        /// the <c>FooAsync()</c> activity interface method.  Then we start the first activity by awaiting 
+        /// <see cref="ActivityFutureStub{TActivityInterface}"/>.  This returns an <see cref="IAsyncFuture{T}"/> whose 
+        /// <see cref="IAsyncFuture.GetAsync"/> method returns the activity result.  The code above calls this to
+        /// retrieve the result from the first activity after executing the second activity in parallel.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// You must take care to pass parameters that match the target method.  <b>Neon.Cadence</b> does check these at
+        /// runtime, but there is no compile-time checking for this scheme.
+        /// </para>
+        /// <para>
+        /// You'll also need to cast the <see cref="IAsyncFuture.GetAsync"/> result to the actual type (if required).
+        /// This method always returns the <c>object</c> type even if referenced workflow and activity methods return
+        /// <c>void</c>.  <see cref="IAsyncFuture.GetAsync"/> will return <c>null</c> in these cases.
+        /// </para>
+        /// </note>
+        /// </remarks>
+        public ActivityFutureStub NewActivityFutureStub(string activityTypeName, ActivityOptions options = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName), nameof(activityTypeName));
+            Client.EnsureNotDisposed();
+            WorkflowBase.CheckCallContext(allowWorkflow: true);
+            SetStackTrace();
+
+            options = ActivityOptions.Normalize(Client, options);
+
+            return new ActivityFutureStub(this, activityTypeName, options);
         }
 
         /// <summary>
@@ -2048,10 +2187,10 @@ namespace Neon.Temporal
         ///     public Task MainAsync()
         ///     {
         ///         var fooStub  = Workflow.NewStartLocalActivityStub("foo");
-        ///         var future   = fooStub.StartAsync("FOO");
+        ///         var future   = fooStub.StartAsync&lt;string&gt;("FOO");
         ///         var barStub  = Workflow.NewActivityStub&lt;IMyActivity&gt;();
         ///         var barValue = await barStub.BarAsync("BAR");   // Returns: "BAR"
-        ///         var fooValue = (int)await future.GetAsync();    // Returns: "FOO"
+        ///         var fooValue = await future.GetAsync();         // Returns: "FOO"
         ///     }
         /// }
         /// </code>
