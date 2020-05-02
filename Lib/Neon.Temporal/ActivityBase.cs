@@ -81,7 +81,7 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Used for mapping an activity type name to its underlying type, constructor
+        /// Used for mapping an activity type name to its underlying type
         /// and entry point method.
         /// </summary>
         private struct ActivityRegistration
@@ -110,8 +110,8 @@ namespace Neon.Temporal
         private static Dictionary<ActivityKey, ActivityBase>    idToActivity = new Dictionary<ActivityKey, ActivityBase>();
 
         // This dictionary is used to map activity type names to the target activity
-        // type, constructor, and entry point method.  Note that these mappings are 
-        // scoped to specific Temporal client instances by prefixing the type name with:
+        // type and entry point method.  Note that these mappings are scoped to specific
+        // Temporal client instances by prefixing the type name with:
         //
         //      CLIENT-ID::
         //
@@ -360,18 +360,19 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Constructs an activity instance suitable for executing a local activity.
+        /// Constructs an activity instance suitable for executing a normal activity.
         /// </summary>
         /// <param name="client">The associated client.</param>
         /// <param name="invokeInfo">The activity invocation information.</param>
-        /// <param name="contextId">The activity context ID or <c>null</c> for local activities.</param>
+        /// <param name="contextId">The activity context ID.</param>
         /// <returns>The constructed activity.</returns>
-        private static ActivityBase Create(TemporalClient client, ActivityRegistration invokeInfo, long? contextId)
+        private static ActivityBase CreateNormal(TemporalClient client, ActivityRegistration invokeInfo, long contextId)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
             var activity = (ActivityBase)ActivatorUtilities.CreateInstance(NeonHelper.ServiceContainer, invokeInfo.ActivityType);
 
+            activity.IsLocal = false;
             activity.Initialize(client, invokeInfo.ActivityType, invokeInfo.ActivityMethod, client.DataConverter, contextId);
 
             return activity;
@@ -382,14 +383,15 @@ namespace Neon.Temporal
         /// </summary>
         /// <param name="client">The associated client.</param>
         /// <param name="activityAction">The target activity action.</param>
-        /// <param name="contextId">The activity context ID or <c>null</c> for local activities.</param>
+        /// <param name="contextId">The activity context ID.</param>
         /// <returns>The constructed activity.</returns>
-        internal static ActivityBase Create(TemporalClient client, LocalActivityAction activityAction, long? contextId)
+        internal static ActivityBase CreateLocal(TemporalClient client, LocalActivityAction activityAction, long contextId)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
-            var activity = (ActivityBase)(activityAction.ActivityConstructor.Invoke(noArgs));
+            var activity = (ActivityBase)ActivatorUtilities.CreateInstance(NeonHelper.ServiceContainer, activityAction.ActivityType);
 
+            activity.IsLocal = true;
             activity.Initialize(client, activityAction.ActivityType, activityAction.ActivityMethod, client.DataConverter, contextId);
 
             return activity;
@@ -446,7 +448,7 @@ namespace Neon.Temporal
                 }
             }
 
-            var activity = Create(client, invokeInfo, request.ContextId);
+            var activity = CreateNormal(client, invokeInfo, request.ContextId);
 
             try
             {
@@ -517,7 +519,6 @@ namespace Neon.Temporal
         // Instance members
 
         private Type            activityType;
-        private ActivityTask    activityTask;
         private MethodInfo      activityMethod;
         private IDataConverter  dataConverter;
         private INeonLogger     logger;
@@ -536,8 +537,8 @@ namespace Neon.Temporal
         /// <param name="activityType">Specifies the target activity type.</param>
         /// <param name="activityMethod">Specifies the target activity method.</param>
         /// <param name="dataConverter">Specifies the data converter to be used for parameter and result serilization.</param>
-        /// <param name="contextId">The activity's context ID or <c>null</c> for local activities.</param>
-        internal void Initialize(TemporalClient client, Type activityType, MethodInfo activityMethod, IDataConverter dataConverter, long? contextId)
+        /// <param name="contextId">The activity's context ID.</param>
+        internal void Initialize(TemporalClient client, Type activityType, MethodInfo activityMethod, IDataConverter dataConverter, long contextId)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
@@ -575,39 +576,19 @@ namespace Neon.Temporal
         internal CancellationToken CancellationToken { get; private set; }
 
         /// <summary>
-        /// Returns the context ID for the activity invocation or <c>null</c> for
-        /// local activities.
+        /// Returns the context ID for the activity invocation.
         /// </summary>
-        internal long? ContextId { get; private set; }
+        internal long ContextId { get; private set; }
 
         /// <summary>
         /// Indicates whether the activity was executed locally.
         /// </summary>
-        internal bool IsLocal => !ContextId.HasValue;
+        internal bool IsLocal { get; private set; }
 
         /// <summary>
-        /// <para>
         /// Returns additional information about the activity and the workflow that executed it.
-        /// </para>
-        /// <note>
-        /// For local activity executions, this property will return an <see cref="ActivityTask"/>
-        /// instance with all properties initialized to their default values.
-        /// </note>
         /// </summary>
-        internal ActivityTask ActivityTask
-        {
-            get
-            {
-                if (activityTask == null)
-                {
-                    activityTask = new ActivityTask();
-                }
-
-                return activityTask;
-            }
-
-            set => activityTask = value;
-        }
+        internal ActivityTask ActivityTask { get; private set; }
 
         /// <summary>
         /// Indicates that the activity will be completed externally.
@@ -662,27 +643,33 @@ namespace Neon.Temporal
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
+            // Capture the activity information.
+
+            var reply = (ActivityGetInfoReply)(await Client.CallProxyAsync(
+                new ActivityGetInfoRequest()
+                {
+                    ContextId = ContextId,
+                }));
+
+            reply.ThrowOnError();
+
+            ActivityTask = reply.Info.ToPublic();
+
+            // Invoke the activity.
+
             if (IsLocal)
             {
+                // This doesn't make sense for local activities.
+
+                ActivityTask.ActivityTypeName = null;
+
                 return await InvokeAsync(client, args);
             }
             else
             {
-                // Capture the activity information.
-
-                var reply = (ActivityGetInfoReply)(await Client.CallProxyAsync(
-                    new ActivityGetInfoRequest()
-                    {
-                        ContextId = ContextId.Value,
-                    }));
-
-                reply.ThrowOnError();
-
-                ActivityTask = reply.Info.ToPublic();
-
                 // Track the activity.
 
-                var activityKey = new ActivityKey(client, ContextId.Value);
+                var activityKey = new ActivityKey(client, ContextId);
 
                 try
                 {

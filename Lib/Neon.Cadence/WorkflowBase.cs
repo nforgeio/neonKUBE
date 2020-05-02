@@ -1238,7 +1238,7 @@ namespace Neon.Cadence
                     }
 
                     var workerArgs = new WorkerArgs() { Client = client, ContextId = request.ActivityContextId };
-                    var activity   = ActivityBase.Create(client, activityAction, null);
+                    var activity   = ActivityBase.CreateLocal(client, activityAction, request.ActivityContextId);
                     var result     = await activity.OnInvokeAsync(client, request.Args);
 
                     return new ActivityInvokeLocalReply()

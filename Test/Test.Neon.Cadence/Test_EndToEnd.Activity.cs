@@ -221,16 +221,19 @@ namespace TestCadence
         public class LocalActivityWithouthResult : ActivityBase, ILocalActivityWithoutResult
         {
             public static string Name { get; private set; } = null;
+            public static ActivityTask Info { get; set; }
 
             public new static void Reset()
             {
                 Name = null;
+                Info = null;
             }
 
             [ActivityMethod]
             public async Task HelloAsync(string name)
             {
                 LocalActivityWithouthResult.Name = name;
+                LocalActivityWithouthResult.Info = ActivityTask;
 
                 await Task.CompletedTask;
             }
@@ -269,6 +272,14 @@ namespace TestCadence
 
             await stub.HelloAsync("Jeff");
             Assert.Equal("Jeff", LocalActivityWithouthResult.Name);
+
+            // Also verify that local activities also receive 
+            // Activity Task info.
+
+            Assert.NotNull(LocalActivityWithouthResult.Info);
+            Assert.Null(LocalActivityWithouthResult.Info.ActivityTypeName);     // This is NULL for local activities
+            Assert.Equal(CadenceTestHelper.TaskList, LocalActivityWithouthResult.Info.TaskList);
+            Assert.Equal("test-domain", LocalActivityWithouthResult.Info.WorkflowDomain);
         }
 
         //---------------------------------------------------------------------
