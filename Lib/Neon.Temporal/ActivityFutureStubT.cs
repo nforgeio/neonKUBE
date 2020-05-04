@@ -142,6 +142,7 @@ namespace Neon.Temporal
         // Implementation
 
         private Workflow            parentWorkflow;
+        private TemporalClient      client;
         private MethodInfo          targetMethod;
         private ActivityOptions     options;
         private string              activityTypeName;
@@ -166,49 +167,15 @@ namespace Neon.Temporal
             TemporalHelper.ValidateActivityInterface(activityInterface);
 
             this.parentWorkflow = parentWorkflow;
+            this.client         = parentWorkflow.Client;
             this.hasStarted     = false;
 
             var activityTarget  = TemporalHelper.GetActivityTarget(activityInterface, methodName);
             var methodAttribute = activityTarget.MethodAttribute;
 
-            activityTypeName    = activityTarget.ActivityTypeName;
-            targetMethod        = activityTarget.TargetMethod;
-
-            if (options == null)
-            {
-                options = new ActivityOptions();
-            }
-            else
-            {
-                options = options.Clone();
-            }
-
-            if (string.IsNullOrEmpty(options.TaskList))
-            {
-                options.TaskList = methodAttribute.TaskList;
-            }
-
-            if (options.HeartbeatTimeout <= TimeSpan.Zero)
-            {
-                options.HeartbeatTimeout = TimeSpan.FromSeconds(methodAttribute.HeartbeatTimeoutSeconds);
-            }
-
-            if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
-            {
-                options.ScheduleToCloseTimeout = TimeSpan.FromSeconds(methodAttribute.ScheduleToCloseTimeoutSeconds);
-            }
-
-            if (options.ScheduleToStartTimeout <= TimeSpan.Zero)
-            {
-                options.ScheduleToStartTimeout = TimeSpan.FromSeconds(methodAttribute.ScheduleToStartTimeoutSeconds);
-            }
-
-            if (options.StartToCloseTimeout <= TimeSpan.Zero)
-            {
-                options.StartToCloseTimeout = TimeSpan.FromSeconds(methodAttribute.StartToCloseTimeoutSeconds);
-            }
-
-            this.options = ActivityOptions.Normalize(parentWorkflow.Client, options);
+            this.activityTypeName = activityTarget.ActivityTypeName;
+            this.targetMethod     = activityTarget.TargetMethod;
+            this.options          = ActivityOptions.Normalize(client, options, typeof(TActivityInterface), activityTarget.TargetMethod);
         }
 
         /// <summary>

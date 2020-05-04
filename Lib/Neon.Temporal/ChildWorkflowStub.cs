@@ -60,7 +60,7 @@ namespace Neon.Temporal
             TemporalHelper.ValidateWorkflowInterface(workflowInterface);
 
             this.parentWorkflow   = parentWorkflow;
-            this.options          = ChildWorkflowOptions.Normalize(parentWorkflow.Client, options);
+            this.options          = options;
             this.hasStarted       = false;
 
             var workflowTarget    = TemporalHelper.GetWorkflowTarget(workflowInterface, methodName);

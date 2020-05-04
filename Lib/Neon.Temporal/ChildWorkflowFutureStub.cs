@@ -69,11 +69,6 @@ namespace Neon.Temporal
             this.client           = parentWorkflow.Client;
             this.WorkflowTypeName = workflowTypeName;
             this.Options          = ChildWorkflowOptions.Normalize(client, options);
-
-            if (string.IsNullOrEmpty(Options.Namespace))
-            {
-                Options.Namespace = parentWorkflow.WorkflowInfo.Namespace;
-            }
         }
 
         /// <summary>

@@ -140,6 +140,7 @@ namespace Neon.Cadence
         // Implementation
 
         private Workflow            parentWorkflow;
+        CadenceClient               client;
         private string              activityTypeName;
         private ActivityOptions     options;
         private bool                hasStarted;
@@ -158,10 +159,10 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName), nameof(activityTypeName));
 
             this.parentWorkflow   = parentWorkflow;
+            this.client           = parentWorkflow.Client;
             this.activityTypeName = activityTypeName;
             this.hasStarted       = false;
-
-            this.options = ActivityOptions.Normalize(parentWorkflow.Client, options);
+            this.options          = ActivityOptions.Normalize(client, options);
         }
 
         /// <summary>

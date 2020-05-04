@@ -35,6 +35,7 @@ namespace Neon.Temporal
     {
         private string      name;
         private string      taskList;
+        private string      @namespace;
         private int         heartbeatTimeoutSeconds;
         private int         scheduleToCloseTimeoutSeconds;
         private int         scheduleToStartTimeoutSeconds;
@@ -114,9 +115,6 @@ namespace Neon.Temporal
         /// a heartbeat before Temporal will consider the activity to have 
         /// timed out.
         /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed.
-        /// </note>
         /// </summary>
         public int HeartbeatTimeoutSeconds
         {
@@ -132,8 +130,6 @@ namespace Neon.Temporal
         /// for the activity to execute on the worker, as well as any time scheduling
         /// and performing retries.
         /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed.
         /// </note>
         /// </summary>
         public int ScheduleToCloseTimeoutSeconds
@@ -147,9 +143,6 @@ namespace Neon.Temporal
         /// Optionally specifies the maximum time the activity may remain 
         /// in the task list before being assigned to a worker.
         /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed.
-        /// </note>
         /// </summary>
         public int ScheduleToStartTimeoutSeconds
         {
@@ -163,9 +156,6 @@ namespace Neon.Temporal
         /// an individual workflow task once it has been assigned
         /// to a worker.
         /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed.
-        /// </note>
         /// </summary>
         public int StartToCloseTimeoutSeconds
         {
@@ -177,9 +167,6 @@ namespace Neon.Temporal
         /// <para>
         /// Optionally specifies the target task list.
         /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed.
-        /// </note>
         /// </summary>
         public string TaskList
         {
@@ -194,6 +181,28 @@ namespace Neon.Temporal
                 else
                 {
                     taskList = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Optionally specifies the target namespace.
+        /// </para>
+        /// </summary>
+        public string Namespace
+        {
+            get => @namespace;
+
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    @namespace = null;
+                }
+                else
+                {
+                    @namespace = value;
                 }
             }
         }

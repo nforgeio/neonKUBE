@@ -2247,7 +2247,7 @@ namespace TestCadence
 
             var options = new WorkflowOptions()
             {
-                TaskStartToCloseTimeout = TimeSpan.FromSeconds(5)
+                DecisionTaskStartToCloseTimeout = TimeSpan.FromSeconds(5)
             };
 
             var stub = client.NewWorkflowStub<IWorkflowFail>(options);
@@ -3271,7 +3271,8 @@ namespace TestCadence
 
             var options = new WorkflowOptions()
             {
-                WorkflowId = $"Workflow_ExternalIdReuseViaAttribute-{Guid.NewGuid().ToString("d")}",
+                WorkflowId            = $"Workflow_ExternalIdReuseViaAttribute-{Guid.NewGuid().ToString("d")}",
+                WorkflowIdReusePolicy = WorkflowIdReusePolicy.AllowDuplicate
             };
 
             // Do the first run.

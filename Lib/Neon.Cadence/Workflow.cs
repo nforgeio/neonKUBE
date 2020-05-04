@@ -1528,7 +1528,7 @@ namespace Neon.Cadence
         ///     Local activity types do not need to be registered with the worker.
         ///     </item>
         ///     <item>
-        ///     Local activities must complete within the <see cref="WorkflowOptions.TaskStartToCloseTimeout"/>.
+        ///     Local activities must complete within the <see cref="WorkflowOptions.DecisionTaskStartToCloseTimeout"/>.
         ///     This defaults to 10 seconds and can be set to a maximum of 60 seconds.
         ///     </item>
         ///     <item>
@@ -1667,8 +1667,6 @@ namespace Neon.Cadence
             Client.EnsureNotDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
-
-            options = ChildWorkflowOptions.Normalize(Client, options, typeof(TWorkflowInterface));
 
             return new ChildWorkflowStub<TWorkflowInterface>(this, methodName, options);
         }
@@ -1940,8 +1938,6 @@ namespace Neon.Cadence
             WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
 
-            options = ActivityOptions.Normalize(Client, options, typeof(TActivityInterface));
-
             return new ActivityFutureStub<TActivityInterface>(this, methodName, options);
         }
 
@@ -2077,8 +2073,6 @@ namespace Neon.Cadence
             Client.EnsureNotDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
-
-            options = ActivityOptions.Normalize(Client, options);
 
             return new ActivityFutureStub(this, activityTypeName, options);
         }
@@ -2289,19 +2283,19 @@ namespace Neon.Cadence
         /// Executes an activity with a specific activity type name and waits for it to complete.
         /// </summary>
         /// <param name="activityTypeName">Identifies the activity.</param>
-        /// <param name="args">Optionally specifies the encoded activity arguments.</param>
-        /// <param name="options">Optionally specifies the activity options.</param>
+        /// <param name="args">Specifies the encoded activity arguments or <c>null</c> when there are no arguments.</param>
+        /// <param name="options">Specifies the activity options.</param>
         /// <returns>The activity result encoded as a byte array.</returns>
         /// <exception cref="CadenceException">
         /// An exception derived from <see cref="CadenceException"/> will be be thrown 
         /// if the child workflow did not complete successfully.
         /// </exception>
         /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
-        /// <exception cref="EntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the Cadence does not exist.</exception>
         /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
-        internal async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args = null, ActivityOptions options = null)
+        internal async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args, ActivityOptions options)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName), nameof(activityTypeName));
             Client.EnsureNotDisposed();
@@ -2343,7 +2337,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(activityMethod != null, nameof(activityMethod));
             Client.EnsureNotDisposed();
 
-            var activityActionId    = Interlocked.Increment(ref nextLocalActivityActionId);
+            var activityActionId = Interlocked.Increment(ref nextLocalActivityActionId);
 
             lock (syncLock)
             {
@@ -2359,8 +2353,8 @@ namespace Neon.Cadence
         /// <param name="activityType">The activity type.</param>
         /// <param name="activityConstructor">The activity constructor.</param>
         /// <param name="activityMethod">The target local activity method.</param>
-        /// <param name="args">Optionally specifies the activity arguments.</param>
-        /// <param name="options">Optionally specifies any local activity options.</param>
+        /// <param name="args">Specifies specifies the encoded activity arguments or <c>null</c> when there are no arguments.</param>
+        /// <param name="options">Specifies the local activity options.</param>
         /// <returns>The activity result encoded as a byte array.</returns>
         /// <exception cref="CadenceException">
         /// An exception derived from <see cref="CadenceException"/> will be be thrown 
@@ -2374,11 +2368,11 @@ namespace Neon.Cadence
         /// <paramref name="activityMethod"/> method.
         /// </remarks>
         /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
-        /// <exception cref="EntityNotExistsException">Thrown if the named domain does not exist.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the Cadence domain does not exist.</exception>
         /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Cadence cluster problems.</exception>
         /// <exception cref="ServiceBusyException">Thrown when Cadence is too busy.</exception>
-        internal async Task<byte[]> ExecuteLocalActivityAsync(Type activityType, ConstructorInfo activityConstructor, MethodInfo activityMethod, byte[] args = null, LocalActivityOptions options = null)
+        internal async Task<byte[]> ExecuteLocalActivityAsync(Type activityType, ConstructorInfo activityConstructor, MethodInfo activityMethod, byte[] args, LocalActivityOptions options)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
             Covenant.Requires<ArgumentException>(activityType.BaseType == typeof(ActivityBase), nameof(activityType));
@@ -2387,15 +2381,9 @@ namespace Neon.Cadence
             Client.EnsureNotDisposed();
             SetStackTrace(skipFrames: 3);
 
-            options = options ?? new LocalActivityOptions();
-            options = options.Clone();
-
-            if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
-            {
-                options.ScheduleToCloseTimeout = Client.Settings.WorkflowScheduleToCloseTimeout;
-            }
-
             var activityActionId = RegisterActivityAction(activityType, activityConstructor, activityMethod);
+
+            options = LocalActivityOptions.Normalize(this.Client, options);
             
             var reply = await ExecuteNonParallel(
                 async () =>

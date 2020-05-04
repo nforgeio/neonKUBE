@@ -75,7 +75,7 @@ namespace Neon.Temporal.Internal
         /// <param name="client">The associated <see cref="TemporalClient"/>.</param>
         /// <param name="workflow">The parent workflow.</param>x
         /// <param name="activityTypeName">Specifies the activity type name.</param>
-        /// <param name="options">Specifies the <see cref="ActivityOptions"/>.</param>
+        /// <param name="options">Specifies the <see cref="ActivityOptions"/> or <c>null</c>.</param>
         /// <param name="activityInterface">Specifies the activity interface definition.</param>
         /// <returns>The activity stub as an <see cref="object"/>.</returns>
         public object Create(TemporalClient client, Workflow workflow, string activityTypeName, ActivityOptions options, System.Type activityInterface)
@@ -83,8 +83,9 @@ namespace Neon.Temporal.Internal
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(workflow != null, nameof(workflow));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName), nameof(activityTypeName));
-            Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
             Covenant.Requires<ArgumentNullException>(activityInterface != null, nameof(activityInterface));
+
+            options = options ?? new ActivityOptions();
 
             return normalConstructor.Invoke(new object[] { client, client.DataConverter, workflow, activityTypeName, options, activityInterface });
         }
@@ -95,10 +96,16 @@ namespace Neon.Temporal.Internal
         /// <param name="client">The associated <see cref="TemporalClient"/>.</param>
         /// <param name="workflow">The parent workflow.</param>
         /// <param name="activityType">The activity implementation type.</param>
-        /// <param name="options">Specifies the <see cref="LocalActivityOptions"/>.</param>
+        /// <param name="options">Specifies the <see cref="LocalActivityOptions"/> or <c>null</c>.</param>
         /// <returns>The activity stub as an <see cref="object"/>.</returns>
         public object CreateLocal(TemporalClient client, Workflow workflow, Type activityType, LocalActivityOptions options)
         {
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(workflow != null, nameof(workflow));
+            Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
+
+            options = options ?? new LocalActivityOptions();
+
             return localConstructor.Invoke(new object[] { client, client.DataConverter, workflow, activityType, options, TemporalHelper.GetActivityInterface(activityType) });
         }
     }

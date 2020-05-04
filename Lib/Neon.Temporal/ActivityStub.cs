@@ -62,7 +62,7 @@ namespace Neon.Temporal
         /// </code>
         /// <note>
         /// You may need to customize activity type name when interoperating with activities written
-        /// in other languages.  See <a href="https://doc.neonkube.com/Neon.Cadence-CrossPlatform.htm">Cadence Cross-Platform</a>
+        /// in other languages.  See <a href="https://doc.neonkube.com/Neon.Temporal-CrossPlatform.htm">Cadence Cross-Platform</a>
         /// for more information.
         /// </note>
         /// </remarks>
@@ -75,7 +75,7 @@ namespace Neon.Temporal
             this.client           = client;
             this.parentWorkflow   = parentWorkflow;
             this.activityTypeName = activityTypeName;
-            this.options          = ActivityOptions.Normalize(client, options);
+            this.options          = options;
         }
 
         /// <summary>

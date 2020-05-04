@@ -39,8 +39,9 @@ namespace Neon.Temporal
         /// Converts compiler diagnostics into a string.
         /// </summary>
         /// <param name="diagnostics">The compiler diagnostics.</param>
-        /// <returns></returns>
-        private static string GetMessage(IEnumerable<Diagnostic> diagnostics)
+        /// <param name="source">Optionally specifies the invalid source code.</param>
+        /// <returns>The message string.</returns>
+        private static string GetMessage(IEnumerable<Diagnostic> diagnostics, string source = null)
         {
             Covenant.Requires<ArgumentNullException>(diagnostics != null, nameof(diagnostics));
             Covenant.Requires<ArgumentException>(diagnostics.Count() > 0, nameof(diagnostics));
@@ -50,6 +51,14 @@ namespace Neon.Temporal
             foreach (var diagnostic in diagnostics)
             {
                 sb.AppendLine(diagnostic.ToString());
+            }
+
+            if (!string.IsNullOrEmpty(source))
+            {
+                sb.AppendLine();
+                sb.AppendLine("SOURCE:");
+                sb.AppendLine("-------------------------------------------------------------------------------");
+                sb.Append(source);
             }
 
             return sb.ToString();
@@ -62,8 +71,9 @@ namespace Neon.Temporal
         /// Constructor.
         /// </summary>
         /// <param name="diagnostics">The compiler diagnostics.</param>
-        public StubCompilerException(IEnumerable<Diagnostic> diagnostics)
-            : base(GetMessage(diagnostics))
+        /// <param name="source">Optionally specifies the invalid source code.</param>
+        public StubCompilerException(IEnumerable<Diagnostic> diagnostics, string source = null)
+            : base(GetMessage(diagnostics, source))
         {
         }
     }

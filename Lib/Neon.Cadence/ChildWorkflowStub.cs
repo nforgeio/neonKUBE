@@ -60,7 +60,7 @@ namespace Neon.Cadence
             CadenceHelper.ValidateWorkflowInterface(workflowInterface);
 
             this.parentWorkflow   = parentWorkflow;
-            this.options          = ChildWorkflowOptions.Normalize(parentWorkflow.Client, options);
+            this.options          = options;
             this.hasStarted       = false;
 
             var workflowTarget    = CadenceHelper.GetWorkflowTarget(workflowInterface, methodName);

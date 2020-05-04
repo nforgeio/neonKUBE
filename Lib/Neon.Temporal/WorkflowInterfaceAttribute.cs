@@ -35,22 +35,55 @@ namespace Neon.Temporal
     [AttributeUsage(AttributeTargets.Interface, AllowMultiple = false)]
     public class WorkflowInterfaceAttribute : Attribute
     {
+        private string      @namespace;
+        private string      taskList;
+
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="taskList">
-        /// Optionally specifies the Temporal task list identifying the workers
-        /// hosting this workflow.
-        /// </param>
-        public WorkflowInterfaceAttribute(string taskList = null)
+        public WorkflowInterfaceAttribute()
         {
-            this.TaskList = taskList;
+        }
+
+        /// <summary>
+        /// Optionally specifies the Temporal namespace where the workflow is registered.
+        /// </summary>
+        public string Namespace
+        {
+            get => @namespace;
+
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    @namespace = null;
+                }
+                else
+                {
+                    @namespace = value;
+                }
+            }
         }
 
         /// <summary>
         /// Optionally specifies the Temporal task list identifying the workers
         /// hosting this workflow.
         /// </summary>
-        public string TaskList { get; set; } = null;
+        public string TaskList
+        {
+            get => taskList;
+
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    taskList = null;
+                }
+                else
+                {
+                    taskList = value;
+                }
+            }
+        }
     }
 }

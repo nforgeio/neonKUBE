@@ -1393,7 +1393,7 @@ namespace Neon.Temporal
         /// </code>
         /// <note>
         /// You may need to customize activity type name when interoperating with activities written
-        /// in other languages.  See <a href="https://doc.neonkube.com/Neon.Cadence-CrossPlatform.htm">Cadence Cross-Platform</a>
+        /// in other languages.  See <a href="https://doc.neonkube.com/Neon.Temporal-CrossPlatform.htm">Temporal Cross-Platform</a>
         /// for more information.
         /// </note>
         /// </remarks>
@@ -1528,7 +1528,7 @@ namespace Neon.Temporal
         ///     Local activity types do not need to be registered with the worker.
         ///     </item>
         ///     <item>
-        ///     Local activities must complete within the <see cref="WorkflowOptions.TaskStartToCloseTimeout"/>.
+        ///     Local activities must complete within the <see cref="WorkflowOptions.DecisionTaskStartToCloseTimeout"/>.
         ///     This defaults to 10 seconds and can be set to a maximum of 60 seconds.
         ///     </item>
         ///     <item>
@@ -1667,8 +1667,6 @@ namespace Neon.Temporal
             Client.EnsureNotDisposed();
             WorkflowBase.CheckCallContext(allowWorkflow: true);
             SetStackTrace();
-
-            options = ChildWorkflowOptions.Normalize(Client, options, typeof(TWorkflowInterface));
 
             return new ChildWorkflowStub<TWorkflowInterface>(this, methodName, options);
         }
@@ -1954,7 +1952,7 @@ namespace Neon.Temporal
         /// <param name="activityTypeName">Specifies the target activity type name.</param>
         /// <param name="options">Optionally specifies the activity options.</param>
         /// <returns>The new untyped <see cref="ActivityFutureStub"/>.</returns>
-        /// <exception cref="ObjectDisposedException">Thrown if the associated Cadence client is disposed.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the associated Temporal client is disposed.</exception>
         /// <exception cref="NotSupportedException">Thrown when this is called outside of a workflow entry point method.</exception>
         /// <remarks>
         /// <para>
@@ -2004,14 +2002,14 @@ namespace Neon.Temporal
         /// The <c>MainAsync()</c> workflow method here starts an activity but doesn't immediately
         /// <c>await</c> it.  It then runs another activity in parallel and then after the second 
         /// activity returns, the workflow awaits the first activity.  This pattern is not supported 
-        /// by <b>Neon.Cadence</b> because all workflow related operations need to be immediately
+        /// by <b>Neon.Temporal</b> because all workflow related operations need to be immediately
         /// awaited to ensure that operations will complete in a consistent order when workflows 
         /// are replayed.
         /// </para>
         /// <note>
-        /// The reason for this restriction is related to how the current <b>Neon.Cadence</b> implementation
-        /// uses an embedded GOLANG Cadence client to actually communicate with a Cadence cluster.  This
-        /// may be relaxed in the future if/when we implement native support for the Cadence protocol.
+        /// The reason for this restriction is related to how the current <b>Neon.Temporal</b> implementation
+        /// uses an embedded GOLANG Temporal client to actually communicate with a Temporal cluster.  This
+        /// may be relaxed in the future if/when we implement native support for the Temporal protocol.
         /// </note>
         /// <para>
         /// A correct implementation would look something like this:
@@ -2062,7 +2060,7 @@ namespace Neon.Temporal
         /// </para>
         /// <note>
         /// <para>
-        /// You must take care to pass parameters that match the target method.  <b>Neon.Cadence</b> does check these at
+        /// You must take care to pass parameters that match the target method.  <b>Neon.Temporal</b> does check these at
         /// runtime, but there is no compile-time checking for this scheme.
         /// </para>
         /// <para>
@@ -2290,19 +2288,19 @@ namespace Neon.Temporal
         /// Executes an activity with a specific activity type name and waits for it to complete.
         /// </summary>
         /// <param name="activityTypeName">Identifies the activity.</param>
-        /// <param name="args">Optionally specifies the encoded activity arguments.</param>
-        /// <param name="options">Optionally specifies the activity options.</param>
+        /// <param name="args">Specifies the encoded activity arguments or <c>null</c> when there are no arguments.</param>
+        /// <param name="options">Specifies the activity options.</param>
         /// <returns>The activity result encoded as a byte array.</returns>
         /// <exception cref="TemporalException">
         /// An exception derived from <see cref="TemporalException"/> will be be thrown 
         /// if the child workflow did not complete successfully.
         /// </exception>
         /// <exception cref="ObjectDisposedException">Thrown if the associated Temporal client is disposed.</exception>
-        /// <exception cref="EntityNotExistsException">Thrown if the named namespace does not exist.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the Temporal namespace does not exist.</exception>
         /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Temporal cluster problems.</exception>
         /// <exception cref="ServiceBusyException">Thrown when Temporal is too busy.</exception>
-        internal async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args = null, ActivityOptions options = null)
+        internal async Task<byte[]> ExecuteActivityAsync(string activityTypeName, byte[] args, ActivityOptions options)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName), nameof(activityTypeName));
             Client.EnsureNotDisposed();
@@ -2344,7 +2342,7 @@ namespace Neon.Temporal
             Covenant.Requires<ArgumentNullException>(activityMethod != null, nameof(activityMethod));
             Client.EnsureNotDisposed();
 
-            var activityActionId    = Interlocked.Increment(ref nextLocalActivityActionId);
+            var activityActionId = Interlocked.Increment(ref nextLocalActivityActionId);
 
             lock (syncLock)
             {
@@ -2360,8 +2358,8 @@ namespace Neon.Temporal
         /// <param name="activityType">The activity type.</param>
         /// <param name="activityConstructor">The activity constructor.</param>
         /// <param name="activityMethod">The target local activity method.</param>
-        /// <param name="args">Optionally specifies the activity arguments.</param>
-        /// <param name="options">Optionally specifies any local activity options.</param>
+        /// <param name="args">Specifies specifies the encoded activity arguments or <c>null</c> when there are no arguments.</param>
+        /// <param name="options">Specifies the local activity options.</param>
         /// <returns>The activity result encoded as a byte array.</returns>
         /// <exception cref="TemporalException">
         /// An exception derived from <see cref="TemporalException"/> will be be thrown 
@@ -2375,11 +2373,11 @@ namespace Neon.Temporal
         /// <paramref name="activityMethod"/> method.
         /// </remarks>
         /// <exception cref="ObjectDisposedException">Thrown if the associated Temporal client is disposed.</exception>
-        /// <exception cref="EntityNotExistsException">Thrown if the named namespace does not exist.</exception>
+        /// <exception cref="EntityNotExistsException">Thrown if the Temporal namespace does not exist.</exception>
         /// <exception cref="BadRequestException">Thrown when the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Temporal cluster problems.</exception>
         /// <exception cref="ServiceBusyException">Thrown when Temporal is too busy.</exception>
-        internal async Task<byte[]> ExecuteLocalActivityAsync(Type activityType, ConstructorInfo activityConstructor, MethodInfo activityMethod, byte[] args = null, LocalActivityOptions options = null)
+        internal async Task<byte[]> ExecuteLocalActivityAsync(Type activityType, ConstructorInfo activityConstructor, MethodInfo activityMethod, byte[] args, LocalActivityOptions options)
         {
             Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
             Covenant.Requires<ArgumentException>(activityType.BaseType == typeof(ActivityBase), nameof(activityType));
@@ -2388,15 +2386,9 @@ namespace Neon.Temporal
             Client.EnsureNotDisposed();
             SetStackTrace(skipFrames: 3);
 
-            options = options ?? new LocalActivityOptions();
-            options = options.Clone();
-
-            if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
-            {
-                options.ScheduleToCloseTimeout = Client.Settings.WorkflowScheduleToCloseTimeout;
-            }
-
             var activityActionId = RegisterActivityAction(activityType, activityConstructor, activityMethod);
+
+            options = LocalActivityOptions.Normalize(this.Client, options);
             
             var reply = await ExecuteNonParallel(
                 async () =>

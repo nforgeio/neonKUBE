@@ -35,6 +35,7 @@ namespace Neon.Cadence
     {
         private string      name;
         private string      taskList;
+        private string      domain;
         private int         heartbeatTimeoutSeconds;
         private int         scheduleToCloseTimeoutSeconds;
         private int         scheduleToStartTimeoutSeconds;
@@ -114,9 +115,6 @@ namespace Neon.Cadence
         /// a heartbeat before Cadence will consider the activity to have 
         /// timed out.
         /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed.
-        /// </note>
         /// </summary>
         public int HeartbeatTimeoutSeconds
         {
@@ -132,9 +130,6 @@ namespace Neon.Cadence
         /// for the activity to execute on the worker, as well as any time scheduling
         /// and performing retries.
         /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed.
-        /// </note>
         /// </summary>
         public int ScheduleToCloseTimeoutSeconds
         {
@@ -147,9 +142,6 @@ namespace Neon.Cadence
         /// Optionally specifies the maximum time the activity may remain 
         /// in the task list before being assigned to a worker.
         /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed.
-        /// </note>
         /// </summary>
         public int ScheduleToStartTimeoutSeconds
         {
@@ -163,9 +155,6 @@ namespace Neon.Cadence
         /// an individual workflow task once it has been assigned
         /// to a worker.
         /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed.
-        /// </note>
         /// </summary>
         public int StartToCloseTimeoutSeconds
         {
@@ -177,9 +166,6 @@ namespace Neon.Cadence
         /// <para>
         /// Optionally specifies the target task list.
         /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed.
-        /// </note>
         /// </summary>
         public string TaskList
         {
@@ -194,6 +180,28 @@ namespace Neon.Cadence
                 else
                 {
                     taskList = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Optionally specifies the target domain.
+        /// </para>
+        /// </summary>
+        public string Domain
+        {
+            get => domain;
+
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    domain = null;
+                }
+                else
+                {
+                    domain = value;
                 }
             }
         }

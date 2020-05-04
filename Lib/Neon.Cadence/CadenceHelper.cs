@@ -706,6 +706,64 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
+        /// Searches a workflow interface for a method with a <see cref="WorkflowMethodAttribute"/> 
+        /// with a matching name.
+        /// </summary>
+        /// <param name="workflowInterface">The workflow interface.</param>
+        /// <param name="methodName">The method name to be matched.</param>
+        /// <returns>The method information or <c>null</c> when there's no matching method.</returns>
+        internal static MethodInfo GetWorkflowMethod(Type workflowInterface, string methodName)
+        {
+            Covenant.Requires<ArgumentNullException>(workflowInterface != null, nameof(workflowInterface));
+
+            if (string.IsNullOrEmpty(methodName))
+            {
+                return null;
+            }
+
+            foreach (var method in workflowInterface.GetMethods())
+            {
+                var methodAttribute = method.GetCustomAttribute<WorkflowMethodAttribute>();
+
+                if (methodAttribute?.Name == methodName)
+                {
+                    return method;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Searches an activity interface for a method with a <see cref="ActivityMethodAttribute"/> 
+        /// with a matching name.
+        /// </summary>
+        /// <param name="activityInterface">The activity interface.</param>
+        /// <param name="methodName">The method name to be matched.</param>
+        /// <returns>The method information or <c>null</c> when there's no matching method.</returns>
+        internal static MethodInfo GetActivityMethod(Type activityInterface, string methodName)
+        {
+            Covenant.Requires<ArgumentNullException>(activityInterface != null, nameof(activityInterface));
+
+            if (string.IsNullOrEmpty(methodName))
+            {
+                return null;
+            }
+
+            foreach (var method in activityInterface.GetMethods())
+            {
+                var methodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();
+
+                if (methodAttribute?.Name == methodName)
+                {
+                    return method;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Ensures that the timespan passed doesn't exceed the minimum or maximum
         /// supported by Cadence/GOLANG.
         /// </summary>

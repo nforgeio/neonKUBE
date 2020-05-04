@@ -35,9 +35,10 @@ namespace Neon.Cadence
     {
         private string      name;
         private int  	    executionStartToCloseTimeoutSeconds;
-        private int         taskStartToCloseTimeoutSeconds;
+        private int         decisionStartToCloseTimeoutSeconds;
         private int         scheduleToStartTimeoutSeconds;
         private string      taskList;
+        private string      domain;
         private string      workflowId;
 
         /// <summary>
@@ -112,10 +113,6 @@ namespace Neon.Cadence
         /// <para>
         /// Optionally specifies the maximum workflow execution time.
         /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed using
-        /// <see cref="WorkflowOptions"/>,
-        /// </note>
         /// </summary>
         public int ExecutionStartToCloseTimeoutSeconds
         {
@@ -125,37 +122,28 @@ namespace Neon.Cadence
 
         /// <summary>
         /// <para>
-        /// Optionally specifies the maximum execution time for
-        /// an individual workflow task.  The maximum possible duration
-        /// is <b>60 seconds</b>.
+        /// Optionally specifies the maximum execution time for an individual workflow decision
+        /// task.  The maximum possible duration is <b>60 seconds</b>.
         /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed using
-        /// <see cref="WorkflowOptions"/>,
-        /// </note>
         /// </summary>
-        public int TaskStartToCloseTimeoutSeconds
+        public int DecisionTaskStartToCloseTimeoutSeconds
         {
-            get => taskStartToCloseTimeoutSeconds;
+            get => decisionStartToCloseTimeoutSeconds;
 
             set
             {
-                Covenant.Requires<ArgumentException>(value <= 60, nameof(value), $"[TaskStartToCloseTimeoutSeconds={value}] cannot exceed 60 seconds.");
+                Covenant.Requires<ArgumentException>(value <= 60, nameof(value), $"[DecisionTaskStartToCloseTimeoutSeconds={value}] cannot exceed 60 seconds.");
 
-                taskStartToCloseTimeoutSeconds = Math.Max(value, 0);
+                decisionStartToCloseTimeoutSeconds = Math.Max(value, 0);
             }
         }
 
         /// <summary>
         /// <para>
         /// Optionally specifies the maximum time a workflow can wait
-        /// between being scheduled and being actually scheduled on a
+        /// between being scheduled and being actually executed on a
         /// worker.
         /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed using
-        /// <see cref="WorkflowOptions"/>,
-        /// </note>
         /// </summary>
         public int ScheduleToStartTimeoutSeconds
         {
@@ -165,12 +153,8 @@ namespace Neon.Cadence
 
         /// <summary>
         /// <para>
-        /// Optionally specifies the target task list.
+        /// Optionally specifies the target Cadence task list.
         /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed using
-        /// <see cref="WorkflowOptions"/>,
-        /// </note>
         /// </summary>
         public string TaskList
         {
@@ -191,12 +175,30 @@ namespace Neon.Cadence
 
         /// <summary>
         /// <para>
+        /// Optionally specifies the target Cadence domain.
+        /// </para>
+        /// </summary>
+        public string Domain
+        {
+            get => domain;
+
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    domain = null;
+                }
+                else
+                {
+                    domain = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// <para>
         /// Optionally specifies the workflow ID.
         /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed using
-        /// <see cref="WorkflowOptions"/>.
-        /// </note>
         /// </summary>
         public string WorkflowId
         {
@@ -219,10 +221,6 @@ namespace Neon.Cadence
         /// <para>
         /// Specifies the workflow ID reuse policy.
         /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed using
-        /// <see cref="WorkflowOptions"/>,
-        /// </note>
         /// </summary>
         public WorkflowIdReusePolicy WorkflowIdReusePolicy { get; set; } = WorkflowIdReusePolicy.UseDefault;
     }

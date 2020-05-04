@@ -844,7 +844,7 @@ namespace TestTemporal
 
             var options = new WorkflowOptions()
             {
-                TaskStartToCloseTimeout = TimeSpan.FromSeconds(60)
+                DecisionTaskStartToCloseTimeout = TimeSpan.FromSeconds(60)
             };
 
             var stub  = client.NewWorkflowStub<IWorkflowActivityFail>(options);

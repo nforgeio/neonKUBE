@@ -63,12 +63,13 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
             var workflowInterface = typeof(WorkflowInterface);
+            var method            = CadenceHelper.GetWorkflowMethod(workflowInterface, methodName);
 
             CadenceHelper.ValidateWorkflowInterface(workflowInterface);
 
             this.client           = client;
             this.workflowTypeName = CadenceHelper.GetWorkflowTarget(workflowInterface, methodName).WorkflowTypeName;
-            this.options          = WorkflowOptions.Normalize(client, options);
+            this.options          = WorkflowOptions.Normalize(client, options, workflowInterface, method);
         }
 
         /// <summary>

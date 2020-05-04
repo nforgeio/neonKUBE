@@ -76,7 +76,7 @@ namespace Neon.Cadence
             this.client           = client;
             this.parentWorkflow   = parentWorkflow;
             this.activityTypeName = activityTypeName;
-            this.options          = ActivityOptions.Normalize(client, options);
+            this.options          = options;
         }
 
         /// <summary>

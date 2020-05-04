@@ -35,22 +35,55 @@ namespace Neon.Temporal
     [AttributeUsage(AttributeTargets.Interface, AllowMultiple = false)]
     public class ActivityInterfaceAttribute : Attribute
     {
+        private string      @namespace;
+        private string      taskList;
+
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="taskList">
-        /// Optionally specifies the Temporal task list identifying the workers
-        /// hosting this activity.
-        /// </param>
-        public ActivityInterfaceAttribute(string taskList = null)
+        public ActivityInterfaceAttribute()
         {
-            this.TaskList = taskList;
+        }
+
+        /// <summary>
+        /// Optionally specifies the Temporal namespace where the activity is registered.
+        /// </summary>
+        public string Namespace
+        {
+            get => @namespace;
+
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    @namespace = null;
+                }
+                else
+                {
+                    @namespace = value;
+                }
+            }
         }
 
         /// <summary>
         /// Optionally specifies the Temporal task list identifying the workers
         /// hosting this activity.
         /// </summary>
-        public string TaskList { get; set; } = null;
+        public string TaskList
+        {
+            get => taskList;
+
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    taskList = null;
+                }
+                else
+                {
+                    taskList = value;
+                }
+            }
+        }
     }
 }
