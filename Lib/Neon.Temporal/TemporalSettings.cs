@@ -85,9 +85,8 @@ namespace Neon.Temporal
         /// the application workflows and activities are restricted to a single namespace (which is pretty common).
         /// </para>
         /// <para>
-        /// The default namespace can be overridden for individual method calls by passing a value as the optional <b>@namespace</b>
-        /// parameter.  You can also set this to <c>null</c> which will require that values be passed to
-        /// the <b>@namespace</b> parameters.
+        /// The default task list can be overridden for workflow interfaces via <see cref="WorkflowInterfaceAttribute.Namespace"/>
+        /// or for specific interface methods via <see cref="WorkflowMethodAttribute.Namespace"/>.
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "DefaultNamespace", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -117,6 +116,24 @@ namespace Neon.Temporal
         [YamlMember(Alias = "createNamespace", ApplyNamingConventions = false)]
         [DefaultValue(false)]
         public bool CreateNamespace { get; set; } = false;
+
+        /// <summary>
+        /// Specifies the default Temporal task list for this client.  This defaults to <c>null</c>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Specifying a default task list can be convienent for many scenarios, especially for those where
+        /// the application workflows and activities are restricted to a single task list.
+        /// </para>
+        /// <para>
+        /// The default task list can be overridden for workflow interfaces via <see cref="WorkflowInterfaceAttribute.TaskList"/>
+        /// or for specific interface methods via <see cref="WorkflowMethodAttribute.TaskList"/>.
+        /// </para>
+        /// </remarks>
+        [JsonProperty(PropertyName = "DefaultTaskList", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultTaskList", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string DefaultTaskList { get; set; }
 
         /// <summary>
         /// Optionally specifies the maximum time the client should wait for synchronous 

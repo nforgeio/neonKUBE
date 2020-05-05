@@ -44,20 +44,15 @@ namespace Neon.Cadence
         /// <param name="client">The associated Cadence client.</param>
         /// <param name="options">The input options or <c>null</c>.</param>
         /// <param name="workflowInterface">Optionally specifies the workflow interface definition.</param>
+        /// <param name="method">Optionally specifies the target workflow method.</param>
         /// <returns>The normalized options.</returns>
         /// <exception cref="ArgumentNullException">Thrown if a valid task list is not specified.</exception>
-        internal static WorkflowOptions Normalize(CadenceClient client, WorkflowOptions options, Type workflowInterface = null)
+        internal static WorkflowOptions Normalize(CadenceClient client, WorkflowOptions options, Type workflowInterface = null, MethodInfo method = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
-            WorkflowInterfaceAttribute interfaceAttribute = null;
-
-            if (workflowInterface != null)
-            {
-                CadenceHelper.ValidateWorkflowInterface(workflowInterface);
-
-                interfaceAttribute = workflowInterface.GetCustomAttribute<WorkflowInterfaceAttribute>();
-            }
+            WorkflowInterfaceAttribute  interfaceAttribute = null;
+            WorkflowMethodAttribute     methodAttribute    = null;
 
             if (options == null)
             {
@@ -68,42 +63,114 @@ namespace Neon.Cadence
                 options = options.Clone();
             }
 
+            if (workflowInterface != null)
+            {
+                CadenceHelper.ValidateWorkflowInterface(workflowInterface);
+
+                interfaceAttribute = workflowInterface.GetCustomAttribute<WorkflowInterfaceAttribute>();
+            }
+
+            if (method != null)
+            {
+                methodAttribute = method.GetCustomAttribute<WorkflowMethodAttribute>();
+            }
+
             if (string.IsNullOrEmpty(options.Domain))
             {
-                options.Domain = client.Settings.DefaultDomain;
-            }
-
-            if (!options.ScheduleToCloseTimeout.HasValue || options.ScheduleToCloseTimeout.Value <= TimeSpan.Zero)
-            {
-                options.ScheduleToCloseTimeout = client.Settings.WorkflowScheduleToCloseTimeout;
-            }
-
-            if (!options.ScheduleToStartTimeout.HasValue || options.ScheduleToStartTimeout.Value <= TimeSpan.Zero)
-            {
-                options.ScheduleToStartTimeout = client.Settings.WorkflowScheduleToStartTimeout;
-            }
-
-            if (!options.TaskStartToCloseTimeout.HasValue || options.TaskStartToCloseTimeout.Value <= TimeSpan.Zero)
-            {
-                options.TaskStartToCloseTimeout = client.Settings.WorkflowDecisionTimeout;
-            }
-
-            if (options.WorkflowIdReusePolicy == Cadence.WorkflowIdReusePolicy.UseDefault)
-            {
-                options.WorkflowIdReusePolicy = client.Settings.WorkflowIdReusePolicy;
-            }
-
-            if (string.IsNullOrEmpty(options.TaskList))
-            {
-                if (interfaceAttribute != null && !string.IsNullOrEmpty(interfaceAttribute.TaskList))
+                if (!string.IsNullOrEmpty(methodAttribute?.Domain))
                 {
-                    options.TaskList = interfaceAttribute.TaskList;
+                    options.Domain = methodAttribute.Domain;
+                }
+
+                if (string.IsNullOrEmpty(options.Domain) && !string.IsNullOrEmpty(interfaceAttribute?.Domain))
+                {
+                    options.Domain = interfaceAttribute.Domain;
+                }
+
+                if (string.IsNullOrEmpty(options.Domain))
+                {
+                    options.Domain = client.Settings.DefaultDomain;
+                }
+
+                if (string.IsNullOrEmpty(options.Domain))
+                {
+                    throw new ArgumentNullException(nameof(options), "You must specify a valid domain explicitly in [CadenceSettings], [ActivityOptions] or via an [ActivityInterface] or [ActivityMethod] attribute on the target activity interface or method.");
                 }
             }
 
             if (string.IsNullOrEmpty(options.TaskList))
             {
-                throw new ArgumentNullException(nameof(options), "You must specify a valid task list explicitly or via an [WorkflowInterface(TaskList = \"my-tasklist\")] attribute on the target workflow interface.");
+                if (!string.IsNullOrEmpty(methodAttribute?.TaskList))
+                {
+                    options.TaskList = methodAttribute.TaskList;
+                }
+
+                if (string.IsNullOrEmpty(options.TaskList) && !string.IsNullOrEmpty(interfaceAttribute?.TaskList))
+                {
+                    options.TaskList = interfaceAttribute.TaskList;
+                }
+
+                if (string.IsNullOrEmpty(options.TaskList))
+                {
+                    options.TaskList = client.Settings.DefaultTaskList;
+                }
+
+                if (string.IsNullOrEmpty(options.TaskList))
+                {
+                    throw new ArgumentNullException(nameof(options), "You must specify a valid task list explicitly via [ActivityOptions] or using an [ActivityInterface] or [ActivityMethod] attribute on the target activity interface or method.");
+                }
+            }
+
+            if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
+            {
+                if (methodAttribute != null && methodAttribute.ExecutionStartToCloseTimeoutSeconds > 0)
+                {
+                    options.ScheduleToCloseTimeout = TimeSpan.FromSeconds(methodAttribute.ExecutionStartToCloseTimeoutSeconds);
+                }
+
+                if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
+                {
+                    options.ScheduleToCloseTimeout = client.Settings.WorkflowScheduleToCloseTimeout;
+                }
+            }
+
+            if (options.ScheduleToStartTimeout <= TimeSpan.Zero)
+            {
+                if (methodAttribute != null && methodAttribute.ScheduleToStartTimeoutSeconds > 0)
+                {
+                    options.ScheduleToStartTimeout = TimeSpan.FromSeconds(methodAttribute.ScheduleToStartTimeoutSeconds);
+                }
+
+                if (options.ScheduleToStartTimeout <= TimeSpan.Zero)
+                {
+                    options.ScheduleToStartTimeout = client.Settings.WorkflowScheduleToStartTimeout;
+                }
+            }
+
+            if (options.DecisionTaskStartToCloseTimeout <= TimeSpan.Zero)
+            {
+                if (methodAttribute != null && methodAttribute.DecisionTaskStartToCloseTimeoutSeconds > 0)
+                {
+                    options.DecisionTaskStartToCloseTimeout = TimeSpan.FromSeconds(methodAttribute.DecisionTaskStartToCloseTimeoutSeconds);
+                }
+
+                if (options.DecisionTaskStartToCloseTimeout <= TimeSpan.Zero)
+                {
+                    options.DecisionTaskStartToCloseTimeout = client.Settings.WorkflowDecisionTimeout;
+                }
+            }
+
+            if (options.WorkflowIdReusePolicy == Cadence.WorkflowIdReusePolicy.UseDefault)
+            {
+                if (methodAttribute != null && methodAttribute.WorkflowIdReusePolicy != WorkflowIdReusePolicy.UseDefault)
+                {
+                    options.WorkflowIdReusePolicy = methodAttribute.WorkflowIdReusePolicy;
+                }
+
+                if (options.WorkflowIdReusePolicy == Cadence.WorkflowIdReusePolicy.UseDefault)
+                {
+                    options.WorkflowIdReusePolicy = client.Settings.WorkflowIdReusePolicy;
+                }
             }
 
             return options;
@@ -126,13 +193,19 @@ namespace Neon.Cadence
         public string WorkflowId { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies the target domain overriding the default client domain.
+        /// Optionally specifies the target Cadence domain.  This defaults to the domain
+        /// specified by <see cref="WorkflowMethodAttribute.Domain"/>, 
+        /// <see cref="WorkflowInterfaceAttribute.Domain"/>, or 
+        /// to the client's default <see cref="CadenceSettings.DefaultDomain"/>
+        /// (in that order of precedence).
         /// </summary>
         public string Domain { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies the target task list overriding the default client task list
-        /// and/or a task list specified by <see cref="WorkflowMethodAttribute.TaskList"/>.
+        /// Optionally specifies the target Cadence task list.  This defaults to the task list
+        /// specified by <see cref="WorkflowMethodAttribute.TaskList"/> or
+        /// <see cref="WorkflowInterfaceAttribute.TaskList"/>
+        /// (in that order of precedence).
         /// </summary>
         public string TaskList { get; set; } = null;
 
@@ -147,13 +220,13 @@ namespace Neon.Cadence
         /// point method.
         /// </note>
         /// </summary>
-        public TimeSpan? ScheduleToCloseTimeout { get; set; }
+        public TimeSpan ScheduleToCloseTimeout { get; set; }
 
         /// <summary>
         /// Optionally specifies the default maximum time a workflow can wait between being scheduled
         /// and actually begin executing.  This defaults to <c>24 hours</c>.
         /// </summary>
-        public TimeSpan? ScheduleToStartTimeout { get; set; }
+        public TimeSpan ScheduleToStartTimeout { get; set; }
 
         /// <summary>
         /// Optionally specifies the time out for processing decision task from the time the worker
@@ -161,7 +234,7 @@ namespace Neon.Cadence
         /// as specified by the retry policy.   This defaults to <b>10 seconds</b> when not specified.
         /// The maximum timeout is <b>60 seconds</b>.
         /// </summary>
-        public TimeSpan? TaskStartToCloseTimeout { get; set; } = TimeSpan.FromSeconds(10);
+        public TimeSpan DecisionTaskStartToCloseTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
         /// <summary>
         /// Optionally determines how Cadence handles workflows that attempt to reuse workflow IDs.
@@ -271,8 +344,8 @@ namespace Neon.Cadence
             {
                 ID                              = this.WorkflowId,
                 TaskList                        = this.TaskList,
-                DecisionTaskStartToCloseTimeout = CadenceHelper.ToCadence(this.TaskStartToCloseTimeout.Value),
-                ExecutionStartToCloseTimeout    = CadenceHelper.ToCadence(this.ScheduleToCloseTimeout.Value),
+                DecisionTaskStartToCloseTimeout = CadenceHelper.ToCadence(this.DecisionTaskStartToCloseTimeout),
+                ExecutionStartToCloseTimeout    = CadenceHelper.ToCadence(this.ScheduleToCloseTimeout),
                 RetryPolicy                     = this.RetryOptions?.ToInternal(),
                 WorkflowIdReusePolicy           = (int)(this.WorkflowIdReusePolicy == WorkflowIdReusePolicy.UseDefault ? Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly : this.WorkflowIdReusePolicy),
                 CronSchedule                    = this.CronSchedule,
@@ -288,15 +361,15 @@ namespace Neon.Cadence
         {
             return new WorkflowOptions()
             {
-                Domain                  = this.Domain,
-                TaskList                = this.TaskList,
-                CronSchedule            = this.CronSchedule,
-                ScheduleToCloseTimeout  = this.ScheduleToCloseTimeout,
-                Memo                    = this.Memo,
-                RetryOptions            = this.RetryOptions,
-                TaskStartToCloseTimeout = this.TaskStartToCloseTimeout,
-                WorkflowId              = this.WorkflowId,
-                WorkflowIdReusePolicy   = this.WorkflowIdReusePolicy
+                Domain                          = this.Domain,
+                TaskList                        = this.TaskList,
+                CronSchedule                    = this.CronSchedule,
+                ScheduleToCloseTimeout          = this.ScheduleToCloseTimeout,
+                Memo                            = this.Memo,
+                RetryOptions                    = this.RetryOptions,
+                DecisionTaskStartToCloseTimeout = this.DecisionTaskStartToCloseTimeout,
+                WorkflowId                      = this.WorkflowId,
+                WorkflowIdReusePolicy           = this.WorkflowIdReusePolicy
             };
         }
     }

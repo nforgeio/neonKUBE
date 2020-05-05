@@ -35,6 +35,7 @@ namespace Neon.Temporal
     {
         private string      name;
         private string      taskList;
+        private string      @namespace;
         private int         heartbeatTimeoutSeconds;
         private int         scheduleToCloseTimeoutSeconds;
         private int         scheduleToStartTimeoutSeconds;
@@ -66,13 +67,12 @@ namespace Neon.Temporal
         /// <b>METHOD_NAME</b> is from <see cref="ActivityMethodAttribute.Name"/>.  This
         /// is the same convention implemented by the Java client.
         /// </para>
-        /// <note>
-        /// Some implications of this scheme are that we'll need to register multiple activity
-        /// types for each activity interface when there are multiple entry points (one per
-        /// method) and that external activity invocations will need to explicitly specify
-        /// activity types that include the method name when one is specified to the target
-        /// method.
-        /// </note>
+        /// <para>
+        /// Sometimes it's useful to be able to specify a workflow type name that doesn't
+        /// follow the convention above, for example to interoperate with workflows written
+        /// in another language..  You can do this by setting <see cref="Name"/> to the
+        /// required workflow type name and then setting <see cref="IsFullName"/><c>=true</c>.
+        /// </para>
         /// </remarks>
         public string Name
         {
@@ -95,13 +95,26 @@ namespace Neon.Temporal
 
         /// <summary>
         /// <para>
+        /// Optionally indicates that <see cref="Name"/> holds the fully qualified type name for
+        /// the workflow and that the .NET client will not add a prefix to <see cref="Name"/>
+        /// when registering the workflow.
+        /// </para>
+        /// <para>
+        /// This is useful when interoperating with workflows written in another language by
+        /// providing a way to specify a specific workflow type name. 
+        /// </para>
+        /// <note>
+        /// <see cref="Name"/> cannot be <c>null</c> or empty when this is <c>true</c>.
+        /// </note>
+        /// </summary>
+        public bool IsFullName { get; set; } = false;
+
+        /// <summary>
+        /// <para>
         /// Optionally specifies the maximum time can wait between recording
         /// a heartbeat before Temporal will consider the activity to have 
         /// timed out.
         /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed.
-        /// </note>
         /// </summary>
         public int HeartbeatTimeoutSeconds
         {
@@ -117,8 +130,6 @@ namespace Neon.Temporal
         /// for the activity to execute on the worker, as well as any time scheduling
         /// and performing retries.
         /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed.
         /// </note>
         /// </summary>
         public int ScheduleToCloseTimeoutSeconds
@@ -132,9 +143,6 @@ namespace Neon.Temporal
         /// Optionally specifies the maximum time the activity may remain 
         /// in the task list before being assigned to a worker.
         /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed.
-        /// </note>
         /// </summary>
         public int ScheduleToStartTimeoutSeconds
         {
@@ -148,9 +156,6 @@ namespace Neon.Temporal
         /// an individual workflow task once it has been assigned
         /// to a worker.
         /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed.
-        /// </note>
         /// </summary>
         public int StartToCloseTimeoutSeconds
         {
@@ -162,9 +167,6 @@ namespace Neon.Temporal
         /// <para>
         /// Optionally specifies the target task list.
         /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed.
-        /// </note>
         /// </summary>
         public string TaskList
         {
@@ -179,6 +181,28 @@ namespace Neon.Temporal
                 else
                 {
                     taskList = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Optionally specifies the target namespace.
+        /// </para>
+        /// </summary>
+        public string Namespace
+        {
+            get => @namespace;
+
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    @namespace = null;
+                }
+                else
+                {
+                    @namespace = value;
                 }
             }
         }

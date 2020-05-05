@@ -379,9 +379,9 @@ namespace TestTemporal
             {
                 // Initialize the non-worker clients.
 
-                TemporalClient   client1;
-                TemporalClient   client2;
-                TemporalClient   client3;
+                TemporalClient  client1;
+                TemporalClient  client2;
+                TemporalClient  client3;
 
                 clients.Add(client1 = await TemporalClient.ConnectAsync(fixture.Settings));
                 clients.Add(client2 = await TemporalClient.ConnectAsync(fixture.Settings));

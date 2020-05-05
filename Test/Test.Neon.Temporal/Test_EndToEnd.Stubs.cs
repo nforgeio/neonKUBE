@@ -48,8 +48,11 @@ namespace TestTemporal
         [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
         public interface ITestWorkflowStub_Execute : IWorkflow
         {
-            [WorkflowMethod]
+            [WorkflowMethod(Name = "hello")]
             Task<string> HelloAsync(string name);
+
+            [WorkflowMethod(Name = "nop")]
+            Task NopAsync();
 
             [WorkflowMethod(Name = "wait-for-signals")]
             Task<List<string>> GetSignalsAsync();
@@ -64,7 +67,7 @@ namespace TestTemporal
             Task<string> QueryAsync(string query);
         }
 
-        [Workflow(AutoRegister = true, Name = nameof(TestWorkflowStub_Execute))]
+        [Workflow(AutoRegister = true, Name = "TestWorkflowStub_Execute")]
         public class TestWorkflowStub_Execute : WorkflowBase, ITestWorkflowStub_Execute
         {
             //-----------------------------------------------------------------
@@ -92,6 +95,13 @@ namespace TestTemporal
             {
                 isRunning = true;
                 return await Task.FromResult($"Hello {name}!");
+            }
+
+            public async Task NopAsync()
+            {
+                isRunning = true;
+
+                await Task.CompletedTask;
             }
 
             public async Task<List<string>> GetQueriesAsync()
@@ -139,7 +149,7 @@ namespace TestTemporal
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public async Task WorkflowStub_Execute()
+        public async Task WorkflowStub_Start_Untyped()
         {
             await SyncContext.ClearAsync;
 
@@ -147,7 +157,7 @@ namespace TestTemporal
 
             TestWorkflowStub_Execute.Reset();
 
-            var stub = client.NewUntypedWorkflowStub(nameof(TestWorkflowStub_Execute), new WorkflowOptions() { TaskList = TemporalTestHelper.TaskList });
+            var stub      = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute::hello", new WorkflowOptions() { TaskList = TemporalTestHelper.TaskList });
             var execution = await stub.StartAsync("Jeff");
 
             Assert.NotNull(execution);
@@ -159,8 +169,39 @@ namespace TestTemporal
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task WorkflowStub_Execute_Untyped()
+        {
+            await SyncContext.ClearAsync;
+
+            // Use an untyped workflow stub to execute a workflow that
+            // returns a result in one step.
+
+            TestWorkflowStub_Execute.Reset();
+
+            var stub = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute::hello", new WorkflowOptions() { TaskList = TemporalTestHelper.TaskList });
+
+            Assert.Equal("Hello Jeff!", await stub.ExecutesAsync<string>("Jeff"));
+
+            // Verify that we're not allowed to reuse the stub.
+
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await stub.StartAsync("Jeff"));
+
+            // Try this again with a workflow method that doesn't return a result.
+
+            stub = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute::nop", new WorkflowOptions() { TaskList = TemporalTestHelper.TaskList });
+
+            await stub.ExecutesAsync();
+
+            // Verify that we're not allowed to reuse the stub.
+
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await stub.StartAsync("Jeff"));
+
+        }
+
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public async Task WorkflowStub_Attach()
+        public async Task WorkflowStub_Attach_Untyped()
         {
             await SyncContext.ClearAsync;
 
@@ -168,7 +209,7 @@ namespace TestTemporal
 
             TestWorkflowStub_Execute.Reset();
 
-            var stub      = client.NewUntypedWorkflowStub(nameof(TestWorkflowStub_Execute), new WorkflowOptions() { TaskList = TemporalTestHelper.TaskList });
+            var stub      = client.NewUntypedWorkflowStub("TestWorkflowStub_Execute::hello", new WorkflowOptions() { TaskList = TemporalTestHelper.TaskList });
             var execution = await stub.StartAsync("Jeff");
 
             Assert.NotNull(execution);
@@ -190,7 +231,7 @@ namespace TestTemporal
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public async Task WorkflowStub_Signal()
+        public async Task WorkflowStub_Signal_Untyped()
         {
             await SyncContext.ClearAsync;
 

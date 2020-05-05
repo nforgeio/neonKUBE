@@ -24,19 +24,21 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
+using Neon.Cadence;
+using Neon.Cadence.Internal;
 using Neon.Common;
 using Neon.Tasks;
-using Neon.Temporal;
-using Neon.Temporal.Internal;
 
-namespace Neon.Temporal
+namespace Neon.Cadence
 {
     /// <summary>
-    /// Used to execute an untyped activity in parallel with other activities, child
+    /// Used to execute a typed activity in parallel with other activities, child
     /// workflows or other operations.  Instances are created via 
-    /// <see cref="Workflow.NewActivityFutureStub(string, ActivityOptions)"/>.
+    /// <see cref="Workflow.NewActivityFutureStub{TActivityInterface}(string, ActivityOptions)"/>.
     /// </summary>
-    public class ActivityFutureStub
+    /// <typeparam name="TActivityInterface">Specifies the activity interface.</typeparam>
+    public class ActivityFutureStub<TActivityInterface>
+        where TActivityInterface : class
     {
         //---------------------------------------------------------------------
         // Private types
@@ -140,33 +142,44 @@ namespace Neon.Temporal
         // Implementation
 
         private Workflow            parentWorkflow;
-        private TemporalClient      client;
-        private string              activityTypeName;
+        private CadenceClient       client;
+        private MethodInfo          targetMethod;
         private ActivityOptions     options;
+        private string              activityTypeName;
         private bool                hasStarted;
 
         /// <summary>
         /// Internal constructor.
         /// </summary>
         /// <param name="parentWorkflow">The associated parent workflow.</param>
-        /// <param name="activityTypeName">
-        /// Specifies the target activity type name.
+        /// <param name="methodName">
+        /// Optionally identifies the target activity method by the name specified in
+        /// the <c>[ActivityMethod]</c> attribute tagging the method.  Pass a <c>null</c>
+        /// or empty string to target the default method.
         /// </param>
         /// <param name="options">The activity options or <c>null</c>.</param>
-        internal ActivityFutureStub(Workflow parentWorkflow, string activityTypeName, ActivityOptions options = null)
+        internal ActivityFutureStub(Workflow parentWorkflow, string methodName = null, ActivityOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName), nameof(activityTypeName));
 
-            this.parentWorkflow   = parentWorkflow;
-            this.client           = parentWorkflow.Client;
-            this.activityTypeName = activityTypeName;
-            this.hasStarted       = false;
-            this.options          = ActivityOptions.Normalize(client, options);
+            var activityInterface = typeof(TActivityInterface);
+
+            CadenceHelper.ValidateActivityInterface(activityInterface);
+
+            this.parentWorkflow = parentWorkflow;
+            this.client         = parentWorkflow.Client;
+            this.hasStarted     = false;
+
+            var activityTarget  = CadenceHelper.GetActivityTarget(activityInterface, methodName);
+            var methodAttribute = activityTarget.MethodAttribute;
+
+            this.activityTypeName = activityTarget.ActivityTypeName;
+            this.targetMethod     = activityTarget.TargetMethod;
+            this.options          = ActivityOptions.Normalize(client, options, typeof(TActivityInterface), activityTarget.TargetMethod);
         }
 
         /// <summary>
-        /// Starts the target activity that returns <typeparamref name="TResult"/>, passing the specified arguments.
+        /// Starts the target activity that returns <typeparamref name="TActivityInterface"/>, passing the specified arguments.
         /// </summary>
         /// <typeparam name="TResult">The activity result type.</typeparam>
         /// <param name="args">The arguments to be passed to the activity.</param>
@@ -192,11 +205,41 @@ namespace Neon.Temporal
                 throw new InvalidOperationException("Cannot start a future stub more than once.");
             }
 
+            var parameters = targetMethod.GetParameters();
+
+            if (parameters.Length != args.Length)
+            {
+                throw new ArgumentException($"Invalid number of parameters: [{parameters.Length}] expected but [{args.Length}] were passed.", nameof(parameters));
+            }
+
             hasStarted = true;
+
+            // Cast the input parameters to the target types so that developers won't need to expicitly
+            // cast things like integers into longs, floats into doubles, etc.
+
+            for (int i = 0; i < args.Length; i++)
+            {
+                args[i] = CadenceHelper.ConvertArg(parameters[i].ParameterType, args[i]);
+            }
+
+            // Validate the return type.
+
+            var resultType = targetMethod.ReturnType;
+
+            if (resultType == typeof(Task))
+            {
+                throw new ArgumentException($"Activity method [{nameof(TActivityInterface)}.{targetMethod.Name}()] does not return [void].", nameof(TActivityInterface));
+            }
+
+            resultType = resultType.GenericTypeArguments.First();
+
+            if (!resultType.IsAssignableFrom(typeof(TResult)))
+            {
+                throw new ArgumentException($"Activity method [{nameof(TActivityInterface)}.{targetMethod.Name}()] returns [{resultType.FullName}] which is not compatible with [{nameof(TResult)}].", nameof(TActivityInterface));
+            }
 
             // Start the activity.
 
-            var client        = parentWorkflow.Client;
             var dataConverter = client.DataConverter;
             var activityId    = parentWorkflow.GetNextActivityId();
 
@@ -209,9 +252,9 @@ namespace Neon.Temporal
                             ContextId  = parentWorkflow.ContextId,
                             ActivityId = activityId,
                             Activity   = activityTypeName,
-                            Args       = TemporalHelper.ArgsToBytes(dataConverter, args),
+                            Args       = CadenceHelper.ArgsToBytes(dataConverter, args),
                             Options    = options.ToInternal(),
-                            Namespace  = options.Namespace
+                            Domain     = options.Domain
                         });
                 });
 
@@ -249,11 +292,25 @@ namespace Neon.Temporal
                 throw new InvalidOperationException("Cannot start a future stub more than once.");
             }
 
+            var parameters = targetMethod.GetParameters();
+
+            if (parameters.Length != args.Length)
+            {
+                throw new ArgumentException($"Invalid number of parameters: [{parameters.Length}] expected but [{args.Length}] were passed.", nameof(parameters));
+            }
+
             hasStarted = true;
+
+            // Cast the input parameters to the target types so that developers won't need to expicitly
+            // cast things like integers into longs, floats into doubles, etc.
+
+            for (int i = 0; i < args.Length; i++)
+            {
+                args[i] = CadenceHelper.ConvertArg(parameters[i].ParameterType, args[i]);
+            }
 
             // Start the activity.
 
-            var client        = parentWorkflow.Client;
             var dataConverter = client.DataConverter;
             var activityId    = parentWorkflow.GetNextActivityId();
 
@@ -266,9 +323,9 @@ namespace Neon.Temporal
                             ContextId  = parentWorkflow.ContextId,
                             ActivityId = activityId,
                             Activity   = activityTypeName,
-                            Args       = TemporalHelper.ArgsToBytes(dataConverter, args),
+                            Args       = CadenceHelper.ArgsToBytes(dataConverter, args),
                             Options    = options.ToInternal(),
-                            Namespace  = options.Namespace,
+                            Domain     = options.Domain,
                         });
                 });
 

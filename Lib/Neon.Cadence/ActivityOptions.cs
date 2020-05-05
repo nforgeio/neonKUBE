@@ -44,11 +44,15 @@ namespace Neon.Cadence
         /// <param name="client">The associated Cadence client.</param>
         /// <param name="options">The input options or <c>null</c>.</param>
         /// <param name="activityInterface">Optionally specifies the activity interface definition.</param>
+        /// <param name="method">Optionally specifies the target workflow method.</param>
         /// <returns>The normalized options.</returns>
         /// <exception cref="ArgumentNullException">Thrown if a valid task list is not specified.</exception>
-        internal static ActivityOptions Normalize(CadenceClient client, ActivityOptions options, Type activityInterface = null)
+        internal static ActivityOptions Normalize(CadenceClient client, ActivityOptions options, Type activityInterface = null, MethodInfo method = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+
+            ActivityInterfaceAttribute  interfaceAttribute = null;
+            ActivityMethodAttribute     methodAttribute    = null;
 
             if (options == null)
             {
@@ -59,44 +63,101 @@ namespace Neon.Cadence
                 options = options.Clone();
             }
 
+            if (activityInterface != null)
+            {
+                CadenceHelper.ValidateActivityInterface(activityInterface);
+
+                interfaceAttribute = activityInterface.GetCustomAttribute<ActivityInterfaceAttribute>();
+            }
+
+            if (method != null)
+            {
+                methodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();
+            }
+
             if (string.IsNullOrEmpty(options.Domain))
             {
-                options.Domain = client.Settings.DefaultDomain;
-            }
-
-            if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
-            {
-                options.ScheduleToCloseTimeout = client.Settings.ActivityScheduleToCloseTimeout;
-            }
-
-            if (options.ScheduleToStartTimeout <= TimeSpan.Zero)
-            {
-                options.ScheduleToStartTimeout = client.Settings.ActivityScheduleToStartTimeout;
-            }
-
-            if (options.StartToCloseTimeout <= TimeSpan.Zero)
-            {
-                options.StartToCloseTimeout = client.Settings.ActivityStartToCloseTimeout;
-            }
-
-            if (string.IsNullOrEmpty(options.TaskList))
-            {
-                if (activityInterface != null)
+                if (!string.IsNullOrEmpty(methodAttribute?.Domain))
                 {
-                    CadenceHelper.ValidateActivityInterface(activityInterface);
+                    options.Domain = methodAttribute.Domain;
+                }
 
-                    var interfaceAttribute = activityInterface.GetCustomAttribute<ActivityInterfaceAttribute>();
+                if (string.IsNullOrEmpty(options.Domain) && !string.IsNullOrEmpty(interfaceAttribute?.Domain))
+                {
+                    options.Domain = interfaceAttribute.Domain;
+                }
 
-                    if (interfaceAttribute != null && !string.IsNullOrEmpty(interfaceAttribute.TaskList))
-                    {
-                        options.TaskList = interfaceAttribute.TaskList;
-                    }
+                if (string.IsNullOrEmpty(options.Domain))
+                {
+                    options.Domain = client.Settings.DefaultDomain;
+                }
+
+                if (string.IsNullOrEmpty(options.Domain))
+                {
+                    throw new ArgumentNullException(nameof(options), "You must specify a valid domain explicitly in [CadenceSettings], [ActivityOptions] or via an [ActivityInterface] or [ActivityMethod] attribute on the target activity interface or method.");
                 }
             }
 
             if (string.IsNullOrEmpty(options.TaskList))
             {
-                throw new ArgumentNullException(nameof(options), "You must specify a valid task list explicitly or via an [ActivityInterface(TaskList = \"my-tasklist\")] attribute on the target activity interface.");
+                if (!string.IsNullOrEmpty(methodAttribute?.TaskList))
+                {
+                    options.TaskList = methodAttribute.TaskList;
+                }
+
+                if (string.IsNullOrEmpty(options.TaskList) && !string.IsNullOrEmpty(interfaceAttribute?.TaskList))
+                {
+                    options.TaskList = interfaceAttribute.TaskList;
+                }
+
+                if (string.IsNullOrEmpty(options.TaskList))
+                {
+                    options.TaskList = client.Settings.DefaultTaskList;
+                }
+
+                if (string.IsNullOrEmpty(options.TaskList))
+                {
+                    throw new ArgumentNullException(nameof(options), "You must specify a valid task list explicitly via [ActivityOptions] or using an [ActivityInterface] or [ActivityMethod] attribute on the target activity interface or method.");
+                }
+            }
+
+            if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
+            {
+                if (methodAttribute != null && methodAttribute.ScheduleToCloseTimeoutSeconds > 0)
+                {
+                    options.ScheduleToCloseTimeout = TimeSpan.FromSeconds(methodAttribute.ScheduleToCloseTimeoutSeconds);
+                }
+
+                if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
+                {
+                    options.ScheduleToCloseTimeout = client.Settings.ActivityScheduleToCloseTimeout;
+                }
+            }
+
+            if (options.ScheduleToStartTimeout <= TimeSpan.Zero)
+            {
+                if (methodAttribute != null && methodAttribute.ScheduleToStartTimeoutSeconds > 0)
+                {
+                    options.ScheduleToStartTimeout = TimeSpan.FromSeconds(methodAttribute.ScheduleToStartTimeoutSeconds);
+                }
+
+                if (options.ScheduleToStartTimeout <= TimeSpan.Zero)
+                {
+                    options.ScheduleToStartTimeout = client.Settings.ActivityScheduleToStartTimeout;
+                }
+            }
+
+            if (options.StartToCloseTimeout <= TimeSpan.Zero)
+            {
+                if (methodAttribute != null && methodAttribute.StartToCloseTimeoutSeconds > 0)
+                {
+                    options.StartToCloseTimeout = TimeSpan.FromSeconds(methodAttribute.StartToCloseTimeoutSeconds);
+                }
+
+                if (options.StartToCloseTimeout <= TimeSpan.Zero)
+                {
+                    options.StartToCloseTimeout = client.Settings.ActivityStartToCloseTimeout;
+                }
             }
 
             return options;
@@ -106,26 +167,18 @@ namespace Neon.Cadence
         // Instance members
 
         /// <summary>
-        /// Specifies the task list where the activity will be scheduled.
+        /// Optionally specifies the target task list.  This defaults to the task list
+        /// specified by <see cref="ActivityMethodAttribute.TaskList"/>,
+        /// <see cref="ActivityInterfaceAttribute.TaskList"/>
+        /// (in that order of precedence).
         /// </summary>
-        /// <remarks>
-        /// <para>
-        /// A task list must be specified when executing an activity.  For activities
-        /// started via a typed stub, this will default to the type list specified
-        /// by the <c>[ActivityInterface(TaskList = "my-tasklist"]</c> tagging the
-        /// interface (if any).
-        /// </para>
-        /// <para>
-        /// For activity stubs created from an interface without a specified task list
-        /// or activities created via untyped or external stubs, this will need to
-        /// be explicitly set to a non-empty value.
-        /// </para>
-        /// </remarks>
         public string TaskList { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies the target domain.  This defaults to the parent 
-        /// workflow's domain.
+        /// Optionally specifies the target domain.  This defaults to the domain
+        /// specified by <see cref="ActivityMethodAttribute.Domain"/>, 
+        /// <see cref="ActivityInterfaceAttribute.Domain"/>, or 
+        /// to the parent workflow's domain (in that order of precedence).
         /// </summary>
         public string Domain { get; set; } = null;
 

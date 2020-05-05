@@ -142,7 +142,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(stub != null, nameof(stub));
             Covenant.Requires<ArgumentException>(stub is ITypedWorkflowStub, nameof(stub), $"[{stub.GetType().FullName}] is not a typed workflow stub.");
 
-          return await ((ITypedWorkflowStub)stub).ToUntypedAsync();
+            return await ((ITypedWorkflowStub)stub).ToUntypedAsync();
         }
 
         //---------------------------------------------------------------------
@@ -461,6 +461,44 @@ namespace Neon.Cadence
             Execution = await client.StartWorkflowAsync(WorkflowTypeName, argBytes, Options);
 
             return Execution;
+        }
+
+        /// <summary>
+        /// Executes the associated workflow and waits for it to complete.
+        /// </summary>
+        /// <param name="args">The workflow arguments.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task ExecutesAsync(params object[] args)
+        {
+            await SyncContext.ClearAsync;
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+            EnsureNotStarted();
+
+            var argBytes = CadenceHelper.ArgsToBytes(client.DataConverter, args);
+
+            Execution = await client.StartWorkflowAsync(WorkflowTypeName, argBytes, Options);
+
+            await GetResultAsync();
+        }
+
+        /// <summary>
+        /// Executes the associated workflow and waits for it to complete,
+        /// returning the workflow result.
+        /// </summary>
+        /// <typeparam name="TResult">The workflow result type.</typeparam>
+        /// <param name="args">The workflow arguments.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task<TResult> ExecutesAsync<TResult>(params object[] args)
+        {
+            await SyncContext.ClearAsync;
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+            EnsureNotStarted();
+
+            var argBytes = CadenceHelper.ArgsToBytes(client.DataConverter, args);
+
+            Execution = await client.StartWorkflowAsync(WorkflowTypeName, argBytes, Options);
+
+            return await GetResultAsync<TResult>();
         }
     }
 }

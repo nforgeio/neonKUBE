@@ -42,20 +42,15 @@ namespace Neon.Temporal
         /// <param name="client">The associated Temporal client.</param>
         /// <param name="options">The input options or <c>null</c>.</param>
         /// <param name="workflowInterface">Optionally specifies the workflow interface definition.</param>
+        /// /// <param name="method">Optionally specifies the target workflow method.</param>
         /// <returns>The normalized options.</returns>
         /// <exception cref="ArgumentNullException">Thrown if a valid task list is not specified.</exception>
-        public static ChildWorkflowOptions Normalize(TemporalClient client, ChildWorkflowOptions options, Type workflowInterface = null)
+        public static ChildWorkflowOptions Normalize(TemporalClient client, ChildWorkflowOptions options, Type workflowInterface = null, MethodInfo method = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
-            WorkflowInterfaceAttribute interfaceAttribute = null;
-
-            if (workflowInterface != null)
-            {
-                TemporalHelper.ValidateWorkflowInterface(workflowInterface);
-
-                interfaceAttribute = workflowInterface.GetCustomAttribute<WorkflowInterfaceAttribute>();
-            }
+            WorkflowInterfaceAttribute  interfaceAttribute = null;
+            WorkflowMethodAttribute     methodAttribute    = null;
 
             if (options == null)
             {
@@ -66,26 +61,108 @@ namespace Neon.Temporal
                 options = options.Clone();
             }
 
-            if (!options.ScheduleToCloseTimeout.HasValue || options.ScheduleToCloseTimeout.Value <= TimeSpan.Zero)
+            if (workflowInterface != null)
             {
-                options.ScheduleToCloseTimeout = client.Settings.WorkflowScheduleToCloseTimeout;
+                TemporalHelper.ValidateWorkflowInterface(workflowInterface);
+
+                interfaceAttribute = workflowInterface.GetCustomAttribute<WorkflowInterfaceAttribute>();
             }
 
-            if (!options.ScheduleToStartTimeout.HasValue || options.ScheduleToStartTimeout.Value <= TimeSpan.Zero)
+            if (method != null)
             {
-                options.ScheduleToStartTimeout = client.Settings.WorkflowScheduleToStartTimeout;
+                methodAttribute = method.GetCustomAttribute<WorkflowMethodAttribute>();
             }
 
-            if (!options.TaskStartToCloseTimeout.HasValue || options.TaskStartToCloseTimeout.Value <= TimeSpan.Zero)
+            if (string.IsNullOrEmpty(options.Namespace))
             {
-                options.TaskStartToCloseTimeout = client.Settings.WorkflowDecisionTimeout;
+                if (!string.IsNullOrEmpty(methodAttribute?.Namespace))
+                {
+                    options.Namespace = methodAttribute.Namespace;
+                }
+
+                if (string.IsNullOrEmpty(options.Namespace) && !string.IsNullOrEmpty(interfaceAttribute?.Namespace))
+                {
+                    options.Namespace = interfaceAttribute.Namespace;
+                }
+
+                if (string.IsNullOrEmpty(options.Namespace))
+                {
+                    options.Namespace = client.Settings.DefaultNamespace;
+                }
+
+                if (string.IsNullOrEmpty(options.Namespace))
+                {
+                    throw new ArgumentNullException(nameof(options), "You must specify a valid namespace explicitly in [TemporalSettings], [ActivityOptions] or via an [ActivityInterface] or [ActivityMethod] attribute on the target activity interface or method.");
+                }
             }
 
             if (string.IsNullOrEmpty(options.TaskList))
             {
-                if (interfaceAttribute != null && !string.IsNullOrEmpty(interfaceAttribute.TaskList))
+                if (!string.IsNullOrEmpty(methodAttribute?.TaskList))
+                {
+                    options.TaskList = methodAttribute.TaskList;
+                }
+
+                if (string.IsNullOrEmpty(options.TaskList) && !string.IsNullOrEmpty(interfaceAttribute?.TaskList))
                 {
                     options.TaskList = interfaceAttribute.TaskList;
+                }
+
+                if (string.IsNullOrEmpty(options.TaskList))
+                {
+                    options.TaskList = client.Settings.DefaultTaskList;
+                }
+            }
+
+            if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
+            {
+                if (methodAttribute != null && methodAttribute.ExecutionStartToCloseTimeoutSeconds > 0)
+                {
+                    options.ScheduleToCloseTimeout = TimeSpan.FromSeconds(methodAttribute.ExecutionStartToCloseTimeoutSeconds);
+                }
+
+                if (options.ScheduleToCloseTimeout <= TimeSpan.Zero)
+                {
+                    options.ScheduleToCloseTimeout = client.Settings.WorkflowScheduleToCloseTimeout;
+                }
+            }
+
+            if (options.ScheduleToStartTimeout <= TimeSpan.Zero)
+            {
+                if (methodAttribute != null && methodAttribute.ScheduleToStartTimeoutSeconds > 0)
+                {
+                    options.ScheduleToStartTimeout = TimeSpan.FromSeconds(methodAttribute.ScheduleToStartTimeoutSeconds);
+                }
+
+                if (options.ScheduleToStartTimeout <= TimeSpan.Zero)
+                {
+                    options.ScheduleToStartTimeout = client.Settings.WorkflowScheduleToStartTimeout;
+                }
+            }
+
+            if (options.DecisionTaskStartToCloseTimeout <= TimeSpan.Zero)
+            {
+                if (methodAttribute != null && methodAttribute.DecisionTaskStartToCloseTimeoutSeconds > 0)
+                {
+                    options.DecisionTaskStartToCloseTimeout = TimeSpan.FromSeconds(methodAttribute.DecisionTaskStartToCloseTimeoutSeconds);
+                }
+
+                if (options.DecisionTaskStartToCloseTimeout <= TimeSpan.Zero)
+                {
+                    options.DecisionTaskStartToCloseTimeout = client.Settings.WorkflowDecisionTimeout;
+                }
+            }
+
+            if (options.WorkflowIdReusePolicy == Temporal.WorkflowIdReusePolicy.UseDefault)
+            {
+                if (methodAttribute != null && methodAttribute.WorkflowIdReusePolicy != WorkflowIdReusePolicy.UseDefault)
+                {
+                    options.WorkflowIdReusePolicy = methodAttribute.WorkflowIdReusePolicy;
+                }
+
+                if (options.WorkflowIdReusePolicy == Temporal.WorkflowIdReusePolicy.UseDefault)
+                {
+                    options.WorkflowIdReusePolicy = client.Settings.WorkflowIdReusePolicy;
                 }
             }
 
@@ -103,21 +180,12 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Specifies the task list where the child workflow will be scheduled.
+        /// Optionally specifies the target namespace.  This defaults to the namespace
+        /// specified by <see cref="WorkflowMethodAttribute.Namespace"/>, 
+        /// <see cref="WorkflowInterfaceAttribute.Namespace"/>, or 
+        /// to the client's default namespace as specified by <see cref="TemporalSettings.DefaultNamespace"/>
+        /// (in that order of precedence).
         /// </summary>
-        /// <remarks>
-        /// <para>
-        /// A task list must be specified when executing a workflow.  For workflows
-        /// started via a typed stub, this will default to the type list specified
-        /// by the <c>[WorkflowInterface(TaskList = "my-tasklist"]</c> tagging the
-        /// interface (if any).
-        /// </para>
-        /// <para>
-        /// For workflow stubs created from an interface without a specified task list
-        /// or workflows created via untyped or external stubs, this will need to
-        /// be explicitly set to a non-empty value.
-        /// </para>
-        /// </remarks>
         public string Namespace { get; set; } = null;
 
         /// <summary>
@@ -136,19 +204,19 @@ namespace Neon.Temporal
         /// Specifies the maximum time the child workflow may execute from start
         /// to finish.  This defaults to <see cref="TemporalSettings.WorkflowScheduleToCloseTimeoutSeconds"/>.
         /// </summary>
-        public TimeSpan? ScheduleToCloseTimeout { get; set; } = TimeSpan.Zero;
+        public TimeSpan ScheduleToCloseTimeout { get; set; } = TimeSpan.Zero;
 
         /// <summary>
         /// Optionally specifies the default maximum time a workflow can wait between being scheduled
         /// and actually begin executing.  This defaults to <c>24 hours</c>.
         /// </summary>
-        public TimeSpan? ScheduleToStartTimeout { get; set; }
+        public TimeSpan ScheduleToStartTimeout { get; set; }
 
         /// <summary>
         /// Optionally specifies the decision task timeout for the child workflow.
         /// This defaults to <see cref="TemporalSettings.WorkflowDecisionTimeout"/>.
         /// </summary>
-        public TimeSpan? TaskStartToCloseTimeout { get; set; } = TimeSpan.FromSeconds(10);
+        public TimeSpan DecisionTaskStartToCloseTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
         /// <summary>
         /// Optionally specifies what happens to the child workflow when the parent is terminated.
@@ -248,10 +316,10 @@ namespace Neon.Temporal
                 Namespace                    = this.Namespace,
                 ChildClosePolicy             = (int)this.ChildPolicy,
                 CronSchedule                 = this.CronSchedule,
-                ExecutionStartToCloseTimeout = TemporalHelper.ToTemporal(this.ScheduleToCloseTimeout.Value),
+                ExecutionStartToCloseTimeout = TemporalHelper.ToTemporal(this.ScheduleToCloseTimeout),
                 RetryPolicy                  = this.RetryOptions?.ToInternal(),
                 TaskList                     = this.TaskList ?? string.Empty,
-                TaskStartToCloseTimeout      = TemporalHelper.ToTemporal(this.TaskStartToCloseTimeout.Value),
+                TaskStartToCloseTimeout      = TemporalHelper.ToTemporal(this.DecisionTaskStartToCloseTimeout),
                 WaitForCancellation          = this.WaitUntilFinished,
                 WorkflowID                   = this.WorkflowId,
                 WorkflowIdReusePolicy        = (int)(this.WorkflowIdReusePolicy == WorkflowIdReusePolicy.UseDefault ? Temporal.WorkflowIdReusePolicy.AllowDuplicateFailedOnly : this.WorkflowIdReusePolicy)
@@ -266,17 +334,17 @@ namespace Neon.Temporal
         {
             return new ChildWorkflowOptions()
             {
-                Namespace                    = this.Namespace,
-                CronSchedule                 = this.CronSchedule,
-                ChildPolicy                  = this.ChildPolicy,
-                ScheduleToCloseTimeout       = this.ScheduleToCloseTimeout,
-                RetryOptions                 = this.RetryOptions,
-                ScheduleToStartTimeout       = this.ScheduleToStartTimeout,
-                TaskList                     = this.TaskList,
-                TaskStartToCloseTimeout      = this.TaskStartToCloseTimeout,
-                WaitUntilFinished            = this.WaitUntilFinished,
-                WorkflowId                   = this.WorkflowId,
-                WorkflowIdReusePolicy        = this.WorkflowIdReusePolicy
+                Namespace                       = this.Namespace,
+                CronSchedule                    = this.CronSchedule,
+                ChildPolicy                     = this.ChildPolicy,
+                ScheduleToCloseTimeout          = this.ScheduleToCloseTimeout,
+                RetryOptions                    = this.RetryOptions,
+                ScheduleToStartTimeout          = this.ScheduleToStartTimeout,
+                TaskList                        = this.TaskList,
+                DecisionTaskStartToCloseTimeout = this.DecisionTaskStartToCloseTimeout,
+                WaitUntilFinished               = this.WaitUntilFinished,
+                WorkflowId                      = this.WorkflowId,
+                WorkflowIdReusePolicy           = this.WorkflowIdReusePolicy
             };
         }
 
@@ -289,15 +357,15 @@ namespace Neon.Temporal
         {
             return new WorkflowOptions()
             {
-                Namespace               = this.Namespace,
-                Memo                    = null,
-                RetryOptions            = this.RetryOptions,
-                ScheduleToCloseTimeout  = this.ScheduleToCloseTimeout,
-                ScheduleToStartTimeout  = this.ScheduleToStartTimeout,
-                TaskList                = this.TaskList,
-                TaskStartToCloseTimeout = this.TaskStartToCloseTimeout,
-                WorkflowId              = this.WorkflowId,
-                WorkflowIdReusePolicy   = this.WorkflowIdReusePolicy
+                Namespace                       = this.Namespace,
+                Memo                            = null,
+                RetryOptions                    = this.RetryOptions,
+                ScheduleToCloseTimeout          = this.ScheduleToCloseTimeout,
+                ScheduleToStartTimeout          = this.ScheduleToStartTimeout,
+                TaskList                        = this.TaskList,
+                DecisionTaskStartToCloseTimeout = this.DecisionTaskStartToCloseTimeout,
+                WorkflowId                      = this.WorkflowId,
+                WorkflowIdReusePolicy           = this.WorkflowIdReusePolicy
             };
         }
     }

@@ -63,12 +63,13 @@ namespace Neon.Temporal
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
             var workflowInterface = typeof(WorkflowInterface);
+            var method            = TemporalHelper.GetWorkflowMethod(workflowInterface, methodName);
 
             TemporalHelper.ValidateWorkflowInterface(workflowInterface);
 
             this.client           = client;
             this.workflowTypeName = TemporalHelper.GetWorkflowTarget(workflowInterface, methodName).WorkflowTypeName;
-            this.options          = WorkflowOptions.Normalize(client, options);
+            this.options          = WorkflowOptions.Normalize(client, options, workflowInterface, method);
         }
 
         /// <summary>

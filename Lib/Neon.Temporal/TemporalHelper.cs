@@ -311,6 +311,11 @@ namespace Neon.Temporal.Internal
 
                 var name = workflowMethodAttribute.Name ?? string.Empty;
 
+                if (name == string.Empty && workflowMethodAttribute.IsFullName)
+                {
+                    throw new WorkflowTypeException($"Workflow method [{workflowInterface.FullName}.{method.Name}()] specifies [WorkflowMethod(Name = \"\", IsFullName=true)].  Fully qualified names cannot be NULL or blank.");
+                }
+
                 if (workflowNames.Contains(name))
                 {
                     throw new WorkflowTypeException($"Multiple workflow methods are tagged by [WorkflowMethod(Name = \"{name}\")].");
@@ -361,7 +366,7 @@ namespace Neon.Temporal.Internal
 
                 if (signalNames.Contains(name))
                 {
-                    throw new WorkflowTypeException($"Multiple signal methods are tagged by [SignalMethod(name:\"{name}\")].");
+                    throw new WorkflowTypeException($"Multiple interface [{workflowInterface.FullName}] signal methods are tagged by [SignalMethod(name:\"{name}\")].");
                 }
 
                 signalNames.Add(name);
@@ -382,14 +387,14 @@ namespace Neon.Temporal.Internal
 
                 if (!(TemporalHelper.IsTask(method.ReturnType) || TemporalHelper.IsTaskT(method.ReturnType)))
                 {
-                    throw new WorkflowTypeException($"Workflow query method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                    throw new WorkflowTypeException($"Workflow interface query method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                 }
 
                 var name = queryMethodAttribute.Name ?? string.Empty;
 
                 if (queryNames.Contains(name))
                 {
-                    throw new WorkflowTypeException($"Multiple query methods are tagged by [QueryMethod(name:\"{name}\")].");
+                    throw new WorkflowTypeException($"Multiple interface [{workflowInterface.FullName}] query methods are tagged by [QueryMethod(name:\"{name}\")].");
                 }
 
                 queryNames.Add(name);
@@ -715,6 +720,64 @@ namespace Neon.Temporal.Internal
             {
                 return timespan;
             }
+        }
+
+        /// <summary>
+        /// Searches a workflow interface for a method with a <see cref="WorkflowMethodAttribute"/> 
+        /// with a matching name.
+        /// </summary>
+        /// <param name="workflowInterface">The workflow interface.</param>
+        /// <param name="methodName">The method name to be matched.</param>
+        /// <returns>The method information or <c>null</c> when there's no matching method.</returns>
+        internal static MethodInfo GetWorkflowMethod(Type workflowInterface, string methodName)
+        {
+            Covenant.Requires<ArgumentNullException>(workflowInterface != null, nameof(workflowInterface));
+
+            if (string.IsNullOrEmpty(methodName))
+            {
+                return null;
+            }
+
+            foreach (var method in workflowInterface.GetMethods())
+            {
+                var methodAttribute = method.GetCustomAttribute<WorkflowMethodAttribute>();
+
+                if (methodAttribute?.Name == methodName)
+                {
+                    return method;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Searches an activity interface for a method with a <see cref="ActivityMethodAttribute"/> 
+        /// with a matching name.
+        /// </summary>
+        /// <param name="activityInterface">The activity interface.</param>
+        /// <param name="methodName">The method name to be matched.</param>
+        /// <returns>The method information or <c>null</c> when there's no matching method.</returns>
+        internal static MethodInfo GetActivityMethod(Type activityInterface, string methodName)
+        {
+            Covenant.Requires<ArgumentNullException>(activityInterface != null, nameof(activityInterface));
+
+            if (string.IsNullOrEmpty(methodName))
+            {
+                return null;
+            }
+
+            foreach (var method in activityInterface.GetMethods())
+            {
+                var methodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();
+
+                if (methodAttribute?.Name == methodName)
+                {
+                    return method;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -1118,7 +1181,11 @@ namespace Neon.Temporal.Internal
 
             var workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowInterface, workflowAttribute);
 
-            if (!string.IsNullOrEmpty(methodAttribute.Name))
+            if (methodAttribute.IsFullName)
+            {
+                workflowTypeName = methodAttribute.Name;
+            }
+            else if (!string.IsNullOrEmpty(methodAttribute.Name))
             {
                 workflowTypeName += $"::{methodAttribute.Name}";
             }

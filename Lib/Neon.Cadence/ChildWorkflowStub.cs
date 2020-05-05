@@ -60,7 +60,7 @@ namespace Neon.Cadence
             CadenceHelper.ValidateWorkflowInterface(workflowInterface);
 
             this.parentWorkflow   = parentWorkflow;
-            this.options          = ChildWorkflowOptions.Normalize(parentWorkflow.Client, options);
+            this.options          = options;
             this.hasStarted       = false;
 
             var workflowTarget    = CadenceHelper.GetWorkflowTarget(workflowInterface, methodName);
@@ -74,7 +74,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <typeparam name="TResult">The workflow result type.</typeparam>
         /// <param name="args">The arguments to be passed to the workflow.</param>
-        /// <returns>The <see cref="ChildWorkflowFuture{T}"/> with the <see cref="ChildWorkflowFuture{T}.GetAsync"/> than can be used to retrieve the workfow result.</returns>
+        /// <returns>The <see cref="ChildWorkflowFuture{T}"/> with the <see cref="ChildWorkflowFuture{T}.GetAsync"/> that can be used to retrieve the workfow result.</returns>
         /// <exception cref="InvalidOperationException">Thrown when attempting to start a future stub more than once.</exception>
         /// <remarks>
         /// <para>
@@ -146,7 +146,7 @@ namespace Neon.Cadence
         /// Starts the target workflow that returns <c>void</c>, passing any specified arguments.
         /// </summary>
         /// <param name="args">The arguments to be passed to the workflow.</param>
-        /// <returns>The <see cref="ChildWorkflowFuture{T}"/> with the <see cref="ChildWorkflowFuture{T}.GetAsync"/> than can be used to retrieve the workfow result.</returns>
+        /// <returns>The <see cref="ChildWorkflowFuture{T}"/> with the <see cref="ChildWorkflowFuture{T}.GetAsync"/> that can be used to retrieve the workfow result.</returns>
         /// <exception cref="InvalidOperationException">Thrown when attempting to start a future stub more than once.</exception>
         /// <remarks>
         /// <para>

@@ -221,16 +221,19 @@ namespace TestCadence
         public class LocalActivityWithouthResult : ActivityBase, ILocalActivityWithoutResult
         {
             public static string Name { get; private set; } = null;
+            public static ActivityTask Info { get; set; }
 
             public new static void Reset()
             {
                 Name = null;
+                Info = null;
             }
 
             [ActivityMethod]
             public async Task HelloAsync(string name)
             {
                 LocalActivityWithouthResult.Name = name;
+                LocalActivityWithouthResult.Info = ActivityTask;
 
                 await Task.CompletedTask;
             }
@@ -269,6 +272,14 @@ namespace TestCadence
 
             await stub.HelloAsync("Jeff");
             Assert.Equal("Jeff", LocalActivityWithouthResult.Name);
+
+            // Also verify that local activities also receive 
+            // Activity Task info.
+
+            Assert.NotNull(LocalActivityWithouthResult.Info);
+            Assert.Null(LocalActivityWithouthResult.Info.ActivityTypeName);     // This is NULL for local activities
+            Assert.Equal(CadenceTestHelper.TaskList, LocalActivityWithouthResult.Info.TaskList);
+            Assert.Equal("test-domain", LocalActivityWithouthResult.Info.WorkflowDomain);
         }
 
         //---------------------------------------------------------------------
@@ -833,7 +844,7 @@ namespace TestCadence
 
             var options = new WorkflowOptions()
             {
-                TaskStartToCloseTimeout = TimeSpan.FromSeconds(60)
+                DecisionTaskStartToCloseTimeout = TimeSpan.FromSeconds(60)
             };
 
             var stub  = client.NewWorkflowStub<IWorkflowActivityFail>(options);
@@ -1021,16 +1032,23 @@ namespace TestCadence
             var task     = stub.RunAsync();
             var activity = ActivityExternalCompletion.WaitForActivity();
 
-            await client.ActivityErrorByTokenAsync(activity.Task.TaskToken, new Exception("error"));
+            await client.ActivityErrorByTokenAsync(activity.Task.TaskToken, new Exception("external activity failed"));
 
             try
             {
                 await task;
             }
+            catch (CadenceCustomException e)
+            {
+                Assert.Equal("external activity failed", e.Message);
+                return;
+            }
             catch (Exception e)
             {
-                // $todo(jefflill): Verify the exception
+                Assert.True(false, $"Expected [{nameof(CadenceCustomException)}] not [{e.GetType().Name}]");
             }
+
+            Assert.True(false, $"Expected [{nameof(CadenceCustomException)}]");
         }
 
         [Fact]
@@ -1048,16 +1066,23 @@ namespace TestCadence
             var task     = stub.RunAsync();
             var activity = ActivityExternalCompletion.WaitForActivity();
 
-            await client.ActivityErrorByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId, new Exception("error"));
+            await client.ActivityErrorByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId, new Exception("external activity failed"));
 
             try
             {
                 await task;
             }
+            catch (CadenceCustomException e)
+            {
+                Assert.Equal("external activity failed", e.Message);
+                return;
+            }
             catch (Exception e)
             {
-                // $todo(jefflill): Verify the exception
+                Assert.True(false, $"Expected [{nameof(CadenceCustomException)}] not [{e.GetType().Name}]");
             }
+
+            Assert.True(false, $"Expected [{nameof(CadenceCustomException)}]");
         }
 
         [Fact]

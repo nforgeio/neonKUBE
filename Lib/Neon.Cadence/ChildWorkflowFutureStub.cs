@@ -69,11 +69,6 @@ namespace Neon.Cadence
             this.client           = parentWorkflow.Client;
             this.WorkflowTypeName = workflowTypeName;
             this.Options          = ChildWorkflowOptions.Normalize(client, options);
-
-            if (string.IsNullOrEmpty(Options.Domain))
-            {
-                Options.Domain = parentWorkflow.WorkflowInfo.Domain;
-            }
         }
 
         /// <summary>

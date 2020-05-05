@@ -659,29 +659,7 @@ namespace Neon.Temporal
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             EnsureNotDisposed();
 
-            if (options == null)
-            {
-                options = new ChildWorkflowOptions();
-            }
-            else
-            {
-                options = options.Clone();
-            }
-
-            if (!options.ScheduleToCloseTimeout.HasValue)
-            {
-                options.ScheduleToCloseTimeout = Settings.WorkflowScheduleToCloseTimeout;
-            }
-
-            if (!options.ScheduleToStartTimeout.HasValue)
-            {
-                options.ScheduleToStartTimeout = Settings.WorkflowScheduleToStartTimeout;
-            }
-
-            if (!options.TaskStartToCloseTimeout.HasValue)
-            {
-                options.TaskStartToCloseTimeout = Settings.WorkflowDecisionTimeout;
-            }
+            options = ChildWorkflowOptions.Normalize(this, options);
 
             var reply = await parentWorkflow.ExecuteNonParallel(
                 async () =>
@@ -693,7 +671,7 @@ namespace Neon.Temporal
                             Workflow               = workflowTypeName,
                             Args                   = args,
                             Options                = options.ToInternal(),
-                            ScheduleToStartTimeout = options.ScheduleToStartTimeout ?? Settings.WorkflowScheduleToStartTimeout
+                            ScheduleToStartTimeout = options.ScheduleToStartTimeout > TimeSpan.Zero ? options.ScheduleToStartTimeout : Settings.WorkflowScheduleToStartTimeout
                         });
                 });
 
