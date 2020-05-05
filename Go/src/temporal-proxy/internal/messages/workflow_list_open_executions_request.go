@@ -68,22 +68,22 @@ func (request *WorkflowListOpenExecutionsRequest) SetMaximumPageSize(value int32
 	request.SetIntProperty("MaximumPageSize", value)
 }
 
-// GetDomain gets a WorkflowListOpenExecutionsRequest's Domain value
-// from its properties map. Optionally overrides the current client domain.
+// GetNamespace gets a WorkflowListOpenExecutionsRequest's Namespace value
+// from its properties map. Optionally overrides the current client namespace.
 //
 // returns *string -> pointer to a string in memory holding the value
-// of a WorkflowListOpenExecutionsRequest's Domain
-func (request *WorkflowListOpenExecutionsRequest) GetDomain() *string {
-	return request.GetStringProperty("Domain")
+// of a WorkflowListOpenExecutionsRequest's Namespace
+func (request *WorkflowListOpenExecutionsRequest) GetNamespace() *string {
+	return request.GetStringProperty("Namespace")
 }
 
-// SetDomain sets a WorkflowListOpenExecutionsRequest's Domain value
-// in its properties map. Optionally overrides the current client domain.
+// SetNamespace sets a WorkflowListOpenExecutionsRequest's Namespace value
+// in its properties map. Optionally overrides the current client namespace.
 //
 // param value *string -> a pointer to a string in memory that holds the value
 // to be set in the properties map
-func (request *WorkflowListOpenExecutionsRequest) SetDomain(value *string) {
-	request.SetStringProperty("Domain", value)
+func (request *WorkflowListOpenExecutionsRequest) SetNamespace(value *string) {
+	request.SetStringProperty("Namespace", value)
 }
 
 // -------------------------------------------------------------------------
@@ -103,6 +103,6 @@ func (request *WorkflowListOpenExecutionsRequest) CopyTo(target IProxyMessage) {
 	request.WorkflowRequest.CopyTo(target)
 	if v, ok := target.(*WorkflowListOpenExecutionsRequest); ok {
 		v.SetMaximumPageSize(request.GetMaximumPageSize())
-		v.SetDomain(request.GetDomain())
+		v.SetNamespace(request.GetNamespace())
 	}
 }

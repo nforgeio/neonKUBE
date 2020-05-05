@@ -29,7 +29,12 @@ import (
 	"testing"
 	"time"
 
-	//temporalshared "go.temporal.io/temporal/.gen/go/shared"
+	"go.temporal.io/temporal-proto/common"
+	"go.temporal.io/temporal-proto/execution"
+	"go.temporal.io/temporal-proto/namespace"
+	"go.temporal.io/temporal-proto/replication"
+	"go.temporal.io/temporal-proto/tasklist"
+	"go.temporal.io/temporal-proto/workflowservice"
 	"go.temporal.io/temporal/activity"
 	"go.temporal.io/temporal/client"
 	"go.temporal.io/temporal/worker"
@@ -39,6 +44,7 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"github.com/a3linux/amazon-ssm-agent/agent/times"
+	"github.com/gogo/protobuf/types"
 
 	"github.com/stretchr/testify/suite"
 
@@ -83,7 +89,7 @@ func TestUnitTestSuite(t *testing.T) {
 	time.Sleep(time.Second * 1)
 
 	// check for goroutine leaks
-	goleak.VerifyNoLeaks(t)
+	goleak.VerifyNone(t)
 }
 
 func (s *UnitTestSuite) setupTestSuiteServer() {
@@ -275,8 +281,8 @@ func (s *UnitTestSuite) TestConnectRequest() {
 		s.Nil(v.GetEndpoints())
 		s.Nil(v.GetIdentity())
 		s.Equal(time.Duration(0), v.GetClientTimeout())
-		s.False(v.GetCreateDomain())
-		s.Nil(v.GetDomain())
+		s.False(v.GetCreateNamespace())
+		s.Nil(v.GetNamespace())
 		s.Equal(time.Duration(0), v.GetRetryDelay())
 		s.Equal(int32(0), v.GetRetries())
 
@@ -296,12 +302,12 @@ func (s *UnitTestSuite) TestConnectRequest() {
 		v.SetClientTimeout(time.Second * 30)
 		s.Equal(time.Second*30, v.GetClientTimeout())
 
-		domain := "my-domain"
-		v.SetDomain(&domain)
-		s.Equal("my-domain", *v.GetDomain())
+		namespace := "my-namespace"
+		v.SetNamespace(&namespace)
+		s.Equal("my-namespace", *v.GetNamespace())
 
-		v.SetCreateDomain(true)
-		s.True(v.GetCreateDomain())
+		v.SetCreateNamespace(true)
+		s.True(v.GetCreateNamespace())
 
 		v.SetRetries(int32(3))
 		s.Equal(int32(3), v.GetRetries())
@@ -323,8 +329,8 @@ func (s *UnitTestSuite) TestConnectRequest() {
 		s.Equal("1.1.1.1:555,2.2.2.2:5555", *v.GetEndpoints())
 		s.Equal("my-identity", *v.GetIdentity())
 		s.Equal(time.Second*30, v.GetClientTimeout())
-		s.Equal("my-domain", *v.GetDomain())
-		s.True(v.GetCreateDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
+		s.True(v.GetCreateNamespace())
 		s.Equal(int32(3), v.GetRetries())
 		s.Equal(time.Second*30, v.GetRetryDelay())
 	}
@@ -338,8 +344,8 @@ func (s *UnitTestSuite) TestConnectRequest() {
 		s.Equal("1.1.1.1:555,2.2.2.2:5555", *v.GetEndpoints())
 		s.Equal("my-identity", *v.GetIdentity())
 		s.Equal(time.Second*30, v.GetClientTimeout())
-		s.Equal("my-domain", *v.GetDomain())
-		s.True(v.GetCreateDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
+		s.True(v.GetCreateNamespace())
 		s.Equal(int32(3), v.GetRetries())
 		s.Equal(time.Second*30, v.GetRetryDelay())
 	}
@@ -490,11 +496,11 @@ func (s *UnitTestSuite) TestDisconnectReply() {
 	}
 }
 
-func (s *UnitTestSuite) TestDomainDescribeRequest() {
+func (s *UnitTestSuite) TestNamespaceDescribeRequest() {
 
-	var message messages.IProxyMessage = messages.NewDomainDescribeRequest()
-	if v, ok := message.(*messages.DomainDescribeRequest); ok {
-		s.Equal(internal.DomainDescribeReply, v.GetReplyType())
+	var message messages.IProxyMessage = messages.NewNamespaceDescribeRequest()
+	if v, ok := message.(*messages.NamespaceDescribeRequest); ok {
+		s.Equal(internal.NamespaceDescribeReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
@@ -505,7 +511,7 @@ func (s *UnitTestSuite) TestDomainDescribeRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainDescribeRequest); ok {
+	if v, ok := message.(*messages.NamespaceDescribeRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetName())
 
@@ -514,9 +520,9 @@ func (s *UnitTestSuite) TestDomainDescribeRequest() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		nameStr := "my-domain"
+		nameStr := "my-namespace"
 		v.SetName(&nameStr)
-		s.Equal("my-domain", *v.GetName())
+		s.Equal("my-namespace", *v.GetName())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -527,23 +533,23 @@ func (s *UnitTestSuite) TestDomainDescribeRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainDescribeRequest); ok {
+	if v, ok := message.(*messages.NamespaceDescribeRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal("my-domain", *v.GetName())
+		s.Equal("my-namespace", *v.GetName())
 	}
 
 	message, err = s.echoToConnection(message)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainDescribeRequest); ok {
+	if v, ok := message.(*messages.NamespaceDescribeRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal("my-domain", *v.GetName())
+		s.Equal("my-namespace", *v.GetName())
 	}
 }
 
-func (s *UnitTestSuite) TestDomainDescribeReply() {
-	var message messages.IProxyMessage = messages.NewDomainDescribeReply()
+func (s *UnitTestSuite) TestNamespaceDescribeReply() {
+	var message messages.IProxyMessage = messages.NewNamespaceDescribeReply()
 	proxyMessage := message.GetProxyMessage()
 
 	serializedMessage, err := proxyMessage.Serialize(false)
@@ -553,15 +559,15 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainDescribeReply); ok {
+	if v, ok := message.(*messages.NamespaceDescribeReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
 		s.False(v.GetConfigurationEmitMetrics())
 		s.Equal(int32(0), v.GetConfigurationRetentionDays())
-		s.Nil(v.GetDomainInfoName())
-		s.Nil(v.GetDomainInfoDescription())
-		s.Nil(v.GetDomainInfoOwnerEmail())
-		s.Nil(v.GetDomainInfoStatus())
+		s.Nil(v.GetNamespaceInfoName())
+		s.Nil(v.GetNamespaceInfoDescription())
+		s.Nil(v.GetNamespaceInfoOwnerEmail())
+		s.Nil(v.GetNamespaceInfoStatus())
 
 		// Round-trip
 
@@ -577,20 +583,20 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 		v.SetConfigurationRetentionDays(int32(7))
 		s.Equal(int32(7), v.GetConfigurationRetentionDays())
 
-		domainInfoNameStr := "my-name"
-		v.SetDomainInfoName(&domainInfoNameStr)
-		s.Equal("my-name", *v.GetDomainInfoName())
+		namespaceInfoNameStr := "my-name"
+		v.SetNamespaceInfoName(&namespaceInfoNameStr)
+		s.Equal("my-name", *v.GetNamespaceInfoName())
 
-		domainInfoDescriptionStr := "my-description"
-		v.SetDomainInfoDescription(&domainInfoDescriptionStr)
-		s.Equal("my-description", *v.GetDomainInfoDescription())
+		namespaceInfoDescriptionStr := "my-description"
+		v.SetNamespaceInfoDescription(&namespaceInfoDescriptionStr)
+		s.Equal("my-description", *v.GetNamespaceInfoDescription())
 
-		v.SetDomainInfoStatus(temporalshared.DomainStatusDeprecated.Ptr())
-		s.Equal(temporalshared.DomainStatusDeprecated, *v.GetDomainInfoStatus())
+		v.SetNamespaceInfoStatus(namespace.NamespaceStatus_Deprecated)
+		s.Equal(namespace.NamespaceStatus_Deprecated, v.GetNamespaceInfoStatus())
 
-		domainInfoOwnerEmailStr := "joe@bloe.com"
-		v.SetDomainInfoOwnerEmail(&domainInfoOwnerEmailStr)
-		s.Equal("joe@bloe.com", *v.GetDomainInfoOwnerEmail())
+		namespaceInfoOwnerEmailStr := "joe@bloe.com"
+		v.SetNamespaceInfoOwnerEmail(&namespaceInfoOwnerEmailStr)
+		s.Equal("joe@bloe.com", *v.GetNamespaceInfoOwnerEmail())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -601,13 +607,13 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainDescribeReply); ok {
+	if v, ok := message.(*messages.NamespaceDescribeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(proxyerror.NewTemporalError(errors.New("foo"), proxyerror.Custom), v.GetError())
-		s.Equal("my-name", *v.GetDomainInfoName())
-		s.Equal("my-description", *v.GetDomainInfoDescription())
-		s.Equal(temporalshared.DomainStatusDeprecated, *v.GetDomainInfoStatus())
-		s.Equal("joe@bloe.com", *v.GetDomainInfoOwnerEmail())
+		s.Equal("my-name", *v.GetNamespaceInfoName())
+		s.Equal("my-description", *v.GetNamespaceInfoDescription())
+		s.Equal(namespace.NamespaceStatus_Deprecated, v.GetNamespaceInfoStatus())
+		s.Equal("joe@bloe.com", *v.GetNamespaceInfoOwnerEmail())
 		s.Equal(int32(7), v.GetConfigurationRetentionDays())
 		s.True(v.GetConfigurationEmitMetrics())
 	}
@@ -616,23 +622,23 @@ func (s *UnitTestSuite) TestDomainDescribeReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainDescribeReply); ok {
+	if v, ok := message.(*messages.NamespaceDescribeReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(proxyerror.NewTemporalError(errors.New("foo"), proxyerror.Custom), v.GetError())
-		s.Equal("my-name", *v.GetDomainInfoName())
-		s.Equal("my-description", *v.GetDomainInfoDescription())
-		s.Equal(temporalshared.DomainStatusDeprecated, *v.GetDomainInfoStatus())
-		s.Equal("joe@bloe.com", *v.GetDomainInfoOwnerEmail())
+		s.Equal("my-name", *v.GetNamespaceInfoName())
+		s.Equal("my-description", *v.GetNamespaceInfoDescription())
+		s.Equal(namespace.NamespaceStatus_Deprecated, v.GetNamespaceInfoStatus())
+		s.Equal("joe@bloe.com", *v.GetNamespaceInfoOwnerEmail())
 		s.Equal(int32(7), v.GetConfigurationRetentionDays())
 		s.True(v.GetConfigurationEmitMetrics())
 	}
 }
 
-func (s *UnitTestSuite) TestDomainListRequest() {
+func (s *UnitTestSuite) TestNamespaceListRequest() {
 
-	var message messages.IProxyMessage = messages.NewDomainListRequest()
-	if v, ok := message.(*messages.DomainListRequest); ok {
-		s.Equal(internal.DomainListReply, v.GetReplyType())
+	var message messages.IProxyMessage = messages.NewNamespaceListRequest()
+	if v, ok := message.(*messages.NamespaceListRequest); ok {
+		s.Equal(internal.NamespaceListReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
@@ -643,7 +649,7 @@ func (s *UnitTestSuite) TestDomainListRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainListRequest); ok {
+	if v, ok := message.(*messages.NamespaceListRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(int64(0), v.GetClientID())
 		s.Equal(int32(0), v.GetPageSize())
@@ -672,7 +678,7 @@ func (s *UnitTestSuite) TestDomainListRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainListRequest); ok {
+	if v, ok := message.(*messages.NamespaceListRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(666), v.GetClientID())
 		s.Equal(int32(777), v.GetPageSize())
@@ -683,7 +689,7 @@ func (s *UnitTestSuite) TestDomainListRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainListRequest); ok {
+	if v, ok := message.(*messages.NamespaceListRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(666), v.GetClientID())
 		s.Equal(int32(777), v.GetPageSize())
@@ -691,9 +697,9 @@ func (s *UnitTestSuite) TestDomainListRequest() {
 	}
 }
 
-func (s *UnitTestSuite) TestDomainListReply() {
-	var domains []*temporalshared.DescribeDomainResponse
-	var message messages.IProxyMessage = messages.NewDomainListReply()
+func (s *UnitTestSuite) TestNamespaceListReply() {
+	var namespaces []*workflowservice.DescribeNamespaceResponse
+	var message messages.IProxyMessage = messages.NewNamespaceListReply()
 
 	proxyMessage := message.GetProxyMessage()
 
@@ -704,10 +710,10 @@ func (s *UnitTestSuite) TestDomainListReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainListReply); ok {
+	if v, ok := message.(*messages.NamespaceListReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
-		s.Nil(v.GetDomains())
+		s.Nil(v.GetNamespaces())
 		s.Nil(v.GetNextPageToken())
 
 		// Round-trip
@@ -722,100 +728,100 @@ func (s *UnitTestSuite) TestDomainListReply() {
 		desc := "my-description"
 		email := "my-email"
 		uuid1 := "uuid1"
-		domainInfo1 := temporalshared.DomainInfo{
-			Name:        &name1,
-			Status:      temporalshared.DomainStatusDeleted.Ptr(),
-			Description: &desc,
-			OwnerEmail:  &email,
+		namespaceInfo1 := namespace.NamespaceInfo{
+			Name:        name1,
+			Status:      namespace.NamespaceStatus_Deleted,
+			Description: desc,
+			OwnerEmail:  email,
 			Data:        map[string]string{"1": "first", "2": "second"},
-			UUID:        &uuid1,
+			Id:          uuid1,
 		}
 
 		name2 := "my-name2"
 		uuid2 := "uuid2"
-		domainInfo2 := temporalshared.DomainInfo{
-			Name:        &name2,
-			Status:      temporalshared.DomainStatusDeprecated.Ptr(),
-			Description: &desc,
-			OwnerEmail:  &email,
+		namespaceInfo2 := namespace.NamespaceInfo{
+			Name:        name2,
+			Status:      namespace.NamespaceStatus_Deprecated,
+			Description: desc,
+			OwnerEmail:  email,
 			Data:        map[string]string{"3": "third", "4": "fourth"},
-			UUID:        &uuid2,
+			Id:          uuid2,
 		}
 
 		reason := "my-reason"
 		operator := "my-operator"
 		ctn1 := int64(44)
-		bbi1 := temporalshared.BadBinaryInfo{
-			Reason:          &reason,
-			Operator:        &operator,
-			CreatedTimeNano: &ctn1,
+		bbi1 := namespace.BadBinaryInfo{
+			Reason:          reason,
+			Operator:        operator,
+			CreatedTimeNano: ctn1,
 		}
 
 		ctn2 := int64(55)
-		bbi2 := temporalshared.BadBinaryInfo{
-			Reason:          &reason,
-			Operator:        &operator,
-			CreatedTimeNano: &ctn2,
+		bbi2 := namespace.BadBinaryInfo{
+			Reason:          reason,
+			Operator:        operator,
+			CreatedTimeNano: ctn2,
 		}
 
-		badBinaries := temporalshared.BadBinaries{
-			Binaries: map[string]*temporalshared.BadBinaryInfo{"1": &bbi1, "2": &bbi2},
+		badBinaries := namespace.BadBinaries{
+			Binaries: map[string]*namespace.BadBinaryInfo{"1": &bbi1, "2": &bbi2},
 		}
 
 		werpd := int32(7)
 		em := true
 		hauri := "huri"
 		vauri := "vuri"
-		domainConfiguration := temporalshared.DomainConfiguration{
-			WorkflowExecutionRetentionPeriodInDays: &werpd,
-			EmitMetric:                             &em,
-			HistoryArchivalURI:                     &hauri,
-			HistoryArchivalStatus:                  temporalshared.ArchivalStatusEnabled.Ptr(),
+		namespaceConfiguration := namespace.NamespaceConfiguration{
+			WorkflowExecutionRetentionPeriodInDays: werpd,
+			EmitMetric:                             &types.BoolValue{Value: em},
+			HistoryArchivalURI:                     hauri,
+			HistoryArchivalStatus:                  namespace.ArchivalStatus_Enabled,
 			BadBinaries:                            &badBinaries,
-			VisibilityArchivalStatus:               temporalshared.ArchivalStatusDisabled.Ptr(),
-			VisibilityArchivalURI:                  &vauri,
+			VisibilityArchivalStatus:               namespace.ArchivalStatus_Disabled,
+			VisibilityArchivalURI:                  vauri,
 		}
 
 		cn1 := "cluster-name1"
-		crc1 := temporalshared.ClusterReplicationConfiguration{
-			ClusterName: &cn1,
+		crc1 := replication.ClusterReplicationConfiguration{
+			ClusterName: cn1,
 		}
 
 		cn2 := "cluster-name2"
-		crc2 := temporalshared.ClusterReplicationConfiguration{
-			ClusterName: &cn2,
+		crc2 := replication.ClusterReplicationConfiguration{
+			ClusterName: cn2,
 		}
 
 		acn := "my-cluster"
-		domainRC := temporalshared.DomainReplicationConfiguration{
-			ActiveClusterName: &acn,
-			Clusters:          []*temporalshared.ClusterReplicationConfiguration{&crc1, &crc2},
+		namespaceRC := replication.NamespaceReplicationConfiguration{
+			ActiveClusterName: acn,
+			Clusters:          []*replication.ClusterReplicationConfiguration{&crc1, &crc2},
 		}
 
 		fv1 := int64(3)
 		igd1 := true
-		ddr1 := temporalshared.DescribeDomainResponse{
-			DomainInfo:               &domainInfo1,
-			Configuration:            &domainConfiguration,
-			ReplicationConfiguration: &domainRC,
-			FailoverVersion:          &fv1,
-			IsGlobalDomain:           &igd1,
+		ddr1 := workflowservice.DescribeNamespaceResponse{
+			NamespaceInfo:            &namespaceInfo1,
+			Configuration:            &namespaceConfiguration,
+			ReplicationConfiguration: &namespaceRC,
+			FailoverVersion:          fv1,
+			IsGlobalNamespace:        igd1,
 		}
 
 		fv2 := int64(10)
 		igd2 := false
-		ddr2 := temporalshared.DescribeDomainResponse{
-			DomainInfo:               &domainInfo2,
-			Configuration:            &domainConfiguration,
-			ReplicationConfiguration: &domainRC,
-			FailoverVersion:          &fv2,
-			IsGlobalDomain:           &igd2,
+		ddr2 := workflowservice.DescribeNamespaceResponse{
+			NamespaceInfo:            &namespaceInfo2,
+			Configuration:            &namespaceConfiguration,
+			ReplicationConfiguration: &namespaceRC,
+			FailoverVersion:          fv2,
+			IsGlobalNamespace:        igd2,
 		}
 
-		domains = []*temporalshared.DescribeDomainResponse{&ddr1, &ddr2}
+		namespaces = []*workflowservice.DescribeNamespaceResponse{&ddr1, &ddr2}
 
-		v.SetDomains(domains)
-		s.Equal(domains, v.GetDomains())
+		v.SetNamespaces(namespaces)
+		s.Equal(namespaces, v.GetNamespaces())
 
 		v.SetError(proxyerror.NewTemporalError(errors.New("foo")))
 		s.Equal(proxyerror.NewTemporalError(errors.New("foo"), proxyerror.Custom), v.GetError())
@@ -829,30 +835,30 @@ func (s *UnitTestSuite) TestDomainListReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainListReply); ok {
+	if v, ok := message.(*messages.NamespaceListReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{1, 2, 3, 4}, v.GetNextPageToken())
 		s.Equal(proxyerror.NewTemporalError(errors.New("foo"), proxyerror.Custom), v.GetError())
-		s.Equal(domains, v.GetDomains())
+		s.Equal(namespaces, v.GetNamespaces())
 	}
 
 	message, err = s.echoToConnection(message)
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainListReply); ok {
+	if v, ok := message.(*messages.NamespaceListReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{1, 2, 3, 4}, v.GetNextPageToken())
 		s.Equal(proxyerror.NewTemporalError(errors.New("foo"), proxyerror.Custom), v.GetError())
-		s.Equal(domains, v.GetDomains())
+		s.Equal(namespaces, v.GetNamespaces())
 	}
 }
 
-func (s *UnitTestSuite) TestDomainRegisterRequest() {
+func (s *UnitTestSuite) TestNamespaceRegisterRequest() {
 
-	var message messages.IProxyMessage = messages.NewDomainRegisterRequest()
-	if v, ok := message.(*messages.DomainRegisterRequest); ok {
-		s.Equal(internal.DomainRegisterReply, v.GetReplyType())
+	var message messages.IProxyMessage = messages.NewNamespaceRegisterRequest()
+	if v, ok := message.(*messages.NamespaceRegisterRequest); ok {
+		s.Equal(internal.NamespaceRegisterReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
@@ -863,7 +869,7 @@ func (s *UnitTestSuite) TestDomainRegisterRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainRegisterRequest); ok {
+	if v, ok := message.(*messages.NamespaceRegisterRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetName())
 		s.Nil(v.GetDescription())
@@ -877,9 +883,9 @@ func (s *UnitTestSuite) TestDomainRegisterRequest() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		nameStr := "my-domain"
+		nameStr := "my-namespace"
 		v.SetName(&nameStr)
-		s.Equal("my-domain", *v.GetName())
+		s.Equal("my-namespace", *v.GetName())
 
 		descriptionStr := "my-description"
 		v.SetDescription(&descriptionStr)
@@ -909,9 +915,9 @@ func (s *UnitTestSuite) TestDomainRegisterRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainRegisterRequest); ok {
+	if v, ok := message.(*messages.NamespaceRegisterRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal("my-domain", *v.GetName())
+		s.Equal("my-namespace", *v.GetName())
 		s.Equal("my-description", *v.GetDescription())
 		s.Equal("my-email", *v.GetOwnerEmail())
 		s.True(v.GetEmitMetrics())
@@ -923,9 +929,9 @@ func (s *UnitTestSuite) TestDomainRegisterRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainRegisterRequest); ok {
+	if v, ok := message.(*messages.NamespaceRegisterRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal("my-domain", *v.GetName())
+		s.Equal("my-namespace", *v.GetName())
 		s.Equal("my-description", *v.GetDescription())
 		s.Equal("my-email", *v.GetOwnerEmail())
 		s.True(v.GetEmitMetrics())
@@ -934,8 +940,8 @@ func (s *UnitTestSuite) TestDomainRegisterRequest() {
 	}
 }
 
-func (s *UnitTestSuite) TestDomainRegisterReply() {
-	var message messages.IProxyMessage = messages.NewDomainRegisterReply()
+func (s *UnitTestSuite) TestNamespaceRegisterReply() {
+	var message messages.IProxyMessage = messages.NewNamespaceRegisterReply()
 	proxyMessage := message.GetProxyMessage()
 
 	serializedMessage, err := proxyMessage.Serialize(false)
@@ -945,7 +951,7 @@ func (s *UnitTestSuite) TestDomainRegisterReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainRegisterReply); ok {
+	if v, ok := message.(*messages.NamespaceRegisterReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
 
@@ -966,7 +972,7 @@ func (s *UnitTestSuite) TestDomainRegisterReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainRegisterReply); ok {
+	if v, ok := message.(*messages.NamespaceRegisterReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(proxyerror.NewTemporalError(errors.New("foo"), proxyerror.Custom), v.GetError())
 	}
@@ -975,17 +981,17 @@ func (s *UnitTestSuite) TestDomainRegisterReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainRegisterReply); ok {
+	if v, ok := message.(*messages.NamespaceRegisterReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(proxyerror.NewTemporalError(errors.New("foo"), proxyerror.Custom), v.GetError())
 	}
 }
 
-func (s *UnitTestSuite) TestDomainDeprecateRequest() {
+func (s *UnitTestSuite) TestNamespaceDeprecateRequest() {
 
-	var message messages.IProxyMessage = messages.NewDomainDeprecateRequest()
-	if v, ok := message.(*messages.DomainDeprecateRequest); ok {
-		s.Equal(internal.DomainDeprecateReply, v.GetReplyType())
+	var message messages.IProxyMessage = messages.NewNamespaceDeprecateRequest()
+	if v, ok := message.(*messages.NamespaceDeprecateRequest); ok {
+		s.Equal(internal.NamespaceDeprecateReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
@@ -996,7 +1002,7 @@ func (s *UnitTestSuite) TestDomainDeprecateRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainDeprecateRequest); ok {
+	if v, ok := message.(*messages.NamespaceDeprecateRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetName())
 		s.Nil(v.GetSecurityToken())
@@ -1006,9 +1012,9 @@ func (s *UnitTestSuite) TestDomainDeprecateRequest() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		nameStr := "my-domain"
+		nameStr := "my-namespace"
 		v.SetName(&nameStr)
-		s.Equal("my-domain", *v.GetName())
+		s.Equal("my-namespace", *v.GetName())
 
 		securityToken := "security-token"
 		v.SetSecurityToken(&securityToken)
@@ -1024,9 +1030,9 @@ func (s *UnitTestSuite) TestDomainDeprecateRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainDeprecateRequest); ok {
+	if v, ok := message.(*messages.NamespaceDeprecateRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal("my-domain", *v.GetName())
+		s.Equal("my-namespace", *v.GetName())
 		s.Equal("security-token", *v.GetSecurityToken())
 	}
 
@@ -1034,15 +1040,15 @@ func (s *UnitTestSuite) TestDomainDeprecateRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainDeprecateRequest); ok {
+	if v, ok := message.(*messages.NamespaceDeprecateRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal("my-domain", *v.GetName())
+		s.Equal("my-namespace", *v.GetName())
 		s.Equal("security-token", *v.GetSecurityToken())
 	}
 }
 
-func (s *UnitTestSuite) TestDomainDeprecateReply() {
-	var message messages.IProxyMessage = messages.NewDomainDeprecateReply()
+func (s *UnitTestSuite) TestNamespaceDeprecateReply() {
+	var message messages.IProxyMessage = messages.NewNamespaceDeprecateReply()
 	proxyMessage := message.GetProxyMessage()
 
 	serializedMessage, err := proxyMessage.Serialize(false)
@@ -1052,7 +1058,7 @@ func (s *UnitTestSuite) TestDomainDeprecateReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainDeprecateReply); ok {
+	if v, ok := message.(*messages.NamespaceDeprecateReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
 
@@ -1073,7 +1079,7 @@ func (s *UnitTestSuite) TestDomainDeprecateReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainDeprecateReply); ok {
+	if v, ok := message.(*messages.NamespaceDeprecateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(proxyerror.NewTemporalError(errors.New("foo"), proxyerror.Custom), v.GetError())
 	}
@@ -1082,17 +1088,17 @@ func (s *UnitTestSuite) TestDomainDeprecateReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainDeprecateReply); ok {
+	if v, ok := message.(*messages.NamespaceDeprecateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(proxyerror.NewTemporalError(errors.New("foo"), proxyerror.Custom), v.GetError())
 	}
 }
 
-func (s *UnitTestSuite) TestDomainUpdateRequest() {
+func (s *UnitTestSuite) TestNamespaceUpdateRequest() {
 
-	var message messages.IProxyMessage = messages.NewDomainUpdateRequest()
-	if v, ok := message.(*messages.DomainUpdateRequest); ok {
-		s.Equal(internal.DomainUpdateReply, v.GetReplyType())
+	var message messages.IProxyMessage = messages.NewNamespaceUpdateRequest()
+	if v, ok := message.(*messages.NamespaceUpdateRequest); ok {
+		s.Equal(internal.NamespaceUpdateReply, v.GetReplyType())
 	}
 
 	proxyMessage := message.GetProxyMessage()
@@ -1103,7 +1109,7 @@ func (s *UnitTestSuite) TestDomainUpdateRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainUpdateRequest); ok {
+	if v, ok := message.(*messages.NamespaceUpdateRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetName())
 		s.Nil(v.GetUpdatedInfoDescription())
@@ -1117,9 +1123,9 @@ func (s *UnitTestSuite) TestDomainUpdateRequest() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		nameStr := "my-domain"
+		nameStr := "my-namespace"
 		v.SetName(&nameStr)
-		s.Equal("my-domain", *v.GetName())
+		s.Equal("my-namespace", *v.GetName())
 
 		descriptionStr := "my-description"
 		v.SetUpdatedInfoDescription(&descriptionStr)
@@ -1149,9 +1155,9 @@ func (s *UnitTestSuite) TestDomainUpdateRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainUpdateRequest); ok {
+	if v, ok := message.(*messages.NamespaceUpdateRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal("my-domain", *v.GetName())
+		s.Equal("my-namespace", *v.GetName())
 		s.Equal("my-description", *v.GetUpdatedInfoDescription())
 		s.Equal("my-email", *v.GetUpdatedInfoOwnerEmail())
 		s.True(v.GetConfigurationEmitMetrics())
@@ -1163,9 +1169,9 @@ func (s *UnitTestSuite) TestDomainUpdateRequest() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainUpdateRequest); ok {
+	if v, ok := message.(*messages.NamespaceUpdateRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal("my-domain", *v.GetName())
+		s.Equal("my-namespace", *v.GetName())
 		s.Equal("my-description", *v.GetUpdatedInfoDescription())
 		s.Equal("my-email", *v.GetUpdatedInfoOwnerEmail())
 		s.True(v.GetConfigurationEmitMetrics())
@@ -1174,8 +1180,8 @@ func (s *UnitTestSuite) TestDomainUpdateRequest() {
 	}
 }
 
-func (s *UnitTestSuite) TestDomainUpdateReply() {
-	var message messages.IProxyMessage = messages.NewDomainUpdateReply()
+func (s *UnitTestSuite) TestNamespaceUpdateReply() {
+	var message messages.IProxyMessage = messages.NewNamespaceUpdateReply()
 	proxyMessage := message.GetProxyMessage()
 
 	serializedMessage, err := proxyMessage.Serialize(false)
@@ -1185,7 +1191,7 @@ func (s *UnitTestSuite) TestDomainUpdateReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainUpdateReply); ok {
+	if v, ok := message.(*messages.NamespaceUpdateReply); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetError())
 
@@ -1206,7 +1212,7 @@ func (s *UnitTestSuite) TestDomainUpdateReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainUpdateReply); ok {
+	if v, ok := message.(*messages.NamespaceUpdateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(proxyerror.NewTemporalError(errors.New("foo"), proxyerror.Custom), v.GetError())
 	}
@@ -1215,7 +1221,7 @@ func (s *UnitTestSuite) TestDomainUpdateReply() {
 	s.NoError(err)
 	s.NotNil(message)
 
-	if v, ok := message.(*messages.DomainUpdateReply); ok {
+	if v, ok := message.(*messages.NamespaceUpdateReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(proxyerror.NewTemporalError(errors.New("foo"), proxyerror.Custom), v.GetError())
 	}
@@ -1575,7 +1581,7 @@ func (s *UnitTestSuite) TestNewWorkerRequest() {
 
 	if v, ok := message.(*messages.NewWorkerRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
-		s.Nil(v.GetDomain())
+		s.Nil(v.GetNamespace())
 		s.Nil(v.GetTaskList())
 		s.Nil(v.GetOptions())
 
@@ -1584,17 +1590,18 @@ func (s *UnitTestSuite) TestNewWorkerRequest() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		domain := "my-domain"
-		v.SetDomain(&domain)
-		s.Equal("my-domain", *v.GetDomain())
+		namespace := "my-namespace"
+		v.SetNamespace(&namespace)
+		s.Equal("my-namespace", *v.GetNamespace())
 
 		tasks := "my-tasks"
 		v.SetTaskList(&tasks)
 		s.Equal("my-tasks", *v.GetTaskList())
 
-		opts := worker.Options{Identity: "my-identity", MaxConcurrentActivityExecutionSize: 1234}
+		opts := worker.Options{WorkerActivitiesPerSecond: 2, MaxConcurrentActivityExecutionSize: 1234}
 		v.SetOptions(&opts)
 		s.Equal(1234, v.GetOptions().MaxConcurrentActivityExecutionSize)
+		s.Equal(2, v.GetOptions().WorkerActivitiesPerSecond)
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1607,9 +1614,10 @@ func (s *UnitTestSuite) TestNewWorkerRequest() {
 
 	if v, ok := message.(*messages.NewWorkerRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal("my-tasks", *v.GetTaskList())
 		s.Equal(1234, v.GetOptions().MaxConcurrentActivityExecutionSize)
+		s.Equal(2, v.GetOptions().WorkerActivitiesPerSecond)
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1618,9 +1626,10 @@ func (s *UnitTestSuite) TestNewWorkerRequest() {
 
 	if v, ok := message.(*messages.NewWorkerRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal("my-tasks", *v.GetTaskList())
 		s.Equal(1234, v.GetOptions().MaxConcurrentActivityExecutionSize)
+		s.Equal(2, v.GetOptions().WorkerActivitiesPerSecond)
 	}
 }
 
@@ -1937,7 +1946,7 @@ func (s *UnitTestSuite) TestDescribeTaskListRequest() {
 	if v, ok := message.(*messages.DescribeTaskListRequest); ok {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetName())
-		s.Nil(v.GetDomain())
+		s.Nil(v.GetNamespace())
 		s.Equal(int64(0), v.GetClientID())
 		s.Nil(v.GetTaskListType())
 		s.Nil(v.GetTaskListKind())
@@ -1954,15 +1963,15 @@ func (s *UnitTestSuite) TestDescribeTaskListRequest() {
 		v.SetName(&nameStr)
 		s.Equal("my-name", *v.GetName())
 
-		domainStr := "my-domain"
-		v.SetDomain(&domainStr)
-		s.Equal("my-domain", *v.GetDomain())
+		namespaceStr := "my-namespace"
+		v.SetNamespace(&namespaceStr)
+		s.Equal("my-namespace", *v.GetNamespace())
 
-		v.SetTaskListType(temporalshared.TaskListTypeDecision.Ptr())
-		s.Equal(temporalshared.TaskListTypeDecision, *v.GetTaskListType())
+		v.SetTaskListType(tasklist.TaskListType_Decision)
+		s.Equal(tasklist.TaskListType_Decision, v.GetTaskListType())
 
-		v.SetTaskListKind(temporalshared.TaskListKindNormal.Ptr())
-		s.Equal(temporalshared.TaskListKindNormal, *v.GetTaskListKind())
+		v.SetTaskListKind(tasklist.TaskListKind_Normal)
+		s.Equal(tasklist.TaskListKind_Normal, v.GetTaskListKind())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1977,9 +1986,9 @@ func (s *UnitTestSuite) TestDescribeTaskListRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(666), v.GetClientID())
 		s.Equal("my-name", *v.GetName())
-		s.Equal("my-domain", *v.GetDomain())
-		s.Equal(temporalshared.TaskListTypeDecision, *v.GetTaskListType())
-		s.Equal(temporalshared.TaskListTypeDecision, *v.GetTaskListType())
+		s.Equal("my-namespace", *v.GetNamespace())
+		s.Equal(tasklist.TaskListType_Decision, v.GetTaskListType())
+		s.Equal(tasklist.TaskListType_Decision, v.GetTaskListType())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1990,9 +1999,9 @@ func (s *UnitTestSuite) TestDescribeTaskListRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal(int64(666), v.GetClientID())
 		s.Equal("my-name", *v.GetName())
-		s.Equal("my-domain", *v.GetDomain())
-		s.Equal(temporalshared.TaskListTypeDecision, *v.GetTaskListType())
-		s.Equal(temporalshared.TaskListTypeDecision, *v.GetTaskListType())
+		s.Equal("my-namespace", *v.GetNamespace())
+		s.Equal(tasklist.TaskListType_Decision, v.GetTaskListType())
+		s.Equal(tasklist.TaskListType_Decision, v.GetTaskListType())
 	}
 }
 
@@ -2017,32 +2026,32 @@ func (s *UnitTestSuite) TestDescribeTaskListReply() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		result := new(temporalshared.DescribeTaskListResponse)
+		result := new(workflowservice.DescribeTaskListResponse)
 		lat1 := int64(1)
 		lat2 := int64(2)
 		identity1 := "i1"
 		identity2 := "i2"
 		rps1 := float64(1)
 		rps2 := float64(2)
-		pollerInfo1 := temporalshared.PollerInfo{
-			LastAccessTime: &lat1,
-			Identity:       &identity1,
-			RatePerSecond:  &rps1,
+		pollerInfo1 := tasklist.PollerInfo{
+			LastAccessTime: lat1,
+			Identity:       identity1,
+			RatePerSecond:  rps1,
 		}
-		pollerInfo2 := temporalshared.PollerInfo{
-			LastAccessTime: &lat2,
-			Identity:       &identity2,
-			RatePerSecond:  &rps2,
+		pollerInfo2 := tasklist.PollerInfo{
+			LastAccessTime: lat2,
+			Identity:       identity2,
+			RatePerSecond:  rps2,
 		}
 
-		pollers := []*temporalshared.PollerInfo{&pollerInfo1, &pollerInfo2}
+		pollers := []*tasklist.PollerInfo{&pollerInfo1, &pollerInfo2}
 		result.Pollers = pollers
 
 		v.SetResult(result)
-		s.Equal(int64(1), *v.GetResult().Pollers[0].LastAccessTime)
-		s.Equal(int64(2), *v.GetResult().Pollers[1].LastAccessTime)
-		s.Equal("i1", *v.GetResult().Pollers[0].Identity)
-		s.Equal("i2", *v.GetResult().Pollers[1].Identity)
+		s.Equal(int64(1), v.GetResult().Pollers[0].LastAccessTime)
+		s.Equal(int64(2), v.GetResult().Pollers[1].LastAccessTime)
+		s.Equal("i1", v.GetResult().Pollers[0].Identity)
+		s.Equal("i2", v.GetResult().Pollers[1].Identity)
 
 		v.SetError(proxyerror.NewTemporalError(errors.New("foo")))
 		s.Equal(proxyerror.NewTemporalError(errors.New("foo"), proxyerror.Custom), v.GetError())
@@ -2058,10 +2067,10 @@ func (s *UnitTestSuite) TestDescribeTaskListReply() {
 
 	if v, ok := message.(*messages.DescribeTaskListReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(int64(1), *v.GetResult().Pollers[0].LastAccessTime)
-		s.Equal(int64(2), *v.GetResult().Pollers[1].LastAccessTime)
-		s.Equal("i1", *v.GetResult().Pollers[0].Identity)
-		s.Equal("i2", *v.GetResult().Pollers[1].Identity)
+		s.Equal(int64(1), v.GetResult().Pollers[0].LastAccessTime)
+		s.Equal(int64(2), v.GetResult().Pollers[1].LastAccessTime)
+		s.Equal("i1", v.GetResult().Pollers[0].Identity)
+		s.Equal("i2", v.GetResult().Pollers[1].Identity)
 		s.Equal(proxyerror.NewTemporalError(errors.New("foo"), proxyerror.Custom), v.GetError())
 	}
 
@@ -2071,10 +2080,10 @@ func (s *UnitTestSuite) TestDescribeTaskListReply() {
 
 	if v, ok := message.(*messages.DescribeTaskListReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(int64(1), *v.GetResult().Pollers[0].LastAccessTime)
-		s.Equal(int64(2), *v.GetResult().Pollers[1].LastAccessTime)
-		s.Equal("i1", *v.GetResult().Pollers[0].Identity)
-		s.Equal("i2", *v.GetResult().Pollers[1].Identity)
+		s.Equal(int64(1), v.GetResult().Pollers[0].LastAccessTime)
+		s.Equal(int64(2), v.GetResult().Pollers[1].LastAccessTime)
+		s.Equal("i1", v.GetResult().Pollers[0].Identity)
+		s.Equal("i2", v.GetResult().Pollers[1].Identity)
 		s.Equal(proxyerror.NewTemporalError(errors.New("foo"), proxyerror.Custom), v.GetError())
 	}
 }
@@ -2188,7 +2197,7 @@ func (s *UnitTestSuite) TestWorkflowRegisterRequest() {
 		s.Equal(internal.WorkflowRegisterReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetName())
-		s.Nil(v.GetDomain())
+		s.Nil(v.GetNamespace())
 
 		// Round-trip
 
@@ -2199,9 +2208,9 @@ func (s *UnitTestSuite) TestWorkflowRegisterRequest() {
 		v.SetName(&name)
 		s.Equal("Foo", *v.GetName())
 
-		domain := "my-domain"
-		v.SetDomain(&domain)
-		s.Equal("my-domain", *v.GetDomain())
+		namespace := "my-namespace"
+		v.SetNamespace(&namespace)
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2215,7 +2224,7 @@ func (s *UnitTestSuite) TestWorkflowRegisterRequest() {
 	if v, ok := message.(*messages.WorkflowRegisterRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("Foo", *v.GetName())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2225,7 +2234,7 @@ func (s *UnitTestSuite) TestWorkflowRegisterRequest() {
 	if v, ok := message.(*messages.WorkflowRegisterRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("Foo", *v.GetName())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 }
 
@@ -2290,7 +2299,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteRequest() {
 	if v, ok := message.(*messages.WorkflowExecuteRequest); ok {
 		s.Equal(internal.WorkflowExecuteReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
-		s.Nil(v.GetDomain())
+		s.Nil(v.GetNamespace())
 		s.Nil(v.GetWorkflow())
 		s.Nil(v.GetArgs())
 		s.Nil(v.GetOptions())
@@ -2300,9 +2309,9 @@ func (s *UnitTestSuite) TestWorkflowExecuteRequest() {
 		v.SetRequestID(int64(555))
 		s.Equal(int64(555), v.GetRequestID())
 
-		domain := "my-domain"
-		v.SetDomain(&domain)
-		s.Equal("my-domain", *v.GetDomain())
+		namespace := "my-namespace"
+		v.SetNamespace(&namespace)
+		s.Equal("my-namespace", *v.GetNamespace())
 
 		workflow := "Foo"
 		v.SetWorkflow(&workflow)
@@ -2312,9 +2321,9 @@ func (s *UnitTestSuite) TestWorkflowExecuteRequest() {
 		v.SetArgs(args)
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
 
-		opts := client.StartWorkflowOptions{TaskList: "my-list", ExecutionStartToCloseTimeout: time.Second * 100}
+		opts := client.StartWorkflowOptions{TaskList: "my-list", WorkflowExecutionTimeout: time.Second * 100}
 		v.SetOptions(&opts)
-		s.Equal(time.Second*100, v.GetOptions().ExecutionStartToCloseTimeout)
+		s.Equal(time.Second*100, v.GetOptions().WorkflowExecutionTimeout)
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2327,10 +2336,10 @@ func (s *UnitTestSuite) TestWorkflowExecuteRequest() {
 
 	if v, ok := message.(*messages.WorkflowExecuteRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal("Foo", *v.GetWorkflow())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
-		s.Equal(time.Second*100, v.GetOptions().ExecutionStartToCloseTimeout)
+		s.Equal(time.Second*100, v.GetOptions().WorkflowExecutionTimeout)
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2339,10 +2348,10 @@ func (s *UnitTestSuite) TestWorkflowExecuteRequest() {
 
 	if v, ok := message.(*messages.WorkflowExecuteRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal("Foo", *v.GetWorkflow())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
-		s.Equal(time.Second*100, v.GetOptions().ExecutionStartToCloseTimeout)
+		s.Equal(time.Second*100, v.GetOptions().WorkflowExecutionTimeout)
 	}
 }
 
@@ -2419,7 +2428,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Equal(int64(0), v.GetContextID())
 		s.Nil(v.GetArgs())
-		s.Nil(v.GetDomain())
+		s.Nil(v.GetNamespace())
 		s.Nil(v.GetWorkflowID())
 		s.Nil(v.GetRunID())
 		s.Nil(v.GetWorkflowType())
@@ -2443,9 +2452,9 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		v.SetArgs(args)
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
 
-		domain := "my-domain"
-		v.SetDomain(&domain)
-		s.Equal("my-domain", *v.GetDomain())
+		namespace := "my-namespace"
+		v.SetNamespace(&namespace)
+		s.Equal("my-namespace", *v.GetNamespace())
 
 		workflowID := "my-workflowid"
 		v.SetWorkflowID(&workflowID)
@@ -2483,7 +2492,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		s.Equal("Foo", *v.GetName())
 		s.Equal(int64(666), v.GetContextID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal("my-workflowid", *v.GetWorkflowID())
 		s.Equal("my-tasklist", *v.GetTaskList())
 		s.Equal("my-runid", *v.GetRunID())
@@ -2501,7 +2510,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeRequest() {
 		s.Equal("Foo", *v.GetName())
 		s.Equal(int64(666), v.GetContextID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal("my-workflowid", *v.GetWorkflowID())
 		s.Equal("my-tasklist", *v.GetTaskList())
 		s.Equal("my-runid", *v.GetRunID())
@@ -2530,7 +2539,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 		s.False(v.GetContinueAsNew())
 		s.Nil(v.GetResult())
 		s.Nil(v.GetContinueAsNewArgs())
-		s.Nil(v.GetContinueAsNewDomain())
+		s.Nil(v.GetContinueAsNewNamespace())
 		s.Nil(v.GetContinueAsNewTaskList())
 		s.Nil(v.GetContinueAsNewWorkflow())
 		s.Equal(int64(0), v.GetContinueAsNewExecutionStartToCloseTimeout())
@@ -2563,9 +2572,9 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 		v.SetContinueAsNewArgs(args)
 		s.Equal([]byte{5, 6, 7, 8}, v.GetContinueAsNewArgs())
 
-		domain := "test-domain"
-		v.SetContinueAsNewDomain(&domain)
-		s.Equal("test-domain", *v.GetContinueAsNewDomain())
+		namespace := "test-namespace"
+		v.SetContinueAsNewNamespace(&namespace)
+		s.Equal("test-namespace", *v.GetContinueAsNewNamespace())
 
 		workflow := "test-workflow"
 		v.SetContinueAsNewWorkflow(&workflow)
@@ -2604,7 +2613,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 		s.True(v.GetForceReplay())
 		s.True(v.GetContinueAsNew())
 		s.Equal([]byte{5, 6, 7, 8}, v.GetContinueAsNewArgs())
-		s.Equal("test-domain", *v.GetContinueAsNewDomain())
+		s.Equal("test-namespace", *v.GetContinueAsNewNamespace())
 		s.Equal("test-workflow", *v.GetContinueAsNewWorkflow())
 		s.Equal("test-task", *v.GetContinueAsNewTaskList())
 		s.Equal(int64(1), v.GetContinueAsNewExecutionStartToCloseTimeout())
@@ -2625,7 +2634,7 @@ func (s *UnitTestSuite) TestWorkflowInvokeReply() {
 		s.True(v.GetForceReplay())
 		s.True(v.GetContinueAsNew())
 		s.Equal([]byte{5, 6, 7, 8}, v.GetContinueAsNewArgs())
-		s.Equal("test-domain", *v.GetContinueAsNewDomain())
+		s.Equal("test-namespace", *v.GetContinueAsNewNamespace())
 		s.Equal("test-workflow", *v.GetContinueAsNewWorkflow())
 		s.Equal("test-task", *v.GetContinueAsNewTaskList())
 		s.Equal(int64(1), v.GetContinueAsNewExecutionStartToCloseTimeout())
@@ -2651,7 +2660,7 @@ func (s *UnitTestSuite) TestWorkflowCancelRequest() {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetWorkflowID())
 		s.Nil(v.GetRunID())
-		s.Nil(v.GetDomain())
+		s.Nil(v.GetNamespace())
 
 		// Round-trip
 
@@ -2666,9 +2675,9 @@ func (s *UnitTestSuite) TestWorkflowCancelRequest() {
 		v.SetRunID(&runID)
 		s.Equal("666", *v.GetRunID())
 
-		domain := "my-domain"
-		v.SetDomain(&domain)
-		s.Equal("my-domain", *v.GetDomain())
+		namespace := "my-namespace"
+		v.SetNamespace(&namespace)
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2682,7 +2691,7 @@ func (s *UnitTestSuite) TestWorkflowCancelRequest() {
 	if v, ok := message.(*messages.WorkflowCancelRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("777", *v.GetWorkflowID())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal("666", *v.GetRunID())
 	}
 
@@ -2693,7 +2702,7 @@ func (s *UnitTestSuite) TestWorkflowCancelRequest() {
 	if v, ok := message.(*messages.WorkflowCancelRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("777", *v.GetWorkflowID())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal("666", *v.GetRunID())
 	}
 }
@@ -2763,7 +2772,7 @@ func (s *UnitTestSuite) TestWorkflowTerminateRequest() {
 		s.Nil(v.GetRunID())
 		s.Nil(v.GetReason())
 		s.Nil(v.GetDetails())
-		s.Nil(v.GetDomain())
+		s.Nil(v.GetNamespace())
 
 		// Round-trip
 
@@ -2786,9 +2795,9 @@ func (s *UnitTestSuite) TestWorkflowTerminateRequest() {
 		v.SetDetails(details)
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetDetails())
 
-		domain := "my-domain"
-		v.SetDomain(&domain)
-		s.Equal("my-domain", *v.GetDomain())
+		namespace := "my-namespace"
+		v.SetNamespace(&namespace)
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2805,7 +2814,7 @@ func (s *UnitTestSuite) TestWorkflowTerminateRequest() {
 		s.Equal("my-reason", *v.GetReason())
 		s.Equal("666", *v.GetRunID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetDetails())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2818,7 +2827,7 @@ func (s *UnitTestSuite) TestWorkflowTerminateRequest() {
 		s.Equal("my-reason", *v.GetReason())
 		s.Equal("666", *v.GetRunID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetDetails())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 }
 
@@ -2887,7 +2896,7 @@ func (s *UnitTestSuite) TestWorkflowSignalRequest() {
 		s.Nil(v.GetRunID())
 		s.Nil(v.GetSignalName())
 		s.Nil(v.GetSignalArgs())
-		s.Nil(v.GetDomain())
+		s.Nil(v.GetNamespace())
 
 		// Round-trip
 
@@ -2910,9 +2919,9 @@ func (s *UnitTestSuite) TestWorkflowSignalRequest() {
 		v.SetSignalArgs(signalArgs)
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetSignalArgs())
 
-		domain := "my-domain"
-		v.SetDomain(&domain)
-		s.Equal("my-domain", *v.GetDomain())
+		namespace := "my-namespace"
+		v.SetNamespace(&namespace)
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2929,7 +2938,7 @@ func (s *UnitTestSuite) TestWorkflowSignalRequest() {
 		s.Equal("my-signal", *v.GetSignalName())
 		s.Equal("666", *v.GetRunID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetSignalArgs())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2942,7 +2951,7 @@ func (s *UnitTestSuite) TestWorkflowSignalRequest() {
 		s.Equal("my-signal", *v.GetSignalName())
 		s.Equal("666", *v.GetRunID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetSignalArgs())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 }
 
@@ -3013,7 +3022,7 @@ func (s *UnitTestSuite) TestWorkflowSignalWithStartRequest() {
 		s.Nil(v.GetSignalArgs())
 		s.Nil(v.GetOptions())
 		s.Nil(v.GetWorkflowArgs())
-		s.Nil(v.GetDomain())
+		s.Nil(v.GetNamespace())
 
 		// Round-trip
 
@@ -3045,9 +3054,9 @@ func (s *UnitTestSuite) TestWorkflowSignalWithStartRequest() {
 		v.SetWorkflowArgs(workflowArgs)
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetWorkflowArgs())
 
-		domain := "my-domain"
-		v.SetDomain(&domain)
-		s.Equal("my-domain", *v.GetDomain())
+		namespace := "my-namespace"
+		v.SetNamespace(&namespace)
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3067,7 +3076,7 @@ func (s *UnitTestSuite) TestWorkflowSignalWithStartRequest() {
 		s.Equal("my-tasklist", v.GetOptions().TaskList)
 		s.Equal(client.WorkflowIDReusePolicyAllowDuplicate, v.GetOptions().WorkflowIDReusePolicy)
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetWorkflowArgs())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3083,7 +3092,7 @@ func (s *UnitTestSuite) TestWorkflowSignalWithStartRequest() {
 		s.Equal("my-tasklist", v.GetOptions().TaskList)
 		s.Equal(client.WorkflowIDReusePolicyAllowDuplicate, v.GetOptions().WorkflowIDReusePolicy)
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetWorkflowArgs())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 }
 
@@ -3257,7 +3266,7 @@ func (s *UnitTestSuite) TestWorkflowQueryRequest() {
 		s.Nil(v.GetRunID())
 		s.Nil(v.GetQueryName())
 		s.Nil(v.GetQueryArgs())
-		s.Nil(v.GetDomain())
+		s.Nil(v.GetNamespace())
 
 		// Round-trip
 
@@ -3280,9 +3289,9 @@ func (s *UnitTestSuite) TestWorkflowQueryRequest() {
 		v.SetQueryArgs(queryArgs)
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetQueryArgs())
 
-		domain := "my-domain"
-		v.SetDomain(&domain)
-		s.Equal("my-domain", *v.GetDomain())
+		namespace := "my-namespace"
+		v.SetNamespace(&namespace)
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3299,7 +3308,7 @@ func (s *UnitTestSuite) TestWorkflowQueryRequest() {
 		s.Equal("777", *v.GetWorkflowID())
 		s.Equal("my-query", *v.GetQueryName())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetQueryArgs())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3312,7 +3321,7 @@ func (s *UnitTestSuite) TestWorkflowQueryRequest() {
 		s.Equal("777", *v.GetWorkflowID())
 		s.Equal("my-query", *v.GetQueryName())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetQueryArgs())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 }
 
@@ -3507,7 +3516,7 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionRequest() {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetWorkflowID())
 		s.Nil(v.GetRunID())
-		s.Nil(v.GetDomain())
+		s.Nil(v.GetNamespace())
 
 		// Round-trip
 
@@ -3522,9 +3531,9 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionRequest() {
 		v.SetRunID(&runID)
 		s.Equal("666", *v.GetRunID())
 
-		domain := "my-domain"
-		v.SetDomain(&domain)
-		s.Equal("my-domain", *v.GetDomain())
+		namespace := "my-namespace"
+		v.SetNamespace(&namespace)
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -3539,7 +3548,7 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("777", *v.GetWorkflowID())
 		s.Equal("666", *v.GetRunID())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -3550,12 +3559,12 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("777", *v.GetWorkflowID())
 		s.Equal("666", *v.GetRunID())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 }
 
 func (s *UnitTestSuite) TestWorkflowDescribeExecutionReply() {
-	var details temporalshared.DescribeWorkflowExecutionResponse
+	var details workflowservice.DescribeWorkflowExecutionResponse
 	var message messages.IProxyMessage = messages.NewWorkflowDescribeExecutionReply()
 
 	proxyMessage := message.GetProxyMessage()
@@ -3578,118 +3587,116 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionReply() {
 		s.Equal(int64(555), v.GetRequestID())
 
 		tlName := "my-list"
-		tl := temporalshared.TaskList{
-			Name: &tlName,
-			Kind: temporalshared.TaskListKindSticky.Ptr(),
+		tl := tasklist.TaskList{
+			Name: tlName,
+			Kind: tasklist.TaskListKind_Sticky,
 		}
 
 		esct := int32(44)
 		tsct := int32(55)
-		wec := temporalshared.WorkflowExecutionConfiguration{
-			TaskList:                            &tl,
-			ExecutionStartToCloseTimeoutSeconds: &esct,
-			TaskStartToCloseTimeoutSeconds:      &tsct,
+		wec := execution.WorkflowExecutionConfiguration{
+			TaskList:                        &tl,
+			WorkflowExecutionTimeoutSeconds: esct,
+			WorkflowTaskTimeoutSeconds:      tsct,
 		}
 
 		wid := "my-workflow"
 		rid := "my-run"
-		we := temporalshared.WorkflowExecution{
-			WorkflowId: &wid,
-			RunId:      &rid,
+		we := execution.WorkflowExecution{
+			WorkflowId: wid,
+			RunId:      rid,
 		}
 
 		pwid := "parent-workflow"
 		prid := "parent-run"
-		pwe := temporalshared.WorkflowExecution{
-			WorkflowId: &pwid,
-			RunId:      &prid,
+		pwe := execution.WorkflowExecution{
+			WorkflowId: pwid,
+			RunId:      prid,
 		}
 
-		name := "my-name"
-		wt := temporalshared.WorkflowType{
-			Name: &name,
-		}
-
+		activityName := "my-activity"
+		wt := "my-name"
 		bc := "my-checksum"
 		fdci := int64(44)
 		ctn := int64(55)
 		etn := int64(66)
 		rese := true
-		rpi := temporalshared.ResetPointInfo{
-			BinaryChecksum:           &bc,
-			RunId:                    &rid,
-			FirstDecisionCompletedId: &fdci,
-			CreatedTimeNano:          &ctn,
-			ExpiringTimeNano:         &etn,
-			Resettable:               &rese,
+		rpi := execution.ResetPointInfo{
+			BinaryChecksum:           bc,
+			RunId:                    rid,
+			FirstDecisionCompletedId: fdci,
+			CreatedTimeNano:          ctn,
+			ExpiringTimeNano:         etn,
+			Resettable:               rese,
 		}
 
-		arp := temporalshared.ResetPoints{
-			Points: []*temporalshared.ResetPointInfo{&rpi},
+		arp := execution.ResetPoints{
+			Points: []*execution.ResetPointInfo{&rpi},
 		}
 
 		st := int64(44)
 		ct := int64(55)
 		hl := int64(66)
-		pd := "parent-domain"
+		pd := "parent-namespace"
 		et := int64(77)
-		memo := temporalshared.Memo{Fields: map[string][]byte{"first": []byte{1, 2, 3, 4, 5}}}
-		sa := temporalshared.SearchAttributes{IndexedFields: map[string][]byte{"second": []byte{6, 7, 8, 9, 10}}}
-		wei := temporalshared.WorkflowExecutionInfo{
-			Execution:        &we,
-			Type:             &wt,
-			StartTime:        &st,
-			CloseTime:        &ct,
-			CloseStatus:      temporalshared.WorkflowExecutionCloseStatusCanceled.Ptr(),
-			HistoryLength:    &hl,
-			ParentDomainId:   &pd,
-			ParentExecution:  &pwe,
-			ExecutionTime:    &et,
-			Memo:             &memo,
-			SearchAttributes: &sa,
-			AutoResetPoints:  &arp,
+		p1 := common.Payload{Data: []byte{1, 2, 3, 4, 5}}
+		p2 := common.Payload{Data: []byte{6, 7, 8, 9, 10}}
+		p3 := common.Payload{Data: []byte{11, 12, 13, 14, 15}}
+		ps := common.Payloads{Payloads: []*common.Payload{&p1, &p2, &p3}}
+		wei := execution.WorkflowExecutionInfo{
+			Execution:         &we,
+			Type:              &common.WorkflowType{wt},
+			StartTime:         &types.Int64Value{Value: st},
+			CloseTime:         &types.Int64Value{Value: ct},
+			HistoryLength:     hl,
+			ParentNamespaceId: pd,
+			ParentExecution:   &pwe,
+			ExecutionTime:     et,
+			Memo:              &common.Memo{Fields: map[string]*common.Payloads{"first": &ps}},
+			SearchAttributes:  &common.SearchAttributes{IndexedFields: map[string]*common.Payloads{"second": &ps}},
+			AutoResetPoints:   &arp,
 		}
 
-		at := temporalshared.ActivityType{
-			Name: &name,
+		at := common.ActivityType{
+			Name: activityName,
 		}
 
-		aid := "my-activity"
+		aid := activityName
 		lht := int64(44)
 		lst := int64(55)
 		atp := int32(66)
 		ma := int32(77)
 		lfr := "my-reason"
 		lwi := "my-identity"
-		pai := temporalshared.PendingActivityInfo{
-			ActivityID:             &aid,
+		pai := execution.PendingActivityInfo{
+			ActivityId:             aid,
 			ActivityType:           &at,
-			State:                  temporalshared.PendingActivityStateStarted.Ptr(),
-			HeartbeatDetails:       []byte{0, 1, 2, 3, 4},
-			LastHeartbeatTimestamp: &lht,
-			LastStartedTimestamp:   &lst,
-			Attempt:                &atp,
-			MaximumAttempts:        &ma,
-			ScheduledTimestamp:     &st,
-			ExpirationTimestamp:    &et,
-			LastFailureReason:      &lfr,
-			LastWorkerIdentity:     &lwi,
+			State:                  execution.PendingActivityState_Started,
+			HeartbeatDetails:       &ps,
+			LastHeartbeatTimestamp: lht,
+			LastStartedTimestamp:   lst,
+			Attempt:                atp,
+			MaximumAttempts:        ma,
+			ScheduledTimestamp:     st,
+			ExpirationTimestamp:    et,
+			LastFailureReason:      lfr,
+			LastWorkerIdentity:     lwi,
 		}
 
 		wn := "my-workflow"
 		iid := int64(44)
-		pcei := temporalshared.PendingChildExecutionInfo{
-			WorkflowID:      &wid,
-			RunID:           &rid,
-			WorkflowTypName: &wn,
-			InitiatedID:     &iid,
+		pcei := execution.PendingChildExecutionInfo{
+			WorkflowId:      wid,
+			RunId:           rid,
+			WorkflowTypName: wn,
+			InitiatedId:     iid,
 		}
 
-		details = temporalshared.DescribeWorkflowExecutionResponse{
+		details = workflowservice.DescribeWorkflowExecutionResponse{
 			ExecutionConfiguration: &wec,
 			WorkflowExecutionInfo:  &wei,
-			PendingActivities:      []*temporalshared.PendingActivityInfo{&pai},
-			PendingChildren:        []*temporalshared.PendingChildExecutionInfo{&pcei},
+			PendingActivities:      []*execution.PendingActivityInfo{&pai},
+			PendingChildren:        []*execution.PendingChildExecutionInfo{&pcei},
 		}
 
 		v.SetDetails(&details)
@@ -3911,14 +3918,14 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildRequest() {
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
 
 		opts := workflow.ChildWorkflowOptions{
-			TaskList:                     "my-tasklist",
-			Domain:                       "my-domain",
-			ParentClosePolicy:            client.ParentClosePolicyAbandon,
-			WorkflowID:                   "my-workflow",
-			ExecutionStartToCloseTimeout: time.Second * 20,
+			TaskList:                 "my-tasklist",
+			Namespace:                "my-namespace",
+			ParentClosePolicy:        client.ParentClosePolicyAbandon,
+			WorkflowID:               "my-workflow",
+			WorkflowExecutionTimeout: time.Second * 20,
 		}
 		v.SetOptions(&opts)
-		s.Equal(workflow.ChildWorkflowOptions{TaskList: "my-tasklist", Domain: "my-domain", ParentClosePolicy: client.ParentClosePolicyAbandon, WorkflowID: "my-workflow", ExecutionStartToCloseTimeout: time.Second * 20}, *v.GetOptions())
+		s.Equal(workflow.ChildWorkflowOptions{TaskList: "my-tasklist", Namespace: "my-namespace", ParentClosePolicy: client.ParentClosePolicyAbandon, WorkflowID: "my-workflow", WorkflowExecutionTimeout: time.Second * 20}, *v.GetOptions())
 
 		v.SetScheduleToStartTimeout(time.Second * 30)
 		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
@@ -3935,7 +3942,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildRequest() {
 	if v, ok := message.(*messages.WorkflowExecuteChildRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-workflow", *v.GetWorkflow())
-		s.Equal(workflow.ChildWorkflowOptions{TaskList: "my-tasklist", Domain: "my-domain", ParentClosePolicy: client.ParentClosePolicyAbandon, WorkflowID: "my-workflow", ExecutionStartToCloseTimeout: time.Second * 20}, *v.GetOptions())
+		s.Equal(workflow.ChildWorkflowOptions{TaskList: "my-tasklist", Namespace: "my-namespace", ParentClosePolicy: client.ParentClosePolicyAbandon, WorkflowID: "my-workflow", WorkflowExecutionTimeout: time.Second * 20}, *v.GetOptions())
 		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
 	}
 
@@ -3946,7 +3953,7 @@ func (s *UnitTestSuite) TestWorkflowExecuteChildRequest() {
 	if v, ok := message.(*messages.WorkflowExecuteChildRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-workflow", *v.GetWorkflow())
-		s.Equal(workflow.ChildWorkflowOptions{TaskList: "my-tasklist", Domain: "my-domain", ParentClosePolicy: client.ParentClosePolicyAbandon, WorkflowID: "my-workflow", ExecutionStartToCloseTimeout: time.Second * 20}, *v.GetOptions())
+		s.Equal(workflow.ChildWorkflowOptions{TaskList: "my-tasklist", Namespace: "my-namespace", ParentClosePolicy: client.ParentClosePolicyAbandon, WorkflowID: "my-workflow", WorkflowExecutionTimeout: time.Second * 20}, *v.GetOptions())
 		s.Equal(time.Second*30, v.GetScheduleToStartTimeout())
 	}
 }
@@ -4115,7 +4122,7 @@ func (s *UnitTestSuite) TestWorkflowGetResultRequest() {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetWorkflowID())
 		s.Nil(v.GetRunID())
-		s.Nil(v.GetDomain())
+		s.Nil(v.GetNamespace())
 
 		// Round-trip
 
@@ -4130,9 +4137,9 @@ func (s *UnitTestSuite) TestWorkflowGetResultRequest() {
 		v.SetRunID(&runID)
 		s.Equal("my-run", *v.GetRunID())
 
-		domain := "my-domain"
-		v.SetDomain(&domain)
-		s.Equal("my-domain", *v.GetDomain())
+		namespace := "my-namespace"
+		v.SetNamespace(&namespace)
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -4147,7 +4154,7 @@ func (s *UnitTestSuite) TestWorkflowGetResultRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-workflow", *v.GetWorkflowID())
 		s.Equal("my-run", *v.GetRunID())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -4158,7 +4165,7 @@ func (s *UnitTestSuite) TestWorkflowGetResultRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-workflow", *v.GetWorkflowID())
 		s.Equal("my-run", *v.GetRunID())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 }
 
@@ -5826,7 +5833,7 @@ func (s *UnitTestSuite) TestActivityCompleteRequest() {
 		s.Nil(v.GetTaskToken())
 		s.Nil(v.GetResult())
 		s.Nil(v.GetError())
-		s.Nil(v.GetDomain())
+		s.Nil(v.GetNamespace())
 		s.Nil(v.GetWorkflowID())
 		s.Nil(v.GetRunID())
 		s.Nil(v.GetActivityID())
@@ -5845,17 +5852,17 @@ func (s *UnitTestSuite) TestActivityCompleteRequest() {
 		v.SetError(proxyerror.NewTemporalError(errors.New("foo"), proxyerror.Generic))
 		s.Equal(proxyerror.NewTemporalError(errors.New("foo"), proxyerror.Generic), v.GetError())
 
-		domain := "my-domain"
+		namespace := "my-namespace"
 		workflowID := "my-workflow"
 		runID := "my-workflowrun"
 		activityID := "my-activity"
 
-		v.SetDomain(&domain)
+		v.SetNamespace(&namespace)
 		v.SetWorkflowID(&workflowID)
 		v.SetRunID(&runID)
 		v.SetActivityID(&activityID)
 
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal("my-workflow", *v.GetWorkflowID())
 		s.Equal("my-workflowrun", *v.GetRunID())
 		s.Equal("my-activity", *v.GetActivityID())
@@ -5874,7 +5881,7 @@ func (s *UnitTestSuite) TestActivityCompleteRequest() {
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetTaskToken())
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetResult())
 		s.Equal(proxyerror.NewTemporalError(errors.New("foo"), proxyerror.Generic), v.GetError())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal("my-workflow", *v.GetWorkflowID())
 		s.Equal("my-workflowrun", *v.GetRunID())
 		s.Equal("my-activity", *v.GetActivityID())
@@ -5889,7 +5896,7 @@ func (s *UnitTestSuite) TestActivityCompleteRequest() {
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetTaskToken())
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetResult())
 		s.Equal(proxyerror.NewTemporalError(errors.New("foo"), proxyerror.Generic), v.GetError())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal("my-workflow", *v.GetWorkflowID())
 		s.Equal("my-workflowrun", *v.GetRunID())
 		s.Equal("my-activity", *v.GetActivityID())
@@ -6122,7 +6129,7 @@ func (s *UnitTestSuite) TestActivityExecuteRequest() {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetArgs())
 		s.Nil(v.GetOptions())
-		s.Nil(v.GetDomain())
+		s.Nil(v.GetNamespace())
 
 		// Round-trip
 
@@ -6140,9 +6147,9 @@ func (s *UnitTestSuite) TestActivityExecuteRequest() {
 		v.SetOptions(&opts)
 		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskList: "my-tasklist"}, *v.GetOptions())
 
-		domain := "my-domain"
-		v.SetDomain(&domain)
-		s.Equal("my-domain", *v.GetDomain())
+		namespace := "my-namespace"
+		v.SetNamespace(&namespace)
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -6157,7 +6164,7 @@ func (s *UnitTestSuite) TestActivityExecuteRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
 		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskList: "my-tasklist"}, *v.GetOptions())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -6168,7 +6175,7 @@ func (s *UnitTestSuite) TestActivityExecuteRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
 		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskList: "my-tasklist"}, *v.GetOptions())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 }
 
@@ -6289,14 +6296,14 @@ func (s *UnitTestSuite) TestActivityGetInfoReply() {
 		s.Equal(int64(555), v.GetRequestID())
 
 		info := activity.Info{
-			TaskList:       "my-tasklist",
-			Attempt:        4,
-			ActivityID:     "my-activity",
-			WorkflowDomain: "my-domain",
-			ActivityType:   activity.Type{Name: "activity"},
+			TaskList:          "my-tasklist",
+			Attempt:           4,
+			ActivityID:        "my-activity",
+			WorkflowNamespace: "my-namespace",
+			ActivityType:      activity.Type{Name: "activity"},
 		}
 		v.SetInfo(&info)
-		s.Equal(activity.Info{TaskList: "my-tasklist", Attempt: 4, ActivityID: "my-activity", WorkflowDomain: "my-domain", ActivityType: activity.Type{Name: "activity"}}, *v.GetInfo())
+		s.Equal(activity.Info{TaskList: "my-tasklist", Attempt: 4, ActivityID: "my-activity", WorkflowNamespace: "my-namespace", ActivityType: activity.Type{Name: "activity"}}, *v.GetInfo())
 
 		v.SetError(proxyerror.NewTemporalError(errors.New("foo")))
 		s.Equal(proxyerror.NewTemporalError(errors.New("foo"), proxyerror.Custom), v.GetError())
@@ -6312,7 +6319,7 @@ func (s *UnitTestSuite) TestActivityGetInfoReply() {
 
 	if v, ok := message.(*messages.ActivityGetInfoReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(activity.Info{TaskList: "my-tasklist", Attempt: 4, ActivityID: "my-activity", WorkflowDomain: "my-domain", ActivityType: activity.Type{Name: "activity"}}, *v.GetInfo())
+		s.Equal(activity.Info{TaskList: "my-tasklist", Attempt: 4, ActivityID: "my-activity", WorkflowNamespace: "my-namespace", ActivityType: activity.Type{Name: "activity"}}, *v.GetInfo())
 		s.Equal(proxyerror.NewTemporalError(errors.New("foo"), proxyerror.Custom), v.GetError())
 	}
 
@@ -6322,7 +6329,7 @@ func (s *UnitTestSuite) TestActivityGetInfoReply() {
 
 	if v, ok := message.(*messages.ActivityGetInfoReply); ok {
 		s.Equal(int64(555), v.GetRequestID())
-		s.Equal(activity.Info{TaskList: "my-tasklist", Attempt: 4, ActivityID: "my-activity", WorkflowDomain: "my-domain", ActivityType: activity.Type{Name: "activity"}}, *v.GetInfo())
+		s.Equal(activity.Info{TaskList: "my-tasklist", Attempt: 4, ActivityID: "my-activity", WorkflowNamespace: "my-namespace", ActivityType: activity.Type{Name: "activity"}}, *v.GetInfo())
 		s.Equal(proxyerror.NewTemporalError(errors.New("foo"), proxyerror.Custom), v.GetError())
 	}
 }
@@ -6742,7 +6749,7 @@ func (s *UnitTestSuite) TestActivityRecordHeartbeatRequest() {
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetDetails())
 		s.Nil(v.GetTaskToken())
-		s.Nil(v.GetDomain())
+		s.Nil(v.GetNamespace())
 		s.Nil(v.GetWorkflowID())
 		s.Nil(v.GetRunID())
 		s.Nil(v.GetActivityID())
@@ -6758,17 +6765,17 @@ func (s *UnitTestSuite) TestActivityRecordHeartbeatRequest() {
 		v.SetTaskToken([]byte{5, 6, 7, 8, 9})
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetTaskToken())
 
-		domain := "my-domain"
+		namespace := "my-namespace"
 		workflowID := "my-workflow"
 		runID := "my-workflowrun"
 		activityID := "my-activity"
 
-		v.SetDomain(&domain)
+		v.SetNamespace(&namespace)
 		v.SetWorkflowID(&workflowID)
 		v.SetRunID(&runID)
 		v.SetActivityID(&activityID)
 
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal("my-workflow", *v.GetWorkflowID())
 		s.Equal("my-workflowrun", *v.GetRunID())
 		s.Equal("my-activity", *v.GetActivityID())
@@ -6786,7 +6793,7 @@ func (s *UnitTestSuite) TestActivityRecordHeartbeatRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetDetails())
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetTaskToken())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal("my-workflow", *v.GetWorkflowID())
 		s.Equal("my-workflowrun", *v.GetRunID())
 		s.Equal("my-activity", *v.GetActivityID())
@@ -6800,7 +6807,7 @@ func (s *UnitTestSuite) TestActivityRecordHeartbeatRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetDetails())
 		s.Equal([]byte{5, 6, 7, 8, 9}, v.GetTaskToken())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal("my-workflow", *v.GetWorkflowID())
 		s.Equal("my-workflowrun", *v.GetRunID())
 		s.Equal("my-activity", *v.GetActivityID())
@@ -6869,7 +6876,7 @@ func (s *UnitTestSuite) TestActivityRegisterRequest() {
 		s.Equal(internal.ActivityRegisterReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetName())
-		s.Nil(v.GetDomain())
+		s.Nil(v.GetNamespace())
 
 		// Round-trip
 
@@ -6880,9 +6887,9 @@ func (s *UnitTestSuite) TestActivityRegisterRequest() {
 		v.SetName(&name)
 		s.Equal("my-activity", *v.GetName())
 
-		domain := "my-domain"
-		v.SetDomain(&domain)
-		s.Equal("my-domain", *v.GetDomain())
+		namespace := "my-namespace"
+		v.SetNamespace(&namespace)
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -6896,7 +6903,7 @@ func (s *UnitTestSuite) TestActivityRegisterRequest() {
 	if v, ok := message.(*messages.ActivityRegisterRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-activity", *v.GetName())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -6906,7 +6913,7 @@ func (s *UnitTestSuite) TestActivityRegisterRequest() {
 	if v, ok := message.(*messages.ActivityRegisterRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-activity", *v.GetName())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 	}
 }
 
@@ -7023,7 +7030,7 @@ func (s *UnitTestSuite) TestActivityStartRequest() {
 		s.Equal(int64(0), v.GetClientID())
 		s.Nil(v.GetArgs())
 		s.Nil(v.GetOptions())
-		s.Nil(v.GetDomain())
+		s.Nil(v.GetNamespace())
 		s.Equal(int64(0), v.GetActivityID())
 
 		// Round-trip
@@ -7045,9 +7052,9 @@ func (s *UnitTestSuite) TestActivityStartRequest() {
 		v.SetOptions(&opts)
 		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskList: "my-tasklist"}, *v.GetOptions())
 
-		domain := "my-domain"
-		v.SetDomain(&domain)
-		s.Equal("my-domain", *v.GetDomain())
+		namespace := "my-namespace"
+		v.SetNamespace(&namespace)
+		s.Equal("my-namespace", *v.GetNamespace())
 
 		v.SetActivityID(int64(666))
 		s.Equal(int64(666), v.GetActivityID())
@@ -7065,7 +7072,7 @@ func (s *UnitTestSuite) TestActivityStartRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
 		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskList: "my-tasklist"}, *v.GetOptions())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal(int64(666), v.GetActivityID())
 		s.Equal(int64(777), v.GetClientID())
 	}
@@ -7078,7 +7085,7 @@ func (s *UnitTestSuite) TestActivityStartRequest() {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal([]byte{0, 1, 2, 3, 4}, v.GetArgs())
 		s.Equal(workflow.ActivityOptions{ScheduleToCloseTimeout: time.Second * 30, WaitForCancellation: false, TaskList: "my-tasklist"}, *v.GetOptions())
-		s.Equal("my-domain", *v.GetDomain())
+		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal(int64(666), v.GetActivityID())
 		s.Equal(int64(777), v.GetClientID())
 	}

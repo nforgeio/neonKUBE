@@ -216,28 +216,28 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 				reply = handleDisconnectRequest(ctx, v)
 			}
 
-		// DomainDescribeRequest
-		case internal.DomainDescribeRequest:
-			if v, ok := request.(*messages.DomainDescribeRequest); ok {
-				reply = handleDomainDescribeRequest(ctx, v)
+		// NamespaceDescribeRequest
+		case internal.NamespaceDescribeRequest:
+			if v, ok := request.(*messages.NamespaceDescribeRequest); ok {
+				reply = handleNamespaceDescribeRequest(ctx, v)
 			}
 
-		// DomainRegisterRequest
-		case internal.DomainRegisterRequest:
-			if v, ok := request.(*messages.DomainRegisterRequest); ok {
-				reply = handleDomainRegisterRequest(ctx, v)
+		// NamespaceRegisterRequest
+		case internal.NamespaceRegisterRequest:
+			if v, ok := request.(*messages.NamespaceRegisterRequest); ok {
+				reply = handleNamespaceRegisterRequest(ctx, v)
 			}
 
-		// DomainUpdateRequest
-		case internal.DomainUpdateRequest:
-			if v, ok := request.(*messages.DomainUpdateRequest); ok {
-				reply = handleDomainUpdateRequest(ctx, v)
+		// NamespaceUpdateRequest
+		case internal.NamespaceUpdateRequest:
+			if v, ok := request.(*messages.NamespaceUpdateRequest); ok {
+				reply = handleNamespaceUpdateRequest(ctx, v)
 			}
 
-		// DomainListRequest
-		case internal.DomainListRequest:
-			if v, ok := request.(*messages.DomainListRequest); ok {
-				reply = handleDomainListRequest(ctx, v)
+		// NamespaceListRequest
+		case internal.NamespaceListRequest:
+			if v, ok := request.(*messages.NamespaceListRequest); ok {
+				reply = handleNamespaceListRequest(ctx, v)
 			}
 
 		// TerminateRequest

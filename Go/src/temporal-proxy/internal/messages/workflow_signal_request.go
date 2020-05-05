@@ -124,22 +124,22 @@ func (request *WorkflowSignalRequest) SetSignalArgs(value []byte) {
 	request.SetBytesProperty("SignalArgs", value)
 }
 
-// GetDomain gets a WorkflowSignalRequest's Domain value
+// GetNamespace gets a WorkflowSignalRequest's Namespace value
 // from its properties map
 //
 // returns *string -> pointer to a string in memory holding the value
-// of a WorkflowSignalRequest's Domain
-func (request *WorkflowSignalRequest) GetDomain() *string {
-	return request.GetStringProperty("Domain")
+// of a WorkflowSignalRequest's Namespace
+func (request *WorkflowSignalRequest) GetNamespace() *string {
+	return request.GetStringProperty("Namespace")
 }
 
-// SetDomain sets a WorkflowSignalRequest's Domain value
+// SetNamespace sets a WorkflowSignalRequest's Namespace value
 // in its properties map.
 //
 // param value *string -> a pointer to a string in memory that holds the value
 // to be set in the properties map
-func (request *WorkflowSignalRequest) SetDomain(value *string) {
-	request.SetStringProperty("Domain", value)
+func (request *WorkflowSignalRequest) SetNamespace(value *string) {
+	request.SetStringProperty("Namespace", value)
 }
 
 // -------------------------------------------------------------------------
@@ -162,6 +162,6 @@ func (request *WorkflowSignalRequest) CopyTo(target IProxyMessage) {
 		v.SetRunID(request.GetRunID())
 		v.SetSignalName(request.GetSignalName())
 		v.SetSignalArgs(request.GetSignalArgs())
-		v.SetDomain(request.GetDomain())
+		v.SetNamespace(request.GetNamespace())
 	}
 }

@@ -171,22 +171,22 @@ func (request *WorkflowSignalWithStartRequest) SetWorkflow(value *string) {
 	request.SetStringProperty("Workflow", value)
 }
 
-// GetDomain gets a WorkflowSignalWithStartRequest's Domain value
+// GetNamespace gets a WorkflowSignalWithStartRequest's Namespace value
 // from its properties map
 //
 // returns *string -> pointer to a string in memory holding the value
-// of a WorkflowSignalWithStartRequest's Domain
-func (request *WorkflowSignalWithStartRequest) GetDomain() *string {
-	return request.GetStringProperty("Domain")
+// of a WorkflowSignalWithStartRequest's Namespace
+func (request *WorkflowSignalWithStartRequest) GetNamespace() *string {
+	return request.GetStringProperty("Namespace")
 }
 
-// SetDomain sets a WorkflowSignalWithStartRequest's Domain value
+// SetNamespace sets a WorkflowSignalWithStartRequest's Namespace value
 // in its properties map.
 //
 // param value *string -> a pointer to a string in memory that holds the value
 // to be set in the properties map
-func (request *WorkflowSignalWithStartRequest) SetDomain(value *string) {
-	request.SetStringProperty("Domain", value)
+func (request *WorkflowSignalWithStartRequest) SetNamespace(value *string) {
+	request.SetStringProperty("Namespace", value)
 }
 
 // -------------------------------------------------------------------------
@@ -211,6 +211,6 @@ func (request *WorkflowSignalWithStartRequest) CopyTo(target IProxyMessage) {
 		v.SetOptions(request.GetOptions())
 		v.SetWorkflowArgs(request.GetWorkflowArgs())
 		v.SetWorkflow(request.GetWorkflow())
-		v.SetDomain(request.GetDomain())
+		v.SetNamespace(request.GetNamespace())
 	}
 }

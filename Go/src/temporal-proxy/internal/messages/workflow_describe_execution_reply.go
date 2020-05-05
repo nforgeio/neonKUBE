@@ -18,9 +18,9 @@
 package messages
 
 import (
-	//temporalshared "go.temporal.io/temporal/.gen/go/shared"
-
 	internal "temporal-proxy/internal"
+
+	"go.temporal.io/temporal-proto/workflowservice"
 )
 
 type (
@@ -49,9 +49,9 @@ func NewWorkflowDescribeExecutionReply() *WorkflowDescribeExecutionReply {
 // GetDetails gets the WorkflowDescribeExecutionReply's Details property from its
 // properties map, the workflow execution details.
 //
-// returns *workflow.DescribeWorkflowExecutionResponse -> the *temporalshared.DescribeWorkflowExecutionResponse.
-func (reply *WorkflowDescribeExecutionReply) GetDetails() *temporalshared.DescribeWorkflowExecutionResponse {
-	resp := new(temporalshared.DescribeWorkflowExecutionResponse)
+// returns *workflow.DescribeWorkflowExecutionResponse -> the *workflowservice.DescribeWorkflowExecutionResponse.
+func (reply *WorkflowDescribeExecutionReply) GetDetails() *workflowservice.DescribeWorkflowExecutionResponse {
+	resp := new(workflowservice.DescribeWorkflowExecutionResponse)
 	err := reply.GetJSONProperty("Details", resp)
 	if err != nil {
 		return nil
@@ -63,8 +63,8 @@ func (reply *WorkflowDescribeExecutionReply) GetDetails() *temporalshared.Descri
 // SetDetails sets the WorkflowDescribeExecutionReply's Details property in its
 // properties map, the workflow execution details.
 //
-// param value *workflow.DescribeWorkflowExecutionResponse -> the *temporalshared.DescribeWorkflowExecutionResponse.
-func (reply *WorkflowDescribeExecutionReply) SetDetails(value *temporalshared.DescribeWorkflowExecutionResponse) {
+// param value *workflowservice.DescribeWorkflowExecutionResponse -> the *workflowservice.DescribeWorkflowExecutionResponse.
+func (reply *WorkflowDescribeExecutionReply) SetDetails(value *workflowservice.DescribeWorkflowExecutionResponse) {
 	reply.SetJSONProperty("Details", value)
 }
 

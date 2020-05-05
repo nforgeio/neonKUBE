@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		domain_register_reply.go
+// FILE:		namespace_register_reply.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -23,22 +23,22 @@ import (
 
 type (
 
-	// DomainRegisterReply is a ProxyReply of MessageType
-	// DomainRegisterReply.  It holds a reference to a ProxyReply in memory
-	DomainRegisterReply struct {
+	// NamespaceRegisterReply is a ProxyReply of MessageType
+	// NamespaceRegisterReply.  It holds a reference to a ProxyReply in memory
+	NamespaceRegisterReply struct {
 		*ProxyReply
 	}
 )
 
-// NewDomainRegisterReply is the default constructor for
-// a DomainRegisterReply
+// NewNamespaceRegisterReply is the default constructor for
+// a NamespaceRegisterReply
 //
-// returns *DomainRegisterReply -> a pointer to a newly initialized
-// DomainRegisterReply in memory
-func NewDomainRegisterReply() *DomainRegisterReply {
-	reply := new(DomainRegisterReply)
+// returns *NamespaceRegisterReply -> a pointer to a newly initialized
+// NamespaceRegisterReply in memory
+func NewNamespaceRegisterReply() *NamespaceRegisterReply {
+	reply := new(NamespaceRegisterReply)
 	reply.ProxyReply = NewProxyReply()
-	reply.SetType(internal.DomainRegisterReply)
+	reply.SetType(internal.NamespaceRegisterReply)
 
 	return reply
 }
@@ -47,15 +47,15 @@ func NewDomainRegisterReply() *DomainRegisterReply {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Clone inherits docs from ProxyReply.Clone()
-func (reply *DomainRegisterReply) Clone() IProxyMessage {
-	domainRegisterReply := NewDomainRegisterReply()
-	var messageClone IProxyMessage = domainRegisterReply
+func (reply *NamespaceRegisterReply) Clone() IProxyMessage {
+	namespaceRegisterReply := NewNamespaceRegisterReply()
+	var messageClone IProxyMessage = namespaceRegisterReply
 	reply.CopyTo(messageClone)
 
 	return messageClone
 }
 
 // CopyTo inherits docs from ProxyReply.CopyTo()
-func (reply *DomainRegisterReply) CopyTo(target IProxyMessage) {
+func (reply *NamespaceRegisterReply) CopyTo(target IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
 }

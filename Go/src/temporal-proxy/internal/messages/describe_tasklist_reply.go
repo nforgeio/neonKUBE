@@ -19,7 +19,8 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
-	//temporalshared "go.temporal.io/temporal/.gen/go/shared"
+
+	"go.temporal.io/temporal-proto/workflowservice"
 )
 
 type (
@@ -48,10 +49,10 @@ func NewDescribeTaskListReply() *DescribeTaskListReply {
 // GetResult gets the DescribeTaskListReply's Result property from its
 // properties map, describes the task list details.
 //
-// returns *temporalshared.DescribeTaskListResponse -> the response to the temporal
+// returns *workflowservice.DescribeTaskListResponse -> the response to the temporal
 // describe task list request.
-func (reply *DescribeTaskListReply) GetResult() *temporalshared.DescribeTaskListResponse {
-	resp := new(temporalshared.DescribeTaskListResponse)
+func (reply *DescribeTaskListReply) GetResult() *workflowservice.DescribeTaskListResponse {
+	resp := new(workflowservice.DescribeTaskListResponse)
 	err := reply.GetJSONProperty("Result", resp)
 	if err != nil {
 		return nil
@@ -63,9 +64,9 @@ func (reply *DescribeTaskListReply) GetResult() *temporalshared.DescribeTaskList
 // SetResult sets the DescribeTaskListReply's Result property in its
 // properties map, describes the task list details.
 //
-// param value temporalshared*.DescribeTaskListResponse -> the response to the temporal
+// param value workflowservice*.DescribeTaskListResponse -> the response to the temporal
 // describe task list request.
-func (reply *DescribeTaskListReply) SetResult(value *temporalshared.DescribeTaskListResponse) {
+func (reply *DescribeTaskListReply) SetResult(value *workflowservice.DescribeTaskListResponse) {
 	reply.SetJSONProperty("Result", value)
 }
 

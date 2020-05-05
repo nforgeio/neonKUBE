@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		domain_deprecate_reply.go
+// FILE:		namespace_update_reply.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -23,22 +23,22 @@ import (
 
 type (
 
-	// DomainDeprecateReply is a ProxyReply of MessageType
-	// DomainDeprecateReply.  It holds a reference to a ProxyReply in memory
-	DomainDeprecateReply struct {
+	// NamespaceUpdateReply is a ProxyReply of MessageType
+	// NamespaceUpdateReply.  It holds a reference to a ProxyReply in memory
+	NamespaceUpdateReply struct {
 		*ProxyReply
 	}
 )
 
-// NewDomainDeprecateReply is the default constructor for
-// a DomainDeprecateReply
+// NewNamespaceUpdateReply is the default constructor for
+// a NamespaceUpdateReply
 //
-// returns *DomainDeprecateReply -> a pointer to a newly initialized
-// DomainDeprecateReply in memory
-func NewDomainDeprecateReply() *DomainDeprecateReply {
-	reply := new(DomainDeprecateReply)
+// returns *NamespaceUpdateReply -> a pointer to a newly initialized
+// NamespaceUpdateReply in memory
+func NewNamespaceUpdateReply() *NamespaceUpdateReply {
+	reply := new(NamespaceUpdateReply)
 	reply.ProxyReply = NewProxyReply()
-	reply.SetType(internal.DomainDeprecateReply)
+	reply.SetType(internal.NamespaceUpdateReply)
 
 	return reply
 }
@@ -47,15 +47,15 @@ func NewDomainDeprecateReply() *DomainDeprecateReply {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Clone inherits docs from ProxyReply.Clone()
-func (reply *DomainDeprecateReply) Clone() IProxyMessage {
-	domainDeprecateReply := NewDomainDeprecateReply()
-	var messageClone IProxyMessage = domainDeprecateReply
+func (reply *NamespaceUpdateReply) Clone() IProxyMessage {
+	namespaceUpdateReply := NewNamespaceUpdateReply()
+	var messageClone IProxyMessage = namespaceUpdateReply
 	reply.CopyTo(messageClone)
 
 	return messageClone
 }
 
 // CopyTo inherits docs from ProxyReply.CopyTo()
-func (reply *DomainDeprecateReply) CopyTo(target IProxyMessage) {
+func (reply *NamespaceUpdateReply) CopyTo(target IProxyMessage) {
 	reply.ProxyReply.CopyTo(target)
 }

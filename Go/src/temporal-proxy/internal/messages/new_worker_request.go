@@ -49,22 +49,22 @@ func NewNewWorkerRequest() *NewWorkerRequest {
 	return request
 }
 
-// GetDomain gets a NewWorkerRequest's Domain value
+// GetNamespace gets a NewWorkerRequest's Namespace value
 // from its properties map
 //
 // returns *string -> pointer to a string in memory holding the value
-// of a NewWorkerRequest's Domain
-func (request *NewWorkerRequest) GetDomain() *string {
-	return request.GetStringProperty("Domain")
+// of a NewWorkerRequest's Namespace
+func (request *NewWorkerRequest) GetNamespace() *string {
+	return request.GetStringProperty("Namespace")
 }
 
-// SetDomain sets a NewWorkerRequest's Domain value
+// SetNamespace sets a NewWorkerRequest's Namespace value
 // in its properties map
 //
 // param value *string -> a pointer to a string in memory that holds the value
 // to be set in the properties map
-func (request *NewWorkerRequest) SetDomain(value *string) {
-	request.SetStringProperty("Domain", value)
+func (request *NewWorkerRequest) SetNamespace(value *string) {
+	request.SetStringProperty("Namespace", value)
 }
 
 // GetTaskList gets a NewWorkerRequest's TaskList value
@@ -126,7 +126,7 @@ func (request *NewWorkerRequest) Clone() IProxyMessage {
 func (request *NewWorkerRequest) CopyTo(target IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
 	if v, ok := target.(*NewWorkerRequest); ok {
-		v.SetDomain(request.GetDomain())
+		v.SetNamespace(request.GetNamespace())
 		v.SetTaskList(request.GetTaskList())
 		v.SetOptions(request.GetOptions())
 	}

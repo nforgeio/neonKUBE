@@ -51,35 +51,35 @@ func CreateNewTypedMessage(messageType internal.MessageType) IProxyMessage {
 	case internal.DisconnectRequest:
 		message = NewDisconnectRequest()
 
-	// DomainDescribe
-	case internal.DomainDescribeReply:
-		message = NewDomainDescribeReply()
-	case internal.DomainDescribeRequest:
-		message = NewDomainDescribeRequest()
+	// NamespaceDescribe
+	case internal.NamespaceDescribeReply:
+		message = NewNamespaceDescribeReply()
+	case internal.NamespaceDescribeRequest:
+		message = NewNamespaceDescribeRequest()
 
-	// DomainRegister
-	case internal.DomainRegisterReply:
-		message = NewDomainRegisterReply()
-	case internal.DomainRegisterRequest:
-		message = NewDomainRegisterRequest()
+	// NamespaceRegister
+	case internal.NamespaceRegisterReply:
+		message = NewNamespaceRegisterReply()
+	case internal.NamespaceRegisterRequest:
+		message = NewNamespaceRegisterRequest()
 
-	// DomainUpdate
-	case internal.DomainUpdateReply:
-		message = NewDomainUpdateReply()
-	case internal.DomainUpdateRequest:
-		message = NewDomainUpdateRequest()
+	// NamespaceUpdate
+	case internal.NamespaceUpdateReply:
+		message = NewNamespaceUpdateReply()
+	case internal.NamespaceUpdateRequest:
+		message = NewNamespaceUpdateRequest()
 
-	// DomainDeprecate
-	case internal.DomainDeprecateReply:
-		message = NewDomainDeprecateReply()
-	case internal.DomainDeprecateRequest:
-		message = NewDomainDeprecateRequest()
+	// NamespaceDeprecate
+	case internal.NamespaceDeprecateReply:
+		message = NewNamespaceDeprecateReply()
+	case internal.NamespaceDeprecateRequest:
+		message = NewNamespaceDeprecateRequest()
 
-	// DomainList
-	case internal.DomainListReply:
-		message = NewDomainListReply()
-	case internal.DomainListRequest:
-		message = NewDomainListRequest()
+	// NamespaceList
+	case internal.NamespaceListReply:
+		message = NewNamespaceListReply()
+	case internal.NamespaceListRequest:
+		message = NewNamespaceListRequest()
 
 	// Heartbeat
 	case internal.HeartbeatReply:

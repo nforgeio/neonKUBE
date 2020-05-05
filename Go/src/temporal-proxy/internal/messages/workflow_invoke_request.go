@@ -145,22 +145,22 @@ func (request *WorkflowInvokeRequest) SetRunID(value *string) {
 	request.SetStringProperty("RunId", value)
 }
 
-// GetDomain gets a WorkflowInvokeRequest's Domain value
-// from its properties map. The domain where the workflow is executing.
+// GetNamespace gets a WorkflowInvokeRequest's Namespace value
+// from its properties map. The namespace where the workflow is executing.
 //
 // returns *string -> pointer to a string in memory holding the value
-// of a WorkflowInvokeRequest's Domain
-func (request *WorkflowInvokeRequest) GetDomain() *string {
-	return request.GetStringProperty("Domain")
+// of a WorkflowInvokeRequest's Namespace
+func (request *WorkflowInvokeRequest) GetNamespace() *string {
+	return request.GetStringProperty("Namespace")
 }
 
-// SetDomain sets a WorkflowInvokeRequest's Domain value
-// in its properties map. The domain where the workflow is executing.
+// SetNamespace sets a WorkflowInvokeRequest's Namespace value
+// in its properties map. The namespace where the workflow is executing.
 //
 // param value *string -> a pointer to a string in memory that holds the value
 // to be set in the properties map
-func (request *WorkflowInvokeRequest) SetDomain(value *string) {
-	request.SetStringProperty("Domain", value)
+func (request *WorkflowInvokeRequest) SetNamespace(value *string) {
+	request.SetStringProperty("Namespace", value)
 }
 
 // GetTaskList gets a WorkflowInvokeRequest's TaskList value
@@ -244,7 +244,7 @@ func (request *WorkflowInvokeRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*WorkflowInvokeRequest); ok {
 		v.SetName(request.GetName())
 		v.SetArgs(request.GetArgs())
-		v.SetDomain(request.GetDomain())
+		v.SetNamespace(request.GetNamespace())
 		v.SetWorkflowID(request.GetWorkflowID())
 		v.SetWorkflowType(request.GetWorkflowType())
 		v.SetRunID(request.GetRunID())

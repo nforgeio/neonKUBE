@@ -109,24 +109,24 @@ func (request *ActivityCompleteRequest) SetError(value *proxyerror.TemporalError
 	request.SetJSONProperty("Error", value)
 }
 
-// GetDomain gets a ActivityCompleteRequest's Domain field
-// from its properties map. Domain is the name of the temporal
-// domain the activity is executing on.
+// GetNamespace gets a ActivityCompleteRequest's Namespace field
+// from its properties map. Namespace is the name of the temporal
+// namespace the activity is executing on.
 //
 // returns *string -> pointer to the string in memory
-// of the temporal domain the activity is executing in.
-func (request *ActivityCompleteRequest) GetDomain() *string {
-	return request.GetStringProperty("Domain")
+// of the temporal namespace the activity is executing in.
+func (request *ActivityCompleteRequest) GetNamespace() *string {
+	return request.GetStringProperty("Namespace")
 }
 
-// SetDomain sets an ActivityCompleteRequest's Domain field
-// in its properties map.  Domain is the name of the temporal
-// domain the activity is executing on.
+// SetNamespace sets an ActivityCompleteRequest's Namespace field
+// in its properties map.  Namespace is the name of the temporal
+// namespace the activity is executing on.
 //
 // param value *string -> pointer to the string in memory
-// of the temporal domain the activity is executing in.
-func (request *ActivityCompleteRequest) SetDomain(value *string) {
-	request.SetStringProperty("Domain", value)
+// of the temporal namespace the activity is executing in.
+func (request *ActivityCompleteRequest) SetNamespace(value *string) {
+	request.SetStringProperty("Namespace", value)
 }
 
 // GetWorkflowID gets a ActivityCompleteRequest's WorkflowID field
@@ -208,7 +208,7 @@ func (request *ActivityCompleteRequest) CopyTo(target IProxyMessage) {
 		v.SetTaskToken(request.GetTaskToken())
 		v.SetResult(request.GetResult())
 		v.SetError(request.GetError())
-		v.SetDomain(request.GetDomain())
+		v.SetNamespace(request.GetNamespace())
 		v.SetWorkflowID(request.GetWorkflowID())
 		v.SetRunID(request.GetRunID())
 		v.SetActivityID(request.GetActivityID())

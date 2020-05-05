@@ -116,22 +116,22 @@ func (request *ActivityExecuteRequest) SetOptions(value *workflow.ActivityOption
 	request.SetJSONProperty("Options", value)
 }
 
-// GetDomain gets a ActivityExecuteRequest's Domain value
+// GetNamespace gets a ActivityExecuteRequest's Namespace value
 // from its properties map
 //
 // returns *string -> pointer to a string in memory holding the value
-// of a ActivityExecuteRequest's Domain
-func (request *ActivityExecuteRequest) GetDomain() *string {
-	return request.GetStringProperty("Domain")
+// of a ActivityExecuteRequest's Namespace
+func (request *ActivityExecuteRequest) GetNamespace() *string {
+	return request.GetStringProperty("Namespace")
 }
 
-// SetDomain sets a ActivityExecuteRequest's Domain value
+// SetNamespace sets a ActivityExecuteRequest's Namespace value
 // in its properties map.
 //
 // param value *string -> a pointer to a string in memory that holds the value
 // to be set in the properties map
-func (request *ActivityExecuteRequest) SetDomain(value *string) {
-	request.SetStringProperty("Domain", value)
+func (request *ActivityExecuteRequest) SetNamespace(value *string) {
+	request.SetStringProperty("Namespace", value)
 }
 
 // -------------------------------------------------------------------------
@@ -153,6 +153,6 @@ func (request *ActivityExecuteRequest) CopyTo(target IProxyMessage) {
 		v.SetArgs(request.GetArgs())
 		v.SetOptions(request.GetOptions())
 		v.SetActivity(request.GetActivity())
-		v.SetDomain(request.GetDomain())
+		v.SetNamespace(request.GetNamespace())
 	}
 }

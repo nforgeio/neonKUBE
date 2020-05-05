@@ -18,10 +18,10 @@
 package messages
 
 import (
-	//temporalshared "go.temporal.io/temporal/.gen/go/shared"
-
 	internal "temporal-proxy/internal"
 	proxyclient "temporal-proxy/internal/temporal/client"
+
+	tasklist "go.temporal.io/temporal-proto/tasklist"
 )
 
 type (
@@ -69,31 +69,31 @@ func (request *DescribeTaskListRequest) SetName(value *string) {
 	request.SetStringProperty("Name", value)
 }
 
-// GetDomain gets the Domain property from the DescribeTaskListRequest's
-// properties map, identifies the target domain.
+// GetNamespace gets the Namespace property from the DescribeTaskListRequest's
+// properties map, identifies the target namespace.
 //
-// returns *string -> the task list domain.
-func (request *DescribeTaskListRequest) GetDomain() *string {
-	return request.GetStringProperty("Domain")
+// returns *string -> the task list namespace.
+func (request *DescribeTaskListRequest) GetNamespace() *string {
+	return request.GetStringProperty("Namespace")
 }
 
-// SetDomain sets the Domain property in the DescribeTaskListRequest's
-// properties map, identifies the target domain.
+// SetNamespace sets the Namespace property in the DescribeTaskListRequest's
+// properties map, identifies the target namespace.
 //
-// param value *string -> the task list domain.
-func (request *DescribeTaskListRequest) SetDomain(value *string) {
-	request.SetStringProperty("Domain", value)
+// param value *string -> the task list namespace.
+func (request *DescribeTaskListRequest) SetNamespace(value *string) {
+	request.SetStringProperty("Namespace", value)
 }
 
 // GetTaskListType gets the TaskListType property from the DescribeTaskListRequest's
 // properties map, identifies the type of task list being requested:
 // decision (AKA workflow) or activity.
 //
-// returns *temporalshared.TaskListType -> the TaskListType.
-func (request *DescribeTaskListRequest) GetTaskListType() *temporalshared.TaskListType {
+// returns tasklist.TaskListType -> the TaskListType.
+func (request *DescribeTaskListRequest) GetTaskListType() tasklist.TaskListType {
 	taskListTypePtr := request.GetStringProperty("TaskListType")
 	if taskListTypePtr == nil {
-		return nil
+		return tasklist.TaskListType_Decision
 	}
 
 	return proxyclient.StringToTaskListType(*taskListTypePtr)
@@ -103,8 +103,8 @@ func (request *DescribeTaskListRequest) GetTaskListType() *temporalshared.TaskLi
 // properties map, identifies the type of task list being requested:
 // decision (AKA workflow) or activity.
 //
-// param value temporalshared.TaskListType -> the TaskListType.
-func (request *DescribeTaskListRequest) SetTaskListType(value *temporalshared.TaskListType) {
+// param value workflowservice.TaskListType -> the TaskListType.
+func (request *DescribeTaskListRequest) SetTaskListType(value tasklist.TaskListType) {
 	taskListType := value.String()
 	request.SetStringProperty("TaskListType", &taskListType)
 }
@@ -113,11 +113,11 @@ func (request *DescribeTaskListRequest) SetTaskListType(value *temporalshared.Ta
 // properties map, identifies the type of task list being requested:
 // decision (AKA workflow) or activity.
 //
-// returns *temporalshared.TaskListKind -> the TaskListKind.
-func (request *DescribeTaskListRequest) GetTaskListKind() *temporalshared.TaskListKind {
+// returns tasklist.TaskListKind -> the TaskListKind.
+func (request *DescribeTaskListRequest) GetTaskListKind() tasklist.TaskListKind {
 	taskListKindPtr := request.GetStringProperty("TaskListKind")
 	if taskListKindPtr == nil {
-		return nil
+		return tasklist.TaskListKind_Normal
 	}
 
 	return proxyclient.StringToTaskListKind(*taskListKindPtr)
@@ -127,8 +127,8 @@ func (request *DescribeTaskListRequest) GetTaskListKind() *temporalshared.TaskLi
 // properties map, identifies the type of task list being requested:
 // decision (AKA workflow) or activity.
 //
-// param value temporalshared.TaskListKind -> the TaskListKind.
-func (request *DescribeTaskListRequest) SetTaskListKind(value *temporalshared.TaskListKind) {
+// param value workflowservice.TaskListKind -> the TaskListKind.
+func (request *DescribeTaskListRequest) SetTaskListKind(value tasklist.TaskListKind) {
 	taskListKind := value.String()
 	request.SetStringProperty("TaskListKind", &taskListKind)
 }
@@ -150,7 +150,8 @@ func (request *DescribeTaskListRequest) CopyTo(target IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
 	if v, ok := target.(*DescribeTaskListRequest); ok {
 		v.SetName(request.GetName())
-		v.SetDomain(request.GetDomain())
+		v.SetNamespace(request.GetNamespace())
 		v.SetTaskListType(request.GetTaskListType())
+		v.SetTaskListKind(request.GetTaskListKind())
 	}
 }

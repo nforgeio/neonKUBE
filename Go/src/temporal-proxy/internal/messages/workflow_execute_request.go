@@ -52,22 +52,22 @@ func NewWorkflowExecuteRequest() *WorkflowExecuteRequest {
 	return request
 }
 
-// GetDomain gets a WorkflowExecuteRequest's Domain value
+// GetNamespace gets a WorkflowExecuteRequest's Namespace value
 // from its properties map
 //
 // returns *string -> pointer to a string in memory holding the value
-// of a WorkflowExecuteRequest's Domain
-func (request *WorkflowExecuteRequest) GetDomain() *string {
-	return request.GetStringProperty("Domain")
+// of a WorkflowExecuteRequest's Namespace
+func (request *WorkflowExecuteRequest) GetNamespace() *string {
+	return request.GetStringProperty("Namespace")
 }
 
-// SetDomain sets an WorkflowExecuteRequest's Domain value
+// SetNamespace sets an WorkflowExecuteRequest's Namespace value
 // in its properties map
 //
 // param value *string -> pointer to a string in memory holding the value
-// of a WorkflowExecuteRequest's Domain
-func (request *WorkflowExecuteRequest) SetDomain(value *string) {
-	request.SetStringProperty("Domain", value)
+// of a WorkflowExecuteRequest's Namespace
+func (request *WorkflowExecuteRequest) SetNamespace(value *string) {
+	request.SetStringProperty("Namespace", value)
 }
 
 // GetWorkflow gets a WorkflowExecuteRequest's Workflow value
@@ -149,7 +149,7 @@ func (request *WorkflowExecuteRequest) Clone() IProxyMessage {
 func (request *WorkflowExecuteRequest) CopyTo(target IProxyMessage) {
 	request.WorkflowRequest.CopyTo(target)
 	if v, ok := target.(*WorkflowExecuteRequest); ok {
-		v.SetDomain(request.GetDomain())
+		v.SetNamespace(request.GetNamespace())
 		v.SetWorkflow(request.GetWorkflow())
 		v.SetArgs(request.GetArgs())
 		v.SetOptions(request.GetOptions())

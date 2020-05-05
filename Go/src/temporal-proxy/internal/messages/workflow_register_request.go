@@ -69,22 +69,22 @@ func (request *WorkflowRegisterRequest) SetName(value *string) {
 	request.SetStringProperty("Name", value)
 }
 
-// GetDomain gets a WorkflowRegisterRequest's Domain value
+// GetNamespace gets a WorkflowRegisterRequest's Namespace value
 // from its properties map
 //
 // returns *string -> pointer to a string in memory holding the value
-// of a WorkflowRegisterRequest's Domain
-func (request *WorkflowRegisterRequest) GetDomain() *string {
-	return request.GetStringProperty("Domain")
+// of a WorkflowRegisterRequest's Namespace
+func (request *WorkflowRegisterRequest) GetNamespace() *string {
+	return request.GetStringProperty("Namespace")
 }
 
-// SetDomain sets a WorkflowRegisterRequest's Domain value
+// SetNamespace sets a WorkflowRegisterRequest's Namespace value
 // in its properties map.
 //
 // param value *string -> a pointer to a string in memory that holds the value
 // to be set in the properties map
-func (request *WorkflowRegisterRequest) SetDomain(value *string) {
-	request.SetStringProperty("Domain", value)
+func (request *WorkflowRegisterRequest) SetNamespace(value *string) {
+	request.SetStringProperty("Namespace", value)
 }
 
 // -------------------------------------------------------------------------
@@ -104,6 +104,6 @@ func (request *WorkflowRegisterRequest) CopyTo(target IProxyMessage) {
 	request.WorkflowRequest.CopyTo(target)
 	if v, ok := target.(*WorkflowRegisterRequest); ok {
 		v.SetName(request.GetName())
-		v.SetDomain(request.GetDomain())
+		v.SetNamespace(request.GetNamespace())
 	}
 }

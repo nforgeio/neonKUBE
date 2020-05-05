@@ -124,22 +124,22 @@ func (request *WorkflowTerminateRequest) SetDetails(value []byte) {
 	request.SetBytesProperty("Details", value)
 }
 
-// GetDomain gets a WorkflowTerminateRequest's Domain value
+// GetNamespace gets a WorkflowTerminateRequest's Namespace value
 // from its properties map
 //
 // returns *string -> pointer to a string in memory holding the value
-// of a WorkflowTerminateRequest's Domain
-func (request *WorkflowTerminateRequest) GetDomain() *string {
-	return request.GetStringProperty("Domain")
+// of a WorkflowTerminateRequest's Namespace
+func (request *WorkflowTerminateRequest) GetNamespace() *string {
+	return request.GetStringProperty("Namespace")
 }
 
-// SetDomain sets a WorkflowTerminateRequest's Domain value
+// SetNamespace sets a WorkflowTerminateRequest's Namespace value
 // in its properties map.
 //
 // param value *string -> a pointer to a string in memory that holds the value
 // to be set in the properties map
-func (request *WorkflowTerminateRequest) SetDomain(value *string) {
-	request.SetStringProperty("Domain", value)
+func (request *WorkflowTerminateRequest) SetNamespace(value *string) {
+	request.SetStringProperty("Namespace", value)
 }
 
 // -------------------------------------------------------------------------
@@ -162,6 +162,6 @@ func (request *WorkflowTerminateRequest) CopyTo(target IProxyMessage) {
 		v.SetRunID(request.GetRunID())
 		v.SetReason(request.GetReason())
 		v.SetDetails(request.GetDetails())
-		v.SetDomain(request.GetDomain())
+		v.SetNamespace(request.GetNamespace())
 	}
 }

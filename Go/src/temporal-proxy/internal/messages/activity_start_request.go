@@ -109,22 +109,22 @@ func (request *ActivityStartRequest) SetOptions(value *workflow.ActivityOptions)
 	request.SetJSONProperty("Options", value)
 }
 
-// GetDomain gets a ActivityStartRequest's Domain value
+// GetNamespace gets a ActivityStartRequest's Namespace value
 // from its properties map
 //
 // returns *string -> pointer to a string in memory holding the value
-// of a ActivityStartRequest's Domain
-func (request *ActivityStartRequest) GetDomain() *string {
-	return request.GetStringProperty("Domain")
+// of a ActivityStartRequest's Namespace
+func (request *ActivityStartRequest) GetNamespace() *string {
+	return request.GetStringProperty("Namespace")
 }
 
-// SetDomain sets a ActivityStartRequest's Domain value
+// SetNamespace sets a ActivityStartRequest's Namespace value
 // in its properties map.
 //
 // param value *string -> a pointer to a string in memory that holds the value
 // to be set in the properties map
-func (request *ActivityStartRequest) SetDomain(value *string) {
-	request.SetStringProperty("Domain", value)
+func (request *ActivityStartRequest) SetNamespace(value *string) {
+	request.SetStringProperty("Namespace", value)
 }
 
 // GetActivityID gets the unique Id used to identify the activity.
@@ -160,7 +160,7 @@ func (request *ActivityStartRequest) CopyTo(target IProxyMessage) {
 		v.SetArgs(request.GetArgs())
 		v.SetOptions(request.GetOptions())
 		v.SetActivity(request.GetActivity())
-		v.SetDomain(request.GetDomain())
+		v.SetNamespace(request.GetNamespace())
 		v.SetActivityID(request.GetActivityID())
 	}
 }

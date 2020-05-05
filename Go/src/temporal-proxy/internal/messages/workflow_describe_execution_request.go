@@ -83,22 +83,22 @@ func (request *WorkflowDescribeExecutionRequest) SetRunID(value *string) {
 	request.SetStringProperty("RunId", value)
 }
 
-// GetDomain gets a WorkflowDescribeExecutionRequest's Domain value
-// from its properties map, optionally identifies the target domain when
+// GetNamespace gets a WorkflowDescribeExecutionRequest's Namespace value
+// from its properties map, optionally identifies the target namespace when
 // RunIdisn't passed.
 //
-// returns *string -> WorkflowDescribeExecutionRequest's string Domain.
-func (request *WorkflowDescribeExecutionRequest) GetDomain() *string {
-	return request.GetStringProperty("Domain")
+// returns *string -> WorkflowDescribeExecutionRequest's string Namespace.
+func (request *WorkflowDescribeExecutionRequest) GetNamespace() *string {
+	return request.GetStringProperty("Namespace")
 }
 
-// SetDomain sets a WorkflowDescribeExecutionRequest's Domain value
-// in its properties map, optionally identifies the target domain when
+// SetNamespace sets a WorkflowDescribeExecutionRequest's Namespace value
+// in its properties map, optionally identifies the target namespace when
 // RunIdisn't passed.
 //
-// param value *string -> WorkflowDescribeExecutionRequest's string Domain.
-func (request *WorkflowDescribeExecutionRequest) SetDomain(value *string) {
-	request.SetStringProperty("Domain", value)
+// param value *string -> WorkflowDescribeExecutionRequest's string Namespace.
+func (request *WorkflowDescribeExecutionRequest) SetNamespace(value *string) {
+	request.SetStringProperty("Namespace", value)
 }
 
 // -------------------------------------------------------------------------
@@ -119,6 +119,6 @@ func (request *WorkflowDescribeExecutionRequest) CopyTo(target IProxyMessage) {
 	if v, ok := target.(*WorkflowDescribeExecutionRequest); ok {
 		v.SetWorkflowID(request.GetWorkflowID())
 		v.SetRunID(request.GetRunID())
-		v.SetDomain(request.GetDomain())
+		v.SetNamespace(request.GetNamespace())
 	}
 }

@@ -52,7 +52,7 @@ func TestUnitTestSuite(t *testing.T) {
 	suite.Run(t, s)
 
 	// check for goroutine leaks
-	goleak.VerifyNoLeaks(t)
+	goleak.VerifyNone(t)
 }
 
 func (s *UnitTestSuite) setupTestSuiteServer() {

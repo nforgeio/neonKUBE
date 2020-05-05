@@ -69,34 +69,34 @@ const (
 	TerminateReply MessageType = 6
 
 	/// <summary>
-	/// <b>client --> proxy:</b> Requests that the proxy register a Temporal domain.
+	/// <b>client --> proxy:</b> Requests that the proxy register a Temporal namespace.
 	/// </summary>
-	DomainRegisterRequest MessageType = 7
+	NamespaceRegisterRequest MessageType = 7
 
 	/// <summary>
-	/// <b>proxy --> client:</b> Sent in response to a <see cref="DomainRegisterRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="NamespaceRegisterRequest"/> message.
 	/// </summary>
-	DomainRegisterReply MessageType = 8
+	NamespaceRegisterReply MessageType = 8
 
 	/// <summary>
-	/// <b>client --> proxy:</b> Requests that the proxy return the details for a Temporal domain.
+	/// <b>client --> proxy:</b> Requests that the proxy return the details for a Temporal namespace.
 	/// </summary>
-	DomainDescribeRequest MessageType = 9
+	NamespaceDescribeRequest MessageType = 9
 
 	/// <summary>
-	/// <b>proxy --> client:</b> Sent in response to a <see cref="DomainDescribeRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="NamespaceDescribeRequest"/> message.
 	/// </summary>
-	DomainDescribeReply MessageType = 10
+	NamespaceDescribeReply MessageType = 10
 
 	/// <summary>
-	/// <b>client --> proxy:</b> Requests that the proxy update a Temporal domain.
+	/// <b>client --> proxy:</b> Requests that the proxy update a Temporal namespace.
 	/// </summary>
-	DomainUpdateRequest MessageType = 11
+	NamespaceUpdateRequest MessageType = 11
 
 	/// <summary>
-	/// <b>proxy --> client:</b> Sent in response to a <see cref="DomainUpdateRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="NamespaceUpdateRequest"/> message.
 	/// </summary>
-	DomainUpdateReply MessageType = 12
+	NamespaceUpdateReply MessageType = 12
 
 	/// <summary>
 	/// <b>client --> proxy:</b> Sent periodically (every second) by the client to the
@@ -123,7 +123,7 @@ const (
 
 	/// <summary>
 	/// <b>client --> proxy:</b> Indicates that the application is capable of handling workflows
-	/// and activities within a specific Temporal domain and task lisk.
+	/// and activities within a specific Temporal namespace and task lisk.
 	/// </summary>
 	NewWorkerRequest MessageType = 17
 
@@ -155,14 +155,14 @@ const (
 	PingReply MessageType = 22
 
 	/// <summary>
-	/// <b>client --> proxy:</b> Requests that the proxy deprecate a Temporal domain.
+	/// <b>client --> proxy:</b> Requests that the proxy deprecate a Temporal namespace.
 	/// </summary>
-	DomainDeprecateRequest MessageType = 23
+	NamespaceDeprecateRequest MessageType = 23
 
 	/// <summary>
-	/// <b>proxy --> client:</b> Sent in response to a <see cref="DomainDeprecateRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="NamespaceDeprecateRequest"/> message.
 	/// </summary>
-	DomainDeprecateReply MessageType = 24
+	NamespaceDeprecateReply MessageType = 24
 
 	/// <summary>
 	///  <b>client --> proxy:</b> Sent to have the proxy disconnect from a Temporal cluster.
@@ -186,14 +186,14 @@ const (
 	LogReply MessageType = 28
 
 	/// <summary>
-	/// <b>client --> proxy:</b> Sent to list the Temporal domains.
+	/// <b>client --> proxy:</b> Sent to list the Temporal namespaces.
 	/// </summary>
-	DomainListRequest MessageType = 29
+	NamespaceListRequest MessageType = 29
 
 	/// <summary>
-	/// <b>proxy --> client:</b> Sent in response to a <see cref="DomainListRequest"/> message.
+	/// <b>proxy --> client:</b> Sent in response to a <see cref="NamespaceListRequest"/> message.
 	/// </summary>
-	DomainListReply MessageType = 30
+	NamespaceListReply MessageType = 30
 
 	/// <summary>
 	/// <b>client --> proxy:</b> Sent to obtain details for a task list.
@@ -784,25 +784,25 @@ func (m MessageType) String() string {
 	case TerminateReply:
 		return "TerminateReply"
 
-	case DomainRegisterRequest:
-		return "DomainRegisterRequest"
-	case DomainRegisterReply:
-		return "DomainRegisterReply"
+	case NamespaceRegisterRequest:
+		return "NamespaceRegisterRequest"
+	case NamespaceRegisterReply:
+		return "NamespaceRegisterReply"
 
-	case DomainDeprecateRequest:
-		return "DomainDeprecateRequest"
-	case DomainDeprecateReply:
-		return "DomainDeprecateReply"
+	case NamespaceDeprecateRequest:
+		return "NamespaceDeprecateRequest"
+	case NamespaceDeprecateReply:
+		return "NamespaceDeprecateReply"
 
-	case DomainDescribeRequest:
-		return "DomainDescribeRequest"
-	case DomainDescribeReply:
-		return "DomainDescribeReply"
+	case NamespaceDescribeRequest:
+		return "NamespaceDescribeRequest"
+	case NamespaceDescribeReply:
+		return "NamespaceDescribeReply"
 
-	case DomainUpdateRequest:
-		return "DomainUpdateRequest"
-	case DomainUpdateReply:
-		return "DomainUpdateReply"
+	case NamespaceUpdateRequest:
+		return "NamespaceUpdateRequest"
+	case NamespaceUpdateReply:
+		return "NamespaceUpdateReply"
 
 	case HeartbeatRequest:
 		return "HeartbeatRequest"

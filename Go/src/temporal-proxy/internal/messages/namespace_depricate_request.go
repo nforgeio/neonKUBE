@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		domain_deprecate_request.go
+// FILE:		namespace_deprecate_request.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -23,63 +23,63 @@ import (
 
 type (
 
-	// DomainDeprecateRequest is ProxyRequest of MessageType
-	// DomainDeprecateRequest.
+	// NamespaceDeprecateRequest is ProxyRequest of MessageType
+	// NamespaceDeprecateRequest.
 	//
-	// A DomainDeprecateRequest contains a RequestId and a reference to a
+	// A NamespaceDeprecateRequest contains a RequestId and a reference to a
 	// ProxyReply struct in memory and ReplyType, which is
 	// the corresponding MessageType for replying to this ProxyRequest
-	DomainDeprecateRequest struct {
+	NamespaceDeprecateRequest struct {
 		*ProxyRequest
 	}
 )
 
-// NewDomainDeprecateRequest is the default constructor for a DomainDeprecateRequest
+// NewNamespaceDeprecateRequest is the default constructor for a NamespaceDeprecateRequest
 //
-// returns *DomainDeprecateRequest -> a reference to a newly initialized
-// DomainDeprecateRequest in memory
-func NewDomainDeprecateRequest() *DomainDeprecateRequest {
-	request := new(DomainDeprecateRequest)
+// returns *NamespaceDeprecateRequest -> a reference to a newly initialized
+// NamespaceDeprecateRequest in memory
+func NewNamespaceDeprecateRequest() *NamespaceDeprecateRequest {
+	request := new(NamespaceDeprecateRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.SetType(internal.DomainDeprecateRequest)
-	request.SetReplyType(internal.DomainDeprecateReply)
+	request.SetType(internal.NamespaceDeprecateRequest)
+	request.SetReplyType(internal.NamespaceDeprecateReply)
 
 	return request
 }
 
-// GetName gets a DomainDeprecateRequest's Name value
+// GetName gets a NamespaceDeprecateRequest's Name value
 // from its properties map
 //
 // returns *string -> pointer to a string in memory holding the value
-// of a DomainDeprecateRequest's Name
-func (request *DomainDeprecateRequest) GetName() *string {
+// of a NamespaceDeprecateRequest's Name
+func (request *NamespaceDeprecateRequest) GetName() *string {
 	return request.GetStringProperty("Name")
 }
 
-// SetName sets a DomainDeprecateRequest's Name value
+// SetName sets a NamespaceDeprecateRequest's Name value
 // in its properties map
 //
 // param value *string -> a pointer to a string in memory that holds the value
 // to be set in the properties map
-func (request *DomainDeprecateRequest) SetName(value *string) {
+func (request *NamespaceDeprecateRequest) SetName(value *string) {
 	request.SetStringProperty("Name", value)
 }
 
-// GetSecurityToken gets a DomainDeprecateRequest's SecurityToken value
+// GetSecurityToken gets a NamespaceDeprecateRequest's SecurityToken value
 // from its properties map
 //
 // returns *string -> pointer to a string in memory holding the value
-// of a DomainDeprecateRequest's SecurityToken
-func (request *DomainDeprecateRequest) GetSecurityToken() *string {
+// of a NamespaceDeprecateRequest's SecurityToken
+func (request *NamespaceDeprecateRequest) GetSecurityToken() *string {
 	return request.GetStringProperty("SecurityToken")
 }
 
-// SetSecurityToken sets a DomainDeprecateRequest's SecurityToken value
+// SetSecurityToken sets a NamespaceDeprecateRequest's SecurityToken value
 // in its properties map
 //
 // param value *string -> a pointer to a string in memory that holds the value
 // to be set in the properties map
-func (request *DomainDeprecateRequest) SetSecurityToken(value *string) {
+func (request *NamespaceDeprecateRequest) SetSecurityToken(value *string) {
 	request.SetStringProperty("SecurityToken", value)
 }
 
@@ -87,18 +87,18 @@ func (request *DomainDeprecateRequest) SetSecurityToken(value *string) {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Clone inherits docs from ProxyRequest.Clone()
-func (request *DomainDeprecateRequest) Clone() IProxyMessage {
-	domainDeprecateRequest := NewDomainDeprecateRequest()
-	var messageClone IProxyMessage = domainDeprecateRequest
+func (request *NamespaceDeprecateRequest) Clone() IProxyMessage {
+	namespaceDeprecateRequest := NewNamespaceDeprecateRequest()
+	var messageClone IProxyMessage = namespaceDeprecateRequest
 	request.CopyTo(messageClone)
 
 	return messageClone
 }
 
 // CopyTo inherits docs from ProxyRequest.CopyTo()
-func (request *DomainDeprecateRequest) CopyTo(target IProxyMessage) {
+func (request *NamespaceDeprecateRequest) CopyTo(target IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
-	if v, ok := target.(*DomainDeprecateRequest); ok {
+	if v, ok := target.(*NamespaceDeprecateRequest); ok {
 		v.SetName(request.GetName())
 		v.SetSecurityToken(request.GetSecurityToken())
 	}

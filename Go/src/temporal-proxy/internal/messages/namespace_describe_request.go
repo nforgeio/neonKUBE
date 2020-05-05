@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		domain_describe_request.go
+// FILE:		namespace_describe_request.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -23,45 +23,45 @@ import (
 
 type (
 
-	// DomainDescribeRequest is ProxyRequest of MessageType
-	// DomainDescribeRequest.
+	// NamespaceDescribeRequest is ProxyRequest of MessageType
+	// NamespaceDescribeRequest.
 	//
-	// A DomainDescribeRequest contains a RequestId and a reference to a
+	// A NamespaceDescribeRequest contains a RequestId and a reference to a
 	// ProxyReply struct in memory and ReplyType, which is
 	// the corresponding MessageType for replying to this ProxyRequest
-	DomainDescribeRequest struct {
+	NamespaceDescribeRequest struct {
 		*ProxyRequest
 	}
 )
 
-// NewDomainDescribeRequest is the default constructor for a DomainDescribeRequest
+// NewNamespaceDescribeRequest is the default constructor for a NamespaceDescribeRequest
 //
-// returns *DomainDescribeRequest -> a reference to a newly initialized
-// DomainDescribeRequest in memory
-func NewDomainDescribeRequest() *DomainDescribeRequest {
-	request := new(DomainDescribeRequest)
+// returns *NamespaceDescribeRequest -> a reference to a newly initialized
+// NamespaceDescribeRequest in memory
+func NewNamespaceDescribeRequest() *NamespaceDescribeRequest {
+	request := new(NamespaceDescribeRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.SetType(internal.DomainDescribeRequest)
-	request.SetReplyType(internal.DomainDescribeReply)
+	request.SetType(internal.NamespaceDescribeRequest)
+	request.SetReplyType(internal.NamespaceDescribeReply)
 
 	return request
 }
 
-// GetName gets a DomainDescribeRequest's Name value
+// GetName gets a NamespaceDescribeRequest's Name value
 // from its properties map
 //
 // returns *string -> pointer to a string in memory holding the value
-// of a DomainDescribeRequest's Name
-func (request *DomainDescribeRequest) GetName() *string {
+// of a NamespaceDescribeRequest's Name
+func (request *NamespaceDescribeRequest) GetName() *string {
 	return request.GetStringProperty("Name")
 }
 
-// SetName sets a DomainDescribeRequest's TargetRequestId value
+// SetName sets a NamespaceDescribeRequest's TargetRequestId value
 // in its properties map
 //
 // param value *string -> a pointer to a string in memory that holds the value
 // to be set in the properties map
-func (request *DomainDescribeRequest) SetName(value *string) {
+func (request *NamespaceDescribeRequest) SetName(value *string) {
 	request.SetStringProperty("Name", value)
 }
 
@@ -69,18 +69,18 @@ func (request *DomainDescribeRequest) SetName(value *string) {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Clone inherits docs from ProxyRequest.Clone()
-func (request *DomainDescribeRequest) Clone() IProxyMessage {
-	domainDescribeRequest := NewDomainDescribeRequest()
-	var messageClone IProxyMessage = domainDescribeRequest
+func (request *NamespaceDescribeRequest) Clone() IProxyMessage {
+	namespaceDescribeRequest := NewNamespaceDescribeRequest()
+	var messageClone IProxyMessage = namespaceDescribeRequest
 	request.CopyTo(messageClone)
 
 	return messageClone
 }
 
 // CopyTo inherits docs from ProxyRequest.CopyTo()
-func (request *DomainDescribeRequest) CopyTo(target IProxyMessage) {
+func (request *NamespaceDescribeRequest) CopyTo(target IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
-	if v, ok := target.(*DomainDescribeRequest); ok {
+	if v, ok := target.(*NamespaceDescribeRequest); ok {
 		v.SetName(request.GetName())
 	}
 }

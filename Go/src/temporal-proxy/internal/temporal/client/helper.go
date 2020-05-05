@@ -64,6 +64,7 @@ type (
 		Builder         *TemporalClientBuilder
 		NamespaceClient client.NamespaceClient
 		WorkflowClients *WorkflowClientsMap
+		clientTimeout   time.Duration
 	}
 
 	// WorkflowClientsMap holds a thread-safe map[interface{}]interface{} of
@@ -106,6 +107,24 @@ func (helper *ClientHelper) SetNamespace(value string) {
 // param value client.Options -> client.Options to set.
 func (helper *ClientHelper) SetClientOptions(value client.Options) {
 	helper.clientOptions = value
+}
+
+// GetClientTimeout gets the ClientTimeout from a ClientHelper instance.
+// specifies the amount of time in seconds a reply has to be sent after
+// a request has been received by the cadence-proxy.
+//
+// returns time.Duration -> time.Duration for the ClientTimeout.
+func (helper *ClientHelper) GetClientTimeout() time.Duration {
+	return helper.clientTimeout
+}
+
+// SetClientTimeout sets the ClientTimeout for a ClientHelper instance.
+// specifies the amount of time in seconds a reply has to be sent after
+// a request has been received by the cadence-proxy.
+//
+// param value time.Duration -> time.Duration for the ClientTimeout.
+func (helper *ClientHelper) SetClientTimeout(value time.Duration) {
+	helper.clientTimeout = value
 }
 
 // SetupServiceConfig configures a ClientHelper's workflowserviceclient.Interface
@@ -430,7 +449,7 @@ func (helper *ClientHelper) GetWorkflow(
 // 	- opts ...grpc.CallOptions -> optional grpc.CallOption.
 //
 // returns:
-//	- *temporalshared.DescribeTaskListResponse -> response to the describe task list request.
+//	- *workflowservice.DescribeTaskListResponse -> response to the describe task list request.
 // 	request
 // 	- error -> error if one is thrown, nil if the method executed with no errors.
 func (helper *ClientHelper) DescribeTaskList(

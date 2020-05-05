@@ -22,13 +22,14 @@ import (
 	"reflect"
 	"time"
 
-	//temporalshared "go.temporal.io/temporal/.gen/go/shared"
 	"go.temporal.io/temporal/activity"
 	"go.temporal.io/temporal/workflow"
 
 	internal "temporal-proxy/internal"
 	"temporal-proxy/internal/messages"
 	proxyerror "temporal-proxy/internal/temporal/error"
+
+	"go.temporal.io/temporal-proto/workflowservice"
 )
 
 func buildReply(reply messages.IProxyReply, temporalError *proxyerror.TemporalError, values ...interface{}) {
@@ -75,28 +76,28 @@ func buildReply(reply messages.IProxyReply, temporalError *proxyerror.TemporalEr
 			buildDisconnectReply(v, temporalError)
 		}
 
-	// DomainDescribeReply
-	case internal.DomainDescribeReply:
-		if v, ok := reply.(*messages.DomainDescribeReply); ok {
-			buildDomainDescribeReply(v, temporalError, value)
+	// NamespaceDescribeReply
+	case internal.NamespaceDescribeReply:
+		if v, ok := reply.(*messages.NamespaceDescribeReply); ok {
+			buildNamespaceDescribeReply(v, temporalError, value)
 		}
 
-	// DomainRegisterReply
-	case internal.DomainRegisterReply:
-		if v, ok := reply.(*messages.DomainRegisterReply); ok {
-			buildDomainRegisterReply(v, temporalError)
+	// NamespaceRegisterReply
+	case internal.NamespaceRegisterReply:
+		if v, ok := reply.(*messages.NamespaceRegisterReply); ok {
+			buildNamespaceRegisterReply(v, temporalError)
 		}
 
-	// DomainUpdateReply
-	case internal.DomainUpdateReply:
-		if v, ok := reply.(*messages.DomainUpdateReply); ok {
-			buildDomainUpdateReply(v, temporalError)
+	// NamespaceUpdateReply
+	case internal.NamespaceUpdateReply:
+		if v, ok := reply.(*messages.NamespaceUpdateReply); ok {
+			buildNamespaceUpdateReply(v, temporalError)
 		}
 
-	// DomainListReply
-	case internal.DomainListReply:
-		if v, ok := reply.(*messages.DomainListReply); ok {
-			buildDomainListReply(v, temporalError, value)
+	// NamespaceListReply
+	case internal.NamespaceListReply:
+		if v, ok := reply.(*messages.NamespaceListReply); ok {
+			buildNamespaceListReply(v, temporalError, value)
 		}
 
 	// TerminateReply
@@ -417,33 +418,33 @@ func buildDisconnectReply(reply *messages.DisconnectReply, temporalError *proxye
 	reply.SetError(temporalError)
 }
 
-func buildDomainDescribeReply(reply *messages.DomainDescribeReply, temporalError *proxyerror.TemporalError, describeDomainResponse ...interface{}) {
+func buildNamespaceDescribeReply(reply *messages.NamespaceDescribeReply, temporalError *proxyerror.TemporalError, describeNamespaceResponse ...interface{}) {
 	reply.SetError(temporalError)
-	if len(describeDomainResponse) > 0 {
-		if v, ok := describeDomainResponse[0].(*temporalshared.DescribeDomainResponse); ok {
-			reply.SetDomainInfoName(v.DomainInfo.Name)
-			reply.SetDomainInfoDescription(v.DomainInfo.Description)
-			reply.SetDomainInfoStatus(v.DomainInfo.Status)
-			reply.SetConfigurationEmitMetrics(*v.Configuration.EmitMetric)
-			reply.SetConfigurationRetentionDays(*v.Configuration.WorkflowExecutionRetentionPeriodInDays)
-			reply.SetDomainInfoOwnerEmail(v.DomainInfo.OwnerEmail)
+	if len(describeNamespaceResponse) > 0 {
+		if v, ok := describeNamespaceResponse[0].(*workflowservice.DescribeNamespaceResponse); ok {
+			reply.SetNamespaceInfoName(&v.NamespaceInfo.Name)
+			reply.SetNamespaceInfoDescription(&v.NamespaceInfo.Description)
+			reply.SetNamespaceInfoStatus(v.NamespaceInfo.Status)
+			reply.SetConfigurationEmitMetrics(v.Configuration.EmitMetric.Value)
+			reply.SetConfigurationRetentionDays(v.Configuration.GetWorkflowExecutionRetentionPeriodInDays())
+			reply.SetNamespaceInfoOwnerEmail(&v.NamespaceInfo.OwnerEmail)
 		}
 	}
 }
 
-func buildDomainRegisterReply(reply *messages.DomainRegisterReply, temporalError *proxyerror.TemporalError) {
+func buildNamespaceRegisterReply(reply *messages.NamespaceRegisterReply, temporalError *proxyerror.TemporalError) {
 	reply.SetError(temporalError)
 }
 
-func buildDomainUpdateReply(reply *messages.DomainUpdateReply, temporalError *proxyerror.TemporalError) {
+func buildNamespaceUpdateReply(reply *messages.NamespaceUpdateReply, temporalError *proxyerror.TemporalError) {
 	reply.SetError(temporalError)
 }
 
-func buildDomainListReply(reply *messages.DomainListReply, temporalError *proxyerror.TemporalError, listDomainsResponse ...interface{}) {
+func buildNamespaceListReply(reply *messages.NamespaceListReply, temporalError *proxyerror.TemporalError, listNamespacesResponse ...interface{}) {
 	reply.SetError(temporalError)
-	if len(listDomainsResponse) > 0 {
-		if v, ok := listDomainsResponse[0].(*temporalshared.ListDomainsResponse); ok {
-			reply.SetDomains(v.Domains)
+	if len(listNamespacesResponse) > 0 {
+		if v, ok := listNamespacesResponse[0].(*workflowservice.ListNamespacesResponse); ok {
+			reply.SetNamespaces(v.Namespaces)
 			reply.SetNextPageToken(v.NextPageToken)
 		}
 	}
@@ -481,7 +482,7 @@ func buildPingReply(reply *messages.PingReply, temporalError *proxyerror.Tempora
 func buildDescribeTaskListReply(reply *messages.DescribeTaskListReply, temporalError *proxyerror.TemporalError, response ...interface{}) {
 	reply.SetError(temporalError)
 	if len(response) > 0 {
-		if v, ok := response[0].(*temporalshared.DescribeTaskListResponse); ok {
+		if v, ok := response[0].(*workflowservice.DescribeTaskListResponse); ok {
 			reply.SetResult(v)
 		}
 	}
@@ -553,7 +554,7 @@ func buildWorkflowMutableReply(reply *messages.WorkflowMutableReply, temporalErr
 func buildWorkflowDescribeExecutionReply(reply *messages.WorkflowDescribeExecutionReply, temporalError *proxyerror.TemporalError, description ...interface{}) {
 	reply.SetError(temporalError)
 	if len(description) > 0 {
-		if v, ok := description[0].(*temporalshared.DescribeWorkflowExecutionResponse); ok {
+		if v, ok := description[0].(*workflowservice.DescribeWorkflowExecutionResponse); ok {
 			reply.SetDetails(v)
 		}
 	}

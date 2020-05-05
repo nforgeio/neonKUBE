@@ -102,42 +102,42 @@ func (request *ConnectRequest) SetClientTimeout(value time.Duration) {
 	request.SetTimeSpanProperty("ClientTimeout", value)
 }
 
-// GetDomain gets a ConnectRequest's domain value from
-// its nested properties map. The default Temporal domain.
+// GetNamespace gets a ConnectRequest's namespace value from
+// its nested properties map. The default Temporal namespace.
 //
 // returns *string -> a pointer to a string in memory holding the value
-// of a ConnectRequest's domain
-func (request *ConnectRequest) GetDomain() *string {
-	return request.GetStringProperty("Domain")
+// of a ConnectRequest's namespace
+func (request *ConnectRequest) GetNamespace() *string {
+	return request.GetStringProperty("Namespace")
 }
 
-// SetDomain sets a ConnectionRequest's domain in
-// its nested properties map. The default Temporal domain.
+// SetNamespace sets a ConnectionRequest's namespace in
+// its nested properties map. The default Temporal namespace.
 //
 // param value *string -> a pointer to a string in memory
 // that holds the value to be set in the properties map
-func (request *ConnectRequest) SetDomain(value *string) {
-	request.SetStringProperty("Domain", value)
+func (request *ConnectRequest) SetNamespace(value *string) {
+	request.SetStringProperty("Namespace", value)
 }
 
-// GetCreateDomain gets a ConnectRequest's CreateDomain value from
+// GetCreateNamespace gets a ConnectRequest's CreateNamespace value from
 // its nested properties map. Indicates whether the Temporal
-// domain should be created if it doesn't already exist.
+// namespace should be created if it doesn't already exist.
 //
-// returns bool -> bool indicating that the default domain should
+// returns bool -> bool indicating that the default namespace should
 // be created if it does not already exist
-func (request *ConnectRequest) GetCreateDomain() bool {
-	return request.GetBoolProperty("CreateDomain")
+func (request *ConnectRequest) GetCreateNamespace() bool {
+	return request.GetBoolProperty("CreateNamespace")
 }
 
-// SetCreateDomain sets a ConnectionRequest's CreateDomain in
+// SetCreateNamespace sets a ConnectionRequest's CreateNamespace in
 // its nested properties map. Indicates whether the Temporal
-// domain should be created if it doesn't already exist.
+// namespace should be created if it doesn't already exist.
 //
-// param value bool -> bool indicating that the default domain should
+// param value bool -> bool indicating that the default namespace should
 // be created if it does not already exist
-func (request *ConnectRequest) SetCreateDomain(value bool) {
-	request.SetBoolProperty("CreateDomain", value)
+func (request *ConnectRequest) SetCreateNamespace(value bool) {
+	request.SetBoolProperty("CreateNamespace", value)
 }
 
 // GetRetries gets a ConnectRequest's RetryAttempts value from
@@ -195,8 +195,8 @@ func (request *ConnectRequest) CopyTo(target IProxyMessage) {
 		v.SetEndpoints(request.GetEndpoints())
 		v.SetIdentity(request.GetIdentity())
 		v.SetClientTimeout(request.GetClientTimeout())
-		v.SetDomain(request.GetDomain())
-		v.SetCreateDomain(request.GetCreateDomain())
+		v.SetNamespace(request.GetNamespace())
+		v.SetCreateNamespace(request.GetCreateNamespace())
 		v.SetRetries(request.GetRetries())
 		v.SetRetryDelay(request.GetRetryDelay())
 	}

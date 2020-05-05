@@ -224,23 +224,23 @@ func (reply *WorkflowInvokeReply) SetContinueAsNewTaskList(value *string) {
 	reply.SetStringProperty("ContinueAsNewTaskList", value)
 }
 
-// GetContinueAsNewDomain gets ContinueAsNewDomain
+// GetContinueAsNewNamespace gets ContinueAsNewNamespace
 // arguments from a WorkflowInvokeReply's properties map. Optionally overrides the current
-// workflow's domain for the restarted workflow when this value is not nil
+// workflow's namespace for the restarted workflow when this value is not nil
 //
-// returns *string -> pointer to a string in memory representing the ContinueAsNewDomain
-func (reply *WorkflowInvokeReply) GetContinueAsNewDomain() *string {
-	return reply.GetStringProperty("ContinueAsNewDomain")
+// returns *string -> pointer to a string in memory representing the ContinueAsNewNamespace
+func (reply *WorkflowInvokeReply) GetContinueAsNewNamespace() *string {
+	return reply.GetStringProperty("ContinueAsNewNamespace")
 }
 
-// SetContinueAsNewDomain sets the ContinueAsNewDomain
+// SetContinueAsNewNamespace sets the ContinueAsNewNamespace
 // in a WorkflowInvokeReply's properties map.Optionally overrides the current
-// workflow's domain for the restarted workflow when this value is not nil
+// workflow's namespace for the restarted workflow when this value is not nil
 //
 // param value *string -> pointer to a string in memory representing the
-// ContinueAsNewDomain to be set in the WorkflowInvokeReply's properties map
-func (reply *WorkflowInvokeReply) SetContinueAsNewDomain(value *string) {
-	reply.SetStringProperty("ContinueAsNewDomain", value)
+// ContinueAsNewNamespace to be set in the WorkflowInvokeReply's properties map
+func (reply *WorkflowInvokeReply) SetContinueAsNewNamespace(value *string) {
+	reply.SetStringProperty("ContinueAsNewNamespace", value)
 }
 
 // GetForceReplay returns the property indicate that the current workflow
@@ -282,7 +282,7 @@ func (reply *WorkflowInvokeReply) CopyTo(target IProxyMessage) {
 		v.SetContinueAsNewStartToCloseTimeout(reply.GetContinueAsNewStartToCloseTimeout())
 		v.SetContinueAsNewWorkflow(reply.GetContinueAsNewWorkflow())
 		v.SetContinueAsNewTaskList(reply.GetContinueAsNewTaskList())
-		v.SetContinueAsNewDomain(reply.GetContinueAsNewDomain())
+		v.SetContinueAsNewNamespace(reply.GetContinueAsNewNamespace())
 		v.SetForceReplay(reply.GetForceReplay())
 	}
 }

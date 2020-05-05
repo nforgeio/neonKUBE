@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// FILE:		domain_list_request.go
+// FILE:		namespace_list_request.go
 // CONTRIBUTOR: John C Burns
 // COPYRIGHT:	Copyright (c) 2016-2019 by neonFORGE, LLC.  All rights reserved.
 //
@@ -23,69 +23,69 @@ import (
 
 type (
 
-	// DomainListRequest is ProxyRequest of MessageType
-	// DomainListRequest.
+	// NamespaceListRequest is ProxyRequest of MessageType
+	// NamespaceListRequest.
 	//
-	// A DomainListRequest contains a RequestId and a reference to a
+	// A NamespaceListRequest contains a RequestId and a reference to a
 	// ProxyReply struct in memory and ReplyType, which is
 	// the corresponding MessageType for replying to this ProxyRequest.
 	//
-	// Requests a list of the Temporal domains.
-	DomainListRequest struct {
+	// Requests a list of the Temporal namespaces.
+	NamespaceListRequest struct {
 		*ProxyRequest
 	}
 )
 
-// NewDomainListRequest is the default constructor for a DomainListRequest
+// NewNamespaceListRequest is the default constructor for a NamespaceListRequest
 //
-// returns *DomainListRequest -> a reference to a newly initialized
-// DomainListRequest in memory
-func NewDomainListRequest() *DomainListRequest {
-	request := new(DomainListRequest)
+// returns *NamespaceListRequest -> a reference to a newly initialized
+// NamespaceListRequest in memory
+func NewNamespaceListRequest() *NamespaceListRequest {
+	request := new(NamespaceListRequest)
 	request.ProxyRequest = NewProxyRequest()
-	request.SetType(internal.DomainListRequest)
-	request.SetReplyType(internal.DomainListReply)
+	request.SetType(internal.NamespaceListRequest)
+	request.SetReplyType(internal.NamespaceListReply)
 
 	return request
 }
 
-// GetPageSize gets a DomainListRequest's PageSize value
+// GetPageSize gets a NamespaceListRequest's PageSize value
 // from its properties map, specifies the maximum number
 // of items to be returned in the reponse.
 //
 // returns int32 -> int32 page size.
-func (request *DomainListRequest) GetPageSize() int32 {
+func (request *NamespaceListRequest) GetPageSize() int32 {
 	return request.GetIntProperty("PageSize")
 }
 
-// SetPageSize sets a DomainListRequest's PageSize value
+// SetPageSize sets a NamespaceListRequest's PageSize value
 // in its properties map, specifies the maximum number
 // of items to be returned in the reponse.
 //
 // param value int32 -> int32 page size.
-func (request *DomainListRequest) SetPageSize(value int32) {
+func (request *NamespaceListRequest) SetPageSize(value int32) {
 	request.SetIntProperty("PageSize", value)
 }
 
-// GetNextPageToken gets a DomainListRequest's NextPageToken value
+// GetNextPageToken gets a NamespaceListRequest's NextPageToken value
 // from its properties map, optionally specifies the next page of results.
 // This will be null for the first page of results and can be set to the the value returned
-// as DomainListReply.NextPageToken to retrieve the next page
+// as NamespaceListReply.NextPageToken to retrieve the next page
 // of results.  This should be considered to be an opaque value.
 //
 // returns []byte -> []byte next page token.
-func (request *DomainListRequest) GetNextPageToken() []byte {
+func (request *NamespaceListRequest) GetNextPageToken() []byte {
 	return request.GetBytesProperty("NextPageToken")
 }
 
-// SetNextPageToken sets a DomainListRequest's NextPageToken value
+// SetNextPageToken sets a NamespaceListRequest's NextPageToken value
 // in its properties map, optionally specifies the next page of results.
 // This will be null for the first page of results and can be set to the the value returned
-// as DomainListReply.NextPageToken to retrieve the next page
+// as NamespaceListReply.NextPageToken to retrieve the next page
 // of results.  This should be considered to be an opaque value.
 //
 // param value []byte -> []byte next page token.
-func (request *DomainListRequest) SetNextPageToken(value []byte) {
+func (request *NamespaceListRequest) SetNextPageToken(value []byte) {
 	request.SetBytesProperty("NextPageToken", value)
 }
 
@@ -93,18 +93,18 @@ func (request *DomainListRequest) SetNextPageToken(value []byte) {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Clone inherits docs from ProxyRequest.Clone()
-func (request *DomainListRequest) Clone() IProxyMessage {
-	domainListRequest := NewDomainListRequest()
-	var messageClone IProxyMessage = domainListRequest
+func (request *NamespaceListRequest) Clone() IProxyMessage {
+	namespaceListRequest := NewNamespaceListRequest()
+	var messageClone IProxyMessage = namespaceListRequest
 	request.CopyTo(messageClone)
 
 	return messageClone
 }
 
 // CopyTo inherits docs from ProxyRequest.CopyTo()
-func (request *DomainListRequest) CopyTo(target IProxyMessage) {
+func (request *NamespaceListRequest) CopyTo(target IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
-	if v, ok := target.(*DomainListRequest); ok {
+	if v, ok := target.(*NamespaceListRequest); ok {
 		v.SetPageSize(request.GetPageSize())
 		v.SetNextPageToken(request.GetNextPageToken())
 	}
