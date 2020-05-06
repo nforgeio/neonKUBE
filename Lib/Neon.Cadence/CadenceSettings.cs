@@ -91,6 +91,7 @@ namespace Neon.Cadence
         /// <para>
         /// Specifying a default domain can be convienent for many scenarios, especially for those where
         /// the application workflows and activities are restricted to a single domain (which is pretty common).
+        /// This defaults to <b>"default"</b>.
         /// </para>
         /// <para>
         /// The default task list can be overridden for workflow interfaces via <see cref="WorkflowInterfaceAttribute.Domain"/>
@@ -99,8 +100,8 @@ namespace Neon.Cadence
         /// </remarks>
         [JsonProperty(PropertyName = "DefaultDomain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "defaultDomain", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string DefaultDomain { get; set; }
+        [DefaultValue("default")]
+        public string DefaultDomain { get; set; } = "default";
 
         /// <summary>
         /// <para>
