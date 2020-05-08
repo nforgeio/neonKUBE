@@ -32,7 +32,6 @@ import (
 	proxyactivity "temporal-proxy/internal/temporal/activity"
 	proxyclient "temporal-proxy/internal/temporal/client"
 	proxyerror "temporal-proxy/internal/temporal/error"
-	proxyworker "temporal-proxy/internal/temporal/worker"
 	proxyworkflow "temporal-proxy/internal/temporal/workflow"
 )
 
@@ -159,30 +158,6 @@ func sendMessage(message messages.IProxyMessage) {
 	}()
 }
 
-// sendFutureACK sends an acknowledgement of a workflow future being created
-// to the .NET client.
-// func sendFutureACK(contextID, operationID, clientID int64) *Operation {
-
-// 	// create the WorkflowFutureReadyRequest
-// 	requestID := NextRequestID()
-// 	workflowFutureReadyRequest := messages.NewWorkflowFutureReadyRequest()
-// 	workflowFutureReadyRequest.SetRequestID(requestID)
-// 	workflowFutureReadyRequest.SetContextID(contextID)
-// 	workflowFutureReadyRequest.SetFutureOperationID(operationID)
-// 	workflowFutureReadyRequest.SetClientID(clientID)
-
-// 	// create the Operation for this request and add it to the operations map
-// 	op := NewOperation(requestID, workflowFutureReadyRequest)
-// 	op.SetChannel(make(chan interface{}))
-// 	op.SetContextID(contextID)
-// 	Operations.Add(requestID, op)
-
-// 	// send the request
-// 	go sendMessage(workflowFutureReadyRequest)
-
-// 	return op
-// }
-
 // isCanceledError checks a golang error or a
 // TemporalError to see if it is a canceledError.
 func isCanceledErr(err interface{}) bool {
@@ -234,10 +209,4 @@ func NextContextID() int64 {
 // Iterates activity contextID.
 func NextActivityContextID() int64 {
 	return proxyactivity.NextContextID()
-}
-
-// NextWorkerID calls proxyworker.NextWorkerID().
-// Iterates workerID.
-func NextWorkerID() int64 {
-	return proxyworker.NextWorkerID()
 }

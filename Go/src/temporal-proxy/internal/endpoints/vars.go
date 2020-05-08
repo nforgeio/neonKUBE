@@ -25,7 +25,6 @@ import (
 	"temporal-proxy/internal/server"
 	proxyactivity "temporal-proxy/internal/temporal/activity"
 	proxyclient "temporal-proxy/internal/temporal/client"
-	proxyworker "temporal-proxy/internal/temporal/worker"
 	proxyworkflow "temporal-proxy/internal/temporal/workflow"
 )
 
@@ -60,12 +59,6 @@ var (
 	// The temporal-client will use contextIds to refer to specific
 	// activity contexts when perfoming activity actions
 	ActivityContexts = proxyactivity.NewActivityContextsMap()
-
-	// Workers maps a int64 WorkerId to the temporal
-	// Worker returned by the Temporal NewWorker() function.
-	// This will be used to stop a worker via the
-	// StopWorkerRequest.
-	Workers = proxyworker.NewWorkersMap()
 
 	// WorkflowContexts maps a int64 ContextId to the temporal
 	// Workflow Context passed to the temporal Workflow functions.

@@ -18,8 +18,34 @@
 package messages
 
 import (
+	"reflect"
 	internal "temporal-proxy/internal"
 )
+
+// CreateReplyMessage takes an IProxyRequest and generates the
+// corresponding IProxyReply message.
+//
+// param request IProxyRequest -> the request message to create the reply for.
+//
+// returns IProxyReply -> a generated reply message to the request.
+func CreateReplyMessage(request IProxyRequest) IProxyReply {
+
+	// get the correct reply type and initialize a new
+	// reply corresponding to the request message type
+	reply := CreateNewTypedMessage(request.GetReplyType())
+	if reflect.ValueOf(reply).IsNil() {
+		return nil
+	}
+
+	reply.SetRequestID(request.GetRequestID())
+	reply.SetClientID(request.GetClientID())
+
+	if v, ok := reply.(IProxyReply); ok {
+		return v
+	}
+
+	return nil
+}
 
 // CreateNewTypedMessage creates newly initialized message of the specified type
 //

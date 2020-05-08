@@ -54,7 +54,7 @@ func handlePingRequest(requestCtx context.Context, request *messages.PingRequest
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new PingReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 	buildReply(reply, nil)
 
 	return reply
@@ -69,7 +69,7 @@ func handleCancelRequest(requestCtx context.Context, request *messages.CancelReq
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new InitializeReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 	buildReply(reply, nil, true)
 
 	return reply
@@ -82,7 +82,7 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new ConnectReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// configure client options
 
@@ -127,18 +127,10 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 				WorkflowExecutionRetentionPeriodInDays: retention,
 			})
 
-		// TODO JACK: FIGURE OUT NAMESPACE FAILURES
-		// if err != nil {
-		// 	if _, ok := err.(*failure.NamespaceAlreadyExists); !ok {
-		// 		Logger.Error("failed to register namespace",
-		// 			zap.String("Namespace Name", defaultNamespace),
-		// 			zap.Error(err))
-
-		// 		buildReply(reply, proxyerror.NewTemporalError(err))
-
-		// 		return reply
-		// 	}
-		// }
+		if err != nil {
+			buildReply(reply, proxyerror.NewTemporalError(err))
+			return reply
+		}
 	}
 
 	_ = Clients.Add(request.GetClientID(), clientHelper)
@@ -155,7 +147,7 @@ func handleDisconnectRequest(requestCtx context.Context, request *messages.Disco
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new DisconnectReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
@@ -163,16 +155,15 @@ func handleDisconnectRequest(requestCtx context.Context, request *messages.Disco
 		return reply
 	}
 
-	// TODO -- JACK IMPLEMENT DESTROY WHEN GET A CHANCE
-	// destroy the client
-	// if err := clientHelper.DestroyClient(); err != nil {
-	// 	Logger.Error("Could not disconnect temporal client.",
-	// 		zap.Int64("ClientID", clientID),
-	// 		zap.Error(err))
+	// destroy clients
+	if err := clientHelper.Destroy(); err != nil {
+		Logger.Error("Had trouble disconnecting from Temporal client.",
+			zap.Int64("ClientID", clientID),
+			zap.Error(err))
 
-	// 	buildReply(reply, proxyerror.NewTemporalError(err))
-	// 	return reply
-	// }
+		buildReply(reply, proxyerror.NewTemporalError(err))
+		return reply
+	}
 
 	_ = Clients.Remove(clientID)
 
@@ -189,7 +180,7 @@ func handleHeartbeatRequest(requestCtx context.Context, request *messages.Heartb
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new HeartbeatReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	buildReply(reply, nil)
 
@@ -203,7 +194,7 @@ func handleInitializeRequest(requestCtx context.Context, request *messages.Initi
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new InitializeReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// set the reply address
 	if internal.DebugPrelaunched {
@@ -238,7 +229,7 @@ func handleTerminateRequest(requestCtx context.Context, request *messages.Termin
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new TerminateReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// setting terminate to true indicates that after the TerminateReply is sent,
 	// the server instance should gracefully shut down
@@ -260,7 +251,7 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new NewWorkerReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
@@ -275,8 +266,8 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 	opts.Logger = logger.Named(internal.TemporalLoggerName)
 
 	// create a new worker using a configured ClientHelper instance
-	workerID := NextWorkerID()
-	worker, err := clientHelper.StartWorker(
+
+	workerID, err := clientHelper.StartWorker(
 		namespace,
 		taskList,
 		*opts)
@@ -285,8 +276,6 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 		buildReply(reply, proxyerror.NewTemporalError(err), workerID)
 		return reply
 	}
-
-	workerID = Workers.Add(workerID, worker)
 
 	Logger.Info("New Worker Created",
 		zap.Int64("WorkerId", workerID),
@@ -309,7 +298,7 @@ func handleStopWorkerRequest(requestCtx context.Context, request *messages.StopW
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new StopWorkerReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
@@ -319,14 +308,11 @@ func handleStopWorkerRequest(requestCtx context.Context, request *messages.StopW
 
 	// get the workerID from the request so that we know
 	// what worker to stop
-	worker := Workers.Get(workerID)
-	if worker == nil {
+
+	if clientHelper.StopWorker != nil {
 		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
-
-	clientHelper.StopWorker(worker)
-	workerID = Workers.Remove(workerID)
 
 	Logger.Info("Worker has been removed from Workers",
 		zap.Int64("WorkerID", workerID),
@@ -347,7 +333,7 @@ func handleNamespaceDescribeRequest(requestCtx context.Context, request *message
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new NamespaceDescribeReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
@@ -381,7 +367,7 @@ func handleNamespaceRegisterRequest(requestCtx context.Context, request *message
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new NamespaceRegisterReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
@@ -422,43 +408,6 @@ func handleNamespaceRegisterRequest(requestCtx context.Context, request *message
 	return reply
 }
 
-func handleNamespaceListRequest(requestCtx context.Context, request *messages.NamespaceListRequest) messages.IProxyReply {
-	clientID := request.GetClientID()
-	Logger.Debug("NamespaceListRequest Received",
-		zap.Int64("ClientId", clientID),
-		zap.Int64("RequestId", request.GetRequestID()),
-		zap.Int("ProcessId", os.Getpid()))
-
-	// new NamespaceListReply
-	reply := createReplyMessage(request)
-
-	clientHelper := Clients.Get(clientID)
-	if clientHelper == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
-		return reply
-	}
-
-	// create context with timeout
-	ctx, cancel := context.WithTimeout(requestCtx, clientHelper.GetClientTimeout())
-	defer cancel()
-
-	pageSize := request.GetPageSize()
-	listRequest := workflowservice.ListNamespacesRequest{
-		PageSize:      pageSize,
-		NextPageToken: request.GetNextPageToken(),
-	}
-
-	response, err := clientHelper.ListNamespaces(ctx, &listRequest)
-	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
-		return reply
-	}
-
-	buildReply(reply, nil, response)
-
-	return reply
-}
-
 func handleNamespaceUpdateRequest(requestCtx context.Context, request *messages.NamespaceUpdateRequest) messages.IProxyReply {
 	nspace := *request.GetName()
 	clientID := request.GetClientID()
@@ -469,7 +418,7 @@ func handleNamespaceUpdateRequest(requestCtx context.Context, request *messages.
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new NamespaceUpdateReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
@@ -526,7 +475,7 @@ func handleDescribeTaskListRequest(requestCtx context.Context, request *messages
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new DescribeTaskListReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
@@ -568,113 +517,120 @@ func handleDescribeTaskListRequest(requestCtx context.Context, request *messages
 func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages.WorkflowRegisterRequest) messages.IProxyReply {
 	workflowName := *request.GetName()
 	clientID := request.GetClientID()
+	workerID := request.GetWorkerID()
 	Logger.Debug("WorkflowRegisterRequest Received",
 		zap.String("Workflow", workflowName),
+		zap.Int64("WorkerId", workerID),
 		zap.Int64("ClientId", clientID),
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowRegisterReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
-	// // create workflow function
-	// workflowFunc := func(ctx workflow.Context, input []byte) ([]byte, error) {
-	// 	contextID := NextContextID()
-	// 	requestID := NextRequestID()
-	// 	Logger.Debug("Executing Workflow",
-	// 		zap.String("Workflow", workflowName),
-	// 		zap.Int64("ClientId", clientID),
-	// 		zap.Int64("ContextId", contextID),
-	// 		zap.Int64("RequestId", requestID),
-	// 		zap.Int("ProcessId", os.Getpid()))
+	clientHelper := Clients.Get(clientID)
+	if clientHelper == nil {
+		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		return reply
+	}
 
-	// 	// set the WorkflowContext in WorkflowContexts
-	// 	wectx := proxyworkflow.NewWorkflowContext(ctx)
-	// 	wectx.SetWorkflowName(&workflowName)
-	// 	contextID = WorkflowContexts.Add(contextID, wectx)
+	// create workflow function
+	workflowFunc := func(ctx workflow.Context, input []byte) ([]byte, error) {
+		contextID := NextContextID()
+		requestID := NextRequestID()
+		Logger.Debug("Executing Workflow",
+			zap.String("Workflow", workflowName),
+			zap.Int64("ClientId", clientID),
+			zap.Int64("ContextId", contextID),
+			zap.Int64("RequestId", requestID),
+			zap.Int("ProcessId", os.Getpid()))
 
-	// 	// Send a WorkflowInvokeRequest to the Neon.Temporal Lib
-	// 	// temporal-client
-	// 	workflowInvokeRequest := messages.NewWorkflowInvokeRequest()
-	// 	workflowInvokeRequest.SetRequestID(requestID)
-	// 	workflowInvokeRequest.SetContextID(contextID)
-	// 	workflowInvokeRequest.SetArgs(input)
-	// 	workflowInvokeRequest.SetClientID(clientID)
+		// set the WorkflowContext in WorkflowContexts
+		wectx := proxyworkflow.NewWorkflowContext(ctx)
+		wectx.SetWorkflowName(&workflowName)
+		contextID = WorkflowContexts.Add(contextID, wectx)
 
-	// 	// get the WorkflowInfo (Namespace, WorkflowID, RunID, WorkflowType,
-	// 	// TaskList, ExecutionStartToCloseTimeout)
-	// 	// from the context
-	// 	workflowInfo := workflow.GetInfo(ctx)
-	// 	workflowInvokeRequest.SetNamespace(&workflowInfo.Namespace)
-	// 	workflowInvokeRequest.SetWorkflowID(&workflowInfo.WorkflowExecution.ID)
-	// 	workflowInvokeRequest.SetRunID(&workflowInfo.WorkflowExecution.RunID)
-	// 	workflowInvokeRequest.SetWorkflowType(&workflowInfo.WorkflowType.Name)
-	// 	workflowInvokeRequest.SetTaskList(&workflowInfo.TaskListName)
-	// 	workflowInvokeRequest.SetExecutionStartToCloseTimeout(time.Duration(int64(workflowInfo.ExecutionStartToCloseTimeoutSeconds) * int64(time.Second)))
+		// Send a WorkflowInvokeRequest to the Neon.Temporal Lib
+		// temporal-client
+		workflowInvokeRequest := messages.NewWorkflowInvokeRequest()
+		workflowInvokeRequest.SetRequestID(requestID)
+		workflowInvokeRequest.SetContextID(contextID)
+		workflowInvokeRequest.SetArgs(input)
+		workflowInvokeRequest.SetClientID(clientID)
 
-	// 	// set ReplayStatus
-	// 	setReplayStatus(ctx, workflowInvokeRequest)
+		// get the WorkflowInfo (Namespace, WorkflowID, RunID, WorkflowType,
+		// TaskList, ExecutionStartToCloseTimeout)
+		// from the context
+		workflowInfo := workflow.GetInfo(ctx)
+		workflowInvokeRequest.SetNamespace(&workflowInfo.Namespace)
+		workflowInvokeRequest.SetWorkflowID(&workflowInfo.WorkflowExecution.ID)
+		workflowInvokeRequest.SetRunID(&workflowInfo.WorkflowExecution.RunID)
+		workflowInvokeRequest.SetWorkflowType(&workflowInfo.WorkflowType.Name)
+		workflowInvokeRequest.SetTaskList(&workflowInfo.TaskListName)
+		workflowInvokeRequest.SetExecutionStartToCloseTimeout(time.Duration(int64(workflowInfo.WorkflowExecutionTimeoutSeconds) * int64(time.Second)))
 
-	// 	// create the Operation for this request and add it to the operations map
-	// 	op := NewOperation(requestID, workflowInvokeRequest)
-	// 	op.SetChannel(make(chan interface{}))
-	// 	op.SetContextID(contextID)
-	// 	Operations.Add(requestID, op)
+		// set ReplayStatus
+		setReplayStatus(ctx, workflowInvokeRequest)
 
-	// 	// send workflowInvokeRequest
-	// 	go sendMessage(workflowInvokeRequest)
+		// create the Operation for this request and add it to the operations map
+		op := NewOperation(requestID, workflowInvokeRequest)
+		op.SetChannel(make(chan interface{}))
+		op.SetContextID(contextID)
+		Operations.Add(requestID, op)
 
-	// 	Logger.Debug("WorkflowInvokeRequest sent",
-	// 		zap.String("Workflow", workflowName),
-	// 		zap.Int64("ClientId", clientID),
-	// 		zap.Int64("ContextId", contextID),
-	// 		zap.Int64("RequestId", requestID),
-	// 		zap.Int("ProcessId", os.Getpid()))
+		// send workflowInvokeRequest
+		go sendMessage(workflowInvokeRequest)
 
-	// 	// block and get result
-	// 	result := <-op.GetChannel()
-	// 	switch s := result.(type) {
-	// 	case error:
-	// 		if isForceReplayErr(s) {
-	// 			panic("force-replay")
-	// 		}
+		Logger.Debug("WorkflowInvokeRequest sent",
+			zap.String("Workflow", workflowName),
+			zap.Int64("ClientId", clientID),
+			zap.Int64("ContextId", contextID),
+			zap.Int64("RequestId", requestID),
+			zap.Int("ProcessId", os.Getpid()))
 
-	// 		Logger.Error("Workflow Failed With Error",
-	// 			zap.String("Workflow", workflowName),
-	// 			zap.Int64("ClientId", clientID),
-	// 			zap.Int64("ContextId", contextID),
-	// 			zap.Int64("RequestId", requestID),
-	// 			zap.Error(s),
-	// 			zap.Int("ProcessId", os.Getpid()))
+		// block and get result
+		result := <-op.GetChannel()
+		switch s := result.(type) {
+		case error:
+			if isForceReplayErr(s) {
+				panic("force-replay")
+			}
 
-	// 		return nil, s
+			Logger.Error("Workflow Failed With Error",
+				zap.String("Workflow", workflowName),
+				zap.Int64("ClientId", clientID),
+				zap.Int64("ContextId", contextID),
+				zap.Int64("RequestId", requestID),
+				zap.Error(s),
+				zap.Int("ProcessId", os.Getpid()))
 
-	// 	case []byte:
-	// 		Logger.Info("Workflow Completed Successfully",
-	// 			zap.String("Workflow", workflowName),
-	// 			zap.Int64("ClientId", clientID),
-	// 			zap.Int64("ContextId", contextID),
-	// 			zap.Int64("RequestId", requestID),
-	// 			zap.ByteString("Result", s),
-	// 			zap.Int("ProcessId", os.Getpid()))
+			return nil, s
 
-	// 		return s, nil
+		case []byte:
+			Logger.Info("Workflow Completed Successfully",
+				zap.String("Workflow", workflowName),
+				zap.Int64("ClientId", clientID),
+				zap.Int64("ContextId", contextID),
+				zap.Int64("RequestId", requestID),
+				zap.ByteString("Result", s),
+				zap.Int("ProcessId", os.Getpid()))
 
-	// 	default:
-	// 		Logger.Error("Unexpected result type",
-	// 			zap.String("Workflow", workflowName),
-	// 			zap.Int64("ClientId", clientID),
-	// 			zap.Int64("ContextId", contextID),
-	// 			zap.Int64("RequestId", requestID),
-	// 			zap.Any("Result", s),
-	// 			zap.Int("ProcessId", os.Getpid()))
+			return s, nil
 
-	// 		return nil, fmt.Errorf("Unexpected result type %v.  result must be an error or []byte.", reflect.TypeOf(s))
-	// 	}
-	// }
+		default:
+			Logger.Error("Unexpected result type",
+				zap.String("Workflow", workflowName),
+				zap.Int64("ClientId", clientID),
+				zap.Int64("ContextId", contextID),
+				zap.Int64("RequestId", requestID),
+				zap.Any("Result", s),
+				zap.Int("ProcessId", os.Getpid()))
 
-	// TODO JACK: MAKE CHANGES TO REGISTER WORKFLOWS WITH WORKERS INSTEAD OF WITH CLIENT
-	//workflow.RegisterWithOptions(workflowFunc, workflow.RegisterOptions{Name: workflowName})
+			return nil, fmt.Errorf("unexpected result type %v.  result must be an error or []byte", reflect.TypeOf(s))
+		}
+	}
+
+	clientHelper.WorkflowRegister(workerID, workflowFunc, workflowName)
 	Logger.Debug("workflow successfully registered", zap.String("WorkflowName", workflowName))
 	buildReply(reply, nil)
 
@@ -693,7 +649,7 @@ func handleWorkflowExecuteRequest(requestCtx context.Context, request *messages.
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowExecuteReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
@@ -746,7 +702,7 @@ func handleWorkflowCancelRequest(requestCtx context.Context, request *messages.W
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowCancelReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
@@ -787,7 +743,7 @@ func handleWorkflowTerminateRequest(requestCtx context.Context, request *message
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowTerminateReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
@@ -830,7 +786,7 @@ func handleWorkflowSignalWithStartRequest(requestCtx context.Context, request *m
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowSignalWithStartReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
@@ -870,7 +826,7 @@ func handleWorkflowSetCacheSizeRequest(requestCtx context.Context, request *mess
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowSetCacheSizeReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// set the sticky workflow cache size
 	worker.SetStickyWorkflowCacheSize(request.GetSize())
@@ -886,7 +842,7 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowMutableReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(request.GetContextID())
@@ -964,7 +920,7 @@ func handleWorkflowDescribeExecutionRequest(requestCtx context.Context, request 
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowDescribeExecutionReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
@@ -1001,7 +957,7 @@ func handleWorkflowGetResultRequest(requestCtx context.Context, request *message
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowGetResultReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
@@ -1050,7 +1006,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowSignalSubscribeReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
@@ -1160,7 +1116,7 @@ func handleWorkflowSignalRequest(requestCtx context.Context, request *messages.W
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowSignalReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
@@ -1200,7 +1156,7 @@ func handleWorkflowHasLastResultRequest(requestCtx context.Context, request *mes
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowHasLastResultReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
@@ -1226,7 +1182,7 @@ func handleWorkflowGetLastResultRequest(requestCtx context.Context, request *mes
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowGetLastResultReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
@@ -1261,7 +1217,7 @@ func handleWorkflowDisconnectContextRequest(requestCtx context.Context, request 
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowDisconnectContextReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
@@ -1290,7 +1246,7 @@ func handleWorkflowGetTimeRequest(requestCtx context.Context, request *messages.
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowGetTimeReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
@@ -1319,7 +1275,7 @@ func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.Wo
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowSleepReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
@@ -1365,7 +1321,7 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowExecuteChildReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
@@ -1425,7 +1381,7 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowWaitForChildReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the child context from the parent workflow context
 	wectx := WorkflowContexts.Get(contextID)
@@ -1481,7 +1437,7 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowSignalChildReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the child context from the parent workflow context
 	wectx := WorkflowContexts.Get(contextID)
@@ -1533,7 +1489,7 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowCancelChildReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the child context from the parent workflow context
 	wectx := WorkflowContexts.Get(contextID)
@@ -1573,7 +1529,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowSetQueryHandlerReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the workflow context
 	wectx := WorkflowContexts.Get(contextID)
@@ -1684,7 +1640,7 @@ func handleWorkflowQueryRequest(requestCtx context.Context, request *messages.Wo
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowQueryReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
@@ -1734,7 +1690,7 @@ func handleWorkflowGetVersionRequest(requestCtx context.Context, request *messag
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowGetVersionReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the child context from the parent workflow context
 	wectx := WorkflowContexts.Get(contextID)
@@ -1771,7 +1727,7 @@ func handleWorkflowQueueNewRequest(requestCtx context.Context, request *messages
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowQueueNewReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the child context from the parent workflow context
 	wectx := WorkflowContexts.Get(contextID)
@@ -1810,7 +1766,7 @@ func handleWorkflowQueueWriteRequest(requestCtx context.Context, request *messag
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowQueueWriteReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the child context from the parent workflow context
 	wectx := WorkflowContexts.Get(contextID)
@@ -1874,7 +1830,7 @@ func handleWorkflowQueueReadRequest(requestCtx context.Context, request *message
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowQueueReadReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the child context from the parent workflow context
 	wectx := WorkflowContexts.Get(contextID)
@@ -1939,7 +1895,7 @@ func handleWorkflowQueueCloseRequest(requestCtx context.Context, request *messag
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new WorkflowQueueCloseReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the child context from the parent workflow context
 	wectx := WorkflowContexts.Get(contextID)
@@ -1977,138 +1933,145 @@ func handleWorkflowQueueCloseRequest(requestCtx context.Context, request *messag
 func handleActivityRegisterRequest(requestCtx context.Context, request *messages.ActivityRegisterRequest) messages.IProxyReply {
 	activityName := *request.GetName()
 	clientID := request.GetClientID()
+	workerID := request.GetWorkerID()
 	Logger.Debug("ActivityRegisterRequest Received",
 		zap.String("Activity", activityName),
+		zap.Int64("WorkerId", workerID),
 		zap.Int64("ClientId", clientID),
 		zap.Int64("RequestId", request.GetRequestID()),
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityRegisterReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
+
+	clientHelper := Clients.Get(clientID)
+	if clientHelper == nil {
+		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		return reply
+	}
 
 	// define the activity function
-	// activityFunc := func(ctx context.Context, input []byte) ([]byte, error) {
-	// 	requestID := NextRequestID()
-	// 	contextID := NextActivityContextID()
-	// 	Logger.Debug("Executing Activity",
-	// 		zap.String("Activity", activityName),
-	// 		zap.Int64("ClientId", clientID),
-	// 		zap.Int64("ActivityContextId", contextID),
-	// 		zap.Int64("RequestId", requestID),
-	// 		zap.Int("ProcessId", os.Getpid()))
+	activityFunc := func(ctx context.Context, input []byte) ([]byte, error) {
+		requestID := NextRequestID()
+		contextID := NextActivityContextID()
+		Logger.Debug("Executing Activity",
+			zap.String("Activity", activityName),
+			zap.Int64("ClientId", clientID),
+			zap.Int64("ActivityContextId", contextID),
+			zap.Int64("RequestId", requestID),
+			zap.Int("ProcessId", os.Getpid()))
 
-	// 	// add the context to ActivityContexts
-	// 	actx := proxyactivity.NewActivityContext(ctx)
-	// 	actx.SetActivityName(&activityName)
-	// 	contextID = ActivityContexts.Add(contextID, actx)
+		// add the context to ActivityContexts
+		actx := proxyactivity.NewActivityContext(ctx)
+		actx.SetActivityName(&activityName)
+		contextID = ActivityContexts.Add(contextID, actx)
 
-	// 	// Send a ActivityInvokeRequest to the Neon.Temporal Lib
-	// 	// temporal-client
-	// 	activityInvokeRequest := messages.NewActivityInvokeRequest()
-	// 	activityInvokeRequest.SetRequestID(requestID)
-	// 	activityInvokeRequest.SetArgs(input)
-	// 	activityInvokeRequest.SetContextID(contextID)
-	// 	activityInvokeRequest.SetActivity(&activityName)
-	// 	activityInvokeRequest.SetClientID(clientID)
+		// Send a ActivityInvokeRequest to the Neon.Temporal Lib
+		// temporal-client
+		activityInvokeRequest := messages.NewActivityInvokeRequest()
+		activityInvokeRequest.SetRequestID(requestID)
+		activityInvokeRequest.SetArgs(input)
+		activityInvokeRequest.SetContextID(contextID)
+		activityInvokeRequest.SetActivity(&activityName)
+		activityInvokeRequest.SetClientID(clientID)
 
-	// 	// create the Operation for this request and add it to the operations map
-	// 	op := NewOperation(requestID, activityInvokeRequest)
-	// 	op.SetChannel(make(chan interface{}))
-	// 	op.SetContextID(contextID)
-	// 	Operations.Add(requestID, op)
+		// create the Operation for this request and add it to the operations map
+		op := NewOperation(requestID, activityInvokeRequest)
+		op.SetChannel(make(chan interface{}))
+		op.SetContextID(contextID)
+		Operations.Add(requestID, op)
 
-	// 	// get worker stop channel on the context
-	// 	// Send and wait for
-	// 	// ActivityStoppingRequest
-	// 	stopChan := activity.GetWorkerStopChannel(ctx)
-	// 	s := func() {
-	// 		<-stopChan
-	// 		requestID := NextRequestID()
-	// 		Logger.Debug("Stopping Activity",
-	// 			zap.String("Activity", activityName),
-	// 			zap.Int64("ClientId", clientID),
-	// 			zap.Int64("ActivityContextId", contextID),
-	// 			zap.Int64("RequestId", requestID),
-	// 			zap.Int("ProcessId", os.Getpid()))
+		// get worker stop channel on the context
+		// Send and wait for
+		// ActivityStoppingRequest
+		stopChan := activity.GetWorkerStopChannel(ctx)
+		s := func() {
+			<-stopChan
+			requestID := NextRequestID()
+			Logger.Debug("Stopping Activity",
+				zap.String("Activity", activityName),
+				zap.Int64("ClientId", clientID),
+				zap.Int64("ActivityContextId", contextID),
+				zap.Int64("RequestId", requestID),
+				zap.Int("ProcessId", os.Getpid()))
 
-	// 		// send an ActivityStoppingRequest to the client
-	// 		activityStoppingRequest := messages.NewActivityStoppingRequest()
-	// 		activityStoppingRequest.SetRequestID(requestID)
-	// 		activityStoppingRequest.SetActivityID(&activityName)
-	// 		activityStoppingRequest.SetContextID(contextID)
-	// 		activityStoppingRequest.SetClientID(clientID)
+			// send an ActivityStoppingRequest to the client
+			activityStoppingRequest := messages.NewActivityStoppingRequest()
+			activityStoppingRequest.SetRequestID(requestID)
+			activityStoppingRequest.SetActivityID(&activityName)
+			activityStoppingRequest.SetContextID(contextID)
+			activityStoppingRequest.SetClientID(clientID)
 
-	// 		// create the Operation for this request and add it to the operations map
-	// 		stoppingReplyChan := make(chan interface{})
-	// 		op := NewOperation(requestID, activityStoppingRequest)
-	// 		op.SetChannel(stoppingReplyChan)
-	// 		op.SetContextID(contextID)
-	// 		Operations.Add(requestID, op)
+			// create the Operation for this request and add it to the operations map
+			stoppingReplyChan := make(chan interface{})
+			op := NewOperation(requestID, activityStoppingRequest)
+			op.SetChannel(stoppingReplyChan)
+			op.SetContextID(contextID)
+			Operations.Add(requestID, op)
 
-	// 		// send the request and wait for the reply
-	// 		go sendMessage(activityStoppingRequest)
+			// send the request and wait for the reply
+			go sendMessage(activityStoppingRequest)
 
-	// 		Logger.Debug("ActivityStoppingRequest sent",
-	// 			zap.String("Activity", activityName),
-	// 			zap.Int64("ClientId", clientID),
-	// 			zap.Int64("ActivityContextId", contextID),
-	// 			zap.Int64("RequestId", requestID),
-	// 			zap.Int("ProcessId", os.Getpid()))
+			Logger.Debug("ActivityStoppingRequest sent",
+				zap.String("Activity", activityName),
+				zap.Int64("ClientId", clientID),
+				zap.Int64("ActivityContextId", contextID),
+				zap.Int64("RequestId", requestID),
+				zap.Int("ProcessId", os.Getpid()))
 
-	// 		<-stoppingReplyChan
-	// 	}
+			<-stoppingReplyChan
+		}
 
-	// 	// run go routines
-	// 	go s()
-	// 	go sendMessage(activityInvokeRequest)
+		// run go routines
+		go s()
+		go sendMessage(activityInvokeRequest)
 
-	// 	Logger.Debug("ActivityInvokeRequest sent",
-	// 		zap.String("Activity", activityName),
-	// 		zap.Int64("ClientId", clientID),
-	// 		zap.Int64("ActivityContextId", contextID),
-	// 		zap.Int64("RequestId", requestID),
-	// 		zap.Int("ProcessId", os.Getpid()))
+		Logger.Debug("ActivityInvokeRequest sent",
+			zap.String("Activity", activityName),
+			zap.Int64("ClientId", clientID),
+			zap.Int64("ActivityContextId", contextID),
+			zap.Int64("RequestId", requestID),
+			zap.Int("ProcessId", os.Getpid()))
 
-	// 	// wait for ActivityInvokeReply
-	// 	result := <-op.GetChannel()
-	// 	switch s := result.(type) {
-	// 	case error:
-	// 		Logger.Error("Activity Failed With Error",
-	// 			zap.String("Activity", activityName),
-	// 			zap.Int64("ClientId", clientID),
-	// 			zap.Int64("ActivityContextId", contextID),
-	// 			zap.Int64("RequestId", requestID),
-	// 			zap.Error(s),
-	// 			zap.Int("ProcessId", os.Getpid()))
+		// wait for ActivityInvokeReply
+		result := <-op.GetChannel()
+		switch s := result.(type) {
+		case error:
+			Logger.Error("Activity Failed With Error",
+				zap.String("Activity", activityName),
+				zap.Int64("ClientId", clientID),
+				zap.Int64("ActivityContextId", contextID),
+				zap.Int64("RequestId", requestID),
+				zap.Error(s),
+				zap.Int("ProcessId", os.Getpid()))
 
-	// 		return nil, s
+			return nil, s
 
-	// 	case []byte:
-	// 		Logger.Info("Activity Completed Successfully",
-	// 			zap.String("Activity", activityName),
-	// 			zap.Int64("ClientId", clientID),
-	// 			zap.Int64("ActivityContextId", contextID),
-	// 			zap.Int64("RequestId", requestID),
-	// 			zap.ByteString("Result", s),
-	// 			zap.Int("ProcessId", os.Getpid()))
+		case []byte:
+			Logger.Info("Activity Completed Successfully",
+				zap.String("Activity", activityName),
+				zap.Int64("ClientId", clientID),
+				zap.Int64("ActivityContextId", contextID),
+				zap.Int64("RequestId", requestID),
+				zap.ByteString("Result", s),
+				zap.Int("ProcessId", os.Getpid()))
 
-	// 		return s, nil
+			return s, nil
 
-	// 	default:
-	// 		Logger.Error("Activity Result unexpected",
-	// 			zap.String("Activity", activityName),
-	// 			zap.Int64("ClientId", clientID),
-	// 			zap.Int64("ActivityContextId", contextID),
-	// 			zap.Int64("RequestId", requestID),
-	// 			zap.Any("Result", s),
-	// 			zap.Int("ProcessId", os.Getpid()))
+		default:
+			Logger.Error("Activity Result unexpected",
+				zap.String("Activity", activityName),
+				zap.Int64("ClientId", clientID),
+				zap.Int64("ActivityContextId", contextID),
+				zap.Int64("RequestId", requestID),
+				zap.Any("Result", s),
+				zap.Int("ProcessId", os.Getpid()))
 
-	// 		return nil, fmt.Errorf("Unexpected result type %v.  result must be an error or []byte.", reflect.TypeOf(s))
-	// 	}
-	// }
+			return nil, fmt.Errorf("unexpected result type %v.  result must be an error or []byte", reflect.TypeOf(s))
+		}
+	}
 
-	// TODO JACL: ADAPT FOR ACTIVITY REGISTRATION FROM WORKER INSTEAD OF FROM CLIENT
-	//activity.RegisterWithOptions(activityFunc, activity.RegisterOptions{Name: activityName})
+	clientHelper.ActivityRegister(workerID, activityFunc, activityName)
 	Logger.Debug("Activity Successfully Registered", zap.String("ActivityName", activityName))
 
 	buildReply(reply, nil)
@@ -2129,7 +2092,7 @@ func handleActivityExecuteRequest(requestCtx context.Context, request *messages.
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityExecuteReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
@@ -2181,7 +2144,7 @@ func handleActivityStartRequest(requestCtx context.Context, request *messages.Ac
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityStartReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
@@ -2227,7 +2190,7 @@ func handleActivityGetResultRequest(requestCtx context.Context, request *message
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityGetResultReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
@@ -2261,7 +2224,7 @@ func handleActivityHasHeartbeatDetailsRequest(requestCtx context.Context, reques
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityHasHeartbeatDetailsReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	actx := ActivityContexts.Get(request.GetContextID())
 	if actx == nil {
@@ -2281,7 +2244,7 @@ func handleActivityGetHeartbeatDetailsRequest(requestCtx context.Context, reques
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityGetHeartbeatDetailsReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the activity context
 	actx := ActivityContexts.Get(request.GetContextID())
@@ -2312,7 +2275,7 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityRecordHeartbeatReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
@@ -2374,7 +2337,7 @@ func handleActivityGetInfoRequest(requestCtx context.Context, request *messages.
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityGetInfoReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the activity context
 	actx := ActivityContexts.Get(contextID)
@@ -2400,7 +2363,7 @@ func handleActivityCompleteRequest(requestCtx context.Context, request *messages
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityCompleteReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
@@ -2459,7 +2422,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityExecuteLocalReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
@@ -2537,7 +2500,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 				zap.Any("Result", s),
 				zap.Int("ProcessId", os.Getpid()))
 
-			return nil, fmt.Errorf("Unexpected result type %v.  result must be an error or []byte.", reflect.TypeOf(s))
+			return nil, fmt.Errorf("unexpected result type %v.  result must be an error or []byte", reflect.TypeOf(s))
 		}
 	}
 
@@ -2583,7 +2546,7 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityStartLocalReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
@@ -2662,7 +2625,7 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 				zap.Any("Result", s),
 				zap.Int("ProcessId", os.Getpid()))
 
-			return nil, fmt.Errorf("Unexpected result type %v.  result must be an error or []byte.", reflect.TypeOf(s))
+			return nil, fmt.Errorf("unexpected result type %v.  result must be an error or []byte", reflect.TypeOf(s))
 		}
 	}
 
@@ -2701,7 +2664,7 @@ func handleActivityGetLocalResultRequest(requestCtx context.Context, request *me
 		zap.Int("ProcessId", os.Getpid()))
 
 	// new ActivityGetLocalResultReply
-	reply := createReplyMessage(request)
+	reply := messages.CreateReplyMessage(request)
 
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)

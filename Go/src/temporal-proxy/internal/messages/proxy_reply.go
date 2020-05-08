@@ -39,6 +39,7 @@ type (
 		IProxyMessage
 		GetError() *proxyerror.TemporalError
 		SetError(value *proxyerror.TemporalError)
+		Build(e *proxyerror.TemporalError, content ...interface{})
 	}
 )
 
@@ -80,6 +81,15 @@ func (reply *ProxyReply) GetError() *proxyerror.TemporalError {
 // JSON string and set at a ProxyReply's Error property
 func (reply *ProxyReply) SetError(value *proxyerror.TemporalError) {
 	reply.SetJSONProperty("Error", value)
+}
+
+// Build build the IProxyReply given specified contents.
+//
+// params:
+// 	- e *proxyerror.TemporalError -> the TemporalError to set in the reply.
+//  - ...interface{} content -> optional contents to set in the reply.
+func (reply *ProxyReply) Build(e *proxyerror.TemporalError, content ...interface{}) {
+	reply.SetError(e)
 }
 
 // -------------------------------------------------------------------------

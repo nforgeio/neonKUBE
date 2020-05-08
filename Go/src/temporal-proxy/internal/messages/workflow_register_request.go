@@ -69,22 +69,20 @@ func (request *WorkflowRegisterRequest) SetName(value *string) {
 	request.SetStringProperty("Name", value)
 }
 
-// GetNamespace gets a WorkflowRegisterRequest's Namespace value
+// GetWorkerID gets a WorkflowRegisterRequest's WorkerID value
 // from its properties map
 //
-// returns *string -> pointer to a string in memory holding the value
-// of a WorkflowRegisterRequest's Namespace
-func (request *WorkflowRegisterRequest) GetNamespace() *string {
-	return request.GetStringProperty("Namespace")
+// returns int64 -> long Id of the worker to register the workflow.
+func (request *WorkflowRegisterRequest) GetWorkerID() int64 {
+	return request.GetLongProperty("WorkerId")
 }
 
-// SetNamespace sets a WorkflowRegisterRequest's Namespace value
+// SetWorkerID sets a WorkflowRegisterRequest's WorkerID value
 // in its properties map.
 //
-// param value *string -> a pointer to a string in memory that holds the value
-// to be set in the properties map
-func (request *WorkflowRegisterRequest) SetNamespace(value *string) {
-	request.SetStringProperty("Namespace", value)
+// param value int64 -> long Id of the worker to register the workflow.
+func (request *WorkflowRegisterRequest) SetWorkerID(value int64) {
+	request.SetLongProperty("WorkerId", value)
 }
 
 // -------------------------------------------------------------------------
@@ -104,6 +102,6 @@ func (request *WorkflowRegisterRequest) CopyTo(target IProxyMessage) {
 	request.WorkflowRequest.CopyTo(target)
 	if v, ok := target.(*WorkflowRegisterRequest); ok {
 		v.SetName(request.GetName())
-		v.SetNamespace(request.GetNamespace())
+		v.SetWorkerID(request.GetWorkerID())
 	}
 }

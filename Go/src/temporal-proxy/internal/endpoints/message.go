@@ -143,7 +143,7 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 	// defer panic recovery
 	defer func() {
 		if r := recover(); r != nil {
-			reply = createReplyMessage(request)
+			reply = messages.CreateReplyMessage(request)
 			err = fmt.Errorf("Panic: %s, MessageType: %s, RequestId: %d, ClientId: %d. %s",
 				r,
 				request.GetType().String(),
@@ -173,7 +173,7 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 	// if it exists, then enter switch block to handle the
 	// specified request type
 	if err = verifyClientHelper(request, Clients.Get(request.GetClientID())); err != nil {
-		reply = createReplyMessage(request)
+		reply = messages.CreateReplyMessage(request)
 		buildReply(reply, proxyerror.NewTemporalError(err))
 	} else {
 
@@ -232,12 +232,6 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 		case internal.NamespaceUpdateRequest:
 			if v, ok := request.(*messages.NamespaceUpdateRequest); ok {
 				reply = handleNamespaceUpdateRequest(ctx, v)
-			}
-
-		// NamespaceListRequest
-		case internal.NamespaceListRequest:
-			if v, ok := request.(*messages.NamespaceListRequest); ok {
-				reply = handleNamespaceListRequest(ctx, v)
 			}
 
 		// TerminateRequest
@@ -512,7 +506,7 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 
 		// Undefined message type
 		default:
-			e := fmt.Errorf("Unhandled message type. could not complete type assertion for type %d.", request.GetType())
+			e := fmt.Errorf("unhandled message type. could not complete type assertion for type %d", request.GetType())
 
 			// set the reply
 			reply = messages.NewProxyReply()

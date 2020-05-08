@@ -69,22 +69,20 @@ func (request *ActivityRegisterRequest) SetName(value *string) {
 	request.SetStringProperty("Name", value)
 }
 
-// GetNamespace gets a ActivityRegisterRequest's Namespace value
+// GetWorkerID gets a ActivityRegisterRequest's WorkerID value
 // from its properties map
 //
-// returns *string -> pointer to a string in memory holding the value
-// of a ActivityRegisterRequest's Namespace
-func (request *ActivityRegisterRequest) GetNamespace() *string {
-	return request.GetStringProperty("Namespace")
+// returns int64 -> long Id of the worker to register the workflow.
+func (request *ActivityRegisterRequest) GetWorkerID() int64 {
+	return request.GetLongProperty("WorkerId")
 }
 
-// SetNamespace sets a ActivityRegisterRequest's Namespace value
+// SetWorkerID sets a ActivityRegisterRequest's WorkerID value
 // in its properties map.
 //
-// param value *string -> a pointer to a string in memory that holds the value
-// to be set in the properties map
-func (request *ActivityRegisterRequest) SetNamespace(value *string) {
-	request.SetStringProperty("Namespace", value)
+// param value int64 -> long Id of the worker to register the workflow.
+func (request *ActivityRegisterRequest) SetWorkerID(value int64) {
+	request.SetLongProperty("WorkerId", value)
 }
 
 // -------------------------------------------------------------------------
@@ -104,6 +102,6 @@ func (request *ActivityRegisterRequest) CopyTo(target IProxyMessage) {
 	request.ActivityRequest.CopyTo(target)
 	if v, ok := target.(*ActivityRegisterRequest); ok {
 		v.SetName(request.GetName())
-		v.SetNamespace(request.GetNamespace())
+		v.SetWorkerID(request.GetWorkerID())
 	}
 }

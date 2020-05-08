@@ -19,17 +19,15 @@ package endpoints
 
 import (
 	"fmt"
-	"reflect"
 	"time"
 
+	"go.temporal.io/temporal-proto/workflowservice"
 	"go.temporal.io/temporal/activity"
 	"go.temporal.io/temporal/workflow"
 
 	internal "temporal-proxy/internal"
 	"temporal-proxy/internal/messages"
 	proxyerror "temporal-proxy/internal/temporal/error"
-
-	"go.temporal.io/temporal-proto/workflowservice"
 )
 
 func buildReply(reply messages.IProxyReply, temporalError *proxyerror.TemporalError, values ...interface{}) {
@@ -376,25 +374,6 @@ func buildReply(reply messages.IProxyReply, temporalError *proxyerror.TemporalEr
 		err := fmt.Errorf("Error building reply for message type %s", reply.GetType())
 		panic(err)
 	}
-}
-
-func createReplyMessage(request messages.IProxyRequest) messages.IProxyReply {
-
-	// get the correct reply type and initialize a new
-	// reply corresponding to the request message type
-	reply := messages.CreateNewTypedMessage(request.GetReplyType())
-	if reflect.ValueOf(reply).IsNil() {
-		return nil
-	}
-
-	reply.SetRequestID(request.GetRequestID())
-	reply.SetClientID(request.GetClientID())
-
-	if v, ok := reply.(messages.IProxyReply); ok {
-		return v
-	}
-
-	return nil
 }
 
 // -------------------------------------------------------------------------

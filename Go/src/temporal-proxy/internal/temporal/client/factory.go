@@ -18,8 +18,6 @@
 package proxyclient
 
 import (
-	"github.com/uber-go/tally"
-	"go.temporal.io/temporal-proto/workflowservice"
 	"go.temporal.io/temporal/client"
 	"go.uber.org/zap"
 )
@@ -113,37 +111,4 @@ func (b *TemporalClientBuilder) BuildTemporalNamespaceClient() (client.Namespace
 		zap.String("HostPort", b.clientOptions.HostPort))
 
 	return client, nil
-}
-
-// BuildServiceClient builds the WorkflowServiceClient used to establish a connection with the
-// temporal service and create other clients.
-func (b *TemporalClientBuilder) BuildServiceClient() (workflowservice.WorkflowServiceClient, error) {
-	if b.clientOptions.Namespace == "" {
-		b.clientOptions.Namespace = client.DefaultNamespace
-	}
-
-	if b.clientOptions.HostPort == "" {
-		b.clientOptions.HostPort = client.DefaultHostPort
-	}
-
-	if b.clientOptions.MetricsScope == nil {
-		b.clientOptions.MetricsScope = tally.NoopScope
-	}
-
-	if b.clientOptions.GRPCDialer == nil {
-		b.clientOptions.GRPCDialer = defaultGRPCDialer
-	}
-
-	connection, err := b.clientOptions.GRPCDialer(client.GRPCDialerParams{
-		HostPort:             b.clientOptions.HostPort,
-		RequiredInterceptors: requiredInterceptors(b.clientOptions.MetricsScope),
-		DefaultServiceConfig: _defaultServiceConfig,
-	})
-
-	if err != nil {
-		b.Logger.Error("Failed to create connection to temporal server", zap.Error(err))
-		return nil, err
-	}
-
-	return workflowservice.NewWorkflowServiceClient(connection), nil
 }
