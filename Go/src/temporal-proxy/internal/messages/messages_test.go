@@ -2197,7 +2197,7 @@ func (s *UnitTestSuite) TestWorkflowRegisterRequest() {
 		s.Equal(internal.WorkflowRegisterReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetName())
-		s.Nil(v.GetNamespace())
+		s.Equal(int64(0), v.GetWorkerID())
 
 		// Round-trip
 
@@ -2208,9 +2208,8 @@ func (s *UnitTestSuite) TestWorkflowRegisterRequest() {
 		v.SetName(&name)
 		s.Equal("Foo", *v.GetName())
 
-		namespace := "my-namespace"
-		v.SetNamespace(&namespace)
-		s.Equal("my-namespace", *v.GetNamespace())
+		v.SetWorkerID(int64(10))
+		s.Equal(int64(10), v.GetWorkerID())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -2224,7 +2223,7 @@ func (s *UnitTestSuite) TestWorkflowRegisterRequest() {
 	if v, ok := message.(*messages.WorkflowRegisterRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("Foo", *v.GetName())
-		s.Equal("my-namespace", *v.GetNamespace())
+		s.Equal(int64(10), v.GetWorkerID())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -2234,7 +2233,7 @@ func (s *UnitTestSuite) TestWorkflowRegisterRequest() {
 	if v, ok := message.(*messages.WorkflowRegisterRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("Foo", *v.GetName())
-		s.Equal("my-namespace", *v.GetNamespace())
+		s.Equal(int64(10), v.GetWorkerID())
 	}
 }
 
@@ -3645,7 +3644,7 @@ func (s *UnitTestSuite) TestWorkflowDescribeExecutionReply() {
 		ps := common.Payloads{Payloads: []*common.Payload{&p1, &p2, &p3}}
 		wei := execution.WorkflowExecutionInfo{
 			Execution:         &we,
-			Type:              &common.WorkflowType{wt},
+			Type:              &common.WorkflowType{Name: wt},
 			StartTime:         &types.Int64Value{Value: st},
 			CloseTime:         &types.Int64Value{Value: ct},
 			HistoryLength:     hl,
@@ -6876,7 +6875,7 @@ func (s *UnitTestSuite) TestActivityRegisterRequest() {
 		s.Equal(internal.ActivityRegisterReply, v.ReplyType)
 		s.Equal(int64(0), v.GetRequestID())
 		s.Nil(v.GetName())
-		s.Nil(v.GetNamespace())
+		s.Equal(int64(0), v.GetWorkerID())
 
 		// Round-trip
 
@@ -6887,9 +6886,8 @@ func (s *UnitTestSuite) TestActivityRegisterRequest() {
 		v.SetName(&name)
 		s.Equal("my-activity", *v.GetName())
 
-		namespace := "my-namespace"
-		v.SetNamespace(&namespace)
-		s.Equal("my-namespace", *v.GetNamespace())
+		v.SetWorkerID(int64(44))
+		s.Equal(int64(44), v.GetWorkerID())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -6903,7 +6901,7 @@ func (s *UnitTestSuite) TestActivityRegisterRequest() {
 	if v, ok := message.(*messages.ActivityRegisterRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-activity", *v.GetName())
-		s.Equal("my-namespace", *v.GetNamespace())
+		s.Equal(int64(44), v.GetWorkerID())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -6913,7 +6911,7 @@ func (s *UnitTestSuite) TestActivityRegisterRequest() {
 	if v, ok := message.(*messages.ActivityRegisterRequest); ok {
 		s.Equal(int64(555), v.GetRequestID())
 		s.Equal("my-activity", *v.GetName())
-		s.Equal("my-namespace", *v.GetNamespace())
+		s.Equal(int64(44), v.GetWorkerID())
 	}
 }
 

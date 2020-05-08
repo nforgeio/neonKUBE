@@ -19,6 +19,7 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
+	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 type (
@@ -46,6 +47,11 @@ func NewPingReply() *PingReply {
 
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
+
+// Build inherits docs from ProxyReply.Build()
+func (reply *PingReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+	reply.ProxyReply.Build(e)
+}
 
 // Clone inherits docs from ProxyReply.Clone()
 func (reply *PingReply) Clone() IProxyMessage {

@@ -151,7 +151,7 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 				request.GetClientID(),
 				string(debug.Stack()))
 
-			buildReply(reply, proxyerror.NewTemporalError(err))
+			reply.Build(proxyerror.NewTemporalError(err))
 
 			Logger.Error("Panic", zap.Error(err))
 
@@ -174,7 +174,7 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 	// specified request type
 	if err = verifyClientHelper(request, Clients.Get(request.GetClientID())); err != nil {
 		reply = messages.CreateReplyMessage(request)
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 	} else {
 
 		// create a context for every request

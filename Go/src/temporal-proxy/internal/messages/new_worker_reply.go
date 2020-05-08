@@ -19,6 +19,7 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
+	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 type (
@@ -65,6 +66,16 @@ func (reply *NewWorkerReply) SetWorkerID(value int64) {
 
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
+
+// Build inherits docs from ProxyReply.Build()
+func (reply *NewWorkerReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+	reply.ProxyReply.Build(e)
+	if len(result) > 0 {
+		if v, ok := result[0].(int64); ok {
+			reply.SetWorkerID(v)
+		}
+	}
+}
 
 // Clone inherits docs from ProxyReply.Clone()
 func (reply *NewWorkerReply) Clone() IProxyMessage {

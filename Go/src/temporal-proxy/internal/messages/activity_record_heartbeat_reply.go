@@ -19,6 +19,7 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
+	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 type (
@@ -65,6 +66,16 @@ func (reply *ActivityRecordHeartbeatReply) SetDetails(value []byte) {
 
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
+
+// Build inherits docs from ActivityReply.Build()
+func (reply *ActivityRecordHeartbeatReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+	reply.ActivityReply.Build(e)
+	if len(result) > 0 {
+		if v, ok := result[0].([]byte); ok {
+			reply.SetDetails(v)
+		}
+	}
+}
 
 // Clone inherits docs from ProxyMessage.Clone()
 func (reply *ActivityRecordHeartbeatReply) Clone() IProxyMessage {

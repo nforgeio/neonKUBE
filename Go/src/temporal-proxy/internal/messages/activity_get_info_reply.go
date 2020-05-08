@@ -19,6 +19,8 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
+	proxyerror "temporal-proxy/internal/temporal/error"
+
 	"go.temporal.io/temporal/activity"
 )
 
@@ -72,6 +74,16 @@ func (reply *ActivityGetInfoReply) SetInfo(value *activity.Info) {
 
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
+
+// Build inherits docs from ActivityReply.Build()
+func (reply *ActivityGetInfoReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+	reply.ActivityReply.Build(e)
+	if len(result) > 0 {
+		if v, ok := result[0].(*activity.Info); ok {
+			reply.SetInfo(v)
+		}
+	}
+}
 
 // Clone inherits docs from ProxyMessage.Clone()
 func (reply *ActivityGetInfoReply) Clone() IProxyMessage {

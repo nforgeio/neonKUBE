@@ -19,15 +19,16 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
+	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 type (
 
-	// ActivityStartLocalReply is a WorkflowReply of MessageType
-	// ActivityStartReply.  It holds a reference to a WorkflowReply in memory
+	// ActivityStartLocalReply is a ActivityReply of MessageType
+	// ActivityStartReply.  It holds a reference to a ActivityReply in memory
 	// and is the reply type to a ActivityExecuteRequest
 	ActivityStartLocalReply struct {
-		*WorkflowReply
+		*ActivityReply
 	}
 )
 
@@ -38,7 +39,7 @@ type (
 // ActivityStartLocalReply in memory
 func NewActivityStartLocalReply() *ActivityStartLocalReply {
 	reply := new(ActivityStartLocalReply)
-	reply.WorkflowReply = NewWorkflowReply()
+	reply.ActivityReply = NewActivityReply()
 	reply.SetType(internal.ActivityStartLocalReply)
 
 	return reply
@@ -46,6 +47,11 @@ func NewActivityStartLocalReply() *ActivityStartLocalReply {
 
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
+
+// Build inherits docs from ActivityReply.Build()
+func (reply *ActivityStartLocalReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+	reply.ActivityReply.Build(e)
+}
 
 // Clone inherits docs from ProxyMessage.Clone()
 func (reply *ActivityStartLocalReply) Clone() IProxyMessage {
@@ -58,5 +64,5 @@ func (reply *ActivityStartLocalReply) Clone() IProxyMessage {
 
 // CopyTo inherits docs from ProxyMessage.CopyTo()
 func (reply *ActivityStartLocalReply) CopyTo(target IProxyMessage) {
-	reply.WorkflowReply.CopyTo(target)
+	reply.ActivityReply.CopyTo(target)
 }

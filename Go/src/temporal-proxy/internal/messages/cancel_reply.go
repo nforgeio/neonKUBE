@@ -19,6 +19,7 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
+	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 type (
@@ -63,6 +64,16 @@ func (reply *CancelReply) SetWasCancelled(value bool) {
 
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
+
+// Build inherits docs from ProxyReply.Build()
+func (reply *CancelReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+	reply.ProxyReply.Build(e)
+	if len(result) > 0 {
+		if v, ok := result[0].(bool); ok {
+			reply.SetWasCancelled(v)
+		}
+	}
+}
 
 // Clone inherits docs from ProxyReply.Clone()
 func (reply *CancelReply) Clone() IProxyMessage {

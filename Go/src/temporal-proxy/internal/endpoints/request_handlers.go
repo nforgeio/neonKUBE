@@ -55,7 +55,7 @@ func handlePingRequest(requestCtx context.Context, request *messages.PingRequest
 
 	// new PingReply
 	reply := messages.CreateReplyMessage(request)
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -70,7 +70,7 @@ func handleCancelRequest(requestCtx context.Context, request *messages.CancelReq
 
 	// new InitializeReply
 	reply := messages.CreateReplyMessage(request)
-	buildReply(reply, nil, true)
+	reply.Build(nil, true)
 
 	return reply
 }
@@ -103,7 +103,7 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 	err := clientHelper.SetupTemporalClients(requestCtx, opts)
 
 	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrConnection))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrConnection))
 		return reply
 	}
 
@@ -128,13 +128,13 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 			})
 
 		if err != nil {
-			buildReply(reply, proxyerror.NewTemporalError(err))
+			reply.Build(proxyerror.NewTemporalError(err))
 			return reply
 		}
 	}
 
 	_ = Clients.Add(request.GetClientID(), clientHelper)
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -151,7 +151,7 @@ func handleDisconnectRequest(requestCtx context.Context, request *messages.Disco
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -161,14 +161,14 @@ func handleDisconnectRequest(requestCtx context.Context, request *messages.Disco
 			zap.Int64("ClientID", clientID),
 			zap.Error(err))
 
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
 
 	_ = Clients.Remove(clientID)
 
 	Logger.Info("Successfully removed client.", zap.Int64("ClientID", clientID))
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -182,7 +182,7 @@ func handleHeartbeatRequest(requestCtx context.Context, request *messages.Heartb
 	// new HeartbeatReply
 	reply := messages.CreateReplyMessage(request)
 
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -217,7 +217,7 @@ func handleInitializeRequest(requestCtx context.Context, request *messages.Initi
 		zap.String("Reply Address", replyAddress),
 		zap.String("LogLevel", logLevel.String()))
 
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -234,7 +234,7 @@ func handleTerminateRequest(requestCtx context.Context, request *messages.Termin
 	// setting terminate to true indicates that after the TerminateReply is sent,
 	// the server instance should gracefully shut down
 	terminate = true
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -255,7 +255,7 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -273,7 +273,7 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 		*opts)
 
 	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err), workerID)
+		reply.Build(proxyerror.NewTemporalError(err), workerID)
 		return reply
 	}
 
@@ -283,7 +283,7 @@ func handleNewWorkerRequest(requestCtx context.Context, request *messages.NewWor
 		zap.String("Namespace", namespace),
 		zap.String("TaskList", taskList))
 
-	buildReply(reply, nil, workerID)
+	reply.Build(nil, workerID)
 
 	return reply
 }
@@ -302,15 +302,15 @@ func handleStopWorkerRequest(requestCtx context.Context, request *messages.StopW
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
 	// get the workerID from the request so that we know
 	// what worker to stop
 
-	if clientHelper.StopWorker != nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+	if clientHelper.StopWorker(workerID) != nil {
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -318,7 +318,7 @@ func handleStopWorkerRequest(requestCtx context.Context, request *messages.StopW
 		zap.Int64("WorkerID", workerID),
 		zap.Int64("ClientId", clientID))
 
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -337,7 +337,7 @@ func handleNamespaceDescribeRequest(requestCtx context.Context, request *message
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -348,11 +348,11 @@ func handleNamespaceDescribeRequest(requestCtx context.Context, request *message
 	// send a describe namespace request to the temporal server
 	describeNamespaceResponse, err := clientHelper.DescribeNamespace(ctx, namespace)
 	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
 
-	buildReply(reply, nil, describeNamespaceResponse)
+	reply.Build(nil, describeNamespaceResponse)
 
 	return reply
 }
@@ -371,7 +371,7 @@ func handleNamespaceRegisterRequest(requestCtx context.Context, request *message
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -398,12 +398,12 @@ func handleNamespaceRegisterRequest(requestCtx context.Context, request *message
 			zap.String("Namespace Name", namespaceName),
 			zap.Error(err))
 
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 
 		return reply
 	}
 
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -422,7 +422,7 @@ func handleNamespaceUpdateRequest(requestCtx context.Context, request *messages.
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -454,11 +454,11 @@ func handleNamespaceUpdateRequest(requestCtx context.Context, request *messages.
 	// Update the namespace using the UpdateNamespaceRequest
 	err := clientHelper.UpdateNamespace(ctx, &namespaceUpdateRequest)
 	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
 
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -479,7 +479,7 @@ func handleDescribeTaskListRequest(requestCtx context.Context, request *messages
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -502,11 +502,11 @@ func handleDescribeTaskListRequest(requestCtx context.Context, request *messages
 
 	describeResponse, err := clientHelper.DescribeTaskList(ctx, &describeRequest)
 	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
 
-	buildReply(reply, nil, describeResponse)
+	reply.Build(nil, describeResponse)
 
 	return reply
 }
@@ -530,7 +530,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -632,7 +632,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 
 	clientHelper.WorkflowRegister(workerID, workflowFunc, workflowName)
 	Logger.Debug("workflow successfully registered", zap.String("WorkflowName", workflowName))
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -653,7 +653,7 @@ func handleWorkflowExecuteRequest(requestCtx context.Context, request *messages.
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -676,7 +676,7 @@ func handleWorkflowExecuteRequest(requestCtx context.Context, request *messages.
 		request.GetArgs())
 
 	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
 
@@ -685,7 +685,7 @@ func handleWorkflowExecuteRequest(requestCtx context.Context, request *messages.
 		RunID: workflowRun.GetRunID(),
 	}
 
-	buildReply(reply, nil, &workflowExecution)
+	reply.Build(nil, &workflowExecution)
 
 	return reply
 }
@@ -706,7 +706,7 @@ func handleWorkflowCancelRequest(requestCtx context.Context, request *messages.W
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -722,11 +722,11 @@ func handleWorkflowCancelRequest(requestCtx context.Context, request *messages.W
 		*request.GetNamespace())
 
 	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
 
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -747,7 +747,7 @@ func handleWorkflowTerminateRequest(requestCtx context.Context, request *message
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -765,11 +765,11 @@ func handleWorkflowTerminateRequest(requestCtx context.Context, request *message
 		request.GetDetails())
 
 	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
 
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -790,7 +790,7 @@ func handleWorkflowSignalWithStartRequest(requestCtx context.Context, request *m
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -810,11 +810,11 @@ func handleWorkflowSignalWithStartRequest(requestCtx context.Context, request *m
 		request.GetWorkflowArgs())
 
 	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
 
-	buildReply(reply, nil, workflowExecution)
+	reply.Build(nil, workflowExecution)
 
 	return reply
 }
@@ -830,7 +830,7 @@ func handleWorkflowSetCacheSizeRequest(requestCtx context.Context, request *mess
 
 	// set the sticky workflow cache size
 	worker.SetStickyWorkflowCacheSize(request.GetSize())
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -847,7 +847,7 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(request.GetContextID())
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -899,11 +899,11 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 	err := value.Get(&result)
 
 	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
 
-	buildReply(reply, nil, result)
+	reply.Build(nil, result)
 
 	return reply
 }
@@ -924,7 +924,7 @@ func handleWorkflowDescribeExecutionRequest(requestCtx context.Context, request 
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -940,11 +940,11 @@ func handleWorkflowDescribeExecutionRequest(requestCtx context.Context, request 
 		*request.GetNamespace())
 
 	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
 
-	buildReply(reply, nil, dwer)
+	reply.Build(nil, dwer)
 
 	return reply
 }
@@ -961,7 +961,7 @@ func handleWorkflowGetResultRequest(requestCtx context.Context, request *message
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -977,7 +977,7 @@ func handleWorkflowGetResultRequest(requestCtx context.Context, request *message
 		*request.GetNamespace())
 
 	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
 
@@ -985,11 +985,11 @@ func handleWorkflowGetResultRequest(requestCtx context.Context, request *message
 	var result []byte
 	err = workflowRun.Get(requestCtx, &result)
 	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
 
-	buildReply(reply, nil, result)
+	reply.Build(nil, result)
 
 	return reply
 }
@@ -1011,7 +1011,7 @@ func handleWorkflowSignalSubscribeRequest(requestCtx context.Context, request *m
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -1120,7 +1120,7 @@ func handleWorkflowSignalRequest(requestCtx context.Context, request *messages.W
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -1138,11 +1138,11 @@ func handleWorkflowSignalRequest(requestCtx context.Context, request *messages.W
 		request.GetSignalArgs())
 
 	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
 
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -1161,14 +1161,14 @@ func handleWorkflowHasLastResultRequest(requestCtx context.Context, request *mes
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
 	// set ReplayStatus
 	ctx := wectx.GetContext()
 	setReplayStatus(ctx, reply)
-	buildReply(reply, nil, workflow.HasLastCompletionResult(ctx))
+	reply.Build(nil, workflow.HasLastCompletionResult(ctx))
 
 	return reply
 }
@@ -1187,7 +1187,7 @@ func handleWorkflowGetLastResultRequest(requestCtx context.Context, request *mes
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -1199,11 +1199,11 @@ func handleWorkflowGetLastResultRequest(requestCtx context.Context, request *mes
 	var result []byte
 	err := workflow.GetLastCompletionResult(ctx, &result)
 	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
 
-	buildReply(reply, nil, result)
+	reply.Build(nil, result)
 
 	return reply
 }
@@ -1222,7 +1222,7 @@ func handleWorkflowDisconnectContextRequest(requestCtx context.Context, request 
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -1232,7 +1232,7 @@ func handleWorkflowDisconnectContextRequest(requestCtx context.Context, request 
 	wectx.SetContext(disconnectedCtx)
 	wectx.SetCancelFunction(cancel)
 
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -1251,7 +1251,7 @@ func handleWorkflowGetTimeRequest(requestCtx context.Context, request *messages.
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -1259,7 +1259,7 @@ func handleWorkflowGetTimeRequest(requestCtx context.Context, request *messages.
 	ctx := wectx.GetContext()
 	setReplayStatus(ctx, reply)
 
-	buildReply(reply, nil, workflow.Now(ctx))
+	reply.Build(nil, workflow.Now(ctx))
 
 	return reply
 }
@@ -1280,7 +1280,7 @@ func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.Wo
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -1299,11 +1299,11 @@ func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.Wo
 	// wait for the future to be unblocked
 	err := future.Get(ctx, &result)
 	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err, proxyerror.Cancelled))
+		reply.Build(proxyerror.NewTemporalError(err, proxyerror.Cancelled))
 		return reply
 	}
 
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -1326,7 +1326,7 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -1362,10 +1362,10 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 	childWE := new(workflow.Execution)
 	err := childFuture.GetChildWorkflowExecution().Get(ctx, childWE)
 	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 	}
 
-	buildReply(reply, nil, append(make([]interface{}, 0), childID, childWE))
+	reply.Build(nil, append(make([]interface{}, 0), childID, childWE))
 
 	return reply
 }
@@ -1386,13 +1386,13 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 	// get the child context from the parent workflow context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
 	cctx := wectx.GetChildContext(childID)
 	if cctx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -1410,12 +1410,12 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 			temporalError = proxyerror.NewTemporalError(err)
 		}
 
-		buildReply(reply, temporalError)
+		reply.Build(temporalError)
 
 		return reply
 	}
 
-	buildReply(reply, nil, result)
+	reply.Build(nil, result)
 
 	defer wectx.RemoveChildContext(childID)
 
@@ -1442,13 +1442,13 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 	// get the child context from the parent workflow context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
 	cctx := wectx.GetChildContext(childID)
 	if cctx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -1469,11 +1469,11 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 	// wait on the future
 	var result []byte
 	if err := future.Get(ctx, &result); err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
 
-	buildReply(reply, nil, result)
+	reply.Build(nil, result)
 
 	return reply
 }
@@ -1494,13 +1494,13 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 	// get the child context from the parent workflow context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
 	cctx := wectx.GetChildContext(childID)
 	if cctx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -1512,7 +1512,7 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 	cancel := cctx.GetCancelFunction()
 	cancel()
 
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -1534,7 +1534,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 	// get the workflow context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -1609,7 +1609,7 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 				zap.Any("Result", s),
 				zap.Int("ProcessId", os.Getpid()))
 
-			return nil, fmt.Errorf("Unexpected result type %v.  result must be an error or []byte.", reflect.TypeOf(s))
+			return nil, fmt.Errorf("unexpected result type %v.  result must be an error or []byte", reflect.TypeOf(s))
 		}
 	}
 
@@ -1617,11 +1617,11 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 	// temporal server
 	err := workflow.SetQueryHandler(ctx, queryName, queryHandler)
 	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
 
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -1644,7 +1644,7 @@ func handleWorkflowQueryRequest(requestCtx context.Context, request *messages.Wo
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -1662,7 +1662,7 @@ func handleWorkflowQueryRequest(requestCtx context.Context, request *messages.Wo
 		request.GetQueryArgs())
 
 	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
 
@@ -1671,12 +1671,12 @@ func handleWorkflowQueryRequest(requestCtx context.Context, request *messages.Wo
 	if value.HasValue() {
 		err = value.Get(&result)
 		if err != nil {
-			buildReply(reply, proxyerror.NewTemporalError(err))
+			reply.Build(proxyerror.NewTemporalError(err))
 			return reply
 		}
 	}
 
-	buildReply(reply, nil, result)
+	reply.Build(nil, result)
 
 	return reply
 }
@@ -1695,7 +1695,7 @@ func handleWorkflowGetVersionRequest(requestCtx context.Context, request *messag
 	// get the child context from the parent workflow context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -1711,7 +1711,7 @@ func handleWorkflowGetVersionRequest(requestCtx context.Context, request *messag
 		workflow.Version(request.GetMinSupported()),
 		workflow.Version(request.GetMaxSupported()))
 
-	buildReply(reply, nil, version)
+	reply.Build(nil, version)
 
 	return reply
 }
@@ -1732,7 +1732,7 @@ func handleWorkflowQueueNewRequest(requestCtx context.Context, request *messages
 	// get the child context from the parent workflow context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -1750,7 +1750,7 @@ func handleWorkflowQueueNewRequest(requestCtx context.Context, request *messages
 		zap.Int("Capacity", capacity),
 		zap.Int64("ContextId", contextID))
 
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -1771,7 +1771,7 @@ func handleWorkflowQueueWriteRequest(requestCtx context.Context, request *messag
 	// get the child context from the parent workflow context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -1783,7 +1783,7 @@ func handleWorkflowQueueWriteRequest(requestCtx context.Context, request *messag
 	data := request.GetData()
 	queue := wectx.GetQueue(queueID)
 	if queue == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -1795,13 +1795,13 @@ func handleWorkflowQueueWriteRequest(requestCtx context.Context, request *messag
 		// indicates that the value was successfully added to the queue
 		// and is not full.
 		s.AddSend(queue, data, func() {
-			buildReply(reply, nil, false)
+			reply.Build(nil, false)
 		})
 
 		// indicates that the queue is full and the value was not added
 		// to the queue.
 		s.AddDefault(func() {
-			buildReply(reply, nil, true)
+			reply.Build(nil, true)
 		})
 		s.Select(ctx)
 	} else {
@@ -1814,7 +1814,7 @@ func handleWorkflowQueueWriteRequest(requestCtx context.Context, request *messag
 		zap.Any("Data", data),
 		zap.Int64("ContextId", contextID))
 
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -1836,7 +1836,7 @@ func handleWorkflowQueueReadRequest(requestCtx context.Context, request *message
 	wectx := WorkflowContexts.Get(contextID)
 
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -1847,7 +1847,7 @@ func handleWorkflowQueueReadRequest(requestCtx context.Context, request *message
 
 	queue := wectx.GetQueue(queueID)
 	if queue == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -1879,7 +1879,7 @@ func handleWorkflowQueueReadRequest(requestCtx context.Context, request *message
 	})
 	s.Select(ctx)
 
-	buildReply(reply, temporalError, append(make([]interface{}, 0), data, isClosed))
+	reply.Build(temporalError, append(make([]interface{}, 0), data, isClosed))
 
 	return reply
 }
@@ -1900,7 +1900,7 @@ func handleWorkflowQueueCloseRequest(requestCtx context.Context, request *messag
 	// get the child context from the parent workflow context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -1911,7 +1911,7 @@ func handleWorkflowQueueCloseRequest(requestCtx context.Context, request *messag
 
 	queue := wectx.GetQueue(queueID)
 	if queue == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -1922,7 +1922,7 @@ func handleWorkflowQueueCloseRequest(requestCtx context.Context, request *messag
 		zap.Int64("QueueId", queueID),
 		zap.Int64("ContextId", contextID))
 
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -1946,7 +1946,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -2074,7 +2074,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 	clientHelper.ActivityRegister(workerID, activityFunc, activityName)
 	Logger.Debug("Activity Successfully Registered", zap.String("ActivityName", activityName))
 
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -2097,7 +2097,7 @@ func handleActivityExecuteRequest(requestCtx context.Context, request *messages.
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -2120,11 +2120,11 @@ func handleActivityExecuteRequest(requestCtx context.Context, request *messages.
 	// execute the activity
 	var result []byte
 	if err := future.Get(ctx, &result); err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
 
-	buildReply(reply, nil, result)
+	reply.Build(nil, result)
 
 	return reply
 }
@@ -2149,7 +2149,7 @@ func handleActivityStartRequest(requestCtx context.Context, request *messages.Ac
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -2172,7 +2172,7 @@ func handleActivityStartRequest(requestCtx context.Context, request *messages.Ac
 	// add to workflow context map
 	_ = wectx.AddActivityFuture(activityID, future)
 
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -2195,13 +2195,13 @@ func handleActivityGetResultRequest(requestCtx context.Context, request *message
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
 	future := wectx.GetActivityFuture(activityID)
 	if future == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 	defer wectx.RemoveActivityFuture(activityID)
@@ -2209,10 +2209,10 @@ func handleActivityGetResultRequest(requestCtx context.Context, request *message
 	// execute the activity
 	var result []byte
 	if err := future.Get(wectx.GetContext(), &result); err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
-	buildReply(reply, nil, result)
+	reply.Build(nil, result)
 
 	return reply
 }
@@ -2228,11 +2228,11 @@ func handleActivityHasHeartbeatDetailsRequest(requestCtx context.Context, reques
 
 	actx := ActivityContexts.Get(request.GetContextID())
 	if actx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
-	buildReply(reply, nil, activity.HasHeartbeatDetails(actx.GetContext()))
+	reply.Build(nil, activity.HasHeartbeatDetails(actx.GetContext()))
 
 	return reply
 }
@@ -2249,7 +2249,7 @@ func handleActivityGetHeartbeatDetailsRequest(requestCtx context.Context, reques
 	// get the activity context
 	actx := ActivityContexts.Get(request.GetContextID())
 	if actx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -2257,10 +2257,10 @@ func handleActivityGetHeartbeatDetailsRequest(requestCtx context.Context, reques
 	var details []byte
 	err := activity.GetHeartbeatDetails(actx.GetContext(), &details)
 	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
-	buildReply(reply, nil, details)
+	reply.Build(nil, details)
 
 	return reply
 }
@@ -2279,7 +2279,7 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -2294,7 +2294,7 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 		if request.GetActivityID() == nil {
 			actx := ActivityContexts.Get(contextID)
 			if actx == nil {
-				buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+				reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 				return reply
 			}
 
@@ -2319,11 +2319,11 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 	}
 
 	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
 
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -2342,7 +2342,7 @@ func handleActivityGetInfoRequest(requestCtx context.Context, request *messages.
 	// get the activity context
 	actx := ActivityContexts.Get(contextID)
 	if actx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrConnection))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrConnection))
 		return reply
 	}
 
@@ -2350,7 +2350,7 @@ func handleActivityGetInfoRequest(requestCtx context.Context, request *messages.
 	// build the reply
 	info := activity.GetInfo(actx.GetContext())
 
-	buildReply(reply, nil, &info)
+	reply.Build(nil, &info)
 
 	return reply
 }
@@ -2367,7 +2367,7 @@ func handleActivityCompleteRequest(requestCtx context.Context, request *messages
 
 	clientHelper := Clients.Get(clientID)
 	if clientHelper == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -2400,11 +2400,11 @@ func handleActivityCompleteRequest(requestCtx context.Context, request *messages
 	}
 
 	if err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
 
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -2426,7 +2426,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -2522,11 +2522,11 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 	// wait for the future to be unblocked
 	var result []byte
 	if err := future.Get(ctx, &result); err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
 
-	buildReply(reply, nil, result)
+	reply.Build(nil, result)
 
 	return reply
 }
@@ -2551,7 +2551,7 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -2646,7 +2646,7 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 
 	// add to workflow context map
 	_ = wectx.AddActivityFuture(activityID, future)
-	buildReply(reply, nil)
+	reply.Build(nil)
 
 	return reply
 }
@@ -2669,13 +2669,13 @@ func handleActivityGetLocalResultRequest(requestCtx context.Context, request *me
 	// get the contextID and the corresponding context
 	wectx := WorkflowContexts.Get(contextID)
 	if wectx == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
 	future := wectx.GetActivityFuture(activityID)
 	if future == nil {
-		buildReply(reply, proxyerror.NewTemporalError(internal.ErrEntityNotExist))
+		reply.Build(proxyerror.NewTemporalError(internal.ErrEntityNotExist))
 		return reply
 	}
 
@@ -2683,11 +2683,11 @@ func handleActivityGetLocalResultRequest(requestCtx context.Context, request *me
 
 	var result []byte
 	if err := future.Get(wectx.GetContext(), &result); err != nil {
-		buildReply(reply, proxyerror.NewTemporalError(err))
+		reply.Build(proxyerror.NewTemporalError(err))
 		return reply
 	}
 
-	buildReply(reply, nil, result)
+	reply.Build(nil, result)
 
 	return reply
 }

@@ -19,6 +19,7 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
+	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 type (
@@ -78,6 +79,21 @@ func (reply *WorkflowQueueReadReply) SetData(value []byte) {
 
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
+
+// Build inherits docs from WorkflowReply.Build()
+func (reply *WorkflowQueueReadReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+	reply.WorkflowReply.Build(e)
+	if len(result) > 0 {
+		if v, ok := result[0].([]interface{}); ok {
+			if _v, _ok := v[0].([]byte); _ok {
+				reply.SetData(_v)
+			}
+			if _v, _ok := v[1].(bool); _ok {
+				reply.SetIsClosed(_v)
+			}
+		}
+	}
+}
 
 // Clone inherits docs from WorkflowReply.Clone()
 func (reply *WorkflowQueueReadReply) Clone() IProxyMessage {

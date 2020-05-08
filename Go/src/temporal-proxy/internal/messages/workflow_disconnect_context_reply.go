@@ -19,6 +19,7 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
+	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 type (
@@ -46,6 +47,11 @@ func NewWorkflowDisconnectContextReply() *WorkflowDisconnectContextReply {
 
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
+
+// Build inherits docs from WorkflowReply.Build()
+func (reply *WorkflowDisconnectContextReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+	reply.WorkflowReply.Build(e)
+}
 
 // Clone inherits docs from WorkflowReply.Clone()
 func (reply *WorkflowDisconnectContextReply) Clone() IProxyMessage {

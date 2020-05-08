@@ -19,6 +19,8 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
+	proxyerror "temporal-proxy/internal/temporal/error"
+
 	"go.temporal.io/temporal/workflow"
 )
 
@@ -91,6 +93,21 @@ func (reply *WorkflowExecuteChildReply) SetExecution(value *workflow.Execution) 
 
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
+
+// Build inherits docs from WorkflowReply.Build()
+func (reply *WorkflowExecuteChildReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+	reply.WorkflowReply.Build(e)
+	if len(result) > 0 {
+		if v, ok := result[0].([]interface{}); ok {
+			if _v, _ok := v[0].(int64); _ok {
+				reply.SetChildID(_v)
+			}
+			if _v, _ok := v[1].(*workflow.Execution); _ok {
+				reply.SetExecution(_v)
+			}
+		}
+	}
+}
 
 // Clone inherits docs from ProxyMessage.Clone()
 func (reply *WorkflowExecuteChildReply) Clone() IProxyMessage {

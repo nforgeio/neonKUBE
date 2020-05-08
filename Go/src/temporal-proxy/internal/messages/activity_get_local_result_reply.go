@@ -19,15 +19,16 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
+	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 type (
 
-	// ActivityGetLocalResultReply is a WorkflowReply of MessageType
-	// ActivityGetLocalResultReply.  It holds a reference to a WorkflowReply in memory
+	// ActivityGetLocalResultReply is a ActivityReply of MessageType
+	// ActivityGetLocalResultReply.  It holds a reference to a ActivityReply in memory
 	// and is the reply type to a ActivityExecuteRequest
 	ActivityGetLocalResultReply struct {
-		*WorkflowReply
+		*ActivityReply
 	}
 )
 
@@ -38,7 +39,7 @@ type (
 // ActivityGetLocalResultReply in memory
 func NewActivityGetLocalResultReply() *ActivityGetLocalResultReply {
 	reply := new(ActivityGetLocalResultReply)
-	reply.WorkflowReply = NewWorkflowReply()
+	reply.ActivityReply = NewActivityReply()
 	reply.SetType(internal.ActivityGetLocalResultReply)
 
 	return reply
@@ -63,6 +64,16 @@ func (reply *ActivityGetLocalResultReply) SetResult(value []byte) {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
+// Build inherits docs from ActivityReply.Build()
+func (reply *ActivityGetLocalResultReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+	reply.ActivityReply.Build(e)
+	if len(result) > 0 {
+		if v, ok := result[0].([]byte); ok {
+			reply.SetResult(v)
+		}
+	}
+}
+
 // Clone inherits docs from ProxyMessage.Clone()
 func (reply *ActivityGetLocalResultReply) Clone() IProxyMessage {
 	activityGetLocalResultReply := NewActivityGetLocalResultReply()
@@ -74,7 +85,7 @@ func (reply *ActivityGetLocalResultReply) Clone() IProxyMessage {
 
 // CopyTo inherits docs from ProxyMessage.CopyTo()
 func (reply *ActivityGetLocalResultReply) CopyTo(target IProxyMessage) {
-	reply.WorkflowReply.CopyTo(target)
+	reply.ActivityReply.CopyTo(target)
 	if v, ok := target.(*ActivityGetLocalResultReply); ok {
 		v.SetResult(reply.GetResult())
 	}

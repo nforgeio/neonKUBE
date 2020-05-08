@@ -19,6 +19,7 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
+	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 type (
@@ -46,6 +47,11 @@ func NewActivityCompleteReply() *ActivityCompleteReply {
 
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
+
+// Build inherits docs from ActivityReply.Build()
+func (reply *ActivityCompleteReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+	reply.ActivityReply.Build(e)
+}
 
 // Clone inherits docs from ProxyMessage.Clone()
 func (reply *ActivityCompleteReply) Clone() IProxyMessage {

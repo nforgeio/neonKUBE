@@ -25,16 +25,16 @@ import (
 
 type (
 
-	// ActivityStartRequest is an WorkflowRequest of MessageType
+	// ActivityStartRequest is an ActivityRequest of MessageType
 	// ActivityStartRequest.
 	//
 	// A ActivityStartRequest contains a reference to a
-	// WorkflowRequest struct in memory and ReplyType, which is
-	// the corresponding MessageType for replying to this WorkflowRequest
+	// ActivityRequest struct in memory and ReplyType, which is
+	// the corresponding MessageType for replying to this ActivityRequest
 	//
 	// Starts a workflow activity.
 	ActivityStartRequest struct {
-		*WorkflowRequest
+		*ActivityRequest
 	}
 )
 
@@ -44,7 +44,7 @@ type (
 // in memory
 func NewActivityStartRequest() *ActivityStartRequest {
 	request := new(ActivityStartRequest)
-	request.WorkflowRequest = NewWorkflowRequest()
+	request.ActivityRequest = NewActivityRequest()
 	request.SetType(internal.ActivityStartRequest)
 	request.SetReplyType(internal.ActivityStartReply)
 
@@ -144,7 +144,7 @@ func (request *ActivityStartRequest) SetActivityID(value int64) {
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
-// Clone inherits docs from WorkflowRequest.Clone()
+// Clone inherits docs from ActivityRequest.Clone()
 func (request *ActivityStartRequest) Clone() IProxyMessage {
 	activityStartRequest := NewActivityStartRequest()
 	var messageClone IProxyMessage = activityStartRequest
@@ -153,9 +153,9 @@ func (request *ActivityStartRequest) Clone() IProxyMessage {
 	return messageClone
 }
 
-// CopyTo inherits docs from WorkflowRequest.CopyTo()
+// CopyTo inherits docs from ActivityRequest.CopyTo()
 func (request *ActivityStartRequest) CopyTo(target IProxyMessage) {
-	request.WorkflowRequest.CopyTo(target)
+	request.ActivityRequest.CopyTo(target)
 	if v, ok := target.(*ActivityStartRequest); ok {
 		v.SetArgs(request.GetArgs())
 		v.SetOptions(request.GetOptions())
