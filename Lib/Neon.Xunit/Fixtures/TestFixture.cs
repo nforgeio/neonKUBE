@@ -278,6 +278,7 @@ namespace Neon.Xunit
         /// <inheritdoc/>
         public virtual void Reset()
         {
+            State.Clear();
         }
 
         /// <summary>

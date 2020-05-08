@@ -34,8 +34,8 @@ namespace Neon.Cadence
     public class WorkflowMethodAttribute : Attribute
     {
         private string      name;
-        private int  	    executionStartToCloseTimeoutSeconds;
-        private int         decisionStartToCloseTimeoutSeconds;
+        private int  	    startToCloseTimeoutSeconds;
+        private int         decisionTaskTimeoutSeconds;
         private int         scheduleToStartTimeoutSeconds;
         private string      taskList;
         private string      domain;
@@ -114,10 +114,10 @@ namespace Neon.Cadence
         /// Optionally specifies the maximum workflow execution time.
         /// </para>
         /// </summary>
-        public int ExecutionStartToCloseTimeoutSeconds
+        public int StartToCloseTimeoutSeconds
         {
-            get => executionStartToCloseTimeoutSeconds;
-            set => executionStartToCloseTimeoutSeconds = Math.Max(value, 0);
+            get => startToCloseTimeoutSeconds;
+            set => startToCloseTimeoutSeconds = Math.Max(value, 0);
         }
 
         /// <summary>
@@ -126,15 +126,15 @@ namespace Neon.Cadence
         /// task.  The maximum possible duration is <b>60 seconds</b>.
         /// </para>
         /// </summary>
-        public int DecisionTaskStartToCloseTimeoutSeconds
+        public int DecisionTaskTimeoutSeconds
         {
-            get => decisionStartToCloseTimeoutSeconds;
+            get => decisionTaskTimeoutSeconds;
 
             set
             {
-                Covenant.Requires<ArgumentException>(value <= 60, nameof(value), $"[DecisionTaskStartToCloseTimeoutSeconds={value}] cannot exceed 60 seconds.");
+                Covenant.Requires<ArgumentException>(value <= 60, nameof(value), $"[{nameof(DecisionTaskTimeoutSeconds)}={value}] cannot exceed 60 seconds.");
 
-                decisionStartToCloseTimeoutSeconds = Math.Max(value, 0);
+                decisionTaskTimeoutSeconds = Math.Max(value, 0);
             }
         }
 

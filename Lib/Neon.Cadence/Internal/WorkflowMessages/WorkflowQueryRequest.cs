@@ -66,7 +66,7 @@ namespace Neon.Cadence.Internal
         public string Domain
         {
             get => GetStringProperty(PropertyNames.Domain);
-            set => SetStringProperty(PropertyNames.Domain, value);
+            set => SetStringProperty(PropertyNames.Domain, value ?? string.Empty);
         }
 
         /// <summary>

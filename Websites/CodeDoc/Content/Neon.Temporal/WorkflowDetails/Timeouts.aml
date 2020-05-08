@@ -39,7 +39,7 @@
             <entry><para><codeEntityReference qualifyHint="false">P:Neon.Temporal.WorkflowOptions.TaskStartToCloseTimeout</codeEntityReference></para></entry>
             <entry>
               <para>
-                This is the decision task time out.  This limits the time a workflow may take to execute any
+                This is the decision task timeout.  This limits the time a workflow may take to execute any
                 decision logic.  This defaults to 10 seconds and may be increased to a maximum of 60 seconds. 
               </para>
             </entry>

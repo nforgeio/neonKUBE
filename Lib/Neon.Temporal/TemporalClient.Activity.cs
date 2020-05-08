@@ -36,6 +36,36 @@ namespace Neon.Temporal
         // Temporal activity related operations.
 
         /// <summary>
+        /// Raised when a normal (non-local) is executed.  This is used internally
+        /// for unit tests that verify that activity options are configured correctly. 
+        /// </summary>
+        internal event EventHandler<ActivityOptions> ActivityExecuteEvent;
+
+        /// <summary>
+        /// Raised when a local is executed.  This is used internally for unit tests 
+        /// that verify that activity options are configured correctly. 
+        /// </summary>
+        internal event EventHandler<LocalActivityOptions> LocalActivityExecuteEvent;
+
+        /// <summary>
+        /// Raises the <see cref="ActivityExecuteEvent"/>.
+        /// </summary>
+        /// <param name="options">The activity options.</param>
+        internal void RaiseActivityExecuteEvent(ActivityOptions options)
+        {
+            ActivityExecuteEvent?.Invoke(this, options);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="LocalActivityExecuteEvent"/>.
+        /// </summary>
+        /// <param name="options">The activity options.</param>
+        internal void RaiseLocalActivityExecuteEvent(LocalActivityOptions options)
+        {
+            LocalActivityExecuteEvent?.Invoke(this, options);
+        }
+
+        /// <summary>
         /// Registers an activity implementation with Temporal.
         /// </summary>
         /// <typeparam name="TActivity">The <see cref="ActivityBase"/> derived class implementing the activity.</typeparam>

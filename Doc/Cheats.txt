@@ -26,3 +26,6 @@ neon logout
 neon login rm --force root@office-tiny
 neon cluster prepare %NF_ROOT%/devops/office/tiny.cluster.yaml --unredacted
 neon cluster setup --unredacted root@office-tiny
+
+# Cadence Testing
+taskkill /f /FI "imagename eq cadence-proxy*"

@@ -724,10 +724,10 @@ namespace Neon.Cadence
                     ContinueAsNewWorkflow                     = e.Workflow,
                     ContinueAsNewDomain                       = e.Domain,
                     ContinueAsNewTaskList                     = e.TaskList,
-                    ContinueAsNewExecutionStartToCloseTimeout = CadenceHelper.ToCadence(e.ExecutionStartToCloseTimeout),
+                    ContinueAsNewExecutionStartToCloseTimeout = CadenceHelper.ToCadence(e.StartToCloseTimeout),
                     ContinueAsNewScheduleToCloseTimeout       = CadenceHelper.ToCadence(e.ScheduleToCloseTimeout),
                     ContinueAsNewScheduleToStartTimeout       = CadenceHelper.ToCadence(e.ScheduleToStartTimeout),
-                    ContinueAsNewStartToCloseTimeout          = CadenceHelper.ToCadence(e.TaskStartToCloseTimeout),
+                    ContinueAsNewStartToCloseTimeout          = CadenceHelper.ToCadence(e.DecisionTaskTimeout),
                 };
             }
             catch (CadenceException e)

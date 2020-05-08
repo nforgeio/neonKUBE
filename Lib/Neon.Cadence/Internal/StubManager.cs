@@ -600,7 +600,6 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"        private bool                  isChild;");
             sbSource.AppendLine($"        private WorkflowOptions       options;");
             sbSource.AppendLine($"        private ChildWorkflowOptions  childOptions;");
-            sbSource.AppendLine($"        private string                domain;");
             sbSource.AppendLine($"        private bool                  hasStarted;");
             sbSource.AppendLine($"        private WorkflowExecution     execution;");
             sbSource.AppendLine($"        private string                workflowId;");
@@ -618,7 +617,6 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.dataConverter     = dataConverter;");
             sbSource.AppendLine($"            this.workflowTypeName  = workflowTypeName;");
             sbSource.AppendLine($"            this.options           = options;");
-            sbSource.AppendLine($"            this.domain            = ___StubHelper.ResolveDomain(client, options.Domain);");
             sbSource.AppendLine($"            this.workflowInterface = workflowInterface;");
             sbSource.AppendLine($"            this.executingEvent    = new AsyncManualResetEvent(initialState: false);");
             sbSource.AppendLine($"        }}");
@@ -632,7 +630,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.dataConverter  = dataConverter;");
             sbSource.AppendLine($"            this.hasStarted     = true;");
             sbSource.AppendLine($"            this.execution      = new WorkflowExecution(workflowId, runId);");
-            sbSource.AppendLine($"            this.domain         = ___StubHelper.ResolveDomain(client, domain);");
+            sbSource.AppendLine($"            this.options        = new WorkflowOptions() {{ Domain = ___StubHelper.ResolveDomain(client, domain) }};");
             sbSource.AppendLine($"            this.executingEvent = new AsyncManualResetEvent(initialState: true);");
             sbSource.AppendLine($"        }}");
 
@@ -646,7 +644,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.hasStarted     = true;");
             sbSource.AppendLine($"            this.execution      = execution;");
             sbSource.AppendLine($"            this.workflowId     = execution.WorkflowId;");
-            sbSource.AppendLine($"            this.domain         = ___StubHelper.ResolveDomain(client, domain);");
+            sbSource.AppendLine($"            this.options        = new WorkflowOptions() {{ Domain = ___StubHelper.ResolveDomain(client, domain) }};");
             sbSource.AppendLine($"            this.executingEvent = new AsyncManualResetEvent(initialState: true);");
             sbSource.AppendLine($"        }}");
 
@@ -660,8 +658,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.parentWorkflow    = parentWorkflow;");
             sbSource.AppendLine($"            this.workflowTypeName  = workflowTypeName;");
             sbSource.AppendLine($"            this.isChild           = true;");
-            sbSource.AppendLine($"            this.childOptions      = options;");
-            sbSource.AppendLine($"            this.domain            = this.childOptions.Domain;");
+            sbSource.AppendLine($"            this.childOptions      = options ?? new ChildWorkflowOptions();");
             sbSource.AppendLine($"            this.workflowInterface = workflowInterface;");
             sbSource.AppendLine($"            this.executingEvent    = new AsyncManualResetEvent(initialState: false);");
             sbSource.AppendLine($"        }}");
@@ -716,7 +713,7 @@ namespace Neon.Cadence.Internal
             sbSource.AppendLine($"            this.parentWorkflow = parentWorkflow;");
             sbSource.AppendLine($"            this.hasStarted     = true;");
             sbSource.AppendLine($"            this.workflowId     = workflowId;");
-            sbSource.AppendLine($"            this.domain         = domain;");
+            sbSource.AppendLine($"            this.childOptions   = new ChildWorkflowOptions() {{ Domain = ___StubHelper.ResolveDomain(client, domain) }};");
             sbSource.AppendLine($"            this.executingEvent = new AsyncManualResetEvent(initialState: true);");
             sbSource.AppendLine($"        }}");
 
@@ -841,12 +838,12 @@ namespace Neon.Cadence.Internal
                     }
 
                     sbSource.AppendLine($"            var ___method           = this.workflowInterface.GetMethod(\"{details.Method.Name}\", {SerializeMethodParameterTypes(details.Method)});");
-                    sbSource.AppendLine($"            var ___options          = ___StubHelper.NormalizeOptions(this.client, this.childOptions, this.workflowInterface, ___method);");
+                    sbSource.AppendLine($"            var ___childOptions     = ___StubHelper.NormalizeOptions(this.client, this.childOptions, this.workflowInterface, ___method);");
                     sbSource.AppendLine($"            byte[] ___argBytes      = {SerializeArgsExpression(details.Method.GetParameters())};");
                     sbSource.AppendLine($"            byte[] ___resultBytes   = null;");
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            this.hasStarted     = true;");
-                    sbSource.AppendLine($"            this.childExecution = await ___StubHelper.StartChildWorkflowAsync(this.client, this.parentWorkflow, ___workflowTypeName, ___argBytes, ___options);");
+                    sbSource.AppendLine($"            this.childExecution = await ___StubHelper.StartChildWorkflowAsync(this.client, this.parentWorkflow, ___workflowTypeName, ___argBytes, ___childOptions);");
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            executingEvent.Set();");
                     sbSource.AppendLine();
@@ -886,7 +883,8 @@ namespace Neon.Cadence.Internal
                         }
                     }
 
-                    sbSource.AppendLine($"            var ___options          = ___StubHelper.NormalizeOptions(this.client, this.options, this.workflowInterface, null);");
+                    sbSource.AppendLine($"            var ___method           = this.workflowInterface.GetMethod(\"{details.Method.Name}\", {SerializeMethodParameterTypes(details.Method)});");
+                    sbSource.AppendLine($"            var ___options          = ___StubHelper.NormalizeOptions(this.client, this.options, this.workflowInterface, ___method);");
                     sbSource.AppendLine($"            byte[] ___argBytes      = {SerializeArgsExpression(details.Method.GetParameters())};");
                     sbSource.AppendLine($"            byte[] ___resultBytes   = null;");
                     sbSource.AppendLine();
@@ -895,7 +893,7 @@ namespace Neon.Cadence.Internal
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            executingEvent.Set();");
                     sbSource.AppendLine();
-                    sbSource.AppendLine($"            ___resultBytes = await ___StubHelper.GetWorkflowResultAsync(this.client, this.execution, this.domain);");
+                    sbSource.AppendLine($"            ___resultBytes = await ___StubHelper.GetWorkflowResultAsync(this.client, this.execution, ___options.Domain);");
 
                     if (!details.IsVoid)
                     {
@@ -979,7 +977,7 @@ namespace Neon.Cadence.Internal
                         sbSource.AppendLine($"            var ___argBytes        = {SerializeArgsExpression(details.Method.GetParameters())};");
                         sbSource.AppendLine($"            var ___signalCall      = new SyncSignalCall({StringLiteral(signalAttribute.Name)}, ___signalId, ___argBytes);");
                         sbSource.AppendLine($"            var ___signalCallBytes = CadenceHelper.ArgsToBytes(this.dataConverter, new object[] {{ ___signalCall }});");
-                        sbSource.AppendLine($"            var ___resultBytes     = await ___StubHelper.SyncSignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___signalId, ___signalCallBytes, this.domain);");
+                        sbSource.AppendLine($"            var ___resultBytes     = await ___StubHelper.SyncSignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___signalId, ___signalCallBytes, this.options.Domain);");
 
                         if (details.ReturnType != typeof(void))
                         {
@@ -992,7 +990,7 @@ namespace Neon.Cadence.Internal
                     {
                         sbSource.AppendLine($"            var ___argBytes = {SerializeArgsExpression(details.Method.GetParameters())};");
                         sbSource.AppendLine();
-                        sbSource.AppendLine($"            await ___StubHelper.SignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___argBytes, this.domain);");
+                        sbSource.AppendLine($"            await ___StubHelper.SignalWorkflowAsync(this.client, this.execution, {StringLiteral(details.SignalMethodAttribute.Name)}, ___argBytes, this.options.Domain);");
                     }
                 }
 
@@ -1024,7 +1022,7 @@ namespace Neon.Cadence.Internal
                 {
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
-                    sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.QueryWorkflowAsync(this.client, this.childExecution.Execution, {StringLiteral(details.QueryMethodAttribute.Name)}, ___argBytes, this.domain);");
+                    sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.QueryWorkflowAsync(this.client, this.childExecution.Execution, {StringLiteral(details.QueryMethodAttribute.Name)}, ___argBytes, this.childOptions.Domain);");
 
                     if (!details.IsVoid)
                     {
@@ -1036,7 +1034,7 @@ namespace Neon.Cadence.Internal
                 {
                     sbSource.AppendLine();
                     sbSource.AppendLine($"            var ___argBytes    = {SerializeArgsExpression(details.Method.GetParameters())};");
-                    sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.QueryWorkflowAsync(this.client, this.execution, {StringLiteral(details.QueryMethodAttribute.Name)}, ___argBytes, this.domain);");
+                    sbSource.AppendLine($"            var ___resultBytes = await ___StubHelper.QueryWorkflowAsync(this.client, this.execution, {StringLiteral(details.QueryMethodAttribute.Name)}, ___argBytes, this.options.Domain);");
 
                     if (!details.IsVoid)
                     {
@@ -1052,7 +1050,6 @@ namespace Neon.Cadence.Internal
 
             sbSource.AppendLine($"    }}");
             sbSource.AppendLine($"}}");
-
 
             //-----------------------------------------------------------------
             // Compile the new workflow stub class into an assembly.

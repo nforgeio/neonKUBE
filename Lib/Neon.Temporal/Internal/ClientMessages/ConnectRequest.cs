@@ -80,7 +80,7 @@ namespace Neon.Temporal.Internal
         public string Namespace
         {
             get => GetStringProperty(PropertyNames.Namespace);
-            set => SetStringProperty(PropertyNames.Namespace, value);
+            set => SetStringProperty(PropertyNames.Namespace, value ?? string.Empty);
         }
 
         /// <summary>

@@ -15,6 +15,7 @@
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
+	<LangVersion>latest</LangVersion>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
   </PropertyGroup>
@@ -333,6 +334,9 @@
     </Compile>
     <Compile Include="..\Test.Neon.Temporal\Test_MultiClient.cs">
       <Link>Test_MultiClient.cs</Link>
+    </Compile>
+    <Compile Include="..\Test.Neon.Temporal\Test_Options.cs">
+      <Link>Test_Options.cs</Link>
     </Compile>
     <Compile Include="..\Test.Neon.Temporal\Test_RegistrationError.Activity.cs">
       <Link>Test_RegistrationError.Activity.cs</Link>

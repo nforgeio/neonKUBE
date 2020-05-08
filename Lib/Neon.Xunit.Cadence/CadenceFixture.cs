@@ -51,6 +51,12 @@ namespace Neon.Xunit.Cadence
     /// See <see cref="Start(CadenceSettings, string, string, string[], string, LogLevel, bool, bool, string, bool, bool, bool)"/>
     /// for more information about how this works.
     /// </para>
+    /// <note>
+    /// You can persist <see cref="CadenceClient"/> instances to the underlying <see cref="TestFixture.State"/>
+    /// dictionary to make these clients available across all test methods.  <see cref="CadenceFixture"/>
+    /// ensures that any of these clients will be disposed when the fixture is disposed,
+    /// reset, or restarted.
+    /// </note>
     /// </remarks>
     /// <threadsafety instance="true"/>
     public sealed class CadenceFixture : ContainerFixture
@@ -334,8 +340,8 @@ namespace Neon.Xunit.Cadence
         public HttpClient ProxyClient { get; private set; }
 
         /// <summary>
-        /// Closes the existing Cadence connection and then restarts the Cadence
-        /// server and establishes a new connection.
+        /// Closes the existing Cadence connection and restarts the Cadence
+        /// server and then establishes a new connection.
         /// </summary>
         public new void Restart()
         {
@@ -377,6 +383,20 @@ namespace Neon.Xunit.Cadence
             {
                 Client.Dispose();
                 Client = null;
+            }
+
+            // $hack(jefflill): 
+            //
+            // We're also going to dispose any clients saved in the
+            // State dictionary because some Cadence unit tests 
+            // persist client instances there.
+
+            foreach (var value in State.Values
+                .Where(v => v != null && v.GetType() == typeof(CadenceClient)))
+            {
+                var client = (CadenceClient)value;
+
+                client.Dispose();
             }
 
             if (HttpClient != null)

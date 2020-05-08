@@ -106,7 +106,7 @@ namespace Neon.Temporal
     /// must be unique within a Temporal cluster.  Once you have a connected <see cref="TemporalClient"/>,
     /// you can create and manage Temporal namespaces via methods like <see cref="RegisterNamespaceAsync(string, string, string, int, bool)"/>,
     /// <see cref="DescribeNamespaceAsync(string)"/>, and <see cref="UpdateNamespaceAsync(string, UpdateNamespaceRequest)"/>.
-    /// Domains can be used provide isolated areas for different teams and/or different environments
+    /// Namespaces can be used provide isolated areas for different teams and/or different environments
     /// (e.g. production, staging, and test).  We discuss task lists in detail further below.
     /// </para>
     /// <para>
@@ -217,7 +217,7 @@ namespace Neon.Temporal
     /// registers the <c>bar</c> activity, you're going run into trouble.
     /// </para>
     /// <para>
-    /// The problem is that Cadcence assumes that both workers implement the same workflows, both
+    /// The problem is that Cadence assumes that both workers implement the same workflows, both
     /// <b>foo</b> and <b>bar</b> in this case.  Say you start a <b>foo</b> workflow.  Temporal
     /// will select one of <b>worker-a</b> or <b>worker-b</b> to run the workflow.  If Temporal
     /// happens to select <b>worker-a</b> everything will work as expected because <b>foo</b>
@@ -684,7 +684,7 @@ namespace Neon.Temporal
 
                 if (resourceStream == null)
                 {
-                    throw new KeyNotFoundException($"Embedded resource [{resourcePath}] not found.  Cannot extract [cadency-proxy].");
+                    throw new KeyNotFoundException($"Embedded resource [{resourcePath}] not found.  Cannot extract [temporal-proxy].");
                 }
 
                 using (resourceStream)
@@ -773,7 +773,7 @@ namespace Neon.Temporal
 
                             if (resourceStream == null)
                             {
-                                throw new KeyNotFoundException($"Embedded resource [{resourcePath}] not found.  Cannot launch [cadency-proxy].");
+                                throw new KeyNotFoundException($"Embedded resource [{resourcePath}] not found.  Cannot launch [temporal-proxy].");
                             }
 
                             using (resourceStream)
@@ -898,7 +898,7 @@ namespace Neon.Temporal
 
             var client = new TemporalClient(settings);
 
-            // Initilize the [temporal-proxy].
+            // Initialize the [temporal-proxy].
 
             if (!settings.DebugDisableHandshakes)
             {
