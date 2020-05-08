@@ -29,7 +29,6 @@ import (
 
 	"temporal-proxy/internal"
 	"temporal-proxy/internal/messages"
-	proxyactivity "temporal-proxy/internal/temporal/activity"
 	proxyclient "temporal-proxy/internal/temporal/client"
 	proxyerror "temporal-proxy/internal/temporal/error"
 	proxyworkflow "temporal-proxy/internal/temporal/workflow"
@@ -197,16 +196,4 @@ func verifyClientHelper(request messages.IProxyRequest, helper *proxyclient.Clie
 	}
 
 	return nil
-}
-
-// NextContextID calls proxyworkflow.NextContextID().
-// Iterates workflow contextID.
-func NextContextID() int64 {
-	return proxyworkflow.NextContextID()
-}
-
-// NextActivityContextID calls proxyactivity.NextContextID().
-// Iterates activity contextID.
-func NextActivityContextID() int64 {
-	return proxyactivity.NextContextID()
 }

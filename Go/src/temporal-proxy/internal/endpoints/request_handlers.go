@@ -536,7 +536,7 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 
 	// create workflow function
 	workflowFunc := func(ctx workflow.Context, input []byte) ([]byte, error) {
-		contextID := NextContextID()
+		contextID := proxyworkflow.NextContextID()
 		requestID := NextRequestID()
 		Logger.Debug("Executing Workflow",
 			zap.String("Workflow", workflowName),
@@ -1953,7 +1953,7 @@ func handleActivityRegisterRequest(requestCtx context.Context, request *messages
 	// define the activity function
 	activityFunc := func(ctx context.Context, input []byte) ([]byte, error) {
 		requestID := NextRequestID()
-		contextID := NextActivityContextID()
+		contextID := proxyactivity.NextContextID()
 		Logger.Debug("Executing Activity",
 			zap.String("Activity", activityName),
 			zap.Int64("ClientId", clientID),
@@ -2433,7 +2433,7 @@ func handleActivityExecuteLocalRequest(requestCtx context.Context, request *mess
 	// the local activity function
 	localActivityFunc := func(ctx context.Context, input []byte) ([]byte, error) {
 		actx := proxyactivity.NewActivityContext(ctx)
-		activityContextID := ActivityContexts.Add(NextActivityContextID(), actx)
+		activityContextID := ActivityContexts.Add(proxyactivity.NextContextID(), actx)
 
 		// Send a ActivityInvokeLocalRequest to the Neon.Temporal Lib
 		// temporal-client
@@ -2558,7 +2558,7 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 	// the local activity function
 	localActivityFunc := func(ctx context.Context, input []byte) ([]byte, error) {
 		actx := proxyactivity.NewActivityContext(ctx)
-		activityContextID := ActivityContexts.Add(NextActivityContextID(), actx)
+		activityContextID := ActivityContexts.Add(proxyactivity.NextContextID(), actx)
 
 		// Send a ActivityInvokeLocalRequest to the Neon.Temporal Lib
 		// temporal-client

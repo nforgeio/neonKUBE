@@ -511,7 +511,7 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 			// set the reply
 			reply = messages.NewProxyReply()
 			reply.SetRequestID(request.GetRequestID())
-			reply.SetError(proxyerror.NewTemporalError(e, proxyerror.Custom))
+			reply.Build(proxyerror.NewTemporalError(e, proxyerror.Custom))
 		}
 	}
 
