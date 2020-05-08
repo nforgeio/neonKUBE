@@ -86,16 +86,6 @@ namespace Neon.Cadence
                 {
                     options.Domain = interfaceAttribute.Domain;
                 }
-
-                if (string.IsNullOrEmpty(options.Domain))
-                {
-                    options.Domain = client.Settings.DefaultDomain;
-                }
-
-                if (string.IsNullOrEmpty(options.Domain))
-                {
-                    throw new ArgumentNullException(nameof(options), "You must specify a valid domain explicitly in [CadenceSettings], [ActivityOptions] or via an [ActivityInterface] or [ActivityMethod] attribute on the target activity interface or method.");
-                }
             }
 
             if (string.IsNullOrEmpty(options.TaskList))
@@ -108,16 +98,6 @@ namespace Neon.Cadence
                 if (string.IsNullOrEmpty(options.TaskList) && !string.IsNullOrEmpty(interfaceAttribute?.TaskList))
                 {
                     options.TaskList = interfaceAttribute.TaskList;
-                }
-
-                if (string.IsNullOrEmpty(options.TaskList))
-                {
-                    options.TaskList = client.Settings.DefaultTaskList;
-                }
-
-                if (string.IsNullOrEmpty(options.TaskList))
-                {
-                    throw new ArgumentNullException(nameof(options), "You must specify a valid task list explicitly via [ActivityOptions] or using an [ActivityInterface] or [ActivityMethod] attribute on the target activity interface or method.");
                 }
             }
 
@@ -167,18 +147,18 @@ namespace Neon.Cadence
         // Instance members
 
         /// <summary>
-        /// Optionally specifies the target task list.  This defaults to the task list
+        /// Optionally specifies the target Cadence task list.  This defaults to the task list
         /// specified by <see cref="ActivityMethodAttribute.TaskList"/>,
-        /// <see cref="ActivityInterfaceAttribute.TaskList"/>
-        /// (in that order of precedence).
+        /// <see cref="ActivityInterfaceAttribute.TaskList"/>, or the parent workflow's
+        /// task list, in that order of precedence.
         /// </summary>
         public string TaskList { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies the target domain.  This defaults to the domain
+        /// Optionally specifies the target Cadence domain.  This defaults to the domain
         /// specified by <see cref="ActivityMethodAttribute.Domain"/>, 
         /// <see cref="ActivityInterfaceAttribute.Domain"/>, or 
-        /// to the parent workflow's domain (in that order of precedence).
+        /// to the parent workflow's domain, in that order of precedence.
         /// </summary>
         public string Domain { get; set; } = null;
 
@@ -229,7 +209,7 @@ namespace Neon.Cadence
         /// Retrying <see cref="ScheduleToStartTimeout"/> does not make sense as it just
         /// mark the task as failed and create a new task and put back in the queue waiting worker to pick again. Cadence
         /// server also make sure the <see cref="ScheduleToStartTimeout"/> will not be larger than the workflow's timeout.
-        /// Same apply to <see cref="ScheduleToCloseTimeout"/>.
+        /// Same apply to <see cref="StartToCloseTimeout"/>.
         /// </para>
         /// </remarks>
         public RetryOptions RetryOptions { get; set; }
@@ -241,13 +221,13 @@ namespace Neon.Cadence
         {
             return new InternalActivityOptions()
             {
-                TaskList               = this.TaskList,
+                HeartbeatTimeout       = CadenceHelper.ToCadence(this.HeartbeatTimeout),
+                RetryPolicy            = RetryOptions?.ToInternal(),
                 ScheduleToCloseTimeout = CadenceHelper.ToCadence(this.ScheduleToCloseTimeout),
                 ScheduleToStartTimeout = CadenceHelper.ToCadence(this.ScheduleToStartTimeout),
                 StartToCloseTimeout    = CadenceHelper.ToCadence(this.StartToCloseTimeout),
-                HeartbeatTimeout       = CadenceHelper.ToCadence(this.HeartbeatTimeout),
+                TaskList               = this.TaskList,
                 WaitForCancellation    = WaitForCancellation,
-                RetryPolicy            = RetryOptions?.ToInternal()
             };
         }
 

@@ -536,6 +536,36 @@ namespace Neon.Cadence
         // Internal workflow related methods used by dynamically generated workflow stubs.
 
         /// <summary>
+        /// Raised when an external workflow is executed.  This is used internally
+        /// for unit tests that verify that workflow options are configured correctly. 
+        /// </summary>
+        internal event EventHandler<WorkflowOptions> WorkflowExecuteEvent;
+
+        /// <summary>
+        /// Raised when a child workflow is executed.  This is used internally
+        /// for unit tests that verify that workflow options are configured correctly. 
+        /// </summary>
+        internal event EventHandler<ChildWorkflowOptions> ChildWorkflowExecuteEvent;
+
+        /// <summary>
+        /// Raises the <see cref="WorkflowExecuteEvent"/>.
+        /// </summary>
+        /// <param name="options">The workflow options.</param>
+        internal void RaiseWorkflowExecuteEvent(WorkflowOptions options)
+        {
+            WorkflowExecuteEvent?.Invoke(this, options);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ChildWorkflowExecuteEvent"/>.
+        /// </summary>
+        /// <param name="options">The workflow options.</param>
+        internal void RaiseChildWorkflowExecuteEvent(ChildWorkflowOptions options)
+        {
+            ChildWorkflowExecuteEvent?.Invoke(this, options);
+        }
+
+        /// <summary>
         /// Starts an external workflow using a specific workflow type name, returning a <see cref="WorkflowExecution"/>
         /// that can be used to track the workflow and also wait for its result via <see cref="GetWorkflowResultAsync(WorkflowExecution, string)"/>.
         /// </summary>
@@ -561,6 +591,8 @@ namespace Neon.Cadence
             EnsureNotDisposed();
 
             options = WorkflowOptions.Normalize(this, options);
+
+            RaiseWorkflowExecuteEvent(options);
 
             var reply = (WorkflowExecuteReply)await CallProxyAsync(
                 new WorkflowExecuteRequest()
@@ -633,6 +665,8 @@ namespace Neon.Cadence
             EnsureNotDisposed();
 
             options = ChildWorkflowOptions.Normalize(this, options);
+            
+            RaiseChildWorkflowExecuteEvent(options);
 
             var reply = await parentWorkflow.ExecuteNonParallel(
                 async () =>
@@ -919,7 +953,7 @@ namespace Neon.Cadence
         /// <param name="signalName">The target signal name.</param>
         /// <param name="signalId">The globally unique signal transaction ID.</param>
         /// <param name="signalArgs">Specifies the <see cref="SyncSignalCall"/> as a single item array and encoded as a byte array.</param>
-        /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
+        /// <param name="domain">Optionally specifies the domain.</param>
         /// <returns>The encoded signal results or <c>null</c> for signals that don't return a result.</returns>
         /// <exception cref="SyncSignalException">Thrown if the target synchronous signal doesn't exist or the workflow is already closed.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>

@@ -155,5 +155,11 @@ namespace Neon.Xunit
         /// </note>
         /// </summary>
         void OnRestart();
+
+        /// <summary>
+        /// Used by unit test classes to persist arbitrary name/value information across
+        /// individual unit tests.
+        /// </summary>
+        IDictionary<string, object> State { get; }
     }
 }

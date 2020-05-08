@@ -61,14 +61,14 @@ namespace Neon.Cadence.Internal
         public string TaskList { get; set; }
 
         /// <summary>
-        /// ExecutionStartToCloseTimeout - The time out for duration of workflow execution (expressed
+        /// ExecutionStartToCloseTimeout - The timeout for duration of workflow execution (expressed
         /// in nanoseconds).  Mandatory: No default.
         /// </summary>
         [JsonProperty(PropertyName = "ExecutionStartToCloseTimeout", Required = Required.Always)]
         public long ExecutionStartToCloseTimeout { get; set; }
 
         /// <summary>
-        /// DecisionTaskStartToCloseTimeout - The time out for processing decision task from the time the worker
+        /// DecisionTaskStartToCloseTimeout - The timeout for processing decision task from the time the worker
         /// pulled this task. If a decision task is lost, it is retried after this timeout.
         /// Expressed as nanoseconds.  Optional: defaulted to 10 secs.
         /// </summary>

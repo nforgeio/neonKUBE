@@ -2247,7 +2247,7 @@ namespace TestCadence
 
             var options = new WorkflowOptions()
             {
-                DecisionTaskStartToCloseTimeout = TimeSpan.FromSeconds(5)
+                DecisionTaskTimeout = TimeSpan.FromSeconds(5)
             };
 
             var stub = client.NewWorkflowStub<IWorkflowFail>(options);
@@ -2289,7 +2289,7 @@ namespace TestCadence
 
             var options = new WorkflowOptions()
             {
-                ScheduleToCloseTimeout = TimeSpan.FromSeconds(5)
+                StartToCloseTimeout = TimeSpan.FromSeconds(5)
             };
 
             var stub = client.NewWorkflowStub<IWorkflowUnregistered>(options);
@@ -4293,7 +4293,7 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IWorkflowTimeout>(
                 new WorkflowOptions()
                 {
-                    ScheduleToCloseTimeout = timeout
+                    StartToCloseTimeout = timeout
                 });
 
             await Assert.ThrowsAsync<StartToCloseTimeoutException>(async () => await stub.SleepAsync(sleepTime));

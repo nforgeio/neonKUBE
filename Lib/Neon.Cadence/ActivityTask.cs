@@ -67,7 +67,8 @@ namespace Neon.Cadence
         public string TaskList { get; internal set; }
 
         /// <summary>
-        /// The maximum time between heartbeats.  0 means no heartbeat needed.
+        /// The maximum time between heartbeats.  <see cref="TimeSpan.Zero"/> 
+        /// indicates that no heartbeating is required.
         /// </summary>
         public TimeSpan HeartbeatTimeout { get; internal set; }
 

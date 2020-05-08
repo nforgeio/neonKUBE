@@ -38,6 +38,37 @@ namespace Neon.Temporal
         // Public Temporal workflow related operations.
 
         /// <summary>
+        /// Raised when an external workflow is executed.  This is used internally
+        /// for unit tests that verify that workflow options are configured correctly. 
+        /// </summary>
+        internal event EventHandler<WorkflowOptions> WorkflowExecuteEvent;
+
+        /// <summary>
+        /// Raised when a child workflow is executed.  This is used internally
+        /// for unit tests that verify that workflow options are configured correctly. 
+        /// </summary>
+        internal event EventHandler<ChildWorkflowOptions> ChildWorkflowExecuteEvent;
+
+        /// <summary>
+        /// Raises the <see cref="WorkflowExecuteEvent"/>.
+        /// </summary>
+        /// <param name="options">The workflow options.</param>
+        internal void RaiseWorkflowExecuteEvent(WorkflowOptions options)
+        {
+            WorkflowExecuteEvent?.Invoke(this, options);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ChildWorkflowExecuteEvent"/>.
+        /// </summary>
+        /// <param name="options">The workflow options.</param>
+        internal void RaiseChildWorkflowExecuteEvent(ChildWorkflowOptions options)
+        {
+            ChildWorkflowExecuteEvent?.Invoke(this, options);
+        }
+
+        /// <summary>
+        /// <summary>
         /// Registers a workflow implementation with Temporal.
         /// </summary>
         /// <typeparam name="TWorkflow">The <see cref="WorkflowBase"/> derived class implementing the workflow.</typeparam>
@@ -589,6 +620,8 @@ namespace Neon.Temporal
 
             options = WorkflowOptions.Normalize(this, options);
 
+            RaiseWorkflowExecuteEvent(options);
+
             var reply = (WorkflowExecuteReply)await CallProxyAsync(
                 new WorkflowExecuteRequest()
                 {
@@ -660,6 +693,8 @@ namespace Neon.Temporal
             EnsureNotDisposed();
 
             options = ChildWorkflowOptions.Normalize(this, options);
+
+            RaiseChildWorkflowExecuteEvent(options);
 
             var reply = await parentWorkflow.ExecuteNonParallel(
                 async () =>
@@ -919,7 +954,7 @@ namespace Neon.Temporal
         /// <param name="signalName">The target signal name.</param>
         /// <param name="signalId">The globally unique signal transaction ID.</param>
         /// <param name="signalArgs">Specifies the <see cref="SyncSignalCall"/> as a single item array and encoded as a byte array.</param>
-        /// <param name="namespace">Optionally specifies the namespace.  This defaults to the client canespace.</param>
+        /// <param name="namespace">Optionally specifies the namespace.</param>
         /// <returns>The encoded signal results or <c>null</c> for signals that don't return a result.</returns>
         /// <exception cref="SyncSignalException">Thrown if the target synchronous signal doesn't exist or the workflow is already closed.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Temporal problems.</exception>

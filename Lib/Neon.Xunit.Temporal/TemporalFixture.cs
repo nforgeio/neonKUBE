@@ -51,6 +51,12 @@ namespace Neon.Xunit.Temporal
     /// See <see cref="Start(TemporalSettings, string, string, string[], string, LogLevel, bool, bool, string, bool, bool, bool)"/>
     /// for more information about how this works.
     /// </para>
+    /// <note>
+    /// You can persist <see cref="TemporalClient"/> instances to the underlying <see cref="TestFixture.State"/>
+    /// dictionary to make these clients available across all test methods.  <see cref="TemporalFixture"/>
+    /// ensures that any of these clients will be disposed when the fixture is disposed,
+    /// reset, or restarted.
+    /// </note>
     /// </remarks>
     /// <threadsafety instance="true"/>
     public sealed class TemporalFixture : ContainerFixture
@@ -332,8 +338,8 @@ namespace Neon.Xunit.Temporal
         public HttpClient ProxyClient { get; private set; }
 
         /// <summary>
-        /// Closes the existing Temporal connection and then restarts the Temporal
-        /// server and establishes a new connection.
+        /// Closes the existing Temporal connection and restarts the Cadence
+        /// server and then establishes a new connection.
         /// </summary>
         public new void Restart()
         {
@@ -375,6 +381,20 @@ namespace Neon.Xunit.Temporal
             {
                 Client.Dispose();
                 Client = null;
+            }
+
+            // $hack(jefflill): 
+            //
+            // We're also going to dispose any clients saved in the
+            // State dictionary because some Temporal unit tests 
+            // persist client instances there.
+
+            foreach (var value in State.Values
+                .Where(v => v != null && v.GetType() == typeof(TemporalClient)))
+            {
+                var client = (TemporalClient)value;
+
+                client.Dispose();
             }
 
             if (HttpClient != null)

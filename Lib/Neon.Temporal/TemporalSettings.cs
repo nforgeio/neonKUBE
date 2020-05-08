@@ -68,7 +68,7 @@ namespace Neon.Temporal
 
         /// <summary>
         /// Optionally specifies the port where the client will listen for traffic from the 
-        /// associated Cadency Proxy.  This defaults to 0 which specifies that lets the 
+        /// associated <b>temporal-proxy</b>.  This defaults to 0 which specifies that lets the 
         /// operating system choose an unused ephermal port.
         /// </summary>
         [JsonProperty(PropertyName = "ListenPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -243,15 +243,15 @@ namespace Neon.Temporal
         /// <summary>
         /// Specifies the default maximum workflow execution time.  This defaults to <b>24 hours</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "WorkflowScheduleToCloseTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "workflowScheduleToCloseTimeoutSeconds", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "WorkflowStartToCloseTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "workflowStartToCloseTimeoutSeconds", ApplyNamingConventions = false)]
         [DefaultValue(defaultTimeoutSeconds)]
-        public double WorkflowScheduleToCloseTimeoutSeconds { get; set; } = defaultTimeoutSeconds;
+        public double WorkflowStartToCloseTimeoutSeconds { get; set; } = defaultTimeoutSeconds;
 
         /// <summary>
-        /// Returns <see cref="WorkflowScheduleToCloseTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// Returns <see cref="WorkflowStartToCloseTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
         /// </summary>
-        internal TimeSpan WorkflowScheduleToCloseTimeout => TimeSpan.FromSeconds(Math.Max(WorkflowScheduleToCloseTimeoutSeconds, 0));
+        internal TimeSpan WorkflowStartToCloseTimeout => TimeSpan.FromSeconds(Math.Max(WorkflowStartToCloseTimeoutSeconds, 0));
 
         /// <summary>
         /// Specifies the default maximum time a workflow can wait between being scheduled
@@ -272,15 +272,15 @@ namespace Neon.Temporal
         /// This must be with the range of <b>1 &lt; value &lt;= 60</b> seconds.
         /// This defaults to <b>10 seconds</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "WorkflowDecisionTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "workflowDecisionTimeoutSeconds", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "WorkflowDecisionTaskTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "workflowDecisionTaskTimeoutSeconds", ApplyNamingConventions = false)]
         [DefaultValue(10.0)]
-        public double WorkflowDecisionTimeoutSeconds { get; set; } = 10.0;
+        public double WorkflowDecisionTaskTimeoutSeconds { get; set; } = 10.0;
 
         /// <summary>
-        /// Returns <see cref="WorkflowDecisionTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// Returns <see cref="WorkflowDecisionTaskTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
         /// </summary>
-        internal TimeSpan WorkflowDecisionTimeout => TimeSpan.FromSeconds(Math.Min(Math.Max(WorkflowDecisionTimeoutSeconds, 1), 60));
+        internal TimeSpan WorkflowDecisionTaskTimeout => TimeSpan.FromSeconds(Math.Min(Math.Max(WorkflowDecisionTaskTimeoutSeconds, 1), 60));
 
         /// <summary>
         /// Specifies what happens when Temporal workflows attempt to reuse workflow IDs.
@@ -559,9 +559,9 @@ namespace Neon.Temporal
                 ProxyTimeoutSeconds                   = this.ProxyTimeoutSeconds,
                 SecurityToken                         = this.SecurityToken,
                 WorkflowIdReusePolicy                 = this.WorkflowIdReusePolicy,
-                WorkflowScheduleToCloseTimeoutSeconds = this.WorkflowScheduleToCloseTimeoutSeconds,
+                WorkflowStartToCloseTimeoutSeconds    = this.WorkflowStartToCloseTimeoutSeconds,
                 WorkflowScheduleToStartTimeoutSeconds = this.WorkflowScheduleToStartTimeoutSeconds,
-                WorkflowDecisionTimeoutSeconds        = this.WorkflowDecisionTimeoutSeconds
+                WorkflowDecisionTaskTimeoutSeconds    = this.WorkflowDecisionTaskTimeoutSeconds
             };
         }
     }

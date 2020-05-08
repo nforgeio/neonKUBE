@@ -184,7 +184,7 @@ namespace Neon.Cadence
                     var reply = (NewWorkerReply)(await CallProxyAsync(
                         new NewWorkerRequest()
                         {
-                            Domain   = ResolveDomain(domain),
+                            Domain   = domain,
                             TaskList = taskList,
                             Options  = options.ToInternal()
                         }));

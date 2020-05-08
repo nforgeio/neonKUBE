@@ -397,6 +397,8 @@ namespace Neon.Xunit
                     ContainerId = null;
                 }
             }
+
+            base.Reset();
         }
 
         /// <summary>

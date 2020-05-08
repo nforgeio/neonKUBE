@@ -184,7 +184,7 @@ namespace Neon.Temporal
                     var reply = (NewWorkerReply)(await CallProxyAsync(
                         new NewWorkerRequest()
                         {
-                            Namespace = ResolveNamespace(@namespace),
+                            Namespace = @namespace,
                             TaskList  = taskList,
                             Options   = options.ToInternal()
                         }));

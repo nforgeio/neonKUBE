@@ -76,7 +76,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Optionally specifies the port where the client will listen for traffic from the 
-        /// associated Cadency Proxy.  This defaults to 0 which specifies that lets the 
+        /// associated <b>cadence-proxy</b>.  This defaults to 0 which specifies that lets the 
         /// operating system choose an unused ephermal port.
         /// </summary>
         [JsonProperty(PropertyName = "ListenPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -91,6 +91,7 @@ namespace Neon.Cadence
         /// <para>
         /// Specifying a default domain can be convienent for many scenarios, especially for those where
         /// the application workflows and activities are restricted to a single domain (which is pretty common).
+        /// This defaults to <b>"default"</b>.
         /// </para>
         /// <para>
         /// The default task list can be overridden for workflow interfaces via <see cref="WorkflowInterfaceAttribute.Domain"/>
@@ -99,8 +100,8 @@ namespace Neon.Cadence
         /// </remarks>
         [JsonProperty(PropertyName = "DefaultDomain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "defaultDomain", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string DefaultDomain { get; set; }
+        [DefaultValue("default")]
+        public string DefaultDomain { get; set; } = "default";
 
         /// <summary>
         /// <para>
@@ -251,15 +252,15 @@ namespace Neon.Cadence
         /// <summary>
         /// Specifies the default maximum workflow execution time.  This defaults to <b>24 hours</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "WorkflowScheduleToCloseTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "workflowScheduleToCloseTimeoutSeconds", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "WorkflowStartToCloseTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "workflowStartToCloseTimeoutSeconds", ApplyNamingConventions = false)]
         [DefaultValue(defaultTimeoutSeconds)]
-        public double WorkflowScheduleToCloseTimeoutSeconds { get; set; } = defaultTimeoutSeconds;
+        public double WorkflowStartToCloseTimeoutSeconds { get; set; } = defaultTimeoutSeconds;
 
         /// <summary>
-        /// Returns <see cref="WorkflowScheduleToCloseTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// Returns <see cref="WorkflowStartToCloseTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
         /// </summary>
-        internal TimeSpan WorkflowScheduleToCloseTimeout => TimeSpan.FromSeconds(Math.Max(WorkflowScheduleToCloseTimeoutSeconds, 0));
+        internal TimeSpan WorkflowStartToCloseTimeout => TimeSpan.FromSeconds(Math.Max(WorkflowStartToCloseTimeoutSeconds, 0));
 
         /// <summary>
         /// Specifies the default maximum time a workflow can wait between being scheduled
@@ -280,15 +281,15 @@ namespace Neon.Cadence
         /// This must be with the range of <b>1 &lt; value &lt;= 60</b> seconds.
         /// This defaults to <b>10 seconds</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "WorkflowDecisionTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "workflowDecisionTimeoutSeconds", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "WorkflowDecisionTaskTimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "workflowDecisionTaskTimeoutSeconds", ApplyNamingConventions = false)]
         [DefaultValue(10.0)]
-        public double WorkflowDecisionTimeoutSeconds { get; set; } = 10.0;
+        public double WorkflowDecisionTaskTimeoutSeconds { get; set; } = 10.0;
 
         /// <summary>
-        /// Returns <see cref="WorkflowDecisionTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
+        /// Returns <see cref="WorkflowDecisionTaskTimeoutSeconds"/> as a <see cref="TimeSpan"/>.
         /// </summary>
-        internal TimeSpan WorkflowDecisionTimeout => TimeSpan.FromSeconds(Math.Min(Math.Max(WorkflowDecisionTimeoutSeconds, 1), 60));
+        internal TimeSpan WorkflowDecisionTaskTimeout => TimeSpan.FromSeconds(Math.Min(Math.Max(WorkflowDecisionTaskTimeoutSeconds, 1), 60));
 
         /// <summary>
         /// Specifies what happens when Cadence workflows attempt to reuse workflow IDs.
@@ -567,9 +568,9 @@ namespace Neon.Cadence
                 SecurityToken                          = this.SecurityToken,
                 Servers                                = this.Servers,
                 WorkflowIdReusePolicy                  = this.WorkflowIdReusePolicy,
-                WorkflowScheduleToCloseTimeoutSeconds  = this.WorkflowScheduleToCloseTimeoutSeconds,
+                WorkflowStartToCloseTimeoutSeconds  = this.WorkflowStartToCloseTimeoutSeconds,
                 WorkflowScheduleToStartTimeoutSeconds  = this.WorkflowScheduleToStartTimeoutSeconds,
-                WorkflowDecisionTimeoutSeconds = this.WorkflowDecisionTimeoutSeconds
+                WorkflowDecisionTaskTimeoutSeconds     = this.WorkflowDecisionTaskTimeoutSeconds
             };
         }
     }

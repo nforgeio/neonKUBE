@@ -724,10 +724,10 @@ namespace Neon.Temporal
                     ContinueAsNewWorkflow                     = e.Workflow,
                     ContinueAsNewNamespace                    = e.Namespace,
                     ContinueAsNewTaskList                     = e.TaskList,
-                    ContinueAsNewExecutionStartToCloseTimeout = TemporalHelper.ToTemporal(e.ExecutionStartToCloseTimeout),
+                    ContinueAsNewExecutionStartToCloseTimeout = TemporalHelper.ToTemporal(e.StartToCloseTimeout),
                     ContinueAsNewScheduleToCloseTimeout       = TemporalHelper.ToTemporal(e.ScheduleToCloseTimeout),
                     ContinueAsNewScheduleToStartTimeout       = TemporalHelper.ToTemporal(e.ScheduleToStartTimeout),
-                    ContinueAsNewStartToCloseTimeout          = TemporalHelper.ToTemporal(e.TaskStartToCloseTimeout),
+                    ContinueAsNewStartToCloseTimeout          = TemporalHelper.ToTemporal(e.DecisionTaskTimeout),
                 };
             }
             catch (TemporalException e)
