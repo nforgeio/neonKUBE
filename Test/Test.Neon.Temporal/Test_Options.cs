@@ -649,8 +649,6 @@ namespace TestTemporal
             }
         }
 
-        //=================================
-
         /// <summary>
         /// Temporarily hooks the <see cref="TemporalClient.ActivityExecuteEvent"/> of the
         /// client passed and then executes the <see cref="IActivityWithNoAttributes.ExecuteActivityWithNoAttributes()"/> 
@@ -769,6 +767,7 @@ namespace TestTemporal
         // External workflow tests
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_UseClientSettings()
         {
             // Verify that the [test1Client] settings are honored for workflows
@@ -800,6 +799,7 @@ namespace TestTemporal
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_UseInterfaceAttributes()
         {
             // Verify that workflow interface attributes are honored.
@@ -813,6 +813,7 @@ namespace TestTemporal
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_UseMethodAttributes()
         {
             // Verify that workflow interface method attributes are honored.
@@ -830,6 +831,7 @@ namespace TestTemporal
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_UseWorkflowOptions()
         {
             // Verify that workflow options are honored.
@@ -858,6 +860,7 @@ namespace TestTemporal
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Workflow_OtherNamespaceTaskList()
         {
             // Verify that we can call a workflow whose worker is running in
@@ -876,6 +879,7 @@ namespace TestTemporal
         // Child workflow tests
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task ChildWorkflow_UseClientSettings()
         {
             // Verify that the [test1Client] settings are honored for child workflows
@@ -907,6 +911,7 @@ namespace TestTemporal
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task ChildWorkflow_UseParentSettings()
         {
             // Verify that child workflows will default to the parent workflow's
@@ -923,6 +928,7 @@ namespace TestTemporal
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task ChildWorkflow_UseInterfaceAttributes()
         {
             // Verify that workflow interface attributes are honored for child workflows.
@@ -936,6 +942,7 @@ namespace TestTemporal
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task ChildWorkflow_UseMethodAttributes()
         {
             // Verify that workflow interface method attributes are honored for child workflows.
@@ -953,6 +960,7 @@ namespace TestTemporal
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task ChildWorkflow_UseWorkflowOptions()
         {
             // Verify that workflow options are honored for child workflows.
@@ -984,6 +992,7 @@ namespace TestTemporal
         // Activity options tests
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Activity_UseClientSettings()
         {
             // Verify that the [test1Client] settings are honored for child workflows
@@ -1013,6 +1022,7 @@ namespace TestTemporal
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Activity_UseParentSettings()
         {
             // Verify that activities will default to the parent workflow's
@@ -1028,10 +1038,8 @@ namespace TestTemporal
                 parentTaskList: "test2-tasklist");
         }
 
-        //=============
-
-
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Activity_UseInterfaceAttributes()
         {
             // Verify that activity interface attributes are honored.
@@ -1045,6 +1053,7 @@ namespace TestTemporal
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Activity_UseMethodAttributes()
         {
             // Verify that activity interface method attributes are honored.
@@ -1062,6 +1071,7 @@ namespace TestTemporal
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
         public async Task Activity_UseWorkflowOptions()
         {
             // Verify that activity options are honored.
@@ -1087,6 +1097,107 @@ namespace TestTemporal
                     Assert.Equal(22, options.StartToCloseTimeout.TotalSeconds);
                 },
                 options: activityOptions);
+        }
+
+        //---------------------------------------------------------------------
+        // The tests below verify that we can wait on external workflows directly
+        // or from a child workflow and that this works against workflows running
+        // in a different namespace.
+        //
+        // These aren't exactly options tests but we'll implement them here
+        // because we have a few client instances to play with.
+
+        [WorkflowInterface]
+        public interface IWorkflowExternalWait : IWorkflow
+        {
+            [WorkflowMethod(Name = "HelloAsync")]
+            Task<string> HelloAsync(string name);
+
+            [WorkflowMethod(Name = "WaitByExecutionAsync")]
+            Task<string> WaitByExecutionAsync(WorkflowExecution execution);
+
+            [WorkflowMethod(Name = "WaitByIdsAsync")]
+            Task<string> WaitByIdsAsync(string workflowId, string runId);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowExternalWait : WorkflowBase, IWorkflowExternalWait
+        {
+            public async Task<string> HelloAsync(string name)
+            {
+                return await Task.FromResult($"Hello {name}!");
+            }
+
+            public async Task<string> WaitByExecutionAsync(WorkflowExecution execution)
+            {
+                var stub = Workflow.Client.NewUntypedWorkflowStub(execution);
+
+                return await stub.GetResultAsync<string>();
+            }
+
+            public async Task<string> WaitByIdsAsync(string workflowId, string runId)
+            {
+                var stub = Workflow.Client.NewUntypedWorkflowStub(workflowId, runId);
+
+                return await stub.GetResultAsync<string>();
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
+        public async Task WorkflowWaitForExternalByExecution()
+        {
+            // Verify that a workflow can wait on an external workflow
+            // running in a different namespace by execution.
+
+            var options = new WorkflowOptions() { TaskList = "test1-tasklist", Namespace = "test1-namespace" };
+            var helloStub = test3Client.NewWorkflowFutureStub<IWorkflowExternalWait>("HelloAsync", options);
+            var helloFuture = await helloStub.StartAsync<string>("JEFF");
+
+            Assert.Equal("Hello JEFF!", await helloFuture.GetAsync());
+
+            var execution = helloFuture.Execution;
+            var waitStub = test2Client.NewWorkflowStub<IWorkflowExternalWait>(options);
+
+            Assert.Equal("Hello JEFF!", await waitStub.WaitByExecutionAsync(execution));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
+        public async Task WorkflowWaitForExternalByIds()
+        {
+            // Verify that a workflow can wait on an external workflow
+            // running in a different namespace by both workflow IDs.
+
+            var options = new WorkflowOptions() { TaskList = "test1-tasklist", Namespace = "test1-namespace" };
+            var helloStub = test3Client.NewWorkflowFutureStub<IWorkflowExternalWait>("HelloAsync", options);
+            var helloFuture = await helloStub.StartAsync<string>("JEFF");
+
+            Assert.Equal("Hello JEFF!", await helloFuture.GetAsync());
+
+            var execution = helloFuture.Execution;
+            var waitStub = test2Client.NewWorkflowStub<IWorkflowExternalWait>(options);
+
+            Assert.Equal("Hello JEFF!", await waitStub.WaitByIdsAsync(workflowId: execution.WorkflowId, runId: execution.RunId));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
+        public async Task WorkflowWaitForExternalByWorkflowId()
+        {
+            // Verify that a workflow can wait on an external workflow
+            // running in a different namespace by both workflow ID only.
+
+            var options = new WorkflowOptions() { TaskList = "test1-tasklist", Namespace = "test1-namespace" };
+            var helloStub = test3Client.NewWorkflowFutureStub<IWorkflowExternalWait>("HelloAsync", options);
+            var helloFuture = await helloStub.StartAsync<string>("JEFF");
+
+            Assert.Equal("Hello JEFF!", await helloFuture.GetAsync());
+
+            var execution = helloFuture.Execution;
+            var waitStub = test2Client.NewWorkflowStub<IWorkflowExternalWait>(options);
+
+            Assert.Equal("Hello JEFF!", await waitStub.WaitByIdsAsync(workflowId: execution.WorkflowId, runId: null));
         }
     }
 }

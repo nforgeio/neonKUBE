@@ -38,16 +38,19 @@ namespace Neon.Cadence
     {
         private bool            completed = false;
         private CadenceClient   client;
+        private string          domain;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="client">The associated client.</param>
         /// <param name="execution">The workflow execution.</param>
-        internal ExternalWorkflowFuture(CadenceClient client, WorkflowExecution execution)
+        /// <param name="domain">Optionally specifies the target domain.  This defaults to the default client domain.</param>
+        internal ExternalWorkflowFuture(CadenceClient client, WorkflowExecution execution, string domain = null)
         {
             this.client    = client;
             this.Execution = execution;
+            this.domain    = client.ResolveDomain(domain);
         }
 
         /// <summary>
@@ -70,7 +73,7 @@ namespace Neon.Cadence
 
             completed = true;
 
-            await client.GetWorkflowResultAsync(Execution);
+            await client.GetWorkflowResultAsync(Execution, domain);
         }
     }
 
@@ -82,16 +85,19 @@ namespace Neon.Cadence
     {
         private bool            completed = false;
         private CadenceClient   client;
+        private string          domain;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="client">The associated client.</param>
         /// <param name="execution">The workflow execution.</param>
-        internal ExternalWorkflowFuture(CadenceClient client, WorkflowExecution execution)
+        /// <param name="domain">Optionally specifies the target domain.  This defaults to the default client domain.</param>
+        internal ExternalWorkflowFuture(CadenceClient client, WorkflowExecution execution, string domain = null)
         {
             this.client    = client;
             this.Execution = execution;
+            this.domain    = client.ResolveDomain(domain);
         }
 
         /// <summary>
@@ -114,7 +120,7 @@ namespace Neon.Cadence
 
             completed = true;
 
-            var resultBytes = await client.GetWorkflowResultAsync(Execution);
+            var resultBytes = await client.GetWorkflowResultAsync(Execution, domain);
 
             return client.DataConverter.FromData<TResult>(resultBytes);
         }

@@ -38,16 +38,19 @@ namespace Neon.Temporal
     {
         private bool            completed = false;
         private TemporalClient  client;
+        private string          @namespace;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="client">The associated client.</param>
         /// <param name="execution">The workflow execution.</param>
-        internal ExternalWorkflowFuture(TemporalClient client, WorkflowExecution execution)
+        /// /// <param name="namespace">Optionally specifies the target namespace.  This defaults to the default client namespace.</param>
+        internal ExternalWorkflowFuture(TemporalClient client, WorkflowExecution execution, string @namespace)
         {
-            this.client    = client;
-            this.Execution = execution;
+            this.client     = client;
+            this.Execution  = execution;
+            this.@namespace = @namespace;
         }
 
         /// <summary>
@@ -70,7 +73,7 @@ namespace Neon.Temporal
 
             completed = true;
 
-            await client.GetWorkflowResultAsync(Execution);
+            await client.GetWorkflowResultAsync(Execution, @namespace);
         }
     }
 
@@ -82,16 +85,19 @@ namespace Neon.Temporal
     {
         private bool            completed = false;
         private TemporalClient  client;
+        private string          @namespace;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="client">The associated client.</param>
         /// <param name="execution">The workflow execution.</param>
-        internal ExternalWorkflowFuture(TemporalClient client, WorkflowExecution execution)
+        /// /// <param name="namespace">Optionally specifies the target namespace.  This defaults to the default client namespace.</param>
+        internal ExternalWorkflowFuture(TemporalClient client, WorkflowExecution execution, string @namespace)
         {
-            this.client    = client;
-            this.Execution = execution;
+            this.client     = client;
+            this.Execution  = execution;
+            this.@namespace = @namespace;
         }
 
         /// <summary>
@@ -114,7 +120,7 @@ namespace Neon.Temporal
 
             completed = true;
 
-            var resultBytes = await client.GetWorkflowResultAsync(Execution);
+            var resultBytes = await client.GetWorkflowResultAsync(Execution, @namespace);
 
             return client.DataConverter.FromData<TResult>(resultBytes);
         }
