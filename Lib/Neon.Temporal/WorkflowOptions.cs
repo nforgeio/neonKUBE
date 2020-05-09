@@ -173,6 +173,11 @@ namespace Neon.Temporal
                 }
             }
 
+            if (string.IsNullOrEmpty(options.CronSchedule) && !string.IsNullOrEmpty(methodAttribute?.CronSchedule))
+            {
+                options.CronSchedule = methodAttribute.CronSchedule;
+            }
+
             return options;
         }
 
