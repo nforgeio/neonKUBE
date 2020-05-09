@@ -117,7 +117,7 @@ namespace Neon.Cadence
 
             // Create and return the future.
 
-            return new ExternalWorkflowFuture(client, execution);
+            return new ExternalWorkflowFuture(client, execution, options.Domain);
         }
 
         /// <summary>
@@ -148,7 +148,7 @@ namespace Neon.Cadence
 
             // Create and return the future.
 
-            return new ExternalWorkflowFuture<TResult>(client, execution);
+            return new ExternalWorkflowFuture<TResult>(client, execution, options.Domain);
         }
 
         /// <summary>
