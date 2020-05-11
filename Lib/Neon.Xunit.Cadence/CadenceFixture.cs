@@ -41,7 +41,7 @@ namespace Neon.Xunit.Cadence
     /// are not true.
     /// </para>
     /// <para>
-    /// See <see cref="Start(CadenceSettings, string, string, string[], string, LogLevel, bool, bool, bool, bool)"/>
+    /// See <see cref="Start(CadenceSettings, string, string, string[], string, LogLevel, bool, string, bool, bool, bool)"/>
     /// for more information about how this works.
     /// </para>
     /// <note>
@@ -57,7 +57,7 @@ namespace Neon.Xunit.Cadence
         private readonly TimeSpan   warmupDelay = TimeSpan.FromSeconds(2);      // Time to allow Cadence to start.
         private CadenceSettings     settings;
         private CadenceClient       client;
-        private bool                keepConnection;
+        private bool                reconnect;
         private bool                noReset;
 
         /// <summary>
@@ -88,12 +88,12 @@ namespace Neon.Xunit.Cadence
         /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="defaultDomain">Optionally specifies the default domain for the fixture's client.  This defaults to <b>test-domain</b>.</param>
         /// <param name="logLevel">Specifies the Cadence log level.  This defaults to <see cref="LogLevel.None"/>.</param>
-        /// <param name="keepConnection">
-        /// Optionally specifies that a new Cadence connection <b>should not</b> be established for each
-        /// unit test case.  By default, the same connection will be reused which will save about a second
-        /// per test.
+        /// <param name="reconnect">
+        /// Optionally specifies that a new Cadence connection <b>should</b> be established for each
+        /// unit test case.  By default, the same connection will be reused which will save about a 
+        /// second per test.
         /// </param>
-        /// <param name="keepOpen">
+        /// <param name="keepRunning">
         /// Optionally indicates that the container should remain running after the fixture is disposed.
         /// This is handy for using the Temporal web UI for port mortems after tests have completed.
         /// </param>
@@ -131,16 +131,17 @@ namespace Neon.Xunit.Cadence
         /// </note>
         /// </remarks>
         public TestFixtureStatus Start(
-            CadenceSettings     settings        = null,
-            string              image           = "nkubeio/cadence-dev:latest",
-            string              name            = "cadence-dev",
-            string[]            env             = null,
-            string              defaultDomain   = DefaultDomain,
-            LogLevel            logLevel        = LogLevel.None,
-            bool                keepConnection  = false,
-            bool                keepOpen        = false,
-            bool                noClient        = false,
-            bool                noReset         = false)
+            CadenceSettings     settings      = null,
+            string              image         = "nkubeio/cadence-dev:latest",
+            string              name          = "cadence-dev",
+            string[]            env           = null,
+            string              defaultDomain = DefaultDomain,
+            LogLevel            logLevel      = LogLevel.None,
+            bool                reconnect     = false,
+            string              hostInterface = null,
+            bool                keepRunning   = false,
+            bool                noClient      = false,
+            bool                noReset       = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image), nameof(image));
 
@@ -154,8 +155,9 @@ namespace Neon.Xunit.Cadence
                         env:             env, 
                         defaultDomain:   defaultDomain, 
                         logLevel:        logLevel,
-                        keepConnection:  keepConnection,
-                        keepOpen:        keepOpen, 
+                        reconnect:       reconnect,
+                        keepRunning:     keepRunning, 
+                        hostInterface:   hostInterface,
                         noClient:        noClient, 
                         noReset:         noReset);
                 });
@@ -170,12 +172,12 @@ namespace Neon.Xunit.Cadence
         /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="defaultDomain">Optionally specifies the default domain for the fixture's client.  This defaults to <b>test-domain</b>.</param>
         /// <param name="logLevel">Specifies the Cadence log level.  This defaults to <see cref="LogLevel.None"/>.</param>
-        /// <param name="keepConnection">
-        /// Optionally specifies that a new Cadence connection <b>should not</b> be established for each
-        /// unit test case.  By default, the same connection will be reused which will save about a second
-        /// per test.
+        /// <param name="reconnect">
+        /// Optionally specifies that a new Cadence connection <b>should</b> be established for each
+        /// unit test case.  By default, the same connection will be reused which will save about a 
+        /// second per test.
         /// </param>
-        /// <param name="keepOpen">
+        /// <param name="keepRunning">
         /// Optionally indicates that the container should remain running after the fixture is disposed.
         /// This is handy for using the Temporal web UI for port mortems after tests have completed.
         /// </param>
@@ -202,17 +204,17 @@ namespace Neon.Xunit.Cadence
         /// </note>
         /// </remarks>
         public void StartAsComposed(
-            CadenceSettings     settings        = null,
-            string              image           = "nkubeio/cadence-dev:latest",
-            string              name            = "cadence-dev",
-            string[]            env             = null,
-            string              defaultDomain   = DefaultDomain,
-            LogLevel            logLevel        = LogLevel.None,
-            bool                keepConnection  = false,
-            bool                keepOpen        = false,
-            string              hostInterface   = null,
-            bool                noClient        = false,
-            bool                noReset         = false)
+            CadenceSettings     settings      = null,
+            string              image         = "nkubeio/cadence-dev:latest",
+            string              name          = "cadence-dev",
+            string[]            env           = null,
+            string              defaultDomain = DefaultDomain,
+            LogLevel            logLevel      = LogLevel.None,
+            bool                reconnect     = false,
+            bool                keepRunning   = false,
+            string              hostInterface = null,
+            bool                noClient      = false,
+            bool                noReset       = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image), nameof(image));
 
@@ -263,7 +265,7 @@ namespace Neon.Xunit.Cadence
                         "-p", $"{GetHostInterface(hostInterface)}:8088:8088"
                     },
                     env: env,
-                    keepOpen: keepOpen);
+                    keepOpen: keepRunning);
 
                 Thread.Sleep(warmupDelay);
 
@@ -279,8 +281,8 @@ namespace Neon.Xunit.Cadence
                 settings.Servers.Clear();
                 settings.Servers.Add($"http://{GetHostInterface(hostInterface, forConnection: true)}:{NetworkPorts.Cadence}");
 
-                this.settings       = settings;
-                this.keepConnection = keepConnection;
+                this.settings  = settings;
+                this.reconnect = reconnect;
 
                 if (!noClient)
                 {
@@ -418,7 +420,7 @@ namespace Neon.Xunit.Cadence
         /// </summary>
         public override void OnRestart()
         {
-            if (keepConnection)
+            if (reconnect)
             {
                 // We're going to continue using the same connection.
 

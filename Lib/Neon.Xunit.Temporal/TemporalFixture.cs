@@ -89,7 +89,7 @@ services:
         private readonly TimeSpan   warmupDelay = TimeSpan.FromSeconds(2);      // Time to allow Temporal server to start.
         private TemporalSettings    settings;
         private TemporalClient      client;
-        private bool                keepConnection;
+        private bool                reconnect;
         private bool                noReset;
 
         /// <summary>
@@ -131,11 +131,12 @@ services:
         /// <param name="name">Optionally specifies the Temporal stack name (defaults to <c>temporal-dev</c>).</param>
         /// <param name="defaultNamespace">Optionally specifies the default namespace for the fixture's client.  This defaults to <b>test-namespace</b>.</param>
         /// <param name="logLevel">Specifies the Temporal log level.  This defaults to <see cref="LogLevel.None"/>.</param>
-        /// <param name="keepConnection">
-        /// Optionally specifies that a new Temporal connection <b>should not</b> be established for each
-        /// unit test case.  By default, the same connection will be reused which will save about a second per test.
+        /// <param name="reconnect">
+        /// Optionally specifies that a new Temporal connection <b>should</b> be established for each
+        /// unit test case.  By default, the same connection will be reused which will save about a 
+        /// second per test.
         /// </param>
-        /// <param name="keepOpen">
+        /// <param name="keepRunning">
         /// Optionally indicates that the stack should remain running after the fixture is disposed.
         /// This is handy for using the Temporal web UI for port mortems after tests have completed.
         /// </param>
@@ -173,8 +174,8 @@ services:
             string              name             = "temporal-dev",
             string              defaultNamespace = DefaultNamespace,
             LogLevel            logLevel         = LogLevel.None,
-            bool                keepConnection   = false,
-            bool                keepOpen         = false,
+            bool                reconnect        = false,
+            bool                keepRunning      = false,
             bool                noClient         = false,
             bool                noReset          = false)
         {
@@ -189,8 +190,8 @@ services:
                         name:             name, 
                         defaultNamespace: defaultNamespace, 
                         logLevel:         logLevel,
-                        keepConnection:   keepConnection,
-                        keepOpen:         keepOpen, 
+                        reconnect:        reconnect,
+                        keepRunning:      keepRunning, 
                         noClient:         noClient, 
                         noReset:          noReset);
                 });
@@ -215,11 +216,12 @@ services:
         /// <param name="name">Optionally specifies the Temporal stack name (defaults to <c>cb-test</c>).</param>
         /// <param name="defaultNamespace">Optionally specifies the default namespace for the fixture's client.  This defaults to <b>test-namespace</b>.</param>
         /// <param name="logLevel">Specifies the Temporal log level.  This defaults to <see cref="LogLevel.None"/>.</param>
-        /// <param name="keepConnection">
-        /// Optionally specifies that a new Temporal connection <b>should not</b> be established for each
-        /// unit test case.  The same connection will be reused which will save about a second per test.
+        /// <param name="reconnect">
+        /// Optionally specifies that a new Temporal connection <b>should</b> be established for each
+        /// unit test case.  By default, the same connection will be reused which will save about a 
+        /// second per test.
         /// </param>
-        /// <param name="keepOpen">
+        /// <param name="keepRunning">
         /// Optionally indicates that the stack should remain running after the fixture is disposed.
         /// This is handy for using the Temporal web UI for port mortems after tests have completed.
         /// </param>
@@ -246,8 +248,8 @@ services:
             string              name             = "temporal-dev",
             string              defaultNamespace = DefaultNamespace,
             LogLevel            logLevel         = LogLevel.None,
-            bool                keepConnection   = false,
-            bool                keepOpen         = false,
+            bool                reconnect        = false,
+            bool                keepRunning      = false,
             bool                noClient         = false,
             bool                noReset          = false)
         {
@@ -273,7 +275,7 @@ services:
 
                 // Start the Temporal stack.
 
-                base.StartAsComposed(name, stackDefinition, keepOpen);
+                base.StartAsComposed(name, stackDefinition, keepRunning);
                 Thread.Sleep(warmupDelay);
 
                 // Initialize the settings.
@@ -287,7 +289,7 @@ services:
                 };
 
                 this.settings       = settings;
-                this.keepConnection = keepConnection;
+                this.reconnect = reconnect;
 
                 if (!noClient)
                 {
@@ -425,7 +427,7 @@ services:
         /// </summary>
         public override void OnRestart()
         {
-            if (keepConnection)
+            if (reconnect)
             {
                 // We're going to continue using the same connection.
 

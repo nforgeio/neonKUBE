@@ -58,7 +58,7 @@ namespace MyTests
             // You can pass [keepOpen=false] to have the fixture remove the container after the
             // test run if you wish.
 
-            if (fixture.Start(settings, keepConnection: true, keepOpen: true) == TestFixtureStatus.Started)
+            if (fixture.Start(settings, reconnect: true, keepRunning: true) == TestFixtureStatus.Started)
             {
                 this.fixture = fixture;
                 this.client  = fixture.Client;

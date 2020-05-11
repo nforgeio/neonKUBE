@@ -60,7 +60,7 @@ namespace TestTemporal
                 ClientIdentity         = TemporalTestHelper.ClientIdentity
             };
 
-            fixture.Start(settings, keepConnection: true);
+            fixture.Start(settings, reconnect: true);
 
             this.fixture     = fixture;
             this.client      = fixture.Client;
