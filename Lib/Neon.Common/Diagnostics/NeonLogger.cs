@@ -128,6 +128,28 @@ namespace Neon.Diagnostics
             // prefixed by: [Microsoft.AspNetCore]
 
             this.infoAsDebug = !noisyAspNet && sourceModule != null && sourceModule.StartsWith("Microsoft.AspNetCore.");
+
+            // $hack(jefflill):
+            //
+            // On Linux, we're going to initialize the [emitCount] to the index persisted to
+            // the [/dev/shm/log-index] file if this is present and parsable.  This will 
+            // align the .NET logging index with any event written via startup scripts.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/578
+
+            emitCount = 0;
+
+            if (NeonHelper.IsLinux)
+            {
+                try
+                {
+                    emitCount = long.Parse(File.ReadAllText("/dev/shm/log-index").Trim());
+                }
+                catch
+                {
+                    // Ignore any exceptions; we'll just start the index at 0 for these cases.
+                }
+            }
         }
 
         /// <inheritdoc/>
