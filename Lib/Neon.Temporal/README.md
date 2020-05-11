@@ -13,6 +13,6 @@ You can get started with this here: [Neon.Temporal](https://doc.neonkube.com/Neo
 
 **Neon.Cadence** is our older project that supports Uber Cadence and is fairly complete and we've been using it production for over 5 months now.  The .NET Temporal API will be very closly aligned with **Neon.Cadence** so using Cadence isn't a bad place to get started if you're itching to try this out on .NET.  There will be breaking changes; we're renaming "Cadence" to "Temporal" throughout the API, changing the term "domain" to "namespace" like the other Temporal clients, and there will be some minor changes to cluster connections are established.  But, the major API concepts will remain the same.
 
-You can get started with Cadence for .NET here: [Neon.Cadence](https://doc.neonkube.com/Neon.Cadence-Overview.htm)
+You can get started with Cadence for .NET here: [Neon.Cadence](https://doc.neonkube.com/Neon.Cadence-Overview.htm) and we also have some [.NET Temporal Samples](https://github.com/nforgeio/temporal-samples).
 
 Once **Neon.Temporal** is usable, we're planning on deprecating **Neon.Cadence** to focus our efforts on Temporal.

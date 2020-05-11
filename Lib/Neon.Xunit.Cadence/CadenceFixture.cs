@@ -41,14 +41,7 @@ namespace Neon.Xunit.Cadence
     /// are not true.
     /// </para>
     /// <para>
-    /// A somewhat safer but slower alternative, is to use the <see cref="DockerFixture"/>
-    /// instead and add <see cref="CadenceFixture"/> as a subfixture.  The 
-    /// advantage is that <see cref="DockerFixture"/> will ensure that all
-    /// (potentially conflicting) containers are removed before the Cadence
-    /// fixture is started.
-    /// </para>
-    /// <para>
-    /// See <see cref="Start(CadenceSettings, string, string, string[], string, LogLevel, bool, bool, string, bool, bool, bool)"/>
+    /// See <see cref="Start(CadenceSettings, string, string, string[], string, LogLevel, bool, string, bool, bool, bool)"/>
     /// for more information about how this works.
     /// </para>
     /// <note>
@@ -61,10 +54,11 @@ namespace Neon.Xunit.Cadence
     /// <threadsafety instance="true"/>
     public sealed class CadenceFixture : ContainerFixture
     {
-        private readonly TimeSpan   warmupDelay = TimeSpan.FromSeconds(2);      // Time to allow Cadence to start.
+        private TimeSpan            warmupDelay = TimeSpan.FromSeconds(2);  // Time to allow Cadence to start.
+        private TimeSpan            removeDelay = TimeSpan.FromSeconds(5);  // $hack(jefflill): FRAGILE
         private CadenceSettings     settings;
         private CadenceClient       client;
-        private bool                keepConnection;
+        private bool                reconnect;
         private bool                noReset;
 
         /// <summary>
@@ -85,7 +79,7 @@ namespace Neon.Xunit.Cadence
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string[], string, LogLevel, bool, bool, string, bool, bool, bool)"/>
+        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string[], string, LogLevel, bool, bool, string, bool, bool)"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>
@@ -95,12 +89,14 @@ namespace Neon.Xunit.Cadence
         /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="defaultDomain">Optionally specifies the default domain for the fixture's client.  This defaults to <b>test-domain</b>.</param>
         /// <param name="logLevel">Specifies the Cadence log level.  This defaults to <see cref="LogLevel.None"/>.</param>
-        /// <param name="keepConnection">
-        /// Optionally specifies that a new Cadence connection <b>should not</b> be established for each
-        /// unit test case.  The same connection will be reused which will save about a second per test.
+        /// <param name="reconnect">
+        /// Optionally specifies that a new Cadence connection <b>should</b> be established for each
+        /// unit test case.  By default, the same connection will be reused which will save about a 
+        /// second per test.
         /// </param>
-        /// <param name="keepOpen">
-        /// Optionally indicates that the container should continue to run after the fixture is disposed.
+        /// <param name="keepRunning">
+        /// Optionally indicates that the container should remain running after the fixture is disposed.
+        /// This is handy for using the Temporal web UI for port mortems after tests have completed.
         /// </param>
         /// <param name="hostInterface">
         /// Optionally specifies the host interface where the container public ports will be
@@ -116,11 +112,6 @@ namespace Neon.Xunit.Cadence
         /// Optionally prevents the fixture from calling <see cref="CadenceClient.Reset()"/> to
         /// put the Cadence client library into its initial state before the fixture starts as well
         /// as when the fixture itself is reset.
-        /// </param>
-        /// <param name="emulateProxy">
-        /// <b>INTERNAL USE ONLY:</b> Optionally starts a partially functional integrated 
-        /// <b>cadence-proxy</b> for low-level testing.  Most users should never enable this
-        /// because it's probably not going to do what you expect.
         /// </param>
         /// <returns>
         /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
@@ -141,18 +132,17 @@ namespace Neon.Xunit.Cadence
         /// </note>
         /// </remarks>
         public TestFixtureStatus Start(
-            CadenceSettings     settings        = null,
-            string              image           = "nkubeio/cadence-dev:latest",
-            string              name            = "cadence-dev",
-            string[]            env             = null,
-            string              defaultDomain   = DefaultDomain,
-            LogLevel            logLevel        = LogLevel.None,
-            bool                keepConnection  = false,
-            bool                keepOpen        = false,
-            string              hostInterface   = null,
-            bool                noClient        = false,
-            bool                noReset         = false,
-            bool                emulateProxy    = false)
+            CadenceSettings     settings      = null,
+            string              image         = "nkubeio/cadence-dev:latest",
+            string              name          = "cadence-dev",
+            string[]            env           = null,
+            string              defaultDomain = DefaultDomain,
+            LogLevel            logLevel      = LogLevel.None,
+            bool                reconnect     = false,
+            string              hostInterface = null,
+            bool                keepRunning   = false,
+            bool                noClient      = false,
+            bool                noReset       = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image), nameof(image));
 
@@ -166,11 +156,11 @@ namespace Neon.Xunit.Cadence
                         env:             env, 
                         defaultDomain:   defaultDomain, 
                         logLevel:        logLevel,
-                        keepConnection:  keepConnection,
-                        keepOpen:        keepOpen, 
+                        reconnect:       reconnect,
+                        keepRunning:     keepRunning, 
+                        hostInterface:   hostInterface,
                         noClient:        noClient, 
-                        noReset:         noReset,
-                        emulateProxy:    emulateProxy);
+                        noReset:         noReset);
                 });
         }
 
@@ -183,12 +173,14 @@ namespace Neon.Xunit.Cadence
         /// <param name="env">Optional environment variables to be passed to the Cadence container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="defaultDomain">Optionally specifies the default domain for the fixture's client.  This defaults to <b>test-domain</b>.</param>
         /// <param name="logLevel">Specifies the Cadence log level.  This defaults to <see cref="LogLevel.None"/>.</param>
-        /// <param name="keepConnection">
-        /// Optionally specifies that a new Cadence connection <b>should not</b> be established for each
-        /// unit test case.  The same connection will be reused which will save about a second per test.
+        /// <param name="reconnect">
+        /// Optionally specifies that a new Cadence connection <b>should</b> be established for each
+        /// unit test case.  By default, the same connection will be reused which will save about a 
+        /// second per test.
         /// </param>
-        /// <param name="keepOpen">
-        /// Optionally indicates that the container should continue to run after the fixture is disposed.
+        /// <param name="keepRunning">
+        /// Optionally indicates that the container should remain running after the fixture is disposed.
+        /// This is handy for using the Temporal web UI for port mortems after tests have completed.
         /// </param>
         /// <param name="hostInterface">
         /// Optionally specifies the host interface where the container public ports will be
@@ -205,11 +197,6 @@ namespace Neon.Xunit.Cadence
         /// put the Cadence client library into its initial state before the fixture starts as well
         /// as when the fixture itself is reset.
         /// </param>
-        /// <param name="emulateProxy">
-        /// <b>INTERNAL USE ONLY:</b> Optionally starts a partially functional integrated 
-        /// <b>cadence-proxy</b> for low-level testing.  Most users should never enable this
-        /// because it's probably not going to do what you expect.
-        /// </param>
         /// <remarks>
         /// <note>
         /// A fresh Cadence client <see cref="Client"/> will be established every time this
@@ -218,18 +205,17 @@ namespace Neon.Xunit.Cadence
         /// </note>
         /// </remarks>
         public void StartAsComposed(
-            CadenceSettings     settings        = null,
-            string              image           = "nkubeio/cadence-dev:latest",
-            string              name            = "cadence-dev",
-            string[]            env             = null,
-            string              defaultDomain   = DefaultDomain,
-            LogLevel            logLevel        = LogLevel.None,
-            bool                keepConnection  = false,
-            bool                keepOpen        = false,
-            string              hostInterface   = null,
-            bool                noClient        = false,
-            bool                noReset         = false,
-            bool                emulateProxy    = false)
+            CadenceSettings     settings      = null,
+            string              image         = "nkubeio/cadence-dev:latest",
+            string              name          = "cadence-dev",
+            string[]            env           = null,
+            string              defaultDomain = DefaultDomain,
+            LogLevel            logLevel      = LogLevel.None,
+            bool                reconnect     = false,
+            bool                keepRunning   = false,
+            string              hostInterface = null,
+            bool                noClient      = false,
+            bool                noReset       = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image), nameof(image));
 
@@ -255,6 +241,63 @@ namespace Neon.Xunit.Cadence
                     CadenceClient.Reset();
                 }
 
+                // [TemporalFixture] deploys a stack that exposes some of the same
+                // ports as [CadenceFixture], so we're going ensure that any running
+                // [TemporalFixture] stack is stopped first.
+                //
+                // Most users won't run into this because Cadence eventually will be
+                // depreciated but neonKUBE unit tests will require this.
+
+                NeonHelper.Execute("docker",
+                    new string[]
+                    {
+                        "stack",
+                        "rm",
+                        "temporal-dev"
+                    });
+
+
+                // $hack(jefflill):
+                //
+                // Unforunately, the [docker stack rm ...] command is asynchronous, which
+                // means that that containers and related assets like networks will not
+                // necessarily be removed when the command returns.  This is uper annoying
+                // and has been an open Docker CLI bug since 2017:
+                //
+                //      https://github.com/moby/moby/issues/32620
+                //
+                // We're going to workaround this by waiting until all stack containers
+                // and networks are actually removed.  We're going to assume that these
+                // will have names prefixed by stack "<name>_" which may be a bit fragile.
+
+                // Poll until there are no containers named like "<name>_*"
+
+                var pollTimeout = TimeSpan.FromSeconds(60);
+
+                NeonHelper.WaitFor(
+                    () =>
+                    {
+                        var result = NeonHelper.ExecuteCapture("docker", new string[] { "ps" });
+
+                        return !result.OutputText.Contains($"{name}_");
+                    },
+                    timeout: pollTimeout,
+                    pollTime: TimeSpan.FromMilliseconds(250));
+
+                // Poll until there are no networks named like "<name>_*"
+
+                NeonHelper.WaitFor(
+                    () =>
+                    {
+                        var result = NeonHelper.ExecuteCapture("docker", new string[] { "network", "ls" });
+
+                        return !result.OutputText.Contains($"{name}_");
+                    },
+                    timeout: pollTimeout,
+                    pollTime: TimeSpan.FromMilliseconds(250));
+
+                Thread.Sleep(removeDelay);
+
                 // Start the Cadence container.
 
                 base.StartAsComposed(name, image,
@@ -265,7 +308,7 @@ namespace Neon.Xunit.Cadence
                         "-p", $"{GetHostInterface(hostInterface)}:8088:8088"
                     },
                     env: env,
-                    keepOpen: keepOpen);
+                    keepOpen: keepRunning);
 
                 Thread.Sleep(warmupDelay);
 
@@ -281,8 +324,8 @@ namespace Neon.Xunit.Cadence
                 settings.Servers.Clear();
                 settings.Servers.Add($"http://{GetHostInterface(hostInterface, forConnection: true)}:{NetworkPorts.Cadence}");
 
-                this.settings       = settings;
-                this.keepConnection = keepConnection;
+                this.settings  = settings;
+                this.reconnect = reconnect;
 
                 if (!noClient)
                 {
@@ -420,7 +463,7 @@ namespace Neon.Xunit.Cadence
         /// </summary>
         public override void OnRestart()
         {
-            if (keepConnection)
+            if (reconnect)
             {
                 // We're going to continue using the same connection.
 

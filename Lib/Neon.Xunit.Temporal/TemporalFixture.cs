@@ -29,26 +29,20 @@ using Xunit;
 namespace Neon.Xunit.Temporal
 {
     /// <summary>
-    /// Used to run the Docker <b>nkubeio/;-dev</b> container on 
-    /// the current machine as a test fixture while tests are being performed 
-    /// and then deletes the container when the fixture is disposed.
+    /// Used to run Temporal server and it's related database and services as
+    /// a Docker stack on  the current machine as a test fixture while tests 
+    /// are being performed  and then deletes the stack when the fixture is
+    /// disposed.
     /// </summary>
     /// <remarks>
     /// <para>
     /// This fixture assumes that Temporal is not currently running on the
-    /// local workstation or as a container named <b>temporal-dev</b>.
+    /// local workstation or as a stack named <b>temporal-dev</b>.
     /// You may see port conflict errors if either of these conditions
     /// are not true.
     /// </para>
     /// <para>
-    /// A somewhat safer but slower alternative, is to use the <see cref="DockerFixture"/>
-    /// instead and add <see cref="TemporalFixture"/> as a subfixture.  The 
-    /// advantage is that <see cref="DockerFixture"/> will ensure that all
-    /// (potentially conflicting) containers are removed before the Temporal
-    /// fixture is started.
-    /// </para>
-    /// <para>
-    /// See <see cref="Start(TemporalSettings, string, string, string[], string, LogLevel, bool, bool, string, bool, bool, bool)"/>
+    /// See <see cref="Start(TemporalSettings, string, string, string, LogLevel, bool, bool, bool, bool)"/>
     /// for more information about how this works.
     /// </para>
     /// <note>
@@ -59,12 +53,43 @@ namespace Neon.Xunit.Temporal
     /// </note>
     /// </remarks>
     /// <threadsafety instance="true"/>
-    public sealed class TemporalFixture : ContainerFixture
+    public sealed class TemporalFixture : StackFixture
     {
+        /// <summary>
+        /// The default Docker compose file text used to spin up Temporal and it's related services
+        /// by the <see cref="TemporalFixture"/>.
+        /// </summary>
+        public const string DefaultStackDefinition =
+@"version: '3.5'
+
+services:
+  cassandra:
+    image: cassandra:3.11
+    ports:
+      - ""9042:9042""
+  temporal:
+    image: temporalio/auto-setup:0.21.1
+    ports:
+     - ""7233:7233""
+    environment:
+      - ""CASSANDRA_SEEDS=cassandra""
+      - ""DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development.yaml""
+    depends_on:
+      - cassandra
+  temporal-web:
+    image: temporalio/web:0.21.1
+    environment:
+      - ""TEMPORAL_GRPC_ENDPOINT=temporal:7233""
+    ports:
+      - ""8088:8088""
+    depends_on:
+      - temporal
+";
+
         private readonly TimeSpan   warmupDelay = TimeSpan.FromSeconds(2);      // Time to allow Temporal server to start.
         private TemporalSettings    settings;
         private TemporalClient      client;
-        private bool                keepConnection;
+        private bool                reconnect;
         private bool                noReset;
 
         /// <summary>
@@ -81,31 +106,39 @@ namespace Neon.Xunit.Temporal
 
         /// <summary>
         /// <para>
-        /// Starts a Temporal container if it's not already running.  You'll generally want
+        /// Starts a Temporal stack if it's not already running.  You'll generally want
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(TemporalSettings, string, string, string[], string, LogLevel, bool, bool, string, bool, bool, bool)"/>
+        /// You'll need to call <see cref="StartAsComposed(TemporalSettings, string, string, string, LogLevel, bool, bool, bool, bool)"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>
         /// <param name="settings">Optional Temporal settings.</param>
-        /// <param name="image">Optionally specifies the Temporal container image (defaults to <b>nkubeio/temporal-dev:latest</b>).</param>
-        /// <param name="name">Optionally specifies the Temporal container name (defaults to <c>temporal-dev</c>).</param>
-        /// <param name="env">Optional environment variables to be passed to the Temporal container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
+        /// <param name="stackDefinition">
+        /// <para>
+        /// Optionally specifies the Temporal Docker compose file text.  This defaults to
+        /// <see cref="DefaultStackDefinition"/> which configures Temporal server to start with
+        /// a new Cassandra database instance listening on port <b>9042</b> as well as the
+        /// Temporal web UI running on port <b>8088</b>.  Temporal server is listening on
+        /// its standard gRPC port <b>7233</b>.
+        /// </para>
+        /// <para>
+        /// You may specify your own Docker compose text file to customize this by configuring
+        /// a different backend database, etc.
+        /// </para>
+        /// </param>
+        /// <param name="name">Optionally specifies the Temporal stack name (defaults to <c>temporal-dev</c>).</param>
         /// <param name="defaultNamespace">Optionally specifies the default namespace for the fixture's client.  This defaults to <b>test-namespace</b>.</param>
         /// <param name="logLevel">Specifies the Temporal log level.  This defaults to <see cref="LogLevel.None"/>.</param>
-        /// <param name="keepConnection">
-        /// Optionally specifies that a new Temporal connection <b>should not</b> be established for each
-        /// unit test case.  The same connection will be reused which will save about a second per test.
+        /// <param name="reconnect">
+        /// Optionally specifies that a new Temporal connection <b>should</b> be established for each
+        /// unit test case.  By default, the same connection will be reused which will save about a 
+        /// second per test.
         /// </param>
-        /// <param name="keepOpen">
-        /// Optionally indicates that the container should continue to run after the fixture is disposed.
-        /// </param>
-        /// <param name="hostInterface">
-        /// Optionally specifies the host interface where the container public ports will be
-        /// published.  This defaults to <see cref="ContainerFixture.DefaultHostInterface"/>
-        /// but may be customized.  This needs to be an IPv4 address.
+        /// <param name="keepRunning">
+        /// Optionally indicates that the stack should remain running after the fixture is disposed.
+        /// This is handy for using the Temporal web UI for port mortems after tests have completed.
         /// </param>
         /// <param name="noClient">
         /// Optionally disables establishing a client connection when <c>true</c>
@@ -116,11 +149,6 @@ namespace Neon.Xunit.Temporal
         /// Optionally prevents the fixture from calling <see cref="TemporalClient.Reset()"/> to
         /// put the Temporal client library into its initial state before the fixture starts as well
         /// as when the fixture itself is reset.
-        /// </param>
-        /// <param name="emulateProxy">
-        /// <b>INTERNAL USE ONLY:</b> Optionally starts a partially functional integrated 
-        /// <b>temporal-proxy</b> for low-level testing.  Most users should never enable this
-        /// because it's probably not going to do what you expect.
         /// </param>
         /// <returns>
         /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
@@ -131,7 +159,7 @@ namespace Neon.Xunit.Temporal
         /// <note>
         /// Some of the <paramref name="settings"/> properties will be ignored including 
         /// <see cref="TemporalSettings.HostPort"/>.  This will be replaced by the local
-        /// endpoint for the Temporal container.  Also, the fixture will connect to the 
+        /// endpoint for the Temporal stack.  Also, the fixture will connect to the 
         /// <b>default</b> Temporal namespace by default (unless another is specified).
         /// </note>
         /// <note>
@@ -142,35 +170,30 @@ namespace Neon.Xunit.Temporal
         /// </remarks>
         public TestFixtureStatus Start(
             TemporalSettings    settings         = null,
-            string              image            = "nkubeio/temporal-dev:latest",
+            string              stackDefinition  = DefaultStackDefinition,
             string              name             = "temporal-dev",
-            string[]            env              = null,
             string              defaultNamespace = DefaultNamespace,
             LogLevel            logLevel         = LogLevel.None,
-            bool                keepConnection   = false,
-            bool                keepOpen         = false,
-            string              hostInterface    = null,
+            bool                reconnect        = false,
+            bool                keepRunning      = false,
             bool                noClient         = false,
-            bool                noReset          = false,
-            bool                emulateProxy     = false)
+            bool                noReset          = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image), nameof(image));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(stackDefinition), nameof(stackDefinition));
 
             return base.Start(
                 () =>
                 {
                     StartAsComposed(
                         settings:         settings, 
-                        image:            image, 
+                        stackDefinition:  stackDefinition, 
                         name:             name, 
-                        env:              env, 
                         defaultNamespace: defaultNamespace, 
                         logLevel:         logLevel,
-                        keepConnection:   keepConnection,
-                        keepOpen:         keepOpen, 
+                        reconnect:        reconnect,
+                        keepRunning:      keepRunning, 
                         noClient:         noClient, 
-                        noReset:          noReset,
-                        emulateProxy:     emulateProxy);
+                        noReset:          noReset);
                 });
         }
 
@@ -178,22 +201,29 @@ namespace Neon.Xunit.Temporal
         /// Used to start the fixture within a <see cref="ComposedFixture"/>.
         /// </summary>
         /// <param name="settings">Optional Temporal settings.</param>
-        /// <param name="image">Optionally specifies the Temporal container image (defaults to <b>nkubeio/temporal-dev:latest</b>).</param>
-        /// <param name="name">Optionally specifies the Temporal container name (defaults to <c>cb-test</c>).</param>
-        /// <param name="env">Optional environment variables to be passed to the Temporal container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
+        /// <param name="stackDefinition">
+        /// <para>
+        /// Optionally specifies the Temporal Docker compose file text.  This defaults to
+        /// <see cref="DefaultStackDefinition"/> which configures Temporal server to start with
+        /// a new Cassandra database instance listening on port <b>9042</b> as well as the
+        /// Temporal web UI running on port <b>8088</b>.  Temporal server is listening on
+        /// its standard gRPC port <b>7233</b>.
+        /// </para>
+        /// <para>
+        /// You may specify your own Docker compose text file to customize this by configuring
+        /// a different backend database, etc.
+        /// </para>
+        /// <param name="name">Optionally specifies the Temporal stack name (defaults to <c>cb-test</c>).</param>
         /// <param name="defaultNamespace">Optionally specifies the default namespace for the fixture's client.  This defaults to <b>test-namespace</b>.</param>
         /// <param name="logLevel">Specifies the Temporal log level.  This defaults to <see cref="LogLevel.None"/>.</param>
-        /// <param name="keepConnection">
-        /// Optionally specifies that a new Temporal connection <b>should not</b> be established for each
-        /// unit test case.  The same connection will be reused which will save about a second per test.
+        /// <param name="reconnect">
+        /// Optionally specifies that a new Temporal connection <b>should</b> be established for each
+        /// unit test case.  By default, the same connection will be reused which will save about a 
+        /// second per test.
         /// </param>
-        /// <param name="keepOpen">
-        /// Optionally indicates that the container should continue to run after the fixture is disposed.
-        /// </param>
-        /// <param name="hostInterface">
-        /// Optionally specifies the host interface where the container public ports will be
-        /// published.  This defaults to <see cref="ContainerFixture.DefaultHostInterface"/>
-        /// but may be customized.  This needs to be an IPv4 address.
+        /// <param name="keepRunning">
+        /// Optionally indicates that the stack should remain running after the fixture is disposed.
+        /// This is handy for using the Temporal web UI for port mortems after tests have completed.
         /// </param>
         /// <param name="noClient">
         /// Optionally disables establishing a client connection when <c>true</c>
@@ -205,11 +235,6 @@ namespace Neon.Xunit.Temporal
         /// put the Temporal client library into its initial state before the fixture starts as well
         /// as when the fixture itself is reset.
         /// </param>
-        /// <param name="emulateProxy">
-        /// <b>INTERNAL USE ONLY:</b> Optionally starts a partially functional integrated 
-        /// <b>temporal-proxy</b> for low-level testing.  Most users should never enable this
-        /// because it's probably not going to do what you expect.
-        /// </param>
         /// <remarks>
         /// <note>
         /// A fresh Temporal client <see cref="Client"/> will be established every time this
@@ -219,32 +244,25 @@ namespace Neon.Xunit.Temporal
         /// </remarks>
         public void StartAsComposed(
             TemporalSettings    settings         = null,
-            string              image            = "nkubeio/temporal-dev:latest",
+            string              stackDefinition  = DefaultStackDefinition,
             string              name             = "temporal-dev",
-            string[]            env              = null,
             string              defaultNamespace = DefaultNamespace,
             LogLevel            logLevel         = LogLevel.None,
-            bool                keepConnection   = false,
-            bool                keepOpen         = false,
-            string              hostInterface    = null,
+            bool                reconnect        = false,
+            bool                keepRunning      = false,
             bool                noClient         = false,
-            bool                noReset          = false,
-            bool                emulateProxy     = false)
+            bool                noReset          = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image), nameof(image));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(stackDefinition), nameof(stackDefinition));
 
             base.CheckWithinAction();
 
             if (!IsRunning)
             {
-                if (string.IsNullOrEmpty(hostInterface))
-                {
-                    hostInterface = ContainerFixture.DefaultHostInterface;
-                }
-                else
-                {
-                    Covenant.Requires<ArgumentException>(IPAddress.TryParse(hostInterface, out var address) && address.AddressFamily == AddressFamily.InterNetwork, nameof(hostInterface), $"[{hostInterface}] is not a valid IPv4 address.");
-                }
+                // The old [cadence-dev] container started by [CadenceFixture] has conflicting ports
+                // for Cassandra and the web UI, so we're going to stop that container if it's running.
+
+                NeonHelper.Execute("docker", new object[] { "rm", "--force", "cadence-dev" });
 
                 // Reset TemporalClient to its initial state.
 
@@ -255,32 +273,23 @@ namespace Neon.Xunit.Temporal
                     TemporalClient.Reset();
                 }
 
-                // Start the Temporal container.
+                // Start the Temporal stack.
 
-                base.StartAsComposed(name, image,
-                    new string[]
-                    {
-                        "--detach",
-                        "-p", $"{GetHostInterface(hostInterface)}:7933-7939:7933-7939",
-                        "-p", $"{GetHostInterface(hostInterface)}:8088:8088"
-                    },
-                    env: env,
-                    keepOpen: keepOpen);
-
+                base.StartAsComposed(name, stackDefinition, keepRunning);
                 Thread.Sleep(warmupDelay);
 
                 // Initialize the settings.
 
                 settings = settings ?? new TemporalSettings()
                 {
-                    HostPort         = $"{GetHostInterface(hostInterface, forConnection: true)}:{NetworkPorts.Temporal}",
+                    HostPort         = $"127.0.0.1:{NetworkPorts.Temporal}",
                     CreateNamespace  = true,
                     DefaultNamespace = defaultNamespace,
                     LogLevel         = logLevel
                 };
 
-                this.settings       = settings;
-                this.keepConnection = keepConnection;
+                this.settings  = settings;
+                this.reconnect = reconnect;
 
                 if (!noClient)
                 {
@@ -351,7 +360,7 @@ namespace Neon.Xunit.Temporal
             HttpClient.Dispose();
             HttpClient = null;
 
-            // Restart the Temporal container.
+            // Restart the Temporal stack.
 
             base.Restart();
 
@@ -367,7 +376,7 @@ namespace Neon.Xunit.Temporal
 
         /// <summary>
         /// This method completely resets the fixture by removing the Temporal 
-        /// container from Docker.  Use <see cref="ContainerFixture.Restart"/> 
+        /// stack from Docker.  Use <see cref="StackFixture.Restart"/> 
         /// if you just want to restart a fresh Temporal instance.
         /// </summary>
         public override void Reset()
@@ -418,7 +427,7 @@ namespace Neon.Xunit.Temporal
         /// </summary>
         public override void OnRestart()
         {
-            if (keepConnection)
+            if (reconnect)
             {
                 // We're going to continue using the same connection.
 

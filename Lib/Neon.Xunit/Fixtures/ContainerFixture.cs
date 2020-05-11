@@ -73,7 +73,7 @@ namespace Neon.Xunit
         /// </para>
         /// <note>
         /// Fixtures implemented by neonFORGE that are derived from <see cref="ContainerFixture"/> 
-        /// all implement tis behavior.  If you implement your own derived fixtures,
+        /// all implement this behavior.  If you implement your own derived fixtures,
         /// you should consider implementing this as well for consistency.
         /// </note>
         /// </remarks>
@@ -152,7 +152,7 @@ namespace Neon.Xunit
         }
 
         /// <summary>
-        /// Returns the running container's name <c>null</c> if the container
+        /// Returns the running container's name or <c>null</c> if the container
         /// has not been started.
         /// </summary>
         public string ContainerName { get; private set; }
@@ -180,7 +180,7 @@ namespace Neon.Xunit
         /// <param name="noRemove">Optionally indicates that the <b>--rm</b> option should not be included when creating the container.</param>
         /// <param name="keepOpen">
         /// Optionally indicates that the container should continue to run after the fixture is disposed.  
-        /// This implies <see cref="noRemove"/><c>=true</c> and defaults to <c>true</c>.
+        /// This implies <see cref="noRemove"/><c>=true</c> and defaults to <c>false</c>.
         /// </param>
         /// <returns>
         /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
@@ -361,7 +361,17 @@ namespace Neon.Xunit
                 dockerArgs.Add("--rm");
             }
 
-            argsString = NeonHelper.NormalizeExecArgs("run", dockerArgs, image, null);
+            dockerArgs.Add(image);
+
+            if (containerArgs != null)
+            {
+                foreach (var arg in containerArgs)
+                {
+                    dockerArgs.Add(arg);
+                }
+            }
+
+            argsString = NeonHelper.NormalizeExecArgs("run", dockerArgs);
             result     = NeonHelper.ExecuteCapture($"docker", argsString);
 
             if (result.ExitCode != 0)

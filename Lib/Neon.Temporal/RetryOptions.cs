@@ -116,7 +116,7 @@ namespace Neon.Temporal
         // $todo(jefflill):
         //
         // We'd align better with the Java client if this was a list of [TemporalException] derived
-        // exceptions rather than GOLANG error strings.  We'll revist this when the port is further
+        // exceptions rather than GOLANG error strings.  We'll revisit this when the port is further
         // along.
 
         /// <summary>

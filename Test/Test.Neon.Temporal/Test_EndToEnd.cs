@@ -75,7 +75,7 @@ namespace TestTemporal
                 ClientIdentity         = TemporalTestHelper.ClientIdentity
             };
 
-            if (fixture.Start(settings, image: TemporalTestHelper.TemporalImage, keepConnection: true, keepOpen: TemporalTestHelper.KeepTemporalServerOpen) == TestFixtureStatus.Started)
+            if (fixture.Start(settings, stackDefinition: TemporalTestHelper.TemporalStackDefinition, reconnect: true, keepRunning: TemporalTestHelper.KeepTemporalServerOpen) == TestFixtureStatus.Started)
             {
                 this.fixture     = fixture;
                 this.client      = fixture.Client;
