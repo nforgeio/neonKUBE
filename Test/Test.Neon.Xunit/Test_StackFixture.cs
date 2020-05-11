@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_ContainerFixture.cs
+// FILE:	    Test_StackFixture.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -21,6 +21,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -32,27 +33,34 @@ using Xunit;
 
 namespace TestXunit
 {
-    public class Test_ContainerFixture : IClassFixture<ContainerFixture>
+    public class Test_StackFixture : IClassFixture<StackFixture>
     {
-        private ContainerFixture fixture;
+        private const string alpineDefinition =
+@"version: '3'
+services:
+  alpine:
+    image: ""alpine:latest""
+";
 
-        public Test_ContainerFixture(ContainerFixture fixture)
+        private StackFixture fixture;
+
+        public Test_StackFixture(StackFixture fixture)
         {
             this.fixture = fixture;
 
-            fixture.Start("neon-unit-test-container", $"{KubeConst.NeonBranchRegistry}/test:latest");
+            fixture.Start("neon-unit-test-stack", alpineDefinition);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Verify()
         {
-            // All we need to do is verify that the container is running.
+            // All we need to do is verify that the stack is running.
 
-            var result = NeonHelper.ExecuteCapture("docker", "ps");
+            var result = NeonHelper.ExecuteCapture("docker", new string[] { "stack", "ls" });
 
             Assert.Equal(0, result.ExitCode);
-            Assert.Contains("neon-unit-test-container", result.AllText);
+            Assert.Contains("neon-unit-test-stack", result.AllText);
         }
     }
 }

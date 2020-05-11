@@ -48,10 +48,9 @@ namespace TestTemporal
     internal static class TemporalTestHelper
     {
         /// <summary>
-        /// Specifies the Temporal server Docker image to be started for unit testing.
+        /// Specifies the Docker stack definition used to execute Temporal unit tests.
         /// </summary>
-        public const string TemporalImage = "nkubeio/temporal-dev:latest";
-        //public const string TemporalImage = "nkubedev/temporal-dev:jeff-v0.11.0";
+        public const string TemporalStackDefinition = TemporalFixture.DefaultStackDefinition;
 
         /// <summary>
         /// <para>

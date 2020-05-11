@@ -41,15 +41,8 @@
           In the meantime, you can reference the <legacyBold>Neon.Xunit.Temporal</legacyBold> 
           nugate package in your unit test projects and use the
           <codeEntityReference qualifyHint="false">F:Neon.Xunit.Temporal.TemporalFixture</codeEntityReference>
-          to quickly spin up a 
-          <externalLink>
-            <linkText>nkubio/Temporal-dev</linkText>
-            <linkUri>https://hub.docker.com/repository/docker/nkubeio/Temporal-dev</linkUri>
-          </externalLink>
-          Docker container on your local workstation so that you can run your
-          tests.  This Docker image includes the Temporal backend and UX services with
-          a Cassandra database, including everything you'll need to run your workflows
-          and activities.
+          to quickly spin up a Docker stack including Temporal server, it's Web UI, as well
+          as its backing Cassandra database.
         </para>
         <alert class="warning">
           <para>
@@ -73,6 +66,38 @@
             <linkUri>https://hub.docker.com/repository/docker/nkubeio/Temporal-dev</linkUri>
           </externalLink>
         </para>
+        <para>
+          You can also spin up the Temporal stack manually by saving the following Docker stack
+          (compose) definition to a file like <legacyBold>temporal.yml</legacyBold>:
+        </para>
+        <code source="%NF_SNIPPETS%\Temporal\Snippets.Temporal.HelloWorld\TemporalFixture.yml" region="code" language="none" tabSize="2"/>
+        <para>
+          Then you can start or stop the Temporal stack using the following commands:
+        </para>
+        <code language="batch">
+          # Start the Temporal stack:
+
+          docker stack deploy -c temporal.yml temporal-dev
+
+          # Stop/remove the Temporal stack:
+
+          docker stack rm temporal-dev
+        </code>
+        <alert class="warning">
+          <para>
+            The commands above will name the stack <legacyBold>temporal-dev</legacyBold> and we
+            recommend that you continue to follow this convention which is compatible with our
+            <codeEntityReference qualifyHint="false">T:Neon.Xunit.Temporal.TemporalFixture</codeEntityReference>
+            which can be used to spin up Temporal stacks that can integrate cleanly with Xunit
+            based tests.
+          </para>
+          <para>
+            By using the same <legacyBold>temporal-dev</legacyBold> stack name,
+            <codeEntityReference qualifyHint="false">T:Neon.Xunit.Temporal.TemporalFixture</codeEntityReference>
+            will be able to start/restart this stack while avoiding potential network port 
+            conflicts.
+          </para>
+        </alert>
       </content>
     </section>
 
