@@ -62,16 +62,6 @@ namespace Neon.Xunit
         private static string defaultHostInterface = "0.0.0.0";
 
         /// <summary>
-        /// $hack(jefflill): FRAGILE
-        /// 
-        /// Docker seems to delete some stack dependencies like it's networks
-        /// asynchronously after a stack rm command has been issued which is
-        /// causing some conflicts.  We're going to hack a fix by delaying
-        /// by this amount after deleting an existing stack.
-        /// </summary>
-        private static TimeSpan removeDelay = TimeSpan.FromSeconds(10);
-
-        /// <summary>
         /// Specifies the IP address of host interface where stack ports
         /// will be published.  This defaults to <b>0.0.0.0</b> which binds
         /// ports to all network interfaces.
@@ -141,6 +131,7 @@ namespace Neon.Xunit
 
         // Arguments required to restart the stack.
 
+        private TimeSpan    removeDelay = TimeSpan.FromSeconds(5); // $hack(jefflill): FRAGILE
         private string      name;
         private string      stackDefinition;
         private bool        keepOpen;

@@ -288,7 +288,7 @@ services:
                     LogLevel         = logLevel
                 };
 
-                this.settings       = settings;
+                this.settings  = settings;
                 this.reconnect = reconnect;
 
                 if (!noClient)

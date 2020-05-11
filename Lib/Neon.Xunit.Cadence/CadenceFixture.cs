@@ -54,7 +54,8 @@ namespace Neon.Xunit.Cadence
     /// <threadsafety instance="true"/>
     public sealed class CadenceFixture : ContainerFixture
     {
-        private readonly TimeSpan   warmupDelay = TimeSpan.FromSeconds(2);      // Time to allow Cadence to start.
+        private TimeSpan            warmupDelay = TimeSpan.FromSeconds(2);  // Time to allow Cadence to start.
+        private TimeSpan            removeDelay = TimeSpan.FromSeconds(5);  // $hack(jefflill): FRAGILE
         private CadenceSettings     settings;
         private CadenceClient       client;
         private bool                reconnect;
@@ -254,6 +255,48 @@ namespace Neon.Xunit.Cadence
                         "rm",
                         "temporal-dev"
                     });
+
+
+                // $hack(jefflill):
+                //
+                // Unforunately, the [docker stack rm ...] command is asynchronous, which
+                // means that that containers and related assets like networks will not
+                // necessarily be removed when the command returns.  This is uper annoying
+                // and has been an open Docker CLI bug since 2017:
+                //
+                //      https://github.com/moby/moby/issues/32620
+                //
+                // We're going to workaround this by waiting until all stack containers
+                // and networks are actually removed.  We're going to assume that these
+                // will have names prefixed by stack "<name>_" which may be a bit fragile.
+
+                // Poll until there are no containers named like "<name>_*"
+
+                var pollTimeout = TimeSpan.FromSeconds(60);
+
+                NeonHelper.WaitFor(
+                    () =>
+                    {
+                        var result = NeonHelper.ExecuteCapture("docker", new string[] { "ps" });
+
+                        return !result.OutputText.Contains($"{name}_");
+                    },
+                    timeout: pollTimeout,
+                    pollTime: TimeSpan.FromMilliseconds(250));
+
+                // Poll until there are no networks named like "<name>_*"
+
+                NeonHelper.WaitFor(
+                    () =>
+                    {
+                        var result = NeonHelper.ExecuteCapture("docker", new string[] { "network", "ls" });
+
+                        return !result.OutputText.Contains($"{name}_");
+                    },
+                    timeout: pollTimeout,
+                    pollTime: TimeSpan.FromMilliseconds(250));
+
+                Thread.Sleep(removeDelay);
 
                 // Start the Cadence container.
 
