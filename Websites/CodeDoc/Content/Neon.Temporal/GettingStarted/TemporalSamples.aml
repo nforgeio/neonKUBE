@@ -70,7 +70,7 @@
           You can also spin up the Temporal stack manually by saving the following Docker stack
           (compose) definition to a file like <legacyBold>temporal.yml</legacyBold>:
         </para>
-        <code source="%NF_SNIPPETS%\Temporal\Snippets.Temporal.HelloWorld\TemporalFixture.yml" region="code" language="none" tabSize="2"/>
+        <code source="%NF_SNIPPETS%\Temporal\Snippets.Temporal.HelloWorld\TemporalFixture.yml" language="none" tabSize="2"/>
         <para>
           Then you can start or stop the Temporal stack using the following commands:
         </para>

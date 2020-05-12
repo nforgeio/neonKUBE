@@ -135,7 +135,7 @@
                 <para>
                   All instances of your workflow should implement <legacyBold>exact same workflows and activities</legacyBold>
                   because Cadence doesn't track exactly which workflows and activities are exposed
-                  by each workflow service instance.  Cadence assumes that all service instances
+                  by each worker instance.  Cadence assumes that all service instances
                   registered with same task list can execute any of the registered workflows
                   and activities.
                 </para>

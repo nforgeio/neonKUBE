@@ -783,7 +783,7 @@ namespace Neon.Cadence
             // between checks.
             //
             // I originally tried using [MutableSideEffectAsync()] for the polling and using
-            // [Task.DelayAsync()] for the poll delay, but that didn't work because it
+            // [Task.Delay()] for the poll delay, but that didn't work because it
             // appears that Cadence doesn't process queries when MutableSideEffectAsync() 
             // is running (perhaps this doesn't count as a real decision task).
             //
