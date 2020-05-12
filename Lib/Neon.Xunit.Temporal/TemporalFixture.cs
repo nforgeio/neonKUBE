@@ -262,7 +262,7 @@ services:
                 // The old [cadence-dev] container started by [CadenceFixture] has conflicting ports
                 // for Cassandra and the web UI, so we're going to stop that container if it's running.
 
-                NeonHelper.Execute("docker", new object[] { "rm", "--force", "cadence-dev" });
+                NeonHelper.Execute("docker.exe", new object[] { "rm", "--force", "cadence-dev" });
 
                 // Reset TemporalClient to its initial state.
 

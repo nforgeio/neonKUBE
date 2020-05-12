@@ -268,11 +268,11 @@ namespace Neon.Xunit
             // We're just going to issue a command to remove the stack and ignore
             // any error code (presumably indicating that the stack doesn't exist).
 
-            var result = NeonHelper.ExecuteCapture("docker", new string[] { "stack", "ls" });
+            var result = NeonHelper.ExecuteCapture("docker.exe", new string[] { "stack", "ls" });
 
             if (result.AllText.Contains(name))
             {
-                NeonHelper.ExecuteCapture($"docker", new string[] { "stack", "rm", name });
+                NeonHelper.ExecuteCapture($"docker.exe", new string[] { "stack", "rm", name });
 
                 // $hack(jefflill):
                 //
@@ -294,7 +294,7 @@ namespace Neon.Xunit
                 NeonHelper.WaitFor(
                     () =>
                     {
-                        var result = NeonHelper.ExecuteCapture("docker", new string[] { "ps" });
+                        var result = NeonHelper.ExecuteCapture("docker.exe", new string[] { "ps" });
 
                         return !result.OutputText.Contains($"{name}_");
                     },
@@ -306,7 +306,7 @@ namespace Neon.Xunit
                 NeonHelper.WaitFor(
                     () =>
                     {
-                        var result = NeonHelper.ExecuteCapture("docker", new string[] { "network", "ls" });
+                        var result = NeonHelper.ExecuteCapture("docker.exe", new string[] { "network", "ls" });
 
                         return !result.OutputText.Contains($"{name}_");
                     },
@@ -324,7 +324,7 @@ namespace Neon.Xunit
             {
                 File.WriteAllText(tempFile.Path, stackDefinition);
 
-                result = NeonHelper.ExecuteCapture("docker", new string[] { "stack", "deploy", "-c", tempFile.Path, name });
+                result = NeonHelper.ExecuteCapture("docker.exe", new string[] { "stack", "deploy", "-c", tempFile.Path, name });
 
                 if (result.ExitCode != 0)
                 {
@@ -344,7 +344,7 @@ namespace Neon.Xunit
 
             if (!keepOpen)
             {
-                NeonHelper.ExecuteCapture($"docker", new string[] { "stack", "rm", name });
+                NeonHelper.ExecuteCapture($"docker.exe", new string[] { "stack", "rm", name });
             }
 
             base.Reset();
