@@ -94,7 +94,7 @@ namespace Neon.Cadence
         /// This defaults to <b>"default"</b>.
         /// </para>
         /// <para>
-        /// The default task list can be overridden for workflow interfaces via <see cref="WorkflowInterfaceAttribute.Domain"/>
+        /// The default domain can be overridden for workflow interfaces via <see cref="WorkflowInterfaceAttribute.Domain"/>
         /// or for specific interface methods via <see cref="WorkflowMethodAttribute.Domain"/>.
         /// </para>
         /// </remarks>
@@ -428,7 +428,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Optionally specifies the logging level for the associated <b>cadence-proxy</b>.
         /// This defaults to <see cref="LogLevel.None"/> which will be appropriate for most
-        /// proiduction situations.  You may wish to set this to <see cref="LogLevel.Info"/>
+        /// production situations.  You may wish to set this to <see cref="LogLevel.Info"/>
         /// or <see cref="LogLevel.Debug"/> while debugging.
         /// </summary>
         [JsonProperty(PropertyName = "LogLevel", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
