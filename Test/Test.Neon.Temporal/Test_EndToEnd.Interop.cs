@@ -113,7 +113,7 @@ namespace TestTemporal
                     new object[]
                     {
                         $"-config={Path.Combine(goTestDir, "config.yaml")}",
-                        $"-domain={TemporalFixture.DefaultNamespace}", 
+                        $"-domain={TemporalFixture.Namespace}", 
                         $"-tasklist={TemporalTestHelper.TaskList_TwfArgs}", 
                         $"-readyfile={readyFile}",
                         $"-stopfile={stopFile}"

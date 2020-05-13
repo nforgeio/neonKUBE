@@ -213,7 +213,7 @@ namespace TestTemporal
             // Verify that we listed the default namespace as well as the 
             // domains we just registered.
 
-            Assert.Contains(domainPage.Namespaces, d => d.NamespaceInfo.Name == client.Settings.DefaultNamespace);
+            Assert.Contains(domainPage.Namespaces, d => d.NamespaceInfo.Name == client.Settings.Namespace);
 
             for (int i = 0; i < testDomainCount; i++)
             {

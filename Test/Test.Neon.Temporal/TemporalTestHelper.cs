@@ -66,9 +66,9 @@ namespace TestTemporal
         public const bool KeepTemporalServerOpen = true;
 
         /// <summary>
-        /// Specifies the log level to use for Temporal related unit tests.
+        /// Specifies the <b>temporal-proxy</b> log level to use for Temporal related unit tests.
         /// </summary>
-        public static readonly LogLevel LogLevel = LogLevel.Info;
+        public static readonly LogLevel ProxyLogLevel = LogLevel.Info;
 
         /// <summary>
         /// Specifies whether Temporal unit tests will connect to Temporal in DEBUG mode

@@ -887,16 +887,20 @@ namespace Neon.Temporal
         /// <returns>The connected <see cref="TemporalClient"/>.</returns>
         /// <remarks>
         /// <note>
-        /// The <see cref="TemporalSettings"/> passed must specify a <see cref="TemporalSettings.DefaultNamespace"/>.
+        /// The <see cref="TemporalSettings"/> passed must specify a <see cref="TemporalSettings.Namespace"/>.
         /// </note>
         /// </remarks>
         public static async Task<TemporalClient> ConnectAsync(TemporalSettings settings)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultNamespace), nameof(settings), "You must specifiy a non-empty default Temporal namespace.");
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.Namespace), nameof(settings), "You must specifiy a non-empty default Temporal namespace.");
+
+            settings = settings.Clone();    // Configure the client using cloned settings
 
             var client = new TemporalClient(settings);
+
+            settings.Client = client;       // This makes the settings read-only
 
             // Initialize the [temporal-proxy].
 
@@ -943,7 +947,7 @@ namespace Neon.Temporal
                         {
                             LibraryAddress = client.ListenUri.Host,
                             LibraryPort    = client.ListenUri.Port,
-                            LogLevel       = client.Settings.LogLevel
+                            LogLevel       = client.Settings.ProxyLogLevel
                         };
 
                     await client.CallProxyAsync(initializeRequest);
@@ -957,7 +961,7 @@ namespace Neon.Temporal
                             HostPort        = settings.HostPort,
                             Identity        = settings.ClientIdentity,
                             ClientTimeout   = TimeSpan.FromSeconds(30),
-                            Namespace       = settings.DefaultNamespace,
+                            Namespace       = settings.Namespace,
                             CreateNamespace = settings.CreateNamespace
                         };
 
@@ -1394,7 +1398,7 @@ namespace Neon.Temporal
         private TemporalClient(TemporalSettings settings)
         {
             Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultNamespace), nameof(settings));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.Namespace), nameof(settings));
 
             this.ClientId = Interlocked.Increment(ref nextClientId);
             this.Settings = settings;
@@ -1749,7 +1753,7 @@ namespace Neon.Temporal
 
         /// <summary>
         /// Returns the Temporal namespace to be referenced for an operation.  If <paramref name="namespace"/>
-        /// is not <c>null</c> or empty then that will be returned otherwise the  <see cref="TemporalSettings.DefaultNamespace"/>
+        /// is not <c>null</c> or empty then that will be returned otherwise the  <see cref="TemporalSettings.Namespace"/>
         /// will be returned.  Note that one of <paramref name="namespace"/> or the default namespace must
         /// be non-empty.
         /// </summary>
@@ -1764,12 +1768,12 @@ namespace Neon.Temporal
             {
                 return @namespace;
             }
-            else if (!string.IsNullOrEmpty(Settings.DefaultNamespace))
+            else if (!string.IsNullOrEmpty(Settings.Namespace))
             {
-                return Settings.DefaultNamespace;
+                return Settings.Namespace;
             }
 
-            throw new ArgumentNullException(nameof(@namespace),$"One of [{nameof(@namespace)}] parameter or the client's default namespace (specified as [{nameof(TemporalClient)}.{nameof(TemporalClient.Settings)}.{nameof(TemporalSettings.DefaultNamespace)}]) must be non-empty.");
+            throw new ArgumentNullException(nameof(@namespace),$"One of [{nameof(@namespace)}] parameter or the client's default namespace (specified as [{nameof(TemporalClient)}.{nameof(TemporalClient.Settings)}.{nameof(TemporalSettings.Namespace)}]) must be non-empty.");
         }
 
         /// <summary>

@@ -89,7 +89,7 @@ namespace Neon.Temporal
 
                 if (string.IsNullOrEmpty(options.Namespace))
                 {
-                    options.Namespace = client.Settings.DefaultNamespace;
+                    options.Namespace = client.Settings.Namespace;
                 }
 
                 if (string.IsNullOrEmpty(options.Namespace))

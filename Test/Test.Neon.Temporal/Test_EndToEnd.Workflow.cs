@@ -2413,7 +2413,7 @@ namespace TestTemporal
 
             var options = new WorkflowOptions()
             {
-                Namespace  = client.Settings.DefaultNamespace,
+                Namespace  = client.Settings.Namespace,
                 WorkflowId = "my-workflow-id"
             };
 
@@ -4409,7 +4409,7 @@ namespace TestTemporal
                     "--detach", 
                     "--name", "test-temporal",
                     "--env", $"TEMPORAL_HOSTPORT={ipAddress}:7933",
-                    "--env", $"TEMPORAL_NAMESPACE={TemporalFixture.DefaultNamespace}",
+                    "--env", $"TEMPORAL_NAMESPACE={TemporalFixture.Namespace}",
                     "--env", $"TEMPORAL_TASKLIST={taskList}",
                     testTemporalImage
                 });
