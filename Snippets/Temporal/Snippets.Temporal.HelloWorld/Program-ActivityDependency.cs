@@ -75,9 +75,9 @@
 
             var settings = new TemporalSettings()
             {
-                DefaultNamespace = "my-namespace",
-                CreateNamespace  = true,
-                HostPort         = "localhost:7933"
+                Namespace       = "my-namespace",
+                CreateNamespace = true,
+                HostPort        = "localhost:7933"
             };
 
             using (var client = await TemporalClient.ConnectAsync(settings))

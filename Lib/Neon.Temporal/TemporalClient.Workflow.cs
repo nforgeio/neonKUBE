@@ -257,7 +257,7 @@ namespace Neon.Temporal
 
             if (string.IsNullOrEmpty(options.Namespace))
             {
-                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.Namespace)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.DefaultNamespace)}].");
+                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.Namespace)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.Namespace)}].");
             }
 
             return new WorkflowStub(this)
@@ -293,7 +293,7 @@ namespace Neon.Temporal
 
             if (string.IsNullOrEmpty(@namespace))
             {
-                throw new ArgumentException($"The [{nameof(@namespace)} parameter must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.DefaultNamespace)}].");
+                throw new ArgumentException($"The [{nameof(@namespace)} parameter must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.Namespace)}].");
             }
 
             return new WorkflowStub(this)
@@ -328,7 +328,7 @@ namespace Neon.Temporal
 
             if (string.IsNullOrEmpty(@namespace))
             {
-                throw new ArgumentException($"The [{nameof(@namespace)} parameter must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.DefaultNamespace)}].");
+                throw new ArgumentException($"The [{nameof(@namespace)} parameter must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.Namespace)}].");
             }
 
             var options = new WorkflowOptions()
@@ -397,7 +397,7 @@ namespace Neon.Temporal
 
             if (string.IsNullOrEmpty(@namespace))
             {
-                throw new ArgumentException($"The [{nameof(@namespace)} parameter must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.DefaultNamespace)}].");
+                throw new ArgumentException($"The [{nameof(@namespace)} parameter must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.Namespace)}].");
             }
 
             return StubManager.NewWorkflowStub<TWorkflowInterface>(this, workflowId, runId, @namespace);
@@ -435,7 +435,7 @@ namespace Neon.Temporal
 
             if (string.IsNullOrEmpty(@namespace))
             {
-                throw new ArgumentException($"The [{nameof(@namespace)} parameter must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.DefaultNamespace)}].");
+                throw new ArgumentException($"The [{nameof(@namespace)} parameter must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.Namespace)}].");
             }
 
             return StubManager.NewWorkflowStub<TWorkflowInterface>(this, execution.WorkflowId, execution.RunId, @namespace);
@@ -489,7 +489,7 @@ namespace Neon.Temporal
 
             if (string.IsNullOrEmpty(options.Namespace))
             {
-                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.Namespace)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.DefaultNamespace)}].");
+                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.Namespace)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.Namespace)}].");
             }
 
             return new WorkflowStub(this)
@@ -735,7 +735,7 @@ namespace Neon.Temporal
 
             if (string.IsNullOrEmpty(@namespace))
             {
-                throw new ArgumentNullException($"The [{nameof(@namespace)}] parameter must be specified when the client doesn't specify [{nameof(TemporalSettings)}.{nameof(TemporalSettings.DefaultNamespace)}].");
+                throw new ArgumentNullException($"The [{nameof(@namespace)}] parameter must be specified when the client doesn't specify [{nameof(TemporalSettings)}.{nameof(TemporalSettings.Namespace)}].");
             }
 
             var reply = (WorkflowGetResultReply)await CallProxyAsync(

@@ -173,7 +173,7 @@ namespace Neon.Temporal
         /// Optionally specifies the target namespace.  This defaults to the namespace
         /// specified by <see cref="WorkflowMethodAttribute.Namespace"/>, 
         /// <see cref="WorkflowInterfaceAttribute.Namespace"/>, or 
-        /// to the client's default namespace as specified by <see cref="TemporalSettings.DefaultNamespace"/>
+        /// to the client's default namespace as specified by <see cref="TemporalSettings.Namespace"/>
         /// (in that order of precedence).
         /// </summary>
         public string Namespace { get; set; } = null;

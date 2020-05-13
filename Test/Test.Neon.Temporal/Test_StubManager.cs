@@ -79,10 +79,10 @@ namespace TestTemporal
         {
             var settings = new TemporalSettings()
             {
-                DefaultNamespace = TemporalFixture.DefaultNamespace,
-                LogLevel         = TemporalTestHelper.LogLevel,
-                Debug            = TemporalTestHelper.Debug,
-                ClientIdentity   = TemporalTestHelper.ClientIdentity
+                Namespace      = TemporalFixture.Namespace,
+                ProxyLogLevel  = TemporalTestHelper.ProxyLogLevel,
+                Debug          = TemporalTestHelper.Debug,
+                ClientIdentity = TemporalTestHelper.ClientIdentity
             };
 
             fixture.Start(settings, reconnect: true);

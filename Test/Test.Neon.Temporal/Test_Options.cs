@@ -99,8 +99,8 @@ namespace TestTemporal
         {
             fixtureSettings = new TemporalSettings()
             {
-                DefaultNamespace       = TemporalFixture.DefaultNamespace,
-                LogLevel               = TemporalTestHelper.LogLevel,
+                Namespace              = TemporalFixture.Namespace,
+                ProxyLogLevel          = TemporalTestHelper.ProxyLogLevel,
                 CreateNamespace        = true,
                 Debug                  = TemporalTestHelper.Debug,
                 DebugPrelaunched       = TemporalTestHelper.DebugPrelaunched,
@@ -110,9 +110,9 @@ namespace TestTemporal
 
             test1Settings = new TemporalSettings()
             {
-                DefaultNamespace                      = "test1-namespace",
+                Namespace                             = "test1-namespace",
                 DefaultTaskList                       = "test1-tasklist",
-                LogLevel                              = TemporalTestHelper.LogLevel,
+                ProxyLogLevel                         = TemporalTestHelper.ProxyLogLevel,
                 CreateNamespace                       = true,
                 Debug                                 = TemporalTestHelper.Debug,
                 DebugPrelaunched                      = TemporalTestHelper.DebugPrelaunched,
@@ -133,10 +133,10 @@ namespace TestTemporal
 
             test2Settings = new TemporalSettings()
             {
-                DefaultNamespace                         = "test2-namespace",
+                Namespace                             = "test2-namespace",
                 DefaultTaskList                       = "test2-tasklist",
-                LogLevel                              = TemporalTestHelper.LogLevel,
-                CreateNamespace                          = true,
+                ProxyLogLevel                         = TemporalTestHelper.ProxyLogLevel,
+                CreateNamespace                       = true,
                 Debug                                 = TemporalTestHelper.Debug,
                 DebugPrelaunched                      = TemporalTestHelper.DebugPrelaunched,
                 DebugDisableHeartbeats                = TemporalTestHelper.DebugDisableHeartbeats,
@@ -157,8 +157,8 @@ namespace TestTemporal
             test3Settings = new TemporalSettings()
             {
                 DefaultTaskList                       = null,
-                LogLevel                              = TemporalTestHelper.LogLevel,
-                CreateNamespace                          = true,
+                ProxyLogLevel                         = TemporalTestHelper.ProxyLogLevel,
+                CreateNamespace                       = true,
                 Debug                                 = TemporalTestHelper.Debug,
                 DebugPrelaunched                      = TemporalTestHelper.DebugPrelaunched,
                 DebugDisableHeartbeats                = TemporalTestHelper.DebugDisableHeartbeats,
@@ -287,7 +287,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(Namespace = TemporalFixture.DefaultNamespace, TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(Namespace = TemporalFixture.Namespace, TaskList = TemporalTestHelper.TaskList)]
         public interface IOptionsTester : IWorkflow
         {
             [WorkflowMethod(Name = "ExecuteChildWithNoAttributes")]
@@ -776,7 +776,7 @@ namespace TestTemporal
             await ExecuteWorkflowWithNoAttributesAsync(test1Client,
                 options =>
                 {
-                    Assert.Equal(test1Settings.DefaultNamespace, options.Namespace);
+                    Assert.Equal(test1Settings.Namespace, options.Namespace);
                     Assert.Equal(test1Settings.DefaultTaskList, options.TaskList);
                     Assert.Equal(test1Settings.WorkflowDecisionTaskTimeout, options.DecisionTaskTimeout);
                     Assert.Equal(test1Settings.WorkflowStartToCloseTimeout, options.StartToCloseTimeout);
@@ -789,7 +789,7 @@ namespace TestTemporal
             await ExecuteWorkflowWithNoAttributesAsync(test2Client,
                 options =>
                 {
-                    Assert.Equal(test2Settings.DefaultNamespace, options.Namespace);
+                    Assert.Equal(test2Settings.Namespace, options.Namespace);
                     Assert.Equal(test2Settings.DefaultTaskList, options.TaskList);
                     Assert.Equal(test2Settings.WorkflowDecisionTaskTimeout, options.DecisionTaskTimeout);
                     Assert.Equal(test2Settings.WorkflowStartToCloseTimeout, options.StartToCloseTimeout);
@@ -888,7 +888,7 @@ namespace TestTemporal
             await ExecuteChildWorkflowWithNoAttributesAsync(test1Client,
                 options =>
                 {
-                    Assert.Equal(test1Settings.DefaultNamespace, options.Namespace);
+                    Assert.Equal(test1Settings.Namespace, options.Namespace);
                     Assert.Equal(test1Settings.DefaultTaskList, options.TaskList);
                     Assert.Equal(test1Settings.WorkflowDecisionTaskTimeout, options.DecisionTaskTimeout);
                     Assert.Equal(test1Settings.WorkflowStartToCloseTimeout, options.StartToCloseTimeout);
@@ -901,7 +901,7 @@ namespace TestTemporal
             await ExecuteChildWorkflowWithNoAttributesAsync(test2Client,
                 options =>
                 {
-                    Assert.Equal(test2Settings.DefaultNamespace, options.Namespace);
+                    Assert.Equal(test2Settings.Namespace, options.Namespace);
                     Assert.Equal(test2Settings.DefaultTaskList, options.TaskList);
                     Assert.Equal(test2Settings.WorkflowDecisionTaskTimeout, options.DecisionTaskTimeout);
                     Assert.Equal(test2Settings.WorkflowStartToCloseTimeout, options.StartToCloseTimeout);
@@ -1001,7 +1001,7 @@ namespace TestTemporal
             await ExecuteActivityWithNoAttributesAsync(test1Client,
                 options =>
                 {
-                    Assert.Equal(test1Settings.DefaultNamespace, options.Namespace);
+                    Assert.Equal(test1Settings.Namespace, options.Namespace);
                     Assert.Equal(test1Settings.DefaultTaskList, options.TaskList);
                     Assert.Equal(test1Settings.ActivityScheduleToCloseTimeout, options.ScheduleToCloseTimeout);
                     Assert.Equal(test1Settings.ActivityStartToCloseTimeout, options.StartToCloseTimeout);
@@ -1013,7 +1013,7 @@ namespace TestTemporal
             await ExecuteActivityWithNoAttributesAsync(test2Client,
                 options =>
                 {
-                    Assert.Equal(test2Settings.DefaultNamespace, options.Namespace);
+                    Assert.Equal(test2Settings.Namespace, options.Namespace);
                     Assert.Equal(test2Settings.DefaultTaskList, options.TaskList);
                     Assert.Equal(test2Settings.ActivityScheduleToCloseTimeout, options.ScheduleToCloseTimeout);
                     Assert.Equal(test2Settings.ActivityStartToCloseTimeout, options.StartToCloseTimeout);

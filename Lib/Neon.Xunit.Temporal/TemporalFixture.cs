@@ -95,7 +95,7 @@ services:
         /// <summary>
         /// The default namespace configured for <see cref="TemporalFixture"/> clients.
         /// </summary>
-        public const string DefaultNamespace = "test-namespace";
+        public const string Namespace = "test-namespace";
 
         /// <summary>
         /// Constructs the fixture.
@@ -172,7 +172,7 @@ services:
             TemporalSettings    settings         = null,
             string              stackDefinition  = DefaultStackDefinition,
             string              name             = "temporal-dev",
-            string              defaultNamespace = DefaultNamespace,
+            string              defaultNamespace = Namespace,
             LogLevel            logLevel         = LogLevel.None,
             bool                reconnect        = false,
             bool                keepRunning      = false,
@@ -246,7 +246,7 @@ services:
             TemporalSettings    settings         = null,
             string              stackDefinition  = DefaultStackDefinition,
             string              name             = "temporal-dev",
-            string              defaultNamespace = DefaultNamespace,
+            string              defaultNamespace = Namespace,
             LogLevel            logLevel         = LogLevel.None,
             bool                reconnect        = false,
             bool                keepRunning      = false,
@@ -284,8 +284,8 @@ services:
                 {
                     HostPort         = $"127.0.0.1:{NetworkPorts.Temporal}",
                     CreateNamespace  = true,
-                    DefaultNamespace = defaultNamespace,
-                    LogLevel         = logLevel
+                    Namespace = defaultNamespace,
+                    ProxyLogLevel         = logLevel
                 };
 
                 this.settings  = settings;

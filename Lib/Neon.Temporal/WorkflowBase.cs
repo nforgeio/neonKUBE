@@ -792,7 +792,7 @@ namespace Neon.Temporal
             // expect that we'll only have to poll for a second or two in most 
             // circumstances anyway.
 
-            var sysDeadline = SysTime.Now + workflow.Workflow.Client.Settings.MaxWorkflowDelay;
+            var sysDeadline = SysTime.Now + workflow.Workflow.Client.Settings.MaxWorkflowKeepAlive;
             var signalCount = 0;
 
             while (SysTime.Now < sysDeadline)
