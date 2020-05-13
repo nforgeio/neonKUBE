@@ -248,7 +248,7 @@ namespace Neon.Xunit.Cadence
                 // Most users won't run into this because Cadence eventually will be
                 // depreciated but neonKUBE unit tests will require this.
 
-                NeonHelper.Execute("docker",
+                NeonHelper.Execute("docker.exe",
                     new string[]
                     {
                         "stack",
@@ -277,7 +277,7 @@ namespace Neon.Xunit.Cadence
                 NeonHelper.WaitFor(
                     () =>
                     {
-                        var result = NeonHelper.ExecuteCapture("docker", new string[] { "ps" });
+                        var result = NeonHelper.ExecuteCapture("docker.exe", new string[] { "ps" });
 
                         return !result.OutputText.Contains($"{name}_");
                     },
@@ -289,7 +289,7 @@ namespace Neon.Xunit.Cadence
                 NeonHelper.WaitFor(
                     () =>
                     {
-                        var result = NeonHelper.ExecuteCapture("docker", new string[] { "network", "ls" });
+                        var result = NeonHelper.ExecuteCapture("docker.exe", new string[] { "network", "ls" });
 
                         return !result.OutputText.Contains($"{name}_");
                     },

@@ -73,7 +73,7 @@
           <listItem>
             <para>
               Workflows must not call things like <codeEntityReference qualifyHint="false" autoUpgrade="true">M:System.Threading.Thread.Sleep(System.TimeSpan)</codeEntityReference>
-              or <codeEntityReference qualifyHint="false" autoUpgrade="true">M:System.Threading.Tasks.Thread.DelayAsync(System.TimeSpan)</codeEntityReference>.
+              or <codeEntityReference qualifyHint="false" autoUpgrade="true">M:System.Threading.Tasks.Task.Delay(System.TimeSpan)</codeEntityReference>.
               Use <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Neon.Temporal.Workflow.SleepAsync(System.TimeSpan)</codeEntityReference> or
               <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Neon.Temporal.Workflow.SleepUntilUtcAsync(System.DateTime)</codeEntityReference> instead.
             </para>

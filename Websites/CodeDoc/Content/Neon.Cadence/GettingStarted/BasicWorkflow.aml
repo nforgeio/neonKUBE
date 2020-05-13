@@ -126,7 +126,7 @@
             <para>Reassigning the workflow if the workflow service executing it is restarted or fails.</para>
           </listItem>
           <listItem>
-            <para>Ensuring that the workflow is idempotent such that steps that have already been completed won't be reexecuted due to workflow service failures.</para>
+            <para>Ensuring that the workflow is idempotent such that steps that have already been completed won't be reexecuted due to worker failures.</para>
           </listItem>
           <listItem>
             <para>Load balancing work across multiple registered workflow service instances.</para>

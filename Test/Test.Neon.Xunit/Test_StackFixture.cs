@@ -57,7 +57,7 @@ services:
         {
             // All we need to do is verify that the stack is running.
 
-            var result = NeonHelper.ExecuteCapture("docker", new string[] { "stack", "ls" });
+            var result = NeonHelper.ExecuteCapture("docker.exe", new string[] { "stack", "ls" });
 
             Assert.Equal(0, result.ExitCode);
             Assert.Contains("neon-unit-test-stack", result.AllText);

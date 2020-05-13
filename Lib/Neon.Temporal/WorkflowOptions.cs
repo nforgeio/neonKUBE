@@ -216,6 +216,12 @@ namespace Neon.Temporal
         public string TaskList { get; set; } = null;
 
         /// <summary>
+        /// Optionally specifies the default maximum time a workflow can wait between being scheduled
+        /// and actually begin executing.  This defaults to <c>24 hours</c>.
+        /// </summary>
+        public TimeSpan ScheduleToStartTimeout { get; set; }
+
+        /// <summary>
         /// <para>
         /// Optionally specifies the maximum time the workflow may execute from start to finish.
         /// This defaults to 24 hours.
@@ -227,12 +233,6 @@ namespace Neon.Temporal
         /// </note>
         /// </summary>
         public TimeSpan StartToCloseTimeout { get; set; }
-
-        /// <summary>
-        /// Optionally specifies the default maximum time a workflow can wait between being scheduled
-        /// and actually begin executing.  This defaults to <c>24 hours</c>.
-        /// </summary>
-        public TimeSpan ScheduleToStartTimeout { get; set; }
 
         /// <summary>
         /// Optionally specifies the timeout for processing decision task from the time the worker

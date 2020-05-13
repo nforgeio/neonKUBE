@@ -91,9 +91,9 @@
           code; nothing fancy right?  It's fetching a list of email addresses and then sending emails to those addresses.
           This is where the genius of Temporal comes into the picture.  This method is really a reliable workflow
           state machine managed by Temporal.  Not only does Temporal manage scheduling (and perhaps rescheduling) the workflow 
-          and each activity call on a workflow service instance, Temporal also tracks the the operations the workflow performs
+          and each activity call on a worker instance, Temporal also tracks the the operations the workflow performs
           such that even if the host workflow service fails in the middle of executing the workflow, Temporal will schedule
-          the workflow on a different workflow service instance and also <legacyBold>ensures that the method continues
+          the workflow on a different workflow worker and also <legacyBold>ensures that the method continues
           exactly where it left off</legacyBold>.
         </para>
         <para>
