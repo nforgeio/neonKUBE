@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -48,17 +49,19 @@ namespace Neon.Temporal
         private struct ActivityKey
         {
             private long clientId;
+            private long workerId;
             private long contextId;
 
-            public ActivityKey(TemporalClient client, long contextId)
+            public ActivityKey(Worker worker, long contextId)
             {
-                this.clientId  = client.ClientId;
+                this.clientId  = worker.Client.ClientId;
+                this.workerId  = worker.WorkerId;
                 this.contextId = contextId;
             }
 
             public override int GetHashCode()
             {
-                return clientId.GetHashCode() ^ contextId.GetHashCode();
+                return clientId.GetHashCode() ^ workerId.GetHashCode() ^ contextId.GetHashCode();
             }
 
             public override bool Equals(object obj)
@@ -71,12 +74,13 @@ namespace Neon.Temporal
                 var other = (ActivityKey)obj;
 
                 return this.clientId == other.clientId &&
+                       this.workerId == other.workerId &&
                        this.contextId == other.contextId;
             }
 
             public override string ToString()
             {
-                return $"clientID={clientId}, contextId={contextId}";
+                return $"clientId={clientId}, workerId={workerId} contextId={contextId}";
             }
         }
 
@@ -111,20 +115,21 @@ namespace Neon.Temporal
 
         // This dictionary is used to map activity type names to the target activity
         // type and entry point method.  Note that these mappings are scoped to specific
-        // Temporal client instances by prefixing the type name with:
+        // Temporal client and worker instances by prefixing the type name with:
         //
-        //      CLIENT-ID::
+        //      CLIENT-ID::WORKER-ID::
         //
-        // where CLIENT-ID is the locally unique ID of the client.  This is important,
-        // because we'll need to remove the entries for clients when they're disposed.
+        // where CLIENT-ID is the locally unique ID of the client and WORKER-ID is the
+        // client local ID for the worker.  This is important, because we'll need to 
+        // remove entries the for clients and workers when they're disposed.
         //
         // Activity type names may also include a second "::" separator with the
         // activity method name appended afterwards to handle activity interfaces
         // that have multiple methods.  So, valid activity registrations
         // may looks like:
         // 
-        //      1::my-activity                  -- clientId = 1, activity type name = my-activity
-        //      1::my-activity::my-entrypoint   -- clientId = 1, activity type name = my-activity, entrypoint = my-entrypoint
+        //      1::1::my-activity                  -- clientId = 1, workerId = 1, activity type name = my-activity
+        //      1::2::my-activity::my-entrypoint   -- clientId = 1, workerId = 2, activity type name = my-activity, entrypoint = my-entrypoint
 
         private static Dictionary<string, ActivityRegistration> nameToRegistration = new Dictionary<string, ActivityRegistration>();
 
@@ -140,26 +145,26 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Prepends the Temporal client ID to the activity type name and optional
+        /// Prepends the Temporal client and worker IDs to the activity type name and optional
         /// activity method attribute name to generate the key used to dereference the 
         /// <see cref="nameToRegistration"/> dictionary.
         /// </summary>
-        /// <param name="client">The Temporal client.</param>
+        /// <param name="worker">The Temporal worker.</param>
         /// <param name="activityTypeName">The activity type name.</param>
         /// <param name="activityMethodAttribute">Optionally specifies the activity method attribute. </param>
         /// <returns>The prepended activity registration key.</returns>
-        private static string GetActivityTypeKey(TemporalClient client, string activityTypeName, ActivityMethodAttribute activityMethodAttribute = null)
+        private static string GetActivityTypeKey(Worker worker, string activityTypeName, ActivityMethodAttribute activityMethodAttribute = null)
         {
-            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName), nameof(activityTypeName));
 
             if (string.IsNullOrEmpty(activityMethodAttribute?.Name))
             {
-                return $"{client.ClientId}::{activityTypeName}";
+                return $"{worker.Client.ClientId}::{worker.WorkerId}::{activityTypeName}";
             }
             else
             {
-                return $"{client.ClientId}::{activityTypeName}::{activityMethodAttribute.Name}";
+                return $"{worker.Client.ClientId}::{worker.WorkerId}::{activityTypeName}::{activityMethodAttribute.Name}";
             }
         }
 
@@ -183,15 +188,15 @@ namespace Neon.Temporal
         /// <summary>
         /// Registers an activity type.
         /// </summary>
-        /// <param name="client">The associated client.</param>
+        /// <param name="worker">The target worker.</param>
         /// <param name="activityType">The activity type.</param>
         /// <param name="activityTypeName">The name used to identify the implementation.</param>
         /// <param name="namespace">Specifies the target namespace.</param>
         /// <returns><c>true</c> if the activity was already registered.</returns>
         /// <exception cref="InvalidOperationException">Thrown if a different activity class has already been registered for <paramref name="activityTypeName"/>.</exception>
-        internal async static Task RegisterAsync(TemporalClient client, Type activityType, string activityTypeName, string @namespace)
+        internal async static Task RegisterAsync(Worker worker, Type activityType, string activityTypeName, string @namespace)
         {
-            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
             TemporalHelper.ValidateActivityImplementation(activityType);
 
@@ -235,7 +240,7 @@ namespace Neon.Temporal
                     continue;
                 }
 
-                var activityTypeKey = GetActivityTypeKey(client, activityTypeName, activityMethodAttribute);
+                var activityTypeKey = GetActivityTypeKey(worker, activityTypeName, activityMethodAttribute);
 
                 lock (syncLock)
                 {
@@ -258,11 +263,11 @@ namespace Neon.Temporal
                     }
                 }
 
-                var reply = (ActivityRegisterReply)await client.CallProxyAsync(
+                var reply = (ActivityRegisterReply)await worker.Client.CallProxyAsync(
                     new ActivityRegisterRequest()
                     {
-                        Name      = GetActivityTypeNameFromKey(activityTypeKey),
-                        Namespace = client.ResolveNamespace(@namespace)
+                        Name     = GetActivityTypeNameFromKey(activityTypeKey),
+                        WorkerId = worker.WorkerId
                     });
 
                 // $hack(jefflill): 
@@ -310,17 +315,17 @@ namespace Neon.Temporal
             // Locate the target method.  Note that the activity type name will be
             // formatted like:
             //
-            //      CLIENT-ID::TYPE-NAME
-            // or   CLIENT-ID::TYPE-NAME::METHOD-NAME
+            //      CLIENT-ID::WORKER-ID::TYPE-NAME
+            // or   CLIENT-ID::WORKER-ID::TYPE-NAME::METHOD-NAME
 
-            var activityTypeNameParts = activityTypeName.Split(TemporalHelper.ActivityTypeMethodSeparator.ToCharArray(), 3);
+            var activityTypeNameParts = activityTypeName.Split(TemporalHelper.ActivityTypeMethodSeparator.ToCharArray(), 4);
             var activityMethodName    = (string)null;
 
-            Covenant.Assert(activityTypeNameParts.Length >= 2);
+            Covenant.Assert(activityTypeNameParts.Length >= 3);
 
-            if (activityTypeNameParts.Length > 2)
+            if (activityTypeNameParts.Length > 3)
             {
-                activityMethodName = activityTypeNameParts[2];
+                activityMethodName = activityTypeNameParts[3];
             }
 
             if (string.IsNullOrEmpty(activityMethodName))
@@ -362,18 +367,18 @@ namespace Neon.Temporal
         /// <summary>
         /// Constructs an activity instance suitable for executing a normal activity.
         /// </summary>
-        /// <param name="client">The associated client.</param>
+        /// <param name="worker">The worker hosting the activity.</param>
         /// <param name="invokeInfo">The activity invocation information.</param>
         /// <param name="contextId">The activity context ID.</param>
         /// <returns>The constructed activity.</returns>
-        private static ActivityBase CreateNormal(TemporalClient client, ActivityRegistration invokeInfo, long contextId)
+        private static ActivityBase CreateNormal(Worker worker, ActivityRegistration invokeInfo, long contextId)
         {
-            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
 
             var activity = (ActivityBase)ActivatorUtilities.CreateInstance(NeonHelper.ServiceContainer, invokeInfo.ActivityType);
 
             activity.IsLocal = false;
-            activity.Initialize(client, invokeInfo.ActivityType, invokeInfo.ActivityMethod, client.DataConverter, contextId);
+            activity.Initialize(worker, invokeInfo.ActivityType, invokeInfo.ActivityMethod, worker.Client.DataConverter, contextId);
 
             return activity;
         }
@@ -381,18 +386,18 @@ namespace Neon.Temporal
         /// <summary>
         /// Constructs an activity instance suitable for executing a normal (non-local) activity.
         /// </summary>
-        /// <param name="client">The associated client.</param>
+        /// <param name="worker">The worker hosting the activity.</param>
         /// <param name="activityAction">The target activity action.</param>
         /// <param name="contextId">The activity context ID.</param>
         /// <returns>The constructed activity.</returns>
-        internal static ActivityBase CreateLocal(TemporalClient client, LocalActivityAction activityAction, long contextId)
+        internal static ActivityBase CreateLocal(Worker worker, LocalActivityAction activityAction, long contextId)
         {
-            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
 
             var activity = (ActivityBase)ActivatorUtilities.CreateInstance(NeonHelper.ServiceContainer, activityAction.ActivityType);
 
             activity.IsLocal = true;
-            activity.Initialize(client, activityAction.ActivityType, activityAction.ActivityMethod, client.DataConverter, contextId);
+            activity.Initialize(worker, activityAction.ActivityType, activityAction.ActivityMethod, worker.Client.DataConverter, contextId);
 
             return activity;
         }
@@ -400,12 +405,12 @@ namespace Neon.Temporal
         /// <summary>
         /// Called to handle a workflow related request message received from the temporal-proxy.
         /// </summary>
-        /// <param name="client">The client that received the request.</param>
+        /// <param name="worker">The worker hosting the activity.</param>
         /// <param name="request">The request message.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        internal static async Task OnProxyRequestAsync(TemporalClient client, ProxyRequest request)
+        internal static async Task OnProxyRequestAsync(Worker worker, ProxyRequest request)
         {
-            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
             ProxyReply reply;
@@ -414,12 +419,12 @@ namespace Neon.Temporal
             {
                 case InternalMessageTypes.ActivityInvokeRequest:
 
-                    reply = await OnActivityInvokeRequest(client, (ActivityInvokeRequest)request);
+                    reply = await OnActivityInvokeRequest(worker, (ActivityInvokeRequest)request);
                     break;
 
                 case InternalMessageTypes.ActivityStoppingRequest:
 
-                    reply = await ActivityStoppingRequest(client, (ActivityStoppingRequest)request);
+                    reply = await ActivityStoppingRequest(worker, (ActivityStoppingRequest)request);
                     break;
 
                 default:
@@ -427,32 +432,32 @@ namespace Neon.Temporal
                     throw new InvalidOperationException($"Unexpected message type [{request.Type}].");
             }
 
-            await client.ProxyReplyAsync(request, reply);
+            await worker.Client.ProxyReplyAsync(request, reply);
         }
 
         /// <summary>
         /// Handles received <see cref="ActivityInvokeRequest"/> messages.
         /// </summary>
-        /// <param name="client">The receiving Temporal client.</param>
+        /// <param name="worker">The worker hosting the activity.</param>
         /// <param name="request">The request message.</param>
         /// <returns>The reply message.</returns>
-        private static async Task<ActivityInvokeReply> OnActivityInvokeRequest(TemporalClient client, ActivityInvokeRequest request)
+        private static async Task<ActivityInvokeReply> OnActivityInvokeRequest(Worker worker, ActivityInvokeRequest request)
         {
             ActivityRegistration  invokeInfo;
 
             lock (syncLock)
             {
-                if (!nameToRegistration.TryGetValue(GetActivityTypeKey(client, request.Activity), out invokeInfo))
+                if (!nameToRegistration.TryGetValue(GetActivityTypeKey(worker, request.Activity), out invokeInfo))
                 {
                     throw new KeyNotFoundException($"Cannot resolve [activityTypeName = {request.Activity}] to a registered activity type and activity method.");
                 }
             }
 
-            var activity = CreateNormal(client, invokeInfo, request.ContextId);
+            var activity = CreateNormal(worker, invokeInfo, request.ContextId);
 
             try
             {
-                var result = await activity.OnInvokeAsync(client, request.Args);
+                var result = await activity.OnInvokeAsync(worker, request.Args);
 
                 if (activity.CompleteExternally)
                 {
@@ -499,14 +504,14 @@ namespace Neon.Temporal
         /// <summary>
         /// Handles received <see cref="ActivityStoppingRequest"/> messages.
         /// </summary>
-        /// <param name="client">The receiving Temporal client.</param>
+        /// <param name="worker">The worker hosting the activity.</param>
         /// <param name="request">The request message.</param>
         /// <returns>The reply message.</returns>
-        private static async Task<ActivityStoppingReply> ActivityStoppingRequest(TemporalClient client, ActivityStoppingRequest request)
+        private static async Task<ActivityStoppingReply> ActivityStoppingRequest(Worker worker, ActivityStoppingRequest request)
         {
             lock (syncLock)
             {
-                if (idToActivity.TryGetValue(new ActivityKey(client, request.ContextId), out var activity))
+                if (idToActivity.TryGetValue(new ActivityKey(worker, request.ContextId), out var activity))
                 {
                     activity.CancellationTokenSource.Cancel();
                 }
@@ -533,20 +538,20 @@ namespace Neon.Temporal
         /// <summary>
         /// Called internally to initialize the activity.
         /// </summary>
-        /// <param name="client">The associated client.</param>
+        /// <param name="worker">The worker hosting the activity.</param>
         /// <param name="activityType">Specifies the target activity type.</param>
         /// <param name="activityMethod">Specifies the target activity method.</param>
         /// <param name="dataConverter">Specifies the data converter to be used for parameter and result serilization.</param>
         /// <param name="contextId">The activity's context ID.</param>
-        internal void Initialize(TemporalClient client, Type activityType, MethodInfo activityMethod, IDataConverter dataConverter, long contextId)
+        internal void Initialize(Worker worker, Type activityType, MethodInfo activityMethod, IDataConverter dataConverter, long contextId)
         {
-            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
             Covenant.Requires<ArgumentNullException>(activityMethod != null, nameof(activityMethod));
             Covenant.Requires<ArgumentNullException>(dataConverter != null, nameof(dataConverter));
             TemporalHelper.ValidateActivityImplementation(activityType);
 
-            this.Client                  = client;
+            this.Client                  = worker.Client;
             this.Activity                = new Activity(this);
             this.activityType            = activityType;
             this.activityMethod          = activityMethod;
@@ -636,12 +641,12 @@ namespace Neon.Temporal
         /// <summary>
         /// Called internally to execute the activity.
         /// </summary>
-        /// <param name="client">The Temporal client.</param>
+        /// <param name="worker">The worker hosting the activity.</param>
         /// <param name="args">The encoded activity arguments.</param>
         /// <returns>Thye activity results.</returns>
-        internal async Task<byte[]> OnInvokeAsync(TemporalClient client, byte[] args)
+        internal async Task<byte[]> OnInvokeAsync(Worker worker, byte[] args)
         {
-            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
 
             // Capture the activity information.
 
@@ -663,13 +668,13 @@ namespace Neon.Temporal
 
                 ActivityTask.ActivityTypeName = null;
 
-                return await InvokeAsync(client, args);
+                return await InvokeAsync(worker.Client, args);
             }
             else
             {
                 // Track the activity.
 
-                var activityKey = new ActivityKey(client, ContextId);
+                var activityKey = new ActivityKey(worker, ContextId);
 
                 try
                 {
@@ -678,7 +683,7 @@ namespace Neon.Temporal
                         idToActivity[activityKey] = this;
                     }
 
-                    return await InvokeAsync(client, args);
+                    return await InvokeAsync(worker.Client, args);
                 }
                 catch (Exception e)
                 {

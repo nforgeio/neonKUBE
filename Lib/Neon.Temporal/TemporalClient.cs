@@ -596,7 +596,7 @@ namespace Neon.Temporal
         private static readonly INeonLogger             log           = LogManager.Default.GetLogger<TemporalClient>();
         private static bool                             proxyWritten  = false;
         private static long                             nextClientId  = 0;
-        private static Dictionary<long, TemporalClient>  idToClient    = new Dictionary<long, TemporalClient>();
+        private static Dictionary<long, TemporalClient> idToClient    = new Dictionary<long, TemporalClient>();
         private static long                             nextRequestId = 0;
         private static Dictionary<long, Operation>      operations    = new Dictionary<long, Operation>();
         private static INeonLogger                      temporalLogger;
@@ -894,7 +894,7 @@ namespace Neon.Temporal
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.Namespace), nameof(settings), "You must specifiy a non-empty default Temporal namespace.");
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(settings.Namespace), nameof(settings.Namespace), "You must specifiy a non-empty Temporal namespace in settings.");
 
             settings = settings.Clone();    // Configure the client using cloned settings
 
@@ -1204,13 +1204,13 @@ namespace Neon.Temporal
                         case InternalMessageTypes.ActivityInvokeLocalRequest:
                         case InternalMessageTypes.WorkflowFutureReadyRequest:
 
-                            await WorkflowBase.OnProxyRequestAsync(client, request);
+                            await WorkflowBase.OnProxyRequestAsync(client.GetWorkerById(request.WorkerId), request);
                             break;
 
                         case InternalMessageTypes.ActivityInvokeRequest:
                         case InternalMessageTypes.ActivityStoppingRequest:
 
-                            await ActivityBase.OnProxyRequestAsync(client, request);
+                            await ActivityBase.OnProxyRequestAsync(client.GetWorkerById(request.WorkerId), request);
                             break;
 
                         default:
@@ -1366,7 +1366,7 @@ namespace Neon.Temporal
 
         private Process                     proxyProcess            = null;
         private int                         proxyPort               = 0;
-        private Dictionary<long, Worker>    workers                 = new Dictionary<long, Worker>();
+        private Dictionary<long, Worker>    idToWorker              = new Dictionary<long, Worker>();
         private Dictionary<string, Type>    activityTypes           = new Dictionary<string, Type>();
         private bool                        isDisposed              = false;
         private List<Type>                  registeredActivityTypes = new List<Type>();
@@ -1510,7 +1510,7 @@ namespace Neon.Temporal
 
                     lock (syncLock)
                     {
-                        workerList = workers.Values.ToList();
+                        workerList = idToWorker.Values.ToList();
                     }
 
                     foreach (var worker in workerList)
@@ -1743,6 +1743,26 @@ namespace Neon.Temporal
                 if (activityTypes.TryGetValue(activityTypeName, out var type))
                 {
                     return type;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Looks up an associated worker by its ID.
+        /// </summary>
+        /// <param name="workerId">The worker ID.</param>
+        /// <returns>The <see cref="Worker"/> or <c>null</c>.</returns>
+        internal Worker GetWorkerById(long workerId)
+        {
+            lock (syncLock)
+            {
+                if (idToWorker.TryGetValue(workerId, out var worker))
+                {
+                    return worker;
                 }
                 else
                 {

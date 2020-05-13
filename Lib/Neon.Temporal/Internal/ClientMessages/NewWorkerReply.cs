@@ -38,15 +38,6 @@ namespace Neon.Temporal.Internal
             Type = InternalMessageTypes.NewWorkerReply;
         }
 
-        /// <summary>
-        /// The ID of the new worker.
-        /// </summary>
-        public long WorkerId
-        {
-            get => GetLongProperty(PropertyNames.WorkerId);
-            set => SetLongProperty(PropertyNames.WorkerId, value);
-        }
-
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -61,10 +52,6 @@ namespace Neon.Temporal.Internal
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
-
-            var typedTarget = (NewWorkerReply)target;
-
-            typedTarget.WorkerId = this.WorkerId;
         }
     }
 }

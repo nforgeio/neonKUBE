@@ -165,7 +165,7 @@ namespace Neon.Temporal
                     // throw an exception because Temporal doesn't support recreating
                     // a worker with the same parameters on the same client.
 
-                    worker = workers.Values.SingleOrDefault(wf => wf.Mode == mode && wf.Namespace == @namespace && wf.Tasklist == taskList);
+                    worker = idToWorker.Values.SingleOrDefault(wf => wf.Mode == mode && wf.Namespace == @namespace && wf.Tasklist == taskList);
 
                     if (worker != null)
                     {
@@ -184,15 +184,14 @@ namespace Neon.Temporal
                     var reply = (NewWorkerReply)(await CallProxyAsync(
                         new NewWorkerRequest()
                         {
-                            Namespace = @namespace,
-                            TaskList  = taskList,
-                            Options   = options.ToInternal()
+                            TaskList = taskList,
+                            Options  = options.ToInternal()
                         }));
 
                     reply.ThrowOnError();
 
                     worker = new Worker(this, mode, reply.WorkerId, @namespace, taskList);
-                    workers.Add(reply.WorkerId, worker);
+                    idToWorker.Add(reply.WorkerId, worker);
                 }
             }
             finally
@@ -308,7 +307,7 @@ namespace Neon.Temporal
                     throw new InvalidOperationException("The worker passed does not belong to this client connection.");
                 }
 
-                if (!workers.ContainsKey(worker.WorkerId))
+                if (!idToWorker.ContainsKey(worker.WorkerId))
                 {
                     // The worker does not exist.  We're going to ignore this.
 

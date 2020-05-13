@@ -64,6 +64,7 @@ namespace TestTemporal
                 Assert.Empty(message.Properties);
                 Assert.Empty(message.Attachments);
                 Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.WorkerId);
 
                 // Message with args and attachments.
 
@@ -106,11 +107,13 @@ namespace TestTemporal
                 Assert.Empty(message.Attachments[1]);
                 Assert.Null(message.Attachments[2]);
 
-                // ClientId property
+                // ClientId and WorkerId properties
 
                 message.ClientId = 444;
+                message.WorkerId = 555;
 
                 Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.WorkerId);
             }
         }
 
