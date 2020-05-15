@@ -102,11 +102,11 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// WorkflowIDReusePolicy - Whether server allow reuse of workflow ID, can be useful
         /// for dedup logic if set to WorkflowIdReusePolicyRejectDuplicate
-        /// Optional: defaulted to WorkflowIDReusePolicyAllowDuplicateFailedOnly.
+        /// Optional: defaulted to WorkflowIdReusePolicyAllowDuplicate.
         /// </summary>
         [JsonProperty(PropertyName = "WorkflowIdReusePolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly)]
-        public int WorkflowIdReusePolicy { get; set; } = (int)Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
+        [DefaultValue(Cadence.WorkflowIdReusePolicy.AllowDuplicate)]
+        public int WorkflowIdReusePolicy { get; set; } = (int)Cadence.WorkflowIdReusePolicy.AllowDuplicate;
 
         /// <summary>
         /// RetryPolicy - Optional retry policy for workflow. If a retry policy is specified, in case of workflow failure

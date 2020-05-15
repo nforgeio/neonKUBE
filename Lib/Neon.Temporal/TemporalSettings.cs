@@ -541,14 +541,14 @@ namespace Neon.Temporal
 
         /// <summary>
         /// Specifies what happens when Temporal workflows attempt to reuse workflow IDs.
-        /// This defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicateFailedOnly"/>.
+        /// This defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicate"/>.
         /// Workflows can customize this via <see cref="WorkflowOptions"/> or <see cref="ChildWorkflowOptions"/>
         /// or by setting this in the <see cref="WorkflowMethodAttribute"/> tagging the 
         /// workflow entry point method
         /// </summary>
         [JsonProperty(PropertyName = "WorkflowIdReusePolicy", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "workflowIdReusePolicy", ApplyNamingConventions = false)]
-        [DefaultValue(WorkflowIdReusePolicy.AllowDuplicateFailedOnly)]
+        [DefaultValue(WorkflowIdReusePolicy.AllowDuplicate)]
         public WorkflowIdReusePolicy WorkflowIdReusePolicy
         {
             get => workflowIdReusePolicy;
@@ -560,7 +560,7 @@ namespace Neon.Temporal
             }
         }
 
-        private WorkflowIdReusePolicy workflowIdReusePolicy = WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
+        private WorkflowIdReusePolicy workflowIdReusePolicy = WorkflowIdReusePolicy.AllowDuplicate;
 
         /// <summary>
         /// Specifies the default maximum time an activity is allowed to wait after being
