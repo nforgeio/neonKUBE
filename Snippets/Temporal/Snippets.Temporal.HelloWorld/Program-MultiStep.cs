@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Mail;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using Neon.Common;
@@ -85,11 +86,13 @@ namespace HelloWorld_MultiStep
 
             using (var client = await TemporalClient.ConnectAsync(settings))
             {
-                // Register your workflow and activity implementations to let 
-                // Temporal know we're open for business.
+                // Create a worker and register the workflow and activity 
+                // implementations to let Temporal know we're open for business.
 
-                await client.RegisterAssemblyAsync(System.Reflection.Assembly.GetExecutingAssembly());
-                await client.StartWorkerAsync("my-tasks");
+                var worker = await client.NewWorkerAsync(new WorkerOptions() { TaskList = "my-tasks" });
+
+                await worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly());
+                await worker.StartAsync();
 
                 // Invoke the workflow.
 

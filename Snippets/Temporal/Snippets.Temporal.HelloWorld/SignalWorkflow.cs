@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using Neon.Common;
@@ -66,8 +67,13 @@ namespace Snippets_SignalWorkflow
 
             using (var client = await TemporalClient.ConnectAsync(settings))
             {
-                await client.RegisterAssemblyAsync(System.Reflection.Assembly.GetExecutingAssembly());
-                await client.StartWorkerAsync("my-tasks");
+                // Create a worker and register the workflow and activity 
+                // implementations to let Temporal know we're open for business.
+
+                var worker = await client.NewWorkerAsync(new WorkerOptions() { TaskList = "my-tasks" });
+
+                await worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly());
+                await worker.StartAsync();
 
                 // Invoke the workflow, send it some signals and very that
                 // it changed its state to the signal value.

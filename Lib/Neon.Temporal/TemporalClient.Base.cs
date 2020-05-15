@@ -36,8 +36,6 @@ namespace Neon.Temporal
         //---------------------------------------------------------------------
         // Temporal basic client related operations.
 
-        private AsyncMutex workerRegistrationMutex = new AsyncMutex();
-
         /// <summary>
         /// Pings the <b>temporal-proxy</b> and waits for the reply.  This is used 
         /// mainly for low-level performance and load testing but can also be used
@@ -53,199 +51,79 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Scans the assembly passed looking for workflow and activity implementations 
-        /// derived from and registers them with Temporal.  This is equivalent to calling
-        /// <see cref="RegisterAssemblyWorkflowsAsync(Assembly, string)"/> and
-        /// <see cref="RegisterAssemblyActivitiesAsync(Assembly, string)"/>,
+        /// Creates a new Temporal <see cref="Worker"/> attached to the current client.  You'll
+        /// use this to register your workflow and/or activity implementations with Temporal and
+        /// the start the worker to signal Temporal that the worker is ready for business.
         /// </summary>
-        /// <param name="assembly">The target assembly.</param>
-        /// <param name="namespace">Optionally overrides the default client namespace.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="TypeLoadException">
-        /// Thrown for types tagged by <see cref="WorkflowAttribute"/> that are not 
-        /// derived from <see cref="WorkflowBase"/> or for types tagged by <see cref="ActivityAttribute"/>
-        /// that are now derived from <see cref="ActivityBase"/>.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
-        /// <exception cref="ActivityWorkerStartedException">
-        /// Thrown if an activity worker has already been started for the client.  You must
-        /// register activity implementations before starting workers.
-        /// </exception>
-        /// <exception cref="WorkflowWorkerStartedException">
-        /// Thrown if a workflow worker has already been started for the client.  You must
-        /// register workflow implementations before starting workers.
-        /// </exception>
-        /// <remarks>
-        /// <note>
-        /// Be sure to register all services you will be injecting into activities via
-        /// <see cref="NeonHelper.ServiceContainer"/> before you call this as well as 
-        /// registering of your activity and workflow implementations before starting 
-        /// workers.
-        /// </note>
-        /// </remarks>
-        public async Task RegisterAssemblyAsync(Assembly assembly, string @namespace = null)
-        {
-            await SyncContext.ClearAsync;
-            EnsureNotDisposed();
-            
-            await RegisterAssemblyWorkflowsAsync(assembly, @namespace);
-            await RegisterAssemblyActivitiesAsync(assembly, @namespace);
-        }
-
-        /// <summary>
-        /// Signals Temporal that the application is capable of executing workflows and/or activities for a specific
-        /// namespace and task list.
-        /// </summary>
-        /// <param name="taskList">Specifies the task list implemented by the worker.  This must not be empty.</param>
         /// <param name="options">Optionally specifies additional worker options.</param>
-        /// <param name="namespace">Optionally overrides the default <see cref="TemporalClient"/> namespace.</param>
         /// <returns>A <see cref="Worker"/> identifying the worker instance.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="taskList"/> is <c>null</c> or empty.</exception>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown when an attempt is made to recreate a worker with the
-        /// same properties on a given client.  See the note in the remarks.
-        /// </exception>
         /// <remarks>
-        /// <note>
-        /// <see cref="TemporalClient"/> for more information on task lists.
-        /// </note>
         /// <para>
-        /// Your workflow application will need to call this method so that Temporal will know
-        /// that it can schedule activities to run within the current process.  You'll need
-        /// to specify the target Temporal namespace and task list.
+        /// Each worker instance will be responsible for actually executing Temporal workflows and
+        /// activities.  Workers are registered within a Temporal namespace and are assigned to a
+        /// task list which identifies the virtual queue Temporal uses to schedule work on workers.
+        /// Workers implementing the same workflows and activities will generally be assigned to
+        /// the same task list (which is just an identifying string).
         /// </para>
         /// <para>
-        /// You may also specify an optional <see cref="WorkerOptions"/> parameter as well
-        /// as customize the name used to register the activity, which defaults to the
-        /// fully qualified name of the activity type.
+        /// After you have a new worker, you'll need to register workflow and/or activity implementations
+        /// via <see cref="Worker.RegisterActivityAsync{TActivity}(string, string)"/>,
+        /// <see cref="Worker.RegisterAssemblyActivitiesAsync(Assembly, string)"/>,
+        /// <see cref="Worker.RegisterAssemblyAsync(Assembly, string)"/>, or
+        /// <see cref="Worker.RegisterAssemblyWorkflowsAsync(Assembly, string)"/>.
         /// </para>
         /// <para>
-        /// This method returns a <see cref="Worker"/> which implements <see cref="IDisposable"/>.
-        /// It's a best practice to call <see cref="Dispose()"/> just before the a worker process
-        /// terminates, but this is optional.  Advanced worker implementation that need to change
-        /// their configuration over time can also call <see cref="Dispose()"/> to stop workers
-        /// for specific namespaces and task lists.
+        /// Then after completing the registrations, you'll call <see cref="Worker.StartAsync"/>
+        /// to start the worker, signalling to Temporal that the worker is ready to execute
+        /// workflows and activities.
         /// </para>
-        /// <note>
-        /// The Temporal GOLANG client does not appear to support starting a worker with a given
-        /// set of parameters, stopping that workflow, and then restarting another worker
-        /// with the same parameters on the same client.  This method detects this situation
-        /// and throws an <see cref="InvalidOperationException"/> when a restart is attempted.
-        /// </note>
+        /// <para>
+        /// You may call <see cref="Worker.Dispose"/> to explicitly stop a worker or just
+        /// dispose the <see cref="TemporalClient"/> which automatically disposes any
+        /// related workers.
+        /// </para>
         /// </remarks>
-        public async Task<Worker> StartWorkerAsync(string taskList, WorkerOptions options = null, string @namespace = null)
+        public async Task<Worker> NewWorkerAsync(WorkerOptions options = null)
         {
             await SyncContext.ClearAsync;
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList), nameof(taskList), "Workers must be started with a non-empty workflow.");
             EnsureNotDisposed();
 
-            options    = options ?? new WorkerOptions();
-            @namespace = ResolveNamespace(@namespace);
+            options = options ?? new WorkerOptions();
 
-            WorkerMode  mode = options.Mode;
-            Worker      worker;
-
-            try
+            if (string.IsNullOrEmpty(options.Namespace))
             {
-                using (await workerRegistrationMutex.AcquireAsync())
-                {
-                    // Ensure that we haven't already registered a worker for the
-                    // specified activity, namespace, and task list.  We'll just increment
-                    // the reference count for the existing worker and return it 
-                    // in this case.
-                    //
-                    // I know that this is a linear search but the number of activity
-                    // registrations per service will generally be very small and 
-                    // registrations will happen infrequently (typically just once
-                    // per service, when it starts).
-
-                    // $note(jefflill):
-                    //
-                    // If the worker exists but its RefCount==0, then we're going to
-                    // throw an exception because Temporal doesn't support recreating
-                    // a worker with the same parameters on the same client.
-
-                    worker = idToWorker.Values.SingleOrDefault(wf => wf.Mode == mode && wf.Namespace == @namespace && wf.Tasklist == taskList);
-
-                    if (worker != null)
-                    {
-                        if (worker.RefCount < 0)
-                        {
-                            throw new InvalidOperationException("A worker with these same parameters has already been started and stopped on this Temporal client.  Temporal does not support recreating workers for a given client instance.");
-                        }
-
-                        Interlocked.Increment(ref worker.RefCount);
-                        return worker;
-                    }
-
-                    options          = options ?? new WorkerOptions();
-                    options.Identity = this.Settings.ClientIdentity;
-
-                    var reply = (NewWorkerReply)(await CallProxyAsync(
-                        new NewWorkerRequest()
-                        {
-                            TaskList = taskList,
-                            Options  = options.ToInternal()
-                        }));
-
-                    reply.ThrowOnError();
-
-                    worker = new Worker(this, mode, reply.WorkerId, @namespace, taskList);
-                    idToWorker.Add(reply.WorkerId, worker);
-                }
+                options.Namespace = Settings.Namespace;
             }
-            finally
+
+            if (string.IsNullOrEmpty(options.TaskList))
             {
-                switch (mode)
+                options.TaskList = Settings.DefaultTaskList;
+
+                if (string.IsNullOrEmpty(options.TaskList))
                 {
-                    case WorkerMode.Activity:
-
-                        activityWorkerStarted = true;
-                        break;
-
-                    case WorkerMode.Workflow:
-
-                        workflowWorkerStarted = true;
-                        break;
-
-                    case WorkerMode.Both:
-
-                        activityWorkerStarted = true;
-                        workflowWorkerStarted = true;
-                        break;
-
-                    default:
-
-                        throw new NotImplementedException();
+                    throw new ArgumentException("Worker cannot be started without a task list.  Please specify this via [WorkerOptions.TaskList] or [TemporalSettings.DefaultTaskList].");
                 }
             }
 
-            // Fetch the stub for each registered workflow and activity type so that
-            // they'll be precompiled so compilation won't impact workflow and activity
-            // performance including potentially intruducing enough delay to cause
-            // decision tasks or activity heartbeats to fail (in very rare situations).
-            //
-            // Note that the compiled stubs are cached, so we don't need to worry
-            // about compiling stubs for types more than once causing a problem.
-
-            lock (registeredWorkflowTypes)
+            if (string.IsNullOrEmpty(options.Identity))
             {
-                foreach (var workflowInterface in registeredWorkflowTypes)
-                {
-                    // Workflows, we're going to compile both the external and child
-                    // versions of the stubs.
-
-                    StubManager.GetWorkflowStub(workflowInterface, isChild: false);
-                    StubManager.GetWorkflowStub(workflowInterface, isChild: true);
-                }
+                options.Identity = Settings.ClientIdentity;
             }
 
-            lock (registeredActivityTypes)
-            {
-                foreach (var activityInterface in registeredActivityTypes)
+            var reply = (NewWorkerReply)(await CallProxyAsync(
+                new NewWorkerRequest()
                 {
-                    StubManager.GetActivityStub(activityInterface);
-                }
+                    TaskList = options.TaskList,
+                    Options  = options.ToInternal()
+                }));
+
+            reply.ThrowOnError();
+
+            var worker = new Worker(this, reply.WorkerId, options);
+
+            lock (syncLock)
+            {
+                idToWorker.Add(reply.WorkerId, worker);
             }
 
             return worker;
@@ -289,7 +167,7 @@ namespace Neon.Temporal
         /// <summary>
         /// Signals Temporal that it should stop invoking activities and workflows 
         /// for the specified <see cref="Worker"/> (returned by a previous call to
-        /// <see cref="StartWorkerAsync(string, WorkerOptions, string)"/>).
+        /// <see cref="NewWorkerAsync(string, WorkerOptions)"/>).
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
@@ -300,26 +178,19 @@ namespace Neon.Temporal
             Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             EnsureNotDisposed(noClosingCheck: true);
 
-            using (await workerRegistrationMutex.AcquireAsync())
+            if (!object.ReferenceEquals(worker.Client, this))
             {
-                if (!object.ReferenceEquals(worker.Client, this))
-                {
-                    throw new InvalidOperationException("The worker passed does not belong to this client connection.");
-                }
+                throw new InvalidOperationException("The worker passed does not belong to this client connection.");
+            }
 
+            lock (syncLock)
+            {
                 if (!idToWorker.ContainsKey(worker.WorkerId))
                 {
                     // The worker does not exist.  We're going to ignore this.
 
                     return;
                 }
-
-                // $note(jefflill):
-                //
-                // If Temporal was able to restart a given worker, we'd uncomment
-                // this line.
-
-                // workers.Remove(worker.WorkerId);
             }
 
             var reply = (StopWorkerReply)(await CallProxyAsync(new StopWorkerRequest() { WorkerId = worker.WorkerId }));

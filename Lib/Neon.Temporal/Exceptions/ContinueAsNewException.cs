@@ -77,7 +77,7 @@ namespace Neon.Temporal
         public ContinueAsNewException(
             byte[]          args                   = null,
             string          workflow               = null,
-            string          @namespace                 = null,
+            string          @namespace             = null,
             string          taskList               = null,
             TimeSpan        startToCloseTimeout    = default,
             TimeSpan        scheduleToCloseTimeout = default,

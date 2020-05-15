@@ -112,7 +112,7 @@ namespace Neon.Temporal
     /// <para>
     /// Temporal workers are started to indicate that the current process can execute workflows
     /// and activities from a Temporal namespace, and optionally a task list (discussed further below).
-    /// You'll call <see cref="StartWorkerAsync(string, WorkerOptions, string)"/> to indicate
+    /// You'll call <see cref="NewWorkerAsync(string, WorkerOptions, string)"/> to indicate
     /// that Temporal can begin scheduling workflow and activity executions from the current client.
     /// </para>
     /// <para>
@@ -164,7 +164,7 @@ namespace Neon.Temporal
     /// <para>
     /// Next you'll need to start workflow and/or activity workers.  These indicate to Temporal that 
     /// the current process implements specific workflow and activity types.  You'll call
-    /// <see cref="StartWorkerAsync(string, WorkerOptions, string)"/>.  You can customize the
+    /// <see cref="NewWorkerAsync(string, WorkerOptions, string)"/>.  You can customize the
     /// Temporal namespace and task list the worker will listen on as well as whether activities,
     /// workflows, or both are to be processed.
     /// </para>
@@ -1364,13 +1364,10 @@ namespace Neon.Temporal
         //---------------------------------------------------------------------
         // Instance members
 
-        private Process                     proxyProcess            = null;
-        private int                         proxyPort               = 0;
-        private Dictionary<long, Worker>    idToWorker              = new Dictionary<long, Worker>();
-        private Dictionary<string, Type>    activityTypes           = new Dictionary<string, Type>();
-        private bool                        isDisposed              = false;
-        private List<Type>                  registeredActivityTypes = new List<Type>();
-        private List<Type>                  registeredWorkflowTypes = new List<Type>();
+        private Process                     proxyProcess = null;
+        private int                         proxyPort    = 0;
+        private Dictionary<long, Worker>    idToWorker   = new Dictionary<long, Worker>();
+        private bool                        isDisposed   = false;
         private HttpClient                  proxyClient;
         private HttpServer                  httpServer;
         private Exception                   pendingException;
@@ -1379,8 +1376,6 @@ namespace Neon.Temporal
         private int                         workflowCacheSize;
         private Thread                      heartbeatThread;
         private Thread                      timeoutThread;
-        private bool                        workflowWorkerStarted;
-        private bool                        activityWorkerStarted;
         private IRetryPolicy                syncSignalRetry;
 
         /// <summary>
@@ -1727,28 +1722,6 @@ namespace Neon.Temporal
             // Signal the background threads that they need to exit.
 
             closingConnection = true;
-        }
-
-        /// <summary>
-        /// Returns the .NET type implementing the named Temporal activity.
-        /// </summary>
-        /// <param name="activityTypeName">The Temporal activity type name.</param>
-        /// <returns>The workflow .NET type or <c>null</c> if the type was not found.</returns>
-        internal Type GetActivityType(string activityTypeName)
-        {
-            Covenant.Requires<ArgumentNullException>(activityTypeName != null, nameof(activityTypeName));
-
-            lock (syncLock)
-            {
-                if (activityTypes.TryGetValue(activityTypeName, out var type))
-                {
-                    return type;
-                }
-                else
-                {
-                    return null;
-                }
-            }
         }
 
         /// <summary>

@@ -37,11 +37,13 @@ namespace HelloWorld_WorkflowOptions
 
             using (var client = await TemporalClient.ConnectAsync(settings))
             {
-                // Register your workflow implementation to let Temporal
-                // know we're open for business.
+                // Create a worker and register the workflow and activity 
+                // implementations to let Temporal know we're open for business.
 
-                await client.RegisterWorkflowAsync<HelloWorkflow>();
-                await client.StartWorkerAsync("my-tasks");
+                var worker = await client.NewWorkerAsync(new WorkerOptions() { TaskList = "my-tasks" });
+
+                await worker.RegisterWorkflowAsync<HelloWorkflow>();
+                await worker.StartAsync();
 
                 #region code
                 // Invoke a workflow with options:

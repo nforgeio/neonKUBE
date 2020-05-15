@@ -183,8 +183,10 @@ namespace TestTemporal
                 this.fixture       = fixture;
                 this.fixtureClient = fixture.Client;
 
-                fixtureClient.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
-                fixtureClient.StartWorkerAsync(TemporalTestHelper.TaskList).Wait();
+                var fixtureWorker = fixtureClient.NewWorkerAsync().Result;
+
+                fixtureWorker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
+                fixtureWorker.StartAsync().Wait();
 
                 // Initialize the test clients and workers
 
@@ -192,22 +194,28 @@ namespace TestTemporal
                 test1Client                   = TemporalClient.ConnectAsync(test1Settings).Result;
                 fixture.State["test1-client"] = test1Client;
 
-                test1Client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
-                test1Client.StartWorkerAsync(test1Settings.DefaultTaskList).Wait();
+                var test1Worker = test1Client.NewWorkerAsync().Result;
+
+                test1Worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
+                test1Worker.StartAsync().Wait();
 
                 test2Settings.HostPort        = fixtureClient.Settings.HostPort;
                 test2Client                   = TemporalClient.ConnectAsync(test2Settings).Result;
                 fixture.State["test2-client"] = test2Client;
 
-                test2Client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
-                test2Client.StartWorkerAsync(test2Settings.DefaultTaskList).Wait();
+                var test2Worker = test2Client.NewWorkerAsync().Result;
+
+                test2Worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
+                test2Worker.StartAsync().Wait();
 
                 test3Settings.HostPort        = fixtureClient.Settings.HostPort;
                 test3Client                   = TemporalClient.ConnectAsync(test3Settings).Result;
                 fixture.State["test3-client"] = test3Client;
-                
-                test3Client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
-                test3Client.StartWorkerAsync(test1Settings.DefaultTaskList).Wait();
+
+                var test3Worker = test3Client.NewWorkerAsync().Result;
+
+                test3Worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
+                test3Worker.StartAsync().Wait();
             }
             else
             {

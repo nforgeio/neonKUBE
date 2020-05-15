@@ -15,7 +15,7 @@
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
-	<LangVersion>latest</LangVersion>
+    <LangVersion>latest</LangVersion>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
   </PropertyGroup>
@@ -372,9 +372,6 @@
     </Compile>
     <Compile Include="..\Test.Neon.Temporal\Test_SyncSignals.cs">
       <Link>Test_SyncSignals.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Temporal\Test_Worker.cs">
-      <Link>Test_Worker.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

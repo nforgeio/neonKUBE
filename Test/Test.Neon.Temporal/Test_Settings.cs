@@ -96,15 +96,20 @@ namespace TestTemporal
 
             using (var client = await TemporalClient.ConnectAsync(fixture.Settings))
             {
-                await client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly());
-                await client.StartWorkerAsync(TemporalTestHelper.TaskList);
+                // Create a worker and register the workflow and activity 
+                // implementations to let Temporal know we're open for business.
+
+                var worker = client.NewWorkerAsync().Result;
+
+                worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
+                worker.StartAsync().Wait();
+
+                // Do the first run; this should succeed.
 
                 var options = new WorkflowOptions()
                 {
                     WorkflowId = $"Workflow_ExternalIdNoReuse-{Guid.NewGuid().ToString("d")}"
                 };
-
-                // Do the first run; this should succeed.
 
                 var stub = client.NewWorkflowStub<IWorkflowIdReuse>(options);
 
@@ -135,15 +140,20 @@ namespace TestTemporal
 
             using (var client = await TemporalClient.ConnectAsync(settings))
             {
-                await client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly());
-                await client.StartWorkerAsync(TemporalTestHelper.TaskList);
+                // Create a worker and register the workflow and activity 
+                // implementations to let Temporal know we're open for business.
+
+                var worker = client.NewWorkerAsync().Result;
+
+                worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
+                worker.StartAsync().Wait();
+
+                // Do the first run.
 
                 var options = new WorkflowOptions()
                 {
                     WorkflowId = $"Workflow_ExternalIdReuseViaOptions-{Guid.NewGuid().ToString("d")}"
                 };
-
-                // Do the first run.
 
                 var stub = client.NewWorkflowStub<IWorkflowIdReuse>(options);
 

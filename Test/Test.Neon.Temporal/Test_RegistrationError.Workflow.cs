@@ -75,7 +75,9 @@ namespace TestTemporal
             // entrypoints that conflict because they have the same (blank)
             // name.
 
-            await Assert.ThrowsAsync<WorkflowTypeException>(async() => await client.RegisterWorkflowAsync<WorkflowDuplicateBlankEntrypoint>());
+            var worker = await client.NewWorkerAsync();
+
+            await Assert.ThrowsAsync<WorkflowTypeException>(async() => await worker.RegisterWorkflowAsync<WorkflowDuplicateBlankEntrypoint>());
         }
 
         //---------------------------------------------------------------------
@@ -111,7 +113,9 @@ namespace TestTemporal
             // Verify that the client detects workflows that have multiple
             // entrypoints that conflict because they have the same name.
 
-            await Assert.ThrowsAsync<WorkflowTypeException>(async () => await client.RegisterWorkflowAsync<WorkflowDuplicateEntrypoint>());
+            var worker = await client.NewWorkerAsync();
+
+            await Assert.ThrowsAsync<WorkflowTypeException>(async () => await worker.RegisterWorkflowAsync<WorkflowDuplicateEntrypoint>());
         }
 
         //---------------------------------------------------------------------
@@ -133,7 +137,9 @@ namespace TestTemporal
             // Verify that the client detects workflows that have no
             // entry point methods.
 
-            await Assert.ThrowsAsync<WorkflowTypeException>(async () => await client.RegisterWorkflowAsync<WorkflowDuplicateEntrypoint>());
+            var worker = await client.NewWorkerAsync();
+
+            await Assert.ThrowsAsync<WorkflowTypeException>(async () => await worker.RegisterWorkflowAsync<WorkflowDuplicateEntrypoint>());
         }
 
         //---------------------------------------------------------------------
@@ -177,7 +183,9 @@ namespace TestTemporal
             // Verify that the client detects workflows with two signals that
             // have the same signal name.
 
-            await Assert.ThrowsAsync<WorkflowTypeException>(async () => await client.RegisterWorkflowAsync<WorkflowDuplicateSignal>());
+            var worker = await client.NewWorkerAsync();
+
+            await Assert.ThrowsAsync<WorkflowTypeException>(async () => await worker.RegisterWorkflowAsync<WorkflowDuplicateSignal>());
         }
 
         //---------------------------------------------------------------------
@@ -221,7 +229,9 @@ namespace TestTemporal
             // Verify that the client detects workflows with two signals that
             // have the same signal name.
 
-            await Assert.ThrowsAsync<WorkflowTypeException>(async () => await client.RegisterWorkflowAsync<WorkflowDuplicateQuery>());
+            var worker = await client.NewWorkerAsync();
+
+            await Assert.ThrowsAsync<WorkflowTypeException>(async () => await worker.RegisterWorkflowAsync<WorkflowDuplicateQuery>());
         }
 
         //---------------------------------------------------------------------
@@ -261,7 +271,9 @@ namespace TestTemporal
             // Verify that the client detects workflow implementations
             // that implement more than one IWorkflow interface.
 
-            await Assert.ThrowsAsync<WorkflowTypeException>(async () => await client.RegisterWorkflowAsync<WorkflowMultiInterface>());
+            var worker = await client.NewWorkerAsync();
+
+            await Assert.ThrowsAsync<WorkflowTypeException>(async () => await worker.RegisterWorkflowAsync<WorkflowMultiInterface>());
         }
     }
 }
