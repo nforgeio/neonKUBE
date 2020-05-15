@@ -247,7 +247,7 @@ namespace Neon.Cadence
         /// This generally defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicate"/>
         /// but the default can be customized via the <see cref="WorkflowMethodAttribute"/> tagging
         /// the workflow entry point method or <see cref="CadenceSettings.WorkflowIdReusePolicy"/>
-        /// (which defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicate"/>.
+        /// (which also defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicate"/>.
         /// </summary>
         public WorkflowIdReusePolicy WorkflowIdReusePolicy { get; set; } = Cadence.WorkflowIdReusePolicy.UseDefault;
         
