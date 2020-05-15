@@ -55,11 +55,11 @@ namespace TestTemporal
             public DummyWorkflow()
             {
                 this.Workflow = new Workflow(
-                    parent:     new WorkflowBase(),
-                    client:             new TemporalClient(),
+                    parent:             new WorkflowBase(),
+                    worker:             new Worker(new TemporalClient(), 1, new WorkerOptions()),
                     contextId:          1,
                     workflowTypeName:   typeof(DummyWorkflow).FullName,
-                    @namespace:             "my-namespace",
+                    @namespace:         "my-namespace",
                     taskList:           "my-tasklist",
                     workflowId:         "my-workflow-id",
                     runId:              "my-run-id",

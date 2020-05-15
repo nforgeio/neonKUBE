@@ -34,9 +34,9 @@ namespace Neon.Temporal
     public class WorkerArgs
     {
         /// <summary>
-        /// The parent <see cref="TemporalClient"/>.
+        /// The parent <see cref="Temporal.Worker"/>.
         /// </summary>
-        internal TemporalClient Client { get; set; }
+        internal Worker Worker { get; set; }
 
         /// <summary>
         /// The ID used to reference the corresponding Temporal context managed by

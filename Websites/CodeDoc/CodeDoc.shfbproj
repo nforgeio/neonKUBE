@@ -236,6 +236,7 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <None Include="Content\Neon.Temporal\OtherTopics\Logging.aml" />
     <None Include="Content\Neon.Temporal\OtherTopics\UnitTesting.aml" />
     <None Include="Content\Neon.Temporal\Overview.aml" />
+    <None Include="Content\Neon.Temporal\CadenceUpgrade.aml" />
     <None Include="Content\Neon.Temporal\WorkflowDetails\ChildWorkflows.aml" />
     <None Include="Content\Neon.Temporal\WorkflowDetails\CodingRules.aml" />
     <None Include="Content\Neon.Temporal\WorkflowDetails\ContinueAsNew.aml" />

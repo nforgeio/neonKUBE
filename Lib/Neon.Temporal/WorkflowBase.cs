@@ -79,23 +79,25 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Used to map a Temporal client ID and workflow context ID into a
-        /// key that can be used to dereference <see cref="idToWorkflow"/>.
+        /// Used to map Temporal client and worker IDs along with a workflow
+        /// context ID into a key that can be used to dereference <see cref="idToWorkflow"/>.
         /// </summary>
         private struct WorkflowInstanceKey
         {
             private long clientId;
+            private long workerId;
             private long contextId;
 
-            public WorkflowInstanceKey(TemporalClient client, long contextId)
+            public WorkflowInstanceKey(Worker worker, long contextId)
             {
-                this.clientId  = client.ClientId;
+                this.clientId  = worker.Client.ClientId;
+                this.workerId  = worker.WorkerId;
                 this.contextId = contextId;
             }
 
             public override int GetHashCode()
             {
-                return clientId.GetHashCode() ^ contextId.GetHashCode();
+                return clientId.GetHashCode() ^ workerId.GetHashCode() ^ contextId.GetHashCode();
             }
 
             public override bool Equals(object obj)
@@ -108,12 +110,13 @@ namespace Neon.Temporal
                 var other = (WorkflowInstanceKey)obj;
 
                 return this.clientId == other.clientId && 
+                       this.workerId == other.workerId &&
                        this.contextId == other.contextId;
             }
 
             public override string ToString()
             {
-                return $"clientID={clientId}, contextId={contextId}";
+                return $"clientId={clientId}, workerId={workerId}, contextId={contextId}";
             }
         }
 
@@ -155,20 +158,21 @@ namespace Neon.Temporal
 
         // This dictionary is used to map workflow type names to the target workflow
         // registration.  Note that these mappings are scoped to specific Temporal client
-        // instances by prefixing the type name with:
+        // and worker instances by prefixing the type name with:
         //
-        //      CLIENT-ID::
+        //      CLIENT-ID::WORKER-ID::
         //
-        // where CLIENT-ID is the locally unique ID of the client.  This is important,
-        // because we'll need to remove entries the for clients when they're disposed.
+        // where CLIENT-ID is the locally unique ID of the client and WORKER-ID is the
+        // client local ID for the worker.  This is important, because we'll need to 
+        // remove entries the for clients and workers when they're disposed.
         //
         // Workflow type names may also include a second "::" separator with the
         // workflow entry point name appended afterwards to handle workflow interfaces
         // that have multiple workflow entry points.  So, valid workflow registrations
         // may looks like:
         // 
-        //      1::my-workflow                  -- clientId = 1, workflow type name = my-workflow
-        //      1::my-workflow::my-entrypoint   -- clientId = 1, workflow type name = my-workflow, entrypoint = my-entrypoint
+        //      1::1::my-workflow                   -- clientId = 1, workerId = 1, workflow type name = my-workflow
+        //      1::2::my-workflow::my-entrypoint    -- clientId = 1, workerId = 2, workflow type name = my-workflow, entrypoint = my-entrypoint
 
         private static Dictionary<string, WorkflowRegistration> nameToRegistration = new Dictionary<string, WorkflowRegistration>();
 
@@ -251,23 +255,23 @@ namespace Neon.Temporal
         /// workflow method name to generate the key used to dereference the <see cref="nameToRegistration"/> 
         /// dictionary.
         /// </summary>
-        /// <param name="client">The Temporal client.</param>
+        /// <param name="worker">The Temporal worker.</param>
         /// <param name="workflowTypeName">The workflow type name.</param>
         /// <param name="workflowMethodAttribute">The workflow method attribute. </param>
         /// <returns>The workflow registration key.</returns>
-        private static string GetWorkflowTypeKey(TemporalClient client, string workflowTypeName, WorkflowMethodAttribute workflowMethodAttribute)
+        private static string GetWorkflowTypeKey(Worker worker, string workflowTypeName, WorkflowMethodAttribute workflowMethodAttribute)
         {
-            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             Covenant.Requires<ArgumentNullException>(workflowMethodAttribute != null, nameof(workflowMethodAttribute));
 
             if (string.IsNullOrEmpty(workflowMethodAttribute.Name))
             {
-                return $"{client.ClientId}::{workflowTypeName}";
+                return $"{worker.Client.ClientId}::{worker.WorkerId}::{workflowTypeName}";
             }
             else
             {
-                return $"{client.ClientId}::{workflowTypeName}::{workflowMethodAttribute.Name}";
+                return $"{worker.Client.ClientId}::{worker.WorkerId}::{workflowTypeName}::{workflowMethodAttribute.Name}";
             }
         }
 
@@ -291,14 +295,14 @@ namespace Neon.Temporal
         /// <summary>
         /// Registers a workflow implementation.
         /// </summary>
-        /// <param name="client">The associated client.</param>
+        /// <param name="worker">The target worker.</param>
         /// <param name="workflowType">The workflow implementation type.</param>
         /// <param name="workflowTypeName">The name used to identify the implementation.</param>
         /// <param name="namespace">Specifies the target namnespace.</param>
         /// <exception cref="InvalidOperationException">Thrown if a different workflow class has already been registered for <paramref name="workflowTypeName"/>.</exception>
-        internal static async Task RegisterAsync(TemporalClient client, Type workflowType, string workflowTypeName, string @namespace)
+        internal static async Task RegisterAsync(Worker worker, Type workflowType, string workflowTypeName, string @namespace)
         {
-            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
             TemporalHelper.ValidateWorkflowImplementation(workflowType);
 
@@ -344,7 +348,7 @@ namespace Neon.Temporal
                     continue;
                 }
 
-                var workflowTypeKey = GetWorkflowTypeKey(client, workflowTypeName, workflowMethodAttribute);
+                var workflowTypeKey = GetWorkflowTypeKey(worker, workflowTypeName, workflowMethodAttribute);
 
                 lock (syncLock)
                 {
@@ -368,11 +372,11 @@ namespace Neon.Temporal
                     }
                 }
 
-                var reply = (WorkflowRegisterReply)await client.CallProxyAsync(
+                var reply = (WorkflowRegisterReply)await worker.Client.CallProxyAsync(
                     new WorkflowRegisterRequest()
                     {
-                        Name      = GetWorkflowTypeNameFromKey(workflowTypeKey),
-                        Namespace = client.ResolveNamespace(@namespace)
+                        Name     = GetWorkflowTypeNameFromKey(workflowTypeKey),
+                        WorkerId = worker.WorkerId
                     });
 
                 // $hack(jefflill): 
@@ -407,17 +411,17 @@ namespace Neon.Temporal
         /// <summary>
         /// Returns the registration for the named Temporal workflow.
         /// </summary>
-        /// <param name="client">The Temporal client.</param>
+        /// <param name="worker">The Temporal worker.</param>
         /// <param name="workflowTypeName">The Temporal workflow type name.</param>
         /// <returns>The <see cref="WorkflowRegistration"/> or <c>null</c> if the type was not found.</returns>
-        private static WorkflowRegistration GetWorkflowRegistration(TemporalClient client, string workflowTypeName)
+        private static WorkflowRegistration GetWorkflowRegistration(Worker worker, string workflowTypeName)
         {
-            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
 
             lock (syncLock)
             {
-                if (nameToRegistration.TryGetValue($"{client.ClientId}::{workflowTypeName}", out var registration))
+                if (nameToRegistration.TryGetValue($"{worker.Client.ClientId}::{worker.WorkerId}::{workflowTypeName}", out var registration))
                 {
                     return registration;
                 }
@@ -444,7 +448,7 @@ namespace Neon.Temporal
 
             lock (syncLock)
             {
-                idToWorkflow.TryGetValue(new WorkflowInstanceKey(Workflow.Current.Client, contextId), out workflow);
+                idToWorkflow.TryGetValue(new WorkflowInstanceKey(Workflow.Current.Worker, contextId), out workflow);
             }
 
             if (workflow == null)
@@ -473,12 +477,12 @@ namespace Neon.Temporal
         /// <summary>
         /// Called to handle a workflow related request message received from the temporal-proxy.
         /// </summary>
-        /// <param name="client">The client that received the request.</param>
+        /// <param name="worker">The worker handling the request.</param>
         /// <param name="request">The request message.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        internal static async Task OnProxyRequestAsync(TemporalClient client, ProxyRequest request)
+        internal static async Task OnProxyRequestAsync(Worker worker, ProxyRequest request)
         {
-            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
             ProxyReply reply;
@@ -487,22 +491,22 @@ namespace Neon.Temporal
             {
                 case InternalMessageTypes.WorkflowInvokeRequest:
 
-                    reply = await OnInvokeAsync(client, (WorkflowInvokeRequest)request);
+                    reply = await OnInvokeAsync(worker, (WorkflowInvokeRequest)request);
                     break;
 
                 case InternalMessageTypes.WorkflowSignalInvokeRequest:
 
-                    reply = await OnSignalAsync(client, (WorkflowSignalInvokeRequest)request);
+                    reply = await OnSignalAsync(worker, (WorkflowSignalInvokeRequest)request);
                     break;
 
                 case InternalMessageTypes.WorkflowQueryInvokeRequest:
 
-                    reply = await OnQueryAsync(client, (WorkflowQueryInvokeRequest)request);
+                    reply = await OnQueryAsync(worker, (WorkflowQueryInvokeRequest)request);
                     break;
 
                 case InternalMessageTypes.ActivityInvokeLocalRequest:
 
-                    reply = await OnInvokeLocalActivity(client, (ActivityInvokeLocalRequest)request);
+                    reply = await OnInvokeLocalActivity(worker, (ActivityInvokeLocalRequest)request);
                     break;
 
                 case InternalMessageTypes.WorkflowFutureReadyRequest:
@@ -517,22 +521,22 @@ namespace Neon.Temporal
                     throw new InvalidOperationException($"Unexpected message type [{request.Type}].");
             }
 
-            await client.ProxyReplyAsync(request, reply);
+            await worker.Client.ProxyReplyAsync(request, reply);
         }
 
         /// <summary>
         /// Thread-safe method that maps a workflow ID to the corresponding workflow instance.
         /// </summary>
-        /// <param name="client">The Temporal client.</param>
+        /// <param name="worker">The Temporal worker.</param>
         /// <param name="contextId">The workflow's context ID.</param>
         /// <returns>The <see cref="WorkflowBase"/> instance or <c>null</c> if the workflow was not found.</returns>
-        private static WorkflowBase GetWorkflow(TemporalClient client, long contextId)
+        private static WorkflowBase GetWorkflow(Worker worker, long contextId)
         {
-            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
 
             lock (syncLock)
             {
-                if (idToWorkflow.TryGetValue(new WorkflowInstanceKey(client, contextId), out var workflow))
+                if (idToWorkflow.TryGetValue(new WorkflowInstanceKey(worker, contextId), out var workflow))
                 {
                     return workflow;
                 }
@@ -546,12 +550,12 @@ namespace Neon.Temporal
         /// <summary>
         /// Handles workflow invocation.
         /// </summary>
-        /// <param name="client">The associated Temporal client.</param>
+        /// <param name="worker">The associated Temporal worker.</param>
         /// <param name="request">The request message.</param>
         /// <returns>The reply message.</returns>
-        internal static async Task<WorkflowInvokeReply> OnInvokeAsync(TemporalClient client, WorkflowInvokeRequest request)
+        internal static async Task<WorkflowInvokeReply> OnInvokeAsync(Worker worker, WorkflowInvokeRequest request)
         {
-            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
             Covenant.Requires<ArgumentException>(request.ReplayStatus != InternalReplayStatus.Unspecified, nameof(request));
 
@@ -559,7 +563,7 @@ namespace Neon.Temporal
             WorkflowRegistration    registration;
 
             var contextId   = request.ContextId;
-            var workflowKey = new WorkflowInstanceKey(client, contextId);
+            var workflowKey = new WorkflowInstanceKey(worker, contextId);
 
             lock (syncLock)
             {
@@ -571,7 +575,7 @@ namespace Neon.Temporal
                     };
                 }
 
-                registration = GetWorkflowRegistration(client, request.WorkflowType);
+                registration = GetWorkflowRegistration(worker, request.WorkflowType);
 
                 if (registration == null)
                 {
@@ -586,7 +590,7 @@ namespace Neon.Temporal
             workflow.Workflow = 
                 new Workflow(
                     parent:             (WorkflowBase)workflow,
-                    client:             client, 
+                    worker:             worker, 
                     contextId:          contextId,
                     workflowTypeName:   request.WorkflowType,
                     @namespace:         request.Namespace,
@@ -608,7 +612,7 @@ namespace Neon.Temporal
 
             foreach (var signalName in registration.MethodMap.GetSignalNames())
             {
-                var reply = (WorkflowSignalSubscribeReply)await client.CallProxyAsync(
+                var reply = (WorkflowSignalSubscribeReply)await worker.Client.CallProxyAsync(
                     new WorkflowSignalSubscribeRequest()
                     {
                         ContextId  = contextId,
@@ -620,7 +624,7 @@ namespace Neon.Temporal
 
             foreach (var queryType in registration.MethodMap.GetQueryTypes())
             {
-                var reply = (WorkflowSetQueryHandlerReply)await client.CallProxyAsync(
+                var reply = (WorkflowSetQueryHandlerReply)await worker.Client.CallProxyAsync(
                     new WorkflowSetQueryHandlerRequest()
                     {
                         ContextId = contextId,
@@ -643,7 +647,7 @@ namespace Neon.Temporal
             {
                 workflow.hasSynchronousSignals = true;
 
-                var signalSubscribeReply = (WorkflowSignalSubscribeReply)await client.CallProxyAsync(
+                var signalSubscribeReply = (WorkflowSignalSubscribeReply)await worker.Client.CallProxyAsync(
                     new WorkflowSignalSubscribeRequest()
                     {
                         ContextId  = contextId,
@@ -652,7 +656,7 @@ namespace Neon.Temporal
 
                 signalSubscribeReply.ThrowOnError();
 
-                var querySubscribeReply = (WorkflowSetQueryHandlerReply)await client.CallProxyAsync(
+                var querySubscribeReply = (WorkflowSetQueryHandlerReply)await worker.Client.CallProxyAsync(
                     new WorkflowSetQueryHandlerRequest()
                     {
                         ContextId = contextId,
@@ -681,7 +685,7 @@ namespace Neon.Temporal
 
                 var workflowMethod   = registration.WorkflowMethod;
                 var resultType       = workflowMethod.ReturnType;
-                var args             = TemporalHelper.BytesToArgs(client.DataConverter, request.Args, registration.WorkflowMethodParameterTypes);
+                var args             = TemporalHelper.BytesToArgs(worker.Client.DataConverter, request.Args, registration.WorkflowMethodParameterTypes);
                 var serializedResult = emptyBytes;
 
                 if (resultType.IsGenericType)
@@ -690,7 +694,7 @@ namespace Neon.Temporal
 
                     var result = await NeonHelper.GetTaskResultAsObjectAsync((Task)workflowMethod.Invoke(workflow, args));
 
-                    serializedResult = client.DataConverter.ToData(result);
+                    serializedResult = worker.Client.DataConverter.ToData(result);
                 }
                 else
                 {
@@ -820,26 +824,26 @@ namespace Neon.Temporal
         /// <summary>
         /// Handles workflow signals.
         /// </summary>
-        /// <param name="client">The Temporal client.</param>
+        /// <param name="worker">The Temporal worker.</param>
         /// <param name="request">The request message.</param>
         /// <returns>The reply message.</returns>
-        internal static async Task<WorkflowSignalInvokeReply> OnSignalAsync(TemporalClient client, WorkflowSignalInvokeRequest request)
+        internal static async Task<WorkflowSignalInvokeReply> OnSignalAsync(Worker worker, WorkflowSignalInvokeRequest request)
         {
-            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
             // Handle synchronous signals in a specialized method.
 
             if (request.SignalName == TemporalClient.SignalSync)
             {
-                return await OnSyncSignalAsync(client, request);
+                return await OnSyncSignalAsync(worker, request);
             }
 
             try
             {
                 WorkflowBase.CallContext.Value = WorkflowCallContext.Signal;
 
-                var workflow = GetWorkflow(client, request.ContextId);
+                var workflow = GetWorkflow(worker, request.ContextId);
 
                 if (workflow != null)
                 {
@@ -849,7 +853,7 @@ namespace Neon.Temporal
 
                     if (method != null)
                     {
-                        await (Task)(method.Invoke(workflow, TemporalHelper.BytesToArgs(client.DataConverter, request.SignalArgs, method.GetParameterTypes())));
+                        await (Task)(method.Invoke(workflow, TemporalHelper.BytesToArgs(worker.Client.DataConverter, request.SignalArgs, method.GetParameterTypes())));
 
                         return new WorkflowSignalInvokeReply()
                         {
@@ -893,19 +897,19 @@ namespace Neon.Temporal
         /// <summary>
         /// Handles internal <see cref="TemporalClient.SignalSync"/> workflow signals.
         /// </summary>
-        /// <param name="client">The Temporal client.</param>
+        /// <param name="worker">The Temporal worker.</param>
         /// <param name="request">The request message.</param>
         /// <returns>The reply message.</returns>
-        internal static async Task<WorkflowSignalInvokeReply> OnSyncSignalAsync(TemporalClient client, WorkflowSignalInvokeRequest request)
+        internal static async Task<WorkflowSignalInvokeReply> OnSyncSignalAsync(Worker worker, WorkflowSignalInvokeRequest request)
         {
-            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
             try
             {
                 WorkflowBase.CallContext.Value = WorkflowCallContext.Signal;
 
-                var workflow = GetWorkflow(client, request.ContextId);
+                var workflow = GetWorkflow(worker, request.ContextId);
 
                 if (workflow != null)
                 {
@@ -917,7 +921,7 @@ namespace Neon.Temporal
                     var signalCallArgs = TemporalHelper.BytesToArgs(JsonDataConverter.Instance, request.SignalArgs, new Type[] { typeof(SyncSignalCall) });
                     var signalCall     = (SyncSignalCall)signalCallArgs[0];
                     var signalMethod   = workflow.Workflow.MethodMap.GetSignalMethod(signalCall.TargetSignal);
-                    var userSignalArgs = TemporalHelper.BytesToArgs(client.DataConverter, signalCall.UserArgs, signalMethod.GetParameterTypes());
+                    var userSignalArgs = TemporalHelper.BytesToArgs(worker.Client.DataConverter, signalCall.UserArgs, signalMethod.GetParameterTypes());
 
                     Workflow.Current.SignalId = signalCall.SignalId;
 
@@ -1013,7 +1017,7 @@ namespace Neon.Temporal
                                 {
                                     if (exception == null)
                                     {
-                                        syncSignalStatus.Result = client.DataConverter.ToData(result);
+                                        syncSignalStatus.Result = worker.Client.DataConverter.ToData(result);
                                     }
                                     else
                                     {
@@ -1073,19 +1077,19 @@ namespace Neon.Temporal
         /// <summary>
         /// Handles workflow queries.
         /// </summary>
-        /// <param name="client">The Temporal client.</param>
+        /// <param name="worker">The Temporal worker.</param>
         /// <param name="request">The request message.</param>
         /// <returns>The reply message.</returns>
-        internal static async Task<WorkflowQueryInvokeReply> OnQueryAsync(TemporalClient client, WorkflowQueryInvokeRequest request)
+        internal static async Task<WorkflowQueryInvokeReply> OnQueryAsync(Worker worker, WorkflowQueryInvokeRequest request)
         {
-            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
             try
             {
                 WorkflowBase.CallContext.Value = WorkflowCallContext.Query;
 
-                var workflow = GetWorkflow(client, request.ContextId);
+                var workflow = GetWorkflow(worker, request.ContextId);
 
                 if (workflow != null)
                 {
@@ -1107,7 +1111,7 @@ namespace Neon.Temporal
                             return new WorkflowQueryInvokeReply()
                             {
                                 RequestId = request.RequestId,
-                                Result    = client.DataConverter.ToData(trace)
+                                Result    = worker.Client.DataConverter.ToData(trace)
                             };
 
                         case TemporalClient.QuerySyncSignal:
@@ -1139,7 +1143,7 @@ namespace Neon.Temporal
                             return new WorkflowQueryInvokeReply()
                             {
                                 RequestId = request.RequestId,
-                                Result    = client.DataConverter.ToData(syncSignalStatus)
+                                Result    = worker.Client.DataConverter.ToData(syncSignalStatus)
                             };
                     }
 
@@ -1158,15 +1162,15 @@ namespace Neon.Temporal
                         {
                             // Query method returns: Task<T>
 
-                            var result = await NeonHelper.GetTaskResultAsObjectAsync((Task)method.Invoke(workflow, TemporalHelper.BytesToArgs(client.DataConverter, request.QueryArgs, methodParameterTypes)));
+                            var result = await NeonHelper.GetTaskResultAsObjectAsync((Task)method.Invoke(workflow, TemporalHelper.BytesToArgs(worker.Client.DataConverter, request.QueryArgs, methodParameterTypes)));
 
-                            serializedResult = client.DataConverter.ToData(result);
+                            serializedResult = worker.Client.DataConverter.ToData(result);
                         }
                         else
                         {
                             // Query method returns: Task
 
-                            await (Task)method.Invoke(workflow, TemporalHelper.BytesToArgs(client.DataConverter, request.QueryArgs, methodParameterTypes));
+                            await (Task)method.Invoke(workflow, TemporalHelper.BytesToArgs(worker.Client.DataConverter, request.QueryArgs, methodParameterTypes));
                         }
 
                         return new WorkflowQueryInvokeReply()
@@ -1209,10 +1213,10 @@ namespace Neon.Temporal
         /// <summary>
         /// Handles workflow local activity invocations.
         /// </summary>
-        /// <param name="client">The client the request was received from.</param>
+        /// <param name="worker">The worker handling the request.</param>
         /// <param name="request">The request message.</param>
         /// <returns>The reply message.</returns>
-        internal static async Task<ActivityInvokeLocalReply> OnInvokeLocalActivity(TemporalClient client, ActivityInvokeLocalRequest request)
+        internal static async Task<ActivityInvokeLocalReply> OnInvokeLocalActivity(Worker worker, ActivityInvokeLocalRequest request)
         {
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 
@@ -1220,7 +1224,7 @@ namespace Neon.Temporal
             {
                 WorkflowBase.CallContext.Value = WorkflowCallContext.Activity;
 
-                var workflow = GetWorkflow(client, request.ContextId);
+                var workflow = GetWorkflow(worker, request.ContextId);
 
                 if (workflow != null)
                 {
@@ -1237,9 +1241,9 @@ namespace Neon.Temporal
                         }
                     }
 
-                    var workerArgs = new WorkerArgs() { Client = client, ContextId = request.ActivityContextId };
-                    var activity   = ActivityBase.CreateLocal(client, activityAction, request.ActivityContextId);
-                    var result     = await activity.OnInvokeAsync(client, request.Args);
+                    var workerArgs = new WorkerArgs() { Worker = worker, ContextId = request.ActivityContextId };
+                    var activity   = ActivityBase.CreateLocal(worker, activityAction, request.ActivityContextId);
+                    var result     = await activity.OnInvokeAsync(worker, request.Args);
 
                     return new ActivityInvokeLocalReply()
                     {

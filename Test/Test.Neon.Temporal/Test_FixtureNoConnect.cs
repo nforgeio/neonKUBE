@@ -69,13 +69,13 @@ namespace TestTemporal
                 this.fixture = fixture;
                 this.client  = fixture.Client = TemporalClient.ConnectAsync(fixture.Settings).Result;
 
-                // Auto register the test workflow and activity implementations.
+                // Create a worker and register the workflow and activity 
+                // implementations to let Temporal know we're open for business.
 
-                client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
+                var worker = client.NewWorkerAsync().Result;
 
-                // Start the worker.
-
-                client.StartWorkerAsync(TemporalTestHelper.TaskList).Wait();
+                worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
+                worker.StartAsync().Wait();
             }
             else
             {

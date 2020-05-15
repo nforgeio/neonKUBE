@@ -219,10 +219,10 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Optionally determines how Cadence handles workflows that attempt to reuse workflow IDs.
-        /// This generally defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicateFailedOnly"/>
+        /// This generally defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicate"/>
         /// but the default can be customized via the <see cref="WorkflowMethodAttribute"/> tagging
         /// the workflow entry point method or <see cref="CadenceSettings.WorkflowIdReusePolicy"/>
-        /// (which defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicateFailedOnly"/>.
+        /// (which also defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicate"/>.
         /// </summary>
         public WorkflowIdReusePolicy WorkflowIdReusePolicy { get; set; } = WorkflowIdReusePolicy.UseDefault;
 
@@ -309,7 +309,7 @@ namespace Neon.Cadence
                 TaskStartToCloseTimeout      = CadenceHelper.ToCadence(this.DecisionTaskTimeout),
                 WaitForCancellation          = this.WaitUntilFinished,
                 WorkflowID                   = this.WorkflowId,
-                WorkflowIdReusePolicy        = (int)(this.WorkflowIdReusePolicy == WorkflowIdReusePolicy.UseDefault ? Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly : this.WorkflowIdReusePolicy)
+                WorkflowIdReusePolicy        = (int)(this.WorkflowIdReusePolicy == WorkflowIdReusePolicy.UseDefault ? Cadence.WorkflowIdReusePolicy.AllowDuplicate : this.WorkflowIdReusePolicy)
             };
         }
 

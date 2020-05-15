@@ -50,15 +50,6 @@ namespace Neon.Temporal.Internal
             set => SetStringProperty(PropertyNames.Name, value);
         }
 
-        /// <summary>
-        /// Identifies the target workflow.
-        /// </summary>
-        public string Namespace
-        {
-            get => GetStringProperty(PropertyNames.Namespace);
-            set => SetStringProperty(PropertyNames.Namespace, value ?? string.Empty);
-        }
-
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -76,8 +67,7 @@ namespace Neon.Temporal.Internal
 
             var typedTarget = (WorkflowRegisterRequest)target;
 
-            typedTarget.Name      = this.Name;
-            typedTarget.Namespace = this.Namespace;
+            typedTarget.Name = this.Name;
         }
     }
 }

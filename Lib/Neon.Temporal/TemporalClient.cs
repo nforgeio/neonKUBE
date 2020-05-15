@@ -112,7 +112,7 @@ namespace Neon.Temporal
     /// <para>
     /// Temporal workers are started to indicate that the current process can execute workflows
     /// and activities from a Temporal namespace, and optionally a task list (discussed further below).
-    /// You'll call <see cref="StartWorkerAsync(string, WorkerOptions, string)"/> to indicate
+    /// You'll call <see cref="NewWorkerAsync(string, WorkerOptions, string)"/> to indicate
     /// that Temporal can begin scheduling workflow and activity executions from the current client.
     /// </para>
     /// <para>
@@ -164,7 +164,7 @@ namespace Neon.Temporal
     /// <para>
     /// Next you'll need to start workflow and/or activity workers.  These indicate to Temporal that 
     /// the current process implements specific workflow and activity types.  You'll call
-    /// <see cref="StartWorkerAsync(string, WorkerOptions, string)"/>.  You can customize the
+    /// <see cref="NewWorkerAsync(string, WorkerOptions, string)"/>.  You can customize the
     /// Temporal namespace and task list the worker will listen on as well as whether activities,
     /// workflows, or both are to be processed.
     /// </para>
@@ -596,7 +596,7 @@ namespace Neon.Temporal
         private static readonly INeonLogger             log           = LogManager.Default.GetLogger<TemporalClient>();
         private static bool                             proxyWritten  = false;
         private static long                             nextClientId  = 0;
-        private static Dictionary<long, TemporalClient>  idToClient    = new Dictionary<long, TemporalClient>();
+        private static Dictionary<long, TemporalClient> idToClient    = new Dictionary<long, TemporalClient>();
         private static long                             nextRequestId = 0;
         private static Dictionary<long, Operation>      operations    = new Dictionary<long, Operation>();
         private static INeonLogger                      temporalLogger;
@@ -894,7 +894,7 @@ namespace Neon.Temporal
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.Namespace), nameof(settings), "You must specifiy a non-empty default Temporal namespace.");
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(settings.Namespace), nameof(settings.Namespace), "You must specifiy a non-empty Temporal namespace in settings.");
 
             settings = settings.Clone();    // Configure the client using cloned settings
 
@@ -1204,13 +1204,13 @@ namespace Neon.Temporal
                         case InternalMessageTypes.ActivityInvokeLocalRequest:
                         case InternalMessageTypes.WorkflowFutureReadyRequest:
 
-                            await WorkflowBase.OnProxyRequestAsync(client, request);
+                            await WorkflowBase.OnProxyRequestAsync(client.GetWorkerById(request.WorkerId), request);
                             break;
 
                         case InternalMessageTypes.ActivityInvokeRequest:
                         case InternalMessageTypes.ActivityStoppingRequest:
 
-                            await ActivityBase.OnProxyRequestAsync(client, request);
+                            await ActivityBase.OnProxyRequestAsync(client.GetWorkerById(request.WorkerId), request);
                             break;
 
                         default:
@@ -1364,13 +1364,10 @@ namespace Neon.Temporal
         //---------------------------------------------------------------------
         // Instance members
 
-        private Process                     proxyProcess            = null;
-        private int                         proxyPort               = 0;
-        private Dictionary<long, Worker>    workers                 = new Dictionary<long, Worker>();
-        private Dictionary<string, Type>    activityTypes           = new Dictionary<string, Type>();
-        private bool                        isDisposed              = false;
-        private List<Type>                  registeredActivityTypes = new List<Type>();
-        private List<Type>                  registeredWorkflowTypes = new List<Type>();
+        private Process                     proxyProcess = null;
+        private int                         proxyPort    = 0;
+        private Dictionary<long, Worker>    idToWorker   = new Dictionary<long, Worker>();
+        private bool                        isDisposed   = false;
         private HttpClient                  proxyClient;
         private HttpServer                  httpServer;
         private Exception                   pendingException;
@@ -1379,8 +1376,6 @@ namespace Neon.Temporal
         private int                         workflowCacheSize;
         private Thread                      heartbeatThread;
         private Thread                      timeoutThread;
-        private bool                        workflowWorkerStarted;
-        private bool                        activityWorkerStarted;
         private IRetryPolicy                syncSignalRetry;
 
         /// <summary>
@@ -1510,7 +1505,7 @@ namespace Neon.Temporal
 
                     lock (syncLock)
                     {
-                        workerList = workers.Values.ToList();
+                        workerList = idToWorker.Values.ToList();
                     }
 
                     foreach (var worker in workerList)
@@ -1730,19 +1725,17 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Returns the .NET type implementing the named Temporal activity.
+        /// Looks up an associated worker by its ID.
         /// </summary>
-        /// <param name="activityTypeName">The Temporal activity type name.</param>
-        /// <returns>The workflow .NET type or <c>null</c> if the type was not found.</returns>
-        internal Type GetActivityType(string activityTypeName)
+        /// <param name="workerId">The worker ID.</param>
+        /// <returns>The <see cref="Worker"/> or <c>null</c>.</returns>
+        internal Worker GetWorkerById(long workerId)
         {
-            Covenant.Requires<ArgumentNullException>(activityTypeName != null, nameof(activityTypeName));
-
             lock (syncLock)
             {
-                if (activityTypes.TryGetValue(activityTypeName, out var type))
+                if (idToWorker.TryGetValue(workerId, out var worker))
                 {
-                    return type;
+                    return worker;
                 }
                 else
                 {

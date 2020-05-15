@@ -78,12 +78,12 @@ namespace Neon.Temporal.Internal
 
         /// <summary>
         /// WorkflowIDReusePolicy - Whether server allow reuse of workflow ID, can be useful
-        /// for dedup logic if set to WorkflowIdReusePolicyRejectDuplicate.
-        /// Optional: defaulted to WorkflowIDReusePolicyAllowDuplicateFailedOnly.
+        /// for dedup logic if set to WorkflowIdReusePolicyAllowDuplicate.
+        /// Optional: defaulted to WorkflowIdReusePolicyAllowDuplicate.
         /// </summary>
         [JsonProperty(PropertyName = "WorkflowIdReusePolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(Temporal.WorkflowIdReusePolicy.AllowDuplicateFailedOnly)]
-        public int WorkflowIdReusePolicy { get; set; } = (int)Temporal.WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
+        [DefaultValue(Temporal.WorkflowIdReusePolicy.AllowDuplicate)]
+        public int WorkflowIdReusePolicy { get; set; } = (int)Temporal.WorkflowIdReusePolicy.AllowDuplicate;
         
         /// <summary>
         /// RetryPolicy - Optional retry policy for workflow. If a retry policy is specified, in case of workflow failure

@@ -65,18 +65,15 @@ namespace TestTemporal
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Name);
-                Assert.Null(message.Namespace);
 
                 // Round-trip
 
                 message.ClientId = 444;
                 message.RequestId = 555;
                 message.Name = "Foo";
-                message.Namespace = "my-namespace";
 
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("Foo", message.Name);
-                Assert.Equal("my-namespace", message.Namespace);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -87,7 +84,6 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("Foo", message.Name);
-                Assert.Equal("my-namespace", message.Namespace);
 
                 // Clone()
 
@@ -96,7 +92,6 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("Foo", message.Name);
-                Assert.Equal("my-namespace", message.Namespace);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -105,7 +100,6 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("Foo", message.Name);
-                Assert.Equal("my-namespace", message.Namespace);
             }
         }
 

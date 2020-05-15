@@ -139,13 +139,17 @@ namespace TestTemporal
 
             using (var client1 = await TemporalClient.ConnectAsync(fixture.Settings))
             {
-                await client1.RegisterWorkflowAsync<WorkflowWithResult1>();
-                await client1.StartWorkerAsync("tasklist-1");
+                var worker1 = await client1.NewWorkerAsync();
+
+                await worker1.RegisterWorkflowAsync<WorkflowWithResult1>();
+                await worker1.StartAsync();
 
                 using (var client2 = await TemporalClient.ConnectAsync(fixture.Settings))
                 {
-                    await client2.RegisterWorkflowAsync<WorkflowWithResult2>();
-                    await client2.StartWorkerAsync("tasklist-2");
+                    var worker2 = await client1.NewWorkerAsync(new WorkerOptions() { TaskList = "tasklist-2" });
+
+                    await worker2.RegisterWorkflowAsync<WorkflowWithResult1>();
+                    await worker2.StartAsync();
 
                     var options1 = new WorkflowOptions()
                     {
@@ -177,10 +181,11 @@ namespace TestTemporal
 
             using (var client = await TemporalClient.ConnectAsync(fixture.Settings))
             {
-                await client.RegisterWorkflowAsync<WorkflowWithResult3>();
-                
-                using (await client.StartWorkerAsync("tasklist-3"))
+                using (var worker = await client.NewWorkerAsync())
                 {
+                    await worker.RegisterWorkflowAsync<WorkflowWithResult3>();
+                    await worker.StartAsync();
+                
                     var stub1 = client.NewWorkflowStub<IWorkflowWithResult3>();
 
                     Assert.Equal("WF3 says: Hello Jack!", await stub1.HelloAsync("Jack"));
@@ -189,10 +194,11 @@ namespace TestTemporal
 
             using (var client = await TemporalClient.ConnectAsync(fixture.Settings))
             {
-                await client.RegisterWorkflowAsync<WorkflowWithResult4>();
-
-                using (await client.StartWorkerAsync("tasklist-4"))
+                using (var worker = await client.NewWorkerAsync())
                 {
+                    await worker.RegisterWorkflowAsync<WorkflowWithResult4>();
+                    await worker.StartAsync();
+
                     var stub1 = client.NewWorkflowStub<IWorkflowWithResult4>();
 
                     Assert.Equal("WF4 says: Hello Jack!", await stub1.HelloAsync("Jack"));
@@ -393,19 +399,25 @@ namespace TestTemporal
                 clients.Add(workerClient2 = await TemporalClient.ConnectAsync(fixture.Settings));
                 clients.Add(workerClient3 = await TemporalClient.ConnectAsync(fixture.Settings));
 
-                // Start the workers.
+                // Initialize and start the workers.
 
-                await workerClient1.RegisterActivityAsync<ActivityWorker1>();
-                await workerClient1.RegisterWorkflowAsync<WorkflowWorker1>();
-                await workerClient1.StartWorkerAsync("tasklist-1");
+                var worker1 = await workerClient1.NewWorkerAsync(new WorkerOptions() { TaskList = "tasklist-1" });
 
-                await workerClient2.RegisterActivityAsync<ActivityWorker2>();
-                await workerClient2.RegisterWorkflowAsync<WorkflowWorker2>();
-                await workerClient2.StartWorkerAsync("tasklist-2");
+                await worker1.RegisterActivityAsync<ActivityWorker1>();
+                await worker1.RegisterWorkflowAsync<WorkflowWorker1>();
+                await worker1.StartAsync();
 
-                await workerClient3.RegisterActivityAsync<ActivityWorker3>();
-                await workerClient3.RegisterWorkflowAsync<WorkflowWorker3>();
-                await workerClient3.StartWorkerAsync("tasklist-3");
+                var worker2 = await workerClient1.NewWorkerAsync(new WorkerOptions() { TaskList = "tasklist-2" });
+
+                await worker2.RegisterActivityAsync<ActivityWorker2>();
+                await worker2.RegisterWorkflowAsync<WorkflowWorker2>();
+                await worker2.StartAsync();
+
+                var worker3 = await workerClient1.NewWorkerAsync(new WorkerOptions() { TaskList = "tasklist-3" });
+
+                await worker3.RegisterActivityAsync<ActivityWorker3>();
+                await worker3.RegisterWorkflowAsync<WorkflowWorker3>();
+                await worker3.StartAsync();
 
                 // Execute each of the worker workflows WITHOUT the associated activities 
                 // from each client (both the worker and non-worker clients).

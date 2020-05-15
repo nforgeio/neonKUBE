@@ -58,8 +58,13 @@ namespace Snippets_QueryWorkflow
 
             using (var client = await TemporalClient.ConnectAsync(settings))
             {
-                await client.RegisterAssemblyAsync(System.Reflection.Assembly.GetExecutingAssembly());
-                await client.StartWorkerAsync("my-tasks");
+                // Create a worker and register the workflow and activity 
+                // implementations to let Temporal know we're open for business.
+
+                var worker = await client.NewWorkerAsync(new WorkerOptions() { TaskList = "my-tasks" });
+
+                await worker.RegisterAssemblyAsync(System.Reflection.Assembly.GetExecutingAssembly());
+                await worker.StartAsync();
 
                 // Invoke the workflow and then query it's status a few times.
 

@@ -74,6 +74,8 @@ namespace Neon.Temporal.Internal
 
             typedTarget.RequestId = this.RequestId;
             typedTarget.Error     = this.Error;
+            typedTarget.ClientId  = this.ClientId;
+            typedTarget.WorkerId  = this.WorkerId;
         }
 
         /// <summary>

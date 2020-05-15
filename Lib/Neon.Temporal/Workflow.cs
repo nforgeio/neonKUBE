@@ -79,7 +79,7 @@ namespace Neon.Temporal
         /// Constructor.
         /// </summary>
         /// <param name="parent">The parent workflow instance.</param>
-        /// <param name="client">The associated client.</param>
+        /// <param name="worker">The worker managing the workflow execution.</param>
         /// <param name="contextId">The workflow's context ID.</param>
         /// <param name="workflowTypeName">The workflow type name.</param>
         /// <param name="namespace">The hosting namespace.</param>
@@ -90,7 +90,7 @@ namespace Neon.Temporal
         /// <param name="methodMap">Maps the workflow signal and query methods.</param>
         internal Workflow(
             WorkflowBase        parent,
-            TemporalClient      client, 
+            Worker              worker, 
             long                contextId, 
             string              workflowTypeName, 
             string              @namespace, 
@@ -100,7 +100,7 @@ namespace Neon.Temporal
             bool                isReplaying, 
             WorkflowMethodMap   methodMap)
         {
-            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList), nameof(taskList));
@@ -116,12 +116,13 @@ namespace Neon.Temporal
             this.nextQueueId               = 0;
             this.IdToLocalActivityAction   = new Dictionary<long, LocalActivityAction>();
             this.MethodMap                 = methodMap;
-            this.Client                    = client;
+            this.Client                    = worker.Client;
+            this.Worker                    = worker;
             this.IsReplaying               = isReplaying;
             this.Execution                 = new WorkflowExecution(workflowId, runId);
             this.Logger                    = LogManager.Default.GetLogger(sourceModule: workflowTypeName, contextId: runId, () => !IsReplaying || Client.Settings.LogDuringReplay);
 
-            if (client.Settings.Debug)
+            if (Client.Settings.Debug)
             {
                 pendingOperationStackTraces = new Dictionary<string, string>();
             }
@@ -167,6 +168,11 @@ namespace Neon.Temporal
         /// Returns the <see cref="TemporalClient"/> managing this workflow.
         /// </summary>
         public TemporalClient Client { get; set; }
+
+        /// <summary>
+        /// Returns the <see cref="Worker"/> managing this workflow.
+        /// </summary>
+        internal Worker Worker { get; set; }
 
         /// <summary>
         /// Returns the logger to be used for logging workflow related events.

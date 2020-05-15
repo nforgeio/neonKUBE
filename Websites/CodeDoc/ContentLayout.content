@@ -59,10 +59,11 @@
   <Topic id="8e17ca95-0bc3-4ab7-b62c-7cd2a74115ae" visible="True" noFile="true" title="Neon.SSH.NET">
     <Topic id="a331f9c6-c9b5-4b21-a827-f717bba4d612" visible="True" title="Overview" />
   </Topic>
-  <Topic id="052d13d8-745c-4a73-a78a-9357258a5c70" visible="True" noFile="true" isSelected="true" title="Neon.Temporal">
+  <Topic id="052d13d8-745c-4a73-a78a-9357258a5c70" visible="True" noFile="true" isExpanded="true" title="Neon.Temporal">
     <Topic id="0605d399-be1e-44c7-bc1f-d143bc1a041f" visible="True" title="Overview" />
     <Topic id="2c7bb40f-5da8-402a-90ae-a26521bd23b1" visible="True" title="Glossary" />
     <Topic id="7e2e1d4c-1782-4872-9c59-c600f50eb546" visible="True" title="Deployment" />
+    <Topic id="a6d5bc2a-3d4a-4264-92f7-eff1082b042b" visible="True" noFile="true" isSelected="true" title="Cadence Upgrade" />
     <Topic id="a0eb693f-9eb3-4e04-98f4-b544a1e200fc" visible="True" noFile="true" isExpanded="true" title="Getting started">
       <Topic id="71ca278a-dfb2-450f-965b-c5bc373538e1" visible="True" title="Basic workflow" />
       <Topic id="a5cdc2a2-6f6d-4717-b2a4-deeefb8d55e6" visible="True" title="Basic activity" />

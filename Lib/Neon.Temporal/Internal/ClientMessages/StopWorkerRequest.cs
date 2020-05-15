@@ -41,15 +41,6 @@ namespace Neon.Temporal.Internal
         /// <inheritdoc/>
         public override InternalMessageTypes ReplyType => InternalMessageTypes.StopWorkerReply;
 
-        /// <summary>
-        /// Identifies the worker being stopped.
-        /// </summary>
-        public long WorkerId
-        {
-            get => GetLongProperty(PropertyNames.WorkerId);
-            set => SetLongProperty(PropertyNames.WorkerId, value);
-        }
-
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -64,10 +55,6 @@ namespace Neon.Temporal.Internal
         protected override void CopyTo(ProxyMessage target)
         {
             base.CopyTo(target);
-
-            var typedTarget = (StopWorkerRequest)target;
-
-            typedTarget.WorkerId = this.WorkerId;
         }
     }
 }

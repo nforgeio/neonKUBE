@@ -81,6 +81,8 @@ namespace Neon.Temporal.Internal
 
             typedTarget.RequestId     = this.RequestId;
             typedTarget.IsCancellable = this.IsCancellable;
+            typedTarget.ClientId      = this.ClientId;
+            typedTarget.WorkerId      = this.WorkerId;
         }
     }
 }

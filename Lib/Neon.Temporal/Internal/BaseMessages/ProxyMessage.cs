@@ -928,5 +928,14 @@ namespace Neon.Temporal.Internal
             get => GetLongProperty(PropertyNames.ClientId);
             set => SetLongProperty(PropertyNames.ClientId, value);
         }
+
+        /// <summary>
+        /// Optionally identifies a client specific worker.
+        /// </summary>
+        public long WorkerId
+        {
+            get => GetLongProperty(PropertyNames.WorkerId);
+            set => SetLongProperty(PropertyNames.WorkerId, value);
+        }
     }
 }

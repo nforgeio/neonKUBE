@@ -244,10 +244,10 @@ namespace Neon.Temporal
 
         /// <summary>
         /// Optionally determines how Temporal handles workflows that attempt to reuse workflow IDs.
-        /// This generally defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicateFailedOnly"/>
+        /// This generally defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicate"/>
         /// but the default can be customized via the <see cref="WorkflowMethodAttribute"/> tagging
         /// the workflow entry point method or <see cref="TemporalSettings.WorkflowIdReusePolicy"/>
-        /// (which defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicateFailedOnly"/>.
+        /// (which also defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicate"/>.
         /// </summary>
         public WorkflowIdReusePolicy WorkflowIdReusePolicy { get; set; } = Temporal.WorkflowIdReusePolicy.UseDefault;
         
@@ -353,7 +353,7 @@ namespace Neon.Temporal
                 DecisionTaskStartToCloseTimeout = TemporalHelper.ToTemporal(this.DecisionTaskTimeout),
                 ExecutionStartToCloseTimeout    = TemporalHelper.ToTemporal(this.StartToCloseTimeout),
                 RetryPolicy                     = this.RetryOptions?.ToInternal(),
-                WorkflowIdReusePolicy           = (int)(this.WorkflowIdReusePolicy == WorkflowIdReusePolicy.UseDefault ? Temporal.WorkflowIdReusePolicy.AllowDuplicateFailedOnly : this.WorkflowIdReusePolicy),
+                WorkflowIdReusePolicy           = (int)(this.WorkflowIdReusePolicy == WorkflowIdReusePolicy.UseDefault ? Temporal.WorkflowIdReusePolicy.AllowDuplicate : this.WorkflowIdReusePolicy),
                 CronSchedule                    = this.CronSchedule,
                 Memo                            = encodedMemos
             };
