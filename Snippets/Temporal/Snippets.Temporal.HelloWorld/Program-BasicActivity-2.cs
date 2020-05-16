@@ -26,6 +26,7 @@ namespace HelloWorld_BasicActivity_2
             message.Body = $"Hello {name}!";
 
             smtp.Send(message);
+            await Task.CompletedTask;
         }
     }
 

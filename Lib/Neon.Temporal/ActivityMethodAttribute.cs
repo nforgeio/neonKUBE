@@ -123,14 +123,11 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// <para>
         /// Optionally specifies the maximum total time allowed for the activity to
         /// complete from the time it is scheduled.  This includes the time the 
         /// activity is waiting to start executing on the worker, the time it takes
         /// for the activity to execute on the worker, as well as any time scheduling
         /// and performing retries.
-        /// </para>
-        /// </note>
         /// </summary>
         public int ScheduleToCloseTimeoutSeconds
         {

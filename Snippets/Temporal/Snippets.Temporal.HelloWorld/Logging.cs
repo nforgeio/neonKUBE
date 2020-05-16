@@ -74,6 +74,8 @@
             {
                 Activity.Logger.LogDebug("SendMessageAsync: finished");
             }
+
+            await Task.CompletedTask;
         }
     }
 
