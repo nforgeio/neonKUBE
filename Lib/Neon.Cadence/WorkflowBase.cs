@@ -173,7 +173,7 @@ namespace Neon.Cadence
         private static Dictionary<string, WorkflowRegistration> nameToRegistration = new Dictionary<string, WorkflowRegistration>();
 
         /// <summary>
-        /// Holds ambient task state indicatring whether the current task executing
+        /// Holds ambient task state indicating whether the current task executing
         /// in the context of a workflow entry point, signal, or query.
         /// </summary>
         internal static AsyncLocal<WorkflowCallContext> CallContext { get; private set; } = new AsyncLocal<WorkflowCallContext>();
