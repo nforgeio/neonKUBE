@@ -107,8 +107,9 @@ namespace Neon.Temporal
         //---------------------------------------------------------------------
         // Implementation
 
-        private List<Type>                                  registeredWorkflowTypes = new List<Type>();
-        private Dictionary<string, WorkflowRegistration>    nameToRegistration      = new Dictionary<string, WorkflowRegistration>();
+        private List<Type>                                  registeredWorkflowTypes    = new List<Type>();
+        private Dictionary<string, WorkflowRegistration>    nameToWorkflowRegistration = new Dictionary<string, WorkflowRegistration>();
+        private Dictionary<long, WorkflowBase>              idToWorkflow               = new Dictionary<long, WorkflowBase>();
 
         /// <summary>
         /// Registers a workflow implementation.
@@ -162,7 +163,7 @@ namespace Neon.Temporal
 
                 var workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowType, workflowMethodAttribute);
 
-                if (nameToRegistration.TryGetValue(workflowTypeName, out var existingRegistration))
+                if (nameToWorkflowRegistration.TryGetValue(workflowTypeName, out var existingRegistration))
                 {
                     if (!object.ReferenceEquals(existingRegistration.WorkflowType, workflowType))
                     {
@@ -171,7 +172,7 @@ namespace Neon.Temporal
                 }
                 else
                 {
-                    nameToRegistration[workflowTypeName] =
+                    nameToWorkflowRegistration[workflowTypeName] =
                         new WorkflowRegistration()
                         {
                             WorkflowType                 = workflowType,

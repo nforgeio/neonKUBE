@@ -48,12 +48,6 @@ namespace Neon.Temporal
         private INeonLogger     log         = LogManager.Default.GetLogger<WorkflowBase>();
         private WorkerOptions   options;
 
-        // Maps a workflow context ID to the workflow's internal state.
-        private Dictionary<long, WorkflowBase> idToWorkflow = new Dictionary<long, WorkflowBase>();
-
-        // Maps an activity context ID to the activity's internal state.
-        private static Dictionary<long, ActivityBase> idToActivity = new Dictionary<long, ActivityBase>();
-
         /// <summary>
         /// Internal constructor.
         /// </summary>

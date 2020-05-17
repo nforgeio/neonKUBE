@@ -24,6 +24,9 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.AspNetCore.Connections.Features;
+using Microsoft.Extensions.DependencyInjection;
+
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Tasks;
@@ -62,7 +65,9 @@ namespace Neon.Temporal
         //---------------------------------------------------------------------
         // Implementation
 
-        private List<Type> registeredActivityTypes = new List<Type>();
+        private List<Type>                                  registeredActivityTypes    = new List<Type>();
+        private Dictionary<string, ActivityRegistration>    nameToActivityRegistration = new Dictionary<string, ActivityRegistration>();
+        private Dictionary<long, ActivityBase>              idToActivity               = new Dictionary<long, ActivityBase>();
 
         /// <summary>
         /// Registers an activity implementation with Temporal.
@@ -102,8 +107,6 @@ namespace Neon.Temporal
             {
                 activityTypeName = TemporalHelper.GetActivityTypeName(activityType, activityType.GetCustomAttribute<ActivityAttribute>());
             }
-
-            await ActivityBase.RegisterAsync(this, activityType, activityTypeName, Client.ResolveNamespace(@namespace));
 
             lock (await workerMutex.AcquireAsync())
             {
@@ -150,14 +153,234 @@ namespace Neon.Temporal
                 {
                     var activityTypeName = TemporalHelper.GetActivityTypeName(type, activityAttribute);
 
-                    await ActivityBase.RegisterAsync(this, type, activityTypeName, Client.ResolveNamespace(@namespace));
-
                     using (await workerMutex.AcquireAsync())
                     {
                         registeredActivityTypes.Add(TemporalHelper.GetActivityInterface(type));
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns the <see cref="ActivityRegistration"/> for an activity type and type name.
+        /// </summary>
+        /// <param name="activityType">The target activity type.</param>
+        /// <param name="activityTypeName">The target activity type name.</param>
+        /// <returns>The <see cref="ActivityRegistration"/>.</returns>
+        private ActivityRegistration GetActivityInvokeInfo(Type activityType, string activityTypeName)
+        {
+            Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName), nameof(activityTypeName));
+
+            var info = new ActivityRegistration();
+
+            // Locate the target method.  Note that the activity type name will be
+            // formatted like:
+            //
+            //      TYPE-NAME
+            // or   TYPE-NAME::METHOD-NAME
+
+            var activityMethodName = (string)null;
+            var separatorPos       = activityTypeName.IndexOf("::");
+
+            if (separatorPos != -1)
+            {
+                activityMethodName = activityTypeName.Substring(separatorPos + 2);
+
+                if (string.IsNullOrEmpty(activityMethodName))
+                {
+                    activityMethodName = null;
+                }
+            }
+
+            foreach (var method in activityType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
+            {
+                var activityMethodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();
+
+                if (activityMethodAttribute == null)
+                {
+                    continue;
+                }
+
+                var name = activityMethodAttribute.Name;
+
+                if (string.IsNullOrEmpty(name))
+                {
+                    name = null;
+                }
+
+                if (name == activityMethodName)
+                {
+                    info.ActivityMethod = method;
+                    break;
+                }
+            }
+
+            if (info.ActivityMethod == null)
+            {
+                throw new ArgumentException($"Activity type [{activityType.FullName}] does not have an entry point method tagged with [ActivityMethod(Name = \"{activityMethodName}\")].", nameof(activityType));
+            }
+
+            return info;
+        }
+
+        /// <summary>
+        /// Constructs an activity instance suitable for executing a normal (non-local) activity.
+        /// </summary>
+        /// <param name="invokeInfo">The activity invocation information.</param>
+        /// <param name="contextId">The activity context ID.</param>
+        /// <returns>The constructed activity.</returns>
+        private ActivityBase CreateNormalActivity(ActivityRegistration invokeInfo, long contextId)
+        {
+            var activity = (ActivityBase)ActivatorUtilities.CreateInstance(NeonHelper.ServiceContainer, invokeInfo.ActivityType);
+
+            activity.IsLocal = false;
+            activity.Initialize(this, invokeInfo.ActivityType, invokeInfo.ActivityMethod, this.Client.DataConverter, contextId);
+
+            return activity;
+        }
+
+        /// <summary>
+        /// Constructs an activity instance suitable for executing a local activity.
+        /// </summary>
+        /// <param name="activityAction">The target activity action.</param>
+        /// <param name="contextId">The activity context ID.</param>
+        /// <returns>The constructed activity.</returns>
+        internal ActivityBase CreateLocalActivity(LocalActivityAction activityAction, long contextId)
+        {
+            var activity = (ActivityBase)ActivatorUtilities.CreateInstance(NeonHelper.ServiceContainer, activityAction.ActivityType);
+
+            activity.IsLocal = true;
+            activity.Initialize(this, activityAction.ActivityType, activityAction.ActivityMethod, this.Client.DataConverter, contextId);
+
+            return activity;
+        }
+
+        /// <summary>
+        /// Called to handle activity related requests received from the <b>temporal-proxy</b>.
+        /// </summary>
+        /// <param name="request">The request message.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        internal async Task OnProxyRequestAsync(ProxyRequest request)
+        {
+            Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
+
+            ProxyReply reply;
+
+            switch (request.Type)
+            {
+                case InternalMessageTypes.ActivityInvokeRequest:
+
+                    reply = await OnActivityInvokeRequest((ActivityInvokeRequest)request);
+                    break;
+
+                case InternalMessageTypes.ActivityStoppingRequest:
+
+                    reply = await ActivityStoppingRequest((ActivityStoppingRequest)request);
+                    break;
+
+                default:
+
+                    throw new InvalidOperationException($"Unexpected message type [{request.Type}].");
+            }
+
+            await Client.ProxyReplyAsync(request, reply);
+        }
+
+        /// <summary>
+        /// Handles received <see cref="ActivityInvokeRequest"/> messages.
+        /// </summary>
+        /// <param name="request">The request message.</param>
+        /// <returns>The reply message.</returns>
+        private async Task<ActivityInvokeReply> OnActivityInvokeRequest(ActivityInvokeRequest request)
+        {
+            ActivityRegistration    invokeInfo;
+            ActivityBase            activity;
+
+            using (await workerMutex.AcquireAsync())
+            {
+                if (!nameToActivityRegistration.TryGetValue(request.Activity, out invokeInfo))
+                {
+                    throw new KeyNotFoundException($"Cannot resolve [activityTypeName = {request.Activity}] to a registered activity type and activity method.");
+                }
+
+                activity = CreateNormalActivity(invokeInfo, request.ContextId);
+                idToActivity.Add(request.ContextId, activity);
+            }
+
+            try
+            {
+                var result = await activity.OnInvokeAsync(request.Args);
+
+                if (activity.CompleteExternally)
+                {
+                    return new ActivityInvokeReply()
+                    {
+                        Pending = true
+                    };
+                }
+                else
+                {
+                    return new ActivityInvokeReply()
+                    {
+                        Result = result,
+                    };
+                }
+            }
+            catch (TemporalException e)
+            {
+                return new ActivityInvokeReply()
+                {
+                    Error = e.ToTemporalError()
+                };
+            }
+            catch (TaskCanceledException e)
+            {
+                return new ActivityInvokeReply()
+                {
+                    Error = new CancelledException(e.Message).ToTemporalError()
+                };
+            }
+            catch (Exception e)
+            {
+                return new ActivityInvokeReply()
+                {
+                    Error = new TemporalError(e)
+                };
+            }
+            finally
+            {
+                using (await workerMutex.AcquireAsync())
+                {
+                    idToActivity.Remove(activity.ContextId);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handles received <see cref="ActivityStoppingRequest"/> messages.
+        /// </summary>
+        /// <param name="request">The request message.</param>
+        /// <returns>The reply message.</returns>
+        private async Task<ActivityStoppingReply> ActivityStoppingRequest(ActivityStoppingRequest request)
+        {
+            ActivityBase    activity;
+
+            using (await workerMutex.AcquireAsync())
+            {
+                if (idToActivity.TryGetValue(request.ContextId, out activity))
+                {
+                    idToActivity.Remove(request.ContextId);
+                }
+                else
+                {
+                    activity = null;
+                }
+            }
+
+            activity?.CancellationTokenSource.Cancel();
+
+            return await Task.FromResult(new ActivityStoppingReply());
         }
     }
 }

@@ -588,7 +588,7 @@ namespace Neon.Temporal
 
         /// <summary>
         /// Resets <see cref="TemporalClient"/> to its initial state, by closing
-        /// and existing connections and clearing any operation state.  This is
+        /// any existing connections and clearing any operation state.  This is
         /// called by the <b>TemporalFixture</b>.
         /// </summary>
         internal static void Reset()
@@ -598,8 +598,17 @@ namespace Neon.Temporal
                 client.Dispose();
             }
 
-            ActivityBase.Reset();
-            WorkflowBase.Reset();
+            List<TemporalClient> clients;
+
+            lock (syncLock)
+            {
+                clients = idToClient.Values.ToList();
+            }
+
+            foreach (var client in clients)
+            {
+                client.Dispose();
+            }
 
             lock (syncLock)
             {
@@ -1194,7 +1203,7 @@ namespace Neon.Temporal
                         case InternalMessageTypes.ActivityInvokeRequest:
                         case InternalMessageTypes.ActivityStoppingRequest:
 
-                            await ActivityBase.OnProxyRequestAsync(client.GetWorkerById(request.WorkerId), request);
+                            await client.GetWorkerById(request.WorkerId).OnProxyRequestAsync(request);
                             break;
 
                         default:
@@ -1518,9 +1527,6 @@ namespace Neon.Temporal
                                 idToClient.Remove(ClientId);
                             }
                         }
-
-                        WorkflowBase.UnregisterClient(this);
-                        ActivityBase.UnregisterClient(this);
 
                         if (proxyProcess != null)
                         {

@@ -297,7 +297,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Returns the <see cref="ActivityRegistration"/> for any activity type and activity type name.
         /// </summary>
-        /// <param name="activityType">The targetr activity type.</param>
+        /// <param name="activityType">The target activity type.</param>
         /// <param name="activityTypeName">The target activity type name.</param>
         /// <returns>The <see cref="ActivityRegistration"/>.</returns>
         private static ActivityRegistration GetActivityInvokeInfo(Type activityType, string activityTypeName)
