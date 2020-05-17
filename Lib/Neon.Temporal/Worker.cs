@@ -41,106 +41,8 @@ namespace Neon.Temporal
     /// worker within an individual Temporal client so this class will prevent this.
     /// </para>
     /// </remarks>
-    public sealed class Worker : IDisposable
+    public sealed partial class Worker : IDisposable
     {
-        //---------------------------------------------------------------------
-        // Activity related private types
-
-        /// <summary>
-        /// Used for mapping an activity type name to its underlying type
-        /// and entry point method.
-        /// </summary>
-        private struct ActivityRegistration
-        {
-            /// <summary>
-            /// The activity type.
-            /// </summary>
-            public Type ActivityType { get; set; }
-
-            /// <summary>
-            /// The activity entry point method.
-            /// </summary>
-            public MethodInfo ActivityMethod { get; set; }
-
-            /// <summary>
-            /// The activity method parameter types.
-            /// </summary>
-            public Type[] ActivityMethodParameterTypes { get; set; }
-        }
-
-        //---------------------------------------------------------------------
-        // Workflow related private types
-
-        /// <summary>
-        /// Enumerates the possible contexts workflow code may be executing within.
-        /// This is used to limit what code can do (i.e. query methods shouldn't be
-        /// allowed to execute activities).  This is also used in some situations to
-        /// modify how workflow code behaves.
-        /// </summary>
-        internal enum WorkflowCallContext
-        {
-            /// <summary>
-            /// The current task is not executing within the context
-            /// of any workflow method.
-            /// </summary>
-            None = 0,
-
-            /// <summary>
-            /// The current task is executing within the context of
-            /// a workflow entrypoint.
-            /// </summary>
-            Entrypoint,
-
-            /// <summary>
-            /// The current task is executing within the context of a
-            /// workflow signal method.
-            /// </summary>
-            Signal,
-
-            /// <summary>
-            /// The current task is executing within the context of a
-            /// workflow query method.
-            /// </summary>
-            Query,
-
-            /// <summary>
-            /// The current task is executing within the context of a
-            /// normal or local activity.
-            /// </summary>
-            Activity
-        }
-
-        /// <summary>
-        /// Describes the workflow implementation type, entry point method, and 
-        /// signal/query methods for registered workflow.
-        /// </summary>
-        private class WorkflowRegistration
-        {
-            /// <summary>
-            /// The workflow implemention type.
-            /// </summary>
-            public Type WorkflowType { get; set; }
-
-            /// <summary>
-            /// The workflow entry point method.
-            /// </summary>
-            public MethodInfo WorkflowMethod { get; set; }
-
-            /// <summary>
-            /// The workflow entry point parameter types.
-            /// </summary>
-            public Type[] WorkflowMethodParameterTypes { get; set; }
-
-            /// <summary>
-            /// Maps workflow signal and query names to the corresponding
-            /// method implementations.
-            /// </summary>
-            public WorkflowMethodMap MethodMap { get; set; }
-        }
-
-        //---------------------------------------------------------------------
-        // Implementation
-
         private AsyncMutex      workerMutex = new AsyncMutex();
         private bool            isRunning   = false;
         private INeonLogger     log         = LogManager.Default.GetLogger<WorkflowBase>();
@@ -182,8 +84,11 @@ namespace Neon.Temporal
 
                 IsDisposed = true;
 
-                Client.StopWorkerAsync(this).Wait();
-                Client = null;
+                if (isRunning)
+                {
+                    Client.StopWorkerAsync(this).Wait();
+                    Client = null;
+                }
 
                 GC.SuppressFinalize(this);
             }
@@ -244,102 +149,6 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Registers an activity implementation with Temporal.
-        /// </summary>
-        /// <typeparam name="TActivity">The <see cref="ActivityBase"/> derived class implementing the activity.</typeparam>
-        /// <param name="activityTypeName">
-        /// Optionally specifies a custom activity type name that will be used 
-        /// for identifying the activity implementation in Temporal.  This defaults
-        /// to the fully qualified <typeparamref name="TActivity"/> type name.
-        /// </param>
-        /// <param name="namespace">Optionally overrides the default client namespace.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if a different activity class has already been registered for <paramref name="activityTypeName"/>.</exception>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown if the worker has already been started.  You must register workflow 
-        /// and activity implementations before starting workers.
-        /// </exception>
-        /// <remarks>
-        /// <note>
-        /// Be sure to register all services you will be injecting into activities via
-        /// <see cref="NeonHelper.ServiceContainer"/> before you call this as well as 
-        /// registering of your activity implementations before starting workers.
-        /// </note>
-        /// </remarks>
-        public async Task RegisterActivityAsync<TActivity>(string activityTypeName = null, string @namespace = null)
-            where TActivity : ActivityBase
-        {
-            await SyncContext.ClearAsync;
-            TemporalHelper.ValidateActivityImplementation(typeof(TActivity));
-            TemporalHelper.ValidateActivityTypeName(activityTypeName);
-            EnsureNotDisposed();
-            EnsureCanRegister();
-
-            var activityType = typeof(TActivity);
-
-            if (string.IsNullOrEmpty(activityTypeName))
-            {
-                activityTypeName = TemporalHelper.GetActivityTypeName(activityType, activityType.GetCustomAttribute<ActivityAttribute>());
-            }
-
-            await ActivityBase.RegisterAsync(this, activityType, activityTypeName, Client.ResolveNamespace(@namespace));
-
-            lock (await workerMutex.AcquireAsync())
-            {
-                registeredActivityTypes.Add(TemporalHelper.GetActivityInterface(typeof(TActivity)));
-            }
-        }
-
-        /// <summary>
-        /// Scans the assembly passed looking for activity implementations derived from
-        /// <see cref="ActivityBase"/> and tagged by <see cref="ActivityAttribute"/> and
-        /// registers them with Temporal.
-        /// </summary>
-        /// <param name="assembly">The target assembly.</param>
-        /// <param name="namespace">Optionally overrides the default client namespace.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="TypeLoadException">
-        /// Thrown for types tagged by <see cref="ActivityAttribute"/> that are not 
-        /// derived from <see cref="ActivityBase"/>.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown if the worker has already been started.  You must register workflow 
-        /// and activity implementations before starting workers.
-        /// </exception>
-        /// <remarks>
-        /// <note>
-        /// Be sure to register all services you will be injecting into activities via
-        /// <see cref="NeonHelper.ServiceContainer"/> before you call this as well as 
-        /// registering of your activity implementations before starting workers.
-        /// </note>
-        /// </remarks>
-        public async Task RegisterAssemblyActivitiesAsync(Assembly assembly, string @namespace = null)
-        {
-            await SyncContext.ClearAsync;
-            Covenant.Requires<ArgumentNullException>(assembly != null, nameof(assembly));
-            EnsureNotDisposed();
-            EnsureCanRegister();
-
-            foreach (var type in assembly.GetTypes().Where(t => t.IsClass))
-            {
-                var activityAttribute = type.GetCustomAttribute<ActivityAttribute>();
-
-                if (activityAttribute != null && activityAttribute.AutoRegister)
-                {
-                    var activityTypeName = TemporalHelper.GetActivityTypeName(type, activityAttribute);
-
-                    await ActivityBase.RegisterAsync(this, type, activityTypeName, Client.ResolveNamespace(@namespace));
-
-                    using (await workerMutex.AcquireAsync())
-                    {
-                        registeredActivityTypes.Add(TemporalHelper.GetActivityInterface(type));
-                    }
-                }
-            }
-        }
-
-        /// <summary>
         /// Scans the assembly passed looking for workflow and activity implementations 
         /// derived from and registers them with Temporal.  This is equivalent to calling
         /// <see cref="RegisterAssemblyWorkflowsAsync(Assembly, string)"/> and
@@ -363,7 +172,7 @@ namespace Neon.Temporal
         /// Be sure to register all services you will be injecting into activities via
         /// <see cref="NeonHelper.ServiceContainer"/> before you call this as well as 
         /// registering of your activity and workflow implementations before starting 
-        /// workers.
+        /// a worker.
         /// </note>
         /// </remarks>
         public async Task RegisterAssemblyAsync(Assembly assembly, string @namespace = null)
@@ -388,7 +197,7 @@ namespace Neon.Temporal
         /// </exception>
         /// <remarks>
         /// <note>
-        /// Be sure to register all of your workflow implementations before starting workers.
+        /// Be sure to register all of your workflow implementations before starting a worker.
         /// </note>
         /// </remarks>
         public async Task RegisterWorkflowAsync<TWorkflow>(string @namespace = null)
@@ -427,7 +236,7 @@ namespace Neon.Temporal
         /// </exception>
         /// <remarks>
         /// <note>
-        /// Be sure to register all of your workflow implementations before starting workers.
+        /// Be sure to register all of your workflow implementations before starting a worker.
         /// </note>
         /// </remarks>
         public async Task RegisterAssemblyWorkflowsAsync(Assembly assembly, string @namespace = null)
@@ -503,98 +312,5 @@ namespace Neon.Temporal
 
             isRunning = true;
         }
-
-        //---------------------------------------------------------------------
-        // Workflow runtime implementation
-
-        private List<Type>                                  registeredWorkflowTypes = new List<Type>();
-        private Dictionary<string, WorkflowRegistration>    nameToRegistration      = new Dictionary<string, WorkflowRegistration>();
-
-        /// <summary>
-        /// Registers a workflow implementation.
-        /// </summary>
-        /// <param name="workflowType">The workflow implementation type.</param>
-        private async Task RegisterWorkflowImplementationAsync(Type workflowType)
-        {
-            TemporalHelper.ValidateWorkflowImplementation(workflowType);
-
-            var methodMap = WorkflowMethodMap.Create(workflowType);
-
-            // We need to register each workflow method that implements a workflow interface method
-            // with the same signature that that was tagged by [WorkflowMethod].
-            //
-            // First, we'll create a dictionary that maps method signatures from any inherited
-            // interfaces that are tagged by [WorkflowMethod] to the attribute.
-
-            var methodSignatureToAttribute = new Dictionary<string, WorkflowMethodAttribute>();
-
-            foreach (var interfaceType in workflowType.GetInterfaces())
-            {
-                foreach (var method in interfaceType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
-                {
-                    var workflowMethodAttribute = method.GetCustomAttribute<WorkflowMethodAttribute>();
-
-                    if (workflowMethodAttribute == null)
-                    {
-                        continue;
-                    }
-
-                    var signature = method.ToString();
-
-                    if (methodSignatureToAttribute.ContainsKey(signature))
-                    {
-                        throw new NotSupportedException($"Workflow type [{workflowType.FullName}] cannot implement the [{signature}] method from two different interfaces.");
-                    }
-
-                    methodSignatureToAttribute.Add(signature, workflowMethodAttribute);
-                }
-            }
-
-            // Next, we need to register the workflow methods that implement the
-            // workflow interface.
-
-            foreach (var method in workflowType.GetMethods())
-            {
-                if (!methodSignatureToAttribute.TryGetValue(method.ToString(), out var workflowMethodAttribute))
-                {
-                    continue;
-                }
-
-                var workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowType, workflowMethodAttribute);
-
-                if (nameToRegistration.TryGetValue(workflowTypeName, out var existingRegistration))
-                {
-                    if (!object.ReferenceEquals(existingRegistration.WorkflowType, workflowType))
-                    {
-                        throw new InvalidOperationException($"Conflicting workflow interface registration: Workflow interface [{workflowType.FullName}] is already registered for workflow type name [{workflowTypeName}].");
-                    }
-                }
-                else
-                {
-                    nameToRegistration[workflowTypeName] =
-                        new WorkflowRegistration()
-                        {
-                            WorkflowType                 = workflowType,
-                            WorkflowMethod               = method,
-                            WorkflowMethodParameterTypes = method.GetParameterTypes(),
-                            MethodMap                    = methodMap
-                        };
-                }
-
-                var reply = (WorkflowRegisterReply)await Client.CallProxyAsync(
-                    new WorkflowRegisterRequest()
-                    {
-                        Name     = workflowTypeName,
-                        WorkerId = WorkerId
-                    });
-
-                reply.ThrowOnError();
-            }
-        }
-
-        //---------------------------------------------------------------------
-        // Activity runtime implementation
-
-        private List<Type> registeredActivityTypes = new List<Type>();
     }
 }

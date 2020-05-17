@@ -153,12 +153,11 @@ namespace Neon.Temporal.Internal
         /// implementation class.
         /// </summary>
         /// <param name="workflowType">The workflow interface or implementation type.</param>
-        /// <param name="workflowMethodAttribute">Specifies the <see cref="WorkflowMethodAttribute"/>.</param>
+        /// <param name="workflowMethodAttribute">Optionally specifies the <see cref="WorkflowMethodAttribute"/> for the target method.</param>
         /// <returns>The fully qualifed type name.</returns>
-        internal static string GetWorkflowTypeName(Type workflowType, WorkflowMethodAttribute workflowMethodAttribute)
+        internal static string GetWorkflowTypeName(Type workflowType, WorkflowMethodAttribute workflowMethodAttribute = null)
         {
             Covenant.Requires<ArgumentNullException>(workflowType != null, nameof(workflowType));
-            Covenant.Requires<ArgumentNullException>(workflowMethodAttribute != null, nameof(workflowMethodAttribute));
 
             if (workflowType.IsClass)
             {
@@ -183,7 +182,7 @@ namespace Neon.Temporal.Internal
                 fullName += typeName.Substring(1);
             }
 
-            if (!string.IsNullOrEmpty(workflowMethodAttribute.Name))
+            if (!string.IsNullOrEmpty(workflowMethodAttribute?.Name))
             {
                 if (workflowMethodAttribute.IsFullName)
                 {
