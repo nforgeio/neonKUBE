@@ -21,6 +21,7 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -36,45 +37,6 @@ namespace Neon.Temporal
     {
         //---------------------------------------------------------------------
         // Workflow related private types
-
-        /// <summary>
-        /// Enumerates the possible contexts workflow code may be executing within.
-        /// This is used to limit what code can do (i.e. query methods shouldn't be
-        /// allowed to execute activities).  This is also used in some situations to
-        /// modify how workflow code behaves.
-        /// </summary>
-        internal enum WorkflowCallContext
-        {
-            /// <summary>
-            /// The current task is not executing within the context
-            /// of any workflow method.
-            /// </summary>
-            None = 0,
-
-            /// <summary>
-            /// The current task is executing within the context of
-            /// a workflow entrypoint.
-            /// </summary>
-            Entrypoint,
-
-            /// <summary>
-            /// The current task is executing within the context of a
-            /// workflow signal method.
-            /// </summary>
-            Signal,
-
-            /// <summary>
-            /// The current task is executing within the context of a
-            /// workflow query method.
-            /// </summary>
-            Query,
-
-            /// <summary>
-            /// The current task is executing within the context of a
-            /// normal or local activity.
-            /// </summary>
-            Activity
-        }
 
         /// <summary>
         /// Describes the workflow implementation type, entry point method, and 
@@ -190,6 +152,768 @@ namespace Neon.Temporal
                     });
 
                 reply.ThrowOnError();
+            }
+        }
+
+        /// <summary>
+        /// Scans the assembly passed looking for workflow implementations derived from
+        /// <see cref="WorkflowBase"/> and tagged by <see cref="WorkflowAttribute"/> with
+        /// <see cref="WorkflowAttribute.AutoRegister"/> set to <c>true</c> and registers 
+        /// them with Temporal.
+        /// </summary>
+        /// <param name="assembly">The target assembly.</param>
+        /// <param name="namespace">Optionally overrides the default client namespace.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="TypeLoadException">
+        /// Thrown for types tagged by <see cref="WorkflowAttribute"/> that are not 
+        /// derived from <see cref="WorkflowBase"/>.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if the worker has already been started.  You must register workflow 
+        /// and activity implementations before starting workers.
+        /// </exception>
+        /// <remarks>
+        /// <note>
+        /// Be sure to register all of your workflow implementations before starting a worker.
+        /// </note>
+        /// </remarks>
+        public async Task RegisterAssemblyWorkflowsAsync(Assembly assembly, string @namespace = null)
+        {
+            await SyncContext.ClearAsync;
+            Covenant.Requires<ArgumentNullException>(assembly != null, nameof(assembly));
+            EnsureNotDisposed();
+            EnsureCanRegister();
+
+            foreach (var type in assembly.GetTypes().Where(t => t.IsClass))
+            {
+                var workflowAttribute = type.GetCustomAttribute<WorkflowAttribute>();
+
+                if (workflowAttribute != null && workflowAttribute.AutoRegister)
+                {
+                    using (await workerMutex.AcquireAsync())
+                    {
+                        registeredWorkflowTypes.Add(TemporalHelper.GetWorkflowInterface(type));
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the registration for the named Temporal workflow.
+        /// </summary>
+        /// <param name="workflowTypeName">The Temporal workflow type name.</param>
+        /// <returns>The <see cref="WorkflowRegistration"/> or <c>null</c> if the type was not found.</returns>
+        private async Task<WorkflowRegistration> GetWorkflowRegistrationAsync(string workflowTypeName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
+
+            using (await workerMutex.AcquireAsync())
+            {
+                if (this.nameToWorkflowRegistration.TryGetValue(workflowTypeName, out var registration))
+                {
+                    return registration;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the existing workflow corresponding to a context ID.
+        /// </summary>
+        /// <param name="contextId">The workflow context ID.</param>
+        /// <returns>The <see cref="Workflow"/> or <c>null</c>.</returns>
+        private async Task<WorkflowBase> GetWorkflowAsync(long contextId)
+        {
+            using (await workerMutex.AcquireAsync())
+            {
+                if (idToWorkflow.TryGetValue(contextId, out var workflow))
+                {
+                    return workflow;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Called to handle a workflow related request message received from the <b>temporal-proxy</b>.
+        /// </summary>
+        /// <param name="request">The request message.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        internal async Task OnProxyRequestAsync(ProxyRequest request)
+        {
+            Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
+
+            ProxyReply reply;
+
+            switch (request.Type)
+            {
+                case InternalMessageTypes.WorkflowInvokeRequest:
+
+                    reply = await OnInvokeAsync((WorkflowInvokeRequest)request);
+                    break;
+
+                case InternalMessageTypes.WorkflowSignalInvokeRequest:
+
+                    reply = await OnSignalAsync((WorkflowSignalInvokeRequest)request);
+                    break;
+
+                case InternalMessageTypes.WorkflowQueryInvokeRequest:
+
+                    reply = await OnQueryAsync((WorkflowQueryInvokeRequest)request);
+                    break;
+
+                case InternalMessageTypes.ActivityInvokeLocalRequest:
+
+                    reply = await OnInvokeLocalActivity((ActivityInvokeLocalRequest)request);
+                    break;
+
+                default:
+
+                    throw new InvalidOperationException($"Unexpected message type [{request.Type}].");
+            }
+
+            await Client.ProxyReplyAsync(request, reply);
+        }
+
+        /// <summary>
+        /// Handles workflow invocation.
+        /// </summary>
+        /// <param name="request">The request message.</param>
+        /// <returns>The reply message.</returns>
+        internal async Task<WorkflowInvokeReply> OnInvokeAsync(WorkflowInvokeRequest request)
+        {
+            Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
+            Covenant.Requires<ArgumentException>(request.ReplayStatus != InternalReplayStatus.Unspecified, nameof(request));
+
+            WorkflowBase            workflow;
+            WorkflowRegistration    registration;
+
+            var contextId = request.ContextId;
+
+            using (await workerMutex.AcquireAsync())
+            {
+                if (idToWorkflow.TryGetValue(contextId, out workflow))
+                {
+                    return new WorkflowInvokeReply()
+                    {
+                        Error = new TemporalError($"A workflow with [ContextId={contextId}] is already running on this worker.")
+                    };
+                }
+
+                registration = await GetWorkflowRegistrationAsync(request.WorkflowType);
+
+                if (registration == null)
+                {
+                    return new WorkflowInvokeReply()
+                    {
+                        Error = new TemporalError($"Workflow type name [Type={request.WorkflowType}] is not registered for this worker.")
+                    };
+                }
+            }
+
+            workflow = (WorkflowBase)Activator.CreateInstance(registration.WorkflowType);
+            workflow.Workflow = 
+                new Workflow(
+                    parent:             (WorkflowBase)workflow,
+                    worker:             this, 
+                    contextId:          contextId,
+                    workflowTypeName:   request.WorkflowType,
+                    @namespace:         request.Namespace,
+                    taskList:           request.TaskList,
+                    workflowId:         request.WorkflowId,
+                    runId:              request.RunId,
+                    isReplaying:        request.ReplayStatus == InternalReplayStatus.Replaying,
+                    methodMap:          registration.MethodMap);
+
+            Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information.
+
+            using (await workerMutex.AcquireAsync())
+            {
+                idToWorkflow.Add(contextId, workflow);
+            }
+
+            // Register any workflow signal and/or query methods with [temporal-proxy].
+            // Note that synchronous signals need special handling further below.
+
+            foreach (var signalName in registration.MethodMap.GetSignalNames())
+            {
+                var reply = (WorkflowSignalSubscribeReply)await Client.CallProxyAsync(
+                    new WorkflowSignalSubscribeRequest()
+                    {
+                        ContextId  = contextId,
+                        SignalName = signalName
+                    });
+
+                reply.ThrowOnError();
+            }
+
+            foreach (var queryType in registration.MethodMap.GetQueryTypes())
+            {
+                var reply = (WorkflowSetQueryHandlerReply)await Client.CallProxyAsync(
+                    new WorkflowSetQueryHandlerRequest()
+                    {
+                        ContextId = contextId,
+                        QueryName = queryType
+                    });
+
+                reply.ThrowOnError();
+            }
+
+            // $hack(jefflill): 
+            //
+            // We registered any synchronous signal names above even though we probably
+            // shouldn't have.  This shouldn't really cause any trouble.
+            //
+            // If the workflow has any synchronous signals, we need to register the
+            // special synchronous signal dispatcher as well as the synchronous signal
+            // query handler.
+
+            if (registration.MethodMap.HasSynchronousSignals)
+            {
+                workflow.HasSynchronousSignals = true;
+
+                var signalSubscribeReply = (WorkflowSignalSubscribeReply)await Client.CallProxyAsync(
+                    new WorkflowSignalSubscribeRequest()
+                    {
+                        ContextId  = contextId,
+                        SignalName = TemporalClient.SignalSync
+                    });
+
+                signalSubscribeReply.ThrowOnError();
+
+                var querySubscribeReply = (WorkflowSetQueryHandlerReply)await Client.CallProxyAsync(
+                    new WorkflowSetQueryHandlerRequest()
+                    {
+                        ContextId = contextId,
+                        QueryName = TemporalClient.QuerySyncSignal
+                    });
+
+                querySubscribeReply.ThrowOnError();
+            }
+
+            // Start the workflow by calling its workflow entry point method.
+            // This method will indicate that it has completed via one of these 
+            // techniques:
+            //
+            //      1. The method returns normally with the workflow result.
+            //
+            //      2. The method calls [ContinuAsNewAsync()] which throws an
+            //         [InternalWorkflowRestartException] which will be caught and
+            //         handled here.
+            //
+            //      3. The method throws another exception which will be caught
+            //         and be used to indicate that the workflow failed.
+
+            try
+            {
+                WorkflowBase.CallContext.Value = WorkflowCallContext.Entrypoint;
+
+                var workflowMethod   = registration.WorkflowMethod;
+                var resultType       = workflowMethod.ReturnType;
+                var args             = TemporalHelper.BytesToArgs(Client.DataConverter, request.Args, registration.WorkflowMethodParameterTypes);
+                var serializedResult = Array.Empty<byte>();
+
+                if (resultType.IsGenericType)
+                {
+                    // Workflow method returns: Task<T>
+
+                    var result = await NeonHelper.GetTaskResultAsObjectAsync((Task)workflowMethod.Invoke(workflow, args));
+
+                    serializedResult = Client.DataConverter.ToData(result);
+                }
+                else
+                {
+                    // Workflow method returns: Task
+
+                    await (Task)workflowMethod.Invoke(workflow, args);
+                }
+
+                await workflow.WaitForPendingWorkflowOperationsAsync();
+
+                return new WorkflowInvokeReply()
+                {
+                    Result = serializedResult
+                };
+            }
+            catch (ForceReplayException)
+            {
+                return new WorkflowInvokeReply()
+                {
+                    ForceReplay = true
+                };
+            }
+            catch (ContinueAsNewException e)
+            {
+                await workflow.WaitForPendingWorkflowOperationsAsync();
+
+                return new WorkflowInvokeReply()
+                {
+                    ContinueAsNew                             = true,
+                    ContinueAsNewArgs                         = e.Args,
+                    ContinueAsNewWorkflow                     = e.Workflow,
+                    ContinueAsNewNamespace                    = e.Namespace,
+                    ContinueAsNewTaskList                     = e.TaskList,
+                    ContinueAsNewExecutionStartToCloseTimeout = TemporalHelper.ToTemporal(e.StartToCloseTimeout),
+                    ContinueAsNewScheduleToCloseTimeout       = TemporalHelper.ToTemporal(e.ScheduleToCloseTimeout),
+                    ContinueAsNewScheduleToStartTimeout       = TemporalHelper.ToTemporal(e.ScheduleToStartTimeout),
+                    ContinueAsNewStartToCloseTimeout          = TemporalHelper.ToTemporal(e.DecisionTaskTimeout),
+                };
+            }
+            catch (TemporalException e)
+            {
+                log.LogError(e);
+
+                await workflow.WaitForPendingWorkflowOperationsAsync();
+
+                return new WorkflowInvokeReply()
+                {
+                    Error = e.ToTemporalError()
+                };
+            }
+            catch (Exception e)
+            {
+                log.LogError(e);
+
+                await workflow.WaitForPendingWorkflowOperationsAsync();
+
+                return new WorkflowInvokeReply()
+                {
+                    Error = new TemporalError(e)
+                };
+            }
+            finally
+            {
+                WorkflowBase.CallContext.Value = WorkflowCallContext.None;
+            }
+        }
+
+        /// <summary>
+        /// Handles workflow signals.
+        /// </summary>
+        /// <param name="request">The request message.</param>
+        /// <returns>The reply message.</returns>
+        internal async Task<WorkflowSignalInvokeReply> OnSignalAsync(WorkflowSignalInvokeRequest request)
+        {
+            Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
+
+            // Handle synchronous signals in a specialized method.
+
+            if (request.SignalName == TemporalClient.SignalSync)
+            {
+                return await OnSyncSignalAsync(request);
+            }
+
+            try
+            {
+                WorkflowBase.CallContext.Value = WorkflowCallContext.Signal;
+
+                var workflow = await GetWorkflowAsync(request.ContextId);
+
+                if (workflow != null)
+                {
+                    Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information.
+
+                    var method = workflow.Workflow.MethodMap.GetSignalMethod(request.SignalName);
+
+                    if (method != null)
+                    {
+                        await (Task)(method.Invoke(workflow, TemporalHelper.BytesToArgs(Client.DataConverter, request.SignalArgs, method.GetParameterTypes())));
+
+                        return new WorkflowSignalInvokeReply()
+                        {
+                            RequestId = request.RequestId
+                        };
+                    }
+                    else
+                    {
+                        return new WorkflowSignalInvokeReply()
+                        {
+                            Error = new EntityNotExistsException($"Workflow type [{workflow.GetType().FullName}] does not define a signal handler for [signalName={request.SignalName}].").ToTemporalError()
+                        };
+                    }
+                }
+                else
+                {
+                    // I don't believe we'll ever land here because that would mean that
+                    // Temporal sends signals to a workflow that hasn't started running
+                    // on a worker (which wouldn't make sense).
+                    //
+                    // We're going go ahead and send a reply, just in case.
+
+                    return new WorkflowSignalInvokeReply();
+                }
+            }
+            catch (Exception e)
+            {
+                log.LogError(e);
+
+                return new WorkflowSignalInvokeReply()
+                {
+                    Error = new TemporalError(e)
+                };
+            }
+            finally
+            {
+                WorkflowBase.CallContext.Value = WorkflowCallContext.None;
+            }
+        }
+
+        /// <summary>
+        /// Handles internal <see cref="TemporalClient.SignalSync"/> workflow signals.
+        /// </summary>
+        /// <param name="request">The request message.</param>
+        /// <returns>The reply message.</returns>
+        internal async Task<WorkflowSignalInvokeReply> OnSyncSignalAsync(WorkflowSignalInvokeRequest request)
+        {
+            Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
+
+            try
+            {
+                WorkflowBase.CallContext.Value = WorkflowCallContext.Signal;
+
+                var workflow = await GetWorkflowAsync(request.ContextId);
+
+                if (workflow != null)
+                {
+                    Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information.
+
+                    // The signal arguments should be just a single [SyncSignalCall] that specifies
+                    // the target signal and also includes its encoded arguments.
+
+                    var signalCallArgs = TemporalHelper.BytesToArgs(JsonDataConverter.Instance, request.SignalArgs, new Type[] { typeof(SyncSignalCall) });
+                    var signalCall     = (SyncSignalCall)signalCallArgs[0];
+                    var signalMethod   = workflow.Workflow.MethodMap.GetSignalMethod(signalCall.TargetSignal);
+                    var userSignalArgs = TemporalHelper.BytesToArgs(Client.DataConverter, signalCall.UserArgs, signalMethod.GetParameterTypes());
+
+                    Workflow.Current.SignalId = signalCall.SignalId;
+
+                    // Create a dictionary with the signal method arguments keyed by parameter name.
+
+                    var args       = new Dictionary<string, object>();
+                    var parameters = signalMethod.GetParameters();
+
+                    for (int i = 0; i < parameters.Length; i++)
+                    {
+                        args.Add(parameters[i].Name, userSignalArgs[i]);
+                    }
+
+                    // Persist the state that the signal status queries will examine.
+                    // We're also going to use the presence of this state to make
+                    // synchronous signal calls idempotent by ensuring that we'll
+                    // only call the signal method once per signal ID.
+                    //
+                    // Note that it's possible that a record has already exists.
+
+                    var signalStatus = workflow.SetSignalStatus(signalCall.SignalId, args, out var newSignal);
+
+                    if (newSignal && signalMethod != null)
+                    {
+                        Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information for workflow library code.
+
+                        var result    = (object)null;
+                        var exception = (Exception)null;
+
+                        // Execute the signal method (if there is one).
+
+                        try
+                        {
+                            if (TemporalHelper.IsTask(signalMethod.ReturnType))
+                            {
+                                // Method returns [Task]: AKA void.
+
+                                await (Task)(signalMethod.Invoke(workflow, userSignalArgs));
+                            }
+                            else
+                            {
+                                // Method returns [Task<T>]: AKA a result.
+
+                                // $note(jefflill):
+                                //
+                                // I would have liked to do something like this:
+                                //
+                                //      result = await (Task<object>)(method.Invoke(workflow, userArgs));
+                                //
+                                // here, but that not going to work because the Task<T>
+                                // being returned won't typically be a Task<object>,
+                                // so the cast will fail.
+                                //
+                                // So instead, I'm going to use reflection to obtain the 
+                                // Task.Result property and then obtain the result from that.
+
+                                var task           = (Task)(signalMethod.Invoke(workflow, userSignalArgs));
+                                var resultProperty = task.GetType().GetProperty("Result");
+
+                                await task;
+
+                                result = resultProperty.GetValue(task);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            exception = e;
+                        }
+
+                        if (exception?.GetType() == typeof(WaitForSignalReplyException))
+                        {
+                            // This will be thrown by synchronous signal handlers that marshalled
+                            // the signal to the workflow logic.  We're going to ignore the signal
+                            // method result in this case and NOT MARK THE SIGNAL AS COMPLETED.
+                        }
+                        else
+                        {
+                            var syncSignalStatus = workflow.GetSignalStatus(signalCall.SignalId);
+
+                            if (syncSignalStatus != null)
+                            {
+                                if (exception == null)
+                                {
+                                    syncSignalStatus.Result = Client.DataConverter.ToData(result);
+                                }
+                                else
+                                {
+                                    log.LogError(exception);
+
+                                    syncSignalStatus.Error = SyncSignalException.GetError(exception);
+                                }
+
+                                syncSignalStatus.Completed = true;
+                            }
+                            else
+                            {
+                                Covenant.Assert(false); // This should never happen.
+                            }
+                        }
+
+                        return new WorkflowSignalInvokeReply()
+                        {
+                            RequestId = request.RequestId
+                        };
+                    }
+                    else
+                    {
+                        return new WorkflowSignalInvokeReply()
+                        {
+                            Error = new EntityNotExistsException($"Workflow type [{workflow.GetType().FullName}] does not define a signal handler for [signalName={request.SignalName}].").ToTemporalError()
+                        };
+                    }
+                }
+                else
+                {
+                    // I don't believe we'll ever land here because that would mean that
+                    // Temporal sends signals to a workflow that hasn't started running
+                    // on a worker (which wouldn't make sense).
+                    //
+                    // We're going go ahead and send a reply, just in case.
+
+                    return new WorkflowSignalInvokeReply();
+                }
+            }
+            catch (Exception e)
+            {
+                log.LogError(e);
+
+                return new WorkflowSignalInvokeReply()
+                {
+                    Error = new TemporalError(e)
+                };
+            }
+            finally
+            {
+                WorkflowBase.CallContext.Value = WorkflowCallContext.None;
+            }
+        }
+
+        /// <summary>
+        /// Handles workflow queries.
+        /// </summary>
+        /// <param name="request">The request message.</param>
+        /// <returns>The reply message.</returns>
+        internal async Task<WorkflowQueryInvokeReply> OnQueryAsync(WorkflowQueryInvokeRequest request)
+        {
+            Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
+
+            try
+            {
+                WorkflowBase.CallContext.Value = WorkflowCallContext.Query;
+
+                var workflow = await GetWorkflowAsync(request.ContextId);
+
+                if (workflow != null)
+                {
+                    Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information for workflow library code.
+
+                    // Handle built-in queries.
+
+                    switch (request.QueryName)
+                    {
+                        case TemporalClient.QueryStack:
+
+                            var trace = string.Empty;
+
+                            if (workflow.StackTrace != null)
+                            {
+                                trace = workflow.StackTrace.ToString();
+                            }
+
+                            return new WorkflowQueryInvokeReply()
+                            {
+                                RequestId = request.RequestId,
+                                Result    = Client.DataConverter.ToData(trace)
+                            };
+
+                        case TemporalClient.QuerySyncSignal:
+
+                            // The arguments for this signal is the (string) ID of the target
+                            // signal being polled for status.
+
+                            var syncSignalArgs   = TemporalHelper.BytesToArgs(JsonDataConverter.Instance, request.QueryArgs, new Type[] { typeof(string) });
+                            var syncSignalId     = (string) (syncSignalArgs.Length > 0 ? syncSignalArgs[0] : null);
+                            var syncSignalStatus = workflow.GetSignalStatus(syncSignalId);
+
+                            Covenant.Assert(false); // This should never happen
+
+                            if (syncSignalStatus.Completed)
+                            {
+                                // Indicate that the completed signal has reported the status
+                                // to the calling client as well as returned the result, if any.
+
+                                syncSignalStatus.Acknowledged       = true;
+                                syncSignalStatus.AcknowledgeTimeUtc = DateTime.UtcNow;
+                            }
+
+                            return new WorkflowQueryInvokeReply()
+                            {
+                                RequestId = request.RequestId,
+                                Result    = Client.DataConverter.ToData(syncSignalStatus)
+                            };
+                    }
+
+                    // Handle user queries.
+
+                    var method = workflow.Workflow.MethodMap.GetQueryMethod(request.QueryName);
+
+                    if (method != null)
+                    {
+                        var resultType           = method.ReturnType;
+                        var methodParameterTypes = method.GetParameterTypes();
+
+                        var serializedResult = Array.Empty<byte>();
+
+                        if (resultType.IsGenericType)
+                        {
+                            // Query method returns: Task<T>
+
+                            var result = await NeonHelper.GetTaskResultAsObjectAsync((Task)method.Invoke(workflow, TemporalHelper.BytesToArgs(Client.DataConverter, request.QueryArgs, methodParameterTypes)));
+
+                            serializedResult = Client.DataConverter.ToData(result);
+                        }
+                        else
+                        {
+                            // Query method returns: Task
+
+                            await (Task)method.Invoke(workflow, TemporalHelper.BytesToArgs(Client.DataConverter, request.QueryArgs, methodParameterTypes));
+                        }
+
+                        return new WorkflowQueryInvokeReply()
+                        {
+                            RequestId = request.RequestId,
+                            Result    = serializedResult
+                        };
+                    }
+                    else
+                    {
+                        return new WorkflowQueryInvokeReply()
+                        {
+                            Error = new EntityNotExistsException($"Workflow type [{workflow.GetType().FullName}] does not define a query handler for [queryType={request.QueryName}].").ToTemporalError()
+                        };
+                    }
+                }
+                else
+                {
+                    return new WorkflowQueryInvokeReply()
+                    {
+                        Error = new EntityNotExistsException($"Workflow with [contextID={request.ContextId}] does not exist.").ToTemporalError()
+                    };
+                }
+            }
+            catch (Exception e)
+            {
+                log.LogError(e);
+
+                return new WorkflowQueryInvokeReply()
+                {
+                    Error = new TemporalError(e)
+                };
+            }
+            finally
+            {
+                WorkflowBase.CallContext.Value = WorkflowCallContext.None;
+            }
+        }
+
+        /// <summary>
+        /// Handles workflow local activity invocations.
+        /// </summary>
+        /// <param name="request">The request message.</param>
+        /// <returns>The reply message.</returns>
+        internal async Task<ActivityInvokeLocalReply> OnInvokeLocalActivity(ActivityInvokeLocalRequest request)
+        {
+            Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
+
+            try
+            {
+                WorkflowBase.CallContext.Value = WorkflowCallContext.Activity;
+
+                var workflow = await GetWorkflowAsync(request.ContextId);
+
+                if (workflow != null)
+                {
+                    var activityAction = workflow.GetActivityAction(request.ActivityTypeId);
+
+                    if (activityAction == null)
+                    {
+                        return new ActivityInvokeLocalReply()
+                        {
+                            Error = new EntityNotExistsException($"Activity type does not exist for [activityTypeId={request.ActivityTypeId}].").ToTemporalError()
+                        };
+                    }
+
+                    var workerArgs = new WorkerArgs() { Worker = this, ContextId = request.ActivityContextId };
+                    var activity   = CreateLocalActivity(activityAction, request.ActivityContextId);
+                    var result     = await activity.OnInvokeAsync(request.Args);
+
+                    return new ActivityInvokeLocalReply()
+                    {
+                        Result = result
+                    };
+                }
+                else
+                {
+                    return new ActivityInvokeLocalReply()
+                    {
+                        Error = new EntityNotExistsException($"Workflow with [contextID={request.ContextId}] does not exist.").ToTemporalError()
+                    };
+                }
+            }
+            catch (Exception e)
+            {
+                log.LogError(e);
+
+                return new ActivityInvokeLocalReply()
+                {
+                    Error = new TemporalError(e)
+                };
+            }
+            finally
+            {
+                WorkflowBase.CallContext.Value = WorkflowCallContext.None;
             }
         }
     }

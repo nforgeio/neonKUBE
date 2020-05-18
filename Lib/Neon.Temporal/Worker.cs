@@ -211,50 +211,6 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Scans the assembly passed looking for workflow implementations derived from
-        /// <see cref="WorkflowBase"/> and tagged by <see cref="WorkflowAttribute"/> with
-        /// <see cref="WorkflowAttribute.AutoRegister"/> set to <c>true</c> and registers 
-        /// them with Temporal.
-        /// </summary>
-        /// <param name="assembly">The target assembly.</param>
-        /// <param name="namespace">Optionally overrides the default client namespace.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="TypeLoadException">
-        /// Thrown for types tagged by <see cref="WorkflowAttribute"/> that are not 
-        /// derived from <see cref="WorkflowBase"/>.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown if the worker has already been started.  You must register workflow 
-        /// and activity implementations before starting workers.
-        /// </exception>
-        /// <remarks>
-        /// <note>
-        /// Be sure to register all of your workflow implementations before starting a worker.
-        /// </note>
-        /// </remarks>
-        public async Task RegisterAssemblyWorkflowsAsync(Assembly assembly, string @namespace = null)
-        {
-            await SyncContext.ClearAsync;
-            Covenant.Requires<ArgumentNullException>(assembly != null, nameof(assembly));
-            EnsureNotDisposed();
-            EnsureCanRegister();
-
-            foreach (var type in assembly.GetTypes().Where(t => t.IsClass))
-            {
-                var workflowAttribute = type.GetCustomAttribute<WorkflowAttribute>();
-
-                if (workflowAttribute != null && workflowAttribute.AutoRegister)
-                {
-                    using (await workerMutex.AcquireAsync())
-                    {
-                        registeredWorkflowTypes.Add(TemporalHelper.GetWorkflowInterface(type));
-                    }
-                }
-            }
-        }
-
-        /// <summary>
         /// Starts the worker if it has not already been started.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>

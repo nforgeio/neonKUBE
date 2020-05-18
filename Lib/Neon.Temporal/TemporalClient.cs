@@ -1195,15 +1195,14 @@ namespace Neon.Temporal
                         case InternalMessageTypes.WorkflowSignalInvokeRequest:
                         case InternalMessageTypes.WorkflowQueryInvokeRequest:
                         case InternalMessageTypes.ActivityInvokeLocalRequest:
-                        case InternalMessageTypes.WorkflowFutureReadyRequest:
 
-                            await WorkflowBase.OnProxyRequestAsync(client.GetWorkerById(request.WorkerId), request);
+                            await client.GetWorkerById(request.WorkerId).OnProxyRequestAsync(request);
                             break;
 
                         case InternalMessageTypes.ActivityInvokeRequest:
                         case InternalMessageTypes.ActivityStoppingRequest:
 
-                            await client.GetWorkerById(request.WorkerId).OnProxyRequestAsync(request);
+                            await client.GetWorkerById(request.WorkerId).OnActivityProxyRequestAsync(request);
                             break;
 
                         default:

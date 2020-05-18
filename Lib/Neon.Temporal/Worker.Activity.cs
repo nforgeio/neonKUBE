@@ -261,7 +261,7 @@ namespace Neon.Temporal
         /// </summary>
         /// <param name="request">The request message.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        internal async Task OnProxyRequestAsync(ProxyRequest request)
+        internal async Task OnActivityProxyRequestAsync(ProxyRequest request)
         {
             Covenant.Requires<ArgumentNullException>(request != null, nameof(request));
 

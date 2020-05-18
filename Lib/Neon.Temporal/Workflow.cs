@@ -69,7 +69,6 @@ namespace Neon.Temporal
         private string                      workflowId;
         private int                         pendingOperationCount;
         private Dictionary<string, string>  pendingOperationStackTraces;
-        private long                        nextLocalActivityActionId;
         private long                        nextActivityId;
         private long                        nextQueueId;
         private Random                      random;
@@ -111,10 +110,8 @@ namespace Neon.Temporal
             this.workflowId                = workflowId;
             this.ContextId                 = contextId;
             this.pendingOperationCount     = 0;
-            this.nextLocalActivityActionId = 0;
             this.nextActivityId            = 0;
             this.nextQueueId               = 0;
-            this.IdToLocalActivityAction   = new Dictionary<long, LocalActivityAction>();
             this.MethodMap                 = methodMap;
             this.Client                    = worker.Client;
             this.Worker                    = worker;
@@ -190,12 +187,6 @@ namespace Neon.Temporal
         internal WorkflowMethodMap MethodMap { get; private set; }
 
         /// <summary>
-        /// Returns the dictionary mapping the IDs to local activity actions
-        /// (the target activity type and method).
-        /// </summary>
-        internal Dictionary<long, LocalActivityAction> IdToLocalActivityAction { get; private set; }
-
-        /// <summary>
         /// Returns the unique ID of the signal being called on the current task.
         /// </summary>
         internal string SignalId { get; set; }
@@ -247,7 +238,7 @@ namespace Neon.Temporal
         /// <returns>The <see cref="SyncSignalStatus"/> for the signal.</returns>
         internal SyncSignalStatus GetSignalStatus(string signalId)
         {
-            return WorkflowBase.GetSignalStatus(ContextId, signalId);
+            return WorkflowBase.GetSignalStatus(signalId);
         }
 
         /// <summary>
@@ -282,7 +273,7 @@ namespace Neon.Temporal
         {
             var debugMode = Client.Settings.Debug;
             
-            if (WorkflowBase.CallContext.Value == WorkflowBase.WorkflowCallContext.Entrypoint)
+            if (WorkflowBase.CallContext.Value == WorkflowCallContext.Entrypoint)
             {
                 // Workflow entry points are restricted to one operation at a time.
 
@@ -2350,14 +2341,7 @@ namespace Neon.Temporal
             Covenant.Requires<ArgumentNullException>(activityMethod != null, nameof(activityMethod));
             Client.EnsureNotDisposed();
 
-            var activityActionId = Interlocked.Increment(ref nextLocalActivityActionId);
-
-            lock (syncLock)
-            {
-                IdToLocalActivityAction.Add(activityActionId, new LocalActivityAction(activityType, activityConstructor, activityMethod));
-            }
-
-            return activityActionId;
+            return WorkflowBase.RegisterActivityAction(activityType, activityConstructor, activityMethod);
         }
 
         /// <summary>

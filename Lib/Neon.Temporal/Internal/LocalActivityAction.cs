@@ -35,7 +35,7 @@ namespace Neon.Temporal.Internal
     /// Holds information about the activity type to be instantiated and the
     /// method to be called when a local activity is invoked.
     /// </summary>
-    internal struct LocalActivityAction
+    internal class LocalActivityAction
     {
         /// <summary>
         /// Constructor.
