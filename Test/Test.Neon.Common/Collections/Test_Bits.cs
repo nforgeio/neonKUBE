@@ -351,7 +351,7 @@ namespace TestCommon
             byte[] input;
             Bits bits;
 
-            input = new byte[0];
+            input = Array.Empty<byte>();
             bits = new Bits(input, 0);
             Assert.Empty(input);
             Assert.Equal("", bits.ToString());

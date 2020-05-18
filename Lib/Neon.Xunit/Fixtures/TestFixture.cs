@@ -88,7 +88,7 @@ namespace Neon.Xunit
                         // We see this for some assemblies like the test runner itself.
                         // We're going to ignore these.
 
-                        assemblyTypes = new Type[0];
+                        assemblyTypes = Array.Empty<Type>();
                     }
 
                     foreach (var type in assemblyTypes)

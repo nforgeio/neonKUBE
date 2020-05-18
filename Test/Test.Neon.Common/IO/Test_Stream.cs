@@ -37,7 +37,7 @@ namespace TestCommon
         {
             using (var ms = new MemoryStream())
             {
-                ms.Write(new byte[0]);
+                ms.Write(Array.Empty<byte>());
 
                 Assert.Equal<long>(0, ms.Length);
 
@@ -61,7 +61,7 @@ namespace TestCommon
         {
             using (var ms = new MemoryStream())
             {
-                await ms.WriteAsync(new byte[0]);
+                await ms.WriteAsync(Array.Empty<byte>());
 
                 Assert.Equal<long>(0, ms.Length);
 

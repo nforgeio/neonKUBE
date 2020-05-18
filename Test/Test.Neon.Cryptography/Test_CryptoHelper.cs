@@ -57,7 +57,7 @@ namespace TestCryptography
             Assert.Equal(zeroString, CryptoHelper.ComputeMD5String((string)null));
             Assert.Equal(zeroString, CryptoHelper.ComputeMD5String(string.Empty));
             Assert.Equal(zeroString, CryptoHelper.ComputeMD5String((byte[])null));
-            Assert.Equal(zeroString, CryptoHelper.ComputeMD5String(new byte[0]));
+            Assert.Equal(zeroString, CryptoHelper.ComputeMD5String(Array.Empty<byte>()));
 
             using (var ms = new MemoryStream())
             {
@@ -67,7 +67,7 @@ namespace TestCryptography
             Assert.Equal(zeroBytes, CryptoHelper.ComputeMD5Bytes((string)null));
             Assert.Equal(zeroBytes, CryptoHelper.ComputeMD5Bytes(string.Empty));
             Assert.Equal(zeroBytes, CryptoHelper.ComputeMD5Bytes((byte[])null));
-            Assert.Equal(zeroBytes, CryptoHelper.ComputeMD5Bytes(new byte[0]));
+            Assert.Equal(zeroBytes, CryptoHelper.ComputeMD5Bytes(Array.Empty<byte>()));
 
             using (var ms = new MemoryStream())
             {
@@ -132,7 +132,7 @@ namespace TestCryptography
             Assert.Equal(zeroString, CryptoHelper.ComputeSHA1String((string)null));
             Assert.Equal(zeroString, CryptoHelper.ComputeSHA1String(string.Empty));
             Assert.Equal(zeroString, CryptoHelper.ComputeSHA1String((byte[])null));
-            Assert.Equal(zeroString, CryptoHelper.ComputeSHA1String(new byte[0]));
+            Assert.Equal(zeroString, CryptoHelper.ComputeSHA1String(Array.Empty<byte>()));
 
             using (var ms = new MemoryStream())
             {
@@ -142,7 +142,7 @@ namespace TestCryptography
             Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA1Bytes((string)null));
             Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA1Bytes(string.Empty));
             Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA1Bytes((byte[])null));
-            Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA1Bytes(new byte[0]));
+            Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA1Bytes(Array.Empty<byte>()));
 
             using (var ms = new MemoryStream())
             {
@@ -207,7 +207,7 @@ namespace TestCryptography
             Assert.Equal(zeroString, CryptoHelper.ComputeSHA256String((string)null));
             Assert.Equal(zeroString, CryptoHelper.ComputeSHA256String(string.Empty));
             Assert.Equal(zeroString, CryptoHelper.ComputeSHA256String((byte[])null));
-            Assert.Equal(zeroString, CryptoHelper.ComputeSHA256String(new byte[0]));
+            Assert.Equal(zeroString, CryptoHelper.ComputeSHA256String(Array.Empty<byte>()));
 
             using (var ms = new MemoryStream())
             {
@@ -217,7 +217,7 @@ namespace TestCryptography
             Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA256Bytes((string)null));
             Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA256Bytes(string.Empty));
             Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA256Bytes((byte[])null));
-            Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA256Bytes(new byte[0]));
+            Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA256Bytes(Array.Empty<byte>()));
 
             using (var ms = new MemoryStream())
             {
@@ -282,7 +282,7 @@ namespace TestCryptography
             Assert.Equal(zeroString, CryptoHelper.ComputeSHA512String((string)null));
             Assert.Equal(zeroString, CryptoHelper.ComputeSHA512String(string.Empty));
             Assert.Equal(zeroString, CryptoHelper.ComputeSHA512String((byte[])null));
-            Assert.Equal(zeroString, CryptoHelper.ComputeSHA512String(new byte[0]));
+            Assert.Equal(zeroString, CryptoHelper.ComputeSHA512String(Array.Empty<byte>()));
 
             using (var ms = new MemoryStream())
             {
@@ -292,7 +292,7 @@ namespace TestCryptography
             Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA512Bytes((string)null));
             Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA512Bytes(string.Empty));
             Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA512Bytes((byte[])null));
-            Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA512Bytes(new byte[0]));
+            Assert.Equal(zeroBytes, CryptoHelper.ComputeSHA512Bytes(Array.Empty<byte>()));
 
             using (var ms = new MemoryStream())
             {
