@@ -911,7 +911,9 @@ namespace Neon.Collections
         public byte[] ToBytes()
         {
             if (length == 0)
-                return new byte[0];
+            {
+                return Array.Empty<byte>();
+            }
 
             byte[] bytes;
 

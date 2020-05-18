@@ -67,7 +67,7 @@ namespace TestTemporal
             Task<string> QueryAsync(string query);
         }
 
-        [Workflow(AutoRegister = true, Name = "TestWorkflowStub_Execute")]
+        [Workflow(AutoRegister = true)]
         public class TestWorkflowStub_Execute : WorkflowBase, ITestWorkflowStub_Execute
         {
             //-----------------------------------------------------------------

@@ -2384,11 +2384,11 @@ namespace TestTemporal
         [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
         public interface IWorkflowInfo : IWorkflow
         {
-            [WorkflowMethod]
+            [WorkflowMethod(Name = "my-workflow-info-type", IsFullName = true)]
             Task<WorkflowInfoTest> GetWorkflowInfoAsync();
         }
 
-        [Workflow(AutoRegister = true, Name = "my-workflow-info-type")]
+        [Workflow(AutoRegister = true)]
         public class WorkflowInfoClass : WorkflowBase, IWorkflowInfo
         {
             public async Task<WorkflowInfoTest> GetWorkflowInfoAsync()
@@ -3329,23 +3329,23 @@ namespace TestTemporal
         [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
         public interface IWorkflowUntypedChildFuture : IWorkflow
         {
-            [WorkflowMethod(Name = "run")]
+            [WorkflowMethod(Name = "WorkflowUntypedChildFuture::run", IsFullName = true)]
             Task RunAsync();
 
-            [WorkflowMethod(Name = "hello")]
+            [WorkflowMethod(Name = "WorkflowUntypedChildFuture::hello", IsFullName = true)]
             Task<string> HelloAsync(string name);
 
-            [WorkflowMethod(Name = "with-result")]
+            [WorkflowMethod(Name = "WorkflowUntypedChildFuture::with-result", IsFullName = true)]
             Task<bool> WithResult();
 
-            [WorkflowMethod(Name = "with-no-result")]
+            [WorkflowMethod(Name = "WorkflowUntypedChildFuture::with-no-result", IsFullName = true)]
             Task<bool> WithNoResult();
 
             [SignalMethod("signal")]
             Task SignalAsync(string signal);
         }
 
-        [Workflow(AutoRegister = true, Name = "WorkflowUntypedChildFuture")]
+        [Workflow(AutoRegister = true)]
         public class WorkflowUntypedChildFuture : WorkflowBase, IWorkflowUntypedChildFuture
         {
             public static bool      HasExecuted    = false;

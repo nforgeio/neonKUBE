@@ -200,7 +200,7 @@ namespace Neon.Temporal
         /// Retrying <see cref="ScheduleToStartTimeout"/> does not make sense as it just
         /// mark the task as failed and create a new task and put back in the queue waiting worker to pick again. Temporal
         /// server also make sure the <see cref="ScheduleToStartTimeout"/> will not be larger than the workflow's timeout.
-        /// Same apply to <see cref="StartToCloseTimeouts"/>.
+        /// The same applies to <see cref="StartToCloseTimeout"/>.
         /// </para>
         /// </remarks>
         public RetryOptions RetryOptions { get; set; }

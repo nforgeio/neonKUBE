@@ -213,6 +213,7 @@ services:
         /// You may specify your own Docker compose text file to customize this by configuring
         /// a different backend database, etc.
         /// </para>
+        /// </param>
         /// <param name="name">Optionally specifies the Temporal stack name (defaults to <c>cb-test</c>).</param>
         /// <param name="defaultNamespace">Optionally specifies the default namespace for the fixture's client.  This defaults to <b>test-namespace</b>.</param>
         /// <param name="logLevel">Specifies the Temporal log level.  This defaults to <see cref="LogLevel.None"/>.</param>

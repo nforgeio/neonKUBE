@@ -106,7 +106,7 @@ namespace Neon.Cadence
         // Static members
 
         private static object                                   syncLock     = new object();
-        private static object[]                                 noArgs       = new object[0];
+        private static object[]                                 noArgs       = Array.Empty<object>();
         private static Dictionary<ActivityKey, ActivityBase>    idToActivity = new Dictionary<ActivityKey, ActivityBase>();
 
         // This dictionary is used to map activity type names to the target activity
@@ -297,7 +297,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Returns the <see cref="ActivityRegistration"/> for any activity type and activity type name.
         /// </summary>
-        /// <param name="activityType">The targetr activity type.</param>
+        /// <param name="activityType">The target activity type.</param>
         /// <param name="activityTypeName">The target activity type name.</param>
         /// <returns>The <see cref="ActivityRegistration"/>.</returns>
         private static ActivityRegistration GetActivityInvokeInfo(Type activityType, string activityTypeName)

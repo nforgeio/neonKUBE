@@ -61,7 +61,7 @@ namespace Snippets_SimpleSignalWorkflow
             cancelPending = true;
             cancelReason  = reason;
 
-            return "Order cancelled";
+            return await Task.FromResult("Order cancelled");
         }
     }
     #endregion

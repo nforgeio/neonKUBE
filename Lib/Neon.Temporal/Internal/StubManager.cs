@@ -1162,13 +1162,12 @@ namespace Neon.Temporal.Internal
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
             var workflowInterface = typeof(TWorkflowInterface);
-            var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
 
             TemporalHelper.ValidateWorkflowInterface(workflowInterface);
 
             if (string.IsNullOrEmpty(workflowTypeName))
             {
-                workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowInterface, workflowAttribute);
+                workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowInterface);
             }
 
             var stub = GetWorkflowStub(typeof(TWorkflowInterface), isChild: false);
@@ -1193,13 +1192,12 @@ namespace Neon.Temporal.Internal
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
 
             var workflowInterface = typeof(TWorkflowInterface);
-            var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
 
             TemporalHelper.ValidateWorkflowInterface(workflowInterface);
 
             if (string.IsNullOrEmpty(workflowTypeName))
             {
-                workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowInterface, workflowAttribute);
+                workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowInterface);
             }
 
             var stub = GetWorkflowStub(typeof(TWorkflowInterface), isChild: true);
@@ -1225,13 +1223,12 @@ namespace Neon.Temporal.Internal
             Covenant.Requires<ArgumentNullException>(childExecution != null, nameof(childExecution));
 
             var workflowInterface = typeof(TWorkflowInterface);
-            var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
 
             TemporalHelper.ValidateWorkflowInterface(workflowInterface);
 
             if (string.IsNullOrEmpty(workflowTypeName))
             {
-                workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowInterface, workflowAttribute);
+                workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowInterface);
             }
 
             var stub = GetWorkflowStub(typeof(TWorkflowInterface), isChild: true);
@@ -1310,12 +1307,11 @@ namespace Neon.Temporal.Internal
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
             var workflowInterface = typeof(TWorkflowInterface);
-            var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
 
             TemporalHelper.ValidateWorkflowInterface(workflowInterface);
 
             var stub             = GetWorkflowStub(typeof(TWorkflowInterface), isChild: false);
-            var workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowInterface, workflowInterface.GetCustomAttribute<WorkflowAttribute>());
+            var workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowInterface);
 
             return (TWorkflowInterface)stub.Create(client, client.DataConverter, workflowTypeName, options);
         }

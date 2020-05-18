@@ -1112,7 +1112,7 @@ namespace Neon.ModelGen
 
             // NOTE: Value types (AKA structs) implicitly have a default parameterless constructor.
 
-            if (ignoreConstructor || type.IsValueType || type.GetConstructor(new Type[0]) != null)
+            if (ignoreConstructor || type.IsValueType || type.GetConstructor(Array.Empty<Type>()) != null)
             {
                 return true;
             }
@@ -1129,7 +1129,7 @@ namespace Neon.ModelGen
                 }
 
                 if (elementType.Assembly.FullName.Contains("System.Private.CoreLib") &&
-                    elementType.IsValueType || elementType.GetConstructor(new Type[0]) != null)
+                    elementType.IsValueType || elementType.GetConstructor(Array.Empty<Type>()) != null)
                 {
                     return true;
                 }

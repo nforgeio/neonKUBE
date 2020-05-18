@@ -38,25 +38,12 @@ namespace Neon.Temporal
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="name">
-        /// Optionally specifies the workflow type name to be used 
-        /// when registering the workflow implementation with Temporal.
-        /// </param>
-        public WorkflowAttribute(string name = null)
+        public WorkflowAttribute()
         {
-            TemporalHelper.ValidateWorkflowTypeName(name);
-
-            this.Name = name;
         }
 
         /// <summary>
-        /// The workflow type name.  This defaults to the fully qualified name
-        /// of the implemented workflow interface (without any leading "I").
-        /// </summary>
-        public string Name { get; set; } = null;
-
-        /// <summary>
-        /// Indicates that <see cref="TemporalClient.RegisterAssemblyWorkflowsAsync(Assembly, string)"/> will
+        /// Indicates that <see cref="Worker.RegisterAssemblyWorkflowsAsync(Assembly, string)"/> will
         /// automatically register the tagged workflow implementation for the specified assembly.
         /// This defaults to <c>false</c>
         /// </summary>

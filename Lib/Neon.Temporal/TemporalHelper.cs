@@ -153,26 +153,11 @@ namespace Neon.Temporal.Internal
         /// implementation class.
         /// </summary>
         /// <param name="workflowType">The workflow interface or implementation type.</param>
-        /// <param name="workflowAttribute">Specifies the <see cref="WorkflowAttribute"/>.</param>
-        /// <returns>The type name.</returns>
-        /// <remarks>
-        /// <para>
-        /// If <paramref name="workflowAttribute"/> is passed and <see cref="WorkflowAttribute.Name"/>
-        /// is not <c>null</c> or empty, then the name specified in the attribute is returned.
-        /// </para>
-        /// <para>
-        /// Otherwise, we'll return the fully qualified name of the workflow interface
-        /// with the leadting "I" removed.
-        /// </para>
-        /// </remarks>
-        internal static string GetWorkflowTypeName(Type workflowType, WorkflowAttribute workflowAttribute)
+        /// <param name="workflowMethodAttribute">Optionally specifies the <see cref="WorkflowMethodAttribute"/> for the target method.</param>
+        /// <returns>The fully qualifed type name.</returns>
+        internal static string GetWorkflowTypeName(Type workflowType, WorkflowMethodAttribute workflowMethodAttribute = null)
         {
             Covenant.Requires<ArgumentNullException>(workflowType != null, nameof(workflowType));
-
-            if (workflowAttribute != null && !string.IsNullOrEmpty(workflowAttribute.Name))
-            {
-                return workflowAttribute.Name;
-            }
 
             if (workflowType.IsClass)
             {
@@ -186,15 +171,27 @@ namespace Neon.Temporal.Internal
             }
 
             var fullName = workflowType.FullName;
-            var name     = workflowType.Name;
+            var typeName = workflowType.Name;
 
-            if (name.StartsWith("I") && name != "I")
+            if (typeName.StartsWith("I") && typeName != "I")
             {
                 // We're going to strip the leading "I" from the unqualified
                 // type name (unless that's the only character).
 
-                fullName  = fullName.Substring(0, fullName.Length - name.Length);
-                fullName += name.Substring(1);
+                fullName  = fullName.Substring(0, fullName.Length - typeName.Length);
+                fullName += typeName.Substring(1);
+            }
+
+            if (!string.IsNullOrEmpty(workflowMethodAttribute?.Name))
+            {
+                if (workflowMethodAttribute.IsFullName)
+                {
+                    fullName = workflowMethodAttribute.Name;
+                }
+                else
+                {
+                    fullName = $"{fullName}::{workflowMethodAttribute.Name}";
+                }
             }
 
             return TypeNameToSource(fullName);
@@ -1148,9 +1145,8 @@ namespace Neon.Temporal.Internal
 
             TemporalHelper.ValidateWorkflowInterface(workflowInterface);
 
-            var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
-            var methodAttribute   = (WorkflowMethodAttribute)null;
-            var targetMethod      = (MethodInfo)null;
+            var methodAttribute = (WorkflowMethodAttribute)null;
+            var targetMethod    = (MethodInfo)null;
 
             if (string.IsNullOrEmpty(methodName))
             {
@@ -1194,7 +1190,7 @@ namespace Neon.Temporal.Internal
                 throw new ArgumentException($"Workflow interface [{workflowInterface.FullName}] does not have a method tagged by [WorkflowMethod(Name = {methodName})].", nameof(workflowInterface));
             }
 
-            var workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowInterface, workflowAttribute);
+            var workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowInterface, methodAttribute);
 
             if (methodAttribute.IsFullName)
             {

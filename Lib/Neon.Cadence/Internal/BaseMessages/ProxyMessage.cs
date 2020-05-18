@@ -267,7 +267,7 @@ namespace Neon.Cadence.Internal
                         }
                         else if (length == 0)
                         {
-                            message.Attachments.Add(new byte[0]);
+                            message.Attachments.Add(Array.Empty<byte>());
                         }
                         else
                         {

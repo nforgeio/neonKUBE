@@ -25,6 +25,7 @@ namespace HelloWorld_BasicActivity_1
             message.Body = $"Hello {name}!";
 
             smtp.Send(message);
+            await Task.CompletedTask;
         }
     }
     #endregion
