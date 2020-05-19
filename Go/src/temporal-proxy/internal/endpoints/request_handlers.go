@@ -89,7 +89,7 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 	defaultNamespace := *request.GetNamespace()
 	opts := client.Options{
 		Identity:  *request.GetIdentity(),
-		HostPort:  *request.GetEndpoints(),
+		HostPort:  *request.GetHostPort(),
 		Namespace: defaultNamespace,
 	}
 

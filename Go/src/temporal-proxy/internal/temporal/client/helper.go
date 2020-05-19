@@ -196,14 +196,6 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
 	connectChan := make(chan error)
 	defer close(connectChan)
 
-	// poll on system namespace
-
-	err = helper.pollNamespace(ctx, connectChan, helper.Builder.GetNamespace())
-	if err != nil {
-		helper = nil
-		return err
-	}
-
 	// build the client
 
 	if c := helper.WorkflowClients.Get(helper.Builder.GetNamespace()); c != nil {

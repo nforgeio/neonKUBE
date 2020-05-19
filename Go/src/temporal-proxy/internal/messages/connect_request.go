@@ -49,22 +49,22 @@ func NewConnectRequest() *ConnectRequest {
 	return request
 }
 
-// GetEndpoints gets a ConnectRequest's endpoints value from
+// GetHostPort gets a ConnectRequest's HostPort value from
 // its nested properties map
 //
 // returns *string -> a pointer to a string in memory holding the value
-// of a ConnectRequest's endpoints
-func (request *ConnectRequest) GetEndpoints() *string {
-	return request.GetStringProperty("Endpoints")
+// of a ConnectRequest's HostPort
+func (request *ConnectRequest) GetHostPort() *string {
+	return request.GetStringProperty("HostPort")
 }
 
-// SetEndpoints sets a ConnectionRequest's endpoints in
+// SetHostPort sets a ConnectionRequest's HostPort in
 // its nested properties map
 //
 // param value *string -> a pointer to a string in memory
 // that holds the value to be set in the properties map
-func (request *ConnectRequest) SetEndpoints(value *string) {
-	request.SetStringProperty("Endpoints", value)
+func (request *ConnectRequest) SetHostPort(value *string) {
+	request.SetStringProperty("HostPort", value)
 }
 
 // GetIdentity gets a ConnectRequest's identity value from
@@ -192,7 +192,7 @@ func (request *ConnectRequest) Clone() IProxyMessage {
 func (request *ConnectRequest) CopyTo(target IProxyMessage) {
 	request.ProxyRequest.CopyTo(target)
 	if v, ok := target.(*ConnectRequest); ok {
-		v.SetEndpoints(request.GetEndpoints())
+		v.SetHostPort(request.GetHostPort())
 		v.SetIdentity(request.GetIdentity())
 		v.SetClientTimeout(request.GetClientTimeout())
 		v.SetNamespace(request.GetNamespace())

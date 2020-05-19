@@ -115,5 +115,11 @@ Go/**/__debug_bin
 /Go/src/github.com/cadence-proxy/cmd/playground/.vscode/settings.json
 /Go/src/github.com/cadence-proxy/cmd/playground/.vscode/launch.json
 
+#####################
+### Neon.Temporal ###
+#####################
+
+/Lib/Neon.Temporal/Resources/**
+
 # OS/X related files
 .DS_Store
