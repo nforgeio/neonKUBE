@@ -134,6 +134,28 @@ func (helper *ClientHelper) SetClientTimeout(value time.Duration) {
 	helper.clientTimeout = value
 }
 
+// SetupTemporalClients establishes a connection to a running temporal server
+// instance and configures namespace and clients.
+//
+// params:
+// 	- ctx context.Context -> the context used to poll the server to see if a
+// 	connection has been established.
+// 	- opts client.Options -> the client options for connection the the temporal
+// 	server instance.
+//
+// returns error -> error if any errors are thrown while trying to establish a
+// connection, or nil upon success.
+func (helper *ClientHelper) SetupTemporalClients(ctx context.Context, opts client.Options) error {
+	helper.SetClientOptions(opts)
+	if err := helper.SetupServiceConfig(ctx); err != nil {
+		defer func() {
+			helper = nil
+		}()
+		return err
+	}
+	return nil
+}
+
 // SetupServiceConfig configures a ClientHelper's workflowserviceclient.Interface
 // Service.  It also sets the Logger, the TemporalClientBuilder, and acts as a helper for
 // creating new temporal workflow and namespace clients.
@@ -200,28 +222,6 @@ func (helper *ClientHelper) SetupServiceConfig(ctx context.Context) error {
 
 	_ = helper.WorkflowClients.Add(helper.Builder.GetNamespace(), client)
 
-	return nil
-}
-
-// SetupTemporalClients establishes a connection to a running temporal server
-// instance and configures namespace and clients.
-//
-// params:
-// 	- ctx context.Context -> the context used to poll the server to see if a
-// 	connection has been established.
-// 	- opts client.Options -> the client options for connection the the temporal
-// 	server instance.
-//
-// returns error -> error if any errors are thrown while trying to establish a
-// connection, or nil upon success.
-func (helper *ClientHelper) SetupTemporalClients(ctx context.Context, opts client.Options) error {
-	helper.SetClientOptions(opts)
-	if err := helper.SetupServiceConfig(ctx); err != nil {
-		defer func() {
-			helper = nil
-		}()
-		return err
-	}
 	return nil
 }
 
