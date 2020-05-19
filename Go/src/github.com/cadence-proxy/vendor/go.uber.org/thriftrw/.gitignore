@@ -1,0 +1,18 @@
+node_modules
+/build
+/thriftrw
+/cover
+cover.out
+cover.full.out
+cover.html
+.idea/
+
+# We will explicitly whitelist vendored libraries that we want to check in.
+vendor/*
+!vendor/github.com/
+
+/vendor/github.com/*
+!vendor/github.com/fatih/
+
+vendor/github.com/fatih/*
+!vendor/github.com/fatih/structtag
