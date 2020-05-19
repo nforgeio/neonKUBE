@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_StackFixture.cs
+// FILE:	    Test_DockerStackFixture.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -33,7 +33,7 @@ using Xunit;
 
 namespace TestXunit
 {
-    public class Test_StackFixture : IClassFixture<StackFixture>
+    public class Test_DockerStackFixture : IClassFixture<DockerStackFixture>
     {
         private const string alpineDefinition =
 @"version: '3'
@@ -42,9 +42,9 @@ services:
     image: ""alpine:latest""
 ";
 
-        private StackFixture fixture;
+        private DockerStackFixture fixture;
 
-        public Test_StackFixture(StackFixture fixture)
+        public Test_DockerStackFixture(DockerStackFixture fixture)
         {
             this.fixture = fixture;
 

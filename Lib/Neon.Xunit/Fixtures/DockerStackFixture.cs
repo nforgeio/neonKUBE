@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    StackFixture.cs
+// FILE:	    DockerStackFixture.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -54,7 +54,7 @@ namespace Neon.Xunit
     /// </note>
     /// </remarks>
     /// <threadsafety instance="true"/>
-    public class StackFixture : TestFixture
+    public class DockerStackFixture : TestFixture
     {
         //---------------------------------------------------------------------
         // Static members
@@ -75,7 +75,7 @@ namespace Neon.Xunit
         /// etc).  You'll need to set this before starting any fixture stacks.
         /// </para>
         /// <note>
-        /// Fixtures implemented by neonFORGE that are derived from <see cref="StackFixture"/> 
+        /// Fixtures implemented by neonFORGE that are derived from <see cref="DockerStackFixture"/> 
         /// all implement this behavior.  If you implement your own derived fixtures,
         /// you should consider implementing this as well for consistency.
         /// </note>
@@ -139,14 +139,14 @@ namespace Neon.Xunit
         /// <summary>
         /// Constructor.
         /// </summary>
-        public StackFixture()
+        public DockerStackFixture()
         {
         }
 
         /// <summary>
         /// Finalizer.
         /// </summary>
-        ~StackFixture()
+        ~DockerStackFixture()
         {
             Dispose(false);
         }
