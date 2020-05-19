@@ -76,7 +76,9 @@ namespace TestTemporal
             // entrypoints that conflict because they have the same (blank)
             // name.
 
-            await Assert.ThrowsAsync<ActivityTypeException>(async () => await client.RegisterActivityAsync<ActivityDuplicateBlankEntrypoint>());
+            var worker = await client.NewWorkerAsync();
+
+            await Assert.ThrowsAsync<ActivityTypeException>(async () => await worker.RegisterActivityAsync<ActivityDuplicateBlankEntrypoint>());
         }
 
         //---------------------------------------------------------------------
@@ -112,7 +114,9 @@ namespace TestTemporal
             // Verify that the client detects workflows that have multiple
             // entrypoints that conflict because they have the same name.
 
-            await Assert.ThrowsAsync<ActivityTypeException>(async () => await client.RegisterActivityAsync<ActivityDuplicateEntrypoint>());
+            var worker = await client.NewWorkerAsync();
+
+            await Assert.ThrowsAsync<ActivityTypeException>(async () => await worker.RegisterActivityAsync<ActivityDuplicateEntrypoint>());
         }
 
         //---------------------------------------------------------------------
@@ -134,7 +138,9 @@ namespace TestTemporal
             // Verify that the client detects activities that don't
             // an entry point method.
 
-            await Assert.ThrowsAsync<ActivityTypeException>(async () => await client.RegisterActivityAsync<ActivityNoEntrypoint>());
+            var worker = await client.NewWorkerAsync();
+
+            await Assert.ThrowsAsync<ActivityTypeException>(async () => await worker.RegisterActivityAsync<ActivityNoEntrypoint>());
         }
 
         //---------------------------------------------------------------------
@@ -174,7 +180,9 @@ namespace TestTemporal
             // Verify that the client detects activity implementations
             // that implement more than one IActivity interface.
 
-            await Assert.ThrowsAsync<ActivityTypeException>(async () => await client.RegisterActivityAsync<ActivityMultiInterface>());
+            var worker = await client.NewWorkerAsync();
+
+            await Assert.ThrowsAsync<ActivityTypeException>(async () => await worker.RegisterActivityAsync<ActivityMultiInterface>());
         }
     }
 }

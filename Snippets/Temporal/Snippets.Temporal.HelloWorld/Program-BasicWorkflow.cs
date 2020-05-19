@@ -30,18 +30,20 @@ namespace HelloWorld
 
             var settings = new TemporalSettings()
             {
-                DefaultNamespace = "my-namespace",
-                CreateNamespace  = true,
-                HostPort         = "localhost:7933"
+                Namespace       = "my-namespace",
+                CreateNamespace = true,
+                HostPort        = "localhost:7933"
             };
 
             using (var client = await TemporalClient.ConnectAsync(settings))
             {
-                // Register your workflow implementation to let Temporal
-                // know we're open for business.
+                // Create a worker and register the workflow and activity 
+                // implementations to let Temporal know we're open for business.
 
-                await client.RegisterWorkflowAsync<HelloWorkflow>();
-                await client.StartWorkerAsync("my-tasks");
+                var worker = await client.NewWorkerAsync();
+
+                await worker.RegisterWorkflowAsync<HelloWorkflow>();
+                await worker.StartAsync();
 
                 // Invoke your workflow.
 

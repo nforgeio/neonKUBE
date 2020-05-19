@@ -236,6 +236,7 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
     <None Include="Content\Neon.Temporal\OtherTopics\Logging.aml" />
     <None Include="Content\Neon.Temporal\OtherTopics\UnitTesting.aml" />
     <None Include="Content\Neon.Temporal\Overview.aml" />
+    <None Include="Content\Neon.Temporal\CadenceUpgrade.aml" />
     <None Include="Content\Neon.Temporal\WorkflowDetails\ChildWorkflows.aml" />
     <None Include="Content\Neon.Temporal\WorkflowDetails\CodingRules.aml" />
     <None Include="Content\Neon.Temporal\WorkflowDetails\ContinueAsNew.aml" />
@@ -277,36 +278,36 @@ Copyright © Renci 2010-2017</NamespaceSummaryItem>
       <ImageId>internal</ImageId>
       <AlternateText>internal</AlternateText>
     </Image>
-    <Image Include="media\Neon.Cadence\deployment-multi-tenant.png">
-      <ImageId>deployment-multi-tenant</ImageId>
+    <Image Include="media\Neon.Cadence\cadence-deployment-multi-tenant.png">
+      <ImageId>cadence-deployment-multi-tenant</ImageId>
       <AlternateText>deployment-multi-tenant</AlternateText>
     </Image>
-    <Image Include="media\Neon.Cadence\deployment-scaled.png">
-      <ImageId>deployment-scaled</ImageId>
+    <Image Include="media\Neon.Cadence\cadence-deployment-scaled.png">
+      <ImageId>cadence-deployment-scaled</ImageId>
       <AlternateText>deployment-scaled</AlternateText>
     </Image>
-    <Image Include="media\Neon.Cadence\deployment-simple.png">
-      <ImageId>deployment-simple</ImageId>
+    <Image Include="media\Neon.Cadence\cadence-deployment-simple.png">
+      <ImageId>cadence-deployment-simple</ImageId>
       <AlternateText>deployment-simple</AlternateText>
     </Image>
-    <Image Include="media\Neon.Cadence\overview-components.png">
-      <ImageId>overview-components</ImageId>
+    <Image Include="media\Neon.Cadence\cadence-overview-components.png">
+      <ImageId>cadence-overview-components</ImageId>
       <AlternateText>overview-components</AlternateText>
     </Image>
-    <Image Include="media\Neon.Temporal\deployment-multi-tenant.png">
-      <ImageId>deployment-multi-tenant</ImageId>
+    <Image Include="media\Neon.Temporal\temporal-deployment-multi-tenant.png">
+      <ImageId>temporal-deployment-multi-tenant</ImageId>
       <AlternateText>deployment-multi-tenant</AlternateText>
     </Image>
-    <Image Include="media\Neon.Temporal\deployment-scaled.png">
-      <ImageId>deployment-scaled</ImageId>
+    <Image Include="media\Neon.Temporal\temporal-deployment-scaled.png">
+      <ImageId>temporal-deployment-scaled</ImageId>
       <AlternateText>deployment-scaled</AlternateText>
     </Image>
-    <Image Include="media\Neon.Temporal\deployment-simple.png">
-      <ImageId>deployment-simple</ImageId>
+    <Image Include="media\Neon.Temporal\temporal-deployment-simple.png">
+      <ImageId>temporal-deployment-simple</ImageId>
       <AlternateText>deployment-simple</AlternateText>
     </Image>
-    <Image Include="media\Neon.Temporal\overview-components.png">
-      <ImageId>overview-components</ImageId>
+    <Image Include="media\Neon.Temporal\temporal-overview-components.png">
+      <ImageId>temporal-overview-components</ImageId>
       <AlternateText>overview-components</AlternateText>
     </Image>
     <Image Include="media\neonlogo.png">

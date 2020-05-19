@@ -220,7 +220,7 @@
         </definitionTable>
         <mediaLink>
           <caption></caption>
-          <image xlink:href="overview-components"/>
+          <image xlink:href="temporal-overview-components"/>
         </mediaLink>
         <para>
           The diagram above depicts how these components fit together.  The two <legacyBold>RED</legacyBold>
@@ -347,7 +347,7 @@
         <linkUri>https://github.com/nforgeio/Temporal-samples</linkUri>
       </externalLink>
       <externalLink>
-        <linkText>Uber Temporal</linkText>
+        <linkText>Temporal Documentation</linkText>
         <linkUri>https://Temporalworkflow.io/docs/</linkUri>
       </externalLink>
     </relatedTopics>

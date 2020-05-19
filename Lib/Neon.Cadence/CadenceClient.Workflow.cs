@@ -217,6 +217,18 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
             EnsureNotDisposed();
 
+            options = WorkflowOptions.Normalize(this, options);
+
+            if (string.IsNullOrEmpty(options.TaskList))
+            {
+                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.TaskList)}] must be specified when the client doesn't set [{nameof(CadenceSettings)}.{nameof(CadenceSettings.DefaultTaskList)}].");
+            }
+
+            if (string.IsNullOrEmpty(options.Domain))
+            {
+                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.Domain)}] must be specified when the client doesn't set [{nameof(CadenceSettings)}.{nameof(CadenceSettings.DefaultDomain)}].");
+            }
+
             return new WorkflowStub(this)
             {
                 WorkflowTypeName = workflowTypeName,
@@ -229,6 +241,11 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="workflowId">The workflow ID.</param>
         /// <param name="runId">Optionally specifies the workflow run ID.</param>
+        /// <param name="domain">
+        /// Optionally specifies the domain where the target workflow is running.
+        /// This will be required when default domain for the client isn't specified
+        /// or when the the target execution is running in a different domain.
+        /// </param>
         /// <returns>The <see cref="WorkflowStub"/>.</returns>
         /// <remarks>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
@@ -236,14 +253,22 @@ namespace Neon.Cadence
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
-        public WorkflowStub NewUntypedWorkflowStub(string workflowId, string runId = null)
+        public WorkflowStub NewUntypedWorkflowStub(string workflowId, string runId = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
             EnsureNotDisposed();
 
+            domain = ResolveDomain(domain);
+
+            if (string.IsNullOrEmpty(domain))
+            {
+                throw new ArgumentException($"The [{nameof(domain)} parameter must be specified when the client doesn't set [{nameof(CadenceSettings)}.{nameof(CadenceSettings.DefaultDomain)}].");
+            }
+
             return new WorkflowStub(this)
             {
-                Execution = new WorkflowExecution(workflowId, runId)
+                Execution = new WorkflowExecution(workflowId, runId),
+                Options   = new WorkflowOptions() { Domain = domain }
             };
         }
 
@@ -251,6 +276,11 @@ namespace Neon.Cadence
         /// Creates an untyped stub for a known workflow execution.
         /// </summary>
         /// <param name="execution">The workflow execution.</param>
+        /// <param name="domain">
+        /// Optionally specifies the domain where the target workflow is running.
+        /// This will be required when default domain for the client isn't specified
+        /// or when the the target execution is running in a different domain.
+        /// </param>
         /// <returns>The <see cref="WorkflowStub"/>.</returns>
         /// <remarks>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
@@ -258,14 +288,27 @@ namespace Neon.Cadence
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
-        public WorkflowStub NewUntypedWorkflowStub(WorkflowExecution execution)
+        public WorkflowStub NewUntypedWorkflowStub(WorkflowExecution execution, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
 
+            domain = ResolveDomain(domain);
+
+            if (string.IsNullOrEmpty(domain))
+            {
+                throw new ArgumentException($"The [{nameof(domain)} parameter must be specified when the client doesn't set [{nameof(CadenceSettings)}.{nameof(CadenceSettings.DefaultDomain)}].");
+            }
+
+            var options = new WorkflowOptions()
+            {
+                Domain = domain
+            };
+
             return new WorkflowStub(this)
             {
-                Execution = execution
+                Execution = execution,
+                Options   = options
             };
         }
 
@@ -300,7 +343,11 @@ namespace Neon.Cadence
         /// <typeparam name="TWorkflowInterface">Identifies the workflow interface.</typeparam>
         /// <param name="workflowId">Specifies the workflow ID.</param>
         /// <param name="runId">Optionally specifies the workflow's run ID.</param>
-        /// <param name="domain">Optionally specifies a domain that </param>
+        /// <param name="domain">
+        /// Optionally specifies the domain where the target workflow is running.
+        /// This will be required when default domain for the client isn't specified
+        /// or when the the target execution is running in a different domain.
+        /// </param>
         /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflowInterface"/>.</returns>
         /// <remarks>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
@@ -315,6 +362,13 @@ namespace Neon.Cadence
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             EnsureNotDisposed();
 
+            domain = ResolveDomain(domain);
+
+            if (string.IsNullOrEmpty(domain))
+            {
+                throw new ArgumentException($"The [{nameof(domain)} parameter must be specified when the client doesn't set [{nameof(CadenceSettings)}.{nameof(CadenceSettings.DefaultDomain)}].");
+            }
+
             return StubManager.NewWorkflowStub<TWorkflowInterface>(this, workflowId, runId, domain);
         }
 
@@ -325,6 +379,11 @@ namespace Neon.Cadence
         /// </summary>
         /// <typeparam name="TWorkflowInterface">Identifies the workflow interface.</typeparam>
         /// <param name="execution">Specifies the <see cref="WorkflowExecution"/>.</param>
+        /// <param name="domain">
+        /// Optionally specifies the domain where the target workflow is running.
+        /// This will be required when default domain for the client isn't specified
+        /// or when the the target execution is running in a different domain.
+        /// </param>
         /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflowInterface"/>.</returns>
         /// <remarks>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
@@ -332,7 +391,7 @@ namespace Neon.Cadence
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
-        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(WorkflowExecution execution)
+        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(WorkflowExecution execution, string domain = null)
             where TWorkflowInterface : class
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
@@ -341,7 +400,14 @@ namespace Neon.Cadence
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             EnsureNotDisposed();
 
-            return StubManager.NewWorkflowStub<TWorkflowInterface>(this, execution.WorkflowId, execution.RunId);
+            domain = ResolveDomain(domain);
+
+            if (string.IsNullOrEmpty(domain))
+            {
+                throw new ArgumentException($"The [{nameof(domain)} parameter must be specified when the client doesn't set [{nameof(CadenceSettings)}.{nameof(CadenceSettings.DefaultDomain)}].");
+            }
+
+            return StubManager.NewWorkflowStub<TWorkflowInterface>(this, execution.WorkflowId, execution.RunId, domain);
         }
 
         /// <summary>
@@ -382,6 +448,18 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             EnsureNotDisposed();
+
+            options = WorkflowOptions.Normalize(this, options);
+
+            if (string.IsNullOrEmpty(options.TaskList))
+            {
+                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.TaskList)}] must be specified when the client doesn't set [{nameof(CadenceSettings)}.{nameof(CadenceSettings.DefaultTaskList)}].");
+            }
+
+            if (string.IsNullOrEmpty(options.Domain))
+            {
+                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.Domain)}] must be specified when the client doesn't set [{nameof(CadenceSettings)}.{nameof(CadenceSettings.DefaultDomain)}].");
+            }
 
             return new WorkflowStub(this)
             {
@@ -536,6 +614,36 @@ namespace Neon.Cadence
         // Internal workflow related methods used by dynamically generated workflow stubs.
 
         /// <summary>
+        /// Raised when an external workflow is executed.  This is used internally
+        /// for unit tests that verify that workflow options are configured correctly. 
+        /// </summary>
+        internal event EventHandler<WorkflowOptions> WorkflowExecuteEvent;
+
+        /// <summary>
+        /// Raised when a child workflow is executed.  This is used internally
+        /// for unit tests that verify that workflow options are configured correctly. 
+        /// </summary>
+        internal event EventHandler<ChildWorkflowOptions> ChildWorkflowExecuteEvent;
+
+        /// <summary>
+        /// Raises the <see cref="WorkflowExecuteEvent"/>.
+        /// </summary>
+        /// <param name="options">The workflow options.</param>
+        internal void RaiseWorkflowExecuteEvent(WorkflowOptions options)
+        {
+            WorkflowExecuteEvent?.Invoke(this, options);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ChildWorkflowExecuteEvent"/>.
+        /// </summary>
+        /// <param name="options">The workflow options.</param>
+        internal void RaiseChildWorkflowExecuteEvent(ChildWorkflowOptions options)
+        {
+            ChildWorkflowExecuteEvent?.Invoke(this, options);
+        }
+
+        /// <summary>
         /// Starts an external workflow using a specific workflow type name, returning a <see cref="WorkflowExecution"/>
         /// that can be used to track the workflow and also wait for its result via <see cref="GetWorkflowResultAsync(WorkflowExecution, string)"/>.
         /// </summary>
@@ -561,6 +669,8 @@ namespace Neon.Cadence
             EnsureNotDisposed();
 
             options = WorkflowOptions.Normalize(this, options);
+
+            RaiseWorkflowExecuteEvent(options);
 
             var reply = (WorkflowExecuteReply)await CallProxyAsync(
                 new WorkflowExecuteRequest()
@@ -593,12 +703,19 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
 
+            domain = ResolveDomain(domain);
+
+            if (string.IsNullOrEmpty(domain))
+            {
+                throw new ArgumentNullException($"The [{nameof(domain)}] parameter must be specified when the client doesn't set [{nameof(CadenceSettings)}.{nameof(CadenceSettings.DefaultDomain)}].");
+            }
+
             var reply = (WorkflowGetResultReply)await CallProxyAsync(
                 new WorkflowGetResultRequest()
                 {
                     WorkflowId = execution.WorkflowId,
                     RunId      = execution.RunId,
-                    Domain     = ResolveDomain(domain)
+                    Domain     = domain
                 });
 
             reply.ThrowOnError();
@@ -633,6 +750,8 @@ namespace Neon.Cadence
             EnsureNotDisposed();
 
             options = ChildWorkflowOptions.Normalize(this, options);
+            
+            RaiseChildWorkflowExecuteEvent(options);
 
             var reply = await parentWorkflow.ExecuteNonParallel(
                 async () =>
@@ -919,7 +1038,7 @@ namespace Neon.Cadence
         /// <param name="signalName">The target signal name.</param>
         /// <param name="signalId">The globally unique signal transaction ID.</param>
         /// <param name="signalArgs">Specifies the <see cref="SyncSignalCall"/> as a single item array and encoded as a byte array.</param>
-        /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
+        /// <param name="domain">Optionally specifies the domain.</param>
         /// <returns>The encoded signal results or <c>null</c> for signals that don't return a result.</returns>
         /// <exception cref="SyncSignalException">Thrown if the target synchronous signal doesn't exist or the workflow is already closed.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>

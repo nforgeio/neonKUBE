@@ -38,99 +38,33 @@ namespace Neon.Temporal
         // Public Temporal workflow related operations.
 
         /// <summary>
-        /// Registers a workflow implementation with Temporal.
+        /// Raised when an external workflow is executed.  This is used internally
+        /// for unit tests that verify that workflow options are configured correctly. 
         /// </summary>
-        /// <typeparam name="TWorkflow">The <see cref="WorkflowBase"/> derived class implementing the workflow.</typeparam>
-        /// <param name="workflowTypeName">
-        /// Optionally specifies a custom workflow type name that will be used 
-        /// for identifying the workflow implementation in Temporal.  This defaults
-        /// to the fully qualified <typeparamref name="TWorkflow"/> type name.
-        /// </param>
-        /// <param name="namespace">Optionally overrides the default client namespace.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if another workflow class has already been registered for <paramref name="workflowTypeName"/>.</exception>
-        /// <exception cref="WorkflowWorkerStartedException">
-        /// Thrown if a workflow worker has already been started for the client.  You must
-        /// register workflow implementations before starting workers.
-        /// </exception>
-        /// <remarks>
-        /// <note>
-        /// Be sure to register all of your workflow implementations before starting workers.
-        /// </note>
-        /// </remarks>
-        public async Task RegisterWorkflowAsync<TWorkflow>(string workflowTypeName = null, string @namespace = null)
-            where TWorkflow : WorkflowBase
+        internal event EventHandler<WorkflowOptions> WorkflowExecuteEvent;
+
+        /// <summary>
+        /// Raised when a child workflow is executed.  This is used internally
+        /// for unit tests that verify that workflow options are configured correctly. 
+        /// </summary>
+        internal event EventHandler<ChildWorkflowOptions> ChildWorkflowExecuteEvent;
+
+        /// <summary>
+        /// Raises the <see cref="WorkflowExecuteEvent"/>.
+        /// </summary>
+        /// <param name="options">The workflow options.</param>
+        internal void RaiseWorkflowExecuteEvent(WorkflowOptions options)
         {
-            await SyncContext.ClearAsync;
-            TemporalHelper.ValidateWorkflowImplementation(typeof(TWorkflow));
-            TemporalHelper.ValidateWorkflowTypeName(workflowTypeName);
-            EnsureNotDisposed();
-
-            if (workflowWorkerStarted)
-            {
-                throw new WorkflowWorkerStartedException();
-            }
-
-            var workflowType = typeof(TWorkflow);
-
-            if (string.IsNullOrEmpty(workflowTypeName))
-            {
-                workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowType, workflowType.GetCustomAttribute<WorkflowAttribute>());
-            }
-
-            await WorkflowBase.RegisterAsync(this, workflowType, workflowTypeName, ResolveNamespace(@namespace));
-
-            lock (registeredWorkflowTypes)
-            {
-                registeredWorkflowTypes.Add(TemporalHelper.GetWorkflowInterface(typeof(TWorkflow)));
-            }
+            WorkflowExecuteEvent?.Invoke(this, options);
         }
 
         /// <summary>
-        /// Scans the assembly passed looking for workflow implementations derived from
-        /// <see cref="WorkflowBase"/> and tagged by <see cref="WorkflowAttribute"/> with
-        /// <see cref="WorkflowAttribute.AutoRegister"/> set to <c>true</c> and registers 
-        /// them with Temporal.
+        /// Raises the <see cref="ChildWorkflowExecuteEvent"/>.
         /// </summary>
-        /// <param name="assembly">The target assembly.</param>
-        /// <param name="namespace">Optionally overrides the default client namespace.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="TypeLoadException">
-        /// Thrown for types tagged by <see cref="WorkflowAttribute"/> that are not 
-        /// derived from <see cref="WorkflowBase"/>.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
-        /// <exception cref="WorkflowWorkerStartedException">
-        /// Thrown if a workflow worker has already been started for the client.  You must
-        /// register workflow implementations before starting workers.
-        /// </exception>
-        /// <remarks>
-        /// <note>
-        /// Be sure to register all of your workflow implementations before starting workers.
-        /// </note>
-        /// </remarks>
-        public async Task RegisterAssemblyWorkflowsAsync(Assembly assembly, string @namespace = null)
+        /// <param name="options">The workflow options.</param>
+        internal void RaiseChildWorkflowExecuteEvent(ChildWorkflowOptions options)
         {
-            await SyncContext.ClearAsync;
-            Covenant.Requires<ArgumentNullException>(assembly != null, nameof(assembly));
-            EnsureNotDisposed();
-
-            foreach (var type in assembly.GetTypes().Where(t => t.IsClass))
-            {
-                var workflowAttribute = type.GetCustomAttribute<WorkflowAttribute>();
-
-                if (workflowAttribute != null && workflowAttribute.AutoRegister)
-                {
-                    var workflowTypeName = TemporalHelper.GetWorkflowTypeName(type, workflowAttribute);
-
-                    await WorkflowBase.RegisterAsync(this, type, workflowTypeName, ResolveNamespace(@namespace));
-
-                    lock (registeredWorkflowTypes)
-                    {
-                        registeredWorkflowTypes.Add(TemporalHelper.GetWorkflowInterface(type));
-                    }
-                }
-            }
+            ChildWorkflowExecuteEvent?.Invoke(this, options);
         }
 
         /// <summary>
@@ -217,6 +151,18 @@ namespace Neon.Temporal
             Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
             EnsureNotDisposed();
 
+            options = WorkflowOptions.Normalize(this, options);
+
+            if (string.IsNullOrEmpty(options.TaskList))
+            {
+                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.TaskList)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.DefaultTaskList)}].");
+            }
+
+            if (string.IsNullOrEmpty(options.Namespace))
+            {
+                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.Namespace)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.Namespace)}].");
+            }
+
             return new WorkflowStub(this)
             {
                 WorkflowTypeName = workflowTypeName,
@@ -229,6 +175,11 @@ namespace Neon.Temporal
         /// </summary>
         /// <param name="workflowId">The workflow ID.</param>
         /// <param name="runId">Optionally specifies the workflow run ID.</param>
+        /// <param name="namespace">
+        /// Optionally specifies the namespace where the target workflow is running.
+        /// This will be required when default namespace for the client isn't specified
+        /// or when the the target execution is running in a different namespace.
+        /// </param>
         /// <returns>The <see cref="WorkflowStub"/>.</returns>
         /// <remarks>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
@@ -236,14 +187,22 @@ namespace Neon.Temporal
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
-        public WorkflowStub NewUntypedWorkflowStub(string workflowId, string runId = null)
+        public WorkflowStub NewUntypedWorkflowStub(string workflowId, string runId = null, string @namespace = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
             EnsureNotDisposed();
 
+            @namespace = ResolveNamespace(@namespace);
+
+            if (string.IsNullOrEmpty(@namespace))
+            {
+                throw new ArgumentException($"The [{nameof(@namespace)} parameter must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.Namespace)}].");
+            }
+
             return new WorkflowStub(this)
             {
-                Execution = new WorkflowExecution(workflowId, runId)
+                Execution = new WorkflowExecution(workflowId, runId),
+                Options   = new WorkflowOptions() { Namespace = @namespace }
             };
         }
 
@@ -251,6 +210,11 @@ namespace Neon.Temporal
         /// Creates an untyped stub for a known workflow execution.
         /// </summary>
         /// <param name="execution">The workflow execution.</param>
+        /// <param name="namespace">
+        /// Optionally specifies the namespace where the target workflow is running.
+        /// This will be required when default namespace for the client isn't specified
+        /// or when the the target execution is running in a different namespace.
+        /// </param>
         /// <returns>The <see cref="WorkflowStub"/>.</returns>
         /// <remarks>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
@@ -258,14 +222,27 @@ namespace Neon.Temporal
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
-        public WorkflowStub NewUntypedWorkflowStub(WorkflowExecution execution)
+        public WorkflowStub NewUntypedWorkflowStub(WorkflowExecution execution, string @namespace = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
 
+            @namespace = ResolveNamespace(@namespace);
+
+            if (string.IsNullOrEmpty(@namespace))
+            {
+                throw new ArgumentException($"The [{nameof(@namespace)} parameter must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.Namespace)}].");
+            }
+
+            var options = new WorkflowOptions()
+            {
+                Namespace = @namespace
+            };
+
             return new WorkflowStub(this)
             {
-                Execution = execution
+                Execution = execution,
+                Options   = options
             };
         }
 
@@ -300,7 +277,11 @@ namespace Neon.Temporal
         /// <typeparam name="TWorkflowInterface">Identifies the workflow interface.</typeparam>
         /// <param name="workflowId">Specifies the workflow ID.</param>
         /// <param name="runId">Optionally specifies the workflow's run ID.</param>
-        /// <param name="namespace">Optionally specifies a namespace that </param>
+        /// <param name="namespace">
+        /// Optionally specifies the namespace where the target workflow is running.
+        /// This will be required when default namespace for the client isn't specified
+        /// or when the the target execution is running in a different namespace.
+        /// </param>
         /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflowInterface"/>.</returns>
         /// <remarks>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
@@ -315,6 +296,13 @@ namespace Neon.Temporal
             TemporalHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             EnsureNotDisposed();
 
+            @namespace = ResolveNamespace(@namespace);
+
+            if (string.IsNullOrEmpty(@namespace))
+            {
+                throw new ArgumentException($"The [{nameof(@namespace)} parameter must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.Namespace)}].");
+            }
+
             return StubManager.NewWorkflowStub<TWorkflowInterface>(this, workflowId, runId, @namespace);
         }
 
@@ -325,6 +313,11 @@ namespace Neon.Temporal
         /// </summary>
         /// <typeparam name="TWorkflowInterface">Identifies the workflow interface.</typeparam>
         /// <param name="execution">Specifies the <see cref="WorkflowExecution"/>.</param>
+        /// <param name="namespace">
+        /// Optionally specifies the namespace where the target workflow is running.
+        /// This will be required when default namespace for the client isn't specified
+        /// or when the the target execution is running in a different namespace.
+        /// </param>
         /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflowInterface"/>.</returns>
         /// <remarks>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
@@ -332,7 +325,7 @@ namespace Neon.Temporal
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
-        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(WorkflowExecution execution)
+        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(WorkflowExecution execution, string @namespace = null)
             where TWorkflowInterface : class
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
@@ -341,7 +334,14 @@ namespace Neon.Temporal
             TemporalHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             EnsureNotDisposed();
 
-            return StubManager.NewWorkflowStub<TWorkflowInterface>(this, execution.WorkflowId, execution.RunId);
+            @namespace = ResolveNamespace(@namespace);
+
+            if (string.IsNullOrEmpty(@namespace))
+            {
+                throw new ArgumentException($"The [{nameof(@namespace)} parameter must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.Namespace)}].");
+            }
+
+            return StubManager.NewWorkflowStub<TWorkflowInterface>(this, execution.WorkflowId, execution.RunId, @namespace);
         }
 
         /// <summary>
@@ -382,6 +382,18 @@ namespace Neon.Temporal
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             EnsureNotDisposed();
+
+            options = WorkflowOptions.Normalize(this, options);
+
+            if (string.IsNullOrEmpty(options.TaskList))
+            {
+                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.TaskList)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.DefaultTaskList)}].");
+            }
+
+            if (string.IsNullOrEmpty(options.Namespace))
+            {
+                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.Namespace)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.Namespace)}].");
+            }
 
             return new WorkflowStub(this)
             {
@@ -589,6 +601,8 @@ namespace Neon.Temporal
 
             options = WorkflowOptions.Normalize(this, options);
 
+            RaiseWorkflowExecuteEvent(options);
+
             var reply = (WorkflowExecuteReply)await CallProxyAsync(
                 new WorkflowExecuteRequest()
                 {
@@ -620,12 +634,19 @@ namespace Neon.Temporal
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
 
+            @namespace = ResolveNamespace(@namespace);
+
+            if (string.IsNullOrEmpty(@namespace))
+            {
+                throw new ArgumentNullException($"The [{nameof(@namespace)}] parameter must be specified when the client doesn't specify [{nameof(TemporalSettings)}.{nameof(TemporalSettings.Namespace)}].");
+            }
+
             var reply = (WorkflowGetResultReply)await CallProxyAsync(
                 new WorkflowGetResultRequest()
                 {
                     WorkflowId = execution.WorkflowId,
                     RunId      = execution.RunId,
-                    Namespace  = ResolveNamespace(@namespace)
+                    Namespace  = @namespace
                 });
 
             reply.ThrowOnError();
@@ -660,6 +681,8 @@ namespace Neon.Temporal
             EnsureNotDisposed();
 
             options = ChildWorkflowOptions.Normalize(this, options);
+
+            RaiseChildWorkflowExecuteEvent(options);
 
             var reply = await parentWorkflow.ExecuteNonParallel(
                 async () =>
@@ -919,7 +942,7 @@ namespace Neon.Temporal
         /// <param name="signalName">The target signal name.</param>
         /// <param name="signalId">The globally unique signal transaction ID.</param>
         /// <param name="signalArgs">Specifies the <see cref="SyncSignalCall"/> as a single item array and encoded as a byte array.</param>
-        /// <param name="namespace">Optionally specifies the namespace.  This defaults to the client canespace.</param>
+        /// <param name="namespace">Optionally specifies the namespace.</param>
         /// <returns>The encoded signal results or <c>null</c> for signals that don't return a result.</returns>
         /// <exception cref="SyncSignalException">Thrown if the target synchronous signal doesn't exist or the workflow is already closed.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Temporal problems.</exception>

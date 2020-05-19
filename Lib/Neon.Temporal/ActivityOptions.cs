@@ -77,16 +77,6 @@ namespace Neon.Temporal
                 {
                     options.Namespace = interfaceAttribute.Namespace;
                 }
-
-                if (string.IsNullOrEmpty(options.Namespace))
-                {
-                    options.Namespace = client.Settings.DefaultNamespace;
-                }
-
-                if (string.IsNullOrEmpty(options.Namespace))
-                {
-                    throw new ArgumentNullException(nameof(options), "You must specify a valid namespace explicitly in [NamespaceSettings], [ActivityOptions] or via an [ActivityInterface] or [ActivityMethod] attribute on the target activity interface or method.");
-                }
             }
 
             if (string.IsNullOrEmpty(options.TaskList))
@@ -99,16 +89,6 @@ namespace Neon.Temporal
                 if (string.IsNullOrEmpty(options.TaskList) && !string.IsNullOrEmpty(interfaceAttribute?.TaskList))
                 {
                     options.TaskList = interfaceAttribute.TaskList;
-                }
-
-                if (string.IsNullOrEmpty(options.TaskList))
-                {
-                    options.TaskList = client.Settings.DefaultTaskList;
-                }
-
-                if (string.IsNullOrEmpty(options.TaskList))
-                {
-                    throw new ArgumentNullException(nameof(options), "You must specify a valid task list explicitly via [ActivityOptions] or using an [ActivityInterface] or [ActivityMethod] attribute on the target activity interface or method.");
                 }
             }
 
@@ -158,18 +138,18 @@ namespace Neon.Temporal
         // Instance members
 
         /// <summary>
-        /// Optionally specifies the target task list.  This defaults to the task list
+        /// Optionally specifies the target Temporal task list.  This defaults to the task list
         /// specified by <see cref="ActivityMethodAttribute.TaskList"/>,
-        /// <see cref="ActivityInterfaceAttribute.TaskList"/>
-        /// (in that order of precedence).
+        /// <see cref="ActivityInterfaceAttribute.TaskList"/>, or the parent workflow's
+        /// task list, in that order of precedence.
         /// </summary>
         public string TaskList { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies the target namespace.  This defaults to the namespace
+        /// Optionally specifies the target Temporal namespace.  This defaults to the domain
         /// specified by <see cref="ActivityMethodAttribute.Namespace"/>, 
         /// <see cref="ActivityInterfaceAttribute.Namespace"/>, or 
-        /// to the parent workflow's namespace (in that order of precedence).
+        /// to the parent workflow's namespace, in that order of precedence.
         /// </summary>
         public string Namespace { get; set; } = null;
 
@@ -220,7 +200,7 @@ namespace Neon.Temporal
         /// Retrying <see cref="ScheduleToStartTimeout"/> does not make sense as it just
         /// mark the task as failed and create a new task and put back in the queue waiting worker to pick again. Temporal
         /// server also make sure the <see cref="ScheduleToStartTimeout"/> will not be larger than the workflow's timeout.
-        /// Same apply to <see cref="ScheduleToCloseTimeout"/>.
+        /// The same applies to <see cref="StartToCloseTimeout"/>.
         /// </para>
         /// </remarks>
         public RetryOptions RetryOptions { get; set; }
@@ -232,13 +212,13 @@ namespace Neon.Temporal
         {
             return new InternalActivityOptions()
             {
-                TaskList               = this.TaskList,
+                HeartbeatTimeout       = TemporalHelper.ToTemporal(this.HeartbeatTimeout),
+                RetryPolicy            = RetryOptions?.ToInternal(),
                 ScheduleToCloseTimeout = TemporalHelper.ToTemporal(this.ScheduleToCloseTimeout),
                 ScheduleToStartTimeout = TemporalHelper.ToTemporal(this.ScheduleToStartTimeout),
                 StartToCloseTimeout    = TemporalHelper.ToTemporal(this.StartToCloseTimeout),
-                HeartbeatTimeout       = TemporalHelper.ToTemporal(this.HeartbeatTimeout),
+                TaskList               = this.TaskList,
                 WaitForCancellation    = WaitForCancellation,
-                RetryPolicy            = RetryOptions?.ToInternal()
             };
         }
 

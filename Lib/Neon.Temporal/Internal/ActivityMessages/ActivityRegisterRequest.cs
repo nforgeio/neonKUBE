@@ -50,15 +50,6 @@ namespace Neon.Temporal.Internal
             set => SetStringProperty(PropertyNames.Name, value);
         }
 
-        /// <summary>
-        /// Identifies the target namespace.
-        /// </summary>
-        public string Namespace
-        {
-            get => GetStringProperty(PropertyNames.Namespace);
-            set => SetStringProperty(PropertyNames.Namespace, value);
-        }
-
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -76,8 +67,8 @@ namespace Neon.Temporal.Internal
 
             var typedTarget = (ActivityRegisterRequest)target;
 
-            typedTarget.Name      = this.Name;
-            typedTarget.Namespace = this.Namespace;
+            typedTarget.Name     = this.Name;
+            typedTarget.WorkerId = this.WorkerId;
         }
     }
 }

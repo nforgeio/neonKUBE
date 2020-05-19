@@ -4,6 +4,7 @@
     using System;
     using System.Collections.Generic;
     using System.Net.Mail;
+    using System.Reflection;
     using System.Threading.Tasks;
 
     using Microsoft.Extensions.DependencyInjection;
@@ -75,18 +76,20 @@
 
             var settings = new TemporalSettings()
             {
-                DefaultNamespace = "my-namespace",
-                CreateNamespace  = true,
-                HostPort         = "localhost:7933"
+                Namespace       = "my-namespace",
+                CreateNamespace = true,
+                HostPort        = "localhost:7933"
             };
 
             using (var client = await TemporalClient.ConnectAsync(settings))
             {
-                // Register your workflow and activity implementations to let 
-                // Temporal know we're open for business.
+                // Create a worker and register the workflow and activity 
+                // implementations to let Temporal know we're open for business.
 
-                await client.RegisterAssemblyAsync(System.Reflection.Assembly.GetExecutingAssembly());
-                await client.StartWorkerAsync("my-tasks");
+                var worker = await client.NewWorkerAsync(new WorkerOptions() { TaskList = "my-tasks" });
+
+                await worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly());
+                await worker.StartAsync();
 
                 // Invoke the workflow.
 

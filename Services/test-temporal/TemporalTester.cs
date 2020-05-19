@@ -81,21 +81,21 @@ namespace TemporalService
 
             Log.LogInfo("Connecting to Temporal.");
 
-            settings.DefaultNamespace = @namespace;
+            settings.Namespace = @namespace;
 
             using (var client = await TemporalClient.ConnectAsync(settings))
             {
-                // Register the workflows.
+                // Create a worker and register the workflow and activity 
+                // implementations to let Temporal know we're open for business.
 
-                Log.LogInfo("Registering workflows.");
-                await client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly());
-
-                // Start the worker.
-
-                Log.LogInfo("Starting worker.");
-
-                using (var worker = client.StartWorkerAsync(taskList))
+                using (var worker = await client.NewWorkerAsync())
                 {
+                    Log.LogInfo("Registering workflows.");
+                    await worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly());
+
+                    Log.LogInfo("Starting worker.");
+                    await worker.StartAsync();
+
                     // Let KubeService know that we're running.
 
                     Log.LogInfo("Ready for work.");

@@ -34,8 +34,8 @@ namespace Neon.Cadence
     public class WorkflowMethodAttribute : Attribute
     {
         private string      name;
-        private int  	    executionStartToCloseTimeoutSeconds;
-        private int         decisionStartToCloseTimeoutSeconds;
+        private int  	    startToCloseTimeoutSeconds;
+        private int         decisionTaskTimeoutSeconds;
         private int         scheduleToStartTimeoutSeconds;
         private string      taskList;
         private string      domain;
@@ -110,40 +110,34 @@ namespace Neon.Cadence
         public bool IsFullName { get; set; } = false;
 
         /// <summary>
-        /// <para>
         /// Optionally specifies the maximum workflow execution time.
-        /// </para>
         /// </summary>
-        public int ExecutionStartToCloseTimeoutSeconds
+        public int StartToCloseTimeoutSeconds
         {
-            get => executionStartToCloseTimeoutSeconds;
-            set => executionStartToCloseTimeoutSeconds = Math.Max(value, 0);
+            get => startToCloseTimeoutSeconds;
+            set => startToCloseTimeoutSeconds = Math.Max(value, 0);
         }
 
         /// <summary>
-        /// <para>
         /// Optionally specifies the maximum execution time for an individual workflow decision
         /// task.  The maximum possible duration is <b>60 seconds</b>.
-        /// </para>
         /// </summary>
-        public int DecisionTaskStartToCloseTimeoutSeconds
+        public int DecisionTaskTimeoutSeconds
         {
-            get => decisionStartToCloseTimeoutSeconds;
+            get => decisionTaskTimeoutSeconds;
 
             set
             {
-                Covenant.Requires<ArgumentException>(value <= 60, nameof(value), $"[DecisionTaskStartToCloseTimeoutSeconds={value}] cannot exceed 60 seconds.");
+                Covenant.Requires<ArgumentException>(value <= 60, nameof(value), $"[{nameof(DecisionTaskTimeoutSeconds)}={value}] cannot exceed 60 seconds.");
 
-                decisionStartToCloseTimeoutSeconds = Math.Max(value, 0);
+                decisionTaskTimeoutSeconds = Math.Max(value, 0);
             }
         }
 
         /// <summary>
-        /// <para>
         /// Optionally specifies the maximum time a workflow can wait
         /// between being scheduled and being actually executed on a
         /// worker.
-        /// </para>
         /// </summary>
         public int ScheduleToStartTimeoutSeconds
         {
@@ -152,9 +146,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// <para>
         /// Optionally specifies the target Cadence task list.
-        /// </para>
         /// </summary>
         public string TaskList
         {
@@ -174,9 +166,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// <para>
         /// Optionally specifies the target Cadence domain.
-        /// </para>
         /// </summary>
         public string Domain
         {
@@ -196,9 +186,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// <para>
         /// Optionally specifies the workflow ID.
-        /// </para>
         /// </summary>
         public string WorkflowId
         {
@@ -218,10 +206,69 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// <para>
         /// Specifies the workflow ID reuse policy.
-        /// </para>
         /// </summary>
         public WorkflowIdReusePolicy WorkflowIdReusePolicy { get; set; } = WorkflowIdReusePolicy.UseDefault;
+
+        /// <summary>
+        /// Optionally specifies a recurring schedule for the workflow method.  This can be set to a string specifying
+        /// the minute, hour, day of month, month, and day of week scheduling parameters using the standard Linux
+        /// CRON format described here: <a href="https://en.wikipedia.org/wiki/Cron">https://en.wikipedia.org/wiki/Cron</a>
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Cadence accepts a CRON string formatted as a single line of text with 5 parameters separated by
+        /// spaces.  The parameters specified the minute, hour, day of month, month, and day of week values:
+        /// </para>
+        /// <code>
+        /// ┌───────────── minute (0 - 59)
+        /// │ ┌───────────── hour (0 - 23)
+        /// │ │ ┌───────────── day of the month (1 - 31)
+        /// │ │ │ ┌───────────── month (1 - 12)
+        /// │ │ │ │ ┌───────────── day of the week (0 - 6) (Sunday to Saturday)
+        /// │ │ │ │ │
+        /// │ │ │ │ │
+        /// * * * * * 
+        /// </code>
+        /// <para>
+        /// Each parameter may be set to one of:
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><b>*</b></term>
+        ///     <description>
+        ///     Matches any value.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>value</b></term>
+        ///     <description>
+        ///     Matches a specific integer value.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>value1-value2</b></term>
+        ///     <description>
+        ///     Matches a range of values to be matched (inclusive).
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>value1,value2,...</b></term>
+        ///     <description>
+        ///     Matches a list of values to be matched.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>value1/value2</b></term>
+        ///     <description>
+        ///     Matches values starting at <b>value1</b> and then those incremented by <b>value2</b>.
+        ///     </description>
+        /// </item>
+        /// </list>
+        /// <para>
+        /// You can use this handy CRON calculator to see how this works: <a href="https://crontab.guru">https://crontab.guru</a>
+        /// </para>
+        /// </remarks>
+        public string CronSchedule { get; set; } = null;
     }
 }

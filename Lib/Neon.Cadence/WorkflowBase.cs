@@ -151,7 +151,6 @@ namespace Neon.Cadence
         private static object                                           syncLock     = new object();
         private static INeonLogger                                      log          = LogManager.Default.GetLogger<WorkflowBase>();
         private static Dictionary<WorkflowInstanceKey, WorkflowBase>    idToWorkflow = new Dictionary<WorkflowInstanceKey, WorkflowBase>();
-        private static byte[]                                           emptyBytes   = new byte[0];
 
         // This dictionary is used to map workflow type names to the target workflow
         // registration.  Note that these mappings are scoped to specific cadence client
@@ -173,7 +172,7 @@ namespace Neon.Cadence
         private static Dictionary<string, WorkflowRegistration> nameToRegistration = new Dictionary<string, WorkflowRegistration>();
 
         /// <summary>
-        /// Holds ambient task state indicatring whether the current task executing
+        /// Holds ambient task state indicating whether the current task executing
         /// in the context of a workflow entry point, signal, or query.
         /// </summary>
         internal static AsyncLocal<WorkflowCallContext> CallContext { get; private set; } = new AsyncLocal<WorkflowCallContext>();
@@ -682,7 +681,7 @@ namespace Neon.Cadence
                 var workflowMethod   = registration.WorkflowMethod;
                 var resultType       = workflowMethod.ReturnType;
                 var args             = CadenceHelper.BytesToArgs(client.DataConverter, request.Args, registration.WorkflowMethodParameterTypes);
-                var serializedResult = emptyBytes;
+                var serializedResult = Array.Empty<byte>();
 
                 if (resultType.IsGenericType)
                 {
@@ -724,10 +723,10 @@ namespace Neon.Cadence
                     ContinueAsNewWorkflow                     = e.Workflow,
                     ContinueAsNewDomain                       = e.Domain,
                     ContinueAsNewTaskList                     = e.TaskList,
-                    ContinueAsNewExecutionStartToCloseTimeout = CadenceHelper.ToCadence(e.ExecutionStartToCloseTimeout),
+                    ContinueAsNewExecutionStartToCloseTimeout = CadenceHelper.ToCadence(e.StartToCloseTimeout),
                     ContinueAsNewScheduleToCloseTimeout       = CadenceHelper.ToCadence(e.ScheduleToCloseTimeout),
                     ContinueAsNewScheduleToStartTimeout       = CadenceHelper.ToCadence(e.ScheduleToStartTimeout),
-                    ContinueAsNewStartToCloseTimeout          = CadenceHelper.ToCadence(e.TaskStartToCloseTimeout),
+                    ContinueAsNewStartToCloseTimeout          = CadenceHelper.ToCadence(e.DecisionTaskTimeout),
                 };
             }
             catch (CadenceException e)
@@ -783,7 +782,7 @@ namespace Neon.Cadence
             // between checks.
             //
             // I originally tried using [MutableSideEffectAsync()] for the polling and using
-            // [Task.DelayAsync()] for the poll delay, but that didn't work because it
+            // [Task.Delay()] for the poll delay, but that didn't work because it
             // appears that Cadence doesn't process queries when MutableSideEffectAsync() 
             // is running (perhaps this doesn't count as a real decision task).
             //
@@ -1152,7 +1151,7 @@ namespace Neon.Cadence
                         var resultType           = method.ReturnType;
                         var methodParameterTypes = method.GetParameterTypes();
 
-                        var serializedResult = emptyBytes;
+                        var serializedResult = Array.Empty<byte>();
 
                         if (resultType.IsGenericType)
                         {

@@ -33,7 +33,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Allows starting a workflow with the same ID as another workflow when
         /// that workflow is not running and the last execution close state 
-        /// is in [terminated, cancelled, timeouted, failed].
+        /// is in [terminated, cancelled, timeout, failed].
         /// </summary>
         AllowDuplicateFailedOnly = 0,
 

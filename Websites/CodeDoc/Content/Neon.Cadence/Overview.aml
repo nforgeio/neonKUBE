@@ -207,7 +207,7 @@
         </definitionTable>
         <mediaLink>
           <caption></caption>
-          <image xlink:href="overview-components"/>
+          <image xlink:href="cadence-overview-components"/>
         </mediaLink>
         <para>
           The diagram above depicts how these components fit together.  The two <legacyBold>RED</legacyBold>

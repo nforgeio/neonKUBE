@@ -129,7 +129,7 @@
             <para>Ensuring that the workflow is idempotent such that steps that have already been completed won't be reexecuted due to workflow service failures.</para>
           </listItem>
           <listItem>
-            <para>Load balancing work across multiple registered workflow service instances.</para>
+            <para>Load balancing work across multiple registered worker instances.</para>
           </listItem>
           <listItem>
             <para>Recording the history of the workflow execution along with the final result.</para>

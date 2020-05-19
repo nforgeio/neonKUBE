@@ -2247,7 +2247,7 @@ namespace TestCadence
 
             var options = new WorkflowOptions()
             {
-                DecisionTaskStartToCloseTimeout = TimeSpan.FromSeconds(5)
+                DecisionTaskTimeout = TimeSpan.FromSeconds(5)
             };
 
             var stub = client.NewWorkflowStub<IWorkflowFail>(options);
@@ -2289,7 +2289,7 @@ namespace TestCadence
 
             var options = new WorkflowOptions()
             {
-                ScheduleToCloseTimeout = TimeSpan.FromSeconds(5)
+                StartToCloseTimeout = TimeSpan.FromSeconds(5)
             };
 
             var stub = client.NewWorkflowStub<IWorkflowUnregistered>(options);
@@ -4293,7 +4293,7 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IWorkflowTimeout>(
                 new WorkflowOptions()
                 {
-                    ScheduleToCloseTimeout = timeout
+                    StartToCloseTimeout = timeout
                 });
 
             await Assert.ThrowsAsync<StartToCloseTimeoutException>(async () => await stub.SleepAsync(sleepTime));
@@ -4381,7 +4381,7 @@ namespace TestCadence
 
             // testCadenceImage = "nkubedev/test-cadence:cadence-latest";
 
-            NeonHelper.Execute("docker",
+            NeonHelper.Execute("docker.exe",
                 new object[]
                 {
                     "rm", "--force", "test-cadence"
@@ -4389,7 +4389,7 @@ namespace TestCadence
 
             // Make sure we have the latest image first.
 
-            var exitCode = NeonHelper.Execute("docker",
+            var exitCode = NeonHelper.Execute("docker.exe",
                 new object[]
                 {
                     "pull",
@@ -4403,7 +4403,7 @@ namespace TestCadence
 
             // Start the test workflow service.
 
-            exitCode = NeonHelper.Execute("docker",
+            exitCode = NeonHelper.Execute("docker.exe",
                 new object[]
                 {
                     "run",
@@ -4452,7 +4452,7 @@ namespace TestCadence
             {
                 // Kill the [test-cadence] container.
 
-                exitCode = NeonHelper.Execute("docker",
+                exitCode = NeonHelper.Execute("docker.exe",
                     new object[]
                     {
                         "rm", "--force", "test-cadence",

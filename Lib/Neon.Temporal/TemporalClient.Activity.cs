@@ -36,107 +36,33 @@ namespace Neon.Temporal
         // Temporal activity related operations.
 
         /// <summary>
-        /// Registers an activity implementation with Temporal.
+        /// Raised when a normal (non-local) is executed.  This is used internally
+        /// for unit tests that verify that activity options are configured correctly. 
         /// </summary>
-        /// <typeparam name="TActivity">The <see cref="ActivityBase"/> derived class implementing the activity.</typeparam>
-        /// <param name="activityTypeName">
-        /// Optionally specifies a custom activity type name that will be used 
-        /// for identifying the activity implementation in Temporal.  This defaults
-        /// to the fully qualified <typeparamref name="TActivity"/> type name.
-        /// </param>
-        /// <param name="namespace">Optionally overrides the default client namespace.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if a different activity class has already been registered for <paramref name="activityTypeName"/>.</exception>
-        /// <exception cref="ActivityWorkerStartedException">
-        /// Thrown if an activity worker has already been started for the client.  You must
-        /// register activity implementations before starting workers.
-        /// </exception>
-        /// <remarks>
-        /// <note>
-        /// Be sure to register all services you will be injecting into activities via
-        /// <see cref="NeonHelper.ServiceContainer"/> before you call this as well as 
-        /// registering of your activity implementations before starting workers.
-        /// </note>
-        /// </remarks>
-        public async Task RegisterActivityAsync<TActivity>(string activityTypeName = null, string @namespace = null)
-            where TActivity : ActivityBase
+        internal event EventHandler<ActivityOptions> ActivityExecuteEvent;
+
+        /// <summary>
+        /// Raised when a local is executed.  This is used internally for unit tests 
+        /// that verify that activity options are configured correctly. 
+        /// </summary>
+        internal event EventHandler<LocalActivityOptions> LocalActivityExecuteEvent;
+
+        /// <summary>
+        /// Raises the <see cref="ActivityExecuteEvent"/>.
+        /// </summary>
+        /// <param name="options">The activity options.</param>
+        internal void RaiseActivityExecuteEvent(ActivityOptions options)
         {
-            await SyncContext.ClearAsync;
-            TemporalHelper.ValidateActivityImplementation(typeof(TActivity));
-            TemporalHelper.ValidateActivityTypeName(activityTypeName);
-            EnsureNotDisposed();
-
-            if (activityWorkerStarted)
-            {
-                throw new ActivityWorkerStartedException();
-            }
-
-            var activityType = typeof(TActivity);
-
-            if (string.IsNullOrEmpty(activityTypeName))
-            {
-                activityTypeName = TemporalHelper.GetActivityTypeName(activityType, activityType.GetCustomAttribute<ActivityAttribute>());
-            }
-
-            await ActivityBase.RegisterAsync(this, activityType, activityTypeName, ResolveNamespace(@namespace));
-
-            lock (registeredActivityTypes)
-            {
-                registeredActivityTypes.Add(TemporalHelper.GetActivityInterface(typeof(TActivity)));
-            }
+            ActivityExecuteEvent?.Invoke(this, options);
         }
 
         /// <summary>
-        /// Scans the assembly passed looking for activity implementations derived from
-        /// <see cref="ActivityBase"/> and tagged by <see cref="ActivityAttribute"/> and
-        /// registers them with Temporal.
+        /// Raises the <see cref="LocalActivityExecuteEvent"/>.
         /// </summary>
-        /// <param name="assembly">The target assembly.</param>
-        /// <param name="namespace">Optionally overrides the default client namespace.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="TypeLoadException">
-        /// Thrown for types tagged by <see cref="ActivityAttribute"/> that are not 
-        /// derived from <see cref="ActivityBase"/>.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
-        /// <exception cref="ActivityWorkerStartedException">
-        /// Thrown if an activity worker has already been started for the client.  You must
-        /// register activity implementations before starting workers.
-        /// </exception>
-        /// <remarks>
-        /// <note>
-        /// Be sure to register all services you will be injecting into activities via
-        /// <see cref="NeonHelper.ServiceContainer"/> before you call this as well as 
-        /// registering of your activity implementations before starting workers.
-        /// </note>
-        /// </remarks>
-        public async Task RegisterAssemblyActivitiesAsync(Assembly assembly, string @namespace = null)
+        /// <param name="options">The activity options.</param>
+        internal void RaiseLocalActivityExecuteEvent(LocalActivityOptions options)
         {
-            await SyncContext.ClearAsync;
-            Covenant.Requires<ArgumentNullException>(assembly != null, nameof(assembly));
-            EnsureNotDisposed();
-
-            if (activityWorkerStarted)
-            {
-                throw new ActivityWorkerStartedException();
-            }
-
-            foreach (var type in assembly.GetTypes().Where(t => t.IsClass))
-            {
-                var activityAttribute = type.GetCustomAttribute<ActivityAttribute>();
-
-                if (activityAttribute != null && activityAttribute.AutoRegister)
-                {
-                    var activityTypeName = TemporalHelper.GetActivityTypeName(type, activityAttribute);
-
-                    await ActivityBase.RegisterAsync(this, type, activityTypeName, ResolveNamespace(@namespace));
-
-                    lock (registeredActivityTypes)
-                    {
-                        registeredActivityTypes.Add(TemporalHelper.GetActivityInterface(type));
-                    }
-                }
-            }
+            LocalActivityExecuteEvent?.Invoke(this, options);
         }
 
         /// <summary>

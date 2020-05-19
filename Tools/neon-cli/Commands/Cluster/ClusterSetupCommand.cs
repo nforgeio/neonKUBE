@@ -1229,12 +1229,12 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                         // Note that we're assuming that there's only one of each in the config
                         // we downloaded from the cluster.
 
-                        var newCluster = newConfig.Clusters.Single();
-                        var newContext = newConfig.Contexts.Single();
-                        var newUser = newConfig.Users.Single();
+                        var newCluster      = newConfig.Clusters.Single();
+                        var newContext      = newConfig.Contexts.Single();
+                        var newUser         = newConfig.Users.Single();
                         var existingCluster = existingConfig.GetCluster(newCluster.Name);
                         var existingContext = existingConfig.GetContext(newContext.Name);
-                        var existingUser = existingConfig.GetUser(newUser.Name);
+                        var existingUser    = existingConfig.GetUser(newUser.Name);
 
                         if (existingConfig != null)
                         {

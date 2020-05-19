@@ -60,7 +60,7 @@
         </para>
         <mediaLink>
           <caption></caption>
-          <image xlink:href="deployment-simple"/>
+          <image xlink:href="temporal-deployment-simple"/>
         </mediaLink>
         <para>
           Temporal can be scaled horizontally by adding more Cassandra, Temporal, and Workflow Service machines.
@@ -71,7 +71,7 @@
         </para>
         <mediaLink>
           <caption></caption>
-          <image xlink:href="deployment-scaled"/>
+          <image xlink:href="temporal-deployment-scaled"/>
         </mediaLink>
         <para>
           Temporal supports multi-tenancy by allowing workflow and activity implementations to isolated
@@ -82,7 +82,7 @@
         </para>
         <mediaLink>
           <caption></caption>
-          <image xlink:href="deployment-multi-tenant"/>
+          <image xlink:href="temporal-deployment-multi-tenant"/>
         </mediaLink>
         <para>
           The diagram above depicts three Temporal namespaces, each with its own set of worker services 

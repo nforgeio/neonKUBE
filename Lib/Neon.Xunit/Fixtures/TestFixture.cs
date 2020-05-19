@@ -88,7 +88,7 @@ namespace Neon.Xunit
                         // We see this for some assemblies like the test runner itself.
                         // We're going to ignore these.
 
-                        assemblyTypes = new Type[0];
+                        assemblyTypes = Array.Empty<Type>();
                     }
 
                     foreach (var type in assemblyTypes)
@@ -151,6 +151,7 @@ namespace Neon.Xunit
             this.IsDisposed = false;
             this.InAction   = false;
             this.IsRunning  = false;
+            this.State      = new Dictionary<string, object>();
         }
 
         /// <summary>
@@ -277,6 +278,7 @@ namespace Neon.Xunit
         /// <inheritdoc/>
         public virtual void Reset()
         {
+            State.Clear();
         }
 
         /// <summary>
@@ -293,5 +295,8 @@ namespace Neon.Xunit
         public virtual void OnRestart()
         {
         }
+
+        /// <inheritdoc/>
+        public IDictionary<string, object> State { get; private set; }
     }
 }

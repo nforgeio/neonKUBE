@@ -52,15 +52,6 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// The namespace hosting the Temporal workflow.
-        /// </summary>
-        public string Namespace
-        {
-            get => GetStringProperty(PropertyNames.Namespace);
-            set => SetStringProperty(PropertyNames.Namespace, value);
-        }
-
-        /// <summary>
         /// Identifies the task list for the source workflows and activities.
         /// </summary>
         public string TaskList
@@ -96,7 +87,6 @@ namespace Neon.Temporal.Internal
             var typedTarget = (NewWorkerRequest)target;
 
             typedTarget.Name     = this.Name;
-            typedTarget.Namespace   = this.Namespace;
             typedTarget.TaskList = this.TaskList;
             typedTarget.Options  = this.Options;
         }

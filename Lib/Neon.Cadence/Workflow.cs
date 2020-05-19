@@ -476,10 +476,10 @@ namespace Neon.Cadence
                 domain:                     options.Domain ?? WorkflowInfo.Domain,
                 taskList:                   options.TaskList ?? WorkflowInfo.TaskList,
                 workflow:                   options.Workflow ?? WorkflowInfo.WorkflowType,
-                executionToStartTimeout:    options.ExecutionStartToCloseTimeout,
+                startToCloseTimeout:    options.ExecutionStartToCloseTimeout,
                 scheduleToCloseTimeout:     options.ScheduleToCloseTimeout,
                 scheduleToStartTimeout:     options.ScheduleToStartTimeout,
-                taskStartToCloseTimeout:    options.TaskStartToCloseTimeout,
+                decisionTaskTimeout:    options.TaskStartToCloseTimeout,
                 retryOptions:               options.RetryOptions);
         }
 
@@ -1528,7 +1528,7 @@ namespace Neon.Cadence
         ///     Local activity types do not need to be registered with the worker.
         ///     </item>
         ///     <item>
-        ///     Local activities must complete within the <see cref="WorkflowOptions.DecisionTaskStartToCloseTimeout"/>.
+        ///     Local activities must complete within the <see cref="WorkflowOptions.DecisionTaskTimeout"/>.
         ///     This defaults to 10 seconds and can be set to a maximum of 60 seconds.
         ///     </item>
         ///     <item>
@@ -2303,6 +2303,8 @@ namespace Neon.Cadence
 
             options = ActivityOptions.Normalize(Client, options);
 
+            Client.RaiseActivityExecuteEvent(options);
+
             var reply = await ExecuteNonParallel(
                 async () => (ActivityExecuteReply)await Client.CallProxyAsync(
                     new ActivityExecuteRequest()
@@ -2384,7 +2386,9 @@ namespace Neon.Cadence
             var activityActionId = RegisterActivityAction(activityType, activityConstructor, activityMethod);
 
             options = LocalActivityOptions.Normalize(this.Client, options);
-            
+
+            Client.RaiseLocalActivityExecuteEvent(options);
+
             var reply = await ExecuteNonParallel(
                 async () =>
                 {

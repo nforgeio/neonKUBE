@@ -39,9 +39,9 @@ namespace MyTests
         {
             var settings = new TemporalSettings()
             {
-                DefaultNamespace = "test-domain",
-                LogLevel         = LogLevel.Info,
-                CreateNamespace  = true            // <-- this ensures that the default namespace exists
+                Namespace       = "test-domain",
+                ProxyLogLevel   = LogLevel.Info,
+                CreateNamespace = true          // <-- this ensures that the default namespace exists
             };
 
             // This starts/restarts the [nforgeio/temporal-dev] container for the first test
@@ -58,16 +58,18 @@ namespace MyTests
             // You can pass [keepOpen=false] to have the fixture remove the container after the
             // test run if you wish.
 
-            if (fixture.Start(settings, keepConnection: true, keepOpen: true) == TestFixtureStatus.Started)
+            if (fixture.Start(settings, reconnect: true, keepRunning: true) == TestFixtureStatus.Started)
             {
                 this.fixture = fixture;
                 this.client  = fixture.Client;
 
-                // Register the test workflow and activity implementations
-                // from this assembly and start the worker.
+                // Create a worker and register the workflow and activity 
+                // implementations to let Temporal know we're open for business.
 
-                client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
-                client.StartWorkerAsync("test-tasks").Wait();
+                var worker = client.NewWorkerAsync(new WorkerOptions() { TaskList = "test-tasks" }).Result;
+
+                worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
+                worker.StartAsync().Wait();
             }
             else
             {

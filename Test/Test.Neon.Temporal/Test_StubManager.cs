@@ -55,11 +55,11 @@ namespace TestTemporal
             public DummyWorkflow()
             {
                 this.Workflow = new Workflow(
-                    parent:     new WorkflowBase(),
-                    client:             new TemporalClient(),
+                    parent:             new WorkflowBase(),
+                    worker:             new Worker(new TemporalClient(), 1, new WorkerOptions()),
                     contextId:          1,
                     workflowTypeName:   typeof(DummyWorkflow).FullName,
-                    @namespace:             "my-namespace",
+                    @namespace:         "my-namespace",
                     taskList:           "my-tasklist",
                     workflowId:         "my-workflow-id",
                     runId:              "my-run-id",
@@ -79,13 +79,13 @@ namespace TestTemporal
         {
             var settings = new TemporalSettings()
             {
-                DefaultNamespace = TemporalFixture.DefaultNamespace,
-                LogLevel         = TemporalTestHelper.LogLevel,
-                Debug            = TemporalTestHelper.Debug,
-                ClientIdentity   = TemporalTestHelper.ClientIdentity
+                Namespace      = TemporalFixture.Namespace,
+                ProxyLogLevel  = TemporalTestHelper.ProxyLogLevel,
+                Debug          = TemporalTestHelper.Debug,
+                ClientIdentity = TemporalTestHelper.ClientIdentity
             };
 
-            fixture.Start(settings, keepConnection: true);
+            fixture.Start(settings, reconnect: true);
 
             this.fixture     = fixture;
             this.client      = fixture.Client;

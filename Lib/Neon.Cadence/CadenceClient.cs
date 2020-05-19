@@ -212,7 +212,7 @@ namespace Neon.Cadence
     /// registers the <c>bar</c> activity, you're going run into trouble.
     /// </para>
     /// <para>
-    /// The problem is that Cadcence assumes that both workers implement the same workflows, both
+    /// The problem is that Cadence assumes that both workers implement the same workflows, both
     /// <b>foo</b> and <b>bar</b> in this case.  Say you start a <b>foo</b> workflow.  Cadence
     /// will select one of <b>worker-a</b> or <b>worker-b</b> to run the workflow.  If Cadence
     /// happens to select <b>worker-a</b> everything will work as expected because <b>foo</b>
@@ -679,7 +679,7 @@ namespace Neon.Cadence
 
                 if (resourceStream == null)
                 {
-                    throw new KeyNotFoundException($"Embedded resource [{resourcePath}] not found.  Cannot extract [cadency-proxy].");
+                    throw new KeyNotFoundException($"Embedded resource [{resourcePath}] not found.  Cannot extract [cadence-proxy].");
                 }
 
                 using (resourceStream)
@@ -768,7 +768,7 @@ namespace Neon.Cadence
 
                             if (resourceStream == null)
                             {
-                                throw new KeyNotFoundException($"Embedded resource [{resourcePath}] not found.  Cannot launch [cadency-proxy].");
+                                throw new KeyNotFoundException($"Embedded resource [{resourcePath}] not found.  Cannot launch [cadence-proxy].");
                             }
 
                             using (resourceStream)
@@ -893,7 +893,7 @@ namespace Neon.Cadence
 
             var client = new CadenceClient(settings);
 
-            // Initilize the [cadence-proxy].
+            // Initialize the [cadence-proxy].
 
             if (!settings.DebugDisableHandshakes)
             {

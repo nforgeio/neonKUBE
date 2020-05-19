@@ -48,8 +48,8 @@ namespace TestTemporal
         {
             var settings = new TemporalSettings()
             {
-                DefaultNamespace       = TemporalFixture.DefaultNamespace,
-                LogLevel               = TemporalTestHelper.LogLevel,
+                Namespace              = TemporalFixture.Namespace,
+                ProxyLogLevel          = TemporalTestHelper.ProxyLogLevel,
                 CreateNamespace        = true,
                 Debug                  = TemporalTestHelper.Debug,
                 DebugPrelaunched       = TemporalTestHelper.DebugPrelaunched,
@@ -59,7 +59,7 @@ namespace TestTemporal
 
             this.fixture = fixture;
 
-            fixture.Start(settings, image: TemporalTestHelper.TemporalImage, keepConnection: true, keepOpen: TemporalTestHelper.KeepTemporalServerOpen, noClient: true);
+            fixture.Start(settings, stackDefinition: TemporalTestHelper.TemporalStackDefinition, reconnect: true, keepRunning: TemporalTestHelper.KeepTemporalServerOpen, noClient: true);
         }
 
         public void Dispose()
@@ -90,21 +90,26 @@ namespace TestTemporal
         {
             await SyncContext.ClearAsync;
 
-            // Verify that default Temporal settings reject duplicate workflow IDs.
+            // Verify that default Temporal settings allow duplicate workflow IDs.
 
-            Assert.Equal(WorkflowIdReusePolicy.AllowDuplicateFailedOnly, fixture.Settings.WorkflowIdReusePolicy);
+            Assert.Equal(WorkflowIdReusePolicy.AllowDuplicate, fixture.Settings.WorkflowIdReusePolicy);
 
             using (var client = await TemporalClient.ConnectAsync(fixture.Settings))
             {
-                await client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly());
-                await client.StartWorkerAsync(TemporalTestHelper.TaskList);
+                // Create a worker and register the workflow and activity 
+                // implementations to let Temporal know we're open for business.
+
+                var worker = client.NewWorkerAsync().Result;
+
+                worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
+                worker.StartAsync().Wait();
+
+                // Do the first run; this should succeed.
 
                 var options = new WorkflowOptions()
                 {
                     WorkflowId = $"Workflow_ExternalIdNoReuse-{Guid.NewGuid().ToString("d")}"
                 };
-
-                // Do the first run; this should succeed.
 
                 var stub = client.NewWorkflowStub<IWorkflowIdReuse>(options);
 
@@ -135,15 +140,20 @@ namespace TestTemporal
 
             using (var client = await TemporalClient.ConnectAsync(settings))
             {
-                await client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly());
-                await client.StartWorkerAsync(TemporalTestHelper.TaskList);
+                // Create a worker and register the workflow and activity 
+                // implementations to let Temporal know we're open for business.
+
+                var worker = client.NewWorkerAsync().Result;
+
+                worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
+                worker.StartAsync().Wait();
+
+                // Do the first run.
 
                 var options = new WorkflowOptions()
                 {
                     WorkflowId = $"Workflow_ExternalIdReuseViaOptions-{Guid.NewGuid().ToString("d")}"
                 };
-
-                // Do the first run.
 
                 var stub = client.NewWorkflowStub<IWorkflowIdReuse>(options);
 

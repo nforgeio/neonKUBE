@@ -267,7 +267,7 @@ namespace Neon.Temporal.Internal
                         }
                         else if (length == 0)
                         {
-                            message.Attachments.Add(new byte[0]);
+                            message.Attachments.Add(Array.Empty<byte>());
                         }
                         else
                         {
@@ -927,6 +927,15 @@ namespace Neon.Temporal.Internal
         {
             get => GetLongProperty(PropertyNames.ClientId);
             set => SetLongProperty(PropertyNames.ClientId, value);
+        }
+
+        /// <summary>
+        /// Optionally identifies a client specific worker.
+        /// </summary>
+        public long WorkerId
+        {
+            get => GetLongProperty(PropertyNames.WorkerId);
+            set => SetLongProperty(PropertyNames.WorkerId, value);
         }
     }
 }

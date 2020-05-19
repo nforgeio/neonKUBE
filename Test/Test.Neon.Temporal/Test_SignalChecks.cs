@@ -55,8 +55,8 @@ namespace TestTemporal
         {
             var settings = new TemporalSettings()
             {
-                DefaultNamespace       = TemporalFixture.DefaultNamespace,
-                LogLevel               = TemporalTestHelper.LogLevel,
+                Namespace              = TemporalFixture.Namespace,
+                ProxyLogLevel          = TemporalTestHelper.ProxyLogLevel,
                 CreateNamespace        = true,
                 Debug                  = TemporalTestHelper.Debug,
                 DebugPrelaunched       = TemporalTestHelper.DebugPrelaunched,
@@ -64,7 +64,7 @@ namespace TestTemporal
                 ClientIdentity         = TemporalTestHelper.ClientIdentity
             };
 
-            if (fixture.Start(settings, image: TemporalTestHelper.TemporalImage, keepConnection: true, keepOpen: TemporalTestHelper.KeepTemporalServerOpen) == TestFixtureStatus.Started)
+            if (fixture.Start(settings, stackDefinition: TemporalTestHelper.TemporalStackDefinition, reconnect: true, keepRunning: TemporalTestHelper.KeepTemporalServerOpen) == TestFixtureStatus.Started)
             {
                 this.fixture     = fixture;
                 this.client      = fixture.Client;
@@ -120,7 +120,9 @@ namespace TestTemporal
             // Verify that async signals must return a Task.  [ISyncSignalNotTask]
             // defines its signal as returning a string.  Registration should fail.
 
-            await Assert.ThrowsAsync<WorkflowTypeException>(async () => await client.RegisterWorkflowAsync<SyncSignalString>());
+            var worker = await client.NewWorkerAsync();
+
+            await Assert.ThrowsAsync<WorkflowTypeException>(async () => await worker.RegisterWorkflowAsync<SyncSignalString>());
 
             // Verify that we're not allowd to create a workflow stub either.
 
@@ -159,7 +161,9 @@ namespace TestTemporal
             // Verify that async signals must return a Task.  [ISyncSignalNotTask]
             // defines its signal as returning void.  Registration should fail.
 
-            await Assert.ThrowsAsync<WorkflowTypeException>(async () => await client.RegisterWorkflowAsync<SyncSignalVoid>());
+            var worker = await client.NewWorkerAsync();
+
+            await Assert.ThrowsAsync<WorkflowTypeException>(async () => await worker.RegisterWorkflowAsync<SyncSignalVoid>());
 
             // Verify that we're not allowd to create a workflow stub either.
 
@@ -199,7 +203,9 @@ namespace TestTemporal
             // Verify that synchronous signals must return a Task.  [IAsyncSignalNotTask]
             // defines its signal as returning a string.  Registration should fail.
 
-            await Assert.ThrowsAsync<WorkflowTypeException>(async () => await client.RegisterWorkflowAsync<AsyncSignalString>());
+            var worker = await client.NewWorkerAsync();
+
+            await Assert.ThrowsAsync<WorkflowTypeException>(async () => await worker.RegisterWorkflowAsync<AsyncSignalString>());
 
             // Verify that we're not allowd to create a workflow stub either.
 
@@ -238,7 +244,9 @@ namespace TestTemporal
             // Verify that synchronous signals must return a Task.  [IAsyncSignalNotTask]
             // defines its signal as returning a string.  Registration should fail.
 
-            await Assert.ThrowsAsync<WorkflowTypeException>(async () => await client.RegisterWorkflowAsync<AsyncSignalVoid>());
+            var worker = await client.NewWorkerAsync();
+
+            await Assert.ThrowsAsync<WorkflowTypeException>(async () => await worker.RegisterWorkflowAsync<AsyncSignalVoid>());
 
             // Verify that we're not allowd to create a workflow stub either.
 

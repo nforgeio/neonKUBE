@@ -40,7 +40,7 @@ namespace Neon.Temporal.Internal
         public string TaskList { get; set; }
 
         /// <summary>
-        /// ScheduleToCloseTimeout - The end to end time out for the activity needed.
+        /// ScheduleToCloseTimeout - The end to end timeout for the activity needed.
         /// The zero value of this uses default value.
         /// Optional: The default value is the sum of ScheduleToStartTimeout and StartToCloseTimeout
         /// </summary>
@@ -49,7 +49,7 @@ namespace Neon.Temporal.Internal
         public long ScheduleToCloseTimeout { get; set; }
 
         /// <summary>
-        /// ScheduleToStartTimeout - The queue time out before the activity starts executed.
+        /// ScheduleToStartTimeout - The queue timeout before the activity starts executed.
         /// Mandatory: No default.
         /// </summary>
         [JsonProperty(PropertyName = "ScheduleToStartTimeout", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -57,7 +57,7 @@ namespace Neon.Temporal.Internal
         public long ScheduleToStartTimeout { get; set; }
 
         /// <summary>
-        /// StartToCloseTimeout - The time out from the start of execution to end of it.
+        /// StartToCloseTimeout - The timeout from the start of execution to end of it.
         /// Mandatory: No default.
         /// </summary>
         [JsonProperty(PropertyName = "StartToCloseTimeout", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

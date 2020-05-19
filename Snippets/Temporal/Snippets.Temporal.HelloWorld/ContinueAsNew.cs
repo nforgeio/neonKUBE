@@ -38,24 +38,29 @@ namespace HelloWorld_ContinueAsNew_1
         {
             // Pretend that we're getting this from a database.
 
-            return new CustomerInfo()
-            {
-                Id                   = id,
-                Email                = "jeff@my-company.com",
-                SignupTimeUtc        = new DateTime(2019, 11, 18, 11, 4,0 , DateTimeKind.Utc),
-                WelcomeSent          = false,
-                LastMarketingPingUtc = null
-            };
+            return await Task.FromResult(
+                new CustomerInfo()
+                {
+                    Id                   = id,
+                    Email                = "jeff@my-company.com",
+                    SignupTimeUtc        = new DateTime(2019, 11, 18, 11, 4,0 , DateTimeKind.Utc),
+                    WelcomeSent          = false,
+                    LastMarketingPingUtc = null
+                });
         }
 
         public async Task UpdateCustomerInfo(CustomerInfo customer)
         {
             // Pretend that we're persisting the customer to a database.
+
+            await Task.CompletedTask;
         }
 
         public async Task SendEmail(string email, string message)
         {
             // Pretend that we're sending an email here.
+
+            await Task.CompletedTask;
         }
     }
 
@@ -130,24 +135,29 @@ namespace HelloWorld_ContinueAsNew_2
         {
             // Pretend that we're getting this from a database.
 
-            return new CustomerInfo()
-            {
-                Id                   = id,
-                Email                = "jeff@my-company.com",
-                SignupTimeUtc        = new DateTime(2019, 11, 18, 11, 4, 0, DateTimeKind.Utc),
-                WelcomeSent          = false,
-                LastMarketingPingUtc = null
-            };
+            return await Task.FromResult(
+                new CustomerInfo()
+                {
+                    Id                   = id,
+                    Email                = "jeff@my-company.com",
+                    SignupTimeUtc        = new DateTime(2019, 11, 18, 11, 4, 0, DateTimeKind.Utc),
+                    WelcomeSent          = false,
+                    LastMarketingPingUtc = null
+                });
         }
 
         public async Task UpdateCustomerInfo(CustomerInfo customer)
         {
             // Pretend that we're persisting the customer to a database.
+
+            await Task.CompletedTask;
         }
 
         public async Task SendEmail(string email, string message)
         {
             // Pretend that we're sending an email here.
+
+            await Task.CompletedTask;
         }
     }
 

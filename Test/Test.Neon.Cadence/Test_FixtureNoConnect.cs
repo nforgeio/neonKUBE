@@ -64,7 +64,7 @@ namespace TestCadence
                 ClientIdentity         = CadenceTestHelper.ClientIdentity
             };
 
-            if (fixture.Start(settings, image: CadenceTestHelper.CadenceImage, keepConnection: true, keepOpen: CadenceTestHelper.KeepCadenceServerOpen, noClient: true) == TestFixtureStatus.Started)
+            if (fixture.Start(settings, image: CadenceTestHelper.CadenceImage, reconnect: true, keepRunning: CadenceTestHelper.KeepCadenceServerOpen, noClient: true) == TestFixtureStatus.Started)
             {
                 this.fixture = fixture;
                 this.client  = fixture.Client = CadenceClient.ConnectAsync(fixture.Settings).Result;

@@ -136,7 +136,7 @@ namespace Neon.Cadence
         public async Task<Worker> StartWorkerAsync(string taskList, WorkerOptions options = null, string domain = null)
         {
             await SyncContext.ClearAsync;
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList), nameof(taskList), "Workers must be started with a non-empty workflow.");
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList), nameof(taskList), "Workers must be started with a non-empty task list.");
             EnsureNotDisposed();
 
             options  = options ?? new WorkerOptions();
@@ -184,7 +184,7 @@ namespace Neon.Cadence
                     var reply = (NewWorkerReply)(await CallProxyAsync(
                         new NewWorkerRequest()
                         {
-                            Domain   = ResolveDomain(domain),
+                            Domain   = domain,
                             TaskList = taskList,
                             Options  = options.ToInternal()
                         }));

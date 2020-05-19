@@ -17,30 +17,43 @@
         </para>
         <table>
           <row>
-            <entry><para><codeEntityReference qualifyHint="false">P:Neon.Temporal.WorkflowOptions.ScheduleToCloseTimeout</codeEntityReference></para></entry>
             <entry>
               <para>
-                This limits the total amount of time the workflow may run from the time it is scheduled with Temporal
-                until it completes.  This defaults to 24 hours for the .NET client.
+                <codeEntityReference qualifyHint="false">P:Neon.Temporal.WorkflowOptions.ScheduleToStartTimeout</codeEntityReference>
               </para>
             </entry>
-          </row>
-          <row>
-            <entry><para><codeEntityReference qualifyHint="false">P:Neon.Temporal.WorkflowOptions.ScheduleToStartTimeout</codeEntityReference></para></entry>
             <entry>
               <para>
-                This limits the time a workflow can wait to be assigned for execution on a workflow service instance.  This can
+                This limits the time a workflow can wait to be assigned for execution on a worker instance.  This can
                 be used as a way to abort workflows that must execute within a period of time.  This defaults to 24 hours for
                 the .NET Temporal client.
               </para>
             </entry>
           </row>
           <row>
-            <entry><para><codeEntityReference qualifyHint="false">P:Neon.Temporal.WorkflowOptions.TaskStartToCloseTimeout</codeEntityReference></para></entry>
             <entry>
               <para>
-                This is the decision task time out.  This limits the time a workflow may take to execute any
-                decision logic.  This defaults to 10 seconds and may be increased to a maximum of 60 seconds. 
+                <codeEntityReference qualifyHint="false">P:Neon.Temporal.WorkflowOptions.StartToCloseTimeout</codeEntityReference>
+              </para>
+            </entry>
+            <entry>
+              <para>
+                This limits the time a workflow can execute on a worker instance.  This can be used as a way to
+                abort workflows that must execute within a period of time.  This defaults to 24 hours for
+                the .NET Temporal client.
+              </para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>
+                <codeEntityReference qualifyHint="false">P:Neon.Temporal.WorkflowOptions.DecisionTaskTimeout</codeEntityReference>
+              </para>
+            </entry>
+            <entry>
+              <para>
+                This is the decision task timeout.  This limits the time a workflow may take to execute any
+                decision logic.  This defaults to 10 seconds and may be increased to a maximum of 60 seconds.
               </para>
             </entry>
           </row>

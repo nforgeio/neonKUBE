@@ -99,21 +99,41 @@ namespace Neon.Temporal
     /// by defaut, but you can customize this if desired.
     /// </para>
     /// <para>
-    /// Temporal supports the concept of namespaces and task lists.  These are
-    /// used to organize workflows and activities.  Workflows and activities essentially 
-    /// reside in a registered namespace, which is essentially just a namespace specified by
-    /// a string.  The combination of a namespace along with a workflow or activity type name
-    /// must be unique within a Temporal cluster.  Once you have a connected <see cref="TemporalClient"/>,
-    /// you can create and manage Temporal namespaces via methods like <see cref="RegisterNamespaceAsync(string, string, string, int, bool)"/>,
+    /// Temporal supports the concept of <b>namespaces</b> and task lists.  Temporal is multi-tenant and
+    /// namespaces are simply string names used to isolate deployments.  For example, you could
+    /// define a <b>PROD</b> namespace for your production workflows and <b>STAGE</b> for preproduction.
+    /// It's also often useful to organize namespaces by the teams implementing and managing their
+    /// workflows.  Each <see cref="TemporalClient"/> is assigned to a default namespace via
+    /// <see cref="TemporalSettings.Namespace"/> and this defaults to <b>"default"</b> unless you
+    /// specify something different when connecting the client.
+    /// </para>
+    /// <note>
+    /// You can override the default client namespace for specific operations via <see cref="WorkerOptions"/>,
+    /// <see cref="WorkflowOptions"/>, <see cref="ChildWorkflowOptions"/>, <see cref="ActivityOptions"/> as
+    /// well as via the <see cref="WorkflowInterfaceAttribute"/>, <see cref="WorkflowMethodAttribute"/>,
+    /// <see cref="ActivityInterfaceAttribute"/> and <see cref="ActivityMethodAttribute"/> attributes
+    /// decorating your workflow and activity interface definitions.
+    /// </note>
+    /// <para>
+    /// Once you have a connected <see cref="TemporalClient"/>, you can create and manage Temporal namespaces
+    /// via methods like <see cref="RegisterNamespaceAsync(string, string, string, int, bool)"/>,
     /// <see cref="DescribeNamespaceAsync(string)"/>, and <see cref="UpdateNamespaceAsync(string, UpdateNamespaceRequest)"/>.
-    /// Domains can be used provide isolated areas for different teams and/or different environments
-    /// (e.g. production, staging, and test).  We discuss task lists in detail further below.
     /// </para>
     /// <para>
-    /// Temporal workers are started to indicate that the current process can execute workflows
-    /// and activities from a Temporal namespace, and optionally a task list (discussed further below).
-    /// You'll call <see cref="StartWorkerAsync(string, WorkerOptions, string)"/> to indicate
-    /// that Temporal can begin scheduling workflow and activity executions from the current client.
+    /// Workflows and activities are implemented by creating a <see cref="Worker"/> via <see cref="NewWorkerAsync(WorkerOptions)"/>,
+    /// registering your workflow and activity implementations with the worker and then starting
+    /// the worker via <see cref="Worker.StartAsync"/>.  Temporal will begin scheduling pending
+    /// workflows and activities on workers after they've been started.
+    /// </para>
+    /// <para>
+    /// The <see cref="Worker"/> class provides methods for registering individual workflow and
+    /// activity implementations, including <see cref="Worker.RegisterWorkflowAsync{TWorkflow}(string, string)"/> 
+    /// and <see cref="Worker.RegisterActivityAsync{TActivity}(string, string)"/> as well as methods
+    /// that register all workflow and activity implementation discovered in an assembly:
+    /// <see cref="Worker.RegisterAssemblyActivitiesAsync(Assembly, string)"/>,
+    /// <see cref="Worker.RegisterAssemblyWorkflowsAsync(Assembly, string)"/>, and
+    /// <see cref="Worker.RegisterAssemblyAsync(Assembly, string)"/> (which registers
+    /// both workflow and assembly implementations).
     /// </para>
     /// <para>
     /// Workflows are implemented by defining an interface describing the workflow methods
@@ -126,47 +146,6 @@ namespace Neon.Temporal
     /// Activities are implemented in the same way by defining an activity interface and then writing a class
     /// that implements this  interface. and inherits <see cref="ActivityBase"/>.  Your activity interface
     /// must define at least one entry point method.
-    /// </para>
-    /// <para>
-    /// After establishing a connection ot a Temporal cluster, you'll need to call 
-    /// <see cref="TemporalClient.RegisterWorkflowAsync{TWorkflowInterface}(string, string)"/> and/or
-    /// <see cref="TemporalClient.RegisterActivityAsync{TActivity}(string, string)"/> to register your
-    /// workflow and activity implementations with Temporal.  These calls combined with the
-    /// workers described above determine which workflows and activities may be scheduled
-    /// on the current client/process.
-    /// </para>
-    /// <para>
-    /// For situations where you have a lot of workflow and activity classes, it can become
-    /// cumbersome to register each implementation class individually (generally because you
-    /// forget to register new classes after they've been implemented).  To assist with this,
-    /// you can also tag your workflow and activity classes with <see cref="WorkflowAttribute"/>
-    /// or <see cref="ActivityAttribute"/> with <see cref="WorkflowAttribute.AutoRegister"/>
-    /// or <see cref="ActivityAttribute.AutoRegister"/> set to <c>true</c> and then call
-    /// <see cref="TemporalClient.RegisterAssemblyWorkflowsAsync(Assembly, string)"/> and/or
-    /// <see cref="TemporalClient.RegisterAssemblyActivitiesAsync(Assembly, string)"/> to scan an
-    /// assembly and automatically register the tagged implementation classes it finds.
-    /// </para>
-    /// <note>
-    /// <para>
-    /// The .NET client uses a simple huristic to try to ensure that the default workflow and activity
-    /// type names applied when the <see cref="WorkflowAttribute.Name"/> and <see cref="ActivityAttribute.Name"/>
-    /// properties are not set for the interface and implementation classes.  If the interface
-    /// name starts with an "I", the "I" will be stripped out before generating the fully qualified
-    /// type name.  This handles the common C# convention where interface names started with an "I"
-    /// and the implementing class uses the same name as the interface, but without the "I".
-    /// </para>
-    /// <para>
-    /// If this huristic doesn't work, you'll need to explicitly specify the same type name in
-    /// the <see cref="WorkflowAttribute"/> or <see cref="ActivityAttribute"/> tagging your 
-    /// interface and class definitions.
-    /// </para>
-    /// </note>
-    /// <para>
-    /// Next you'll need to start workflow and/or activity workers.  These indicate to Temporal that 
-    /// the current process implements specific workflow and activity types.  You'll call
-    /// <see cref="StartWorkerAsync(string, WorkerOptions, string)"/>.  You can customize the
-    /// Temporal namespace and task list the worker will listen on as well as whether activities,
-    /// workflows, or both are to be processed.
     /// </para>
     /// <para>
     /// You'll generally create stub classes to start and manage workflows and activities.
@@ -199,6 +178,11 @@ namespace Neon.Temporal
     /// is to tag your workflow and activity interfaces with <c>[WorkflowInterface(TaskList = "payments")]</c>
     /// and <c>[ActivityInterface(TaskList = "payments")]</c> attributes, specifying the target task list.
     /// </para>
+    /// <note>
+    /// You may specify a default task list when connecting a <see cref="TemporalClient"/> via
+    /// <see cref="TemporalSettings.DefaultTaskList"/> (which defaults to <c>null</c>).  This may
+    /// be convienent for simple deployments.
+    /// </note>
     /// <para>
     /// You may also specify a custom task list in the workflow and activity options used when
     /// executing a workflow or activity.  A task list specified in one of these options takes
@@ -206,18 +190,18 @@ namespace Neon.Temporal
     /// </para>
     /// <note>
     /// The .NET client will complain if a task list is not specified in either an interface
-    /// attribute or the options.
+    /// attribute via options and the there's no client default task list set.
     /// </note>
     /// <note>
     /// <para>
     /// <b>IMPORTANT:</b> You need to take care to ensure that the task lists you use for your
-    /// workers uniquely identify the set of workflows and activities registered for the workers.
+    /// workers uniquely identify the set of workflows and activities implemented by your the workers.
     /// For example, if you start two workers, <b>worker-a</b> and <b>worker-b</b> using the same
     /// task list, but <b>worker-a</b> registers the <b>foo</b> workflow and <b>worker-b</b>
     /// registers the <c>bar</c> activity, you're going run into trouble.
     /// </para>
     /// <para>
-    /// The problem is that Cadcence assumes that both workers implement the same workflows, both
+    /// The problem is that Cadence assumes that both workers implement the same workflows, both
     /// <b>foo</b> and <b>bar</b> in this case.  Say you start a <b>foo</b> workflow.  Temporal
     /// will select one of <b>worker-a</b> or <b>worker-b</b> to run the workflow.  If Temporal
     /// happens to select <b>worker-a</b> everything will work as expected because <b>foo</b>
@@ -596,7 +580,7 @@ namespace Neon.Temporal
         private static readonly INeonLogger             log           = LogManager.Default.GetLogger<TemporalClient>();
         private static bool                             proxyWritten  = false;
         private static long                             nextClientId  = 0;
-        private static Dictionary<long, TemporalClient>  idToClient    = new Dictionary<long, TemporalClient>();
+        private static Dictionary<long, TemporalClient> idToClient    = new Dictionary<long, TemporalClient>();
         private static long                             nextRequestId = 0;
         private static Dictionary<long, Operation>      operations    = new Dictionary<long, Operation>();
         private static INeonLogger                      temporalLogger;
@@ -604,7 +588,7 @@ namespace Neon.Temporal
 
         /// <summary>
         /// Resets <see cref="TemporalClient"/> to its initial state, by closing
-        /// and existing connections and clearing any operation state.  This is
+        /// any existing connections and clearing any operation state.  This is
         /// called by the <b>TemporalFixture</b>.
         /// </summary>
         internal static void Reset()
@@ -614,8 +598,17 @@ namespace Neon.Temporal
                 client.Dispose();
             }
 
-            ActivityBase.Reset();
-            WorkflowBase.Reset();
+            List<TemporalClient> clients;
+
+            lock (syncLock)
+            {
+                clients = idToClient.Values.ToList();
+            }
+
+            foreach (var client in clients)
+            {
+                client.Dispose();
+            }
 
             lock (syncLock)
             {
@@ -684,7 +677,7 @@ namespace Neon.Temporal
 
                 if (resourceStream == null)
                 {
-                    throw new KeyNotFoundException($"Embedded resource [{resourcePath}] not found.  Cannot extract [cadency-proxy].");
+                    throw new KeyNotFoundException($"Embedded resource [{resourcePath}] not found.  Cannot extract [temporal-proxy].");
                 }
 
                 using (resourceStream)
@@ -773,7 +766,7 @@ namespace Neon.Temporal
 
                             if (resourceStream == null)
                             {
-                                throw new KeyNotFoundException($"Embedded resource [{resourcePath}] not found.  Cannot launch [cadency-proxy].");
+                                throw new KeyNotFoundException($"Embedded resource [{resourcePath}] not found.  Cannot launch [temporal-proxy].");
                             }
 
                             using (resourceStream)
@@ -887,18 +880,22 @@ namespace Neon.Temporal
         /// <returns>The connected <see cref="TemporalClient"/>.</returns>
         /// <remarks>
         /// <note>
-        /// The <see cref="TemporalSettings"/> passed must specify a <see cref="TemporalSettings.DefaultNamespace"/>.
+        /// The <see cref="TemporalSettings"/> passed must specify a <see cref="TemporalSettings.Namespace"/>.
         /// </note>
         /// </remarks>
         public static async Task<TemporalClient> ConnectAsync(TemporalSettings settings)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultNamespace), nameof(settings), "You must specifiy a non-empty default Temporal namespace.");
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(settings.Namespace), nameof(settings.Namespace), "You must specifiy a non-empty Temporal namespace in settings.");
+
+            settings = settings.Clone();    // Configure the client using cloned settings
 
             var client = new TemporalClient(settings);
 
-            // Initilize the [temporal-proxy].
+            settings.Client = client;       // This makes the settings read-only
+
+            // Initialize the [temporal-proxy].
 
             if (!settings.DebugDisableHandshakes)
             {
@@ -943,7 +940,7 @@ namespace Neon.Temporal
                         {
                             LibraryAddress = client.ListenUri.Host,
                             LibraryPort    = client.ListenUri.Port,
-                            LogLevel       = client.Settings.LogLevel
+                            LogLevel       = client.Settings.ProxyLogLevel
                         };
 
                     await client.CallProxyAsync(initializeRequest);
@@ -957,7 +954,7 @@ namespace Neon.Temporal
                             HostPort        = settings.HostPort,
                             Identity        = settings.ClientIdentity,
                             ClientTimeout   = TimeSpan.FromSeconds(30),
-                            Namespace       = settings.DefaultNamespace,
+                            Namespace       = settings.Namespace,
                             CreateNamespace = settings.CreateNamespace
                         };
 
@@ -1198,15 +1195,14 @@ namespace Neon.Temporal
                         case InternalMessageTypes.WorkflowSignalInvokeRequest:
                         case InternalMessageTypes.WorkflowQueryInvokeRequest:
                         case InternalMessageTypes.ActivityInvokeLocalRequest:
-                        case InternalMessageTypes.WorkflowFutureReadyRequest:
 
-                            await WorkflowBase.OnProxyRequestAsync(client, request);
+                            await client.GetWorkerById(request.WorkerId).OnProxyRequestAsync(request);
                             break;
 
                         case InternalMessageTypes.ActivityInvokeRequest:
                         case InternalMessageTypes.ActivityStoppingRequest:
 
-                            await ActivityBase.OnProxyRequestAsync(client, request);
+                            await client.GetWorkerById(request.WorkerId).OnActivityProxyRequestAsync(request);
                             break;
 
                         default:
@@ -1360,13 +1356,10 @@ namespace Neon.Temporal
         //---------------------------------------------------------------------
         // Instance members
 
-        private Process                     proxyProcess            = null;
-        private int                         proxyPort               = 0;
-        private Dictionary<long, Worker>    workers                 = new Dictionary<long, Worker>();
-        private Dictionary<string, Type>    activityTypes           = new Dictionary<string, Type>();
-        private bool                        isDisposed              = false;
-        private List<Type>                  registeredActivityTypes = new List<Type>();
-        private List<Type>                  registeredWorkflowTypes = new List<Type>();
+        private Process                     proxyProcess = null;
+        private int                         proxyPort    = 0;
+        private Dictionary<long, Worker>    idToWorker   = new Dictionary<long, Worker>();
+        private bool                        isDisposed   = false;
         private HttpClient                  proxyClient;
         private HttpServer                  httpServer;
         private Exception                   pendingException;
@@ -1375,8 +1368,6 @@ namespace Neon.Temporal
         private int                         workflowCacheSize;
         private Thread                      heartbeatThread;
         private Thread                      timeoutThread;
-        private bool                        workflowWorkerStarted;
-        private bool                        activityWorkerStarted;
         private IRetryPolicy                syncSignalRetry;
 
         /// <summary>
@@ -1394,7 +1385,7 @@ namespace Neon.Temporal
         private TemporalClient(TemporalSettings settings)
         {
             Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultNamespace), nameof(settings));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.Namespace), nameof(settings));
 
             this.ClientId = Interlocked.Increment(ref nextClientId);
             this.Settings = settings;
@@ -1506,7 +1497,7 @@ namespace Neon.Temporal
 
                     lock (syncLock)
                     {
-                        workerList = workers.Values.ToList();
+                        workerList = idToWorker.Values.ToList();
                     }
 
                     foreach (var worker in workerList)
@@ -1535,9 +1526,6 @@ namespace Neon.Temporal
                                 idToClient.Remove(ClientId);
                             }
                         }
-
-                        WorkflowBase.UnregisterClient(this);
-                        ActivityBase.UnregisterClient(this);
 
                         if (proxyProcess != null)
                         {
@@ -1726,19 +1714,17 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Returns the .NET type implementing the named Temporal activity.
+        /// Looks up an associated worker by its ID.
         /// </summary>
-        /// <param name="activityTypeName">The Temporal activity type name.</param>
-        /// <returns>The workflow .NET type or <c>null</c> if the type was not found.</returns>
-        internal Type GetActivityType(string activityTypeName)
+        /// <param name="workerId">The worker ID.</param>
+        /// <returns>The <see cref="Worker"/> or <c>null</c>.</returns>
+        internal Worker GetWorkerById(long workerId)
         {
-            Covenant.Requires<ArgumentNullException>(activityTypeName != null, nameof(activityTypeName));
-
             lock (syncLock)
             {
-                if (activityTypes.TryGetValue(activityTypeName, out var type))
+                if (idToWorker.TryGetValue(workerId, out var worker))
                 {
-                    return type;
+                    return worker;
                 }
                 else
                 {
@@ -1749,7 +1735,7 @@ namespace Neon.Temporal
 
         /// <summary>
         /// Returns the Temporal namespace to be referenced for an operation.  If <paramref name="namespace"/>
-        /// is not <c>null</c> or empty then that will be returned otherwise the  <see cref="TemporalSettings.DefaultNamespace"/>
+        /// is not <c>null</c> or empty then that will be returned otherwise the  <see cref="TemporalSettings.Namespace"/>
         /// will be returned.  Note that one of <paramref name="namespace"/> or the default namespace must
         /// be non-empty.
         /// </summary>
@@ -1764,12 +1750,12 @@ namespace Neon.Temporal
             {
                 return @namespace;
             }
-            else if (!string.IsNullOrEmpty(Settings.DefaultNamespace))
+            else if (!string.IsNullOrEmpty(Settings.Namespace))
             {
-                return Settings.DefaultNamespace;
+                return Settings.Namespace;
             }
 
-            throw new ArgumentNullException(nameof(@namespace),$"One of [{nameof(@namespace)}] parameter or the client's default namespace (specified as [{nameof(TemporalClient)}.{nameof(TemporalClient.Settings)}.{nameof(TemporalSettings.DefaultNamespace)}]) must be non-empty.");
+            throw new ArgumentNullException(nameof(@namespace),$"One of [{nameof(@namespace)}] parameter or the client's default namespace (specified as [{nameof(TemporalClient)}.{nameof(TemporalClient.Settings)}.{nameof(TemporalSettings.Namespace)}]) must be non-empty.");
         }
 
         /// <summary>

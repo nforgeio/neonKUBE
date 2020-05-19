@@ -209,7 +209,7 @@
                 <para>
                   All instances of your workflow should implement <legacyBold>exact same workflows and activities</legacyBold>
                   because Temporal doesn't track exactly which workflows and activities are exposed
-                  by each workflow service instance.  Temporal assumes that all service instances
+                  by each workflow service instance.  Temporal assumes that all worker instances
                   registered with same task list can execute any of the registered workflows
                   and activities.
                 </para>
@@ -274,7 +274,7 @@
               <para>
                 This is an application or service that implements one or more workflows
                 and/or activities.  When a worker or worker service starts, it will
-                register its workflows and activities with Cadcence.  Then Temporal
+                register its workflows and activities with Cadence.  Then Temporal
                 will assign workflows and activities to each worker service as it
                 sees fit.
               </para>

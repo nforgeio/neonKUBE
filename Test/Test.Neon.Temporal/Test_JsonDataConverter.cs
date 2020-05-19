@@ -253,7 +253,7 @@ namespace TestTemporal
             // Empty array.
 
             contents = null;
-            items    = converter.FromDataArray(contents, new Type[0]);
+            items    = converter.FromDataArray(contents, Array.Empty<Type>());
 
             Assert.Empty(items);
 

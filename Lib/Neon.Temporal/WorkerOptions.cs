@@ -18,7 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-
+using System.Reflection.Metadata;
 using Neon.Common;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
@@ -32,6 +32,23 @@ namespace Neon.Temporal
     /// </summary>
     public class WorkerOptions
     {
+        /// <summary>
+        /// Optionally specifies the Temporal namespace for the worker.  This defaults to
+        /// <see cref="TemporalSettings.Namespace"/>.
+        /// </summary>
+        public string Namespace { get; set; }
+
+        /// <summary>
+        /// <para>
+        /// Optionally specifies the Temporal task list for the worker.  This defaults to
+        /// <see cref="TemporalSettings.DefaultTaskList"/>.
+        /// </para>
+        /// <note>
+        /// You must ensure that this is not <c>null</c> or empty.
+        /// </note>
+        /// </summary>
+        public string TaskList { get; set; }
+
         /// <summary>
         /// Optionally sets set the maximum concurrent activity executions this worker can have.
         /// The zero value of this uses the default value.  Defaults to <b>1000</b>.

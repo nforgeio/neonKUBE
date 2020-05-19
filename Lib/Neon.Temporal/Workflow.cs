@@ -69,7 +69,6 @@ namespace Neon.Temporal
         private string                      workflowId;
         private int                         pendingOperationCount;
         private Dictionary<string, string>  pendingOperationStackTraces;
-        private long                        nextLocalActivityActionId;
         private long                        nextActivityId;
         private long                        nextQueueId;
         private Random                      random;
@@ -79,7 +78,7 @@ namespace Neon.Temporal
         /// Constructor.
         /// </summary>
         /// <param name="parent">The parent workflow instance.</param>
-        /// <param name="client">The associated client.</param>
+        /// <param name="worker">The worker managing the workflow execution.</param>
         /// <param name="contextId">The workflow's context ID.</param>
         /// <param name="workflowTypeName">The workflow type name.</param>
         /// <param name="namespace">The hosting namespace.</param>
@@ -90,7 +89,7 @@ namespace Neon.Temporal
         /// <param name="methodMap">Maps the workflow signal and query methods.</param>
         internal Workflow(
             WorkflowBase        parent,
-            TemporalClient      client, 
+            Worker              worker, 
             long                contextId, 
             string              workflowTypeName, 
             string              @namespace, 
@@ -100,7 +99,7 @@ namespace Neon.Temporal
             bool                isReplaying, 
             WorkflowMethodMap   methodMap)
         {
-            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList), nameof(taskList));
@@ -111,17 +110,16 @@ namespace Neon.Temporal
             this.workflowId                = workflowId;
             this.ContextId                 = contextId;
             this.pendingOperationCount     = 0;
-            this.nextLocalActivityActionId = 0;
             this.nextActivityId            = 0;
             this.nextQueueId               = 0;
-            this.IdToLocalActivityAction   = new Dictionary<long, LocalActivityAction>();
             this.MethodMap                 = methodMap;
-            this.Client                    = client;
+            this.Client                    = worker.Client;
+            this.Worker                    = worker;
             this.IsReplaying               = isReplaying;
             this.Execution                 = new WorkflowExecution(workflowId, runId);
             this.Logger                    = LogManager.Default.GetLogger(sourceModule: workflowTypeName, contextId: runId, () => !IsReplaying || Client.Settings.LogDuringReplay);
 
-            if (client.Settings.Debug)
+            if (Client.Settings.Debug)
             {
                 pendingOperationStackTraces = new Dictionary<string, string>();
             }
@@ -148,7 +146,7 @@ namespace Neon.Temporal
 
                 // $todo(jefflill): We need to initialize these from somewhere.
                 //
-                // ExecutionStartToCloseTimeout
+                // StartToCloseTimeout
                 // ChildPolicy 
             };
         }
@@ -169,6 +167,11 @@ namespace Neon.Temporal
         public TemporalClient Client { get; set; }
 
         /// <summary>
+        /// Returns the <see cref="Worker"/> managing this workflow.
+        /// </summary>
+        internal Worker Worker { get; set; }
+
+        /// <summary>
         /// Returns the logger to be used for logging workflow related events.
         /// </summary>
         public INeonLogger Logger { get; private set; }
@@ -182,12 +185,6 @@ namespace Neon.Temporal
         /// Returns the workflow types method map.
         /// </summary>
         internal WorkflowMethodMap MethodMap { get; private set; }
-
-        /// <summary>
-        /// Returns the dictionary mapping the IDs to local activity actions
-        /// (the target activity type and method).
-        /// </summary>
-        internal Dictionary<long, LocalActivityAction> IdToLocalActivityAction { get; private set; }
 
         /// <summary>
         /// Returns the unique ID of the signal being called on the current task.
@@ -241,7 +238,7 @@ namespace Neon.Temporal
         /// <returns>The <see cref="SyncSignalStatus"/> for the signal.</returns>
         internal SyncSignalStatus GetSignalStatus(string signalId)
         {
-            return WorkflowBase.GetSignalStatus(ContextId, signalId);
+            return WorkflowBase.GetSignalStatus(signalId);
         }
 
         /// <summary>
@@ -276,7 +273,7 @@ namespace Neon.Temporal
         {
             var debugMode = Client.Settings.Debug;
             
-            if (WorkflowBase.CallContext.Value == WorkflowBase.WorkflowCallContext.Entrypoint)
+            if (WorkflowBase.CallContext.Value == WorkflowCallContext.Entrypoint)
             {
                 // Workflow entry points are restricted to one operation at a time.
 
@@ -476,10 +473,10 @@ namespace Neon.Temporal
                 @namespace:                 options.Namespace ?? WorkflowInfo.Namespace,
                 taskList:                   options.TaskList ?? WorkflowInfo.TaskList,
                 workflow:                   options.Workflow ?? WorkflowInfo.WorkflowType,
-                executionToStartTimeout:    options.ExecutionStartToCloseTimeout,
+                startToCloseTimeout:        options.ExecutionStartToCloseTimeout,
                 scheduleToCloseTimeout:     options.ScheduleToCloseTimeout,
                 scheduleToStartTimeout:     options.ScheduleToStartTimeout,
-                taskStartToCloseTimeout:    options.TaskStartToCloseTimeout,
+                decisionTaskTimeout:        options.TaskStartToCloseTimeout,
                 retryOptions:               options.RetryOptions);
         }
 
@@ -1528,7 +1525,7 @@ namespace Neon.Temporal
         ///     Local activity types do not need to be registered with the worker.
         ///     </item>
         ///     <item>
-        ///     Local activities must complete within the <see cref="WorkflowOptions.DecisionTaskStartToCloseTimeout"/>.
+        ///     Local activities must complete within the <see cref="WorkflowOptions.DecisionTaskTimeout"/>.
         ///     This defaults to 10 seconds and can be set to a maximum of 60 seconds.
         ///     </item>
         ///     <item>
@@ -2308,6 +2305,8 @@ namespace Neon.Temporal
 
             options = ActivityOptions.Normalize(Client, options);
 
+            Client.RaiseActivityExecuteEvent(options);
+
             var reply = await ExecuteNonParallel(
                 async () => (ActivityExecuteReply)await Client.CallProxyAsync(
                     new ActivityExecuteRequest()
@@ -2342,14 +2341,7 @@ namespace Neon.Temporal
             Covenant.Requires<ArgumentNullException>(activityMethod != null, nameof(activityMethod));
             Client.EnsureNotDisposed();
 
-            var activityActionId = Interlocked.Increment(ref nextLocalActivityActionId);
-
-            lock (syncLock)
-            {
-                IdToLocalActivityAction.Add(activityActionId, new LocalActivityAction(activityType, activityConstructor, activityMethod));
-            }
-
-            return activityActionId;
+            return WorkflowBase.RegisterActivityAction(activityType, activityConstructor, activityMethod);
         }
 
         /// <summary>
@@ -2389,7 +2381,9 @@ namespace Neon.Temporal
             var activityActionId = RegisterActivityAction(activityType, activityConstructor, activityMethod);
 
             options = LocalActivityOptions.Normalize(this.Client, options);
-            
+
+            Client.RaiseLocalActivityExecuteEvent(options);
+
             var reply = await ExecuteNonParallel(
                 async () =>
                 {

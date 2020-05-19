@@ -2247,7 +2247,7 @@ namespace TestTemporal
 
             var options = new WorkflowOptions()
             {
-                DecisionTaskStartToCloseTimeout = TimeSpan.FromSeconds(5)
+                DecisionTaskTimeout = TimeSpan.FromSeconds(5)
             };
 
             var stub = client.NewWorkflowStub<IWorkflowFail>(options);
@@ -2289,7 +2289,7 @@ namespace TestTemporal
 
             var options = new WorkflowOptions()
             {
-                ScheduleToCloseTimeout = TimeSpan.FromSeconds(5)
+                DecisionTaskTimeout = TimeSpan.FromSeconds(5)
             };
 
             var stub = client.NewWorkflowStub<IWorkflowUnregistered>(options);
@@ -2384,11 +2384,11 @@ namespace TestTemporal
         [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
         public interface IWorkflowInfo : IWorkflow
         {
-            [WorkflowMethod]
+            [WorkflowMethod(Name = "my-workflow-info-type", IsFullName = true)]
             Task<WorkflowInfoTest> GetWorkflowInfoAsync();
         }
 
-        [Workflow(AutoRegister = true, Name = "my-workflow-info-type")]
+        [Workflow(AutoRegister = true)]
         public class WorkflowInfoClass : WorkflowBase, IWorkflowInfo
         {
             public async Task<WorkflowInfoTest> GetWorkflowInfoAsync()
@@ -2413,7 +2413,7 @@ namespace TestTemporal
 
             var options = new WorkflowOptions()
             {
-                Namespace  = client.Settings.DefaultNamespace,
+                Namespace  = client.Settings.Namespace,
                 WorkflowId = "my-workflow-id"
             };
 
@@ -3329,23 +3329,23 @@ namespace TestTemporal
         [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
         public interface IWorkflowUntypedChildFuture : IWorkflow
         {
-            [WorkflowMethod(Name = "run")]
+            [WorkflowMethod(Name = "WorkflowUntypedChildFuture::run", IsFullName = true)]
             Task RunAsync();
 
-            [WorkflowMethod(Name = "hello")]
+            [WorkflowMethod(Name = "WorkflowUntypedChildFuture::hello", IsFullName = true)]
             Task<string> HelloAsync(string name);
 
-            [WorkflowMethod(Name = "with-result")]
+            [WorkflowMethod(Name = "WorkflowUntypedChildFuture::with-result", IsFullName = true)]
             Task<bool> WithResult();
 
-            [WorkflowMethod(Name = "with-no-result")]
+            [WorkflowMethod(Name = "WorkflowUntypedChildFuture::with-no-result", IsFullName = true)]
             Task<bool> WithNoResult();
 
             [SignalMethod("signal")]
             Task SignalAsync(string signal);
         }
 
-        [Workflow(AutoRegister = true, Name = "WorkflowUntypedChildFuture")]
+        [Workflow(AutoRegister = true)]
         public class WorkflowUntypedChildFuture : WorkflowBase, IWorkflowUntypedChildFuture
         {
             public static bool      HasExecuted    = false;
@@ -4292,7 +4292,7 @@ namespace TestTemporal
             var stub = client.NewWorkflowStub<IWorkflowTimeout>(
                 new WorkflowOptions()
                 {
-                    ScheduleToCloseTimeout = timeout
+                    StartToCloseTimeout = timeout
                 });
 
             await Assert.ThrowsAsync<StartToCloseTimeoutException>(async () => await stub.SleepAsync(sleepTime));
@@ -4380,7 +4380,7 @@ namespace TestTemporal
 
             // TestTemporalImage = "nkubedev/test-temporal:temporal-latest";
 
-            NeonHelper.Execute("docker",
+            NeonHelper.Execute("docker.exe",
                 new object[]
                 {
                     "rm", "--force", "test-temporal"
@@ -4388,7 +4388,7 @@ namespace TestTemporal
 
             // Make sure we have the latest image first.
 
-            var exitCode = NeonHelper.Execute("docker",
+            var exitCode = NeonHelper.Execute("docker.exe",
                 new object[]
                 {
                     "pull",
@@ -4402,14 +4402,14 @@ namespace TestTemporal
 
             // Start the test workflow service.
 
-            exitCode = NeonHelper.Execute("docker",
+            exitCode = NeonHelper.Execute("docker.exe",
                 new object[]
                 {
                     "run",
                     "--detach", 
                     "--name", "test-temporal",
                     "--env", $"TEMPORAL_HOSTPORT={ipAddress}:7933",
-                    "--env", $"TEMPORAL_NAMESPACE={TemporalFixture.DefaultNamespace}",
+                    "--env", $"TEMPORAL_NAMESPACE={TemporalFixture.Namespace}",
                     "--env", $"TEMPORAL_TASKLIST={taskList}",
                     testTemporalImage
                 });
@@ -4451,7 +4451,7 @@ namespace TestTemporal
             {
                 // Kill the [test-temporal] container.
 
-                exitCode = NeonHelper.Execute("docker",
+                exitCode = NeonHelper.Execute("docker.exe",
                     new object[]
                     {
                         "rm", "--force", "test-temporal",

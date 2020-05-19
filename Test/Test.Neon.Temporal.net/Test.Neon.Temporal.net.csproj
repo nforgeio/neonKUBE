@@ -15,6 +15,7 @@
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
+    <LangVersion>latest</LangVersion>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
   </PropertyGroup>
@@ -42,7 +43,6 @@
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
@@ -334,6 +334,9 @@
     <Compile Include="..\Test.Neon.Temporal\Test_MultiClient.cs">
       <Link>Test_MultiClient.cs</Link>
     </Compile>
+    <Compile Include="..\Test.Neon.Temporal\Test_Options.cs">
+      <Link>Test_Options.cs</Link>
+    </Compile>
     <Compile Include="..\Test.Neon.Temporal\Test_RegistrationError.Activity.cs">
       <Link>Test_RegistrationError.Activity.cs</Link>
     </Compile>
@@ -369,9 +372,6 @@
     </Compile>
     <Compile Include="..\Test.Neon.Temporal\Test_SyncSignals.cs">
       <Link>Test_SyncSignals.cs</Link>
-    </Compile>
-    <Compile Include="..\Test.Neon.Temporal\Test_Worker.cs">
-      <Link>Test_Worker.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -80,7 +80,7 @@ namespace Neon.Temporal.Internal
         public string Namespace
         {
             get => GetStringProperty(PropertyNames.Namespace);
-            set => SetStringProperty(PropertyNames.Namespace, value);
+            set => SetStringProperty(PropertyNames.Namespace, value ?? string.Empty);
         }
 
         /// <summary>
@@ -129,13 +129,13 @@ namespace Neon.Temporal.Internal
 
             var typedTarget = (ConnectRequest)target;
 
-            typedTarget.HostPort         = this.HostPort;
-            typedTarget.Identity         = this.Identity;
-            typedTarget.ClientTimeout    = this.ClientTimeout;
-            typedTarget.Namespace        = this.Namespace;
-            typedTarget.CreateNamespace  = this.CreateNamespace;
-            typedTarget.Retries          = this.Retries;
-            typedTarget.RetryDelay       = this.RetryDelay;
+            typedTarget.HostPort        = this.HostPort;
+            typedTarget.Identity        = this.Identity;
+            typedTarget.ClientTimeout   = this.ClientTimeout;
+            typedTarget.Namespace       = this.Namespace;
+            typedTarget.CreateNamespace = this.CreateNamespace;
+            typedTarget.Retries         = this.Retries;
+            typedTarget.RetryDelay      = this.RetryDelay;
         }
     }
 }

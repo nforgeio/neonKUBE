@@ -304,21 +304,26 @@ namespace Neon.Cadence.Internal
                     continue;
                 }
 
+                if (method.IsGenericMethod)
+                {
+                    throw new WorkflowTypeException($"Workflow entrypoint method [{workflowInterface.FullName}.{method.Name}()] is generic.  Generic methods are not supported by Cadence.");
+                }
+
                 if (!(CadenceHelper.IsTask(method.ReturnType) || CadenceHelper.IsTaskT(method.ReturnType)))
                 {
-                    throw new WorkflowTypeException($"Workflow workflow method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                    throw new WorkflowTypeException($"Workflow entrypoint method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                 }
 
                 var name = workflowMethodAttribute.Name ?? string.Empty;
 
                 if (name == string.Empty && workflowMethodAttribute.IsFullName)
                 {
-                    throw new WorkflowTypeException($"Workflow method [{workflowInterface.FullName}.{method.Name}()] specifies [WorkflowMethod(Name = \"\", IsFullName=true)].  Fully qualified names cannot be NULL or blank.");
+                    throw new WorkflowTypeException($"Workflow entrypoint method [{workflowInterface.FullName}.{method.Name}()] specifies [WorkflowMethod(Name = \"\", IsFullName=true)].  Fully qualified names cannot be NULL or blank.");
                 }
 
                 if (workflowNames.Contains(name))
                 {
-                    throw new WorkflowTypeException($"Multiple workflow [{workflowInterface.FullName}] methods are tagged by [WorkflowMethod(Name = \"{name}\")].");
+                    throw new WorkflowTypeException($"Multiple workflow entrypoint [{workflowInterface.FullName}] methods are tagged by [WorkflowMethod(Name = \"{name}\")].");
                 }
 
                 workflowNames.Add(name);
@@ -326,7 +331,7 @@ namespace Neon.Cadence.Internal
 
             if (workflowNames.Count == 0)
             {
-                throw new ActivityTypeException($"Workflow interface [{workflowInterface.FullName}] does not define any methods tagged with [WorkflowMethod].");
+                throw new ActivityTypeException($"Workflow [{workflowInterface.FullName}] does not define any methods tagged with [WorkflowMethod].");
             }
 
             // Validate the signal method names and return types.
@@ -342,11 +347,16 @@ namespace Neon.Cadence.Internal
                     continue;
                 }
 
+                if (method.IsGenericMethod)
+                {
+                    throw new WorkflowTypeException($"Workflow signal method [{workflowInterface.FullName}.{method.Name}()] is generic.  Generic methods are not supported by Cadence.");
+                }
+
                 if (signalMethodAttribute.Synchronous)
                 {
                     if (!CadenceHelper.IsTask(method.ReturnType) && !CadenceHelper.IsTaskT(method.ReturnType))
                     {
-                        throw new WorkflowTypeException($"Synchronous workflow signal method [{workflowInterface.FullName}.{method.Name}()] must return a [Task] or [Task<T>].");
+                        throw new WorkflowTypeException($"Synchronous signal method [{workflowInterface.FullName}.{method.Name}()] must return a [Task] or [Task<T>].");
                     }
                 }
                 else
@@ -358,7 +368,7 @@ namespace Neon.Cadence.Internal
 
                     if (CadenceHelper.IsTaskT(method.ReturnType))
                     {
-                        throw new WorkflowTypeException($"Fire-and-forget workflow signal method [{workflowInterface.FullName}.{method.Name}()] cannot return a result via a [Task<T>].  Use [SignalMethod(Synchronous = true)] to enable this.");
+                        throw new WorkflowTypeException($"Fire-and-forget signal method [{workflowInterface.FullName}.{method.Name}()] cannot return a result via a [Task<T>].  Use [SignalMethod(Synchronous = true)] to enable this.");
                     }
                 }
 
@@ -366,7 +376,7 @@ namespace Neon.Cadence.Internal
 
                 if (signalNames.Contains(name))
                 {
-                    throw new WorkflowTypeException($"Multiple interface [{workflowInterface.FullName}] signal methods are tagged by [SignalMethod(name:\"{name}\")].");
+                    throw new WorkflowTypeException($"Multiple [{workflowInterface.FullName}] signal methods are tagged by [SignalMethod(name:\"{name}\")].");
                 }
 
                 signalNames.Add(name);
@@ -385,16 +395,21 @@ namespace Neon.Cadence.Internal
                     continue;
                 }
 
+                if (method.IsGenericMethod)
+                {
+                    throw new WorkflowTypeException($"Workflow query method [{workflowInterface.FullName}.{method.Name}()] is generic.  Generic methods are not supported by Cadence.");
+                }
+
                 if (!(CadenceHelper.IsTask(method.ReturnType) || CadenceHelper.IsTaskT(method.ReturnType)))
                 {
-                    throw new WorkflowTypeException($"Workflow interface query method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                    throw new WorkflowTypeException($"Workflow query method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                 }
 
                 var name = queryMethodAttribute.Name ?? string.Empty;
 
                 if (queryNames.Contains(name))
                 {
-                    throw new WorkflowTypeException($"Multiple interface [{workflowInterface.FullName}] query methods are tagged by [QueryMethod(name:\"{name}\")].");
+                    throw new WorkflowTypeException($"Multiple [{workflowInterface.FullName}] query methods are tagged by [QueryMethod(name:\"{name}\")].");
                 }
 
                 queryNames.Add(name);

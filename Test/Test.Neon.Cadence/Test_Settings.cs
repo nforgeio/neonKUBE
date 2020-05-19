@@ -59,7 +59,7 @@ namespace TestCadence
 
             this.fixture = fixture;
 
-            fixture.Start(settings, image: CadenceTestHelper.CadenceImage, keepConnection: true, keepOpen: CadenceTestHelper.KeepCadenceServerOpen, noClient: true);
+            fixture.Start(settings, image: CadenceTestHelper.CadenceImage, reconnect: true, keepRunning: CadenceTestHelper.KeepCadenceServerOpen, noClient: true);
         }
 
         public void Dispose()
@@ -90,9 +90,9 @@ namespace TestCadence
         {
             await SyncContext.ClearAsync;
 
-            // Verify that default Cadence settings reject duplicate workflow IDs.
+            // Verify that default Cadence settings allow duplicate workflow IDs.
 
-            Assert.Equal(WorkflowIdReusePolicy.AllowDuplicateFailedOnly, fixture.Settings.WorkflowIdReusePolicy);
+            Assert.Equal(WorkflowIdReusePolicy.AllowDuplicate, fixture.Settings.WorkflowIdReusePolicy);
 
             using (var client = await CadenceClient.ConnectAsync(fixture.Settings))
             {

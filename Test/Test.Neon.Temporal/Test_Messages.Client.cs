@@ -1161,7 +1161,6 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
-                Assert.Null(message.Namespace);
                 Assert.Null(message.TaskList);
                 Assert.Null(message.Options);
 
@@ -1169,13 +1168,11 @@ namespace TestTemporal
 
                 message.ClientId = 444;
                 message.RequestId = 555;
-                message.Namespace = "my-namespace";
                 message.TaskList = "my-tasks";
                 message.Options = new InternalWorkerOptions() { Identity = "my-identity", MaxConcurrentActivityExecutionSize = 1234 };
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-tasks", message.TaskList);
                 Assert.Equal("my-identity", message.Options.Identity);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
@@ -1188,7 +1185,6 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-tasks", message.TaskList);
                 Assert.Equal("my-identity", message.Options.Identity);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
@@ -1199,7 +1195,6 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-tasks", message.TaskList);
                 Assert.Equal("my-identity", message.Options.Identity);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
@@ -1210,7 +1205,6 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-namespace", message.Namespace);
                 Assert.Equal("my-tasks", message.TaskList);
                 Assert.Equal("my-identity", message.Options.Identity);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);

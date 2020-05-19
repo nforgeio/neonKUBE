@@ -153,26 +153,11 @@ namespace Neon.Temporal.Internal
         /// implementation class.
         /// </summary>
         /// <param name="workflowType">The workflow interface or implementation type.</param>
-        /// <param name="workflowAttribute">Specifies the <see cref="WorkflowAttribute"/>.</param>
-        /// <returns>The type name.</returns>
-        /// <remarks>
-        /// <para>
-        /// If <paramref name="workflowAttribute"/> is passed and <see cref="WorkflowAttribute.Name"/>
-        /// is not <c>null</c> or empty, then the name specified in the attribute is returned.
-        /// </para>
-        /// <para>
-        /// Otherwise, we'll return the fully qualified name of the workflow interface
-        /// with the leadting "I" removed.
-        /// </para>
-        /// </remarks>
-        internal static string GetWorkflowTypeName(Type workflowType, WorkflowAttribute workflowAttribute)
+        /// <param name="workflowMethodAttribute">Optionally specifies the <see cref="WorkflowMethodAttribute"/> for the target method.</param>
+        /// <returns>The fully qualifed type name.</returns>
+        internal static string GetWorkflowTypeName(Type workflowType, WorkflowMethodAttribute workflowMethodAttribute = null)
         {
             Covenant.Requires<ArgumentNullException>(workflowType != null, nameof(workflowType));
-
-            if (workflowAttribute != null && !string.IsNullOrEmpty(workflowAttribute.Name))
-            {
-                return workflowAttribute.Name;
-            }
 
             if (workflowType.IsClass)
             {
@@ -186,15 +171,27 @@ namespace Neon.Temporal.Internal
             }
 
             var fullName = workflowType.FullName;
-            var name     = workflowType.Name;
+            var typeName = workflowType.Name;
 
-            if (name.StartsWith("I") && name != "I")
+            if (typeName.StartsWith("I") && typeName != "I")
             {
                 // We're going to strip the leading "I" from the unqualified
                 // type name (unless that's the only character).
 
-                fullName  = fullName.Substring(0, fullName.Length - name.Length);
-                fullName += name.Substring(1);
+                fullName  = fullName.Substring(0, fullName.Length - typeName.Length);
+                fullName += typeName.Substring(1);
+            }
+
+            if (!string.IsNullOrEmpty(workflowMethodAttribute?.Name))
+            {
+                if (workflowMethodAttribute.IsFullName)
+                {
+                    fullName = workflowMethodAttribute.Name;
+                }
+                else
+                {
+                    fullName = $"{fullName}::{workflowMethodAttribute.Name}";
+                }
             }
 
             return TypeNameToSource(fullName);
@@ -304,21 +301,26 @@ namespace Neon.Temporal.Internal
                     continue;
                 }
 
+                if (method.IsGenericMethod)
+                {
+                    throw new WorkflowTypeException($"Workflow entrypoint method [{workflowInterface.FullName}.{method.Name}()] is generic.  Generic methods are not supported by Temporal.");
+                }
+
                 if (!(TemporalHelper.IsTask(method.ReturnType) || TemporalHelper.IsTaskT(method.ReturnType)))
                 {
-                    throw new WorkflowTypeException($"Workflow workflow method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                    throw new WorkflowTypeException($"Workflow entrypoint method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                 }
 
                 var name = workflowMethodAttribute.Name ?? string.Empty;
 
                 if (name == string.Empty && workflowMethodAttribute.IsFullName)
                 {
-                    throw new WorkflowTypeException($"Workflow method [{workflowInterface.FullName}.{method.Name}()] specifies [WorkflowMethod(Name = \"\", IsFullName=true)].  Fully qualified names cannot be NULL or blank.");
+                    throw new WorkflowTypeException($"Workflow entrypoint method [{workflowInterface.FullName}.{method.Name}()] specifies [WorkflowMethod(Name = \"\", IsFullName=true)].  Fully qualified names cannot be NULL or blank.");
                 }
 
                 if (workflowNames.Contains(name))
                 {
-                    throw new WorkflowTypeException($"Multiple workflow methods are tagged by [WorkflowMethod(Name = \"{name}\")].");
+                    throw new WorkflowTypeException($"Multiple entrypoint methods are tagged by [WorkflowMethod(Name = \"{name}\")].");
                 }
 
                 workflowNames.Add(name);
@@ -326,7 +328,7 @@ namespace Neon.Temporal.Internal
 
             if (workflowNames.Count == 0)
             {
-                throw new ActivityTypeException($"Workflow interface [{workflowInterface.FullName}] does not define any methods tagged with [WorkflowMethod].");
+                throw new ActivityTypeException($"Workflow [{workflowInterface.FullName}] does not define any methods tagged with [WorkflowMethod].");
             }
 
             // Validate the signal method names and return types.
@@ -342,11 +344,16 @@ namespace Neon.Temporal.Internal
                     continue;
                 }
 
+                if (method.IsGenericMethod)
+                {
+                    throw new WorkflowTypeException($"Workflow signal method [{workflowInterface.FullName}.{method.Name}()] is generic.  Generic methods are not supported by Temporal.");
+                }
+
                 if (signalMethodAttribute.Synchronous)
                 {
                     if (!TemporalHelper.IsTask(method.ReturnType) && !TemporalHelper.IsTaskT(method.ReturnType))
                     {
-                        throw new WorkflowTypeException($"Synchronous workflow signal method [{workflowInterface.FullName}.{method.Name}()] must return a [Task] or [Task<T>].");
+                        throw new WorkflowTypeException($"Synchronous signal method [{workflowInterface.FullName}.{method.Name}()] must return a [Task] or [Task<T>].");
                     }
                 }
                 else
@@ -358,7 +365,7 @@ namespace Neon.Temporal.Internal
 
                     if (TemporalHelper.IsTaskT(method.ReturnType))
                     {
-                        throw new WorkflowTypeException($"Fire-and-forget workflow signal method [{workflowInterface.FullName}.{method.Name}()] cannot return a result via a [Task<T>].  Use [SignalMethod(Synchronous = true)] to enable this.");
+                        throw new WorkflowTypeException($"Fire-and-forget signal method [{workflowInterface.FullName}.{method.Name}()] cannot return a result via a [Task<T>].  Use [SignalMethod(Synchronous = true)] to enable this.");
                     }
                 }
 
@@ -366,7 +373,7 @@ namespace Neon.Temporal.Internal
 
                 if (signalNames.Contains(name))
                 {
-                    throw new WorkflowTypeException($"Multiple interface [{workflowInterface.FullName}] signal methods are tagged by [SignalMethod(name:\"{name}\")].");
+                    throw new WorkflowTypeException($"Multiple [{workflowInterface.FullName}] signal methods are tagged by [SignalMethod(name:\"{name}\")].");
                 }
 
                 signalNames.Add(name);
@@ -385,16 +392,21 @@ namespace Neon.Temporal.Internal
                     continue;
                 }
 
+                if (method.IsGenericMethod)
+                {
+                    throw new WorkflowTypeException($"Workflow query method [{workflowInterface.FullName}.{method.Name}()] is generic.  Generic methods are not supported by Temporal.");
+                }
+
                 if (!(TemporalHelper.IsTask(method.ReturnType) || TemporalHelper.IsTaskT(method.ReturnType)))
                 {
-                    throw new WorkflowTypeException($"Workflow interface query method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                    throw new WorkflowTypeException($"Workflow query method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                 }
 
                 var name = queryMethodAttribute.Name ?? string.Empty;
 
                 if (queryNames.Contains(name))
                 {
-                    throw new WorkflowTypeException($"Multiple interface [{workflowInterface.FullName}] query methods are tagged by [QueryMethod(name:\"{name}\")].");
+                    throw new WorkflowTypeException($"Multiple [{workflowInterface.FullName}] query methods are tagged by [QueryMethod(name:\"{name}\")].");
                 }
 
                 queryNames.Add(name);
@@ -1133,9 +1145,8 @@ namespace Neon.Temporal.Internal
 
             TemporalHelper.ValidateWorkflowInterface(workflowInterface);
 
-            var workflowAttribute = workflowInterface.GetCustomAttribute<WorkflowAttribute>();
-            var methodAttribute   = (WorkflowMethodAttribute)null;
-            var targetMethod      = (MethodInfo)null;
+            var methodAttribute = (WorkflowMethodAttribute)null;
+            var targetMethod    = (MethodInfo)null;
 
             if (string.IsNullOrEmpty(methodName))
             {
@@ -1179,7 +1190,7 @@ namespace Neon.Temporal.Internal
                 throw new ArgumentException($"Workflow interface [{workflowInterface.FullName}] does not have a method tagged by [WorkflowMethod(Name = {methodName})].", nameof(workflowInterface));
             }
 
-            var workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowInterface, workflowAttribute);
+            var workflowTypeName = TemporalHelper.GetWorkflowTypeName(workflowInterface, methodAttribute);
 
             if (methodAttribute.IsFullName)
             {

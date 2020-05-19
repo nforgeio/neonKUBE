@@ -62,7 +62,7 @@ namespace Neon.Temporal
         /// </code>
         /// <note>
         /// You may need to customize activity type name when interoperating with activities written
-        /// in other languages.  See <a href="https://doc.neonkube.com/Neon.Temporal-CrossPlatform.htm">Cadence Cross-Platform</a>
+        /// in other languages.  See <a href="https://doc.neonkube.com/Neon.Temporal-CrossPlatform.htm">Temporal Cross-Platform</a>
         /// for more information.
         /// </note>
         /// </remarks>

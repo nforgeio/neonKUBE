@@ -73,8 +73,8 @@ namespace TestTemporal
         {
             var settings = new TemporalSettings()
             {
-                DefaultNamespace       = TemporalFixture.DefaultNamespace,
-                LogLevel               = TemporalTestHelper.LogLevel,
+                Namespace              = TemporalFixture.Namespace,
+                ProxyLogLevel          = TemporalTestHelper.ProxyLogLevel,
                 CreateNamespace        = true,
                 Debug                  = TemporalTestHelper.Debug,
                 DebugPrelaunched       = TemporalTestHelper.DebugPrelaunched,
@@ -82,18 +82,18 @@ namespace TestTemporal
                 ClientIdentity         = TemporalTestHelper.ClientIdentity
             };
 
-            if (fixture.Start(settings, image: TemporalTestHelper.TemporalImage, keepConnection: true, keepOpen: TemporalTestHelper.KeepTemporalServerOpen) == TestFixtureStatus.Started)
+            if (fixture.Start(settings, stackDefinition: TemporalTestHelper.TemporalStackDefinition, reconnect: true, keepRunning: TemporalTestHelper.KeepTemporalServerOpen) == TestFixtureStatus.Started)
             {
                 this.fixture = fixture;
                 this.client  = fixture.Client;
 
-                // Auto register the test workflow and activity implementations.
+                // Create a worker and register the workflow and activity 
+                // implementations to let Temporal know we're open for business.
 
-                client.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
+                var worker = client.NewWorkerAsync().Result;
 
-                // Start the worker.
-
-                client.StartWorkerAsync(TemporalTestHelper.TaskList).Wait();
+                worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly()).Wait();
+                worker.StartAsync().Wait();
             }
             else
             {

@@ -61,14 +61,14 @@ namespace Neon.Cadence.Internal
         public string TaskList { get; set; }
 
         /// <summary>
-        /// ExecutionStartToCloseTimeout - The time out for duration of workflow execution (expressed
+        /// ExecutionStartToCloseTimeout - The timeout for duration of workflow execution (expressed
         /// in nanoseconds).  Mandatory: No default.
         /// </summary>
         [JsonProperty(PropertyName = "ExecutionStartToCloseTimeout", Required = Required.Always)]
         public long ExecutionStartToCloseTimeout { get; set; }
 
         /// <summary>
-        /// DecisionTaskStartToCloseTimeout - The time out for processing decision task from the time the worker
+        /// DecisionTaskStartToCloseTimeout - The timeout for processing decision task from the time the worker
         /// pulled this task. If a decision task is lost, it is retried after this timeout.
         /// Expressed as nanoseconds.  Optional: defaulted to 10 secs.
         /// </summary>
@@ -79,11 +79,11 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// WorkflowIDReusePolicy - Whether server allow reuse of workflow ID, can be useful
         /// for dedup logic if set to WorkflowIdReusePolicyRejectDuplicate.
-        /// Optional: defaulted to WorkflowIDReusePolicyAllowDuplicateFailedOnly.
+        /// Optional: defaulted to WorkflowIdReusePolicyAllowDuplicate.
         /// </summary>
         [JsonProperty(PropertyName = "WorkflowIdReusePolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly)]
-        public int WorkflowIdReusePolicy { get; set; } = (int)Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
+        [DefaultValue(Cadence.WorkflowIdReusePolicy.AllowDuplicate)]
+        public int WorkflowIdReusePolicy { get; set; } = (int)Cadence.WorkflowIdReusePolicy.AllowDuplicate;
         
         /// <summary>
         /// RetryPolicy - Optional retry policy for workflow. If a retry policy is specified, in case of workflow failure

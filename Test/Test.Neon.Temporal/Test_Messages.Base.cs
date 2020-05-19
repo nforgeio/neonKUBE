@@ -64,6 +64,7 @@ namespace TestTemporal
                 Assert.Empty(message.Properties);
                 Assert.Empty(message.Attachments);
                 Assert.Equal(0, message.ClientId);
+                Assert.Equal(0, message.WorkerId);
 
                 // Message with args and attachments.
 
@@ -78,7 +79,7 @@ namespace TestTemporal
                 message.SetJsonProperty(PropertyNames.TestPerson, new Person() { Name = "Jack", Age = 10 });
 
                 message.Attachments.Add(new byte[] { 0, 1, 2, 3, 4 });
-                message.Attachments.Add(new byte[0]);
+                message.Attachments.Add(Array.Empty<byte>());
                 message.Attachments.Add(null);
 
                 stream.SetLength(0);
@@ -106,11 +107,13 @@ namespace TestTemporal
                 Assert.Empty(message.Attachments[1]);
                 Assert.Null(message.Attachments[2]);
 
-                // ClientId property
+                // ClientId and WorkerId properties
 
                 message.ClientId = 444;
+                message.WorkerId = 555;
 
                 Assert.Equal(444, message.ClientId);
+                Assert.Equal(555, message.WorkerId);
             }
         }
 

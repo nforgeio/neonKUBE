@@ -250,7 +250,7 @@ namespace Renci.SshNet.Abstractions
         /// Reads a byte from the specified <see cref="Socket"/>.
         /// </summary>
         /// <param name="socket">The <see cref="Socket"/> to read from.</param>
-        /// <param name="timeout">Specifies the amount of time after which the call will time out.</param>
+        /// <param name="timeout">Specifies the amount of time after which the call will timeout.</param>
         /// <returns>
         /// The byte read, or <c>-1</c> if the socket was closed.
         /// </returns>
@@ -282,7 +282,7 @@ namespace Renci.SshNet.Abstractions
         /// </summary>
         /// <param name="socket"></param>
         /// <param name="size">The number of bytes to receive.</param>
-        /// <param name="timeout">Specifies the amount of time after which the call will time out.</param>
+        /// <param name="timeout">Specifies the amount of time after which the call will timeout.</param>
         /// <returns>
         /// The bytes received.
         /// </returns>
@@ -307,7 +307,7 @@ namespace Renci.SshNet.Abstractions
         /// <param name="buffer">An array of type <see cref="byte"/> that is the storage location for the received data. </param>
         /// <param name="offset">The position in <paramref name="buffer"/> parameter to store the received data.</param>
         /// <param name="size">The number of bytes to receive.</param>
-        /// <param name="timeout">Specifies the amount of time after which the call will time out.</param>
+        /// <param name="timeout">Specifies the amount of time after which the call will timeout.</param>
         /// <returns>
         /// The number of bytes received.
         /// </returns>
