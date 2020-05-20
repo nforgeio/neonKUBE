@@ -53,7 +53,7 @@ namespace Neon.Xunit.Temporal
     /// </note>
     /// </remarks>
     /// <threadsafety instance="true"/>
-    public sealed class TemporalFixture : DockerStackFixture
+    public sealed class TemporalFixture : DockerComposeFixture
     {
         /// <summary>
         /// The default Docker compose file text used to spin up Temporal and it's related services
@@ -377,7 +377,7 @@ services:
 
         /// <summary>
         /// This method completely resets the fixture by removing the Temporal 
-        /// stack from Docker.  Use <see cref="DockerStackFixture.Restart"/> 
+        /// stack from Docker.  Use <see cref="DockerComposeFixture.Restart"/> 
         /// if you just want to restart a fresh Temporal instance.
         /// </summary>
         public override void Reset()

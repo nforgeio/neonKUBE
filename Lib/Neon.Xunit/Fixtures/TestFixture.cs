@@ -32,18 +32,18 @@ namespace Neon.Xunit
     /// <remarks>
     /// <note>
     /// <para>
-    /// <b>IMPORTANT:</b> The Neon <see cref="TestFixture"/> implementation <b>DOES NOT</b>
+    /// <b>IMPORTANT:</b> The base Neon <see cref="TestFixture"/> implementation <b>DOES NOT</b>
     /// support parallel test execution because fixtures may impact global machine state
-    /// like starting a Couchbase Docker container, modifying the local DNS <b>hosts</b>
-    /// file or managing a Docker Swarm or cluster.
+    /// like starting a Docker container, modifying the local DNS <b>hosts</b> file, configuring
+    /// environment variables or initializing a test database.
     /// </para>
     /// <para>
     /// You should explicitly disable parallel execution in all test assemblies that
-    /// rely on test fixtures by adding a C# file with:
+    /// rely on test fixtures by adding a C# file called <c>AssemblyInfo.cs</c> with:
+    /// </para>
     /// <code language="csharp">
     /// [assembly: CollectionBehavior(DisableTestParallelization = true, MaxParallelThreads = 1)]
     /// </code>
-    /// </para>
     /// </note>
     /// <para>
     /// Test fixtures that modify global machine or other environmental state must
