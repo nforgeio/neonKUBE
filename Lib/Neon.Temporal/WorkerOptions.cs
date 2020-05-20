@@ -126,12 +126,6 @@ namespace Neon.Temporal
         public double WorkerDecisionTasksPerSecond { get; set; } = 1000;
 
         /// <summary>
-        /// Optionally sets an identify that can be used to track this host for debugging.
-        /// This defaults to include the hostname, groupName and process ID.
-        /// </summary>
-        public string Identity { get; set; } = null;
-
-        /// <summary>
         /// Optionally enables logging in replay.  This defaults to <c>false</c>.
         /// </summary>
         /// <remarks>
@@ -222,7 +216,6 @@ namespace Neon.Temporal
                 MaxConcurrentDecisionTaskExecutionSize   = this.MaxConcurrentDecisionTaskExecutionSize,
                 WorkerDecisionTasksPerSecond             = this.WorkerDecisionTasksPerSecond,
                 AutoHeartBeat                            = false,
-                Identity                                 = this.Identity,
                 EnableLoggingInReplay                    = this.EnableLoggingInReplay,
                 DisableWorkflowWorker                    = this.DisableWorkflowWorker,
                 DisableActivityWorker                    = this.DisableActivityWorker,
