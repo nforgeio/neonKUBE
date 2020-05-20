@@ -18,10 +18,10 @@
 package messages
 
 import (
+	"go.temporal.io/temporal-proto/workflowservice"
+
 	internal "temporal-proxy/internal"
 	proxyerror "temporal-proxy/internal/temporal/error"
-
-	"go.temporal.io/temporal-proto/workflowservice"
 )
 
 type (

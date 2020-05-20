@@ -19,6 +19,7 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
+	proxytemporal "temporal-proxy/internal/temporal"
 	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
@@ -45,12 +46,42 @@ func NewActivityStartReply() *ActivityStartReply {
 	return reply
 }
 
+// GetReplayStatus gets the ReplayStatus from a ActivityStartReply's properties
+// map.
+//
+// returns proxytemporal.ReplayStatus -> the current history replay
+// state of an activity
+func (reply *ActivityStartReply) GetReplayStatus() proxytemporal.ReplayStatus {
+	replayStatusPtr := reply.GetStringProperty("ReplayStatus")
+	if replayStatusPtr == nil {
+		return proxytemporal.ReplayStatusUnspecified
+	}
+	replayStatus := proxytemporal.StringToReplayStatus(*replayStatusPtr)
+
+	return replayStatus
+}
+
+// SetReplayStatus sets the ReplayStatus in a WorkflowInvokeRequest's properties
+// map.
+//
+// param value proxytemporal.ReplayStatus -> the current history replay
+// state of an activity
+func (reply *ActivityStartReply) SetReplayStatus(value proxytemporal.ReplayStatus) {
+	status := value.String()
+	reply.SetStringProperty("ReplayStatus", &status)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Build inherits docs from ActivityReply.Build()
 func (reply *ActivityStartReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
 	reply.ActivityReply.Build(e)
+	if len(result) > 0 {
+		if v, ok := result[0].(proxytemporal.ReplayStatus); ok {
+			reply.SetReplayStatus(v)
+		}
+	}
 }
 
 // Clone inherits docs from ProxyMessage.Clone()
@@ -65,4 +96,7 @@ func (reply *ActivityStartReply) Clone() IProxyMessage {
 // CopyTo inherits docs from ProxyMessage.CopyTo()
 func (reply *ActivityStartReply) CopyTo(target IProxyMessage) {
 	reply.ActivityReply.CopyTo(target)
+	if v, ok := target.(*ActivityStartReply); ok {
+		v.SetReplayStatus(reply.GetReplayStatus())
+	}
 }

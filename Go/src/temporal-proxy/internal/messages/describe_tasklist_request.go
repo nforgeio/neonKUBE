@@ -18,10 +18,9 @@
 package messages
 
 import (
+	tasklist "go.temporal.io/temporal-proto/tasklist"
 	internal "temporal-proxy/internal"
 	proxyclient "temporal-proxy/internal/temporal/client"
-
-	tasklist "go.temporal.io/temporal-proto/tasklist"
 )
 
 type (

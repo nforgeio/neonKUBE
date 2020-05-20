@@ -29,9 +29,9 @@ import (
 
 	"temporal-proxy/internal"
 	"temporal-proxy/internal/messages"
+	proxytemporal "temporal-proxy/internal/temporal"
 	proxyclient "temporal-proxy/internal/temporal/client"
 	proxyerror "temporal-proxy/internal/temporal/error"
-	proxyworkflow "temporal-proxy/internal/temporal/workflow"
 )
 
 //----------------------------------------------------------------------------
@@ -116,30 +116,30 @@ func setReplayStatus(ctx workflow.Context, message messages.IProxyMessage) {
 	switch s := message.(type) {
 	case messages.IWorkflowReply:
 		if isReplaying {
-			s.SetReplayStatus(proxyworkflow.ReplayStatusReplaying)
+			s.SetReplayStatus(proxytemporal.ReplayStatusReplaying)
 		} else {
-			s.SetReplayStatus(proxyworkflow.ReplayStatusNotReplaying)
+			s.SetReplayStatus(proxytemporal.ReplayStatusNotReplaying)
 		}
 
 	case *messages.WorkflowInvokeRequest:
 		if isReplaying {
-			s.SetReplayStatus(proxyworkflow.ReplayStatusReplaying)
+			s.SetReplayStatus(proxytemporal.ReplayStatusReplaying)
 		} else {
-			s.SetReplayStatus(proxyworkflow.ReplayStatusNotReplaying)
+			s.SetReplayStatus(proxytemporal.ReplayStatusNotReplaying)
 		}
 
 	case *messages.WorkflowQueryInvokeRequest:
 		if isReplaying {
-			s.SetReplayStatus(proxyworkflow.ReplayStatusReplaying)
+			s.SetReplayStatus(proxytemporal.ReplayStatusReplaying)
 		} else {
-			s.SetReplayStatus(proxyworkflow.ReplayStatusNotReplaying)
+			s.SetReplayStatus(proxytemporal.ReplayStatusNotReplaying)
 		}
 
 	case *messages.WorkflowSignalInvokeRequest:
 		if isReplaying {
-			s.SetReplayStatus(proxyworkflow.ReplayStatusReplaying)
+			s.SetReplayStatus(proxytemporal.ReplayStatusReplaying)
 		} else {
-			s.SetReplayStatus(proxyworkflow.ReplayStatusNotReplaying)
+			s.SetReplayStatus(proxytemporal.ReplayStatusNotReplaying)
 		}
 	}
 }

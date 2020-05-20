@@ -19,6 +19,7 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
+	proxytemporal "temporal-proxy/internal/temporal"
 	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
@@ -61,6 +62,31 @@ func (reply *ActivityGetLocalResultReply) SetResult(value []byte) {
 	reply.SetBytesProperty("Result", value)
 }
 
+// GetReplayStatus gets the ReplayStatus from a ActivityGetLocalResultReply's properties
+// map.
+//
+// returns proxytemporal.ReplayStatus -> the current history replay
+// state of an activity
+func (reply *ActivityGetLocalResultReply) GetReplayStatus() proxytemporal.ReplayStatus {
+	replayStatusPtr := reply.GetStringProperty("ReplayStatus")
+	if replayStatusPtr == nil {
+		return proxytemporal.ReplayStatusUnspecified
+	}
+	replayStatus := proxytemporal.StringToReplayStatus(*replayStatusPtr)
+
+	return replayStatus
+}
+
+// SetReplayStatus sets the ReplayStatus in a WorkflowInvokeRequest's properties
+// map.
+//
+// param value proxytemporal.ReplayStatus -> the current history replay
+// state of an activity
+func (reply *ActivityGetLocalResultReply) SetReplayStatus(value proxytemporal.ReplayStatus) {
+	status := value.String()
+	reply.SetStringProperty("ReplayStatus", &status)
+}
+
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -68,8 +94,13 @@ func (reply *ActivityGetLocalResultReply) SetResult(value []byte) {
 func (reply *ActivityGetLocalResultReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
 	reply.ActivityReply.Build(e)
 	if len(result) > 0 {
-		if v, ok := result[0].([]byte); ok {
-			reply.SetResult(v)
+		if v, ok := result[0].([]interface{}); ok {
+			if _v, _ok := v[0].([]byte); _ok {
+				reply.SetResult(_v)
+			}
+			if _v, _ok := v[1].(proxytemporal.ReplayStatus); _ok {
+				reply.SetReplayStatus(_v)
+			}
 		}
 	}
 }
@@ -88,5 +119,6 @@ func (reply *ActivityGetLocalResultReply) CopyTo(target IProxyMessage) {
 	reply.ActivityReply.CopyTo(target)
 	if v, ok := target.(*ActivityGetLocalResultReply); ok {
 		v.SetResult(reply.GetResult())
+		v.SetReplayStatus(reply.GetReplayStatus())
 	}
 }

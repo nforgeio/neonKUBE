@@ -19,8 +19,8 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
+	proxytemporal "temporal-proxy/internal/temporal"
 	proxyerror "temporal-proxy/internal/temporal/error"
-	proxyworkflow "temporal-proxy/internal/temporal/workflow"
 )
 
 type (
@@ -40,8 +40,8 @@ type (
 		IProxyReply
 		GetContextID() int64
 		SetContextID(value int64)
-		GetReplayStatus() proxyworkflow.ReplayStatus
-		SetReplayStatus(status proxyworkflow.ReplayStatus)
+		GetReplayStatus() proxytemporal.ReplayStatus
+		SetReplayStatus(status proxytemporal.ReplayStatus)
 	}
 )
 
@@ -81,14 +81,14 @@ func (reply *WorkflowReply) SetContextID(value int64) {
 // map. For workflow requests related to an executing workflow,
 // this will indicate the current history replay state.
 //
-// returns proxyworkflow.ReplayStatus -> the current history replay
+// returns proxytemporal.ReplayStatus -> the current history replay
 // state of a workflow
-func (reply *WorkflowReply) GetReplayStatus() proxyworkflow.ReplayStatus {
+func (reply *WorkflowReply) GetReplayStatus() proxytemporal.ReplayStatus {
 	replayStatusPtr := reply.GetStringProperty("ReplayStatus")
 	if replayStatusPtr == nil {
-		return proxyworkflow.ReplayStatusUnspecified
+		return proxytemporal.ReplayStatusUnspecified
 	}
-	replayStatus := proxyworkflow.StringToReplayStatus(*replayStatusPtr)
+	replayStatus := proxytemporal.StringToReplayStatus(*replayStatusPtr)
 
 	return replayStatus
 }
@@ -97,9 +97,9 @@ func (reply *WorkflowReply) GetReplayStatus() proxyworkflow.ReplayStatus {
 // map. For workflow requests related to an executing workflow,
 // this will indicate the current history replay state.
 //
-// param value proxyworkflow.ReplayStatus -> the current history replay
+// param value proxytemporal.ReplayStatus -> the current history replay
 // state of a workflow
-func (reply *WorkflowReply) SetReplayStatus(value proxyworkflow.ReplayStatus) {
+func (reply *WorkflowReply) SetReplayStatus(value proxytemporal.ReplayStatus) {
 	status := value.String()
 	reply.SetStringProperty("ReplayStatus", &status)
 }

@@ -1169,12 +1169,11 @@ namespace TestTemporal
                 message.ClientId = 444;
                 message.RequestId = 555;
                 message.TaskList = "my-tasks";
-                message.Options = new InternalWorkerOptions() { Identity = "my-identity", MaxConcurrentActivityExecutionSize = 1234 };
+                message.Options = new InternalWorkerOptions() { MaxConcurrentActivityExecutionSize = 1234 };
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-tasks", message.TaskList);
-                Assert.Equal("my-identity", message.Options.Identity);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
 
                 stream.SetLength(0);
@@ -1186,7 +1185,6 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-tasks", message.TaskList);
-                Assert.Equal("my-identity", message.Options.Identity);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
 
                 // Clone()
@@ -1196,7 +1194,6 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-tasks", message.TaskList);
-                Assert.Equal("my-identity", message.Options.Identity);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
@@ -1206,7 +1203,6 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-tasks", message.TaskList);
-                Assert.Equal("my-identity", message.Options.Identity);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
             }
         }

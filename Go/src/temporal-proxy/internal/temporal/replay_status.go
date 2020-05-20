@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package workflow
+package temporal
 
 // ReplayStatus indicates a workflow's
 // current replay status.
@@ -26,16 +26,16 @@ const (
 	// ReplayStatusUnspecified indicates that the corresponding
 	// operation cannot determine the replay
 	// status (e.g. because the it didn't relate
-	// to an executing workflow).
+	// to an executing workflow or activity).
 	// This is the default value.
 	ReplayStatusUnspecified ReplayStatus = 0
 
 	// ReplayStatusNotReplaying indicates that
-	// the related workflow is not replaying.
+	// the related workflow or activity is not replaying.
 	ReplayStatusNotReplaying ReplayStatus = 1
 
 	// ReplayStatusReplaying indicates that
-	// The related workflow is replaying.
+	// The related workflow or activity is replaying.
 	ReplayStatusReplaying ReplayStatus = 2
 )
 
