@@ -15,18 +15,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# This script builds the [cadence-proxy] GOLANG executables and writes
+# This script builds the [temporal-proxy] GOLANG executables and writes
 # them to: $NF_BUILD.
 #
 # USAGE: powershell -file build-temporal-proxy.ps1
 
 $env:GOPATH   = "$env:NF_ROOT\Go"
 $buildPath    = "$env:NF_BUILD"
-$projectPath  = "$env:GOPATH\src\github.com\cadence-proxy"
+$projectPath  = "$env:GOPATH\src\temporal-proxy"
 $logPath      = "$buildPath\build-temporal-proxy.log"
 $orgDirectory = Get-Location
 
-Set-Location "$projectpath\cmd\cadenceproxy"
+Set-Location "$projectpath\cmd\temporalproxy"
 
 # Ensure that the build output folder exists.
 if (!(test-path $buildPath))
@@ -40,7 +40,7 @@ Set-Location $projectPath
 # Build the WINDOWS binary
 $env:GOOS	= "windows"
 $env:GOARCH = "amd64"
-go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\temporal-proxy.win.exe cmd\cadenceproxy\main.go > "$logPath" 2>&1
+go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\temporal-proxy.win.exe cmd\temporalproxy\main.go > "$logPath" 2>&1
 
 $exitCode = $lastExitCode
 
@@ -54,7 +54,7 @@ if ($exitCode -ne 0)
 # Build the LINUX binary
 $env:GOOS   = "linux"
 $env:GOARCH = "amd64"
-go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\temporal-proxy.linux cmd\cadenceproxy\main.go > "$logPath" 2>&1
+go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\temporal-proxy.linux cmd\temporalproxy\main.go > "$logPath" 2>&1
 
 $exitCode = $lastExitCode
 
@@ -68,7 +68,7 @@ if ($exitCode -ne 0)
 # Build the OSX binary
 $env:GOOS   = "darwin"
 $env:GOARCH = "amd64"
-go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\temporal-proxy.osx cmd\cadenceproxy\main.go > "$logPath" 2>&1
+go build -i -mod=vendor -ldflags="-w -s" -v -o $buildPath\temporal-proxy.osx cmd\temporalproxy\main.go > "$logPath" 2>&1
 
 $exitCode = $lastExitCode
 
