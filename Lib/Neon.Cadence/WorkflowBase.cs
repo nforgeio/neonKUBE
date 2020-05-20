@@ -151,7 +151,6 @@ namespace Neon.Cadence
         private static object                                           syncLock     = new object();
         private static INeonLogger                                      log          = LogManager.Default.GetLogger<WorkflowBase>();
         private static Dictionary<WorkflowInstanceKey, WorkflowBase>    idToWorkflow = new Dictionary<WorkflowInstanceKey, WorkflowBase>();
-        private static byte[]                                           emptyBytes   = new byte[0];
 
         // This dictionary is used to map workflow type names to the target workflow
         // registration.  Note that these mappings are scoped to specific cadence client
@@ -682,7 +681,7 @@ namespace Neon.Cadence
                 var workflowMethod   = registration.WorkflowMethod;
                 var resultType       = workflowMethod.ReturnType;
                 var args             = CadenceHelper.BytesToArgs(client.DataConverter, request.Args, registration.WorkflowMethodParameterTypes);
-                var serializedResult = emptyBytes;
+                var serializedResult = Array.Empty<byte>();
 
                 if (resultType.IsGenericType)
                 {
@@ -1152,7 +1151,7 @@ namespace Neon.Cadence
                         var resultType           = method.ReturnType;
                         var methodParameterTypes = method.GetParameterTypes();
 
-                        var serializedResult = emptyBytes;
+                        var serializedResult = Array.Empty<byte>();
 
                         if (resultType.IsGenericType)
                         {

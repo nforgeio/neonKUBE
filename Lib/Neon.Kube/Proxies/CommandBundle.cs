@@ -229,7 +229,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(command), nameof(command));
 
             this.Command = command;
-            this.Args    = args ?? new object[0];
+            this.Args    = args ?? Array.Empty<object>();
         }
 
         /// <summary>
@@ -295,7 +295,7 @@ namespace Neon.Kube
             Add(new CommandFile()
             {
                 Path         = path,
-                Data         = data ?? new byte[0],
+                Data         = data ?? Array.Empty<byte>(),
                 IsExecutable = isExecutable
             });
         }

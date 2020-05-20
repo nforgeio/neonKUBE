@@ -1203,7 +1203,7 @@ namespace Neon.Common
 
             int len = input.Length;
             if (len < 1)
-                return new byte[0];
+                return Array.Empty<byte>();
 
             ///////////////////////////////////////////////////////////////////
             // Step 1: Calculate the number of padding chars to append to this string.

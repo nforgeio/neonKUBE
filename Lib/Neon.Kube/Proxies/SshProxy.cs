@@ -1705,7 +1705,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
 
             if (bytes == null)
             {
-                bytes = new byte[0];
+                bytes = Array.Empty<byte>();
             }
 
             using (var ms = new MemoryStream(bytes))
@@ -2603,7 +2603,7 @@ echo $? > {cmdFolder}/exit
                 {
                     if (binaryOutput)
                     {
-                        var outputBinary = response.OutputBinary ?? new byte[0];
+                        var outputBinary = response.OutputBinary ?? Array.Empty<byte>();
 
                         LogLine($"    BINARY OUTPUT [length={outputBinary.Length}]");
                     }

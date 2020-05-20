@@ -116,7 +116,7 @@ environment variable to the path to the editor executable file.
                 // Create an empty temporary file, encrypt it to the target
                 // file, and then launch the editor on the temporary file.
 
-                File.WriteAllBytes(tempPath, new byte[0]);
+                File.WriteAllBytes(tempPath, Array.Empty<byte>());
                 vault.Encrypt(tempPath, path, passwordName);
                 NeonHelper.OpenEditor(tempPath);
 
