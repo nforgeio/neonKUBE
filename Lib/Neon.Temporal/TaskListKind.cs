@@ -30,7 +30,6 @@ namespace Neon.Temporal
     /// Enumerates the different kinds of task lists.
     /// </summary>
     public enum TaskListKind
-
     {
         // WARNING: These values must match those defined by [InternalTaskListKind].
 
