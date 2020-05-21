@@ -108,30 +108,6 @@ func (request *DescribeTaskListRequest) SetTaskListType(value tasklist.TaskListT
 	request.SetStringProperty("TaskListType", &taskListType)
 }
 
-// GetTaskListKind gets the TaskListKind property from the DescribeTaskListRequest's
-// properties map, identifies the type of task list being requested:
-// decision (AKA workflow) or activity.
-//
-// returns tasklist.TaskListKind -> the TaskListKind.
-func (request *DescribeTaskListRequest) GetTaskListKind() tasklist.TaskListKind {
-	taskListKindPtr := request.GetStringProperty("TaskListKind")
-	if taskListKindPtr == nil {
-		return tasklist.TaskListKind_Normal
-	}
-
-	return proxyclient.StringToTaskListKind(*taskListKindPtr)
-}
-
-// SetTaskListKind sets the TaskListKind property in the DescribeTaskListRequest's
-// properties map, identifies the type of task list being requested:
-// decision (AKA workflow) or activity.
-//
-// param value workflowservice.TaskListKind -> the TaskListKind.
-func (request *DescribeTaskListRequest) SetTaskListKind(value tasklist.TaskListKind) {
-	taskListKind := value.String()
-	request.SetStringProperty("TaskListKind", &taskListKind)
-}
-
 // -------------------------------------------------------------------------
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
@@ -151,6 +127,5 @@ func (request *DescribeTaskListRequest) CopyTo(target IProxyMessage) {
 		v.SetName(request.GetName())
 		v.SetNamespace(request.GetNamespace())
 		v.SetTaskListType(request.GetTaskListType())
-		v.SetTaskListKind(request.GetTaskListKind())
 	}
 }
