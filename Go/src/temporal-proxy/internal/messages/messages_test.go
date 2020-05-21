@@ -1948,7 +1948,8 @@ func (s *UnitTestSuite) TestDescribeTaskListRequest() {
 		s.Nil(v.GetName())
 		s.Nil(v.GetNamespace())
 		s.Equal(int64(0), v.GetClientID())
-		s.Nil(v.GetTaskListType())
+		s.Equal(tasklist.TaskListType_Decision, v.GetTaskListType())
+		s.Equal(tasklist.TaskListKind_Normal, v.GetTaskListKind())
 
 		// Round-trip
 
@@ -1966,8 +1967,11 @@ func (s *UnitTestSuite) TestDescribeTaskListRequest() {
 		v.SetNamespace(&namespaceStr)
 		s.Equal("my-namespace", *v.GetNamespace())
 
-		v.SetTaskListType(tasklist.TaskListType_Decision)
-		s.Equal(tasklist.TaskListType_Decision, v.GetTaskListType())
+		v.SetTaskListType(tasklist.TaskListType_Activity)
+		s.Equal(tasklist.TaskListType_Activity, v.GetTaskListType())
+
+		v.SetTaskListKind(tasklist.TaskListKind_Sticky)
+		s.Equal(tasklist.TaskListKind_Sticky, v.GetTaskListKind())
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1983,8 +1987,8 @@ func (s *UnitTestSuite) TestDescribeTaskListRequest() {
 		s.Equal(int64(666), v.GetClientID())
 		s.Equal("my-name", *v.GetName())
 		s.Equal("my-namespace", *v.GetNamespace())
-		s.Equal(tasklist.TaskListType_Decision, v.GetTaskListType())
-		s.Equal(tasklist.TaskListType_Decision, v.GetTaskListType())
+		s.Equal(tasklist.TaskListType_Activity, v.GetTaskListType())
+		s.Equal(tasklist.TaskListKind_Sticky, v.GetTaskListKind())
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1996,8 +2000,8 @@ func (s *UnitTestSuite) TestDescribeTaskListRequest() {
 		s.Equal(int64(666), v.GetClientID())
 		s.Equal("my-name", *v.GetName())
 		s.Equal("my-namespace", *v.GetNamespace())
-		s.Equal(tasklist.TaskListType_Decision, v.GetTaskListType())
-		s.Equal(tasklist.TaskListType_Decision, v.GetTaskListType())
+		s.Equal(tasklist.TaskListType_Activity, v.GetTaskListType())
+		s.Equal(tasklist.TaskListKind_Sticky, v.GetTaskListKind())
 	}
 }
 
