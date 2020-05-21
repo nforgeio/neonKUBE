@@ -149,15 +149,6 @@ namespace Neon.Temporal.Internal
         public bool AutoHeartBeat { get; set; }
 
         /// <summary>
-        /// Specifies an identity that will be used to track this host for debugging.
-        /// This will be included in the Temporal woirkflow history.  This defaults to
-        /// a string including the current hostname, groupName and process ID.
-        /// </summary>
-        [JsonProperty(PropertyName = "Identity", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string Identity { get; set; }
-
-        /// <summary>
         /// Optionally enables logging during workflow replay.  This defaults to <c>false</c>.
         /// </summary>
         /// <remarks>

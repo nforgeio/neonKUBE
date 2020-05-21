@@ -256,62 +256,14 @@ namespace Neon.Xunit.Cadence
                     CadenceClient.Reset();
                 }
 
-                // [TemporalFixture] deploys a stack that exposes some of the same
-                // ports as [CadenceFixture], so we're going ensure that any running
-                // [TemporalFixture] stack is stopped first.
+                // [TemporalFixture] deploys a compose application that exposes some of 
+                // the same ports as [CadenceFixture], so we're going ensure that any 
+                // running [TemporalFixture] application is stopped first.
                 //
                 // Most users won't run into this because Cadence eventually will be
                 // depreciated but neonKUBE unit tests will require this.
 
-                NeonHelper.Execute("docker.exe",
-                    new string[]
-                    {
-                        "stack",
-                        "rm",
-                        "temporal-dev"
-                    });
-
-
-                // $hack(jefflill):
-                //
-                // Unforunately, the [docker stack rm ...] command is asynchronous, which
-                // means that that containers and related assets like networks will not
-                // necessarily be removed when the command returns.  This is uper annoying
-                // and has been an open Docker CLI bug since 2017:
-                //
-                //      https://github.com/moby/moby/issues/32620
-                //
-                // We're going to workaround this by waiting until all stack containers
-                // and networks are actually removed.  We're going to assume that these
-                // will have names prefixed by stack "<name>_" which may be a bit fragile.
-
-                // Poll until there are no containers named like "<name>_*"
-
-                var pollTimeout = TimeSpan.FromSeconds(60);
-
-                NeonHelper.WaitFor(
-                    () =>
-                    {
-                        var result = NeonHelper.ExecuteCapture("docker.exe", new string[] { "ps" });
-
-                        return !result.OutputText.Contains($"{name}_");
-                    },
-                    timeout: pollTimeout,
-                    pollTime: TimeSpan.FromMilliseconds(250));
-
-                // Poll until there are no networks named like "<name>_*"
-
-                NeonHelper.WaitFor(
-                    () =>
-                    {
-                        var result = NeonHelper.ExecuteCapture("docker.exe", new string[] { "network", "ls" });
-
-                        return !result.OutputText.Contains($"{name}_");
-                    },
-                    timeout: pollTimeout,
-                    pollTime: TimeSpan.FromMilliseconds(250));
-
-                Thread.Sleep(removeDelay);
+                DockerComposeFixture.StopApplication("temporal-dev");
 
                 // Start the Cadence container.
 

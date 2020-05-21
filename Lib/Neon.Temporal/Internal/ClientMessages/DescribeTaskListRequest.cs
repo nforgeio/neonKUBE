@@ -68,15 +68,6 @@ namespace Neon.Temporal.Internal
             set => SetEnumProperty<TaskListType>(PropertyNames.TaskListType, value);
         }
 
-        /// <summary>
-        /// Identifies the kind of task list being requested: sticky or normal.
-        /// </summary>
-        public TaskListType TaskListKind
-        {
-            get => GetEnumProperty<TaskListType>(PropertyNames.TaskListType);
-            set => SetEnumProperty<TaskListType>(PropertyNames.TaskListType, value);
-        }
-
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
@@ -96,7 +87,6 @@ namespace Neon.Temporal.Internal
 
             typedTarget.Name         = this.Name;
             typedTarget.TaskListType = this.TaskListType;
-            typedTarget.TaskListKind = this.TaskListKind;
         }
     }
 }

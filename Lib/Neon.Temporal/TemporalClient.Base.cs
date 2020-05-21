@@ -105,11 +105,6 @@ namespace Neon.Temporal
                 }
             }
 
-            if (string.IsNullOrEmpty(options.Identity))
-            {
-                options.Identity = Settings.ClientIdentity;
-            }
-
             var reply = (NewWorkerReply)(await CallProxyAsync(
                 new NewWorkerRequest()
                 {

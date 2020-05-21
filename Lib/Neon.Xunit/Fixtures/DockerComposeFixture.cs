@@ -56,6 +56,102 @@ namespace Neon.Xunit
     /// <threadsafety instance="true"/>
     public class DockerComposeFixture : TestFixture
     {
+        //---------------------------------------------------------------------
+        // Static mmembers
+
+        /// <summary>
+        /// Stops any existing docker-compose application running with the same name passed.
+        /// </summary>
+        public static void StopApplication(string name)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+
+            // We're going to list any existing compose containers and look for any
+            // with names like:
+            //
+            //      APPLICATION-NAME_*
+            //
+            // We're going to assume that an existing docker-compose application is
+            // currently running if we find any of these and remove the application.
+
+            var result = NeonHelper.ExecuteCapture("docker.exe", new object[] { "ps", "--all", "--format", "{{.Names}}" });
+
+            Covenant.Assert(result.ExitCode == 0, result.ErrorText);
+
+            var appNamePrefix  = $"{name}_";
+            var containerNames = new List<string>();
+
+            using (var reader = new StringReader(result.AllText))
+            {
+                foreach (var line in reader.Lines())
+                {
+                    if (line.StartsWith(appNamePrefix))
+                    {
+                        containerNames.Add(line);
+                    }
+                }
+            }
+
+            if (containerNames.Count > 0)
+            {
+                // Looks like the application is running, so we'll need to stop it.
+                // We have a couple problems to deal with:
+                //
+                //      1. Normally you'd need the original compose file to bring the
+                //         application down cleanly via docker-compose.  The problem is
+                //         that we may not have the original compose file anymore because
+                //         the application could have been started long ago.
+                //
+                //         We could save the compose file as a temp file somewhere but
+                //         we're not going to do that because of #2 below.
+                //
+                //      2. It seems like many container images don't handle SIGTERM signals
+                //         and rely on the hosting environment to wait for seconds before
+                //         killing the container processes.  Docker defaults to waiting for
+                //         10 seconds.  This delay is annoying, and to make it worse, compose
+                //         seems to wait separately for each container it's closing, so 
+                //         stopping a three container application may take 30 seconds.
+                //
+                // To deal with both #1 and #2 above we're going to simply [rm --force] the application's
+                // containers explicitly as well as removing any lingering application networks.
+
+                // Remove the napplication containers:
+
+                result = NeonHelper.ExecuteCapture("docker.exe", new object[] { "rm", "--force", containerNames });
+
+                Covenant.Assert(result.ExitCode == 0, result.ErrorText);
+            }
+
+            // Remove any application (possibly orphaned) networks:
+
+            var networkNames = new List<string>();
+
+            result = NeonHelper.ExecuteCapture("docker.exe", new object[] { "network", "ls", "--format", "{{.Name}}" });
+
+            Covenant.Assert(result.ExitCode == 0, result.ErrorText);
+
+            using (var reader = new StringReader(result.AllText))
+            {
+                foreach (var line in reader.Lines())
+                {
+                    if (line.StartsWith(appNamePrefix))
+                    {
+                        networkNames.Add(line);
+                    }
+                }
+            }
+
+            if (networkNames.Count > 0)
+            {
+                result = NeonHelper.ExecuteCapture("docker.exe", new object[] { "network", "rm", networkNames });
+
+                Covenant.Assert(result.ExitCode == 0, result.ErrorText);
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private string      composeFile;
         private bool        keepOpen;
 
@@ -188,7 +284,7 @@ namespace Neon.Xunit
             // the unit tests before the fixture was disposed or an application with
             // the same name is already running for some other reason.
 
-            StopApplication();
+            StopApplication(ApplicationName);
 
             // Start the application.  Note that we're going to write the compose file
             // to a temporary file to accomplish this.
@@ -206,95 +302,6 @@ namespace Neon.Xunit
             }
         }
 
-        /// <summary>
-        /// Stops any existing docker-compose application running with the same name as
-        /// the current application.
-        /// </summary>
-        private void StopApplication()
-        {
-            // We're going to list any existing compose containers and look for any
-            // with names like:
-            //
-            //      APPLICATION-NAME_*
-            //
-            // We're going to assume that an existing docker-compose application is
-            // currently running if we find any of these and remove the application.
-
-            var result = NeonHelper.ExecuteCapture("docker.exe", new object[] { "ps", "--all", "--format", "{{.Names}}" });
-
-            Covenant.Assert(result.ExitCode == 0, result.ErrorText);
-
-            var appNamePrefix  = $"{ApplicationName}_";
-            var containerNames = new List<string>();
-
-            using (var reader = new StringReader(result.AllText))
-            {
-                foreach (var line in reader.Lines())
-                {
-                    if (line.StartsWith(appNamePrefix))
-                    {
-                        containerNames.Add(line);
-                    }
-                }
-            }
-
-            if (containerNames.Count > 0)
-            {
-                // Looks like the application is running, so we'll need to stop it.
-                // We have a couple problems to deal with:
-                //
-                //      1. Normally you'd need the original compose file to bring the
-                //         application down cleanly via docker-compose.  The problem is
-                //         that we may not have the original compose file anymore because
-                //         the application could have been started long ago.
-                //
-                //         We could save the compose file as a temp file somewhere but
-                //         we're not going to do that because of #2 below.
-                //
-                //      2. It seems like many container images don't handle SIGTERM signals
-                //         and rely on the hosting environment to wait for seconds before
-                //         killing the container processes.  Docker defaults to waiting for
-                //         10 seconds.  This delay is annoying, and to make it worse, compose
-                //         seems to wait separately for each container it's closing, so 
-                //         stopping a three container application may take 30 seconds.
-                //
-                // To deal with both #1 and #2 above we're going to simply [rm --force] the application's
-                // containers explicitly as well as removing any lingering application networks.
-
-                // Remove the napplication containers:
-
-                result = NeonHelper.ExecuteCapture("docker.exe", new object[] { "rm", "--force", containerNames });
-
-                Covenant.Assert(result.ExitCode == 0, result.ErrorText);
-            }
-
-            // Remove any application (possibly orphaned) networks:
-
-            var networkNames = new List<string>();
-
-            result = NeonHelper.ExecuteCapture("docker.exe", new object[] { "network", "ls", "--format", "{{.Name}}" });
-
-            Covenant.Assert(result.ExitCode == 0, result.ErrorText);
-
-            using (var reader = new StringReader(result.AllText))
-            {
-                foreach (var line in reader.Lines())
-                {
-                    if (line.StartsWith(appNamePrefix))
-                    {
-                        networkNames.Add(line);
-                    }
-                }
-            }
-
-            if (networkNames.Count > 0)
-            {
-                result = NeonHelper.ExecuteCapture("docker.exe", new object[] { "network", "rm", networkNames });
-
-                Covenant.Assert(result.ExitCode == 0, result.ErrorText);
-            }
-        }
-
         /// <inheritdoc/>
         public override void Reset()
         {
@@ -302,7 +309,7 @@ namespace Neon.Xunit
 
             if (!keepOpen)
             {
-                StopApplication();
+                StopApplication(ApplicationName);
             }
 
             base.Reset();
