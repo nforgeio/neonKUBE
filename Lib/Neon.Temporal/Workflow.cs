@@ -1686,21 +1686,7 @@ namespace Neon.Temporal
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </para>
         /// <para>
-        /// <paramref name="workflowTypeName"/> specifies the target workflow implementation type name and optionally,
-        /// the specific workflow method to be called for workflow interfaces that have multiple methods.  For
-        /// workflow methods tagged by <c>[WorkflowMethod]</c> with specifying a name, the workflow type name will default
-        /// to the fully qualified interface type name or the custom type name specified by <see cref="WorkflowAttribute.Name"/>.
-        /// </para>
-        /// <para>
-        /// For workflow methods with <see cref="WorkflowMethodAttribute.Name"/> specified, the workflow type will
-        /// look like:
-        /// </para>
-        /// <code>
-        /// WORKFLOW-TYPE-NAME::METHOD-NAME
-        /// </code>
-        /// <para>
-        /// You'll need to use this format when calling workflows using external untyped stubs or 
-        /// from other languages.  The Java Temporal client works the same way.
+        /// <paramref name="workflowTypeName"/> specifies the target workflow type name.
         /// </para>
         /// </remarks>
         public ChildWorkflowFutureStub NewUntypedChildWorkflowFutureStub(string workflowTypeName, ChildWorkflowOptions options = null)
@@ -1733,21 +1719,7 @@ namespace Neon.Temporal
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </para>
         /// <para>
-        /// <paramref name="workflowTypeName"/> specifies the target workflow implementation type name and optionally,
-        /// the specific workflow method to be called for workflow interfaces that have multiple methods.  For
-        /// workflow methods tagged by <c>[WorkflowMethod]</c> with specifying a name, the workflow type name will default
-        /// to the fully qualified interface type name or the custom type name specified by <see cref="WorkflowAttribute.Name"/>.
-        /// </para>
-        /// <para>
-        /// For workflow methods with <see cref="WorkflowMethodAttribute.Name"/> specified, the workflow type will
-        /// look like:
-        /// </para>
-        /// <code>
-        /// WORKFLOW-TYPE-NAME::METHOD-NAME
-        /// </code>
-        /// <para>
-        /// You'll need to use this format when calling workflows using external untyped stubs or 
-        /// from other languages.  The Java Temporal client works the same way.
+        /// <paramref name="workflowTypeName"/> specifies the target workflow type name.
         /// </para>
         /// </remarks>
         public UntypedChildWorkflowFutureStub<TResult> NewUntypedChildWorkflowFutureStub<TResult>(string workflowTypeName, ChildWorkflowOptions options = null)

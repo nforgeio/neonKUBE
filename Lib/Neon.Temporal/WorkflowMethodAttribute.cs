@@ -62,11 +62,16 @@ namespace Neon.Temporal
         /// WORKFLOW_TYPENAME::METHODNAME
         /// </code>
         /// <para>
-        /// where <b>WORKFLOW_TYPENAME</b> is either the workflow interface's fully qualified 
-        /// name or the name specified by <see cref="WorkflowAttribute.Name"/> and 
-        /// <b>METHOD_NAME</b> is from <see cref="WorkflowMethodAttribute.Name"/>.  This
-        /// is the same convention implemented by the Java client.
+        /// where <b>WORKFLOW_TYPENAME</b> defaults to the the workflow interface's fully qualified 
+        /// name (with any leading "I" character removed and <b>METHOD_NAME</b> is from
+        /// <see cref="WorkflowMethodAttribute.Name"/>.  This is the same convention implemented by 
+        /// the Java client.
         /// </para>
+        /// <note>
+        /// Settings <see cref="IsFullName"/><c>true</c> specifies that <see cref="WorkflowMethodAttribute.Name"/>
+        /// by itself specifies the workflow type name so you can easily interoperate with other
+        /// clients and type naming conventions.
+        /// </note>
         /// <para>
         /// Sometimes it's useful to be able to specify a workflow type name that doesn't
         /// follow the convention above, for example to interoperate with workflows written

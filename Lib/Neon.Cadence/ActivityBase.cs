@@ -587,6 +587,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Returns additional information about the activity and the workflow that executed it.
+        /// </summary>
         internal ActivityTask ActivityTask { get; private set; }
 
         /// <summary>
