@@ -109,8 +109,8 @@ func (request *DescribeTaskListRequest) SetTaskListType(value tasklist.TaskListT
 }
 
 // GetTaskListKind gets the TaskListKind property from the DescribeTaskListRequest's
-// properties map, identifies the type of task list being requested:
-// decision (AKA workflow) or activity.
+// properties map, identifies the kind of task list being requested:
+// normal or sticky.
 //
 // returns tasklist.TaskListKind -> the TaskListKind.
 func (request *DescribeTaskListRequest) GetTaskListKind() tasklist.TaskListKind {
@@ -124,7 +124,7 @@ func (request *DescribeTaskListRequest) GetTaskListKind() tasklist.TaskListKind 
 
 // SetTaskListKind sets the TaskListKind property in the DescribeTaskListRequest's
 // properties map, identifies the type of task list being requested:
-// decision (AKA workflow) or activity.
+// normal or sticky.
 //
 // param value workflowservice.TaskListKind -> the TaskListKind.
 func (request *DescribeTaskListRequest) SetTaskListKind(value tasklist.TaskListKind) {
