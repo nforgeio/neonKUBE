@@ -4381,7 +4381,7 @@ namespace TestCadence
 
             // testCadenceImage = "nkubedev/test-cadence:cadence-latest";
 
-            NeonHelper.Execute("docker.exe",
+            NeonHelper.Execute(NeonHelper.DockerCli,
                 new object[]
                 {
                     "rm", "--force", "test-cadence"
@@ -4389,7 +4389,7 @@ namespace TestCadence
 
             // Make sure we have the latest image first.
 
-            var exitCode = NeonHelper.Execute("docker.exe",
+            var exitCode = NeonHelper.Execute(NeonHelper.DockerCli,
                 new object[]
                 {
                     "pull",
@@ -4403,7 +4403,7 @@ namespace TestCadence
 
             // Start the test workflow service.
 
-            exitCode = NeonHelper.Execute("docker.exe",
+            exitCode = NeonHelper.Execute(NeonHelper.DockerCli,
                 new object[]
                 {
                     "run",
@@ -4452,7 +4452,7 @@ namespace TestCadence
             {
                 // Kill the [test-cadence] container.
 
-                exitCode = NeonHelper.Execute("docker.exe",
+                exitCode = NeonHelper.Execute(NeonHelper.DockerCli,
                     new object[]
                     {
                         "rm", "--force", "test-cadence",

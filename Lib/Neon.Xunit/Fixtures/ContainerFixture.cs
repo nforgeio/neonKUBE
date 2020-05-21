@@ -292,7 +292,7 @@ namespace Neon.Xunit
             // and remove it if its ID doesn't match the current container.
 
             var args   = new string[] { "ps", "-a", "--filter", $"name={name}", "--format", "{{.ID}}" };
-            var result = NeonHelper.ExecuteCapture($"docker.exe", args);
+            var result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, args);
 
             if (result.ExitCode == 0)
             {
@@ -300,7 +300,7 @@ namespace Neon.Xunit
 
                 if (!string.IsNullOrEmpty(existingId))
                 {
-                    NeonHelper.Execute("docker.exe", new object[] { "rm", "--force", "-v", existingId });
+                    NeonHelper.Execute(NeonHelper.DockerCli, new object[] { "rm", "--force", "-v", existingId });
                 }
             }
 
@@ -313,7 +313,7 @@ namespace Neon.Xunit
             pullRetry.InvokeAsync(
                 async () =>
                 {
-                    result = NeonHelper.ExecuteCapture($"docker.exe", argsString);
+                    result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, argsString);
 
                     if (result.ExitCode != 0)
                     {
@@ -372,7 +372,7 @@ namespace Neon.Xunit
             }
 
             argsString = NeonHelper.NormalizeExecArgs("run", dockerArgs);
-            result     = NeonHelper.ExecuteCapture($"docker.exe", argsString);
+            result     = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, argsString);
 
             if (result.ExitCode != 0)
             {
@@ -395,7 +395,7 @@ namespace Neon.Xunit
                 try
                 {
                     var args   = new string[] { "rm", "--force", "-v", ContainerId };
-                    var result = NeonHelper.ExecuteCapture($"docker.exe", args);
+                    var result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, args);
 
                     if (result.ExitCode != 0)
                     {

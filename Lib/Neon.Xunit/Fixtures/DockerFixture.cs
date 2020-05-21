@@ -591,7 +591,7 @@ namespace Neon.Xunit
         {
             base.CheckDisposed();
 
-            return NeonHelper.ExecuteCapture("docker.exe", args);
+            return NeonHelper.ExecuteCapture(NeonHelper.DockerCli, args);
         }
 
         /// <summary>
@@ -616,7 +616,7 @@ namespace Neon.Xunit
         {
             base.CheckDisposed();
 
-            return NeonHelper.ExecuteCapture("docker.exe", argString);
+            return NeonHelper.ExecuteCapture(NeonHelper.DockerCli, argString);
         }
 
         /// <summary>

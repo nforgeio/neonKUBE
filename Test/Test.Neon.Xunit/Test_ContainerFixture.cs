@@ -49,7 +49,7 @@ namespace TestXunit
         {
             // All we need to do is verify that the container is running.
 
-            var result = NeonHelper.ExecuteCapture("docker.exe", "ps");
+            var result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, "ps");
 
             Assert.Equal(0, result.ExitCode);
             Assert.Contains("neon-unit-test-container", result.AllText);

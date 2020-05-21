@@ -1843,5 +1843,60 @@ namespace Neon.Common
 
             return converters;
         }
+
+        private static string dockerCli        = null;
+        private static string dockerComposeCli = null;
+
+        /// <summary>
+        /// Returns the name of the Docker CLI execuable for the current platform.  This will
+        /// be <b>docker.exe</b> on Windows and just <b>docker</b> on Linux and OS/x.
+        /// </summary>
+        public static string DockerCli
+        {
+            get
+            {
+                if (dockerCli != null)
+                {
+                    return dockerCli;
+                }
+
+                if (IsWindows)
+                {
+                    dockerCli = "docker.exe";
+                }
+                else
+                {
+                    dockerCli = "docker";
+                }
+
+                return dockerCli;
+            }
+        }
+
+        /// <summary>
+        /// Returns the name of the Docker Compose CLI execuable for the current platform.  This will
+        /// be <b>docker-compose.exe</b> on Windows and just <b>docker-compose</b> on Linux and OS/x.
+        /// </summary>
+        public static string DockerComposeCli
+        {
+            get
+            {
+                if (dockerComposeCli != null)
+                {
+                    return dockerComposeCli;
+                }
+
+                if (IsWindows)
+                {
+                    dockerComposeCli = "docker-compose.exe";
+                }
+                else
+                {
+                    dockerComposeCli = "docker-compose";
+                }
+
+                return dockerComposeCli;
+            }
+        }
     }
 }

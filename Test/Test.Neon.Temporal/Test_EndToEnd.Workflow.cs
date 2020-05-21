@@ -4380,7 +4380,7 @@ namespace TestTemporal
 
             // TestTemporalImage = "nkubedev/test-temporal:temporal-latest";
 
-            NeonHelper.Execute("docker.exe",
+            NeonHelper.Execute(NeonHelper.DockerCli,
                 new object[]
                 {
                     "rm", "--force", "test-temporal"
@@ -4388,7 +4388,7 @@ namespace TestTemporal
 
             // Make sure we have the latest image first.
 
-            var exitCode = NeonHelper.Execute("docker.exe",
+            var exitCode = NeonHelper.Execute(NeonHelper.DockerCli,
                 new object[]
                 {
                     "pull",
@@ -4402,7 +4402,7 @@ namespace TestTemporal
 
             // Start the test workflow service.
 
-            exitCode = NeonHelper.Execute("docker.exe",
+            exitCode = NeonHelper.Execute(NeonHelper.DockerCli,
                 new object[]
                 {
                     "run",
@@ -4451,7 +4451,7 @@ namespace TestTemporal
             {
                 // Kill the [test-temporal] container.
 
-                exitCode = NeonHelper.Execute("docker.exe",
+                exitCode = NeonHelper.Execute(NeonHelper.DockerCli,
                     new object[]
                     {
                         "rm", "--force", "test-temporal",

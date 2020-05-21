@@ -61,12 +61,12 @@ services:
             // All we need to do is verify that the application containers are running
             // and that the default application network exists.
 
-            var result = NeonHelper.ExecuteCapture("docker.exe", new string[] { "ps" });
+            var result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new string[] { "ps" });
 
             Assert.Equal(0, result.ExitCode);
             Assert.Contains("neon-unit-test-stack_", result.AllText);
 
-            result = NeonHelper.ExecuteCapture("docker.exe", new string[] { "network", "ls" });
+            result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new string[] { "network", "ls" });
 
             Assert.Equal(0, result.ExitCode);
             Assert.Contains("neon-unit-test-stack_default", result.AllText);
@@ -80,7 +80,7 @@ services:
             // that the new container ID was assigned a new ID.
 
             var idRegex = new Regex(@"^neon-unit-test-stack_.+$", RegexOptions.Multiline);
-            var result  = NeonHelper.ExecuteCapture("docker.exe", new object[] { "ps", "--format", "{{.Names}}.{{.ID}}" });
+            var result  = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "ps", "--format", "{{.Names}}.{{.ID}}" });
 
             Assert.Equal(0, result.ExitCode);
 
@@ -88,7 +88,7 @@ services:
 
             fixture.Restart();
 
-            result = NeonHelper.ExecuteCapture("docker.exe", new object[] { "ps", "--format", "{{.Names}}.{{.ID}}" });
+            result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "ps", "--format", "{{.Names}}.{{.ID}}" });
             
             Assert.Equal(0, result.ExitCode);
 

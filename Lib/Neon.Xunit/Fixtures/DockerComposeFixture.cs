@@ -74,7 +74,7 @@ namespace Neon.Xunit
             // We're going to assume that an existing docker-compose application is
             // currently running if we find any of these and remove the application.
 
-            var result = NeonHelper.ExecuteCapture("docker.exe", new object[] { "ps", "--all", "--format", "{{.Names}}" });
+            var result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "ps", "--all", "--format", "{{.Names}}" });
 
             Covenant.Assert(result.ExitCode == 0, result.ErrorText);
 
@@ -117,7 +117,7 @@ namespace Neon.Xunit
 
                 // Remove the napplication containers:
 
-                result = NeonHelper.ExecuteCapture("docker.exe", new object[] { "rm", "--force", containerNames });
+                result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "rm", "--force", containerNames });
 
                 Covenant.Assert(result.ExitCode == 0, result.ErrorText);
             }
@@ -126,7 +126,7 @@ namespace Neon.Xunit
 
             var networkNames = new List<string>();
 
-            result = NeonHelper.ExecuteCapture("docker.exe", new object[] { "network", "ls", "--format", "{{.Name}}" });
+            result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "network", "ls", "--format", "{{.Name}}" });
 
             Covenant.Assert(result.ExitCode == 0, result.ErrorText);
 
@@ -143,7 +143,7 @@ namespace Neon.Xunit
 
             if (networkNames.Count > 0)
             {
-                result = NeonHelper.ExecuteCapture("docker.exe", new object[] { "network", "rm", networkNames });
+                result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "network", "rm", networkNames });
 
                 Covenant.Assert(result.ExitCode == 0, result.ErrorText);
             }
@@ -293,7 +293,7 @@ namespace Neon.Xunit
             {
                 File.WriteAllText(tempFile.Path, composeFile);
 
-                var result = NeonHelper.ExecuteCapture("docker-compose.exe", new string[] { "-f", tempFile.Path, "--project-name", ApplicationName, "up", "--detach" });
+                var result = NeonHelper.ExecuteCapture(NeonHelper.DockerComposeCli, new string[] { "-f", tempFile.Path, "--project-name", ApplicationName, "up", "--detach" });
 
                 if (result.ExitCode != 0)
                 {
