@@ -60,12 +60,21 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// Identifies the type of task list being requested: decision (AKA workflow) or activity.
+        /// Identifies the type of task list being requested: decision (AKA workflow or activity).
         /// </summary>
         public TaskListType TaskListType
         {
             get => GetEnumProperty<TaskListType>(PropertyNames.TaskListType);
             set => SetEnumProperty<TaskListType>(PropertyNames.TaskListType, value);
+        }
+
+        /// <summary>
+        /// Indicates that the response should include the task list status.
+        /// </summary>
+        public bool IncludeStatus
+        {
+            get => GetBoolProperty(PropertyNames.IncludeStatus);
+            set => SetBoolProperty(PropertyNames.IncludeStatus, value);
         }
 
         /// <inheritdoc/>
@@ -85,8 +94,9 @@ namespace Neon.Temporal.Internal
 
             var typedTarget = (DescribeTaskListRequest)target;
 
-            typedTarget.Name         = this.Name;
-            typedTarget.TaskListType = this.TaskListType;
+            typedTarget.Name          = this.Name;
+            typedTarget.TaskListType  = this.TaskListType;
+            typedTarget.IncludeStatus = this.IncludeStatus;
         }
     }
 }

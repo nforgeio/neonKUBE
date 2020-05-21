@@ -78,6 +78,7 @@ namespace Neon.Temporal.Internal
         public static PropertyNameUtf8 HasResult { get; private set; }                                 = new PropertyNameUtf8("HasResult");
         public static PropertyNameUtf8 HostPort { get; private set; }                                  = new PropertyNameUtf8("HostPort");
         public static PropertyNameUtf8 Identity { get; private set; }                                  = new PropertyNameUtf8("Identity");
+        public static PropertyNameUtf8 IncludeStatus { get; private set; }                             = new PropertyNameUtf8("IncludeStatus");
         public static PropertyNameUtf8 Info { get; private set; }                                      = new PropertyNameUtf8("Info");
         public static PropertyNameUtf8 IsCancellable { get; private set; }                             = new PropertyNameUtf8("IsCancellable");
         public static PropertyNameUtf8 IsClosed { get; private set; }                                  = new PropertyNameUtf8("IsClosed");
@@ -124,6 +125,7 @@ namespace Neon.Temporal.Internal
         public static PropertyNameUtf8 Size { get; private set; }                                      = new PropertyNameUtf8("Size");
         public static PropertyNameUtf8 TargetRequestId { get; private set; }                           = new PropertyNameUtf8("TargetRequestId");
         public static PropertyNameUtf8 TaskList { get; private set; }                                  = new PropertyNameUtf8("TaskList");
+        public static PropertyNameUtf8 TaskListKind { get; private set; }                              = new PropertyNameUtf8("TaskListKind");
         public static PropertyNameUtf8 TaskListType { get; private set; }                              = new PropertyNameUtf8("TaskListType");
         public static PropertyNameUtf8 TaskToken { get; private set; }                                 = new PropertyNameUtf8("TaskToken");
         public static PropertyNameUtf8 Time { get; private set; }                                      = new PropertyNameUtf8("Time");
