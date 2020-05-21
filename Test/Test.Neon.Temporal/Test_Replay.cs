@@ -176,7 +176,7 @@ namespace TestTemporal
             private static bool     firstPass = true;
             private static object   originalValue;
 
-            public new static void Reset()
+            public static void Reset()
             {
                 firstPass = true;
             }

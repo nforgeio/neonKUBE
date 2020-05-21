@@ -66,7 +66,7 @@ namespace TestCadence
 
             public static bool WorkflowWithNoResultCalled = false;
 
-            public new static void Reset()
+            public static new void Reset()
             {
                 WorkflowWithNoResultCalled = false;
             }
@@ -1129,7 +1129,7 @@ namespace TestCadence
 
             public static bool HasStarted { get; private set; } = false;
 
-            public new static void Reset()
+            public static new void Reset()
             {
                 HasStarted = false;
             }
@@ -1252,7 +1252,7 @@ namespace TestCadence
 
             public static bool HasStarted { get; private set; } = false;
 
-            public new static void Reset()
+            public static new void Reset()
             {
                 HasStarted = false;
             }
@@ -1459,7 +1459,7 @@ namespace TestCadence
 
             public static bool HasStarted { get; private set; } = false;
 
-            public new static void Reset()
+            public static new void Reset()
             {
                 HasStarted = false;
             }
@@ -1634,7 +1634,7 @@ namespace TestCadence
             public static List<string>  ReceivedQueries = new List<string>();
             public static List<string>  ReceivedSignals = new List<string>();
 
-            public new static void Reset()
+            public static new void Reset()
             {
                 WasExecuted = false;
                 ExitNow     = false;

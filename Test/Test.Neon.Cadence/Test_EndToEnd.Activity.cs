@@ -223,7 +223,7 @@ namespace TestCadence
             public static string Name { get; private set; } = null;
             public static ActivityTask Info { get; set; }
 
-            public new static void Reset()
+            public static new void Reset()
             {
                 Name = null;
                 Info = null;

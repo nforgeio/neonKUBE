@@ -223,7 +223,7 @@ namespace TestTemporal
             public static string Name { get; private set; } = null;
             public static ActivityTask Info { get; set; }
 
-            public new static void Reset()
+            public static void Reset()
             {
                 Name = null;
                 Info = null;
@@ -933,7 +933,7 @@ namespace TestTemporal
         {
             public static Activity ActivityInstance = null;
 
-            public static new void Reset()
+            public static void Reset()
             {
                 ActivityInstance = null;
             }

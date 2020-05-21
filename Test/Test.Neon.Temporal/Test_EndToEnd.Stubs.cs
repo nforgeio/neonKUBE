@@ -75,7 +75,7 @@ namespace TestTemporal
 
             private static bool isRunning = false;
 
-            public new static void Reset()
+            public static void Reset()
             {
                 isRunning = false;
             }

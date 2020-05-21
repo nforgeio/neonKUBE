@@ -66,7 +66,7 @@ namespace TestTemporal
 
             public static bool WorkflowWithNoResultCalled = false;
 
-            public new static void Reset()
+            public static void Reset()
             {
                 WorkflowWithNoResultCalled = false;
             }
@@ -1129,7 +1129,7 @@ namespace TestTemporal
 
             public static bool HasStarted { get; private set; } = false;
 
-            public new static void Reset()
+            public static void Reset()
             {
                 HasStarted = false;
             }
@@ -1252,7 +1252,7 @@ namespace TestTemporal
 
             public static bool HasStarted { get; private set; } = false;
 
-            public new static void Reset()
+            public static void Reset()
             {
                 HasStarted = false;
             }
@@ -1459,7 +1459,7 @@ namespace TestTemporal
 
             public static bool HasStarted { get; private set; } = false;
 
-            public new static void Reset()
+            public static void Reset()
             {
                 HasStarted = false;
             }
@@ -1634,7 +1634,7 @@ namespace TestTemporal
             public static List<string>  ReceivedQueries = new List<string>();
             public static List<string>  ReceivedSignals = new List<string>();
 
-            public new static void Reset()
+            public static void Reset()
             {
                 WasExecuted = false;
                 ExitNow     = false;
@@ -2881,7 +2881,7 @@ namespace TestTemporal
         {
             private static string receivedSignal;
 
-            public static new void Reset()
+            public static void Reset()
             {
                 receivedSignal = null;
             }
@@ -3352,7 +3352,7 @@ namespace TestTemporal
             public static string    ReceivedSignal = null;
             public static bool      Error          = false;
 
-            public static new void Reset()
+            public static void Reset()
             {
                 HasExecuted    = false;
                 ReceivedSignal = null;

@@ -75,7 +75,7 @@ namespace TestCadence
 
             private static bool isRunning = false;
 
-            public new static void Reset()
+            public static new void Reset()
             {
                 isRunning = false;
             }

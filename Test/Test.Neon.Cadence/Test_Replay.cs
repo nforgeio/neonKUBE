@@ -176,7 +176,7 @@ namespace TestCadence
             private static bool     firstPass = true;
             private static object   originalValue;
 
-            public new static void Reset()
+            public static new void Reset()
             {
                 firstPass = true;
             }
