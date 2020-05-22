@@ -41,10 +41,10 @@ namespace Neon.Temporal.Internal
         /// <summary>
         /// The workflow execution details.
         /// </summary>
-        public InternalDescribeWorkflowExecutionResponse Details
+        public WorkflowDescription Details
         {
-            get => GetJsonProperty<InternalDescribeWorkflowExecutionResponse>(PropertyNames.Details);
-            set => SetJsonProperty<InternalDescribeWorkflowExecutionResponse>(PropertyNames.Details, value);
+            get => GetJsonProperty<WorkflowDescription>(PropertyNames.Details);
+            set => SetJsonProperty<WorkflowDescription>(PropertyNames.Details, value);
         }
 
         /// <inheritdoc/>

@@ -41,10 +41,10 @@ namespace Neon.Temporal.Internal
         /// <summary>
         /// Returns the activity information.
         /// </summary>
-        public InternalActivityInfo Info
+        public ActivityTask Info
         {
-            get => GetJsonProperty<InternalActivityInfo>(PropertyNames.Info);
-            set => SetJsonProperty<InternalActivityInfo>(PropertyNames.Info, value);
+            get => GetJsonProperty<ActivityTask>(PropertyNames.Info);
+            set => SetJsonProperty<ActivityTask>(PropertyNames.Info, value);
         }
 
         /// <inheritdoc/>

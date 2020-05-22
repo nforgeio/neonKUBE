@@ -36,6 +36,11 @@ namespace Neon.Temporal
         public string Name { get; set; }
 
         /// <summary>
+        /// The namespace UUID.
+        /// </summary>
+        public string Uuid { get; set; }
+
+        /// <summary>
         /// The namespace status.
         /// </summary>
         public NamespaceStatus Status { get; set; }
@@ -49,5 +54,11 @@ namespace Neon.Temporal
         /// The namespace owner's email address.
         /// </summary>
         public string OwnerEmail { get; set; }
+
+        /// <summary>
+        /// A dictionary of named byte data that can be attached to namespace
+        /// and that can be used for any purpose.
+        /// </summary>
+        public Dictionary<string, byte[]> Data;
     }
 }

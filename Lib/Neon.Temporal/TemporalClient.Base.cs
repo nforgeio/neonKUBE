@@ -108,8 +108,7 @@ namespace Neon.Temporal
             var reply = (NewWorkerReply)(await CallProxyAsync(
                 new NewWorkerRequest()
                 {
-                    TaskList = options.TaskList,
-                    Options  = options.ToInternal()
+                    Options = options
                 }));
 
             reply.ThrowOnError();
@@ -153,7 +152,7 @@ namespace Neon.Temporal
 
             reply.ThrowOnError();
 
-            return reply.Result.ToPublic();
+            return reply.Result;
         }
 
         //---------------------------------------------------------------------

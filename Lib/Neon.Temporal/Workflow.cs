@@ -2286,8 +2286,7 @@ namespace Neon.Temporal
                         ContextId = ContextId,
                         Activity  = activityTypeName,
                         Args      = args,
-                        Options   = options.ToInternal(),
-                        Namespace = options.Namespace,
+                        Options   = options
                     }));
 
             reply.ThrowOnError();
@@ -2365,7 +2364,7 @@ namespace Neon.Temporal
                             ContextId      = ContextId,
                             ActivityTypeId = activityActionId,
                             Args           = args,
-                            Options        = options.ToInternal(),
+                            Options        = options,
                         });
                 });
 

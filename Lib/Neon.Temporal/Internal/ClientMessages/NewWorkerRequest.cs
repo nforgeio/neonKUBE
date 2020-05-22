@@ -52,21 +52,12 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// Identifies the task list for the source workflows and activities.
-        /// </summary>
-        public string TaskList
-        {
-            get => GetStringProperty(PropertyNames.TaskList);
-            set => SetStringProperty(PropertyNames.TaskList, value);
-        }
-
-        /// <summary>
         /// The worker options.
         /// </summary>
-        public InternalWorkerOptions Options
+        public WorkerOptions Options
         {
-            get => GetJsonProperty<InternalWorkerOptions>(PropertyNames.Options);
-            set => SetJsonProperty<InternalWorkerOptions>(PropertyNames.Options, value);
+            get => GetJsonProperty<WorkerOptions>(PropertyNames.Options);
+            set => SetJsonProperty<WorkerOptions>(PropertyNames.Options, value);
         }
 
         /// <inheritdoc/>
@@ -86,9 +77,8 @@ namespace Neon.Temporal.Internal
 
             var typedTarget = (NewWorkerRequest)target;
 
-            typedTarget.Name     = this.Name;
-            typedTarget.TaskList = this.TaskList;
-            typedTarget.Options  = this.Options;
+            typedTarget.Name    = this.Name;
+            typedTarget.Options = this.Options;
         }
     }
 }

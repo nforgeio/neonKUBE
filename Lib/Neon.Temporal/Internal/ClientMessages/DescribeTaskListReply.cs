@@ -41,10 +41,10 @@ namespace Neon.Temporal.Internal
         /// <summary>
         /// The task list details.
         /// </summary>
-        public InternalDescribeTaskListResponse Result
+        public TaskListDescription Result
         {
-            get => GetJsonProperty<InternalDescribeTaskListResponse>(PropertyNames.Result);
-            set => SetJsonProperty<InternalDescribeTaskListResponse>(PropertyNames.Result, value);
+            get => GetJsonProperty<TaskListDescription>(PropertyNames.Result);
+            set => SetJsonProperty<TaskListDescription>(PropertyNames.Result, value);
         }
 
         /// <inheritdoc/>

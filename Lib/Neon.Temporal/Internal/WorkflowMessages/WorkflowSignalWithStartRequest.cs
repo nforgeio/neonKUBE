@@ -91,10 +91,10 @@ namespace Neon.Temporal.Internal
         /// <summary>
         /// Optionally specifies the workflow start options.
         /// </summary>
-        public InternalStartWorkflowOptions Options
+        public WorkflowOptions Options
         {
-            get => GetJsonProperty<InternalStartWorkflowOptions>(PropertyNames.Options);
-            set => SetJsonProperty<InternalStartWorkflowOptions>(PropertyNames.Options, value);
+            get => GetJsonProperty<WorkflowOptions>(PropertyNames.Options);
+            set => SetJsonProperty<WorkflowOptions>(PropertyNames.Options, value);
         }
 
         /// <summary>

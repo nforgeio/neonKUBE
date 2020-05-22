@@ -72,10 +72,10 @@ namespace Neon.Temporal.Internal
         /// <summary>
         /// The local activity options.
         /// </summary>
-        public InternalLocalActivityOptions Options
+        public LocalActivityOptions Options
         {
-            get => GetJsonProperty<InternalLocalActivityOptions>(PropertyNames.Options);
-            set => SetJsonProperty<InternalLocalActivityOptions>(PropertyNames.Options, value);
+            get => GetJsonProperty<LocalActivityOptions>(PropertyNames.Options);
+            set => SetJsonProperty<LocalActivityOptions>(PropertyNames.Options, value);
         }
 
         /// <inheritdoc/>

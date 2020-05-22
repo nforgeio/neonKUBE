@@ -173,7 +173,7 @@ namespace Neon.Temporal
 
             reply.ThrowOnError();
 
-            ActivityTask = reply.Info.ToPublic();
+            ActivityTask = reply.Info;
 
             // Invoke the activity.
 

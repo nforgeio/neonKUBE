@@ -329,37 +329,6 @@ namespace Neon.Temporal
         public Dictionary<string, object> Memo { get; set; }
 
         /// <summary>
-        /// Converts the instance into an internal <see cref="InternalStartWorkflowOptions"/>.
-        /// </summary>
-        /// <returns>The corresponding <see cref="InternalStartWorkflowOptions"/>.</returns>
-        internal InternalStartWorkflowOptions ToInternal()
-        {
-            Dictionary<string, byte[]> encodedMemos = null;
-
-            if (Memo != null && Memo.Count > 0)
-            {
-                encodedMemos = new Dictionary<string, byte[]>();
-
-                foreach (var item in Memo)
-                {
-                    encodedMemos.Add(item.Key, NeonHelper.JsonSerializeToBytes(item.Value));
-                }
-            }
-
-            return new InternalStartWorkflowOptions()
-            {
-                ID                              = this.WorkflowId,
-                TaskList                        = this.TaskList,
-                DecisionTaskStartToCloseTimeout = TemporalHelper.ToTemporal(this.DecisionTaskTimeout),
-                ExecutionStartToCloseTimeout    = TemporalHelper.ToTemporal(this.StartToCloseTimeout),
-                RetryPolicy                     = this.RetryOptions?.ToInternal(),
-                WorkflowIdReusePolicy           = (int)(this.WorkflowIdReusePolicy == WorkflowIdReusePolicy.UseDefault ? Temporal.WorkflowIdReusePolicy.AllowDuplicate : this.WorkflowIdReusePolicy),
-                CronSchedule                    = this.CronSchedule,
-                Memo                            = encodedMemos
-            };
-        }
-
-        /// <summary>
         /// Returns a shallow clone of the current instance.
         /// </summary>
         /// <returns>The cloned <see cref="WorkflowOptions"/>.</returns>

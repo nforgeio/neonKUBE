@@ -199,7 +199,7 @@ namespace TestTemporal
                 message.Namespace = "my-namespace";
                 message.Workflow = "Foo";
                 message.Args = new byte[] { 0, 1, 2, 3, 4 };
-                message.Options = new InternalStartWorkflowOptions() { TaskList = "my-list", ExecutionStartToCloseTimeout = GoTimeSpan.Parse("100s").Ticks };
+                message.Options = new WorkflowOptions() { TaskList = "my-list", StartToCloseTimeout = TimeSpan.FromSeconds(100) };
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -208,7 +208,7 @@ namespace TestTemporal
                 Assert.Equal("Foo", message.Workflow);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskList);
-                Assert.Equal(GoTimeSpan.Parse("100s").Ticks, message.Options.ExecutionStartToCloseTimeout);
+                Assert.Equal(TimeSpan.FromSeconds(100), message.Options.StartToCloseTimeout);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -223,7 +223,7 @@ namespace TestTemporal
                 Assert.Equal("Foo", message.Workflow);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskList);
-                Assert.Equal(GoTimeSpan.Parse("100s").Ticks, message.Options.ExecutionStartToCloseTimeout);
+                Assert.Equal(TimeSpan.FromSeconds(100), message.Options.StartToCloseTimeout);
 
                 // Clone()
 
@@ -236,7 +236,7 @@ namespace TestTemporal
                 Assert.Equal("Foo", message.Workflow);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskList);
-                Assert.Equal(GoTimeSpan.Parse("100s").Ticks, message.Options.ExecutionStartToCloseTimeout);
+                Assert.Equal(TimeSpan.FromSeconds(100), message.Options.StartToCloseTimeout);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -249,7 +249,7 @@ namespace TestTemporal
                 Assert.Equal("Foo", message.Workflow);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.Equal("my-list", message.Options.TaskList);
-                Assert.Equal(GoTimeSpan.Parse("100s").Ticks, message.Options.ExecutionStartToCloseTimeout);
+                Assert.Equal(TimeSpan.FromSeconds(100), message.Options.StartToCloseTimeout);
             }
         }
 

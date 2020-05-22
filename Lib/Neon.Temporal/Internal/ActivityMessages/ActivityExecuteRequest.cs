@@ -63,19 +63,10 @@ namespace Neon.Temporal.Internal
         /// <summary>
         /// The activity start options.
         /// </summary>
-        public InternalActivityOptions Options
+        public ActivityOptions Options
         {
-            get => GetJsonProperty<InternalActivityOptions>(PropertyNames.Options);
-            set => SetJsonProperty<InternalActivityOptions>(PropertyNames.Options, value);
-        }
-
-        /// <summary>
-        /// Optionally overrides the parent workflow's namespace.
-        /// </summary>
-        public string Namespace
-        {
-            get => GetStringProperty(PropertyNames.Namespace);
-            set => SetStringProperty(PropertyNames.Namespace, value ?? string.Empty);
+            get => GetJsonProperty<ActivityOptions>(PropertyNames.Options);
+            set => SetJsonProperty<ActivityOptions>(PropertyNames.Options, value);
         }
 
         /// <inheritdoc/>
@@ -95,10 +86,9 @@ namespace Neon.Temporal.Internal
 
             var typedTarget = (ActivityExecuteRequest)target;
 
-            typedTarget.Activity  = this.Activity;
-            typedTarget.Args      = this.Args;
-            typedTarget.Options   = this.Options;
-            typedTarget.Namespace = this.Namespace;
+            typedTarget.Activity = this.Activity;
+            typedTarget.Args     = this.Args;
+            typedTarget.Options  = this.Options;
         }
     }
 }

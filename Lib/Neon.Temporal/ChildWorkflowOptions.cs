@@ -298,27 +298,6 @@ namespace Neon.Temporal
         public string CronSchedule { get; set; }
 
         /// <summary>
-        /// Converts this instance into the corresponding internal object.
-        /// </summary>
-        /// <returns>The equivalent <see cref="InternalChildWorkflowOptions"/>.</returns>
-        internal InternalChildWorkflowOptions ToInternal()
-        {
-            return new InternalChildWorkflowOptions()
-            {
-                Namespace                    = this.Namespace,
-                ChildClosePolicy             = (int)this.ChildPolicy,
-                CronSchedule                 = this.CronSchedule,
-                ExecutionStartToCloseTimeout = TemporalHelper.ToTemporal(this.StartToCloseTimeout),
-                RetryPolicy                  = this.RetryOptions?.ToInternal(),
-                TaskList                     = this.TaskList ?? string.Empty,
-                TaskStartToCloseTimeout      = TemporalHelper.ToTemporal(this.DecisionTaskTimeout),
-                WaitForCancellation          = this.WaitUntilFinished,
-                WorkflowID                   = this.WorkflowId,
-                WorkflowIdReusePolicy        = (int)(this.WorkflowIdReusePolicy == WorkflowIdReusePolicy.UseDefault ? Temporal.WorkflowIdReusePolicy.AllowDuplicate : this.WorkflowIdReusePolicy)
-            };
-        }
-
-        /// <summary>
         /// Returns a shallow clone of the current instance.
         /// </summary>
         /// <returns>The cloned <see cref="WorkflowOptions"/>.</returns>

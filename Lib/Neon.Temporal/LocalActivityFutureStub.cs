@@ -249,7 +249,7 @@ namespace Neon.Temporal
                             ActivityId     = activityId,
                             ActivityTypeId = activityActionId,
                             Args           = TemporalHelper.ArgsToBytes(dataConverter, args),
-                            Options        = options.ToInternal()
+                            Options        = options
                         });
                 });
 
@@ -322,7 +322,7 @@ namespace Neon.Temporal
                             ActivityId     = activityId,
                             ActivityTypeId = activityActionId,
                             Args           = TemporalHelper.ArgsToBytes(dataConverter, args),
-                            Options        = options.ToInternal()
+                            Options        = options
                         });
                 });
 

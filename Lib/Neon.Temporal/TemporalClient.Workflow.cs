@@ -477,7 +477,7 @@ namespace Neon.Temporal
 
             reply.ThrowOnError();
 
-            return reply.Details.ToPublic();
+            return reply.Details;
         }
 
 
@@ -505,7 +505,7 @@ namespace Neon.Temporal
 
             reply.ThrowOnError();
 
-            return reply.Details.ToPublic();
+            return reply.Details;
         }
         /// <summary>
         /// Waits for a resonable period of time for Temporal to start a workflow.
@@ -609,14 +609,12 @@ namespace Neon.Temporal
                     Workflow  = workflowTypeName,
                     Namespace = options.Namespace,
                     Args      = args,
-                    Options   = options.ToInternal()
+                    Options   = options
                 });
 
             reply.ThrowOnError();
 
-            var execution = reply.Execution;
-
-            return new WorkflowExecution(execution.ID, execution.RunID);
+            return reply.Execution;
         }
 
         /// <summary>
@@ -690,18 +688,17 @@ namespace Neon.Temporal
                     return (WorkflowExecuteChildReply)await CallProxyAsync(
                         new WorkflowExecuteChildRequest()
                         {
-                            ContextId              = parentWorkflow.ContextId,
-                            Workflow               = workflowTypeName,
-                            Args                   = args,
-                            Options                = options.ToInternal(),
-                            ScheduleToStartTimeout = options.ScheduleToStartTimeout > TimeSpan.Zero ? options.ScheduleToStartTimeout : Settings.WorkflowScheduleToStartTimeout
+                            ContextId = parentWorkflow.ContextId,
+                            Workflow  = workflowTypeName,
+                            Args      = args,
+                            Options   = options
                         });
                 });
 
             reply.ThrowOnError();
             parentWorkflow.UpdateReplay(reply);
 
-            return new ChildExecution(reply.Execution.ToPublic(), reply.ChildId);
+            return new ChildExecution(reply.Execution, reply.ChildId);
         }
 
         /// <summary>
@@ -846,7 +843,7 @@ namespace Neon.Temporal
                 {
                     Workflow     = workflowTypeName,
                     WorkflowId   = options.WorkflowId,
-                    Options      = options.ToInternal(),
+                    Options      = options,
                     SignalName   = signalName,
                     SignalArgs   = signalArgs,
                     WorkflowArgs = startArgs,
@@ -855,7 +852,7 @@ namespace Neon.Temporal
 
             reply.ThrowOnError();
 
-            return reply.Execution.ToPublic();
+            return reply.Execution;
         }
 
         /// <summary>

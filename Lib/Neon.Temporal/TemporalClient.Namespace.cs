@@ -264,13 +264,6 @@ namespace Neon.Temporal
 
             reply.ThrowOnError();
 
-            var namespaces = new List<NamespaceDescription>(reply.Namespaces.Count);
-
-            foreach (var @namespace in reply.Namespaces)
-            {
-                namespaces.Add(@namespace.ToPublic());
-            }
-
             nextPageToken = reply.NextPageToken;
 
             if (nextPageToken != null && nextPageToken.Length == 0)
@@ -280,7 +273,7 @@ namespace Neon.Temporal
 
             return new NamespaceListPage()
             { 
-                Namespaces    = namespaces,
+                Namespaces    = reply.Namespaces,
                 NextPageToken = nextPageToken
             };
         }

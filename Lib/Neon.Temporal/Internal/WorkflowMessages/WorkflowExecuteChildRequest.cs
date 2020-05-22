@@ -64,20 +64,10 @@ namespace Neon.Temporal.Internal
         /// <summary>
         /// Specifies the child workflow options.
         /// </summary>
-        public InternalChildWorkflowOptions Options
+        public ChildWorkflowOptions Options
         {
-            get => GetJsonProperty<InternalChildWorkflowOptions>(PropertyNames.Options);
-            set => SetJsonProperty<InternalChildWorkflowOptions>(PropertyNames.Options, value);
-        }
-
-        /// <summary>
-        /// Specifies the maximum time the workflow will wait after being scheduled
-        /// until it is executed to a worker.
-        /// </summary>
-        public TimeSpan ScheduleToStartTimeout
-        {
-            get => GetTimeSpanProperty(PropertyNames.ScheduleToStartTimeout);
-            set => SetTimeSpanProperty(PropertyNames.ScheduleToStartTimeout, value);
+            get => GetJsonProperty<ChildWorkflowOptions>(PropertyNames.Options);
+            set => SetJsonProperty<ChildWorkflowOptions>(PropertyNames.Options, value);
         }
 
         /// <inheritdoc/>
@@ -97,10 +87,9 @@ namespace Neon.Temporal.Internal
 
             var typedTarget = (WorkflowExecuteChildRequest)target;
 
-            typedTarget.Workflow               = this.Workflow;
-            typedTarget.Args                   = this.Args;
-            typedTarget.Options                = this.Options;
-            typedTarget.ScheduleToStartTimeout = this.ScheduleToStartTimeout;
+            typedTarget.Workflow = this.Workflow;
+            typedTarget.Args     = this.Args;
+            typedTarget.Options  = this.Options;
         }
     }
 }

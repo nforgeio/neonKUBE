@@ -41,10 +41,10 @@ namespace Neon.Temporal.Internal
         /// <summary>
         /// Lists information about the Temporal namespaces.
         /// </summary>
-        public List<InternalDescribeNamespaceResponse> Namespaces
+        public List<NamespaceDescription> Namespaces
         {
-            get => GetJsonProperty<List<InternalDescribeNamespaceResponse>>(PropertyNames.Namespaces);
-            set => SetJsonProperty<List<InternalDescribeNamespaceResponse>>(PropertyNames.Namespaces, value);
+            get => GetJsonProperty<List<NamespaceDescription>>(PropertyNames.Namespaces);
+            set => SetJsonProperty<List<NamespaceDescription>>(PropertyNames.Namespaces, value);
         }
 
         /// <summary>

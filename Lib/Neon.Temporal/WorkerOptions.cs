@@ -199,31 +199,5 @@ namespace Neon.Temporal
         /// Optionally sets the graceful shutdown timeout.  Defaults to <see cref="TimeSpan.Zero"/>.
         /// </summary>
         public TimeSpan WorkerStopTimeout { get; set; } = TimeSpan.Zero;
-
-        /// <summary>
-        /// Converts the instance into an <see cref="InternalWorkerOptions"/>.
-        /// </summary>
-        /// <returns>The converted instance.</returns>
-        internal InternalWorkerOptions ToInternal()
-        {
-            return new InternalWorkerOptions()
-            {
-                MaxConcurrentActivityExecutionSize       = this.MaxConcurrentActivityExecutionSize,
-                WorkerActivitiesPerSecond                = this.WorkerActivitiesPerSecond,
-                MaxConcurrentLocalActivityExecutionSize  = this.MaxConcurrentLocalActivityExecutionSize,
-                WorkerLocalActivitiesPerSecond           = this.WorkerLocalActivitiesPerSecond,
-                TaskListActivitiesPerSecond              = this.TaskListActivitiesPerSecond,
-                MaxConcurrentDecisionTaskExecutionSize   = this.MaxConcurrentDecisionTaskExecutionSize,
-                WorkerDecisionTasksPerSecond             = this.WorkerDecisionTasksPerSecond,
-                AutoHeartBeat                            = false,
-                EnableLoggingInReplay                    = this.EnableLoggingInReplay,
-                DisableWorkflowWorker                    = this.DisableWorkflowWorker,
-                DisableActivityWorker                    = this.DisableActivityWorker,
-                DisableStickyExecution                   = this.DisableStickyExecution,
-                StickyScheduleToStartTimeout             = GoTimeSpan.FromTimeSpan(this.StickyScheduleToStartTimeout).Ticks,
-                NonDeterministicWorkflowPolicy           = (int)this.NonDeterministicWorkflowPolicy,
-                WorkerStopTimeout                        = GoTimeSpan.FromTimeSpan(this.WorkerStopTimeout).Ticks
-            };
-        }
     }
 }

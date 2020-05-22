@@ -83,19 +83,6 @@ namespace Neon.Temporal
         public RetryOptions RetryOptions { get; set; } = null;
 
         /// <summary>
-        /// Converts this instance into the corresponding internal object.
-        /// </summary>
-        /// <returns>The equivalent <see cref="InternalLocalActivityOptions"/>.</returns>
-        internal InternalLocalActivityOptions ToInternal()
-        {
-            return new InternalLocalActivityOptions()
-            {
-                ScheduleToCloseTimeout = TemporalHelper.ToTemporal(this.ScheduleToCloseTimeout),
-                RetryPolicy            = RetryOptions?.ToInternal()
-            };
-        }
-
-        /// <summary>
         /// Returns a shallow copy of the instance.
         /// </summary>
         /// <returns>The cloned <see cref="LocalActivityOptions"/>.</returns>

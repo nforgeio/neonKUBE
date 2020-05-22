@@ -1161,19 +1161,21 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
-                Assert.Null(message.TaskList);
                 Assert.Null(message.Options);
 
                 // Round-trip
 
                 message.ClientId = 444;
                 message.RequestId = 555;
-                message.TaskList = "my-tasks";
-                message.Options = new InternalWorkerOptions() { MaxConcurrentActivityExecutionSize = 1234 };
+                message.Options = new WorkerOptions() 
+                { 
+                    TaskList = "my-tasks",
+                    MaxConcurrentActivityExecutionSize = 1234 
+                };
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-tasks", message.TaskList);
+                Assert.Equal("my-tasks", message.Options.TaskList);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
 
                 stream.SetLength(0);
@@ -1184,7 +1186,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-tasks", message.TaskList);
+                Assert.Equal("my-tasks", message.Options.TaskList);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
 
                 // Clone()
@@ -1193,7 +1195,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-tasks", message.TaskList);
+                Assert.Equal("my-tasks", message.Options.TaskList);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
@@ -1202,7 +1204,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-tasks", message.TaskList);
+                Assert.Equal("my-tasks", message.Options.TaskList);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
             }
         }
@@ -2047,35 +2049,34 @@ namespace TestTemporal
         }
 
         /// <summary>
-        /// Returns an <see cref="InternalNamespaceInfo"/> instance for testing purposes.
+        /// Returns a <see cref="NamespaceInfo"/> instance for testing purposes.
         /// </summary>
         /// <returns>The test info.</returns>
-        private InternalNamespaceInfo GetTestDomainInfo()
+        private NamespaceInfo GetTestNamespaceInfo()
         {
             var data = new Dictionary<string, byte[]>();
 
             data.Add("test", new byte[] { 0, 1, 2, 3, 4 });
 
-            return new InternalNamespaceInfo()
+            return new NamespaceInfo()
             {
-                Name         = "my-namespace",
-                NamespaceStatus = NamespaceStatus.Deprecated,
-                Description  = "Test domain",
-                OwnerEmail   = "jeff@lilltek.com",
-                Data         = data,
-                Uuid         = "1111-2222-3333-4444"
+                Name        = "my-namespace",
+                Status      = NamespaceStatus.Deprecated,
+                Description = "Test domain",
+                OwnerEmail  = "jeff@lilltek.com",
+                Uuid        = "1111-2222-3333-4444"
             };
         }
 
         /// <summary>
-        /// Validates an <see cref="InternalNamespaceInfo"/> instance for testing purposes.
+        /// Validates a <see cref="NamespaceInfo"/> instance for testing purposes.
         /// </summary>
         /// <param name="info">The domain info.</param>
-        private void ValidateTestDomainInfo(InternalNamespaceInfo info)
+        private void ValidateTestNamespaceInfo(NamespaceInfo info)
         {
             Assert.NotNull(info);
             Assert.Equal("my-namespace", info.Name);
-            Assert.Equal(NamespaceStatus.Deprecated, info.NamespaceStatus);
+            Assert.Equal(NamespaceStatus.Deprecated, info.Status);
             Assert.Equal("jeff@lilltek.com", info.OwnerEmail);
             Assert.Single(info.Data);
             Assert.Equal("test", info.Data.First().Key);
@@ -2084,81 +2085,52 @@ namespace TestTemporal
         }
 
         /// <summary>
-        /// Returns an <see cref="InternalNamespaceConfiguration"/> for testing purposes.
+        /// Returns a <see cref="NamespaceConfiguration"/> for testing purposes.
         /// </summary>
         /// <returns></returns>
-        private InternalNamespaceConfiguration GetTestDomainConfiguration()
+        private NamespaceConfiguration GetTestDomainConfiguration()
         {
-            var badBinariesMap = new Dictionary<string, InternalBadBinaryInfo>();
-
-            badBinariesMap.Add("bad",
-                new InternalBadBinaryInfo()
-                {
-                    Reason          = "foo",
-                    Operator        = "bar",
-                    CreatedTimeNano = 5000000000L
-                });
-
-            var badBinaries = new InternalBadBinaries()
+            return new NamespaceConfiguration()
             {
-                Binaries = badBinariesMap
-            };
-
-            return new InternalNamespaceConfiguration()
-            {
-                WorkflowExecutionRetentionPeriodInDays = 30,
-                EmitMetric                             = true,
-                BadBinaries                            = badBinaries,
-                HistoryArchivalStatus                  = ArchivalStatus.Enabled,
-                HistoryArchivalUri                     = "http://history",
-                VisibilityArchivalStatus               = ArchivalStatus.Disabled,
-                VisibilityArchivalUri                  = "http://visibility"
+                RetentionDays = 30,
+                EmitMetrics   = true,
             };
         }
 
         /// <summary>
-        /// Validates a test <see cref="InternalNamespaceConfiguration"/>.
+        /// Validates a test <see cref="NamespaceConfiguration"/>.
         /// </summary>
         /// <param name="config">The domain config.</param>
-        private void ValidateTestDomainConfiguration(InternalNamespaceConfiguration config)
+        private void ValidateTestNamespaceConfiguration(NamespaceConfiguration config)
         {
             Assert.NotNull(config);
-            Assert.Equal(30, config.WorkflowExecutionRetentionPeriodInDays);
-            Assert.True(config.EmitMetric);
-            Assert.NotNull(config.BadBinaries);
-            Assert.Single(config.BadBinaries.Binaries);
-            Assert.Equal("bad", config.BadBinaries.Binaries.First().Key);
-            Assert.Equal("foo", config.BadBinaries.Binaries.First().Value.Reason);
-            Assert.Equal("bar", config.BadBinaries.Binaries.First().Value.Operator);
-            Assert.Equal(5000000000L, config.BadBinaries.Binaries.First().Value.CreatedTimeNano);
-            Assert.Equal(ArchivalStatus.Enabled, config.HistoryArchivalStatus);
-            Assert.Equal("http://history", config.HistoryArchivalUri);
-            Assert.Equal(ArchivalStatus.Disabled, config.VisibilityArchivalStatus);
-            Assert.Equal("http://visibility", config.VisibilityArchivalUri);
+            Assert.Equal(30, config.RetentionDays);
+            Assert.True(config.EmitMetrics);
         }
 
         /// <summary>
-        /// Returns a list of test domain information.
+        /// Returns a list of test namespace descriptions.
         /// </summary>
-        private List<InternalDescribeNamespaceResponse> GetTestDomains()
+        private List<NamespaceDescription> GetTestNamespaceDescriptions()
         {
-            var list = new List<InternalDescribeNamespaceResponse>();
+            var list = new List<NamespaceDescription>();
 
             list.Add(
-                new InternalDescribeNamespaceResponse()
+                new NamespaceDescription()
                 {
                     IsGlobalNamespace = true,
-                    NamespaceConfiguration = new InternalNamespaceConfiguration()
+                    Configuration = new NamespaceConfiguration()
                     {
-                        EmitMetric                             = true,
-                        WorkflowExecutionRetentionPeriodInDays = 30
+                        EmitMetrics   = true,
+                        RetentionDays = 30
                     },
-                    NamespaceInfo = new InternalNamespaceInfo()
+                    NamespaceInfo = new NamespaceInfo()
                     {
-                        Name         = "my-namespace",
-                        Description  = "This is my domain",
-                        NamespaceStatus = NamespaceStatus.Deprecated,
-                        OwnerEmail   = "jeff@lilltek.com"
+                        Name        = "my-namespace",
+                        Uuid        = "abc-def",
+                        Description = "This is my domain",
+                        Status      = NamespaceStatus.Deprecated,
+                        OwnerEmail  = "jeff@lilltek.com",
 
                         // $todo(jefflill): Currently ignoring
                         //
@@ -2171,10 +2143,10 @@ namespace TestTemporal
         }
 
         /// <summary>
-        /// Verifies that a test domain list is valid.
+        /// Verifies that a test namespace description list is valid.
         /// </summary>
         /// <param name="domains">The test domains.</param>
-        private void ValidateTestDomains(List<InternalDescribeNamespaceResponse> domains)
+        private void ValidateTestNamespaceDescriptions(List<NamespaceDescription> domains)
         {
             Assert.NotNull(domains);
             Assert.Single(domains);
@@ -2183,14 +2155,15 @@ namespace TestTemporal
 
             Assert.True(domain.IsGlobalNamespace);
             
-            Assert.NotNull(domain.NamespaceConfiguration);
-            Assert.True(domain.NamespaceConfiguration.EmitMetric);
-            Assert.Equal(30, domain.NamespaceConfiguration.WorkflowExecutionRetentionPeriodInDays);
+            Assert.NotNull(domain.Configuration);
+            Assert.True(domain.Configuration.EmitMetrics);
+            Assert.Equal(30, domain.Configuration.RetentionDays);
 
             Assert.NotNull(domain.NamespaceInfo);
             Assert.Equal("my-namespace", domain.NamespaceInfo.Name);
+            Assert.Equal("abc-def", domain.NamespaceInfo.Uuid);
             Assert.Equal("This is my domain", domain.NamespaceInfo.Description);
-            Assert.Equal(NamespaceStatus.Deprecated, domain.NamespaceInfo.NamespaceStatus);
+            Assert.Equal(NamespaceStatus.Deprecated, domain.NamespaceInfo.Status);
             Assert.Equal("jeff@lilltek.com", domain.NamespaceInfo.OwnerEmail);
         }
 
@@ -2223,11 +2196,11 @@ namespace TestTemporal
                 message.ClientId      = 444;
                 message.RequestId     = 555;
                 message.NextPageToken = new byte[] { 5, 6, 7, 8, 9 };
-                message.Namespaces       = GetTestDomains();
+                message.Namespaces       = GetTestNamespaceDescriptions();
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                ValidateTestDomains(message.Namespaces);
+                ValidateTestNamespaceDescriptions(message.Namespaces);
                 Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
 
                 stream.SetLength(0);
@@ -2238,7 +2211,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                ValidateTestDomains(message.Namespaces);
+                ValidateTestNamespaceDescriptions(message.Namespaces);
                 Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
 
                 // Clone()
@@ -2247,7 +2220,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                ValidateTestDomains(message.Namespaces);
+                ValidateTestNamespaceDescriptions(message.Namespaces);
                 Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
 
                 // Echo the message via the associated [temporal-proxy] and verify.
@@ -2256,7 +2229,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                ValidateTestDomains(message.Namespaces);
+                ValidateTestNamespaceDescriptions(message.Namespaces);
                 Assert.Equal(message.NextPageToken, new byte[] { 5, 6, 7, 8, 9 });
             }
         }
@@ -2354,17 +2327,19 @@ namespace TestTemporal
 
                 // Round-trip
 
+                var lastAccessTime = new DateTime(2020, 5, 22, 8, 46, 0);
+
                 message.ClientId  = 444;
                 message.RequestId = 555;
                 message.Result =
-                    new InternalDescribeTaskListResponse()
+                    new TaskListDescription()
                     {
-                        Pollers = new InternalPollerInfo[]
+                        Pollers = new List<PollerInfo>()
                         {
-                             new InternalPollerInfo()
+                             new PollerInfo()
                              {
                                  Identity       = "my-poller",
-                                 LastAccessTime = 5000000000L,
+                                 LastAccessTime = lastAccessTime,
                                  RatePerSecond  = 666
                              }
                         }
@@ -2375,7 +2350,7 @@ namespace TestTemporal
                 Assert.NotNull(message.Result);
                 Assert.Single(message.Result.Pollers);
                 Assert.Equal("my-poller", message.Result.Pollers.First().Identity);
-                Assert.Equal(5000000000L, message.Result.Pollers.First().LastAccessTime);
+                Assert.Equal(lastAccessTime, message.Result.Pollers.First().LastAccessTime);
                 Assert.Equal(666, message.Result.Pollers.First().RatePerSecond);
 
                 stream.SetLength(0);
@@ -2389,7 +2364,7 @@ namespace TestTemporal
                 Assert.NotNull(message.Result);
                 Assert.Single(message.Result.Pollers);
                 Assert.Equal("my-poller", message.Result.Pollers.First().Identity);
-                Assert.Equal(5000000000L, message.Result.Pollers.First().LastAccessTime);
+                Assert.Equal(lastAccessTime, message.Result.Pollers.First().LastAccessTime);
                 Assert.Equal(666, message.Result.Pollers.First().RatePerSecond);
 
                 // Clone()
@@ -2401,7 +2376,7 @@ namespace TestTemporal
                 Assert.NotNull(message.Result);
                 Assert.Single(message.Result.Pollers);
                 Assert.Equal("my-poller", message.Result.Pollers.First().Identity);
-                Assert.Equal(5000000000L, message.Result.Pollers.First().LastAccessTime);
+                Assert.Equal(lastAccessTime, message.Result.Pollers.First().LastAccessTime);
                 Assert.Equal(666, message.Result.Pollers.First().RatePerSecond);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
@@ -2413,7 +2388,7 @@ namespace TestTemporal
                 Assert.NotNull(message.Result);
                 Assert.Single(message.Result.Pollers);
                 Assert.Equal("my-poller", message.Result.Pollers.First().Identity);
-                Assert.Equal(5000000000L, message.Result.Pollers.First().LastAccessTime);
+                Assert.Equal(lastAccessTime, message.Result.Pollers.First().LastAccessTime);
                 Assert.Equal(666, message.Result.Pollers.First().RatePerSecond);
             }
         }

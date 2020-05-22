@@ -130,22 +130,5 @@ namespace Neon.Temporal
         /// </note>
         /// </summary>
         public List<string> NonRetriableErrors { get; set; } = new List<string>();
-
-        /// <summary>
-        /// Converts the instance into an <see cref="InternalRetryPolicy"/>.
-        /// </summary>
-        /// <returns>The converted instance.</returns>
-        internal InternalRetryPolicy ToInternal()
-        {
-            return new InternalRetryPolicy()
-            {
-                BackoffCoefficient       = this.BackoffCoefficient,
-                ExpirationInterval       = TemporalHelper.ToTemporal(this.ExpirationInterval),
-                InitialInterval          = TemporalHelper.ToTemporal(this.InitialInterval),
-                MaximumAttempts          = this.MaximumAttempts,
-                MaximumInterval          = TemporalHelper.ToTemporal(this.MaximumInterval),
-                NonRetriableErrorReasons = NonRetriableErrors.ToList()
-            };
-        }
     }
 }
