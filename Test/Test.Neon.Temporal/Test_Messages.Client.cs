@@ -2285,21 +2285,18 @@ namespace TestTemporal
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Name);
                 Assert.Equal(default, message.TaskListType);
-                Assert.False(message.IncludeStatus);
 
                 // Round-trip
 
-                message.ClientId      = 444;
-                message.RequestId     = 555;
-                message.Name          = "my-tasklist";
-                message.TaskListType  = TaskListType.Activity;
-                message.IncludeStatus = true;
+                message.ClientId     = 444;
+                message.RequestId    = 555;
+                message.Name         = "my-tasklist";
+                message.TaskListType = TaskListType.Activity;
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-tasklist", message.Name);
                 Assert.Equal(TaskListType.Activity, message.TaskListType);
-                Assert.True(message.IncludeStatus);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -2311,7 +2308,6 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-tasklist", message.Name);
                 Assert.Equal(TaskListType.Activity, message.TaskListType);
-                Assert.True(message.IncludeStatus);
 
                 // Clone()
 
@@ -2321,7 +2317,6 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-tasklist", message.Name);
                 Assert.Equal(TaskListType.Activity, message.TaskListType);
-                Assert.True(message.IncludeStatus);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -2331,7 +2326,6 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("my-tasklist", message.Name);
                 Assert.Equal(TaskListType.Activity, message.TaskListType);
-                Assert.True(message.IncludeStatus);
             }
         }
 

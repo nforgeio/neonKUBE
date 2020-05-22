@@ -134,9 +134,8 @@ namespace Neon.Temporal
         /// or activity pollers.
         /// </param>
         /// <param name="namespace">Optionally specifies the Temporal namespace.</param>
-        /// <param name="includeStatus">Optionally specifies that the result should include information about the task list status.</param>
         /// <returns>The <see cref="TaskListDescription"/> for the pollers.</returns>
-        public async Task<TaskListDescription> DescribeTaskListAsync(string taskList, TaskListType taskListType, string @namespace = null, bool includeStatus = false)
+        public async Task<TaskListDescription> DescribeTaskListAsync(string taskList, TaskListType taskListType, string @namespace = null)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList));
@@ -147,10 +146,9 @@ namespace Neon.Temporal
             var reply = (DescribeTaskListReply)await CallProxyAsync(
                 new DescribeTaskListRequest()
                 {
-                    Name          = taskList,
-                    TaskListType  = taskListType,
-                    Namespace     = @namespace,
-                    IncludeStatus = includeStatus
+                    Name         = taskList,
+                    TaskListType = taskListType,
+                    Namespace    = @namespace,
                 });
 
             reply.ThrowOnError();
