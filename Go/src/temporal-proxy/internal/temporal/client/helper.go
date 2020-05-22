@@ -24,6 +24,7 @@ import (
 	"sync"
 	"time"
 
+	"go.temporal.io/temporal-proto/tasklist"
 	"go.temporal.io/temporal-proto/workflowservice"
 	"go.temporal.io/temporal/activity"
 	"go.temporal.io/temporal/client"
@@ -32,8 +33,6 @@ import (
 	"go.temporal.io/temporal/workflow"
 
 	"go.uber.org/zap"
-
-	"google.golang.org/grpc"
 
 	"temporal-proxy/internal"
 	proxyerror "temporal-proxy/internal/temporal/error"
@@ -455,9 +454,9 @@ func (helper *ClientHelper) GetWorkflow(
 // params:
 //	- ctx context.Context -> the context to use to execute the describe namespace
 // 	request to temporal.
-// 	- request *workflowservice.DescribeTaskListRequest -> the *workflowservice.DescribeTaskListRequest to
-// 	query temporal for a task list.
-// 	- opts ...grpc.CallOptions -> optional grpc.CallOption.
+//  - namespace string -> the string namespace the specified TaskList exists in.
+// 	- taskList string -> the string name of the TaskList to describe.
+//  - taskListType -> the tasklist.TaskListType of the TaskList to describe.
 //
 // returns:
 //	- *workflowservice.DescribeTaskListResponse -> response to the describe task list request.
@@ -465,15 +464,16 @@ func (helper *ClientHelper) GetWorkflow(
 // 	- error -> error if one is thrown, nil if the method executed with no errors.
 func (helper *ClientHelper) DescribeTaskList(
 	ctx context.Context,
-	request *workflowservice.DescribeTaskListRequest,
-	opts ...grpc.CallOption,
+	namespace string,
+	taskList string,
+	taskListType tasklist.TaskListType,
 ) (*workflowservice.DescribeTaskListResponse, error) {
-	client, err := helper.GetOrCreateWorkflowClient(request.Namespace)
+	client, err := helper.GetOrCreateWorkflowClient(namespace)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := client.DescribeTaskList(ctx, request.TaskList.Name, request.TaskListType)
+	resp, err := client.DescribeTaskList(ctx, taskList, taskListType)
 	if err != nil {
 		return nil, err
 	}
