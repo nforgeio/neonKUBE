@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowConfig.cs
+// FILE:	    WorkflowConfiguration.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -28,7 +28,7 @@ namespace Neon.Temporal
     /// <summary>
     /// Describes a workflow's configuration.
     /// </summary>
-    public class WorkflowConfig
+    public class WorkflowConfiguration
     {
         /// <summary>
         /// Identifies the task list where the workflow was scheduled.
@@ -43,12 +43,12 @@ namespace Neon.Temporal
         /// <summary>
         /// Maximum time the entire workflow may take to complete end-to-end.
         /// </summary>
-        public TimeSpan ExecutionStartToCloseTimeout { get; internal set; }
+        public TimeSpan StartToCloseTimeout { get; internal set; }
 
         /// <summary>
         /// Maximum time a workflow task/decision may take to complete.
         /// </summary>
-        public TimeSpan TaskStartToCloseTimeoutSeconds { get; internal set; }
+        public TimeSpan TaskStartToCloseTimeout { get; internal set; }
 
         /// <summary>
         /// The termination policy to apply to the child workflow when

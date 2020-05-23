@@ -33,7 +33,7 @@ namespace Neon.Temporal
         /// <summary>
         /// Describes the workflow's configuration.
         /// </summary>
-        public WorkflowConfig Configuration { get; internal set; }
+        public WorkflowConfiguration Configuration { get; internal set; }
 
         /// <summary>
         /// Describes the workflow's execution status.

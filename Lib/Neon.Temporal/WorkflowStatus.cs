@@ -70,7 +70,7 @@ namespace Neon.Temporal
         /// <summary>
         /// The status for a closed workflow.
         /// </summary>
-        public WorkflowExecutionCloseStatus WorkflowCloseStatus { get; internal set; }
+        public WorkflowExecutionCloseStatus CloseStatus { get; internal set; }
 
         /// <summary>
         /// Workflow history length.

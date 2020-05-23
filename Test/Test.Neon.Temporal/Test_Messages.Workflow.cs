@@ -280,13 +280,13 @@ namespace TestTemporal
 
                 message.ClientId = 444;
                 message.RequestId = 555;
-                message.Execution = new InternalWorkflowExecution() { ID = "foo", RunID = "bar" };
+                message.Execution = new WorkflowExecution("foo", "bar");
                 message.Error = new TemporalError("MyError");
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("foo", message.Execution.ID);
-                Assert.Equal("bar", message.Execution.RunID);
+                Assert.Equal("foo", message.Execution.WorkflowId);
+                Assert.Equal("bar", message.Execution.RunId);
                 Assert.Equal("MyError", message.Error.String);
 
                 stream.SetLength(0);
@@ -297,8 +297,8 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("foo", message.Execution.ID);
-                Assert.Equal("bar", message.Execution.RunID);
+                Assert.Equal("foo", message.Execution.WorkflowId);
+                Assert.Equal("bar", message.Execution.RunId);
                 Assert.Equal("MyError", message.Error.String);
 
                 // Clone()
@@ -307,8 +307,8 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("foo", message.Execution.ID);
-                Assert.Equal("bar", message.Execution.RunID);
+                Assert.Equal("foo", message.Execution.WorkflowId);
+                Assert.Equal("bar", message.Execution.RunId);
                 Assert.Equal("MyError", message.Error.String);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
@@ -317,8 +317,8 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("foo", message.Execution.ID);
-                Assert.Equal("bar", message.Execution.RunID);
+                Assert.Equal("foo", message.Execution.WorkflowId);
+                Assert.Equal("bar", message.Execution.RunId);
                 Assert.Equal("MyError", message.Error.String);
             }
         }
@@ -1021,7 +1021,7 @@ namespace TestTemporal
                 message.Namespace = "my-namespace";
                 message.SignalName = "my-signal";
                 message.SignalArgs = new byte[] { 0, 1, 2, 3, 4 };
-                message.Options = new InternalStartWorkflowOptions() { TaskList = "my-tasklist", WorkflowIdReusePolicy = (int)WorkflowIdReusePolicy.AllowDuplicate };
+                message.Options = new WorkflowOptions() { TaskList = "my-tasklist", WorkflowIdReusePolicy = WorkflowIdReusePolicy.AllowDuplicate };
                 message.WorkflowArgs = new byte[] { 5, 6, 7, 8, 9 };
 
                 Assert.Equal(444, message.ClientId);
@@ -1032,7 +1032,7 @@ namespace TestTemporal
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
                 Assert.Equal("my-tasklist", message.Options.TaskList);
-                Assert.Equal((int)WorkflowIdReusePolicy.AllowDuplicate, message.Options.WorkflowIdReusePolicy);
+                Assert.Equal(WorkflowIdReusePolicy.AllowDuplicate, message.Options.WorkflowIdReusePolicy);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.WorkflowArgs);
 
                 stream.SetLength(0);
@@ -1049,7 +1049,7 @@ namespace TestTemporal
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
                 Assert.Equal("my-tasklist", message.Options.TaskList);
-                Assert.Equal((int)WorkflowIdReusePolicy.AllowDuplicate, message.Options.WorkflowIdReusePolicy);
+                Assert.Equal(WorkflowIdReusePolicy.AllowDuplicate, message.Options.WorkflowIdReusePolicy);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.WorkflowArgs);
 
                 // Clone()
@@ -1064,7 +1064,7 @@ namespace TestTemporal
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
                 Assert.Equal("my-tasklist", message.Options.TaskList);
-                Assert.Equal((int)WorkflowIdReusePolicy.AllowDuplicate, message.Options.WorkflowIdReusePolicy);
+                Assert.Equal(WorkflowIdReusePolicy.AllowDuplicate, message.Options.WorkflowIdReusePolicy);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.WorkflowArgs);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
@@ -1079,7 +1079,7 @@ namespace TestTemporal
                 Assert.Equal("my-signal", message.SignalName);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.SignalArgs);
                 Assert.Equal("my-tasklist", message.Options.TaskList);
-                Assert.Equal((int)WorkflowIdReusePolicy.AllowDuplicate, message.Options.WorkflowIdReusePolicy);
+                Assert.Equal(WorkflowIdReusePolicy.AllowDuplicate, message.Options.WorkflowIdReusePolicy);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.WorkflowArgs);
             }
         }
@@ -1112,13 +1112,13 @@ namespace TestTemporal
                 message.ClientId = 444;
                 message.RequestId = 555;
                 message.Error = new TemporalError("MyError");
-                message.Execution = new InternalWorkflowExecution() { ID = "666", RunID = "777" };
+                message.Execution = new WorkflowExecution("666", "777");
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
-                Assert.Equal("666", message.Execution.ID);
-                Assert.Equal("777", message.Execution.RunID);
+                Assert.Equal("666", message.Execution.WorkflowId);
+                Assert.Equal("777", message.Execution.RunId);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -1129,8 +1129,8 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
-                Assert.Equal("666", message.Execution.ID);
-                Assert.Equal("777", message.Execution.RunID);
+                Assert.Equal("666", message.Execution.WorkflowId);
+                Assert.Equal("777", message.Execution.RunId);
 
                 // Clone()
 
@@ -1139,8 +1139,8 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
-                Assert.Equal("666", message.Execution.ID);
-                Assert.Equal("777", message.Execution.RunID);
+                Assert.Equal("666", message.Execution.WorkflowId);
+                Assert.Equal("777", message.Execution.RunId);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -1149,8 +1149,8 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
-                Assert.Equal("666", message.Execution.ID);
-                Assert.Equal("777", message.Execution.RunID);
+                Assert.Equal("666", message.Execution.WorkflowId);
+                Assert.Equal("777", message.Execution.RunId);
             }
         }
 
@@ -1525,125 +1525,89 @@ namespace TestTemporal
         }
 
         /// <summary>
-        /// Returns a test <see cref="InternalDescribeWorkflowExecutionResponse"/>.
+        /// Returns a test <see cref="WorkflowDescription"/>.
         /// </summary>
-        private InternalDescribeWorkflowExecutionResponse GetDescribeWorkflow()
+        private WorkflowDescription GetWorkflowDescription()
         {
-            var details = new InternalDescribeWorkflowExecutionResponse()
+            var description = new WorkflowDescription()
             {
-                ExecutionConfiguration = new InternalWorkflowExecutionConfiguration()
+                Configuration = new WorkflowConfiguration()
                 {
-                    TaskList                       = new InternalTaskList() { Name = "my-tasklist", TaskListKind = (InternalTaskListKind)TaskListKind.Sticky },
-                    ExecutionStartToCloseTimeout   = 1000,
-                    TaskStartToCloseTimeoutSeconds = 2000,
-                    ChildPolicy                    = InternalParentClosePolicy.REQUEST_CANCEL
+                    TaskList                = "my-tasklist",
+                    TaskListKind            = TaskListType.Activity,
+                    StartToCloseTimeout     = TimeSpan.FromSeconds(1),
+                    TaskStartToCloseTimeout = TimeSpan.FromSeconds(2),
+                    ParentClosePolicy       = ParentClosePolicy.RequestCancel
                 },
 
-                WorkflowExecutionInfo = new InternalWorkflowExecutionInfo()
+                Status = new WorkflowStatus()
                 {
-                    Execution = new InternalWorkflowExecution2()
-                    {
-                        ID    = "workflow-id",
-                        RunID = "run-id",
-                    },
-
-                    WorkflowType        = new InternalWorkflowType() { Name = "my-workflow" },
-                    StartTime           = 3000,
-                    CloseTime           = 4000,
-                    WorkflowCloseStatus = (InternalWorkflowCloseStatus)InternalWorkflowCloseStatus.CONTINUED_AS_NEW,
-                    HistoryLength       = 5000,
-                    ParentNamespaceId      = "parent-domain",
-                    ParentExecution     = new InternalWorkflowExecution2() { ID = "parent-id", RunID = "parent-runid" },
-                    ExecutionTime       = 6000,
-
-                    Memo = new InternalMemo()
-                    {
-                        Fields = new Dictionary<string, byte[]>() { { "foo", new byte[] { 0, 1, 2, 3, 4 } } }
-                    }
-                },
-
-                PendingActivities = new List<InternalPendingActivityInfo>()
-                {
-                    new InternalPendingActivityInfo()
-                    {
-                        ActivityID             = "my-activityid",
-                        ActivityType           = new InternalActivityType() { Name = "my-activity" },
-                        Attempt                = 10000,
-                        ExpirationTimestamp    = 11000,
-                        HeartbeatDetails       = new byte[] { 0, 1, 2, 3, 4 },
-                        LastHeartbeatTimestamp = 12000,
-                        LastStartedTimestamp   = 13000,
-                        MaximumAttempts        = 14000,
-                        ScheduledTimestamp     = 15000,
-                        State                  = InternalPendingActivityState.STARTED
-                    }
-                },
-
-                PendingChildren = new List<InternalPendingChildExecutionInfo>()
-                {
-                    new InternalPendingChildExecutionInfo()
-                    {
-                        WorkflowId        = "my-workflowid",
-                        RunId             = "my-runid",
-                        WorkflowTypeName  = "my-workflow-typename",
-                        InitiatedId       = 16000
-                    }
+                    Execution       = new WorkflowExecution("workflow-id", "run-id"),
+                    TypeName        = "my-workflow",
+                    StartTime       = new DateTime(2020, 5, 23, 13, 21, 0),
+                    CloseTime       = new DateTime(2020, 5, 23, 13, 22, 0),
+                    CloseStatus     = WorkflowExecutionCloseStatus.ContinuedAsNew,
+                    HistoryLength   = 5000,
+                    ParentNamespace = "parent-namespace",
+                    ParentExecution = new WorkflowExecution("parent-id", "parent-runid"),
+                    ExecutionTime   = TimeSpan.FromSeconds(6000),
+                    Memo            = new Dictionary<string, byte[]>() { { "foo", new byte[] { 0, 1, 2, 3, 4 } } }
                 }
             };
 
-            return details;
+            return description;
         }
 
         /// <summary>
-        /// Ensures that the <paramref name="details"/> passed matches the instance
-        /// returned by <see cref="GetDescribeWorkflow"/>.
+        /// Ensures that the <paramref name="description"/> passed matches the instance
+        /// returned by <see cref="GetWorkflowDescription"/>.
         /// </summary>
-        /// <param name="details">The response to ve validated.</param>
-        private void VerifyDescribeWorkflow(InternalDescribeWorkflowExecutionResponse details)
+        /// <param name="description">The response to ve validated.</param>
+        private void VerifyWorkflowDescription(WorkflowDescription description)
         {
-            var expected = GetDescribeWorkflow();
+            var expected = GetWorkflowDescription();
 
-            Assert.NotNull(details);
+            Assert.NotNull(description);
 
             //---------------------------------------------
 
-            var config = details.ExecutionConfiguration;
+            var config = description.Configuration;
 
             Assert.NotNull(config);
             Assert.NotNull(config.TaskList);
-            Assert.Equal(expected.ExecutionConfiguration.TaskList.Name, config.TaskList.Name);
-            Assert.Equal(expected.ExecutionConfiguration.ExecutionStartToCloseTimeout, config.ExecutionStartToCloseTimeout);
-            Assert.Equal(expected.ExecutionConfiguration.TaskStartToCloseTimeoutSeconds, config.TaskStartToCloseTimeoutSeconds);
-            Assert.Equal(expected.ExecutionConfiguration.ChildPolicy, config.ChildPolicy);
+            Assert.Equal(expected.Configuration.TaskList, config.TaskList);
+            Assert.Equal(expected.Configuration.StartToCloseTimeout, config.StartToCloseTimeout);
+            Assert.Equal(expected.Configuration.TaskStartToCloseTimeout, config.TaskStartToCloseTimeout);
+            Assert.Equal(expected.Configuration.ParentClosePolicy, config.ParentClosePolicy);
 
             //---------------------------------------------
 
-            var info = details.WorkflowExecutionInfo;
+            var status = description.Status;
 
-            Assert.NotNull(info);
-            Assert.NotNull(info.Execution);
-            Assert.Equal(expected.WorkflowExecutionInfo.Execution.ID, info.Execution.ID);
-            Assert.Equal(expected.WorkflowExecutionInfo.Execution.RunID, info.Execution.RunID);
-            Assert.NotNull(info.WorkflowType);
-            Assert.Equal(expected.WorkflowExecutionInfo.WorkflowType.Name, info.WorkflowType.Name);
-            Assert.Equal(expected.WorkflowExecutionInfo.StartTime, info.StartTime);
-            Assert.Equal(expected.WorkflowExecutionInfo.CloseTime, info.CloseTime);
-            Assert.Equal(expected.WorkflowExecutionInfo.WorkflowCloseStatus, info.WorkflowCloseStatus);
-            Assert.Equal(expected.WorkflowExecutionInfo.HistoryLength, info.HistoryLength);
-            Assert.Equal(expected.WorkflowExecutionInfo.ParentNamespaceId, info.ParentNamespaceId);
+            Assert.NotNull(status);
+            Assert.NotNull(status.Execution);
+            Assert.Equal(expected.Status.Execution.WorkflowId, status.Execution.WorkflowId);
+            Assert.Equal(expected.Status.Execution.RunId, status.Execution.RunId);
+            Assert.NotNull(status.TypeName);
+            Assert.Equal(expected.Status.TypeName, status.TypeName);
+            Assert.Equal(expected.Status.StartTime, status.StartTime);
+            Assert.Equal(expected.Status.CloseTime, status.CloseTime);
+            Assert.Equal(expected.Status.CloseStatus, status.CloseStatus);
+            Assert.Equal(expected.Status.HistoryLength, status.HistoryLength);
+            Assert.Equal(expected.Status.ParentNamespace, status.ParentNamespace);
 
-            Assert.NotNull(info.ParentExecution);
-            Assert.Equal(expected.WorkflowExecutionInfo.ParentExecution.ID, info.ParentExecution.ID);
-            Assert.Equal(expected.WorkflowExecutionInfo.ParentExecution.RunID, info.ParentExecution.RunID);
+            Assert.NotNull(status.ParentExecution);
+            Assert.Equal(expected.Status.ParentExecution.WorkflowId, status.ParentExecution.WorkflowId);
+            Assert.Equal(expected.Status.ParentExecution.RunId, status.ParentExecution.RunId);
 
-            Assert.Equal(expected.WorkflowExecutionInfo.ExecutionTime, info.ExecutionTime);
+            Assert.Equal(expected.Status.ExecutionTime, status.ExecutionTime);
 
             //---------------------------------------------
 
-            Assert.NotNull(details.PendingActivities);
-            Assert.Single(details.PendingActivities);
+            Assert.NotNull(description.PendingActivities);
+            Assert.Single(description.PendingActivities);
 
-            var pendingActivity = details.PendingActivities.First();
+            var pendingActivity = description.PendingActivities.First();
 
             Assert.Equal("my-activityid", pendingActivity.ActivityID);
             Assert.Equal("my-activity", pendingActivity.ActivityType.Name);
@@ -1658,10 +1622,10 @@ namespace TestTemporal
 
             //---------------------------------------------
 
-            Assert.NotNull(details.PendingChildren);
-            Assert.Single(details.PendingChildren);
+            Assert.NotNull(description.PendingChildren);
+            Assert.Single(description.PendingChildren);
 
-            var pendingChild = details.PendingChildren.First();
+            var pendingChild = description.PendingChildren.First();
 
             Assert.Equal("my-workflowid", pendingChild.WorkflowId);
             Assert.Equal("my-runid", pendingChild.RunId);
@@ -1670,14 +1634,13 @@ namespace TestTemporal
 
             //---------------------------------------------
 
-            Assert.NotNull(info.Memo);
-            Assert.NotNull(info.Memo.Fields);
-            Assert.Equal(expected.WorkflowExecutionInfo.Memo.Fields.Count, info.Memo.Fields.Count);
+            Assert.NotNull(status.Memo);
+            Assert.Equal(expected.Status.Memo.Count, status.Memo.Count);
 
-            for (int i = 0; i < expected.WorkflowExecutionInfo.Memo.Fields.Count; i++)
+            for (int i = 0; i < expected.Status.Memo.Count; i++)
             {
-                var refField = expected.WorkflowExecutionInfo.Memo.Fields.ToArray()[i];
-                var field    = info.Memo.Fields.ToArray()[i];
+                var refField = expected.Status.Memo.ToArray()[i];
+                var field    = status.Memo.ToArray()[i];
 
                 Assert.Equal(refField.Key, field.Key);
                 Assert.Equal(refField.Value, field.Value);
@@ -1712,7 +1675,7 @@ namespace TestTemporal
                 message.ClientId = 444;
                 message.RequestId = 555;
                 message.Error = new TemporalError("MyError");
-                message.Details = GetDescribeWorkflow();
+                message.Details = GetWorkflowDescription();
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -1727,7 +1690,7 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
-                VerifyDescribeWorkflow(message.Details);
+                VerifyWorkflowDescription(message.Details);
 
                 // Clone()
 
@@ -1736,7 +1699,7 @@ namespace TestTemporal
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
-                VerifyDescribeWorkflow(message.Details);
+                VerifyWorkflowDescription(message.Details);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -1744,7 +1707,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
-                VerifyDescribeWorkflow(message.Details);
+                VerifyWorkflowDescription(message.Details);
             }
         }
 
@@ -2755,18 +2718,19 @@ namespace TestTemporal
             }
         }
 
-        private void AssertEqualChildOptions(InternalChildWorkflowOptions expected, InternalChildWorkflowOptions actual)
+        private void AssertEqualChildOptions(ChildWorkflowOptions expected, ChildWorkflowOptions actual)
         {
             Assert.Equal(expected.TaskList, actual.TaskList);
             Assert.Equal(expected.Namespace, actual.Namespace);
-            Assert.Equal(expected.ChildClosePolicy, actual.ChildClosePolicy);
+            Assert.Equal(expected.ChildPolicy, actual.ChildPolicy);
             Assert.Equal(expected.CronSchedule, actual.CronSchedule);
-            Assert.Equal(expected.WorkflowID, actual.WorkflowID);
-            Assert.Equal(expected.WaitForCancellation, actual.WaitForCancellation);
-            Assert.Equal(expected.ExecutionStartToCloseTimeout, actual.ExecutionStartToCloseTimeout);
-            Assert.Equal(expected.TaskStartToCloseTimeout, actual.TaskStartToCloseTimeout);
+            Assert.Equal(expected.WorkflowId, actual.WorkflowId);
+            Assert.Equal(expected.WaitUntilFinished, actual.WaitUntilFinished);
+            Assert.Equal(expected.ScheduleToStartTimeout, actual.ScheduleToStartTimeout);
+            Assert.Equal(expected.StartToCloseTimeout, actual.StartToCloseTimeout);
+            Assert.Equal(expected.DecisionTaskTimeout, actual.DecisionTaskTimeout);
             Assert.Equal(expected.WorkflowIdReusePolicy, actual.WorkflowIdReusePolicy);
-            Assert.Equal(expected.RetryPolicy.MaximumAttempts, actual.RetryPolicy.MaximumAttempts);
+            Assert.Equal(expected.RetryOptions.MaximumAttempts, actual.RetryOptions.MaximumAttempts);
         }
 
         [Fact]
@@ -2794,22 +2758,22 @@ namespace TestTemporal
                 Assert.Null(message.Workflow);
                 Assert.Null(message.Args);
                 Assert.Null(message.Options);
-                Assert.Equal(TimeSpan.Zero, message.ScheduleToStartTimeout);
 
                 // Round-trip
 
-                var options = new InternalChildWorkflowOptions()
+                var options = new ChildWorkflowOptions()
                 {
-                    TaskList                     = "my-tasklist",
-                    Namespace                       = "my-namespace",
-                    ChildClosePolicy             = (int)InternalParentClosePolicy.REQUEST_CANCEL,
-                    CronSchedule                 = "* 12 * * *",
-                    WorkflowID                   = "my-workflow",
-                    WaitForCancellation          = true,
-                    ExecutionStartToCloseTimeout = 1000,
-                    TaskStartToCloseTimeout      = 2000,
-                    WorkflowIdReusePolicy        = (int)WorkflowIdReusePolicy.RejectDuplicate,
-                    RetryPolicy                  = new InternalRetryPolicy()
+                    TaskList               = "my-tasklist",
+                    Namespace              = "my-namespace",
+                    ChildPolicy            = ParentClosePolicy.RequestCancel,
+                    CronSchedule           = "* 12 * * *",
+                    WorkflowId             = "my-workflow",
+                    WaitUntilFinished      = true,
+                    ScheduleToStartTimeout = TimeSpan.FromSeconds(1),
+                    StartToCloseTimeout    = TimeSpan.FromSeconds(2),
+                    DecisionTaskTimeout    = TimeSpan.FromSeconds(3),
+                    WorkflowIdReusePolicy  = WorkflowIdReusePolicy.RejectDuplicate,
+                    RetryOptions           = new RetryOptions()
                     {
                         MaximumAttempts = 100
                     }
@@ -2820,13 +2784,11 @@ namespace TestTemporal
                 message.Workflow = "my-workflow";
                 message.Args = new byte[] { 5, 6, 7, 8, 9 };
                 message.Options = options;
-                message.ScheduleToStartTimeout = TimeSpan.FromSeconds(120);
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
                 AssertEqualChildOptions(options, message.Options);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.Args);
-                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -2839,7 +2801,6 @@ namespace TestTemporal
                 Assert.Equal("my-workflow", message.Workflow);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.Args);
                 AssertEqualChildOptions(options, message.Options);
-                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
 
                 // Clone()
 
@@ -2850,7 +2811,6 @@ namespace TestTemporal
                 Assert.Equal("my-workflow", message.Workflow);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.Args);
                 AssertEqualChildOptions(options, message.Options);
-                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -2861,7 +2821,6 @@ namespace TestTemporal
                 AssertEqualChildOptions(options, message.Options);
                 Assert.Equal("my-workflow", message.Workflow);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, message.Args);
-                Assert.Equal(TimeSpan.FromSeconds(120), message.ScheduleToStartTimeout);
             }
         }
 
@@ -2901,9 +2860,9 @@ namespace TestTemporal
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(666, message.ChildId);
 
-                message.Execution = new InternalWorkflowExecution() { ID = "foo", RunID = "bar" };
-                Assert.Equal("foo", message.Execution.ID);
-                Assert.Equal("bar", message.Execution.RunID);
+                message.Execution = new WorkflowExecution("foo", "bar");
+                Assert.Equal("foo", message.Execution.WorkflowId);
+                Assert.Equal("bar", message.Execution.RunId);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -2915,8 +2874,8 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(666, message.ChildId);
-                Assert.Equal("foo", message.Execution.ID);
-                Assert.Equal("bar", message.Execution.RunID);
+                Assert.Equal("foo", message.Execution.WorkflowId);
+                Assert.Equal("bar", message.Execution.RunId);
 
                 // Clone()
 
@@ -2926,8 +2885,8 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(666, message.ChildId);
-                Assert.Equal("foo", message.Execution.ID);
-                Assert.Equal("bar", message.Execution.RunID);
+                Assert.Equal("foo", message.Execution.WorkflowId);
+                Assert.Equal("bar", message.Execution.RunId);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -2937,8 +2896,8 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
                 Assert.Equal(666, message.ChildId);
-                Assert.Equal("foo", message.Execution.ID);
-                Assert.Equal("bar", message.Execution.RunID);
+                Assert.Equal("foo", message.Execution.WorkflowId);
+                Assert.Equal("bar", message.Execution.RunId);
             }
         }
 

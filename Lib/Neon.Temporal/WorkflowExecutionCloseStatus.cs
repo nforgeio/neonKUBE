@@ -53,9 +53,9 @@ namespace Neon.Temporal
         Terminated = 3,
 
         /// <summary>
-        /// The workflow was restarted (aka <i>continued as new</i>).
+        /// The workflow was continued as new.
         /// </summary>
-        Restarted = 4,
+        ContinuedAsNew = 4,
 
         /// <summary>
         /// The workflow timed out.
