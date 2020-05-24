@@ -34,27 +34,27 @@ namespace Neon.Temporal
         /// <summary>
         /// Returns the workflow namespace.
         /// </summary>
-        public string Namespace { get; internal set; }
+        public string Namespace { get; set; }
 
         /// <summary>
         /// Returns the workflow ID.
         /// </summary>
-        public string WorkflowId { get; internal set; }
+        public string WorkflowId { get; set; }
 
         /// <summary>
         /// Returns the workflow's current run ID.
         /// </summary>
-        public string RunId { get; internal set; }
+        public string RunId { get; set; }
 
         /// <summary>
         /// Returns the workflow's workflow type name.
         /// </summary>
-        public string WorkflowType { get; internal set; }
+        public string WorkflowType { get; set; }
 
         /// <summary>
         /// Returns the workflow task list.
         /// </summary>
-        public string TaskList { get; internal set; }
+        public string TaskList { get; set; }
 
 #if TODO
         // $toodo(jefflill): These properties aren't supported yet.
@@ -63,12 +63,12 @@ namespace Neon.Temporal
         /// Returns the maximum time the workflow is allowed to run from
         /// the time the workflow was started until it completed.
         /// </summary>
-        public TimeSpan ExecutionStartToCloseTimeout { get; internal set; }
+        public TimeSpan ExecutionStartToCloseTimeout { get; set; }
 
         /// <summary>
         /// Returns the workflow's child policy.
         /// </summary>
-        public ChildPolicy ChildPolicy { get; internal set; }
+        public ChildPolicy ChildPolicy { get; set; }
 #endif
     }
 }

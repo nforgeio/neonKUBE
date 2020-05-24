@@ -1314,21 +1314,21 @@ namespace TestTemporal
             }
         }
 
-        private void AssertEqual(InternalActivityInfo expected, InternalActivityInfo actual)
+        private void AssertEqual(ActivityTask expected, ActivityTask actual)
         {
             Assert.Equal(expected.ActivityId , actual.ActivityId);
             Assert.Equal(expected.Attempt , actual.Attempt);
-            Assert.Equal(expected.ActivityType.Name , actual.ActivityType.Name);
-            Assert.Equal(expected.Deadline , actual.Deadline);
+            Assert.Equal(expected.ActivityTypeName , actual.ActivityTypeName);
+            Assert.Equal(expected.DeadlineTime , actual.DeadlineTime);
             Assert.Equal(expected.HeartbeatTimeout , actual.HeartbeatTimeout);
-            Assert.Equal(expected.ScheduledTimestamp , actual.ScheduledTimestamp);
-            Assert.Equal(expected.StartedTimestamp , actual.StartedTimestamp);
+            Assert.Equal(expected.ScheduledTime, actual.ScheduledTime);
+            Assert.Equal(expected.StartedTime , actual.StartedTime);
             Assert.Equal(expected.TaskList , actual.TaskList);
             Assert.Equal(expected.TaskToken , actual.TaskToken);
             Assert.Equal(expected.WorkflowNamespace , actual.WorkflowNamespace);
-            Assert.Equal(expected.WorkflowExecution.ID , actual.WorkflowExecution.ID);
-            Assert.Equal(expected.WorkflowExecution.RunID , actual.WorkflowExecution.RunID);
-            Assert.Equal(expected.WorkflowType.Name , actual.WorkflowType.Name);
+            Assert.Equal(expected.WorkflowExecution.WorkflowId , actual.WorkflowExecution.WorkflowId);
+            Assert.Equal(expected.WorkflowExecution.RunId , actual.WorkflowExecution.RunId);
+            Assert.Equal(expected.WorkflowTypeName , actual.WorkflowTypeName);
         }
 
         [Fact]
@@ -1364,20 +1364,20 @@ namespace TestTemporal
                 Assert.Equal(555, message.RequestId);
                 Assert.Equal("MyError", message.Error.String);
 
-                var expected = new InternalActivityInfo()
+                var expected = new ActivityTask()
                 {
-                    ActivityId = "666",
-                    Attempt = 4,
-                    ActivityType = new InternalActivityType() { Name = "my-activity" },
-                    Deadline = "2014-05-16T08:28:06.801064-04:00",
-                    HeartbeatTimeout = 1000,
-                    ScheduledTimestamp = "2014-05-16T09:28:06.801064-04:00",
-                    StartedTimestamp = "2014-05-16T10:28:06.801064-04:00",
-                    TaskList = "my-tasklist",
-                    TaskToken = Convert.ToBase64String(new byte[] { 0, 1, 2, 3, 4 }),
+                    ActivityId        = "666",
+                    Attempt           = 4,
+                    ActivityTypeName  = "my-activity",
+                    DeadlineTime      = new DateTime(2020, 5, 24, 1, 48, 0),
+                    HeartbeatTimeout  = TimeSpan.FromSeconds(5),
+                    ScheduledTime     = new DateTime(2020, 5, 24, 1, 49, 0),
+                    StartedTime       = new DateTime(2020, 5, 24, 1, 50, 0),
+                    TaskList          = "my-tasklist",
+                    TaskToken         = Convert.ToBase64String(new byte[] { 0, 1, 2, 3, 4 }),
                     WorkflowNamespace = "my-namespace",
-                    WorkflowExecution = new InternalWorkflowExecution() { ID = "777", RunID = "888" },
-                    WorkflowType = new InternalWorkflowType() { Name = "my-workflow" }
+                    WorkflowExecution = new WorkflowExecution("777", "888"),
+                    WorkflowTypeName  = "my-workflow" 
                 };
 
                 message.Info = expected;

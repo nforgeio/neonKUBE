@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowExecutionCloseStatus.cs
+// FILE:	    WorkflowCloseStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -28,7 +28,7 @@ namespace Neon.Temporal
     /// <summary>
     /// Enumerates the possible reasons why a workflow was closed.
     /// </summary>
-    public enum WorkflowExecutionCloseStatus
+    public enum WorkflowCloseStatus
     {
         // WARNING: These values must match those defined by [InternalWorkflowCloseState].
 

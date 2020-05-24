@@ -295,8 +295,8 @@ namespace Neon.Temporal
                 this.CompletionSource = new TaskCompletionSource<ProxyReply>();
                 this.RequestId        = requestId;
                 this.Request          = request;
-                this.StartTimeUtc     = DateTime.UtcNow;
-                this.Timeout          = timeout.AdjustToFitDateRange(StartTimeUtc);
+                this.StartTime        = DateTime.UtcNow;
+                this.Timeout          = timeout.AdjustToFitDateRange(StartTime);
             }
 
             /// <summary>
@@ -310,9 +310,9 @@ namespace Neon.Temporal
             public ProxyRequest Request { get; private set; }
 
             /// <summary>
-            /// The time (UTC) the operation started.
+            /// The time the operation started.
             /// </summary>
-            public DateTime StartTimeUtc { get; private set; }
+            public DateTime StartTime { get; private set; }
 
             /// <summary>
             /// The operation timeout. 
@@ -1984,7 +1984,7 @@ namespace Neon.Temporal
                                     continue;
                                 }
 
-                                if (operation.StartTimeUtc + operation.Timeout <= utcNow)
+                                if (operation.StartTime + operation.Timeout <= utcNow)
                                 {
                                     timedOutOperations.Add(operation);
                                 }
@@ -2010,7 +2010,7 @@ namespace Neon.Temporal
                             // run in parallel rather than waiting for them to complete
                             // one-by-one.
 
-                            log.LogWarn(() => $"Request Timeout: [request={operation.Request.GetType().Name}, started={operation.StartTimeUtc.ToString(NeonHelper.DateFormat100NsTZ)}, timeout={operation.Timeout}].");
+                            log.LogWarn(() => $"Request Timeout: [request={operation.Request.GetType().Name}, started={operation.StartTime.ToString(NeonHelper.DateFormat100NsTZ)}, timeout={operation.Timeout}].");
 
                             // $todo(jefflill):
                             //

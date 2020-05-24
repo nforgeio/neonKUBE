@@ -39,26 +39,26 @@ namespace Neon.Temporal
         /// <summary>
         /// Returns the workflow ID.
         /// </summary>
-        public string WorkflowId { get; internal set; }
+        public string WorkflowId { get; set; }
 
         /// <summary>
         /// Returns the workflow run ID.
         /// </summary>
-        public string RunId { get; internal set; }
+        public string RunId { get; set; }
 
         /// <summary>
         /// Returns the workflow type name.
         /// </summary>
-        public string WorkflowTypeName { get; internal set; }
+        public string WorkflowTypeName { get; set; }
 
         /// <summary>
-        /// $todo(jefflill): Don't know what this is.
+        /// $todo(jefflill): What is this?
         /// </summary>
-        public long InitatedId { get; internal set; }
+        public long InitiatedId { get; set; }
 
         /// <summary>
         /// Returns policy used to close this child when its parent is closed.
         /// </summary>
-        public ParentClosePolicy ParentClosePolicy { get; internal set; }
+        public ParentClosePolicy ParentClosePolicy { get; set; }
     }
 }

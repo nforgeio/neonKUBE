@@ -1540,18 +1540,47 @@ namespace TestTemporal
                     ParentClosePolicy       = ParentClosePolicy.RequestCancel
                 },
 
-                Status = new WorkflowStatus()
+                ExeecutionInfo = new WorkflowExecutionInfo()
                 {
                     Execution       = new WorkflowExecution("workflow-id", "run-id"),
                     TypeName        = "my-workflow",
                     StartTime       = new DateTime(2020, 5, 23, 13, 21, 0),
                     CloseTime       = new DateTime(2020, 5, 23, 13, 22, 0),
-                    CloseStatus     = WorkflowExecutionCloseStatus.ContinuedAsNew,
+                    CloseStatus     = WorkflowCloseStatus.ContinuedAsNew,
                     HistoryLength   = 5000,
                     ParentNamespace = "parent-namespace",
                     ParentExecution = new WorkflowExecution("parent-id", "parent-runid"),
                     ExecutionTime   = TimeSpan.FromSeconds(6000),
                     Memo            = new Dictionary<string, byte[]>() { { "foo", new byte[] { 0, 1, 2, 3, 4 } } }
+                },
+
+                PendingActivities = new List<PendingActivityInfo>()
+                {
+                    new PendingActivityInfo()
+                    {
+                        ActivityId         = "my-activity-id",
+                        ActivityTypeName   = "my-activity",
+                        State              = PendingActivityState.Started,
+                        HeartbeatDetails   = new byte[] { 0, 1, 2, 3, 4 },
+                        LastHeartbeatTime  = new DateTime(2020, 5, 24, 13, 32, 0),
+                        LastStartedTime    = new DateTime(2020, 5, 24, 13, 33, 0),
+                        Attempt            = 2,
+                        MaximumAttempts    = 3,
+                        ScheduledTime      = new DateTime(2020, 5, 24, 13, 34, 0),
+                        ExpirationTime     = new DateTime(2020, 5, 24, 13, 35, 0),
+                        LastWorkerIdentity = "my-worker"
+                    }
+                },
+
+                PendingChildren = new List<PendingChildExecutionInfo>()
+                {
+                    new PendingChildExecutionInfo()
+                    {
+                        WorkflowId       = "my-workflow-id",
+                        RunId            = "my-run-id",
+                        WorkflowTypeName = "my-workflow",
+                        InitiatedId      = 16000
+                    }
                 }
             };
 
@@ -1582,25 +1611,25 @@ namespace TestTemporal
 
             //---------------------------------------------
 
-            var status = description.Status;
+            var status = description.ExeecutionInfo;
 
             Assert.NotNull(status);
             Assert.NotNull(status.Execution);
-            Assert.Equal(expected.Status.Execution.WorkflowId, status.Execution.WorkflowId);
-            Assert.Equal(expected.Status.Execution.RunId, status.Execution.RunId);
+            Assert.Equal(expected.ExeecutionInfo.Execution.WorkflowId, status.Execution.WorkflowId);
+            Assert.Equal(expected.ExeecutionInfo.Execution.RunId, status.Execution.RunId);
             Assert.NotNull(status.TypeName);
-            Assert.Equal(expected.Status.TypeName, status.TypeName);
-            Assert.Equal(expected.Status.StartTime, status.StartTime);
-            Assert.Equal(expected.Status.CloseTime, status.CloseTime);
-            Assert.Equal(expected.Status.CloseStatus, status.CloseStatus);
-            Assert.Equal(expected.Status.HistoryLength, status.HistoryLength);
-            Assert.Equal(expected.Status.ParentNamespace, status.ParentNamespace);
+            Assert.Equal(expected.ExeecutionInfo.TypeName, status.TypeName);
+            Assert.Equal(expected.ExeecutionInfo.StartTime, status.StartTime);
+            Assert.Equal(expected.ExeecutionInfo.CloseTime, status.CloseTime);
+            Assert.Equal(expected.ExeecutionInfo.CloseStatus, status.CloseStatus);
+            Assert.Equal(expected.ExeecutionInfo.HistoryLength, status.HistoryLength);
+            Assert.Equal(expected.ExeecutionInfo.ParentNamespace, status.ParentNamespace);
 
             Assert.NotNull(status.ParentExecution);
-            Assert.Equal(expected.Status.ParentExecution.WorkflowId, status.ParentExecution.WorkflowId);
-            Assert.Equal(expected.Status.ParentExecution.RunId, status.ParentExecution.RunId);
+            Assert.Equal(expected.ExeecutionInfo.ParentExecution.WorkflowId, status.ParentExecution.WorkflowId);
+            Assert.Equal(expected.ExeecutionInfo.ParentExecution.RunId, status.ParentExecution.RunId);
 
-            Assert.Equal(expected.Status.ExecutionTime, status.ExecutionTime);
+            Assert.Equal(expected.ExeecutionInfo.ExecutionTime, status.ExecutionTime);
 
             //---------------------------------------------
 
@@ -1609,16 +1638,16 @@ namespace TestTemporal
 
             var pendingActivity = description.PendingActivities.First();
 
-            Assert.Equal("my-activityid", pendingActivity.ActivityID);
-            Assert.Equal("my-activity", pendingActivity.ActivityType.Name);
-            Assert.Equal(10000, pendingActivity.Attempt);
-            Assert.Equal(11000, pendingActivity.ExpirationTimestamp);
+            Assert.Equal("my-activity-id", pendingActivity.ActivityId);
+            Assert.Equal("my-activity", pendingActivity.ActivityTypeName);
+            Assert.Equal(PendingActivityState.Started, PendingActivityState.Started);
+            Assert.Equal(2, pendingActivity.Attempt);
+            Assert.Equal(3, pendingActivity.MaximumAttempts);
+            Assert.Equal(new DateTime(2020, 5, 24, 13, 34, 0), pendingActivity.ScheduledTime);
+            Assert.Equal(new DateTime(2020, 5, 24, 13, 35, 0), pendingActivity.ExpirationTime);
             Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, pendingActivity.HeartbeatDetails);
-            Assert.Equal(12000, pendingActivity.LastHeartbeatTimestamp);
-            Assert.Equal(13000, pendingActivity.LastStartedTimestamp);
-            Assert.Equal(14000, pendingActivity.MaximumAttempts);
-            Assert.Equal(15000, pendingActivity.ScheduledTimestamp);
-            Assert.Equal(InternalPendingActivityState.STARTED, pendingActivity.State);
+            Assert.Equal(new DateTime(2020, 5, 24, 13, 32, 0), pendingActivity.LastHeartbeatTime);
+            Assert.Equal(new DateTime(2020, 5, 24, 13, 33, 0), pendingActivity.LastStartedTime);
 
             //---------------------------------------------
 
@@ -1627,19 +1656,19 @@ namespace TestTemporal
 
             var pendingChild = description.PendingChildren.First();
 
-            Assert.Equal("my-workflowid", pendingChild.WorkflowId);
-            Assert.Equal("my-runid", pendingChild.RunId);
+            Assert.Equal("my-workflow-id", pendingChild.WorkflowId);
+            Assert.Equal("my-run-id", pendingChild.RunId);
             Assert.Equal("my-workflow-typename", pendingChild.WorkflowTypeName);
             Assert.Equal(16000, pendingChild.InitiatedId);
 
             //---------------------------------------------
 
             Assert.NotNull(status.Memo);
-            Assert.Equal(expected.Status.Memo.Count, status.Memo.Count);
+            Assert.Equal(expected.ExeecutionInfo.Memo.Count, status.Memo.Count);
 
-            for (int i = 0; i < expected.Status.Memo.Count; i++)
+            for (int i = 0; i < expected.ExeecutionInfo.Memo.Count; i++)
             {
-                var refField = expected.Status.Memo.ToArray()[i];
+                var refField = expected.ExeecutionInfo.Memo.ToArray()[i];
                 var field    = status.Memo.ToArray()[i];
 
                 Assert.Equal(refField.Key, field.Key);

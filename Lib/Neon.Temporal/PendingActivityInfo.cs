@@ -37,64 +37,58 @@ namespace Neon.Temporal
         /// <summary>
         /// The activity ID.
         /// </summary>
-        public string ActivityID { get; internal set; }
+        public string ActivityId { get; set; }
 
         /// <summary>
-        /// Identifies the activity type.
+        /// The activiy type name.
         /// </summary>
-        public string Name { get; internal set; }
+        public string ActivityTypeName { get; set; }
 
         /// <summary>
         /// The activity state.
         /// </summary>
-        public ActivityStatus Status { get; internal set; }
+        public PendingActivityState State { get; set; }
 
         /// <summary>
         /// Details from the last activity heartbeart.
         /// </summary>
-        public byte[] HeartbeatDetails { get; internal set; }
-
-        /// <summary>
-        /// Returns the <see cref="HeartbeatDetails"/> converted to <typeparamref name="TResult"/>
-        /// using the client <see cref="IDataConverter"/>.
-        /// </summary>
-        /// <typeparam name="TResult">The result type.</typeparam>
-        /// <returns>The heartbeat details as a<typeparamref name="TResult"/>.</returns>
-        public TResult GetHeartbeatDetails<TResult>()
-        {
-            Covenant.Assert(Client != null);
-
-            return Client.DataConverter.FromData<TResult>(HeartbeatDetails);
-        }
+        public byte[] HeartbeatDetails { get; set; }
 
         /// <summary>
         /// Time when the last activity heartbeat was received.
         /// </summary>
-        public DateTime LastHeartbeatTimeUtc { get; internal set; }
+        public DateTime LastHeartbeatTime { get; set; }
 
         /// <summary>
         /// Time when the activity was most recently started.
         /// </summary>
-        public DateTime LastStartedTimeUtc { get; internal set; }
+        public DateTime LastStartedTime { get; set; }
 
         /// <summary>
         /// The number of times the activity has been started/restarted.
         /// </summary>
-        public int Attempt { get; internal set; }
+        public int Attempt { get; set; }
 
         /// <summary>
         /// The maximum times the activity may be started.
         /// </summary>
-        public int MaximumAttempts { get; internal set; }
+        public int MaximumAttempts { get; set; }
 
         /// <summary>
         /// Time when the activity is scheduled to run.
         /// </summary>
-        public DateTime ScheduledTimeUtc { get; internal set; }
+        public DateTime ScheduledTime { get; set; }
 
         /// <summary>
         /// Time when the activity must complete.
         /// </summary>
-        public DateTime ExpirationTimeUtc { get; internal set; }
+        public DateTime ExpirationTime { get; set; }
+
+        // $todo(jefflill): We need to implement [LastFailure]
+
+        /// <summary>
+        /// The identity of the last worker that processed this activity.
+        /// </summary>
+        public string LastWorkerIdentity { get; set; }
     }
 }

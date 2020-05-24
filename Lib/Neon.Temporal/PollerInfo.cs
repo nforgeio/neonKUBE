@@ -31,7 +31,7 @@ namespace Neon.Temporal
     public class PollerInfo
     {
         /// <summary>
-        /// The last time the poller accessed Temporal (UTC).
+        /// The last time the poller accessed Temporal.
         /// </summary>
         public DateTime LastAccessTime { get; set; }
 

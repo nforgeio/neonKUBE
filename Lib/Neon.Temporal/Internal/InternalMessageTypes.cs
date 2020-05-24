@@ -462,7 +462,7 @@ namespace Neon.Temporal.Internal
         WorkflowDisconnectContextReply = 145,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Request the current workflow time (UTC).
+        /// <b>client --> proxy:</b> Request the current workflow time.
         /// </summary>
         WorkflowGetTimeRequest = 146,
 

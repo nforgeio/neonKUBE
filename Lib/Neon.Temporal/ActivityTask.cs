@@ -34,63 +34,63 @@ namespace Neon.Temporal
         /// <summary>
         /// The opaque base-64 encoded activity task token.
         /// </summary>
-        public string TaskToken { get; internal set; }
+        public string TaskToken { get; set; }
 
         /// <summary>
         /// The parent workflow type name.
         /// </summary>
-        public string WorkflowTypeName { get; internal set; }
+        public string WorkflowTypeName { get; set; }
 
         /// <summary>
         /// The parent workflow namespace.
         /// </summary>
-        public string WorkflowNamespace { get; internal set; }
+        public string WorkflowNamespace { get; set; }
 
         /// <summary>
         /// The parent workflow execution details.
         /// </summary>
-        public WorkflowExecution WorkflowExecution { get; internal set; }
+        public WorkflowExecution WorkflowExecution { get; set; }
 
         /// <summary>
         /// The activity ID.
         /// </summary>
-        public string ActivityId { get; internal set; }
+        public string ActivityId { get; set; }
 
         /// <summary>
         /// The activity type name.
         /// </summary>
-        public string ActivityTypeName { get; internal set; }
+        public string ActivityTypeName { get; set; }
 
         /// <summary>
         /// The activity task list.
         /// </summary>
-        public string TaskList { get; internal set; }
+        public string TaskList { get; set; }
 
         /// <summary>
         /// The maximum time between heartbeats.  <see cref="TimeSpan.Zero"/> 
         /// indicates that no heartbeating is required.
         /// </summary>
-        public TimeSpan HeartbeatTimeout { get; internal set; }
+        public TimeSpan HeartbeatTimeout { get; set; }
 
         /// <summary>
-        /// Time (UTC) when the activity was scheduled.
+        /// Time when the activity was scheduled.
         /// </summary>
-        public DateTime ScheduledTimeUtc { get; internal set; }
+        public DateTime ScheduledTime { get; set; }
 
         /// <summary>
-        /// Time (UTC) when the activity was started.
+        /// Time when the activity was started.
         /// </summary>
-        public DateTime StartedTimeUtc { get; internal set; }
+        public DateTime StartedTime { get; set; }
 
         /// <summary>
-        /// Time (UTC) when the activity will timeout.
+        /// Time when the activity will timeout.
         /// </summary>
-        public DateTime DeadlineTimeUtc { get; internal set; }
+        public DateTime DeadlineTime { get; set; }
 
         /// <summary>
         /// Indicates how many times the activity was been restarted.  This will be zero
         /// for the first execution, 1 for the second, and so on.
         /// </summary>
-        public int Attempt { get; internal set; }
+        public int Attempt { get; set; }
     }
 }

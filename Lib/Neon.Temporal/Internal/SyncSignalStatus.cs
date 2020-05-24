@@ -76,9 +76,9 @@ namespace Neon.Temporal.Internal
         public bool Acknowledged { get; set; }
 
         /// <summary>
-        /// Returns the time (UTC) when the signal was acknowledged.
+        /// Returns the time when the signal was acknowledged.
         /// </summary>
         [JsonIgnore]
-        public DateTime AcknowledgeTimeUtc { get; set; }
+        public DateTime AcknowledgeTime { get; set; }
     }
 }

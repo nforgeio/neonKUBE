@@ -33,21 +33,21 @@ namespace Neon.Temporal
         /// <summary>
         /// Describes the workflow's configuration.
         /// </summary>
-        public WorkflowConfiguration Configuration { get; internal set; }
+        public WorkflowConfiguration Configuration { get; set; }
 
         /// <summary>
-        /// Describes the workflow's execution status.
+        /// Describes the workflow's execution details.
         /// </summary>
-        public WorkflowStatus Status { get; internal set; }
+        public WorkflowExecutionInfo ExeecutionInfo { get; set; }
 
         /// <summary>
         /// Describes the workflow's scheduled and executing activities.
         /// </summary>
-        public List<PendingActivityInfo> PendingActivities { get; internal set; }
+        public List<PendingActivityInfo> PendingActivities { get; set; }
 
         /// <summary>
         /// Describes the workflow's scheduled and executing child workflows.
         /// </summary>
-        public List<PendingChildExecutionInfo> PendingChildren { get; internal set; }
+        public List<PendingChildExecutionInfo> PendingChildren { get; set; }
     }
 }

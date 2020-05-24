@@ -784,8 +784,8 @@ namespace Neon.Temporal
                                 // Indicate that the completed signal has reported the status
                                 // to the calling client as well as returned the result, if any.
 
-                                syncSignalStatus.Acknowledged       = true;
-                                syncSignalStatus.AcknowledgeTimeUtc = DateTime.UtcNow;
+                                syncSignalStatus.Acknowledged    = true;
+                                syncSignalStatus.AcknowledgeTime = DateTime.UtcNow;
                             }
 
                             return new WorkflowQueryInvokeReply()

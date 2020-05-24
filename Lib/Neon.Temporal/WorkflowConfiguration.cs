@@ -33,27 +33,27 @@ namespace Neon.Temporal
         /// <summary>
         /// Identifies the task list where the workflow was scheduled.
         /// </summary>
-        public string TaskList { get; internal set; }
+        public string TaskList { get; set; }
 
         /// <summary>
         /// Identifies the type of a task list.
         /// </summary>
-        public TaskListType TaskListKind { get; internal set; }
+        public TaskListType TaskListKind { get; set; }
 
         /// <summary>
         /// Maximum time the entire workflow may take to complete end-to-end.
         /// </summary>
-        public TimeSpan StartToCloseTimeout { get; internal set; }
+        public TimeSpan StartToCloseTimeout { get; set; }
 
         /// <summary>
         /// Maximum time a workflow task/decision may take to complete.
         /// </summary>
-        public TimeSpan TaskStartToCloseTimeout { get; internal set; }
+        public TimeSpan TaskStartToCloseTimeout { get; set; }
 
         /// <summary>
         /// The termination policy to apply to the child workflow when
         /// the parent workflow is terminated.
         /// </summary>
-        public ParentClosePolicy ParentClosePolicy { get; internal set; }
+        public ParentClosePolicy ParentClosePolicy { get; set; }
     }
 }

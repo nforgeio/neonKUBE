@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    WorkflowStatus.cs
+// FILE:	    WorkflowExecutionInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -29,27 +29,27 @@ namespace Neon.Temporal
     /// <summary>
     /// Describes the current state of a workflow.
     /// </summary>
-    public class WorkflowStatus
+    public class WorkflowExecutionInfo
     {
         /// <summary>
         /// Describes the workflow execution.
         /// </summary>
-        public WorkflowExecution Execution { get; internal set; }
+        public WorkflowExecution Execution { get; set; }
 
         /// <summary>
         /// Identifies the workflow implementation.
         /// </summary>
-        public string TypeName { get; internal set; }
+        public string TypeName { get; set; }
 
         /// <summary>
         /// Workflow start time or <c>null</c> if the workflow hasn't started yet.
         /// </summary>
-        public DateTime? StartTime { get; internal set; }
+        public DateTime? StartTime { get; set; }
 
         /// <summary>
         /// Workflow close time or <c>null</c> if the workflow hasn't completed yet.
         /// </summary>
-        public DateTime? CloseTime { get; internal set; }
+        public DateTime? CloseTime { get; set; }
 
         /// <summary>
         /// Returns <c>true</c> if the workflow has been started and is still running
@@ -70,32 +70,32 @@ namespace Neon.Temporal
         /// <summary>
         /// The status for a closed workflow.
         /// </summary>
-        public WorkflowExecutionCloseStatus CloseStatus { get; internal set; }
+        public WorkflowCloseStatus CloseStatus { get; set; }
 
         /// <summary>
         /// Workflow history length.
         /// </summary>
-        public long HistoryLength { get; internal set; }
+        public long HistoryLength { get; set; }
 
         /// <summary>
         /// Identifies the namespece where the parent workflow is running
         /// (or <c>null</c>).
         /// </summary>
-        public string ParentNamespace { get; internal set; }
+        public string ParentNamespace { get; set; }
 
         /// <summary>
         /// Identfies the parent workflow (or <c>null</c>).
         /// </summary>
-        public WorkflowExecution ParentExecution { get; internal set; }
+        public WorkflowExecution ParentExecution { get; set; }
 
         /// <summary>
         /// The workflow execution time.
         /// </summary>
-        public TimeSpan ExecutionTime { get; internal set; }
+        public TimeSpan ExecutionTime { get; set; }
 
         /// <summary>
         /// Optional workflow metadata.
         /// </summary>
-        public Dictionary<string, byte[]> Memo { get; internal set; }
+        public Dictionary<string, byte[]> Memo { get; set; }
     }
 }
