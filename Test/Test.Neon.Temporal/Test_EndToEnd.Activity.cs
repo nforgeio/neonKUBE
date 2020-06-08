@@ -1190,5 +1190,56 @@ namespace TestTemporal
 
             Assert.True(await stub.RunAsync());
         }
+
+        //---------------------------------------------------------------------
+
+        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        public interface IActivityWorkflowNullables : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<TimeSpan?> TestAsync(TimeSpan? value);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class ActivityWorkflowNullables : WorkflowBase, IActivityWorkflowNullables
+        {
+            public async Task<TimeSpan?> TestAsync(TimeSpan? value)
+            {
+                var stub = Workflow.NewActivityStub<IActivityNullables>();
+
+                return await stub.TestAsync(value);
+            }
+        }
+
+        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        public interface IActivityNullables : IActivity
+        {
+            [ActivityMethod]
+            Task<TimeSpan?> TestAsync(TimeSpan? value);
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ActivityNullables : ActivityBase, IActivityNullables
+        {
+            public async Task<TimeSpan?> TestAsync(TimeSpan? value)
+            {
+                return await Task.FromResult(value);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_Nullable()
+        {
+            // Verify that nullable activity arguments and results are serialized properly.
+
+            var stub = client.NewWorkflowStub<IActivityWorkflowNullables>();
+
+            Assert.Null(await stub.TestAsync(null));
+
+            stub = client.NewWorkflowStub<IActivityWorkflowNullables>();
+
+            Assert.Equal(TimeSpan.FromSeconds(77), await stub.TestAsync(TimeSpan.FromSeconds(77)));
+        }
     }
 }

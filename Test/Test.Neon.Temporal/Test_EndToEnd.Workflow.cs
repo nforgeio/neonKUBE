@@ -4497,5 +4497,38 @@ namespace TestTemporal
             Assert.True(await stub.RunAsync());
             Assert.Null(Workflow.Current);
         }
+
+        //---------------------------------------------------------------------
+
+        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        public interface IWorkflowNullables : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<TimeSpan?> TestAsync(TimeSpan? value);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowNullables : WorkflowBase, IWorkflowNullables
+        {
+            public async Task<TimeSpan?> TestAsync(TimeSpan? value)
+            {
+                return await Task.FromResult(value);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_Nullable()
+        {
+            // Verify that nullable arguments and results are serialized properly.
+
+            var stub = client.NewWorkflowStub<IWorkflowNullables>();
+
+            Assert.Null(await stub.TestAsync(null));
+
+            stub = client.NewWorkflowStub<IWorkflowNullables>();
+
+            Assert.Equal(TimeSpan.FromSeconds(77), await stub.TestAsync(TimeSpan.FromSeconds(77)));
+        }
     }
 }

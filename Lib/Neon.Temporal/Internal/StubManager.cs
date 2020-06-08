@@ -164,9 +164,16 @@ namespace Neon.Temporal.Internal
             // .NET returns fully qualified type names that include a "+" for
             // nested types.  We're going to convert these to "." to make the 
             // name's C# compatible.  We're also going to prepend "global::"
-            // to avoid namespace conflicts.
+            // to avoid namespace conflicts if this isn't already present.
 
-            return "global::" + TemporalHelper.TypeNameToSource(type);
+            var typeDefinition = TemporalHelper.TypeNameToSource(type); ;
+
+            if (!typeDefinition.StartsWith("global::"))
+            {
+                typeDefinition = "global::" + typeDefinition;
+            }
+
+            return typeDefinition;
         }
 
         /// <summary>
@@ -469,7 +476,7 @@ namespace Neon.Temporal.Internal
 
                     if (signalAttribute.Synchronous)
                     {
-                        // Synchronous signal can return both Task or Task<T>.
+                        // Synchronous signals can return either Task or Task<T>.
 
                         if (!TemporalHelper.IsTask(method.ReturnType) && !TemporalHelper.IsTaskT(method.ReturnType))
                         {

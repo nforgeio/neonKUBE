@@ -145,7 +145,7 @@ namespace Neon.Temporal.Internal
         {
             Covenant.Requires<ArgumentNullException>(type != null);
 
-            return TypeNameToSource(type.FullName);
+            return TypeNameToSource(TypeToCSharp(type));
         }
 
         /// <summary>
