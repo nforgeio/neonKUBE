@@ -16,6 +16,12 @@ neon login rm --force root@home-large
 neon cluster prepare %NF_ROOT%/devops/home/large.cluster.yaml --unredacted
 neon cluster setup --unredacted root@home-large
 
+# HOME: tiny-xcp
+neon logout
+neon login rm --force root@tiny-xcp-home
+neon cluster prepare %NF_ROOT%/devops/home/tiny-xcp.cluster.yaml --unredacted
+neon cluster setup --unredacted root@tiny-xcp-home
+
 # WRT
 neon logout
 neon cluster prepare %NF_ROOT%/devops/wrt/jeff-small.cluster.yaml --unredacted

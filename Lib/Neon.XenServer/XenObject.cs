@@ -25,9 +25,9 @@ using Neon.Kube;
 namespace Neon.Xen
 {
     /// <summary>
-    /// Base class for all XenServer object that implements common properties.
+    /// Base class for all XenServer objects that implement common properties.
     /// </summary>
-    public abstract class XenObject
+    public class XenObject
     {
         /// <summary>
         /// Constructs an instance from raw property values returned by the <b>xe CLI</b>.

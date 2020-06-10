@@ -27,7 +27,6 @@ import (
 
 	"github.com/gogo/protobuf/types"
 	"go.temporal.io/temporal-proto/namespace"
-	"go.temporal.io/temporal-proto/tasklist"
 	"go.temporal.io/temporal-proto/workflowservice"
 	"go.temporal.io/temporal/activity"
 	"go.temporal.io/temporal/client"
@@ -487,20 +486,7 @@ func handleDescribeTaskListRequest(requestCtx context.Context, request *messages
 	ctx, cancel := context.WithTimeout(requestCtx, clientHelper.GetClientTimeout())
 	defer cancel()
 
-	includeStatus := false
-	taskList := tasklist.TaskList{
-		Name: name,
-		Kind: request.GetTaskListKind(),
-	}
-
-	describeRequest := workflowservice.DescribeTaskListRequest{
-		Namespace:             namespace,
-		TaskList:              &taskList,
-		TaskListType:          request.GetTaskListType(),
-		IncludeTaskListStatus: includeStatus,
-	}
-
-	describeResponse, err := clientHelper.DescribeTaskList(ctx, &describeRequest)
+	describeResponse, err := clientHelper.DescribeTaskList(ctx, namespace, name, request.GetTaskListType())
 	if err != nil {
 		reply.Build(proxyerror.NewTemporalError(err))
 		return reply

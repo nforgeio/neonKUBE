@@ -229,7 +229,7 @@ namespace Neon.Xen
         /// <param name="args">The optional arguments formatted as <b>name=value</b>.</param>
         /// <returns>The command <see cref="XenResponse"/>.</returns>
         /// <exception cref="XenException">Thrown if the operation failed.</exception>
-        public XenResponse SafeInvokeItems(string command, params string[] args)
+        public XenResponse SafeInvokeList(string command, params string[] args)
         {
             return new XenResponse(SafeInvoke(command, args));
         }

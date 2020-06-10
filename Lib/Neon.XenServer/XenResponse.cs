@@ -46,7 +46,7 @@ namespace Neon.Xen
         internal XenResponse(CommandResponse response)
         {
             this.Response = response;
-            this.Results  = new List<Dictionary<string, string>>();
+            this.Items  = new List<Dictionary<string, string>>();
 
             // We need to parse the [xe] results from the standard output.  This will 
             // look something like:
@@ -160,7 +160,7 @@ namespace Neon.Xen
 
                     if (rawRecord.Count > 0)
                     {
-                        Results.Add(rawRecord);
+                        Items.Add(rawRecord);
                     }
                 }
             }
@@ -179,6 +179,6 @@ namespace Neon.Xen
         /// <summary>
         /// The list of raw property dictionaries returned by the command.
         /// </summary>
-        public List<Dictionary<string, string>> Results { get; private set; }
+        public List<Dictionary<string, string>> Items { get; private set; }
     }
 }

@@ -58,10 +58,10 @@ namespace Neon.Xen
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
             public List<XenTemplate> List()
             {
-                var response  = client.SafeInvokeItems("template-list", "params=all");
+                var response  = client.SafeInvokeList("template-list", "params=all");
                 var templates = new List<XenTemplate>();
 
-                foreach (var result in response.Results)
+                foreach (var result in response.Items)
                 {
                     templates.Add(new XenTemplate(result));
                 }
