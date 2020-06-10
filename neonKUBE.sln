@@ -138,6 +138,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home", "home", "{E4CB108C-A
 	ProjectSection(SolutionItems) = preProject
 		Devops\home\large.cluster.yaml = Devops\home\large.cluster.yaml
 		Devops\home\small.cluster.yaml = Devops\home\small.cluster.yaml
+		Devops\home\tiny-xcp.cluster.yaml = Devops\home\tiny-xcp.cluster.yaml
 		Devops\home\tiny.cluster.yaml = Devops\home\tiny.cluster.yaml
 	EndProjectSection
 EndProject
@@ -346,7 +347,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Models.Temporal",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Neon.Temporal.net", "Test\Test.Neon.Temporal.net\Test.Neon.Temporal.net.csproj", "{3F538D6C-2477-4969-A8C4-EB8E1588BB9C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test-temporal", "Services\test-temporal\test-temporal.csproj", "{5B0F0129-3826-49C4-885E-25738DE9980B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "test-temporal", "Services\test-temporal\test-temporal.csproj", "{5B0F0129-3826-49C4-885E-25738DE9980B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -46,10 +46,10 @@ namespace Neon.Xen
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
             public List<XenVirtualMachine> List()
             {
-                var response = client.SafeInvokeItems("vm-list", "params=all");
+                var response = client.SafeInvokeList("vm-list", "params=all");
                 var vms      = new List<XenVirtualMachine>();
 
-                foreach (var result in response.Results)
+                foreach (var result in response.Items)
                 {
                     vms.Add(new XenVirtualMachine(result));
                 }
@@ -114,6 +114,12 @@ namespace Neon.Xen
             /// Optionally specifies the storage repository where any extra drives for
             /// the virtual machine will be created.  This defaults to <b>Local storage</b>.
             /// </param>
+            /// <note>
+            /// The default value assumes that your XenServer pool is <b>NOT CONFIGURED FOR HA</b>.
+            /// Auto start VMs are not recommended for HA pools due to potential conflicts.  We're
+            /// not sure what problems having autostart VMs in a HA pool cause.
+            /// </note>
+            /// </param>
             /// <returns>The new <see cref="XenVirtualMachine"/>.</returns>
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
             /// <remarks>
@@ -125,11 +131,11 @@ namespace Neon.Xen
             public XenVirtualMachine Create(
                 string                          name, 
                 string                          templateName, 
-                int                             processors  = 2, 
-                long                            memoryBytes = 0, 
-                long                            diskBytes   = 0, 
-                bool                            snapshot    = false,
-                IEnumerable<XenVirtualDrive>    extraDrives = null,
+                int                             processors               = 2, 
+                long                            memoryBytes              = 0, 
+                long                            diskBytes                = 0, 
+                bool                            snapshot                 = false,
+                IEnumerable<XenVirtualDrive>    extraDrives              = null,
                 string                          primaryStorageRepository = "Local storage",
                 string                          extraStorageRespository  = "Local storage")
             {
@@ -172,7 +178,7 @@ namespace Neon.Xen
                 var templateSrUuid  = (string)null;
                 var srUuidArg       = (string)null;
 
-                foreach (var vdiProperties in vdiListResponse.Results)
+                foreach (var vdiProperties in vdiListResponse.Items)
                 {
                     if (vdiProperties["name-label"] == templateVdiName)
                     {
@@ -189,21 +195,92 @@ namespace Neon.Xen
                 // Create the VM.
 
                 var vmInstallResponse = client.SafeInvoke("vm-install", $"template={templateName}", $"new-name-label={name}", srUuidArg);
-                var uuid              = vmInstallResponse.OutputText.Trim();
+                var vmUuid            = vmInstallResponse.OutputText.Trim();
 
                 // Configure processors
 
                 client.SafeInvoke("vm-param-set",
-                    $"uuid={uuid}",
+                    $"uuid={vmUuid}",
                     $"VCPUs-at-startup={processors}",
                     $"VCPUs-max={processors}");
+
+                // Citrix says that VM autostart is not compatible with HA so we don't
+                // want to enable autostart when HA is enabled.  We'll assume that the
+                // user will configure autostart manually via the HA settings.
+                //
+                // If the XenServer host is not HA enabled, we're going to configure
+                // the VM to start automatically when the host machine boots.  We're
+                // going to list the XenServer pool to obtain its UUID and then inspect
+                // its parameters to determine whether HA is enabled.  We're going to
+                // assume that any single XenServer host can only be a member of a
+                // single pool (which makes sense).
+                //
+                // Note that the pool list will look like:
+                //
+                //   uuid ( RO)                : 55ab0faf-19e2-6a93-717d-441213705f60
+                //             name-label ( RW):
+                //       name-description ( RW):
+                //                 master ( RO): eae75dd5-6ae2-474f-a04d-a982d52821e7
+                //             default-SR ( RW): 62166a25-0601-dc07-d1ce-e74625e71444
+                //
+                // and the pool parameters will look like:
+                //
+                //   uuid ( RO)                            : 55ab0faf-19e2-6a93-717d-441213705f60
+                //                         name-label ( RW): test
+                //                   name-description ( RW):
+                //                             master ( RO): eae75dd5-6ae2-474f-a04d-a982d52821e7
+                //                         default-SR ( RW): <not in database>
+                //                      crash-dump-SR ( RW): <not in database>
+                //                   suspend-image-SR ( RW): <not in database>
+                //                 supported-sr-types ( RO): smb; lvm; iso; nfs; lvmofcoe; udev; hba; dummy; ext; lvmoiscsi; lvmohba; file; iscsi
+                //                       other-config (MRW): auto_poweron: true; memory-ratio-hvm: 0.25; memory-ratio-pv: 0.25
+                //                 allowed-operations (SRO): cluster_create; ha_enable
+                //                 current-operations (SRO):
+                //                         ha-enabled ( RO): false
+                //                   ha-configuration ( RO):
+                //                      ha-statefiles ( RO):
+                //       ha-host-failures-to-tolerate ( RW): 0
+                //                 ha-plan-exists-for ( RO): 0
+                //                ha-allow-overcommit ( RW): false
+                //                   ha-overcommitted ( RO): false
+                //                              blobs ( RO):
+                //                            wlb-url ( RO):
+                //                       wlb-username ( RO):
+                //                        wlb-enabled ( RW): false
+                //                    wlb-verify-cert ( RW): false
+                //              igmp-snooping-enabled ( RW): false
+                //                         gui-config (MRW):
+                //                health-check-config (MRW):
+                //                       restrictions ( RO): restrict_vswitch_controller: false; restrict_lab: false; restrict_stage: false; restrict_storagelink: false; restrict_storagelink_site_recovery: false; restrict_web_selfservice: false; restrict_web_selfservice_manager: false; restrict_hotfix_apply: false; restrict_export_resource_data: false; restrict_read_caching: false; restrict_cifs: false; restrict_health_check: false; restrict_xcm: false; restrict_vm_memory_introspection: false; restrict_batch_hotfix_apply: false; restrict_management_on_vlan: false; restrict_ws_proxy: false; restrict_vlan: false; restrict_qos: false; restrict_pool_attached_storage: false; restrict_netapp: false; restrict_equalogic: false; restrict_pooling: false; enable_xha: true; restrict_marathon: false; restrict_email_alerting: false; restrict_historical_performance: false; restrict_wlb: false; restrict_rbac: false; restrict_dmc: false; restrict_checkpoint: false; restrict_cpu_masking: false; restrict_connection: false; platform_filter: false; regular_nag_dialog: false; restrict_vmpr: false; restrict_vmss: false; restrict_intellicache: false; restrict_gpu: false; restrict_dr: false; restrict_vif_locking: false; restrict_storage_xen_motion: false; restrict_vgpu: false; restrict_integrated_gpu_passthrough: false; restrict_vss: false; restrict_guest_agent_auto_update: false; restrict_pci_device_for_auto_update: false; restrict_xen_motion: false; restrict_guest_ip_setting: false; restrict_ad: false; restrict_ssl_legacy_switch: false; restrict_nested_virt: false; restrict_live_patching: false; restrict_set_vcpus_number_live: false; restrict_pvs_proxy: false; restrict_igmp_snooping: false; restrict_rpu: false; restrict_pool_size: false; restrict_cbt: false; restrict_usb_passthrough: false; restrict_network_sriov: false; restrict_corosync: true; restrict_zstd_export: false
+                //                               tags (SRW):
+                //                      license-state ( RO): edition: xcp-ng; expiry: never
+                //                   ha-cluster-stack ( RO): xhad
+                //                 guest-agent-config (MRW):
+                //                           cpu_info (MRO): features_hvm_host: 1fcbfbff-80b82221-2993fbff-00000403-00000000-00000000-00000000-00000000-00001000-9c000000-00000000-00000000-00000000-00000000-00000000; features_hvm: 1fcbfbff-80b82221-2993fbff-00000403-00000000-00000000-00000000-00000000-00001000-9c000000-00000000-00000000-00000000-00000000-00000000; features_pv_host: 1fc9cbf5-80b82201-2991cbf5-00000003-00000000-00000000-00000000-00000000-00001000-8c000000-00000000-00000000-00000000-00000000-00000000; features_pv: 1fc9cbf5-80b82201-2991cbf5-00000003-00000000-00000000-00000000-00000000-00001000-8c000000-00000000-00000000-00000000-00000000-00000000; socket_count: 2; cpu_count: 16; vendor: GenuineIntel
+                //            policy-no-vendor-device ( RW): false
+                //             live-patching-disabled ( RW): false
+
+                var poolList = client.SafeInvokeList("pool-list").Items.First();
+                var poolUuid = poolList["uuid"];
+                var pool     = client.SafeInvokeList("pool-param-list", $"uuid={poolUuid}").Items.First();
+
+                if (pool["ha-enabled"] == "false")
+                {
+                    client.SafeInvoke("pool-param-set",
+                        $"uuid={poolUuid}",
+                        $"other-config:auto_poweron=true");
+
+                    client.SafeInvoke("vm-param-set",
+                        $"uuid={vmUuid}",
+                        $"other-config:auto_poweron=true");
+                }
 
                 // Configure memory.
 
                 if (memoryBytes > 0)
                 {
                     client.SafeInvoke("vm-memory-limits-set",
-                        $"uuid={uuid}",
+                        $"uuid={vmUuid}",
                         $"dynamic-max={memoryBytes}",
                         $"dynamic-min={memoryBytes}",
                         $"static-max={memoryBytes}",
@@ -214,7 +291,7 @@ namespace Neon.Xen
 
                 if (diskBytes > 0)
                 {
-                    var disks = client.SafeInvokeItems("vm-disk-list", $"uuid={uuid}").Results;
+                    var disks = client.SafeInvokeList("vm-disk-list", $"uuid={vmUuid}").Items;
                     var vdi   = disks.FirstOrDefault(items => items.ContainsKey("Disk 0 VDI"));
 
                     if (vdi == null)
@@ -236,12 +313,12 @@ namespace Neon.Xen
 
                     foreach (var drive in extraDrives)
                     {
-                        client.SafeInvoke("vm-disk-add", $"uuid={uuid}", $"sr-uuid={extraSR.Uuid}", $"disk-size={drive.Size}", $"device={driveIndex}");
+                        client.SafeInvoke("vm-disk-add", $"uuid={vmUuid}", $"sr-uuid={extraSR.Uuid}", $"disk-size={drive.Size}", $"device={driveIndex}");
                         driveIndex++;
                     }
                 }
 
-                return client.Machine.Find(uuid: uuid);
+                return client.Machine.Find(uuid: vmUuid);
             }
 
             /// <summary>

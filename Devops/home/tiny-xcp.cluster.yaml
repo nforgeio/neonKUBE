@@ -1,0 +1,34 @@
+name: tiny-xcp-home
+datacenter: sultan
+environment: development
+timeSources:
+- pool.ntp.org
+allowUnitTesting: true
+kubernetes:
+  allowPodsOnMasters: true
+ceph:
+  osdDriveSize: 32GiB
+hosting:
+  environment: xenserver
+  vmHostUsername: $<<XENSERVER_USERNAME>>
+  vmHostPassword: $<<XENSERVER_PASSWORD>>
+  vmNamePrefix: jeff
+  vmHosts:
+  - name: XCP-HOME
+    address: 10.0.172.188
+  xenServer:
+     snapshot: true
+network:
+  premiseSubnet: 10.0.0.0/16
+  nodesSubnet: 10.0.173.0/24
+nodeOptions:
+   upgrade: none
+   passwordLength: 20
+nodes:
+   master-0:
+     role: master
+     privateAddress: 10.0.173.0
+     vmHost: XCP-HOME
+     vmProcessors: 4
+     vmMemory: 2GiB
+     vmDisk: 10GiB

@@ -60,7 +60,7 @@ namespace Neon.Xen
                 var response     = client.InvokeItems("sr-list", "params=all");
                 var repositories = new List<XenStorageRepository>();
 
-                foreach (var result in response.Results)
+                foreach (var result in response.Items)
                 {
                     repositories.Add(new XenStorageRepository(result));
                 }
