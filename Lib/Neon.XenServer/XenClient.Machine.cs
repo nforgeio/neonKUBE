@@ -113,7 +113,6 @@ namespace Neon.Xen
             /// <param name="extraStorageRespository">
             /// Optionally specifies the storage repository where any extra drives for
             /// the virtual machine will be created.  This defaults to <b>Local storage</b>.
-            /// </param>
             /// <note>
             /// The default value assumes that your XenServer pool is <b>NOT CONFIGURED FOR HA</b>.
             /// Auto start VMs are not recommended for HA pools due to potential conflicts.  We're
