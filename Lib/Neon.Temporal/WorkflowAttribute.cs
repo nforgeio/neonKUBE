@@ -43,7 +43,7 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Indicates that <see cref="Worker.RegisterAssemblyWorkflowsAsync(Assembly, string)"/> will
+        /// Indicates that <see cref="Worker.RegisterAssemblyWorkflowsAsync(Assembly, bool)"/> will
         /// automatically register the tagged workflow implementation for the specified assembly.
         /// This defaults to <c>false</c>
         /// </summary>
