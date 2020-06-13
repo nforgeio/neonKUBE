@@ -90,11 +90,16 @@ namespace TestTemporal
         {
             await SyncContext.ClearAsync;
 
-            // Verify that default Temporal settings allow duplicate workflow IDs.
+            // Verify that default Cadence settings allow duplicate workflow IDs
+            // and then change this to prevent reuse.
 
-            Assert.Equal(WorkflowIdReusePolicy.AllowDuplicate, fixture.Settings.WorkflowIdReusePolicy);
+            var settings = fixture.Settings.Clone();
 
-            using (var client = await TemporalClient.ConnectAsync(fixture.Settings))
+            Assert.Equal(WorkflowIdReusePolicy.AllowDuplicate, settings.WorkflowIdReusePolicy);
+
+            settings.WorkflowIdReusePolicy = WorkflowIdReusePolicy.RejectDuplicate;
+
+            using (var client = await TemporalClient.ConnectAsync(settings))
             {
                 // Create a worker and register the workflow and activity 
                 // implementations to let Temporal know we're open for business.
@@ -131,12 +136,11 @@ namespace TestTemporal
         {
             await SyncContext.ClearAsync;
 
-            // Verify that we can reuse a workflow ID for an external
-            // workflow via client settings.
+            // Verify that default Cadence settings allow duplicate workflow IDs.
 
             var settings = fixture.Settings.Clone();
 
-            settings.WorkflowIdReusePolicy = WorkflowIdReusePolicy.AllowDuplicate;
+            Assert.Equal(WorkflowIdReusePolicy.AllowDuplicate, settings.WorkflowIdReusePolicy);
 
             using (var client = await TemporalClient.ConnectAsync(settings))
             {
