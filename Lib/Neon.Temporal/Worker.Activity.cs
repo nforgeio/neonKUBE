@@ -73,18 +73,13 @@ namespace Neon.Temporal
         /// Registers an activity implementation with Temporal.
         /// </summary>
         /// <typeparam name="TActivity">The <see cref="ActivityBase"/> derived class implementing the activity.</typeparam>
-        /// <param name="activityTypeName">
-        /// Optionally specifies a custom activity type name that will be used 
-        /// for identifying the activity implementation in Temporal.  This defaults
-        /// to the fully qualified <typeparamref name="TActivity"/> type name.
-        /// </param>
-        /// <param name="namespace">Optionally overrides the default client namespace.</param>
+        /// <param name="disableDuplicateCheck">Disable checks for duplicate activity registrations.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if a different activity class has already been registered for <paramref name="activityTypeName"/>.</exception>
         /// <exception cref="InvalidOperationException">
         /// Thrown if the worker has already been started.  You must register workflow 
         /// and activity implementations before starting a worker.
         /// </exception>
+        /// <exception cref="RegistrationException">Thrown when there's a problem with the registration.</exception>
         /// <remarks>
         /// <note>
         /// Be sure to register all services you will be injecting into activities via
@@ -92,25 +87,31 @@ namespace Neon.Temporal
         /// registering of your activity implementations before starting a worker.
         /// </note>
         /// </remarks>
-        public async Task RegisterActivityAsync<TActivity>(string activityTypeName = null, string @namespace = null)
+        public async Task RegisterActivityAsync<TActivity>(bool disableDuplicateCheck = false)
             where TActivity : ActivityBase
         {
             await SyncContext.ClearAsync;
             TemporalHelper.ValidateActivityImplementation(typeof(TActivity));
-            TemporalHelper.ValidateActivityTypeName(activityTypeName);
             EnsureNotDisposed();
             EnsureCanRegister();
 
-            var activityType = typeof(TActivity);
-
-            if (string.IsNullOrEmpty(activityTypeName))
-            {
-                activityTypeName = TemporalHelper.GetActivityTypeName(activityType, activityType.GetCustomAttribute<ActivityAttribute>());
-            }
-
             lock (await workerMutex.AcquireAsync())
             {
-                registeredActivityTypes.Add(TemporalHelper.GetActivityInterface(typeof(TActivity)));
+                var activityInterface = TemporalHelper.GetActivityInterface(typeof(TActivity));
+
+                if (registeredActivityTypes.Contains(activityInterface))
+                {
+                    if (disableDuplicateCheck)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        throw new RegistrationException($"Activity implementation [{typeof(TActivity).FullName}] has already been registered.");
+                    }
+                }
+
+                registeredActivityTypes.Add(activityInterface);
             }
         }
 
@@ -120,7 +121,7 @@ namespace Neon.Temporal
         /// registers them with Temporal.
         /// </summary>
         /// <param name="assembly">The target assembly.</param>
-        /// <param name="namespace">Optionally overrides the default client namespace.</param>
+        /// <param name="disableDuplicateCheck">Disable checks for duplicate activity registrations.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TypeLoadException">
         /// Thrown for types tagged by <see cref="ActivityAttribute"/> that are not 
@@ -131,6 +132,7 @@ namespace Neon.Temporal
         /// Thrown if the worker has already been started.  You must register workflow 
         /// and activity implementations before starting workers.
         /// </exception>
+        /// <exception cref="RegistrationException">Thrown when there's a problem with the registration.</exception>
         /// <remarks>
         /// <note>
         /// Be sure to register all services you will be injecting into activities via
@@ -138,7 +140,7 @@ namespace Neon.Temporal
         /// registering of your activity implementations before starting a worker.
         /// </note>
         /// </remarks>
-        public async Task RegisterAssemblyActivitiesAsync(Assembly assembly, string @namespace = null)
+        public async Task RegisterAssemblyActivitiesAsync(Assembly assembly, bool disableDuplicateCheck = false)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(assembly != null, nameof(assembly));
@@ -155,7 +157,21 @@ namespace Neon.Temporal
 
                     using (await workerMutex.AcquireAsync())
                     {
-                        registeredActivityTypes.Add(TemporalHelper.GetActivityInterface(type));
+                        var activityInterface = TemporalHelper.GetActivityInterface(type);
+
+                        if (registeredActivityTypes.Contains(activityInterface))
+                        {
+                            if (disableDuplicateCheck)
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                throw new RegistrationException($"Activity implementation [{type.FullName}] has already been registered.");
+                            }
+                        }
+
+                        registeredActivityTypes.Add(activityInterface);
                     }
                 }
             }

@@ -127,12 +127,12 @@ namespace Neon.Temporal
     /// </para>
     /// <para>
     /// The <see cref="Worker"/> class provides methods for registering individual workflow and
-    /// activity implementations, including <see cref="Worker.RegisterWorkflowAsync{TWorkflow}(string)"/> 
-    /// and <see cref="Worker.RegisterActivityAsync{TActivity}(string, string)"/> as well as methods
+    /// activity implementations, including <see cref="Worker.RegisterWorkflowAsync{TWorkflow}(bool)"/> 
+    /// and <see cref="Worker.RegisterActivityAsync{TActivity}(bool)"/> as well as methods
     /// that register all workflow and activity implementation discovered in an assembly:
-    /// <see cref="Worker.RegisterAssemblyActivitiesAsync(Assembly, string)"/>,
-    /// <see cref="Worker.RegisterAssemblyWorkflowsAsync(Assembly, string)"/>, and
-    /// <see cref="Worker.RegisterAssemblyAsync(Assembly, string)"/> (which registers
+    /// <see cref="Worker.RegisterAssemblyActivitiesAsync(Assembly, bool)"/>,
+    /// <see cref="Worker.RegisterAssemblyWorkflowsAsync(Assembly, bool)"/>, and
+    /// <see cref="Worker.RegisterAssemblyAsync(Assembly, bool)"/> (which registers
     /// both workflow and assembly implementations).
     /// </para>
     /// <para>

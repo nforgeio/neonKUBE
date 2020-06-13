@@ -67,10 +67,10 @@ namespace Neon.Temporal
         /// </para>
         /// <para>
         /// After you have a new worker, you'll need to register workflow and/or activity implementations
-        /// via <see cref="Worker.RegisterActivityAsync{TActivity}(string, string)"/>,
-        /// <see cref="Worker.RegisterAssemblyActivitiesAsync(Assembly, string)"/>,
-        /// <see cref="Worker.RegisterAssemblyAsync(Assembly, string)"/>, or
-        /// <see cref="Worker.RegisterAssemblyWorkflowsAsync(Assembly, string)"/>.
+        /// via <see cref="Worker.RegisterActivityAsync{TActivity}(bool)"/>,
+        /// <see cref="Worker.RegisterAssemblyActivitiesAsync(Assembly, bool)"/>,
+        /// <see cref="Worker.RegisterAssemblyAsync(Assembly, bool)"/>, or
+        /// <see cref="Worker.RegisterAssemblyWorkflowsAsync(Assembly, bool)"/>.
         /// </para>
         /// <para>
         /// Then after completing the registrations, you'll call <see cref="Worker.StartAsync"/>

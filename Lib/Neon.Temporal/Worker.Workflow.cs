@@ -77,7 +77,9 @@ namespace Neon.Temporal
         /// Registers a workflow implementation.
         /// </summary>
         /// <param name="workflowType">The workflow implementation type.</param>
-        private async Task RegisterWorkflowImplementationAsync(Type workflowType)
+        /// <param name="disableDuplicateCheck">Disable checks for duplicate workflow registrations.</param>
+        /// <exception cref="RegistrationException">Thrown when there's a problem with the registration.</exception>
+        private async Task RegisterWorkflowImplementationAsync(Type workflowType, bool disableDuplicateCheck = false)
         {
             TemporalHelper.ValidateWorkflowImplementation(workflowType);
 
@@ -156,19 +158,11 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Scans the assembly passed looking for workflow implementations derived from
-        /// <see cref="WorkflowBase"/> and tagged by <see cref="WorkflowAttribute"/> with
-        /// <see cref="WorkflowAttribute.AutoRegister"/> set to <c>true</c> and registers 
-        /// them with Temporal.
+        /// Registers a workflow implementation with Temporal.
         /// </summary>
-        /// <param name="assembly">The target assembly.</param>
-        /// <param name="namespace">Optionally overrides the default client namespace.</param>
+        /// <typeparam name="TWorkflow">The <see cref="WorkflowBase"/> derived class implementing the workflow.</typeparam>
+        /// <param name="disableDuplicateCheck">Disable checks for duplicate registrations.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="TypeLoadException">
-        /// Thrown for types tagged by <see cref="WorkflowAttribute"/> that are not 
-        /// derived from <see cref="WorkflowBase"/>.
-        /// </exception>
-        /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
         /// <exception cref="InvalidOperationException">
         /// Thrown if the worker has already been started.  You must register workflow 
         /// and activity implementations before starting workers.
@@ -178,7 +172,56 @@ namespace Neon.Temporal
         /// Be sure to register all of your workflow implementations before starting a worker.
         /// </note>
         /// </remarks>
-        public async Task RegisterAssemblyWorkflowsAsync(Assembly assembly, string @namespace = null)
+        public async Task RegisterWorkflowAsync<TWorkflow>(bool disableDuplicateCheck = false)
+            where TWorkflow : WorkflowBase
+        {
+            await SyncContext.ClearAsync;
+            TemporalHelper.ValidateWorkflowImplementation(typeof(TWorkflow));
+            EnsureNotDisposed();
+            EnsureCanRegister();
+
+            var workflowInterface = TemporalHelper.GetWorkflowInterface(typeof(TWorkflow));
+
+            if (registeredWorkflowTypes.Contains(workflowInterface))
+            {
+                if (disableDuplicateCheck)
+                {
+                    return;
+                }
+                else
+                {
+                    throw new RegistrationException($"Workflow implementation [{typeof(TWorkflow).FullName}] has already been registered.");
+                }
+            }
+
+            registeredWorkflowTypes.Add(workflowInterface);
+        }
+
+        /// <summary>
+        /// Scans the assembly passed looking for workflow implementations derived from
+        /// <see cref="WorkflowBase"/> and tagged by <see cref="WorkflowAttribute"/> with
+        /// <see cref="WorkflowAttribute.AutoRegister"/> set to <c>true</c> and registers 
+        /// them with Temporal.
+        /// </summary>
+        /// <param name="assembly">The target assembly.</param>
+        /// <param name="disableDuplicateCheck">Disable checks for duplicate registrations.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="TypeLoadException">
+        /// Thrown for types tagged by <see cref="WorkflowAttribute"/> that are not 
+        /// derived from <see cref="WorkflowBase"/>.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">Thrown if one of the tagged classes conflict with an existing registration.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// <exception cref="RegistrationException">Thrown when there's a problem with the registration.</exception>
+        /// Thrown if the worker has already been started.  You must register workflow 
+        /// and activity implementations before starting workers.
+        /// </exception>
+        /// <remarks>
+        /// <note>
+        /// Be sure to register all of your workflow implementations before starting a worker.
+        /// </note>
+        /// </remarks>
+        public async Task RegisterAssemblyWorkflowsAsync(Assembly assembly, bool disableDuplicateCheck = false)
         {
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(assembly != null, nameof(assembly));
@@ -193,7 +236,21 @@ namespace Neon.Temporal
                 {
                     using (await workerMutex.AcquireAsync())
                     {
-                        registeredWorkflowTypes.Add(TemporalHelper.GetWorkflowInterface(type));
+                        var workflowInterface = TemporalHelper.GetWorkflowInterface(type);
+
+                        if (registeredWorkflowTypes.Contains(workflowInterface))
+                        {
+                            if (disableDuplicateCheck)
+                            {
+                                return;
+                            }
+                            else
+                            {
+                                throw new RegistrationException($"Workflow implementation [{type.FullName}] has already been registered.");
+                            }
+                        }
+
+                        registeredWorkflowTypes.Add(workflowInterface);
                     }
                 }
             }

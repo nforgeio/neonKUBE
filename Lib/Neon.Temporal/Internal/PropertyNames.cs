@@ -65,6 +65,7 @@ namespace Neon.Temporal.Internal
         public static PropertyNameUtf8 Data { get; private set; }                                      = new PropertyNameUtf8("Data");
         public static PropertyNameUtf8 Description { get; private set; }                               = new PropertyNameUtf8("Description");
         public static PropertyNameUtf8 Details { get; private set; }                                   = new PropertyNameUtf8("Details");
+        public static PropertyNameUtf8 DisableAlreadyRegisteredCheck { get; private set; }             = new PropertyNameUtf8("DisableAlreadyRegisteredCheck");
         public static PropertyNameUtf8 Duration { get; private set; }                                  = new PropertyNameUtf8("Duration");
         public static PropertyNameUtf8 EmitMetrics { get; private set; }                               = new PropertyNameUtf8("EmitMetrics");
         public static PropertyNameUtf8 Error { get; private set; }                                     = new PropertyNameUtf8("Error");

@@ -145,11 +145,11 @@ namespace Neon.Temporal
         /// <summary>
         /// Scans the assembly passed looking for workflow and activity implementations 
         /// derived from and registers them with Temporal.  This is equivalent to calling
-        /// <see cref="RegisterAssemblyWorkflowsAsync(Assembly, string)"/> and
-        /// <see cref="RegisterAssemblyActivitiesAsync(Assembly, string)"/>,
+        /// <see cref="RegisterAssemblyWorkflowsAsync(Assembly, bool)"/> and
+        /// <see cref="RegisterAssemblyActivitiesAsync(Assembly, bool)"/>,
         /// </summary>
         /// <param name="assembly">The target assembly.</param>
-        /// <param name="namespace">Optionally overrides the default client namespace.</param>
+        /// <param name="disableDuplicateCheck">Disable checks for duplicate workflow and activity registrations.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="TypeLoadException">
         /// Thrown for types tagged by <see cref="WorkflowAttribute"/> that are not 
@@ -161,6 +161,7 @@ namespace Neon.Temporal
         /// Thrown if the worker has already been started.  You must register workflow 
         /// and activity implementations before starting workers.
         /// </exception>
+        /// <exception cref="RegistrationException">Thrown when there's a problem with the registration.</exception>
         /// <remarks>
         /// <note>
         /// Be sure to register all services you will be injecting into activities via
@@ -169,45 +170,14 @@ namespace Neon.Temporal
         /// a worker.
         /// </note>
         /// </remarks>
-        public async Task RegisterAssemblyAsync(Assembly assembly, string @namespace = null)
+        public async Task RegisterAssemblyAsync(Assembly assembly, bool disableDuplicateCheck = false)
         {
             await SyncContext.ClearAsync;
             EnsureNotDisposed();
             EnsureCanRegister();
 
-            await RegisterAssemblyWorkflowsAsync(assembly, @namespace);
-            await RegisterAssemblyActivitiesAsync(assembly, @namespace);
-        }
-
-        /// <summary>
-        /// Registers a workflow implementation with Temporal.
-        /// </summary>
-        /// <typeparam name="TWorkflow">The <see cref="WorkflowBase"/> derived class implementing the workflow.</typeparam>
-        /// <param name="namespace">Optionally overrides the default client namespace.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown if the worker has already been started.  You must register workflow 
-        /// and activity implementations before starting workers.
-        /// </exception>
-        /// <remarks>
-        /// <note>
-        /// Be sure to register all of your workflow implementations before starting a worker.
-        /// </note>
-        /// </remarks>
-        public async Task RegisterWorkflowAsync<TWorkflow>(string @namespace = null)
-            where TWorkflow : WorkflowBase
-        {
-            await SyncContext.ClearAsync;
-            TemporalHelper.ValidateWorkflowImplementation(typeof(TWorkflow));
-            EnsureNotDisposed();
-            EnsureCanRegister();
-
-            var workflowType = typeof(TWorkflow);
-
-            using (await workerMutex.AcquireAsync())
-            {
-                registeredWorkflowTypes.Add(TemporalHelper.GetWorkflowInterface(typeof(TWorkflow)));
-            }
+            await RegisterAssemblyWorkflowsAsync(assembly, disableDuplicateCheck);
+            await RegisterAssemblyActivitiesAsync(assembly, disableDuplicateCheck);
         }
 
         /// <summary>

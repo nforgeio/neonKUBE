@@ -42,12 +42,21 @@ namespace Neon.Temporal.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.WorkflowRegisterReply;
 
         /// <summary>
-        /// Identifies the workflow implementation.
+        /// Identifies the workflow implementation (AKA the workflow type name).
         /// </summary>
         public string Name
         {
             get => GetStringProperty(PropertyNames.Name);
             set => SetStringProperty(PropertyNames.Name, value);
+        }
+
+        /// <summary>
+        /// Disables checks for duplicate registrations.
+        /// </summary>
+        public bool DisableAlreadyRegisteredCheck
+        {
+            get => GetBoolProperty(PropertyNames.DisableAlreadyRegisteredCheck);
+            set => SetBoolProperty(PropertyNames.DisableAlreadyRegisteredCheck, value);
         }
 
         /// <inheritdoc/>
@@ -67,7 +76,8 @@ namespace Neon.Temporal.Internal
 
             var typedTarget = (WorkflowRegisterRequest)target;
 
-            typedTarget.Name = this.Name;
+            typedTarget.Name                          = this.Name;
+            typedTarget.DisableAlreadyRegisteredCheck = this.DisableAlreadyRegisteredCheck;
         }
     }
 }

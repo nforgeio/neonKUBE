@@ -64,16 +64,23 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
+                Assert.Equal(0, message.WorkerId);
                 Assert.Null(message.Name);
+                Assert.False(message.DisableAlreadyRegisteredCheck);
 
                 // Round-trip
 
                 message.ClientId = 444;
                 message.RequestId = 555;
+                message.WorkerId = 666;
                 message.Name = "Foo";
+                message.DisableAlreadyRegisteredCheck = true;
 
+                Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.WorkerId);
                 Assert.Equal("Foo", message.Name);
+                Assert.True(message.DisableAlreadyRegisteredCheck);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
@@ -83,7 +90,9 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.WorkerId);
                 Assert.Equal("Foo", message.Name);
+                Assert.True(message.DisableAlreadyRegisteredCheck);
 
                 // Clone()
 
@@ -91,7 +100,9 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.WorkerId);
                 Assert.Equal("Foo", message.Name);
+                Assert.True(message.DisableAlreadyRegisteredCheck);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -99,7 +110,9 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
+                Assert.Equal(666, message.WorkerId);
                 Assert.Equal("Foo", message.Name);
+                Assert.True(message.DisableAlreadyRegisteredCheck);
             }
         }
 

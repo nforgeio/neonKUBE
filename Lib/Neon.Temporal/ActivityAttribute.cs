@@ -56,7 +56,7 @@ namespace Neon.Temporal
         public string Name { get; set; } = null;
 
         /// <summary>
-        /// Indicates that <see cref="Worker.RegisterAssemblyActivitiesAsync(Assembly, string)"/> will
+        /// Indicates that <see cref="Worker.RegisterAssemblyActivitiesAsync(Assembly, bool)"/> will
         /// automatically register the tagged activity implementation for the specified assembly.
         /// This defaults to <c>false</c>
         /// </summary>

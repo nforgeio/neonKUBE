@@ -42,12 +42,21 @@ namespace Neon.Temporal.Internal
         public override InternalMessageTypes ReplyType => InternalMessageTypes.ActivityRegisterReply;
 
         /// <summary>
-        /// Identifies the workflow implementation.
+        /// Identifies the activity implementation (AKA the activity type name).
         /// </summary>
         public string Name
         {
             get => GetStringProperty(PropertyNames.Name);
             set => SetStringProperty(PropertyNames.Name, value);
+        }
+
+        /// <summary>
+        /// Disables checks for duplicate registrations.
+        /// </summary>
+        public bool DisableAlreadyRegisteredCheck
+        {
+            get => GetBoolProperty(PropertyNames.DisableAlreadyRegisteredCheck);
+            set => SetBoolProperty(PropertyNames.DisableAlreadyRegisteredCheck, value);
         }
 
         /// <inheritdoc/>
@@ -67,8 +76,8 @@ namespace Neon.Temporal.Internal
 
             var typedTarget = (ActivityRegisterRequest)target;
 
-            typedTarget.Name     = this.Name;
-            typedTarget.WorkerId = this.WorkerId;
+            typedTarget.Name                          = this.Name;
+            typedTarget.DisableAlreadyRegisteredCheck = this.DisableAlreadyRegisteredCheck;
         }
     }
 }
