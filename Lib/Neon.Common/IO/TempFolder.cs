@@ -80,5 +80,11 @@ namespace Neon.IO
                 }
             }
         }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return Path;
+        }
     }
 }
