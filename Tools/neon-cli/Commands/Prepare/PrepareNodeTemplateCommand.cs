@@ -31,6 +31,8 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Kube;
+using Org.BouncyCastle.Utilities;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace NeonCli
 {
@@ -109,6 +111,7 @@ node template.
 
             var hyperv    = commandLine.HasOption("--hyperv");
             var xenserver = commandLine.HasOption("--xenserver");
+            var vmHost    = hyperv ? "Hyper-V" : "XenServer";
 
             if (!hyperv && !xenserver)
             {
@@ -141,7 +144,7 @@ node template.
             Covenant.Assert(Program.MachineUsername == KubeConst.SysAdminUser);
 
             Console.WriteLine();
-            Console.WriteLine("** Prepare VM Template ***");
+            Console.WriteLine($"** Prepare {vmHost} VM Template ***");
             Console.WriteLine();
 
             using (var server = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
@@ -211,6 +214,16 @@ chown temp:temp /home/temp
                 Console.WriteLine($"Connecting as [temp]");
                 server.WaitForBoot(createHomeFolders: true);
 
+                // Beginning with Ubuntu 20.04 we're seeing systemd/(sd-pam) processes 
+                // hanging around for a while for the [temp] process which prevents us 
+                // from deleting the [temp] user below.  We're going to handle this by
+                // killing any [temp] user processes first.
+
+                Console.WriteLine("Kill [sysadmin] user processes");
+                server.SudoCommand("pkill -u sysadmin");
+
+                // Relocate the [sysadmin] user to from [uid=1000:gid=1000} to [1234:1234]:
+
                 var sysadminUserScript =
 $@"#!/bin/bash
 
@@ -220,18 +233,25 @@ $@"#!/bin/bash
 find / -group 1000 -exec chgrp -h {KubeConst.SysAdminGroup} {{}} \;
 find / -user 1000 -exec chown -h {KubeConst.SysAdminUser} {{}} \;
 
-# Relocate the user ID:
+# Relocate the [sysadmin] UID and GID:
 
 groupmod --gid {KubeConst.SysAdminGID} {KubeConst.SysAdminGroup}
 usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups root,sysadmin,sudo {KubeConst.SysAdminUser}
 ";
+
                 Console.WriteLine("Relocate [sysadmin] user");
                 server.SudoCommand(CommandBundle.FromScript(sysadminUserScript), RunOptions.FaultOnError);
             }
 
             // We need to reconnect again with [sysadmin] so we can remove
-            // the [temp] user and create the [container] user and then
-            // wrap things up.
+            // the [temp] user, create the [container] user and then
+            // wrap things up.  Beginning with Ubuntu 20.04 we're seeing
+            // [systemd/(sd-pam)] processes hanging around for a while for
+            // the [temp] user which prevents us from deleting the [temp]
+            // user below.
+            //
+            // We're going to work around this be rebooting before reconnecting
+            // as [sysadmin].
 
             Program.MachineUsername = KubeConst.SysAdminUser;
 
@@ -246,10 +266,17 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
                 Console.WriteLine("Set [sysadmin] home folder owner");
                 server.SudoCommand($"chown -R {KubeConst.SysAdminUser}:{KubeConst.SysAdminGroup} .*", RunOptions.FaultOnError);
 
+                // Beginning with Ubuntu 20.04 we're seeing systemd/(sd-pam) processes 
+                // hanging around for a while for the [temp] process which prevents us 
+                // from deleting the [temp] user below.  We're going to handle this by
+                // killing any [temp] user processes first.
+
+                Console.WriteLine("Kill [temp] user processes");
+                server.SudoCommand("pkill -u temp");
+
                 // Remove the [temp] user.
 
                 Console.WriteLine("Remove [temp] user");
-                server.SudoCommand($"userdel temp", RunOptions.FaultOnError);
                 server.SudoCommand($"rm -rf /home/temp", RunOptions.FaultOnError);
 
                 // Create the [container] user with no home directory.  This
