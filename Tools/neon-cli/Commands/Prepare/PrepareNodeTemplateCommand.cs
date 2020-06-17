@@ -157,7 +157,7 @@ node template.
 
             using (var server = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
             {
-                Console.WriteLine($"Connect as [{KubeConst.SysAdminUser}]");
+                Console.WriteLine($"Login as [{KubeConst.SysAdminUser}]");
                 server.WaitForBoot();
 
                 // Install required packages:
@@ -202,6 +202,7 @@ adduser temp sudo
 chown temp:temp /home/temp
 ";
                 server.SudoCommand(CommandBundle.FromScript(tempUserScript), RunOptions.FaultOnError);
+                Console.WriteLine($"Logout");
             }
 
             // We need to reconnect with the new temporary account so
@@ -211,7 +212,7 @@ chown temp:temp /home/temp
 
             using (var server = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
             {
-                Console.WriteLine($"Connecting as [temp]");
+                Console.WriteLine($"Login as [temp]");
                 server.WaitForBoot(createHomeFolders: true);
 
                 // Beginning with Ubuntu 20.04 we're seeing systemd/(sd-pam) processes 
@@ -219,7 +220,7 @@ chown temp:temp /home/temp
                 // from deleting the [temp] user below.  We're going to handle this by
                 // killing any [temp] user processes first.
 
-                Console.WriteLine("Kill [sysadmin] user processes");
+                Console.WriteLine("Kill [sysadmin] processes");
                 server.SudoCommand("pkill -u sysadmin");
 
                 // Relocate the [sysadmin] user to from [uid=1000:gid=1000} to [1234:1234]:
@@ -241,6 +242,7 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
 
                 Console.WriteLine("Relocate [sysadmin] user");
                 server.SudoCommand(CommandBundle.FromScript(sysadminUserScript), RunOptions.FaultOnError);
+                Console.WriteLine($"Logout");
             }
 
             // We need to reconnect again with [sysadmin] so we can remove
@@ -257,7 +259,7 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
 
             using (var server = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
             {
-                Console.WriteLine($"Connect as [{KubeConst.SysAdminUser}]");
+                Console.WriteLine($"Login as [{KubeConst.SysAdminUser}]");
                 server.WaitForBoot();
 
                 // Ensure that the owner and group for files in the [sysadmin]
@@ -332,6 +334,8 @@ sfill -fllz /
                     Console.WriteLine();
                     Console.WriteLine("*** IMPORTANT: You need to manually complete the remaining steps ***");
                 }
+
+                Console.WriteLine($"Logout");
             }
 
             Program.Exit(0);
