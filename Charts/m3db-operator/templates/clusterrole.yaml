@@ -1,9 +1,7 @@
----
-# Source: m3db-operator/templates/cluster_role.yaml
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
-  name: m3db-operator
+  name: {{ .Values.operator.name }}
 rules:
 - apiGroups: ["extensions"]
   resources: ["deployments", "replicasets", "daemonsets"]
@@ -22,7 +20,7 @@ rules:
   verbs: ["create", "get", "deletecollection", "delete"]
 - apiGroups: [""]
   resources: ["pods"]
-  verbs: ["list", "get", "watch", "update"]
+  verbs: ["list", "get", "watch", "update", "patch"]
 - apiGroups: ["apps"]
   resources: ["statefulsets", "deployments"]
   verbs: ["*"]
