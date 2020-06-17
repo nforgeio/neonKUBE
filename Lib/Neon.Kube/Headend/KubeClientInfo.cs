@@ -104,5 +104,15 @@ namespace Neon.Kube
         [YamlMember(Alias = "updateReleaseNotesUrl", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string UpdateReleaseNotesUrl { get; set; }
+
+        /// <summary>
+        /// Returns the URI prefix for the web server with the neonKUBE virtual machine
+        /// templates.  Simply append a template file name like <b>hyperv-ubuntu-20.04.latest.vhdx</b>
+        /// to this to get the URI for a specific template.
+        /// </summary>
+        [JsonProperty(PropertyName = "VmTemplateSitePrefix", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "vmTemplateSitePrefix", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string VmTemplateSitePrefix { get; set; }
     }
 }

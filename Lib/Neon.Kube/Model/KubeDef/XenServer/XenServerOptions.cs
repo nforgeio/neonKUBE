@@ -46,7 +46,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// URI to the XenServer XVA image to use as a template for creating the virtual machines.  This defaults to
-        /// <b>http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-Ubuntu-18.04.latest.xva</b>
+        /// <b>http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/xenserver-ubuntu-18.04.latest.xva</b>
         /// which is the latest supported Ubuntu 16.04 image.
         /// </para>
         /// <note>
@@ -66,7 +66,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Names the XenServer template to be used when creating cluster nodes.  This defaults
-        /// to <b>ubuntu-template</b>.
+        /// to <b>neonkube-ubuntu-18.04</b>.
         /// </summary>
         [JsonProperty(PropertyName = "TemplateName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "templateName", ApplyNamingConventions = false)]
