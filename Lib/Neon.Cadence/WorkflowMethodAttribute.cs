@@ -34,10 +34,11 @@ namespace Neon.Cadence
     public class WorkflowMethodAttribute : Attribute
     {
         private string      name;
-        private int  	    executionStartToCloseTimeoutSeconds;
-        private int         taskStartToCloseTimeoutSeconds;
+        private int  	    startToCloseTimeoutSeconds;
+        private int         decisionTaskTimeoutSeconds;
         private int         scheduleToStartTimeoutSeconds;
         private string      taskList;
+        private string      domain;
         private string      workflowId;
 
         /// <summary>
@@ -55,10 +56,10 @@ namespace Neon.Cadence
         /// <remarks>
         /// <para>
         /// When specified, this name will be combined with the workflow type name when registering
-        /// and executing a workflow started via the method.  This will look like:
+        /// and executing a workflow started via the method.  This will typically look like:
         /// </para>
         /// <code>
-        /// WORKFLOW_TYPENNAME::METHODNAME
+        /// WORKFLOW_TYPENAME::METHODNAME
         /// </code>
         /// <para>
         /// where <b>WORKFLOW_TYPENAME</b> is either the workflow interface's fully qualified 
@@ -66,13 +67,12 @@ namespace Neon.Cadence
         /// <b>METHOD_NAME</b> is from <see cref="WorkflowMethodAttribute.Name"/>.  This
         /// is the same convention implemented by the Java client.
         /// </para>
-        /// <note>
-        /// Some implications of this scheme are that we'll need to register multiple workflow
-        /// types for each workflow interface when there are multiple entry points (one per
-        /// method) and that external workflow invocations will need to explicitly specify
-        /// workflow types that include the method name when one is specified to the target
-        /// method.
-        /// </note>
+        /// <para>
+        /// Sometimes it's useful to be able to specify a workflow type name that doesn't
+        /// follow the convention above, for example to interoperate with workflows written
+        /// in another language..  You can do this by setting <see cref="Name"/> to the
+        /// required workflow type name and then setting <see cref="IsFullName"/><c>=true</c>.
+        /// </para>
         /// </remarks>
         public string Name
         {
@@ -95,52 +95,49 @@ namespace Neon.Cadence
 
         /// <summary>
         /// <para>
-        /// Optionally specifies the maximum workflow execution time.
+        /// Optionally indicates that <see cref="Name"/> holds the fully qualified type name for
+        /// the workflow and that the .NET client will not add a prefix to <see cref="Name"/>
+        /// when registering the workflow.
+        /// </para>
+        /// <para>
+        /// This is useful when interoperating with workflows written in another language by
+        /// providing a way to specify a specific workflow type name. 
         /// </para>
         /// <note>
-        /// This can be overridden when the workflow is executed using
-        /// <see cref="WorkflowOptions"/>,
+        /// <see cref="Name"/> cannot be <c>null</c> or empty when this is <c>true</c>.
         /// </note>
         /// </summary>
-        public int ExecutionStartToCloseTimeoutSeconds
+        public bool IsFullName { get; set; } = false;
+
+        /// <summary>
+        /// Optionally specifies the maximum workflow execution time.
+        /// </summary>
+        public int StartToCloseTimeoutSeconds
         {
-            get => executionStartToCloseTimeoutSeconds;
-            set => executionStartToCloseTimeoutSeconds = Math.Max(value, 0);
+            get => startToCloseTimeoutSeconds;
+            set => startToCloseTimeoutSeconds = Math.Max(value, 0);
         }
 
         /// <summary>
-        /// <para>
-        /// Optionally specifies the maximum execution time for
-        /// an individual workflow task.  The maximum possible duration
-        /// is <b>60 seconds</b>.
-        /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed using
-        /// <see cref="WorkflowOptions"/>,
-        /// </note>
+        /// Optionally specifies the maximum execution time for an individual workflow decision
+        /// task.  The maximum possible duration is <b>60 seconds</b>.
         /// </summary>
-        public int TaskStartToCloseTimeoutSeconds
+        public int DecisionTaskTimeoutSeconds
         {
-            get => taskStartToCloseTimeoutSeconds;
+            get => decisionTaskTimeoutSeconds;
 
             set
             {
-                Covenant.Requires<ArgumentException>(value <= 60, nameof(value), $"[TaskStartToCloseTimeoutSeconds={value}] cannot exceed 60 seconds.");
+                Covenant.Requires<ArgumentException>(value <= 60, nameof(value), $"[{nameof(DecisionTaskTimeoutSeconds)}={value}] cannot exceed 60 seconds.");
 
-                taskStartToCloseTimeoutSeconds = Math.Max(value, 0);
+                decisionTaskTimeoutSeconds = Math.Max(value, 0);
             }
         }
 
         /// <summary>
-        /// <para>
         /// Optionally specifies the maximum time a workflow can wait
-        /// between being scheduled and being actually scheduled on a
+        /// between being scheduled and being actually executed on a
         /// worker.
-        /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed using
-        /// <see cref="WorkflowOptions"/>,
-        /// </note>
         /// </summary>
         public int ScheduleToStartTimeoutSeconds
         {
@@ -149,13 +146,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// <para>
-        /// Optionally specifies the target task list.
-        /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed using
-        /// <see cref="WorkflowOptions"/>,
-        /// </note>
+        /// Optionally specifies the target Cadence task list.
         /// </summary>
         public string TaskList
         {
@@ -175,13 +166,27 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// <para>
+        /// Optionally specifies the target Cadence domain.
+        /// </summary>
+        public string Domain
+        {
+            get => domain;
+
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    domain = null;
+                }
+                else
+                {
+                    domain = value;
+                }
+            }
+        }
+
+        /// <summary>
         /// Optionally specifies the workflow ID.
-        /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed using
-        /// <see cref="WorkflowOptions"/>.
-        /// </note>
         /// </summary>
         public string WorkflowId
         {
@@ -201,14 +206,69 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// <para>
         /// Specifies the workflow ID reuse policy.
-        /// </para>
-        /// <note>
-        /// This can be overridden when the workflow is executed using
-        /// <see cref="WorkflowOptions"/>,
-        /// </note>
         /// </summary>
         public WorkflowIdReusePolicy WorkflowIdReusePolicy { get; set; } = WorkflowIdReusePolicy.UseDefault;
+
+        /// <summary>
+        /// Optionally specifies a recurring schedule for the workflow method.  This can be set to a string specifying
+        /// the minute, hour, day of month, month, and day of week scheduling parameters using the standard Linux
+        /// CRON format described here: <a href="https://en.wikipedia.org/wiki/Cron">https://en.wikipedia.org/wiki/Cron</a>
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Cadence accepts a CRON string formatted as a single line of text with 5 parameters separated by
+        /// spaces.  The parameters specified the minute, hour, day of month, month, and day of week values:
+        /// </para>
+        /// <code>
+        /// ┌───────────── minute (0 - 59)
+        /// │ ┌───────────── hour (0 - 23)
+        /// │ │ ┌───────────── day of the month (1 - 31)
+        /// │ │ │ ┌───────────── month (1 - 12)
+        /// │ │ │ │ ┌───────────── day of the week (0 - 6) (Sunday to Saturday)
+        /// │ │ │ │ │
+        /// │ │ │ │ │
+        /// * * * * * 
+        /// </code>
+        /// <para>
+        /// Each parameter may be set to one of:
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><b>*</b></term>
+        ///     <description>
+        ///     Matches any value.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>value</b></term>
+        ///     <description>
+        ///     Matches a specific integer value.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>value1-value2</b></term>
+        ///     <description>
+        ///     Matches a range of values to be matched (inclusive).
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>value1,value2,...</b></term>
+        ///     <description>
+        ///     Matches a list of values to be matched.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>value1/value2</b></term>
+        ///     <description>
+        ///     Matches values starting at <b>value1</b> and then those incremented by <b>value2</b>.
+        ///     </description>
+        /// </item>
+        /// </list>
+        /// <para>
+        /// You can use this handy CRON calculator to see how this works: <a href="https://crontab.guru">https://crontab.guru</a>
+        /// </para>
+        /// </remarks>
+        public string CronSchedule { get; set; } = null;
     }
 }

@@ -17,7 +17,7 @@ using Neon.Diagnostics;
 using Neon.Kube.Service;
 using Neon.Service;
 
-namespace CadenceTester
+namespace CadenceService
 {
     public partial class CadenceTester : KubeService
     {
@@ -112,7 +112,7 @@ namespace CadenceTester
                     // Let KubeService know that we're running.
 
                     Log.LogInfo("Ready for work.");
-                    SetRunning();
+                    await SetRunningAsync();
 
                     // Wait for the process terminator to signal that the service is stopping.
 

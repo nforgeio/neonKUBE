@@ -14,7 +14,7 @@ namespace Snippets_SimpleSignalWorkflow
     public interface IOrderWorkflow : IWorkflow
     {
         [WorkflowMethod]
-        Task ProcessOrderAsync();
+        Task<bool> ProcessOrderAsync();
 
         [SignalMethod("cancel", Synchronous = true)]
         Task<string> CancelOrderAsync(string reason);
@@ -27,11 +27,28 @@ namespace Snippets_SimpleSignalWorkflow
         private string  cancelReason  = null;
         private bool    canCancel     = true;
 
-        public async Task ProcessOrderAsync()
+        public async Task<bool> ProcessOrderAsync()
         {
             // Implements order processing.  This is probably includes
             // one or more loops that poll [canCancel] while it's still
             // possible to cancel the order.
+
+            await Workflow.SleepAsync(TimeSpan.FromSeconds(5));
+
+            if (cancelPending)
+            {
+                return false;
+            }
+
+            // Cancellation is no longer alloowed.
+
+            canCancel = false;
+
+            // This is where the order will be fulfilled.
+
+            await Workflow.SleepAsync(TimeSpan.FromSeconds(5));
+
+            return true;
         }
 
         public async Task<string> CancelOrderAsync(string reason)

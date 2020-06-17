@@ -390,7 +390,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Asyncrhonously starts a process to run an executable file with an array of
+        /// Asynchronously starts a process to run an executable file with an array of
         /// arguments and then and waits for the process to terminate.
         /// </summary>
         /// <param name="path">Path to the executable file.</param>
@@ -420,7 +420,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Asyncrhonously starts a process to run an executable file and then waits for the process to terminate.
+        /// Asynchronously starts a process to run an executable file and then waits for the process to terminate.
         /// </summary>
         /// <param name="path">Path to the executable file.</param>
         /// <param name="args">Command line arguments (or <c>null</c>).</param>
@@ -551,10 +551,10 @@ namespace Neon.Common
         public static ExecuteResponse ExecuteCapture(
             string          path, 
             object[]        args, 
-            TimeSpan?       timeout = null,
-            Process         process = null,
+            TimeSpan?       timeout      = null,
+            Process         process      = null,
             Action<string>  outputAction = null,
-            Action<string>  errorAction = null)
+            Action<string>  errorAction  = null)
         {
             return ExecuteCapture(path, NormalizeExecArgs(args), timeout, process, outputAction, errorAction);
         }
@@ -596,10 +596,10 @@ namespace Neon.Common
         public static ExecuteResponse ExecuteCapture(
             string          path, 
             string          args, 
-            TimeSpan?       timeout = null,
-            Process         process = null,
+            TimeSpan?       timeout      = null,
+            Process         process      = null,
             Action<string>  outputAction = null,
-            Action<string>  errorAction = null)
+            Action<string>  errorAction  = null)
         {
             var processInfo     = new ProcessStartInfo(GetProgramPath(path), args ?? string.Empty);
             var externalProcess = process != null;
@@ -695,8 +695,11 @@ namespace Neon.Common
         /// parameter will not be killed in this case.
         /// </note>
         /// </remarks>
-        public static async Task<ExecuteResponse> ExecuteCaptureAsync(string path, object[] args,
-                                                                    TimeSpan? timeout = null, Process process = null)
+        public static async Task<ExecuteResponse> ExecuteCaptureAsync(
+            string      path, 
+            object[]    args,
+            TimeSpan?   timeout = null, 
+            Process     process = null)
         {
             await SyncContext.ClearAsync;
 
@@ -729,8 +732,11 @@ namespace Neon.Common
         /// parameter will not be killed in this case.
         /// </note>
         /// </remarks>
-        public static async Task<ExecuteResponse> ExecuteCaptureAsync(string path, string args, 
-                                                                    TimeSpan? timeout = null, Process process = null)
+        public static async Task<ExecuteResponse> ExecuteCaptureAsync(
+            string      path, 
+            string      args, 
+            TimeSpan?   timeout = null, 
+            Process     process = null)
         {
             await SyncContext.ClearAsync;
 

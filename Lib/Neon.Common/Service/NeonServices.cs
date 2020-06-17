@@ -41,5 +41,10 @@ namespace Neon.Service
         /// Non-production service used to test Cadence running in a Linux container.
         /// </summary>
         public const string TestCadence = "test-cadence";
+
+        /// <summary>
+        /// Non-production service used to test Temporal running in a Linux container.
+        /// </summary>
+        public const string TestTemporal = "test-temporal";
     }
 }

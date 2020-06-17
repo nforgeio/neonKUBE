@@ -54,10 +54,11 @@ namespace TestCadence
                 CreateDomain           = true,
                 Debug                  = CadenceTestHelper.Debug,
                 DebugPrelaunched       = CadenceTestHelper.DebugPrelaunched,
-                DebugDisableHeartbeats = CadenceTestHelper.DebugDisableHeartbeats
+                DebugDisableHeartbeats = CadenceTestHelper.DebugDisableHeartbeats,
+                ClientIdentity         = CadenceTestHelper.ClientIdentity
             };
 
-            if (fixture.Start(settings, keepConnection: true, keepOpen: CadenceTestHelper.KeepCadenceServerOpen) == TestFixtureStatus.Started)
+            if (fixture.Start(settings, image: CadenceTestHelper.CadenceImage, reconnect: true, keepRunning: CadenceTestHelper.KeepCadenceServerOpen) == TestFixtureStatus.Started)
             {
                 this.fixture     = fixture;
                 this.client      = fixture.Client;

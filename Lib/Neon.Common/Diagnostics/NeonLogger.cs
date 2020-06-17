@@ -53,6 +53,9 @@ namespace Neon.Diagnostics
         public bool IsLogDebugEnabled => logManager.LogLevel >= LogLevel.Debug;
 
         /// <inheritdoc/>
+        public bool IsLogTransientEnabled => logManager.LogLevel >= LogLevel.Transient;
+
+        /// <inheritdoc/>
         public bool IsLogErrorEnabled => logManager.LogLevel >= LogLevel.Error;
 
         /// <inheritdoc/>
@@ -125,6 +128,28 @@ namespace Neon.Diagnostics
             // prefixed by: [Microsoft.AspNetCore]
 
             this.infoAsDebug = !noisyAspNet && sourceModule != null && sourceModule.StartsWith("Microsoft.AspNetCore.");
+
+            // $hack(jefflill):
+            //
+            // On Linux, we're going to initialize the [emitCount] to the index persisted to
+            // the [/dev/shm/log-index] file if this is present and parsable.  This will 
+            // align the .NET logging index with any event written via startup scripts.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/578
+
+            emitCount = 0;
+
+            if (NeonHelper.IsLinux)
+            {
+                try
+                {
+                    emitCount = long.Parse(File.ReadAllText("/dev/shm/log-index").Trim());
+                }
+                catch
+                {
+                    // Ignore any exceptions; we'll just start the index at 0 for these cases.
+                }
+            }
         }
 
         /// <inheritdoc/>
@@ -144,6 +169,10 @@ namespace Neon.Diagnostics
                 case LogLevel.Debug:
 
                     return IsLogDebugEnabled;
+
+                case LogLevel.Transient:
+
+                    return IsLogTransientEnabled;
 
                 case LogLevel.Info:
 
@@ -210,14 +239,15 @@ namespace Neon.Diagnostics
 
             switch (logLevel)
             {
-                case LogLevel.Critical: level = "CRITICAL"; break;
-                case LogLevel.Debug:    level = "DEBUG"; break;
-                case LogLevel.Error:    level = "ERROR"; break;
-                case LogLevel.Info:     level = "INFO"; break;
-                case LogLevel.None:     level = "NONE"; break;
-                case LogLevel.SError:   level = "SERROR"; break;
-                case LogLevel.SInfo:    level = "SINFO"; break;
-                case LogLevel.Warn:     level = "WARN"; break;
+                case LogLevel.Critical:     level = "CRITICAL"; break;
+                case LogLevel.Debug:        level = "DEBUG"; break;
+                case LogLevel.Transient:    level = "TRANSIENT"; break;
+                case LogLevel.Error:        level = "ERROR"; break;
+                case LogLevel.Info:         level = "INFO"; break;
+                case LogLevel.None:         level = "NONE"; break;
+                case LogLevel.SError:       level = "SERROR"; break;
+                case LogLevel.SInfo:        level = "SINFO"; break;
+                case LogLevel.Warn:         level = "WARN"; break;
             }
 
             message = Normalize(message);
@@ -295,6 +325,45 @@ namespace Neon.Diagnostics
                     else
                     {
                         Log(LogLevel.Debug, $"{NeonHelper.ExceptionError(e, stackTrace: true)}", activityId);
+                    }
+                }
+                catch
+                {
+                    // Doesn't make sense to handle this.
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public void LogTransient(object message, string activityId = null)
+        {
+            if (IsLogDebugEnabled)
+            {
+                try
+                {
+                    Log(LogLevel.Transient, message?.ToString(), activityId);
+                }
+                catch
+                {
+                    // Doesn't make sense to handle this.
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public void LogTransient(object message, Exception e, string activityId = null)
+        {
+            if (IsLogDebugEnabled)
+            {
+                try
+                {
+                    if (message != null)
+                    {
+                        Log(LogLevel.Transient, $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}", activityId);
+                    }
+                    else
+                    {
+                        Log(LogLevel.Transient, $"{NeonHelper.ExceptionError(e, stackTrace: true)}", activityId);
                     }
                 }
                 catch
@@ -626,6 +695,7 @@ namespace Neon.Diagnostics
                     break;
 
                 case LogLevel.Debug:
+                case LogLevel.Transient:
 
                     if (exception == null)
                     {

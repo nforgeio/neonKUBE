@@ -212,7 +212,7 @@ namespace Neon.Cadence
     /// registers the <c>bar</c> activity, you're going run into trouble.
     /// </para>
     /// <para>
-    /// The problem is that Cadcence assumes that both workers implement the same workflows, both
+    /// The problem is that Cadence assumes that both workers implement the same workflows, both
     /// <b>foo</b> and <b>bar</b> in this case.  Say you start a <b>foo</b> workflow.  Cadence
     /// will select one of <b>worker-a</b> or <b>worker-b</b> to run the workflow.  If Cadence
     /// happens to select <b>worker-a</b> everything will work as expected because <b>foo</b>
@@ -679,7 +679,7 @@ namespace Neon.Cadence
 
                 if (resourceStream == null)
                 {
-                    throw new KeyNotFoundException($"Embedded resource [{resourcePath}] not found.  Cannot extract [cadency-proxy].");
+                    throw new KeyNotFoundException($"Embedded resource [{resourcePath}] not found.  Cannot extract [cadence-proxy].");
                 }
 
                 using (resourceStream)
@@ -768,7 +768,7 @@ namespace Neon.Cadence
 
                             if (resourceStream == null)
                             {
-                                throw new KeyNotFoundException($"Embedded resource [{resourcePath}] not found.  Cannot launch [cadency-proxy].");
+                                throw new KeyNotFoundException($"Embedded resource [{resourcePath}] not found.  Cannot launch [cadence-proxy].");
                             }
 
                             using (resourceStream)
@@ -837,7 +837,7 @@ namespace Neon.Cadence
 
                 // These event handlers intentionally ignore the process output because
                 // we don't want it to get mixed in with the application's output
-                // streams which will often be used fo streaming application log data
+                // streams which will often be used for streaming application log data
                 // or for other purposes.
                 //
                 // [cadence-proxy] is already transmitting log information to the
@@ -893,7 +893,7 @@ namespace Neon.Cadence
 
             var client = new CadenceClient(settings);
 
-            // Initilize the [cadence-proxy].
+            // Initialize the [cadence-proxy].
 
             if (!settings.DebugDisableHandshakes)
             {
@@ -1388,6 +1388,7 @@ namespace Neon.Cadence
         /// </summary>
         internal CadenceClient()
         {
+            Settings = new CadenceSettings();
         }
 
         /// <summary>
@@ -1395,7 +1396,6 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="settings">The <see cref="CadenceSettings"/>.</param>
         private CadenceClient(CadenceSettings settings)
-            : this()
         {
             Covenant.Requires<ArgumentNullException>(settings != null, nameof(settings));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.DefaultDomain), nameof(settings));
@@ -1651,6 +1651,34 @@ namespace Neon.Cadence
         /// arguments passed to the handler.
         /// </summary>
         public event CadenceClosedDelegate ConnectionClosed;
+
+        /// <summary>
+        /// <para>
+        /// <b>INTERNAL USE ONLY:</b> Appends a line of text to the debug log which is
+        /// used internally to debug generated code like stubs.  This hardcodes its
+        /// output to <b>C:\Temp\cadence-debug.log</b> so this currently only works
+        /// on Windows.
+        /// </para>
+        /// <note>
+        /// This method doesn't actually log anything unless <see cref="CadenceSettings.Debug"/>
+        /// is set to <c>true</c>.
+        /// </note>
+        /// </summary>
+        /// <param name="text">The line of text to be written.</param>
+        public void DebugLog(string text)
+        {
+            if (Settings.Debug)
+            {
+                if (!string.IsNullOrEmpty(text) && !text.StartsWith("----"))
+                {
+                    CadenceHelper.DebugLog($"clientId:{ClientId} {text}");
+                }
+                else
+                {
+                    CadenceHelper.DebugLog(text);
+                }
+            }
+        }
 
         /// <summary>
         /// <para>

@@ -4,6 +4,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.42.0] - 2019-10-31 (Spooky)
+### Added
+- Added fail-fast option to peer lists.  With this option enabled, a peer list
+  will return an error if no peers are connected at the time of a call, instead
+  of waiting for an available peer or the context to time out.
+### Fixed
+- Previously, every peer list reported itself as a "single" peer list for
+  purposes of debugging, instead of its own name.
+- Metrics emit `CodeResourceExhausted` as a client error and `CodeUnimplemented`
+  as a server error.
+- Simplified the flow of status change notifications for the HTTP transport to
+  reduce the liklihood of deadlocks.
+- Removed a bug from the gRPC transport that would cause a very rare deadlock
+  during production deploys and restarts.
+  The gRPC peer release method would synchronize with the connection status
+  change monitor loop, waiting for it to exit.
+  This would wait forever since retain was called while holding a lock on the
+  list.
+
+## [1.41.0] - 2019-10-01
+### Fixed
+- Fixed TChannel memory pressure that would occur during server-side errors.
+
+## [1.40.0] - 2019-09-19
+### Added
+- Added improved logging and metrics for streams and streaming messages.
+- Log level configuration can now be expressed specifically for every
+  combination of inbound and outbound, for success, failure, and application
+  error.
+- A peer list and transport stress tester is now in the `yarpctest` package.
+- Added `direct` peer chooser to enable directly addressable peers.
+- Added custom dialer option for outbound HTTP requests.
+- Added custom dialer option for outbound gRPC requests.
+
+## [1.39.0] - 2019-06-25
+### Fixed
+- call.HeaderNames() now specifies a capacity when creating a slice,
+  which should improve the call.HeaderNames()'s performance.
+- Observability middleware will always emit an error code if the returned error
+  is from the `yarpcerrors` package.
+### Added
+- Added error details support in protobuf over gRPC and HTTP.
+- Protobuf JSON encoding can take a custom gogo/protobuf/jsonpb.AnyResolver with
+  Fx.
+
 ## [1.38.0] - 2019-05-20
 ### Changed
 - The Thrift encoding attempts to close the request body immediately after
@@ -1091,6 +1136,10 @@ This release requires regeneration of ThriftRW code.
 
 - Initial release.
 
+[1.42.0]: https://github.com/yarpc/yarpc-go/compare/v1.41.0...v1.42.0
+[1.41.0]: https://github.com/yarpc/yarpc-go/compare/v1.40.0...v1.41.0
+[1.40.0]: https://github.com/yarpc/yarpc-go/compare/v1.39.0...v1.40.0
+[1.39.0]: https://github.com/yarpc/yarpc-go/compare/v1.38.0...v1.39.0
 [1.38.0]: https://github.com/yarpc/yarpc-go/compare/v1.37.4...v1.38.0
 [1.37.4]: https://github.com/yarpc/yarpc-go/compare/v1.37.3...v1.37.4
 [1.37.3]: https://github.com/yarpc/yarpc-go/compare/v1.37.2...v1.37.3

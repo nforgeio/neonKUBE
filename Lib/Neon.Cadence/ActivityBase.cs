@@ -24,6 +24,8 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
@@ -79,7 +81,7 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Used for mapping an activity type name to its underlying type, constructor
+        /// Used for mapping an activity type name to its underlying type 
         /// and entry point method.
         /// </summary>
         private struct ActivityRegistration
@@ -90,11 +92,6 @@ namespace Neon.Cadence
             public Type ActivityType { get; set; }
             
             /// <summary>
-            /// The activity constructor.
-            /// </summary>
-            public ConstructorInfo ActivityConstructor { get; set; }
-
-            /// <summary>
             /// The activity entry point method.
             /// </summary>
             public MethodInfo ActivityMethod { get; set; }
@@ -102,21 +99,19 @@ namespace Neon.Cadence
             /// <summary>
             /// The activity method parameter types.
             /// </summary>
-            public Type[] ActivityMethodParamaterTypes { get; set; }
+            public Type[] ActivityMethodParameterTypes { get; set; }
         }
 
         //---------------------------------------------------------------------
         // Static members
 
         private static object                                   syncLock     = new object();
-        private static INeonLogger                              log          = LogManager.Default.GetLogger<ActivityBase>();
-        private static object[]                                 noArgs       = new object[0];
+        private static object[]                                 noArgs       = Array.Empty<object>();
         private static Dictionary<ActivityKey, ActivityBase>    idToActivity = new Dictionary<ActivityKey, ActivityBase>();
-        private static byte[]                                   emptyBytes   = new byte[0];
 
         // This dictionary is used to map activity type names to the target activity
-        // type, constructor, and entry point method.  Note that these mappings are 
-        // scoped to specific cadence client instances by prefixing the type name with:
+        // type and entry point method.  Note that these mappings are scoped to specific
+        // Cadence client instances by prefixing the type name with:
         //
         //      CLIENT-ID::
         //
@@ -124,7 +119,7 @@ namespace Neon.Cadence
         // because we'll need to remove the entries for clients when they're disposed.
         //
         // Activity type names may also include a second "::" separator with the
-        // activity methof name appended afterwards to handle activity interfaces
+        // activity method name appended afterwards to handle activity interfaces
         // that have multiple methods.  So, valid activity registrations
         // may looks like:
         // 
@@ -200,13 +195,6 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(domain), nameof(domain));
             CadenceHelper.ValidateActivityImplementation(activityType);
 
-            var constructor = activityType.GetConstructor(Type.EmptyTypes);
-
-            if (constructor == null)
-            {
-                throw new ArgumentException($"Activity type [{activityType.FullName}] does not have a default constructor.", nameof(activityType));
-            }
-
             // We need to register each activity method that implements an activity interface method
             // with the same signature that that was tagged by [ActivityMethod].
             //
@@ -264,9 +252,8 @@ namespace Neon.Cadence
                             new ActivityRegistration()
                             {
                                 ActivityType                 = activityType,
-                                ActivityConstructor          = constructor,
                                 ActivityMethod               = method,
-                                ActivityMethodParamaterTypes = method.GetParameterTypes()
+                                ActivityMethodParameterTypes = method.GetParameterTypes()
                             };
                     }
                 }
@@ -310,7 +297,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Returns the <see cref="ActivityRegistration"/> for any activity type and activity type name.
         /// </summary>
-        /// <param name="activityType">The targetr activity type.</param>
+        /// <param name="activityType">The target activity type.</param>
         /// <param name="activityTypeName">The target activity type name.</param>
         /// <returns>The <see cref="ActivityRegistration"/>.</returns>
         private static ActivityRegistration GetActivityInvokeInfo(Type activityType, string activityTypeName)
@@ -319,15 +306,6 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityTypeName), nameof(activityTypeName));
 
             var info = new ActivityRegistration();
-
-            // Locate the constructor.
-
-            info.ActivityConstructor = activityType.GetConstructor(Type.EmptyTypes);
-
-            if (info.ActivityConstructor == null)
-            {
-                throw new ArgumentException($"Activity type [{activityType.FullName}] does not have a default constructor.", nameof(activityType));
-            }
 
             // Locate the target method.  Note that the activity type name will be
             // formatted like:
@@ -382,18 +360,19 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Constructs an activity instance suitable for executing a local activity.
+        /// Constructs an activity instance suitable for executing a normal activity.
         /// </summary>
         /// <param name="client">The associated client.</param>
         /// <param name="invokeInfo">The activity invocation information.</param>
-        /// <param name="contextId">The activity context ID or <c>null</c> for local activities.</param>
+        /// <param name="contextId">The activity context ID.</param>
         /// <returns>The constructed activity.</returns>
-        private static ActivityBase Create(CadenceClient client, ActivityRegistration invokeInfo, long? contextId)
+        private static ActivityBase CreateNormal(CadenceClient client, ActivityRegistration invokeInfo, long contextId)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
-            var activity = (ActivityBase)(invokeInfo.ActivityConstructor.Invoke(noArgs));
+            var activity = (ActivityBase)ActivatorUtilities.CreateInstance(NeonHelper.ServiceContainer, invokeInfo.ActivityType);
 
+            activity.IsLocal = false;
             activity.Initialize(client, invokeInfo.ActivityType, invokeInfo.ActivityMethod, client.DataConverter, contextId);
 
             return activity;
@@ -404,14 +383,15 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="client">The associated client.</param>
         /// <param name="activityAction">The target activity action.</param>
-        /// <param name="contextId">The activity context ID or <c>null</c> for local activities.</param>
+        /// <param name="contextId">The activity context ID.</param>
         /// <returns>The constructed activity.</returns>
-        internal static ActivityBase Create(CadenceClient client, LocalActivityAction activityAction, long? contextId)
+        internal static ActivityBase CreateLocal(CadenceClient client, LocalActivityAction activityAction, long contextId)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
-            var activity = (ActivityBase)(activityAction.ActivityConstructor.Invoke(noArgs));
+            var activity = (ActivityBase)ActivatorUtilities.CreateInstance(NeonHelper.ServiceContainer, activityAction.ActivityType);
 
+            activity.IsLocal = true;
             activity.Initialize(client, activityAction.ActivityType, activityAction.ActivityMethod, client.DataConverter, contextId);
 
             return activity;
@@ -468,7 +448,7 @@ namespace Neon.Cadence
                 }
             }
 
-            var activity = Create(client, invokeInfo, request.ContextId);
+            var activity = CreateNormal(client, invokeInfo, request.ContextId);
 
             try
             {
@@ -491,7 +471,7 @@ namespace Neon.Cadence
             }
             catch (CadenceException e)
             {
-                log.LogError(e);
+                activity.logger.LogError(e);
 
                 return new ActivityInvokeReply()
                 {
@@ -507,7 +487,7 @@ namespace Neon.Cadence
             }
             catch (Exception e)
             {
-                log.LogError(e);
+                activity.logger.LogError(e);
 
                 return new ActivityInvokeReply()
                 {
@@ -541,6 +521,7 @@ namespace Neon.Cadence
         private Type            activityType;
         private MethodInfo      activityMethod;
         private IDataConverter  dataConverter;
+        private INeonLogger     logger;
 
         /// <summary>
         /// Default protected constructor.
@@ -556,8 +537,8 @@ namespace Neon.Cadence
         /// <param name="activityType">Specifies the target activity type.</param>
         /// <param name="activityMethod">Specifies the target activity method.</param>
         /// <param name="dataConverter">Specifies the data converter to be used for parameter and result serilization.</param>
-        /// <param name="contextId">The activity's context ID or <c>null</c> for local activities.</param>
-        internal void Initialize(CadenceClient client, Type activityType, MethodInfo activityMethod, IDataConverter dataConverter, long? contextId)
+        /// <param name="contextId">The activity's context ID.</param>
+        internal void Initialize(CadenceClient client, Type activityType, MethodInfo activityMethod, IDataConverter dataConverter, long contextId)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(activityType != null, nameof(activityType));
@@ -565,13 +546,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(dataConverter != null, nameof(dataConverter));
             CadenceHelper.ValidateActivityImplementation(activityType);
 
-            var activityTask = new ActivityTask()
-            {
-                 // $todo(jefflill): Need to initialize these properties.
-            };
-
             this.Client                  = client;
-            this.ActivityTask            = activityTask;
             this.Activity                = new Activity(this);
             this.activityType            = activityType;
             this.activityMethod          = activityMethod;
@@ -579,6 +554,7 @@ namespace Neon.Cadence
             this.ContextId               = contextId;
             this.CancellationTokenSource = new CancellationTokenSource();
             this.CancellationToken       = CancellationTokenSource.Token;
+            this.logger                  = LogManager.Default.GetLogger(sourceModule: activityType.FullName);
         }
 
         /// <inheritdoc/>
@@ -600,15 +576,14 @@ namespace Neon.Cadence
         internal CancellationToken CancellationToken { get; private set; }
 
         /// <summary>
-        /// Returns the context ID for the activity invocation or <c>null</c> for
-        /// local activities.
+        /// Returns the context ID for the activity invocation.
         /// </summary>
-        internal long? ContextId { get; private set; }
+        internal long ContextId { get; private set; }
 
         /// <summary>
         /// Indicates whether the activity was executed locally.
         /// </summary>
-        internal bool IsLocal => !ContextId.HasValue;
+        internal bool IsLocal { get; private set; }
 
         /// <summary>
         /// Returns additional information about the activity and the workflow that executed it.
@@ -637,8 +612,8 @@ namespace Neon.Cadence
             }
 
             var resultType       = activityMethod.ReturnType;
-            var args             = dataConverter.FromDataArray(argBytes, parameterTypes);
-            var serializedResult = emptyBytes;
+            var args             = CadenceHelper.BytesToArgs(dataConverter, argBytes, parameterTypes);
+            var serializedResult = Array.Empty<byte>();
 
             if (resultType.IsGenericType)
             {
@@ -668,27 +643,33 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
+            // Capture the activity information.
+
+            var reply = (ActivityGetInfoReply)(await Client.CallProxyAsync(
+                new ActivityGetInfoRequest()
+                {
+                    ContextId = ContextId,
+                }));
+
+            reply.ThrowOnError();
+
+            ActivityTask = reply.Info.ToPublic();
+
+            // Invoke the activity.
+
             if (IsLocal)
             {
+                // This doesn't make sense for local activities.
+
+                ActivityTask.ActivityTypeName = null;
+
                 return await InvokeAsync(client, args);
             }
             else
             {
-                // Capture the activity information.
-
-                var reply = (ActivityGetInfoReply)(await Client.CallProxyAsync(
-                    new ActivityGetInfoRequest()
-                    {
-                        ContextId = ContextId.Value,
-                    }));
-
-                reply.ThrowOnError();
-
-                ActivityTask = reply.Info.ToPublic();
-
                 // Track the activity.
 
-                var activityKey = new ActivityKey(client, ContextId.Value);
+                var activityKey = new ActivityKey(client, ContextId);
 
                 try
                 {
@@ -701,7 +682,7 @@ namespace Neon.Cadence
                 }
                 catch (Exception e)
                 {
-                    log.LogError(e);
+                    logger.LogError(e);
 
                     throw;
                 }

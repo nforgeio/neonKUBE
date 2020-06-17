@@ -31,11 +31,17 @@ import (
 )
 
 const (
-	_error              = "error"
+	_error = "error"
+
 	_successfulInbound  = "Handled inbound request."
 	_successfulOutbound = "Made outbound call."
 	_errorInbound       = "Error handling inbound request."
 	_errorOutbound      = "Error making outbound call."
+
+	_successStreamOpen  = "Successfully created stream"
+	_successStreamClose = "Successfully closed stream"
+	_errorStreamOpen    = "Error creating stream"
+	_errorStreamClose   = "Error closing stream"
 )
 
 // A call represents a single RPC along an edge.
@@ -53,7 +59,11 @@ type call struct {
 	rpcType   transport.Type
 	direction directionName
 
-	succLevel, failLevel, appErrLevel zapcore.Level
+	levels *levels
+}
+
+type levels struct {
+	success, failure, applicationError zapcore.Level
 }
 
 func (c call) End(err error) {
@@ -73,16 +83,16 @@ func (c call) endLogs(elapsed time.Duration, err error, isApplicationError bool)
 		if c.direction != _directionInbound {
 			msg = _successfulOutbound
 		}
-		ce = c.edge.logger.Check(c.succLevel, msg)
+		ce = c.edge.logger.Check(c.levels.success, msg)
 	} else {
 		msg := _errorInbound
 		if c.direction != _directionInbound {
 			msg = _errorOutbound
 		}
 
-		lvl := c.failLevel
+		lvl := c.levels.failure
 		if isApplicationError {
-			lvl = c.appErrLevel
+			lvl = c.levels.applicationError
 		}
 		ce = c.edge.logger.Check(lvl, msg)
 	}
@@ -113,8 +123,13 @@ func (c call) endStats(elapsed time.Duration, err error, isApplicationError bool
 		c.edge.latencies.Observe(elapsed)
 		return
 	}
-	// For now, assume that all application errors are the caller's fault.
-	if isApplicationError {
+
+	isStatus := yarpcerrors.IsStatus(err)
+
+	// If the error is not a yarpcerrors.Status, we cannot determine a code or
+	// fault. Assume that these application errors are the caller's fault and emit
+	// a generic error tag.
+	if isApplicationError && !isStatus {
 		c.edge.callerErrLatencies.Observe(elapsed)
 		if counter, err := c.edge.callerFailures.Get(_error, "application_error"); err == nil {
 			counter.Inc()
@@ -122,7 +137,7 @@ func (c call) endStats(elapsed time.Duration, err error, isApplicationError bool
 		return
 	}
 
-	if !yarpcerrors.IsStatus(err) {
+	if !isStatus {
 		c.edge.serverErrLatencies.Observe(elapsed)
 		if counter, err := c.edge.serverFailures.Get(_error, "unknown_internal_yarpc"); err == nil {
 			counter.Inc()
@@ -130,39 +145,134 @@ func (c call) endStats(elapsed time.Duration, err error, isApplicationError bool
 		return
 	}
 
-	errCode := yarpcerrors.FromError(err).Code()
-	switch errCode {
-	case yarpcerrors.CodeCancelled,
-		yarpcerrors.CodeInvalidArgument,
-		yarpcerrors.CodeNotFound,
-		yarpcerrors.CodeAlreadyExists,
-		yarpcerrors.CodePermissionDenied,
-		yarpcerrors.CodeFailedPrecondition,
-		yarpcerrors.CodeAborted,
-		yarpcerrors.CodeOutOfRange,
-		yarpcerrors.CodeUnimplemented,
-		yarpcerrors.CodeUnauthenticated:
+	// Emit finer grained metrics since the error is a yarpcerrors.Status.
+	status := yarpcerrors.FromError(err)
+	errCode := status.Code()
+
+	switch statusFault(status) {
+	case clientFault:
 		c.edge.callerErrLatencies.Observe(elapsed)
 		if counter, err := c.edge.callerFailures.Get(_error, errCode.String()); err == nil {
 			counter.Inc()
 		}
-		return
-	case yarpcerrors.CodeUnknown,
-		yarpcerrors.CodeDeadlineExceeded,
-		yarpcerrors.CodeResourceExhausted,
-		yarpcerrors.CodeInternal,
-		yarpcerrors.CodeUnavailable,
-		yarpcerrors.CodeDataLoss:
+
+	case serverFault:
 		c.edge.serverErrLatencies.Observe(elapsed)
 		if counter, err := c.edge.serverFailures.Get(_error, errCode.String()); err == nil {
 			counter.Inc()
 		}
+
+	default:
+		// If this code is executed we've hit an error code outside the usual error
+		// code range, so we'll just log the string representation of that code.
+		c.edge.serverErrLatencies.Observe(elapsed)
+		if counter, err := c.edge.serverFailures.Get(_error, errCode.String()); err == nil {
+			counter.Inc()
+		}
+	}
+}
+
+// EndStreamHandshake should be invoked immediately after successfully creating
+// a stream.
+func (c call) EndStreamHandshake() {
+	c.EndStreamHandshakeWithError(nil)
+}
+
+// EndStreamHandshakeWithError should be invoked immediately after attempting to
+// create a stream.
+func (c call) EndStreamHandshakeWithError(err error) {
+	c.logStreamEvent(err, _successStreamOpen, _errorStreamOpen)
+
+	c.edge.calls.Inc()
+	if err == nil {
+		c.edge.successes.Inc()
+		c.edge.streaming.streamsActive.Inc()
 		return
 	}
-	// If this code is executed we've hit an error code outside the usual error
-	// code range, so we'll just log the string representation of that code.
-	c.edge.serverErrLatencies.Observe(elapsed)
-	if counter, err := c.edge.serverFailures.Get(_error, errCode.String()); err == nil {
-		counter.Inc()
+
+	c.emitStreamError(err)
+}
+
+// EndStream should be invoked immediately after a stream closes.
+func (c call) EndStream(err error) {
+	elapsed := _timeNow().Sub(c.started)
+	c.logStreamEvent(err, _successStreamClose, _errorStreamClose, zap.Duration("duration", elapsed))
+
+	c.edge.streaming.streamsActive.Dec()
+	c.edge.streaming.streamDurations.Observe(elapsed)
+	c.emitStreamError(err)
+}
+
+// This function resembles EndStats for unary calls. However, we do not special
+// case application errors and it does not measure failure latencies as those
+// measurements are irrelevant for streams.
+func (c call) emitStreamError(err error) {
+	if err == nil {
+		return
 	}
+
+	if !yarpcerrors.IsStatus(err) {
+		if counter, err := c.edge.serverFailures.Get(_error, "unknown_internal_yarpc"); err == nil {
+			counter.Inc()
+		}
+		return
+	}
+
+	// Emit finer grained metrics since the error is a yarpcerrors.Status.
+	errCode := yarpcerrors.FromError(err).Code()
+
+	switch statusFault(yarpcerrors.FromError(err)) {
+	case clientFault:
+		if counter, err2 := c.edge.callerFailures.Get(_error, errCode.String()); err2 != nil {
+			c.edge.logger.DPanic("could not retrieve caller failures counter", zap.Error(err2))
+		} else {
+			counter.Inc()
+		}
+
+	case serverFault:
+		if counter, err2 := c.edge.serverFailures.Get(_error, errCode.String()); err2 != nil {
+			c.edge.logger.DPanic("could not retrieve server failures counter", zap.Error(err2))
+		} else {
+			counter.Inc()
+		}
+
+	default:
+		// If this code is executed we've hit an error code outside the usual error
+		// code range, so we'll just log the string representation of that code.
+		if counter, err2 := c.edge.serverFailures.Get(_error, errCode.String()); err2 != nil {
+			c.edge.logger.DPanic("could not retrieve server failures counter", zap.Error(err2))
+		} else {
+			counter.Inc()
+		}
+	}
+}
+
+// logStreamEvent is a generic logging function useful for logging stream
+// events.
+func (c call) logStreamEvent(err error, succMsg, errMsg string, extraFields ...zap.Field) {
+	var ce *zapcore.CheckedEntry
+	if err != nil {
+		ce = c.edge.logger.Check(c.levels.failure, errMsg)
+	} else {
+		ce = c.edge.logger.Check(c.levels.success, succMsg)
+	}
+
+	fields := []zap.Field{
+		zap.String("rpcType", c.rpcType.String()),
+		zap.Bool("successful", err == nil),
+		c.extract(c.ctx),
+		zap.Error(err), // no-op if err == nil
+	}
+	fields = append(fields, extraFields...)
+
+	ce.Write(fields...)
+}
+
+// inteded for metric tags, this returns the yarpcerrors.Status error code name
+// or "unknown_internal_yarpc"
+func errToMetricString(err error) string {
+	if yarpcerrors.IsStatus(err) {
+		return yarpcerrors.FromError(err).Code().String()
+	}
+	return "unknown_internal_yarpc"
 }

@@ -40,7 +40,7 @@ namespace TestCommon
 {
     public partial class Test_JsonClient
     {
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PatchUnsafeAsync()
         {
@@ -98,7 +98,7 @@ namespace TestCommon
             };
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PatchUnsafeAsync_NotJson()
         {
@@ -156,7 +156,7 @@ namespace TestCommon
             };
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PatchUnsafeAsync_Args()
         {
@@ -222,7 +222,7 @@ namespace TestCommon
             };
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PatchUnsafeAsync_Headers()
         {
@@ -288,7 +288,7 @@ namespace TestCommon
             };
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PatchUnsafeAsync_Dynamic()
         {
@@ -345,7 +345,7 @@ namespace TestCommon
             };
         }
  
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PatchUnsafeAsync_Dynamic_NotJson()
         {
@@ -402,7 +402,7 @@ namespace TestCommon
             };
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PatchUnsafeAsync_Error()
         {

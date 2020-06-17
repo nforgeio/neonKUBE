@@ -12,6 +12,9 @@ case "${LOG_LEVEL}" in
     "DEBUG")
         LOG=true
         ;;
+    "TRANSIENT")
+        LOG=true
+        ;;
     "SINFO")
         LOG=true
         ;;

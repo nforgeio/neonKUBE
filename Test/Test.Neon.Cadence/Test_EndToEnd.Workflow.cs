@@ -66,7 +66,7 @@ namespace TestCadence
 
             public static bool WorkflowWithNoResultCalled = false;
 
-            public new static void Reset()
+            public static new void Reset()
             {
                 WorkflowWithNoResultCalled = false;
             }
@@ -89,7 +89,7 @@ namespace TestCadence
             await SyncContext.ClearAsync;
 
             // Verify that we can call a simple workflow that accepts a
-            // parameter and results a result.
+            // parameter and returns a result.
 
             WorkflowWithNoResult.Reset();
 
@@ -1129,7 +1129,7 @@ namespace TestCadence
 
             public static bool HasStarted { get; private set; } = false;
 
-            public new static void Reset()
+            public static new void Reset()
             {
                 HasStarted = false;
             }
@@ -1252,7 +1252,7 @@ namespace TestCadence
 
             public static bool HasStarted { get; private set; } = false;
 
-            public new static void Reset()
+            public static new void Reset()
             {
                 HasStarted = false;
             }
@@ -1459,7 +1459,7 @@ namespace TestCadence
 
             public static bool HasStarted { get; private set; } = false;
 
-            public new static void Reset()
+            public static new void Reset()
             {
                 HasStarted = false;
             }
@@ -1634,7 +1634,7 @@ namespace TestCadence
             public static List<string>  ReceivedQueries = new List<string>();
             public static List<string>  ReceivedSignals = new List<string>();
 
-            public new static void Reset()
+            public static new void Reset()
             {
                 WasExecuted = false;
                 ExitNow     = false;
@@ -2247,7 +2247,7 @@ namespace TestCadence
 
             var options = new WorkflowOptions()
             {
-                TaskStartToCloseTimeout = TimeSpan.FromSeconds(5)
+                DecisionTaskTimeout = TimeSpan.FromSeconds(5)
             };
 
             var stub = client.NewWorkflowStub<IWorkflowFail>(options);
@@ -2289,7 +2289,7 @@ namespace TestCadence
 
             var options = new WorkflowOptions()
             {
-                ScheduleToCloseTimeout = TimeSpan.FromSeconds(5)
+                StartToCloseTimeout = TimeSpan.FromSeconds(5)
             };
 
             var stub = client.NewWorkflowStub<IWorkflowUnregistered>(options);
@@ -3271,7 +3271,8 @@ namespace TestCadence
 
             var options = new WorkflowOptions()
             {
-                WorkflowId = $"Workflow_ExternalIdReuseViaAttribute-{Guid.NewGuid().ToString("d")}",
+                WorkflowId            = $"Workflow_ExternalIdReuseViaAttribute-{Guid.NewGuid().ToString("d")}",
+                WorkflowIdReusePolicy = WorkflowIdReusePolicy.AllowDuplicate
             };
 
             // Do the first run.
@@ -4292,7 +4293,7 @@ namespace TestCadence
             var stub = client.NewWorkflowStub<IWorkflowTimeout>(
                 new WorkflowOptions()
                 {
-                    ScheduleToCloseTimeout = timeout
+                    StartToCloseTimeout = timeout
                 });
 
             await Assert.ThrowsAsync<StartToCloseTimeoutException>(async () => await stub.SleepAsync(sleepTime));
@@ -4347,6 +4348,8 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_Container()
         {
+            const string taskList = "test-cadence-container";
+
             await SyncContext.ClearAsync;
 
             // Start the [nkubeio/test-cadence:latest] Docker image locally, having it
@@ -4378,7 +4381,7 @@ namespace TestCadence
 
             // testCadenceImage = "nkubedev/test-cadence:cadence-latest";
 
-            NeonHelper.Execute("docker",
+            NeonHelper.Execute(NeonHelper.DockerCli,
                 new object[]
                 {
                     "rm", "--force", "test-cadence"
@@ -4386,7 +4389,7 @@ namespace TestCadence
 
             // Make sure we have the latest image first.
 
-            var exitCode = NeonHelper.Execute("docker",
+            var exitCode = NeonHelper.Execute(NeonHelper.DockerCli,
                 new object[]
                 {
                     "pull",
@@ -4400,7 +4403,7 @@ namespace TestCadence
 
             // Start the test workflow service.
 
-            exitCode = NeonHelper.Execute("docker",
+            exitCode = NeonHelper.Execute(NeonHelper.DockerCli,
                 new object[]
                 {
                     "run",
@@ -4408,7 +4411,7 @@ namespace TestCadence
                     "--name", "test-cadence",
                     "--env", $"CADENCE_SERVERS=cadence://{ipAddress}:7933",
                     "--env", $"CADENCE_DOMAIN={CadenceFixture.DefaultDomain}",
-                    "--env", $"CADENCE_TASKLIST={CadenceTestHelper.TaskList}",
+                    "--env", $"CADENCE_TASKLIST={taskList}",
                     testCadenceImage
                 });
 
@@ -4434,7 +4437,7 @@ namespace TestCadence
                         new WorkflowOptions()
                         {
                             WorkflowId = $"busywork-{Guid.NewGuid().ToString("d")}",
-                            TaskList   = CadenceTestHelper.TaskList
+                            TaskList   = taskList
                         });
 
                     pending.Add(stub.DoItAsync(workflowIterations, sleepTime, $"workflow-{i}"));
@@ -4449,7 +4452,7 @@ namespace TestCadence
             {
                 // Kill the [test-cadence] container.
 
-                exitCode = NeonHelper.Execute("docker",
+                exitCode = NeonHelper.Execute(NeonHelper.DockerCli,
                     new object[]
                     {
                         "rm", "--force", "test-cadence",
@@ -4467,7 +4470,7 @@ namespace TestCadence
         [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowAmbientState : IWorkflow
         {
-            [WorkflowMethod()]
+            [WorkflowMethod]
             Task<bool> RunAsync();
         }
 
@@ -4498,70 +4501,35 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
-        public interface IWorkflowActivityIssue755 : IActivity
-        {
-            [ActivityMethod(Name = "Delay")]
-            Task Delay(TimeSpan delay);
-        }
-
-        [Activity(AutoRegister = true)]
-        public class WorkflowActivityIssue755 : ActivityBase, IWorkflowActivityIssue755
-        {
-            public async Task Delay(TimeSpan delay)
-            {
-                await Task.Delay(delay);
-            }
-        }
-
         [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
-        public interface IWorkflowIssue755 : IWorkflow
+        public interface IWorkflowNullables : IWorkflow
         {
-            [WorkflowMethod()]
-            Task RunAsync(TimeSpan delay, int activityCount);
+            [WorkflowMethod]
+            Task<TimeSpan?> TestAsync(TimeSpan? value);
         }
 
         [Workflow(AutoRegister = true)]
-        public class WorkflowIssue755 : WorkflowBase, IWorkflowIssue755
+        public class WorkflowNullables : WorkflowBase, IWorkflowNullables
         {
-            public async Task RunAsync(TimeSpan delay, int iterations)
+            public async Task<TimeSpan?> TestAsync(TimeSpan? value)
             {
-                var stub = Workflow.NewLocalActivityStub<IWorkflowActivityIssue755, WorkflowActivityIssue755>(
-                    options: new LocalActivityOptions()
-                    {
-                        ScheduleToCloseTimeout = TimeSpan.FromHours(1),
-                        RetryOptions           = new RetryOptions()
-                        {
-                            MaximumAttempts    = 10,
-                            BackoffCoefficient = 2.0,
-                            InitialInterval    = TimeSpan.FromSeconds(1),
-                            MaximumInterval    = TimeSpan.FromSeconds(30),
-                            NonRetriableErrors = new List<string>()
-                        }
-                    });
-
-                for (int i = 0; i < iterations; i++)
-                {
-                    await stub.Delay(delay);
-                }
+                return await Task.FromResult(value);
             }
         }
 
-        [Theory]
-        [InlineData(10, 1000, 0.010)]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Workflow_Issue755(int workflowCount, int activityCount, double delaySeconds)
+        public async Task Workflow_Nullable()
         {
-            // Replicating and then verifying the fix for:
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/775
+            // Verify that nullable workflow arguments and results are serialized properly.
 
-            for (int i = 0; i < workflowCount; i++)
-            {
-                var stub = client.NewWorkflowStub<IWorkflowIssue755>();
+            var stub = client.NewWorkflowStub<IWorkflowNullables>();
 
-                await stub.RunAsync(TimeSpan.FromMilliseconds(delaySeconds), activityCount);
-            }
+            Assert.Null(await stub.TestAsync(null));
+
+            stub = client.NewWorkflowStub<IWorkflowNullables>();
+
+            Assert.Equal(TimeSpan.FromSeconds(77), await stub.TestAsync(TimeSpan.FromSeconds(77)));
         }
     }
 }

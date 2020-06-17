@@ -192,7 +192,14 @@ namespace TestCadence
 
             for (int i = 0; i < testDomainCount; i++)
             {
-                await client.RegisterDomainAsync($"my-domain-{i}", $"This is my-domain-{i}", $"jeff-{i}@lilltek.com", retentionDays: 7 + i);
+                var retentionDays = i + 7;
+
+                if (retentionDays >= 30)
+                {
+                    retentionDays = 30;
+                }
+
+                await client.RegisterDomainAsync($"my-domain-{i}", $"This is my-domain-{i}", $"jeff-{i}@lilltek.com", retentionDays: retentionDays);
             }
 
             // List all of the domains in one page.
@@ -228,7 +235,7 @@ namespace TestCadence
                 Assert.Equal($"This is my-domain-{id}", domain.DomainInfo.Description);
                 Assert.Equal($"jeff-{id}@lilltek.com", domain.DomainInfo.OwnerEmail);
                 Assert.Equal(DomainStatus.Registered, domain.DomainInfo.Status);
-                Assert.Equal(7 + id, domain.Configuration.RetentionDays);
+                Assert.True(((7 + id) == domain.Configuration.RetentionDays) || (30 == domain.Configuration.RetentionDays));
             }
 
             // List all of the domains, one to each page of results.
@@ -269,9 +276,8 @@ namespace TestCadence
             var description = await client.DescribeTaskListAsync(CadenceTestHelper.TaskList, TaskListType.Decision);
 
             Assert.NotNull(description);
-            Assert.Single(description.Pollers);
 
-            var poller = description.Pollers.First();
+            var poller = description.Pollers.Single(p => p.Identity == CadenceTestHelper.ClientIdentity);
 
             // We're just going to verify that the poller last access time
             // looks reasonable.  This was way off earlier due to not deserializing
@@ -300,7 +306,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Base_DescribeWorkflowAsync()
+        public async Task Base_DescribeWorkflowExecutionAsync()
         {
             await SyncContext.ClearAsync;
 
@@ -318,7 +324,7 @@ namespace TestCadence
 
             await stub.RunAsync();
 
-            var description = await client.DescribeWorkflowAsync(new WorkflowExecution(workflowId));
+            var description = await client.DescribeWorkflowExecutionAsync(new WorkflowExecution(workflowId));
 
             Assert.NotNull(description);
 

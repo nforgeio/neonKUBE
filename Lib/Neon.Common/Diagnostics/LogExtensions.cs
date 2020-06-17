@@ -48,6 +48,22 @@ namespace Neon.Diagnostics
         }
 
         /// <summary>
+        /// Logs a transient message retrieved via a message function.
+        /// </summary>
+        /// <param name="log">The log.</param>
+        /// <param name="messageFunc">The message function.</param>
+        /// <remarks>
+        /// This method is intended mostly to enable the efficient use of interpolated C# strings.
+        /// </remarks>
+        public static void LogTransient(this INeonLogger log, Func<object> messageFunc)
+        {
+            if (log.IsLogDebugEnabled)
+            {
+                log.LogTransient(messageFunc());
+            }
+        }
+
+        /// <summary>
         /// Logs an informational message retrieved via a message function.
         /// </summary>
         /// <param name="log">The log.</param>
@@ -121,6 +137,19 @@ namespace Neon.Diagnostics
             if (log.IsLogDebugEnabled)
             {
                 log.LogDebug(null, e);
+            }
+        }
+
+        /// <summary>
+        /// Logs a transient exception.
+        /// </summary>
+        /// <param name="log">The log.</param>
+        /// <param name="e">The exception.</param>
+        public static void LogTransient(this INeonLogger log, Exception e)
+        {
+            if (log.IsLogTransientEnabled)
+            {
+                log.LogTransient(null, e);
             }
         }
 

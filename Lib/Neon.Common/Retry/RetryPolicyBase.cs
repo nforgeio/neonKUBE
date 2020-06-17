@@ -69,13 +69,13 @@ namespace Neon.Retry
         protected string SourceModule { get; private set; }
 
         /// <summary>
-        /// Logs a transient exception that is going to be retried if logging
+        /// Logs a transient exception that will be retried if logging
         /// is enabled.
         /// </summary>
         /// <param name="e">The exception.</param>
         protected void LogTransient(Exception e)
         {
-            log?.LogWarn("[transient-retry]", e);
+            log?.LogTransient(e);
         }
 
         /// <summary>

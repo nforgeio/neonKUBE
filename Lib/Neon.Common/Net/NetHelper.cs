@@ -461,19 +461,44 @@ namespace Neon.Net
 
                 if (response.ExitCode != 0)
                 {
-                    throw new ToolException($"ipconfig [exitcode={response.ExitCode}]: {response.ErrorText}");
+                    throw new ToolException($"ipconfig: [exitcode={response.ExitCode}]: {response.ErrorText}");
                 }
             }
             else if (NeonHelper.IsOSX)
             {
-                // $todo(jefflill):
-                //
-                // We may need to clear the OSX DNS cache here.  Here's some information on 
-                // how to do this:
+                // This should work on OS/X 12 (Sierra) or later.  We're not going to support
+                // older OS/X versions for now but here's some information on how to do this
+                // if we change our minds:
                 //
                 //      https://help.dreamhost.com/hc/en-us/articles/214981288-Flushing-your-DNS-cache-in-Mac-OS-X-and-Linux
+                //
+                // Note that this requires that the current process be running as ROOT.
 
-                throw new NotImplementedException("$todo(jefflill): Purge the OSX DNS cache.");
+                var response = NeonHelper.ExecuteCapture("killall", "-HUP mDNSResponder");
+
+                if (response.ExitCode != 0)
+                {
+                    throw new ToolException($"killall -HUP mDNSResponder: [exitcode={response.ExitCode}]: {response.ErrorText}");
+                }
+
+                response = NeonHelper.ExecuteCapture("killall", "mDNSResponderHelper");
+
+                if (response.ExitCode != 0)
+                {
+                    throw new ToolException($"killall mDNSResponderHelper: [exitcode={response.ExitCode}]: {response.ErrorText}");
+                }
+
+                response = NeonHelper.ExecuteCapture("dscacheutil", "-flushcache");
+
+                if (response.ExitCode != 0)
+                {
+                    throw new ToolException($"dscacheutil -flushcache [exitcode={response.ExitCode}]: {response.ErrorText}");
+                }
+            }
+            else if (NeonHelper.IsLinux)
+            {
+                // Linux distributions don't typically enable a system-wide DNS cache so we're
+                // not going to worry about this here.
             }
 
             if (NeonHelper.IsWindows || NeonHelper.IsOSX)
@@ -845,6 +870,18 @@ namespace Neon.Net
         /// Returns a routable (non-loopback) IPv4 address for the current machine.
         /// </summary>
         /// <returns>The IP address or <c>null</c> if there doesn't appear to be a connected network interface.</returns>
+        /// <remarks>
+        /// <para>
+        /// This works via a somewhat fragile heuristic.  We list all network interfaces,
+        /// filter out those that are loopback, TAP interfaces, as well as any that aren't 
+        /// up and then return the highest speed interface from any conforming interfaces 
+        /// remaining.
+        /// </para>
+        /// <para>
+        /// This may not work as expected for machines with multiple active connections
+        /// to different networks.
+        /// </para>
+        /// </remarks>
         public static IPAddress GetRoutableIpAddress()
         {
             // Look for an active non-loopback interface with the best speed
@@ -855,10 +892,10 @@ namespace Neon.Net
                 .FirstOrDefault(
                     netInterface =>
                     {
-                        // Filter out loopback interfaces, Hyper-V virtual switches and interfaces that aren't up.
+                        // Filter out loopback interfaces, TAP interfaces and interfaces that aren't up.
 
                         if (netInterface.NetworkInterfaceType == NetworkInterfaceType.Loopback || 
-                            netInterface.Description.Contains("Hyper-V") ||
+                            netInterface.Description.StartsWith("TAP-") ||
                             netInterface.OperationalStatus != OperationalStatus.Up)
                         {
                             return false;

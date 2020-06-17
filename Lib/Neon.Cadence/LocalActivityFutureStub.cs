@@ -176,7 +176,7 @@ namespace Neon.Cadence
         /// </summary>
         /// <typeparam name="TResult">The local activity result type.</typeparam>
         /// <param name="args">The arguments to be passed to the activity.</param>
-        /// <returns>The <see cref="IAsyncFuture{T}"/> with the <see cref="IAsyncFuture{T}.GetAsync"/> than can be used to retrieve the workfow result.</returns>
+        /// <returns>The <see cref="IAsyncFuture{T}"/> with the <see cref="IAsyncFuture{T}.GetAsync"/> that can be used to retrieve the workfow result.</returns>
         /// <exception cref="InvalidOperationException">Thrown when attempting to start a stub more than once.</exception>
         /// <remarks>
         /// <para>
@@ -248,7 +248,7 @@ namespace Neon.Cadence
                             ContextId      = parentWorkflow.ContextId,
                             ActivityId     = activityId,
                             ActivityTypeId = activityActionId,
-                            Args           = dataConverter.ToData(args),
+                            Args           = CadenceHelper.ArgsToBytes(dataConverter, args),
                             Options        = options.ToInternal()
                         });
                 });
@@ -265,7 +265,7 @@ namespace Neon.Cadence
         /// Starts the target activity that returns <c>void</c>, passing the specified arguments.
         /// </summary>
         /// <param name="args">The arguments to be passed to the activity.</param>
-        /// <returns>The <see cref="IAsyncFuture{T}"/> with the <see cref="IAsyncFuture{T}.GetAsync"/> than can be used to retrieve the workfow result.</returns>
+        /// <returns>The <see cref="IAsyncFuture{T}"/> with the <see cref="IAsyncFuture{T}.GetAsync"/> that can be used to retrieve the workfow result.</returns>
         /// <exception cref="InvalidOperationException">Thrown when attempting to start a stub more than once.</exception>
         /// <remarks>
         /// <para>
@@ -321,7 +321,7 @@ namespace Neon.Cadence
                             ContextId      = parentWorkflow.ContextId,
                             ActivityId     = activityId,
                             ActivityTypeId = activityActionId,
-                            Args           = dataConverter.ToData(args),
+                            Args           = CadenceHelper.ArgsToBytes(dataConverter, args),
                             Options        = options.ToInternal()
                         });
                 });

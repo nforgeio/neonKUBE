@@ -12,7 +12,12 @@ This is a full Neon release intended for general consumption.  Note that some pa
   <tr>
     <td>Cadence samples:</td>
     <td><a href="https://github.com/nforgeio/cadence-samples">https://github.com/nforgeio/cadence-samples</a></td>
-  </tr></table>
+  </tr>
+  <tr>
+    <td>Temporal samples:</td>
+    <td><a href="https://github.com/nforgeio/temporal-samples">https://github.com/nforgeio/temporal-samples</a></td>
+  </tr>
+</table>
 
 ## Highlights:
 
@@ -20,7 +25,7 @@ This is a full Neon release intended for general consumption.  Note that some pa
 
 ### <img src="https://doc.neonkube.com/media/release.png"/> Neon.Cadence
 
-This package provides a .NET client for the [Uber Cadence](https://cadenceworkflow.io/docs/) workflow platform.  This is still a work in progress and some important features need to be implem ented.  That being said, most functionality is implemented and we're using this in production using Linux containers for a significant project.  This library is tagged as **release** quality; it's actually probably closer to **preview** quality.
+This package provides a .NET client for the [Uber Cadence](https://cadenceworkflow.io/docs/) workflow platform.  This is still a work in progress and some important features need to be implemented.  That being said, most functionality is implemented and we're using this in production using Linux containers for a significant project.  This library is tagged as **release** quality; it's actually probably closer to **preview** quality.
 
 You can get started: [here](https://doc.neonkube.com/Neon.Cadence-Overview.htm)
 Follow open issues: [here](https://github.com/nforgeio/neonKUBE/labels/cadence)
@@ -75,6 +80,17 @@ This is a semi-clone of the [https://github.com/sshnet/SSH.NET](>https://github.
 
 **Changes:** No significant changes for this release.
 
+### <img src="https://doc.neonkube.com/media/alpha.png"/> Neon.Temporal
+
+**WARNING: This is under construction and is not ready for general use.**
+
+This package provides a .NET client for the [Temporal](https://docs.temporal.io/) workflow platform.
+
+You can get started: [here](https://doc.neonkube.com/Neon.Temporal-Overview.htm)
+Follow open issues: [here](https://github.com/nforgeio/neonKUBE/labels/temporal)
+
+**Changes:** No significant changes for this release.
+
 ### <img src="https://doc.neonkube.com/media/release.png"/> Neon.Web 
 
 Handy ASP.NET related extensions and utilities including new base controller classes that provide integrated logging.
@@ -99,9 +115,17 @@ This package includes a fixture for running Couchbase locally as a Docker contai
 
 **Changes:** No significant changes for this release.
 
-### <img src="https://doc.neonkube.com/media/alpha.png"/> Neon.Xunit.Kube
+### <img src="https://doc.neonkube.com/media/internal.png"/> Neon.Xunit.Kube
 
 This package is currently used internally for neonKUBE related unit testing.
+
+**Changes:** No significant changes for this release.
+
+### <img src="https://doc.neonkube.com/media/alpha.png"/> Neon.Xunit.Temporal
+
+**WARNING: This is under construction and is not ready for general use.**
+
+This package includes a fixture for running Temporal locally as a Docker container during for unit tests.
 
 **Changes:** No significant changes for this release.
 
@@ -156,7 +180,7 @@ Neon components are released using versions compatible with [Semantic Versioning
   </tr>
   <tr>
     <td><img src="https://doc.neonkube.com/media/internal.png"/></td>
-    <td>indicates that the released binary is not intended for general consumption. These are typically referenced by other neonKUBE libaries and tools. </td>
+    <td>indicates that the released binary is not intended for general consumption. These are typically referenced by other neonKUBE libraries and tools. </td>
   </tr>
 </table>
 

@@ -152,7 +152,7 @@ namespace TestXunit
 
             // Verify the ContainerFixture.
 
-            var result = NeonHelper.ExecuteCapture("docker", "ps");
+            var result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, "ps");
 
             Assert.Equal(0, result.ExitCode);
             Assert.Contains("my-container", result.AllText);

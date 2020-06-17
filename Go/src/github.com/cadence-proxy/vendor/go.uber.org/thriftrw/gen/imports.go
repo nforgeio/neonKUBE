@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,8 +24,8 @@ import (
 	"go/ast"
 	"go/token"
 	"path/filepath"
-	"strings"
-	"unicode"
+
+	"go.uber.org/thriftrw/internal/goast"
 )
 
 // importer is responsible for managing imports for the code generator and
@@ -72,33 +72,14 @@ func (i importer) Import(path string) string {
 		return filepath.Base(path)
 	}
 
-	// Find a name, preferring the base name
-	// TODO what if the package name is not the base name?
-	baseName := filepath.Base(path)
-	name := i.ns.NewName(sanitizeImportName(baseName))
-	astImport := &ast.ImportSpec{Path: stringLiteral(path)}
-	if name != baseName {
-		astImport.Name = ast.NewIdent(name)
+	name := i.ns.NewName(goast.DeterminePackageName(path))
+	astImport := &ast.ImportSpec{
+		Name: ast.NewIdent(name),
+		Path: stringLiteral(path),
 	}
 
 	i.imports[path] = astImport
 	return name
-}
-
-func sanitizeImportName(s string) string {
-	// special handling for common "foo-go" pattern
-	if strings.HasSuffix(s, "-go") {
-		s = s[:len(s)-3]
-	}
-
-	return strings.Map(func(c rune) rune {
-		switch {
-		case unicode.IsLetter(c), unicode.IsDigit(c):
-			return c
-		default:
-			return '_'
-		}
-	}, s)
 }
 
 // importDecl builds an import declation from the given list of imports.

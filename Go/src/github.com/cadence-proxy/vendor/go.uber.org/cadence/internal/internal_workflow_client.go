@@ -48,6 +48,10 @@ const (
 	defaultGetHistoryTimeoutInSecs   = 25
 )
 
+var (
+	maxListArchivedWorkflowTimeout = time.Minute * 3
+)
+
 type (
 	// workflowClient is the client for starting a workflow execution.
 	workflowClient struct {
@@ -658,6 +662,38 @@ func (wc *workflowClient) ListWorkflow(ctx context.Context, request *s.ListWorkf
 	return response, nil
 }
 
+// ListArchivedWorkflow implementation
+func (wc *workflowClient) ListArchivedWorkflow(ctx context.Context, request *s.ListArchivedWorkflowExecutionsRequest) (*s.ListArchivedWorkflowExecutionsResponse, error) {
+	if len(request.GetDomain()) == 0 {
+		request.Domain = common.StringPtr(wc.domain)
+	}
+	var response *s.ListArchivedWorkflowExecutionsResponse
+	err := backoff.Retry(ctx,
+		func() error {
+			var err1 error
+			timeout := maxListArchivedWorkflowTimeout
+			now := time.Now()
+			if ctx != nil {
+				if expiration, ok := ctx.Deadline(); ok && expiration.After(now) {
+					timeout = expiration.Sub(now)
+					if timeout > maxListArchivedWorkflowTimeout {
+						timeout = maxListArchivedWorkflowTimeout
+					} else if timeout < minRPCTimeout {
+						timeout = minRPCTimeout
+					}
+				}
+			}
+			tchCtx, cancel, opt := newChannelContext(ctx, chanTimeout(timeout))
+			defer cancel()
+			response, err1 = wc.workflowService.ListArchivedWorkflowExecutions(tchCtx, request, opt...)
+			return err1
+		}, createDynamicServiceRetryPolicy(ctx), isServiceTransientError)
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
 // ScanWorkflow implementation
 func (wc *workflowClient) ScanWorkflow(ctx context.Context, request *s.ListWorkflowExecutionsRequest) (*s.ListWorkflowExecutionsResponse, error) {
 	if len(request.GetDomain()) == 0 {
@@ -758,9 +794,9 @@ func (wc *workflowClient) DescribeWorkflowExecution(ctx context.Context, workflo
 func (wc *workflowClient) QueryWorkflow(ctx context.Context, workflowID string, runID string, queryType string, args ...interface{}) (Value, error) {
 	queryWorkflowWithOptionsRequest := &QueryWorkflowWithOptionsRequest{
 		WorkflowID: workflowID,
-		RunID: runID,
-		QueryType: queryType,
-		Args: args,
+		RunID:      runID,
+		QueryType:  queryType,
+		Args:       args,
 	}
 	result, err := wc.QueryWorkflowWithOptions(ctx, queryWorkflowWithOptionsRequest)
 	if err != nil {
@@ -791,6 +827,11 @@ type QueryWorkflowWithOptionsRequest struct {
 	// QueryRejectConditionNotOpen will reject queries to workflows which are not open
 	// QueryRejectConditionNotCompletedCleanly will reject queries to workflows which completed in any state other than completed (e.g. terminated, canceled timeout etc...)
 	QueryRejectCondition *s.QueryRejectCondition
+
+	// QueryConsistencyLevel is an optional field used to control the consistency level.
+	// QueryConsistencyLevelEventual means that query will eventually reflect up to date state of a workflow.
+	// QueryConsistencyLevelStrong means that query will reflect a workflow state of having applied all events which came before the query.
+	QueryConsistencyLevel *s.QueryConsistencyLevel
 }
 
 // QueryWorkflowWithOptionsResponse is the response to QueryWorkflowWithOptions
@@ -828,7 +869,8 @@ func (wc *workflowClient) QueryWorkflowWithOptions(ctx context.Context, request 
 			QueryType: common.StringPtr(request.QueryType),
 			QueryArgs: input,
 		},
-		QueryRejectCondition: request.QueryRejectCondition,
+		QueryRejectCondition:  request.QueryRejectCondition,
+		QueryConsistencyLevel: request.QueryConsistencyLevel,
 	}
 
 	var resp *s.QueryWorkflowResponse
@@ -847,12 +889,12 @@ func (wc *workflowClient) QueryWorkflowWithOptions(ctx context.Context, request 
 	if resp.QueryRejected != nil {
 		return &QueryWorkflowWithOptionsResponse{
 			QueryRejected: resp.QueryRejected,
-			QueryResult: nil,
+			QueryResult:   nil,
 		}, nil
 	}
 	return &QueryWorkflowWithOptionsResponse{
 		QueryRejected: nil,
-		QueryResult: newEncodedValue(resp.QueryResult, wc.dataConverter),
+		QueryResult:   newEncodedValue(resp.QueryResult, wc.dataConverter),
 	}, nil
 }
 

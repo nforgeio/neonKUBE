@@ -119,7 +119,7 @@ func handleConnectRequest(requestCtx context.Context, request *messages.ConnectR
 		defer cancel()
 
 		// register the domain
-		retention := int32(365)
+		retention := int32(7)
 		err = clientHelper.RegisterDomain(
 			ctx,
 			&cadenceshared.RegisterDomainRequest{
@@ -205,7 +205,7 @@ func handleInitializeRequest(requestCtx context.Context, request *messages.Initi
 
 	// set the reply address
 	if internal.DebugPrelaunched {
-		replyAddress = "http://127.0.0.2:5001/"
+		replyAddress = "http://127.0.0.1:5001/"
 	} else {
 		address := *request.GetLibraryAddress()
 		port := request.GetLibraryPort()

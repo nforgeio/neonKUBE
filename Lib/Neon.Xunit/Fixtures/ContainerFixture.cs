@@ -36,10 +36,10 @@ namespace Neon.Xunit
     /// <remarks>
     /// <note>
     /// <para>
-    /// <b>IMPORTANT:</b> The Neon <see cref="TestFixture"/> implementation <b>DOES NOT</b>
+    /// <b>IMPORTANT:</b> The base Neon <see cref="TestFixture"/> implementation <b>DOES NOT</b>
     /// support parallel test execution because fixtures may impact global machine state
-    /// like starting a Couchbase Docker container, modifying the local DNS <b>hosts</b>
-    /// file or managing a Docker Swarm or cluster.
+    /// like starting a Docker container, modifying the local DNS <b>hosts</b> file, configuring
+    /// environment variables or initializing a test database.
     /// </para>
     /// <para>
     /// You should explicitly disable parallel execution in all test assemblies that
@@ -73,7 +73,7 @@ namespace Neon.Xunit
         /// </para>
         /// <note>
         /// Fixtures implemented by neonFORGE that are derived from <see cref="ContainerFixture"/> 
-        /// all implement tis behavior.  If you implement your own derived fixtures,
+        /// all implement this behavior.  If you implement your own derived fixtures,
         /// you should consider implementing this as well for consistency.
         /// </note>
         /// </remarks>
@@ -152,7 +152,7 @@ namespace Neon.Xunit
         }
 
         /// <summary>
-        /// Returns the running container's name <c>null</c> if the container
+        /// Returns the running container's name or <c>null</c> if the container
         /// has not been started.
         /// </summary>
         public string ContainerName { get; private set; }
@@ -180,7 +180,7 @@ namespace Neon.Xunit
         /// <param name="noRemove">Optionally indicates that the <b>--rm</b> option should not be included when creating the container.</param>
         /// <param name="keepOpen">
         /// Optionally indicates that the container should continue to run after the fixture is disposed.  
-        /// This implies <see cref="noRemove"/><c>=true</c> and defaults to <c>true</c>.
+        /// This implies <see cref="noRemove"/><c>=true</c> and defaults to <c>false</c>.
         /// </param>
         /// <returns>
         /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
@@ -292,7 +292,7 @@ namespace Neon.Xunit
             // and remove it if its ID doesn't match the current container.
 
             var args   = new string[] { "ps", "-a", "--filter", $"name={name}", "--format", "{{.ID}}" };
-            var result = NeonHelper.ExecuteCapture($"docker", args);
+            var result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, args);
 
             if (result.ExitCode == 0)
             {
@@ -300,7 +300,7 @@ namespace Neon.Xunit
 
                 if (!string.IsNullOrEmpty(existingId))
                 {
-                    NeonHelper.Execute("docker", new object[] { "rm", "--force", "-v", existingId });
+                    NeonHelper.Execute(NeonHelper.DockerCli, new object[] { "rm", "--force", "-v", existingId });
                 }
             }
 
@@ -313,7 +313,7 @@ namespace Neon.Xunit
             pullRetry.InvokeAsync(
                 async () =>
                 {
-                    result = NeonHelper.ExecuteCapture($"docker", argsString);
+                    result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, argsString);
 
                     if (result.ExitCode != 0)
                     {
@@ -361,8 +361,18 @@ namespace Neon.Xunit
                 dockerArgs.Add("--rm");
             }
 
-            argsString = NeonHelper.NormalizeExecArgs("run", dockerArgs, image, null);
-            result     = NeonHelper.ExecuteCapture($"docker", argsString);
+            dockerArgs.Add(image);
+
+            if (containerArgs != null)
+            {
+                foreach (var arg in containerArgs)
+                {
+                    dockerArgs.Add(arg);
+                }
+            }
+
+            argsString = NeonHelper.NormalizeExecArgs("run", dockerArgs);
+            result     = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, argsString);
 
             if (result.ExitCode != 0)
             {
@@ -385,7 +395,7 @@ namespace Neon.Xunit
                 try
                 {
                     var args   = new string[] { "rm", "--force", "-v", ContainerId };
-                    var result = NeonHelper.ExecuteCapture($"docker", args);
+                    var result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, args);
 
                     if (result.ExitCode != 0)
                     {
@@ -397,6 +407,8 @@ namespace Neon.Xunit
                     ContainerId = null;
                 }
             }
+
+            base.Reset();
         }
 
         /// <summary>

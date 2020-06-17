@@ -273,6 +273,11 @@ namespace Neon.Net
         /// </summary>
         public const int Cadence = 7933;
 
+        /// <summary>
+        /// Temporal primary cluster port.
+        /// </summary>
+        public const int Temporal = 7233;
+
         private static Dictionary<string, int> wellKnownMap;
 
         private struct Map
@@ -341,7 +346,8 @@ namespace Neon.Net
                 new Map("AMQP", AMQP),
                 new Map("RabbitMQAdmin", RabbitMQAdmin),
                 new Map("aptcacherng", AppCacherNg),
-                new Map("cadence", Cadence)
+                new Map("cadence", Cadence),
+                new Map("temporal", Temporal)
             };
 
         wellKnownMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);

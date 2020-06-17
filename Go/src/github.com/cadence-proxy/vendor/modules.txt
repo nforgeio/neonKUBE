@@ -8,16 +8,16 @@ github.com/anmitsu/go-shlex
 github.com/apache/thrift/lib/go/thrift
 # github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973
 github.com/beorn7/perks/quantile
-# github.com/davecgh/go-spew v1.1.0
+# github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
 # github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a
 github.com/facebookgo/clock
 # github.com/fatih/structtag v1.0.0
 github.com/fatih/structtag
-# github.com/go-chi/chi v4.0.2+incompatible
+# github.com/go-chi/chi v4.0.3+incompatible
 github.com/go-chi/chi
 github.com/go-chi/chi/middleware
-# github.com/gogo/protobuf v1.2.1
+# github.com/gogo/protobuf v1.3.0
 github.com/gogo/protobuf/gogoproto
 github.com/gogo/protobuf/plugin/compare
 github.com/gogo/protobuf/plugin/defaultcheck
@@ -59,7 +59,7 @@ github.com/kisielk/errcheck
 github.com/kisielk/errcheck/internal/errcheck
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
-# github.com/opentracing/opentracing-go v1.0.2
+# github.com/opentracing/opentracing-go v1.1.0
 github.com/opentracing/opentracing-go
 github.com/opentracing/opentracing-go/ext
 github.com/opentracing/opentracing-go/log
@@ -87,7 +87,7 @@ github.com/robfig/cron
 github.com/samuel/go-thrift/parser
 # github.com/stretchr/objx v0.1.1
 github.com/stretchr/objx
-# github.com/stretchr/testify v1.2.1
+# github.com/stretchr/testify v1.3.0
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/mock
 github.com/stretchr/testify/require
@@ -106,9 +106,9 @@ github.com/uber/tchannel-go/tnet
 github.com/uber/tchannel-go/tos
 github.com/uber/tchannel-go/trand
 github.com/uber/tchannel-go/typed
-# go.uber.org/atomic v1.3.2
+# go.uber.org/atomic v1.5.1
 go.uber.org/atomic
-# go.uber.org/cadence v0.9.3
+# go.uber.org/cadence v0.11.2
 go.uber.org/cadence
 go.uber.org/cadence/.gen/go/cadence
 go.uber.org/cadence/.gen/go/cadence/workflowserviceclient
@@ -135,7 +135,7 @@ go.uber.org/net/metrics
 go.uber.org/net/metrics/bucket
 go.uber.org/net/metrics/push
 go.uber.org/net/metrics/tallypush
-# go.uber.org/thriftrw v1.11.0
+# go.uber.org/thriftrw v1.20.2
 go.uber.org/thriftrw
 go.uber.org/thriftrw/ast
 go.uber.org/thriftrw/compile
@@ -164,7 +164,7 @@ go.uber.org/thriftrw/version
 go.uber.org/thriftrw/wire
 # go.uber.org/tools v0.0.0-20190430173459-422a61c266e1
 go.uber.org/tools/update-license
-# go.uber.org/yarpc v1.38.0
+# go.uber.org/yarpc v1.42.0
 go.uber.org/yarpc
 go.uber.org/yarpc/api/backoff
 go.uber.org/yarpc/api/encoding
@@ -205,19 +205,22 @@ go.uber.org/zap/internal/bufferpool
 go.uber.org/zap/internal/color
 go.uber.org/zap/internal/exit
 go.uber.org/zap/zapcore
-# golang.org/x/lint v0.0.0-20190909230951-414d861bb4ac
+# golang.org/x/lint v0.0.0-20191125180803-fdd1cda4f05f
 golang.org/x/lint
 golang.org/x/lint/golint
-# golang.org/x/net v0.0.0-20190311183353-d8887717615a
+# golang.org/x/net v0.0.0-20200114155413-6afb5195e5aa
 golang.org/x/net/bpf
 golang.org/x/net/context
 golang.org/x/net/internal/iana
 golang.org/x/net/internal/socket
 golang.org/x/net/ipv4
 golang.org/x/net/ipv6
+# golang.org/x/sys v0.0.0-20190412213103-97732733099d
+golang.org/x/sys/unix
+golang.org/x/sys/windows
 # golang.org/x/time v0.0.0-20170927054726-6dc17368e09b
 golang.org/x/time/rate
-# golang.org/x/tools v0.0.0-20190529203303-fb6c8ffd2207
+# golang.org/x/tools v0.0.0-20200127195909-ed30b9180dd3
 golang.org/x/tools/cmd/stringer
 golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/ast/inspector
@@ -229,9 +232,7 @@ golang.org/x/tools/go/internal/packagesdriver
 golang.org/x/tools/go/loader
 golang.org/x/tools/go/packages
 golang.org/x/tools/go/types/typeutil
-golang.org/x/tools/internal/fastwalk
-golang.org/x/tools/internal/gopathwalk
-golang.org/x/tools/internal/semver
+golang.org/x/tools/internal/packagesinternal
 # gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2
 # honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc

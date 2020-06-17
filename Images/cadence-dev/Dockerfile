@@ -29,21 +29,28 @@
 #   UI_VERSION      - The Cadence-web version to be built (AKA its GitHub tag)
 
 # Build cadence binaries
-ARG GO_VERSION
+ARG  GO_VERSION
 FROM golang:$GO_VERSION as builder
-ARG VERSION
+ARG  VERSION
 
 # get and compile cadence-server
 RUN go get -u github.com/golang/dep/cmd/dep \
     && go get -u golang.org/x/lint/golint \
     && git clone https://github.com/uber/cadence.git /go/src/github.com/uber/cadence \
     && cd /go/src/github.com/uber/cadence \
-    && git checkout tags/$VERSION && make bins_nothrift
+    && git checkout tags/$VERSION && make bins
 
 # Final Cadence image
 # open-jdk-8 debian9 stretch
 FROM openjdk:8-jdk-stretch
 ARG UI_VERSION
+
+# Export ENV variable
+ENV CADENCE_HOME /cadence
+ENV UI_HOME /usr/cadence-web
+ENV NODE_VERSION=10.x
+ENV NODE_ENV=production
+ENV TZ=UTC
 
 # BASIC COMMON LIBRARY INSTALLATIONS
 # CQLSH installation
@@ -58,18 +65,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         python-setuptools \
         build-essential \
     && rm -rf /var/lib/apt/lists/* \
-    && pip install wheel \
-    && pip install cqlsh
+    && pip install wheel
 
 # NODEJS/NPM INSTALLATION
 RUN apt-get update \
-    && curl -sL https://deb.nodesource.com/setup_10.x | bash - \
+    && curl -sL https://deb.nodesource.com/setup_$NODE_VERSION | bash - \
     && apt-get install -y nodejs
 
 # CASSANDRA INSTALLATION
 RUN apt-get update \
-    && echo "deb http://www.apache.org/dist/cassandra/debian 311x main" | tee -a /etc/apt/sources.list.d/cassandra.sources.list \
-    && curl https://www.apache.org/dist/cassandra/KEYS | apt-key add - \
+    && echo "deb https://downloads.apache.org/cassandra/debian 311x main" | tee -a /etc/apt/sources.list.d/cassandra.sources.list \
+    && curl https://downloads.apache.org/cassandra/KEYS | apt-key add - \
     && apt-get update \
     && apt-get install cassandra -y
 
@@ -84,11 +90,7 @@ RUN git clone https://github.com/uber/cadence-web.git /usr/cadence-web \
     && cd /usr/cadence-web \
     && git checkout tags/$UI_VERSION
 
-# Export ENV variable
-ENV CADENCE_HOME /cadence
-ENV UI_HOME /usr/cadence-web
-ENV NODE_ENV=production
-ENV TZ=UTC
+
 
 # Tell to expose ports
 EXPOSE 7933 7934 7935 7939 9042 8088
@@ -110,8 +112,9 @@ COPY --from=builder /go/src/github.com/uber/cadence/schema/                /cade
 # change working dir to /usr/cadence-web
 # Install cadence ui 
 # app dependencies
+
 WORKDIR $UI_HOME
-RUN npm install --production \
+RUN npm install --production --unsafe-perm \
     && npm run build-production
 
 # change working dir to /cadence

@@ -59,10 +59,11 @@ namespace TestCadence
                 CreateDomain           = true,
                 Debug                  = CadenceTestHelper.Debug,
                 DebugPrelaunched       = CadenceTestHelper.DebugPrelaunched,
-                DebugDisableHeartbeats = CadenceTestHelper.DebugDisableHeartbeats
+                DebugDisableHeartbeats = CadenceTestHelper.DebugDisableHeartbeats,
+                ClientIdentity         = CadenceTestHelper.ClientIdentity
             };
 
-            if (fixture.Start(settings, keepConnection: true, keepOpen: CadenceTestHelper.KeepCadenceServerOpen) == TestFixtureStatus.Started)
+            if (fixture.Start(settings, image: CadenceTestHelper.CadenceImage, reconnect: true, keepRunning: CadenceTestHelper.KeepCadenceServerOpen) == TestFixtureStatus.Started)
             {
                 this.fixture     = fixture;
                 this.client      = fixture.Client;
@@ -106,7 +107,7 @@ namespace TestCadence
         [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface ISyncSignal : IWorkflow
         {
-            [WorkflowMethod()]
+            [WorkflowMethod]
             Task RunAsync(TimeSpan delay);
 
             [SignalMethod("signal-void", Synchronous = true)]
@@ -156,7 +157,7 @@ namespace TestCadence
         [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface ISyncChildSignal : IWorkflow
         {
-            [WorkflowMethod()]
+            [WorkflowMethod]
             Task<bool> RunAsync(TimeSpan signalDelay, bool signalWithResult);
         }
 
@@ -222,6 +223,29 @@ namespace TestCadence
         [Theory]
         [Repeat(testIterations)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task SyncSignalFuture_WithoutResult(int iteration)
+        {
+            LogStart(iteration);
+
+            // Verify that sending a synchronous signal returning void
+            // via a future works as expected when there's no delay
+            // executing the signal.
+
+            SyncSignal.Clear();
+
+            var stub   = client.NewWorkflowFutureStub<ISyncSignal>();
+            var future = await stub.StartAsync(SyncSignal.WorkflowDelay);
+
+            await stub.SyncSignalAsync("signal-void", TimeSpan.Zero);
+            await future.GetAsync();
+
+            Assert.True(SyncSignal.SignalBeforeDelay);
+            Assert.True(SyncSignal.SignalAfterDelay);
+        }
+
+        [Theory]
+        [Repeat(testIterations)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task SyncSignal_WithoutResult_AndDelay(int iteration)
         {
             LogStart(iteration);
@@ -263,6 +287,31 @@ namespace TestCadence
             Assert.Equal("Hello World!", result);
 
             await task;
+        }
+
+        [Theory]
+        [Repeat(testIterations)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task SyncSignalFuture_WithResult(int iteration)
+        {
+            LogStart(iteration);
+
+            // Verify that sending a synchronous signal returning void
+            // via a future works as expected when there's no delay
+            // executing the signal.
+
+            SyncSignal.Clear();
+
+            var stub   = client.NewWorkflowFutureStub<ISyncSignal>();
+            var future = await stub.StartAsync(SyncSignal.WorkflowDelay);
+            var result = await stub.SyncSignalAsync<string>("signal-with-result", TimeSpan.Zero, "Hello World!");
+
+            Assert.Equal("Hello World!", result);
+
+            await future.GetAsync();
+
+            Assert.True(SyncSignal.SignalBeforeDelay);
+            Assert.True(SyncSignal.SignalAfterDelay);
         }
 
         [Theory]

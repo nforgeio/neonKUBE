@@ -221,16 +221,19 @@ namespace TestCadence
         public class LocalActivityWithouthResult : ActivityBase, ILocalActivityWithoutResult
         {
             public static string Name { get; private set; } = null;
+            public static ActivityTask Info { get; set; }
 
-            public new static void Reset()
+            public static new void Reset()
             {
                 Name = null;
+                Info = null;
             }
 
             [ActivityMethod]
             public async Task HelloAsync(string name)
             {
                 LocalActivityWithouthResult.Name = name;
+                LocalActivityWithouthResult.Info = ActivityTask;
 
                 await Task.CompletedTask;
             }
@@ -269,6 +272,14 @@ namespace TestCadence
 
             await stub.HelloAsync("Jeff");
             Assert.Equal("Jeff", LocalActivityWithouthResult.Name);
+
+            // Also verify that local activities also receive 
+            // Activity Task info.
+
+            Assert.NotNull(LocalActivityWithouthResult.Info);
+            Assert.Null(LocalActivityWithouthResult.Info.ActivityTypeName);     // This is NULL for local activities
+            Assert.Equal(CadenceTestHelper.TaskList, LocalActivityWithouthResult.Info.TaskList);
+            Assert.Equal("test-domain", LocalActivityWithouthResult.Info.WorkflowDomain);
         }
 
         //---------------------------------------------------------------------
@@ -833,7 +844,7 @@ namespace TestCadence
 
             var options = new WorkflowOptions()
             {
-                TaskStartToCloseTimeout = TimeSpan.FromSeconds(60)
+                DecisionTaskTimeout = TimeSpan.FromSeconds(60)
             };
 
             var stub  = client.NewWorkflowStub<IWorkflowActivityFail>(options);
@@ -1021,16 +1032,23 @@ namespace TestCadence
             var task     = stub.RunAsync();
             var activity = ActivityExternalCompletion.WaitForActivity();
 
-            await client.ActivityErrorByTokenAsync(activity.Task.TaskToken, new Exception("error"));
+            await client.ActivityErrorByTokenAsync(activity.Task.TaskToken, new Exception("external activity failed"));
 
             try
             {
                 await task;
             }
+            catch (CadenceCustomException e)
+            {
+                Assert.Equal("external activity failed", e.Message);
+                return;
+            }
             catch (Exception e)
             {
-                // $todo(jefflill): Verify the exception
+                Assert.True(false, $"Expected [{nameof(CadenceCustomException)}] not [{e.GetType().Name}]");
             }
+
+            Assert.True(false, $"Expected [{nameof(CadenceCustomException)}]");
         }
 
         [Fact]
@@ -1048,16 +1066,23 @@ namespace TestCadence
             var task     = stub.RunAsync();
             var activity = ActivityExternalCompletion.WaitForActivity();
 
-            await client.ActivityErrorByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId, new Exception("error"));
+            await client.ActivityErrorByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId, new Exception("external activity failed"));
 
             try
             {
                 await task;
             }
+            catch (CadenceCustomException e)
+            {
+                Assert.Equal("external activity failed", e.Message);
+                return;
+            }
             catch (Exception e)
             {
-                // $todo(jefflill): Verify the exception
+                Assert.True(false, $"Expected [{nameof(CadenceCustomException)}] not [{e.GetType().Name}]");
             }
+
+            Assert.True(false, $"Expected [{nameof(CadenceCustomException)}]");
         }
 
         [Fact]
@@ -1102,6 +1127,119 @@ namespace TestCadence
             // $todo(jefflill): Need to work on exception mapping for this to work.
 
             // await Assert.ThrowsAsync<CadenceCancelledException>(async () => await task);
+        }
+
+        //---------------------------------------------------------------------
+
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IActivityWithDependency : IActivity
+        {
+            [ActivityMethod]
+            Task<bool> RunAsync();
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ActivityWithDependency : ActivityBase, IActivityWithDependency
+        {
+            private ActivityDependency dependency;
+
+            public ActivityWithDependency(ActivityDependency dependency)
+            {
+                this.dependency = dependency;
+            }
+
+            public async Task<bool> RunAsync()
+            {
+                return await Task.FromResult(dependency != null && dependency.Hello == "World!");
+            }
+        }
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IActivityWorkflowWithDependency : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<bool> RunAsync();
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class ActivityWorkflowWithDependency : WorkflowBase, IActivityWorkflowWithDependency
+        {
+            public async Task<bool> RunAsync()
+            {
+                var stub = Workflow.NewActivityStub<IActivityWithDependency>();
+
+                return await stub.RunAsync();
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_WithDependency()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that depdency injection works for activities.  Note that the
+            // Test_EndToEnd constructor has configured a singleton ActivityDependency
+            // instance with NeonHelper.ServiceContainer.  The workflow will invoke
+            // an activity that expects this instance to be passed to the constructor.
+            //
+            // The activity and calling workflow return TRUE when the dependency
+            // is passed correctly.
+            
+            var stub = client.NewWorkflowStub<IActivityWorkflowWithDependency>();
+
+            Assert.True(await stub.RunAsync());
+        }
+
+        //---------------------------------------------------------------------
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IActivityWorkflowNullables : IWorkflow
+        {
+            [WorkflowMethod]
+            Task<TimeSpan?> TestAsync(TimeSpan? value);
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class ActivityWorkflowNullables : WorkflowBase, IActivityWorkflowNullables
+        {
+            public async Task<TimeSpan?> TestAsync(TimeSpan? value)
+            {
+                var stub = Workflow.NewActivityStub<IActivityNullables>();
+
+                return await stub.TestAsync(value);
+            }
+        }
+
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IActivityNullables : IActivity
+        {
+            [ActivityMethod]
+            Task<TimeSpan?> TestAsync(TimeSpan? value);
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ActivityNullables : ActivityBase, IActivityNullables
+        {
+            public async Task<TimeSpan?> TestAsync(TimeSpan? value)
+            {
+                return await Task.FromResult(value);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_Nullable()
+        {
+            // Verify that nullable activity arguments and results are serialized properly.
+
+            var stub = client.NewWorkflowStub<IActivityWorkflowNullables>();
+
+            Assert.Null(await stub.TestAsync(null));
+
+            stub = client.NewWorkflowStub<IActivityWorkflowNullables>();
+
+            Assert.Equal(TimeSpan.FromSeconds(77), await stub.TestAsync(TimeSpan.FromSeconds(77)));
         }
     }
 }

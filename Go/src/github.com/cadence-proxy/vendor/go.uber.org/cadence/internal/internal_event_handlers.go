@@ -40,6 +40,10 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+const (
+	queryResultSizeLimit = 2000000 // 2MB
+)
+
 // Assert that structs do indeed implement the interfaces
 var _ workflowEnvironment = (*workflowEnvironmentImpl)(nil)
 var _ workflowExecutionEventHandler = (*workflowExecutionEventHandlerImpl)(nil)
@@ -294,7 +298,14 @@ func (wc *workflowEnvironmentImpl) UpsertSearchAttributes(attributes map[string]
 		return err
 	}
 
-	upsertID := wc.GenerateSequenceID()
+	var upsertID string
+	if changeVersion, ok := attributes[CadenceChangeVersion]; ok {
+		// to ensure backward compatibility on searchable GetVersion, use latest changeVersion as upsertID
+		upsertID = changeVersion.([]string)[0]
+	} else {
+		upsertID = wc.GenerateSequenceID()
+	}
+
 	wc.decisionsHelper.upsertSearchAttributes(upsertID, attr)
 	wc.updateWorkflowInfoWithSearchAttributes(attr) // this is for getInfo correctness
 	return nil
@@ -306,7 +317,12 @@ func (wc *workflowEnvironmentImpl) updateWorkflowInfoWithSearchAttributes(attrib
 
 func mergeSearchAttributes(current, upsert *shared.SearchAttributes) *shared.SearchAttributes {
 	if current == nil || len(current.IndexedFields) == 0 {
-		return upsert
+		if upsert == nil || len(upsert.IndexedFields) == 0 {
+			return nil
+		}
+		current = &shared.SearchAttributes{
+			IndexedFields: make(map[string][]byte),
+		}
 	}
 
 	fields := current.IndexedFields
@@ -354,8 +370,8 @@ func (wc *workflowEnvironmentImpl) ExecuteChildWorkflow(
 	attributes.TaskStartToCloseTimeoutSeconds = params.taskStartToCloseTimeoutSeconds
 	attributes.Input = params.input
 	attributes.WorkflowType = workflowTypePtr(*params.workflowType)
-	attributes.ChildPolicy = params.childPolicy.toThriftChildPolicyPtr()
 	attributes.WorkflowIdReusePolicy = params.workflowIDReusePolicy.toThriftPtr()
+	attributes.ParentClosePolicy = params.parentClosePolicy.toThriftPtr()
 	attributes.RetryPolicy = params.retryPolicy
 	attributes.Header = params.header
 	attributes.Memo = memo
@@ -568,14 +584,34 @@ func (wc *workflowEnvironmentImpl) GetVersion(changeID string, minSupported, max
 		// GetVersion for changeID is called first time in replay mode, use DefaultVersion
 		version = DefaultVersion
 	} else {
-		// GetVersion for changeID is called first time (non-replay mode), we need to generate a marker decision for it.
+		// GetVersion for changeID is called first time (non-replay mode), generate a marker decision for it.
+		// Also upsert search attributes to enable ability to search by changeVersion.
 		version = maxSupported
 		wc.decisionsHelper.recordVersionMarker(changeID, version, wc.GetDataConverter())
+		wc.UpsertSearchAttributes(createSearchAttributesForChangeVersion(changeID, version, wc.changeVersions))
 	}
 
 	validateVersion(changeID, version, minSupported, maxSupported)
 	wc.changeVersions[changeID] = version
 	return version
+}
+
+func createSearchAttributesForChangeVersion(changeID string, version Version, existingChangeVersions map[string]Version) map[string]interface{} {
+	return map[string]interface{}{
+		CadenceChangeVersion: getChangeVersions(changeID, version, existingChangeVersions),
+	}
+}
+
+func getChangeVersions(changeID string, version Version, existingChangeVersions map[string]Version) []string {
+	res := []string{getChangeVersion(changeID, version)}
+	for k, v := range existingChangeVersions {
+		res = append(res, getChangeVersion(k, v))
+	}
+	return res
+}
+
+func getChangeVersion(changeID string, version Version) string {
+	return fmt.Sprintf("%s-%v", changeID, version)
 }
 
 func (wc *workflowEnvironmentImpl) SideEffect(f func() ([]byte, error), callback resultHandler) {
@@ -878,7 +914,21 @@ func (weh *workflowExecutionEventHandlerImpl) ProcessQuery(queryType string, que
 	case QueryTypeOpenSessions:
 		return weh.encodeArg(weh.getOpenSessions())
 	default:
-		return weh.queryHandler(queryType, queryArgs)
+		result, err := weh.queryHandler(queryType, queryArgs)
+		if err != nil {
+			return nil, err
+		}
+
+		resultSize := len(result)
+		if resultSize > queryResultSizeLimit {
+			weh.logger.Error("Query result size exceeds limit.",
+				zap.String(tagQueryType, queryType),
+				zap.String(tagWorkflowID, weh.workflowInfo.WorkflowExecution.ID),
+				zap.String(tagRunID, weh.workflowInfo.WorkflowExecution.RunID))
+			return nil, fmt.Errorf("query result size (%v) exceeds limit (%v)", resultSize, queryResultSizeLimit)
+		}
+
+		return result, nil
 	}
 }
 
@@ -940,9 +990,17 @@ func (weh *workflowExecutionEventHandlerImpl) handleActivityTaskTimedOut(event *
 		return nil
 	}
 
+	var err error
 	attributes := event.ActivityTaskTimedOutEventAttributes
-	details := newEncodedValues(attributes.Details, weh.GetDataConverter())
-	err := NewTimeoutError(attributes.GetTimeoutType(), details)
+	if len(attributes.GetLastFailureReason()) > 0 && attributes.GetTimeoutType() == shared.TimeoutTypeStartToClose {
+		// When retry activity timeout, it is possible that previous attempts got other customer timeout errors.
+		// To stabilize the error type, we always return the customer error.
+		// See more details of background: https://github.com/uber/cadence/issues/2627
+		err = constructError(attributes.GetLastFailureReason(), attributes.LastFailureDetails, weh.GetDataConverter())
+	} else {
+		details := newEncodedValues(attributes.Details, weh.GetDataConverter())
+		err = NewTimeoutError(attributes.GetTimeoutType(), details)
+	}
 	activity.handle(nil, err)
 	return nil
 }

@@ -76,6 +76,12 @@ namespace Neon.Diagnostics
         SInfo = 600,
 
         /// <summary>
+        /// Indicates a transient error, typically logged by <see cref="Neon.Retry.IRetryPolicy"/>
+        /// implementations.
+        /// </summary>
+        Transient = 650,
+
+        /// <summary>
         /// Describes detailed debug or diagnostic information.
         /// </summary>
         Debug = 700

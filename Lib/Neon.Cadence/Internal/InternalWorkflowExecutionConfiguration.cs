@@ -58,8 +58,8 @@ namespace Neon.Cadence.Internal
         /// the parent workflow is terminated.
         /// </summary>
         [JsonProperty(PropertyName = "ChildPolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(InternaChildClosePolicy.ABANDON)]
-        public InternaChildClosePolicy ChildPolicy { get; set; } = InternaChildClosePolicy.ABANDON;
+        [DefaultValue(InternalParentClosePolicy.REQUEST_CANCEL)]
+        public InternalParentClosePolicy ChildPolicy { get; set; } = InternalParentClosePolicy.REQUEST_CANCEL;
 
         /// <summary>
         /// Coverts the instance to a public <see cref="WorkflowConfig"/>.

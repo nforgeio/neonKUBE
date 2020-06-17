@@ -39,7 +39,7 @@ namespace TestCommon
 {
     public partial class Test_JsonClient
     {
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task DeletetAsync()
         {
@@ -86,7 +86,7 @@ namespace TestCommon
             }
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task DeleteAsync_NotJson()
         {
@@ -129,7 +129,7 @@ namespace TestCommon
             }
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task DeleteAsync_Args()
         {
@@ -180,7 +180,7 @@ namespace TestCommon
             }
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task DeleteAsync_Headers()
         {
@@ -231,7 +231,7 @@ namespace TestCommon
             }
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task DeleteAsync_Dynamic()
         {
@@ -273,8 +273,8 @@ namespace TestCommon
                 }
             }
         }
- 
-        [Fact]
+
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task DeleteAsync_Dynamic_NotJson()
         {
@@ -317,7 +317,7 @@ namespace TestCommon
             }
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task DeleteAsync_Error()
         {
@@ -340,7 +340,7 @@ namespace TestCommon
             }
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task DeleteAsync_Retry()
         {
@@ -381,7 +381,7 @@ namespace TestCommon
             }
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task DeleteAsync_NoRetryNull()
         {
@@ -421,7 +421,7 @@ namespace TestCommon
             }
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task DeleteAsync_NoRetryExplicit()
         {

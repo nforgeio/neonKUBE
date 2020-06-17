@@ -92,6 +92,12 @@ type (
 		// The zero value of this uses the default value. Default: 100k
 		TaskListActivitiesPerSecond float64
 
+		// optional: Sets the maximum number of goroutines that will concurrently poll the
+		// cadence-server to retrieve activity tasks. Changing this value will affect the
+		// rate at which the worker is able to consume tasks from a task list.
+		// Default value is 2
+		MaxConcurrentActivityTaskPollers int
+
 		// Optional: To set the maximum concurrent decision task executions this worker can have.
 		// The zero value of this uses the default value.
 		// default: defaultMaxConcurrentTaskExecutionSize(1k)
@@ -101,6 +107,12 @@ type (
 		// worker. This can be used to limit resources used by the worker.
 		// The zero value of this uses the default value. Default: 100k
 		WorkerDecisionTasksPerSecond float64
+
+		// optional: Sets the maximum number of goroutines that will concurrently poll the
+		// cadence-server to retrieve decision tasks. Changing this value will affect the
+		// rate at which the worker is able to consume tasks from a task list.
+		// Default value is 2
+		MaxConcurrentDecisionTaskPollers int
 
 		// Optional: if the activities need auto heart beating for those activities
 		// by the framework
@@ -303,7 +315,7 @@ func ReplayWorkflowHistoryFromJSONFile(logger *zap.Logger, jsonfileName string) 
 	return ReplayPartialWorkflowHistoryFromJSONFile(logger, jsonfileName, 0)
 }
 
-// ReplayWorkflowHistoryFromJSONFile executes a single decision task for the given json history file upto provided
+// ReplayPartialWorkflowHistoryFromJSONFile executes a single decision task for the given json history file upto provided
 // lastEventID(inclusive).
 // Use for testing the backwards compatibility of code changes and troubleshooting workflows in a debugger.
 // The logger is an optional parameter. Defaults to the noop logger.
@@ -347,7 +359,7 @@ func replayWorkflowHistory(logger *zap.Logger, service workflowserviceclient.Int
 	}
 	workflowType := attr.WorkflowType
 	execution := &shared.WorkflowExecution{
-		RunId:      common.StringPtr(uuid.NewUUID().String()),
+		RunId:      common.StringPtr(uuid.NewRandom().String()),
 		WorkflowId: common.StringPtr("ReplayId"),
 	}
 	if first.WorkflowExecutionStartedEventAttributes.GetOriginalExecutionRunId() != "" {

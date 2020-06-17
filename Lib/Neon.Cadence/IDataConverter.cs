@@ -58,10 +58,18 @@ namespace Neon.Cadence
         object[] FromDataArray(byte[] content, params Type[] valueTypes);
 
         /// <summary>
-        /// Serializes a single value into a byte array.
+        /// Serializes a value into a byte array
         /// </summary>
         /// <param name="value">The value being serialized.</param>
         /// <returns>The serialized bytes.</returns>
         byte[] ToData(object value);
+
+        /// <summary>
+        /// Serializes an array of values into a byte array.  This is typically
+        /// used to serialize arguments passed to workflow and acrivity methods.
+        /// </summary>
+        /// <param name="values">The values being serialized (or <c>null</c>).</param>
+        /// <returns>The serialized bytes.</returns>
+        byte[] ToDataArray(object[] values);
     }
 }

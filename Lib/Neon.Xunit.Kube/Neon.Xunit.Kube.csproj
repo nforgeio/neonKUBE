@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Xunit.Kube</RootNamespace>
     <PackageId>Neon.Xunit.Kube</PackageId>
-    <Version>1.2.2-alpha</Version>
+    <Version>2.1.0-internal</Version>
     <Authors>Jeff Lill</Authors>
     <Product>neonKUBE</Product>
     <Description>neonKUBE Neon Xunit testing helpers.</Description>
@@ -21,7 +21,7 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Configurations>Debug;Release;CodeDoc</Configurations>
-    <PackageIconUrl>https://doc.neonkube.com/images/nuget-icon.png</PackageIconUrl>
+    <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageTags>xunit kubernetes</PackageTags>
   </PropertyGroup>
 
@@ -59,10 +59,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\LICENSE">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
+    <None Include="..\nuget-icon.png" Pack="true" PackagePath=""/>
+    <None Include="..\..\LICENSE" Pack="True" PackagePath=""/>
   </ItemGroup>
 
 </Project>

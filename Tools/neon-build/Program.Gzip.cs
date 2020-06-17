@@ -55,16 +55,26 @@ namespace NeonBuild
 
             Directory.CreateDirectory(Path.GetDirectoryName(targetPath));
 
-            if (File.Exists(targetPath) && File.GetLastWriteTimeUtc(targetPath) > File.GetLastWriteTimeUtc(sourcePath))
+            if (File.Exists(targetPath))
             {
-                Console.WriteLine($"File [{targetPath}] is up to date.");
-                Program.Exit(0);
+                if (File.GetLastWriteTimeUtc(targetPath) > File.GetLastWriteTimeUtc(sourcePath))
+                {
+                    Console.WriteLine($"File [{targetPath}] is up to date.");
+                    Program.Exit(0);
+                }
+                else
+                {
+                    // Delete the existing file so we can replace it.
+
+                    Console.WriteLine($"Deleting: [{targetPath}]");
+                    File.Delete(targetPath);
+                }
             }
 
             Console.WriteLine($"GZIP: [{sourcePath}] --> [{targetPath}].");
 
             var uncompressed = File.ReadAllBytes(sourcePath);
-            var compressed = NeonHelper.GzipBytes(uncompressed);
+            var compressed   = NeonHelper.GzipBytes(uncompressed);
 
             File.WriteAllBytes(targetPath, compressed);
         }

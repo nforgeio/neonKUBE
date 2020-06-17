@@ -40,7 +40,7 @@ namespace TestCommon
 {
     public partial class Test_JsonClient
     {
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task OptionsAsync()
         {
@@ -114,7 +114,7 @@ namespace TestCommon
             };
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task OptionsDynamicAsync()
         {
@@ -171,7 +171,7 @@ namespace TestCommon
             };
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task OptionsAsync_NotJson()
         {
@@ -229,7 +229,7 @@ namespace TestCommon
             };
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task OptionsAsync_Args()
         {
@@ -295,7 +295,7 @@ namespace TestCommon
             };
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task OptionsAsync_Headers()
         {
@@ -361,7 +361,7 @@ namespace TestCommon
             };
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task OptionsAsync_Dynamic()
         {
@@ -419,7 +419,7 @@ namespace TestCommon
             };
         }
  
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task OptionsAsync_Dynamic_NotJson()
         {
@@ -477,7 +477,7 @@ namespace TestCommon
             };
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task OptionsAsync_Error()
         {
@@ -507,7 +507,7 @@ namespace TestCommon
             };
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task OptionsAsync_Retry()
         {
@@ -563,7 +563,7 @@ namespace TestCommon
             };
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task OptionsAsync_NoRetryNull()
         {
@@ -610,7 +610,7 @@ namespace TestCommon
             };
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task OptionsAsync_NoRetryExplicit()
         {
@@ -657,7 +657,7 @@ namespace TestCommon
             };
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task Options_CustomPayloadAsync()
         {
@@ -703,7 +703,7 @@ namespace TestCommon
             };
         }
 
-        [Fact]
+        [PlatformFact(TargetPlatforms.Windows)]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task OptionsAsync_NullPayloadAsync()
         {

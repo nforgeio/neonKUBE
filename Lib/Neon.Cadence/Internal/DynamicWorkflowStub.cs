@@ -87,7 +87,7 @@ namespace Neon.Cadence.Internal
         /// <param name="client">The associated <see cref="CadenceClient"/>.</param>
         /// <param name="dataConverter">The data converter.</param>
         /// <param name="workflowTypeName">Specifies the workflow type name.</param>
-        /// <param name="options">Specifies the <see cref="WorkflowOptions"/>.</param>
+        /// <param name="options">Specifies the <see cref="WorkflowOptions"/> or <c>null</c>.</param>
         /// <param name="workflowInterface">Specifies the workflow interface definition.</param>
         /// <returns>The workflow stub as an <see cref="object"/>.</returns>
         public object Create(CadenceClient client, IDataConverter dataConverter, string workflowTypeName, WorkflowOptions options, System.Type workflowInterface)
@@ -95,8 +95,9 @@ namespace Neon.Cadence.Internal
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
             Covenant.Requires<ArgumentNullException>(dataConverter != null, nameof(dataConverter));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
-            Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
             Covenant.Requires<ArgumentNullException>(workflowInterface != null, nameof(workflowInterface));
+
+            options = options ?? new WorkflowOptions();
 
             return externalStartConstructor.Invoke(new object[] { client, dataConverter, workflowTypeName, options, workflowInterface });
         }
@@ -126,7 +127,7 @@ namespace Neon.Cadence.Internal
         /// <param name="dataConverter">The data converter.</param>
         /// <param name="parentWorkflow">The parent workflow.</param>
         /// <param name="workflowTypeName">Specifies the workflow type name.</param>
-        /// <param name="options">Specifies the child workflow options.</param>
+        /// <param name="options">Specifies the child workflow options or <c>null</c>.</param>
         /// <param name="workflowInterface">Specifies the workflow interface definition.</param>
         /// <returns>The workflow stub as an <see cref="object"/>.</returns>
         public object Create(CadenceClient client, IDataConverter dataConverter, Workflow parentWorkflow, string workflowTypeName, ChildWorkflowOptions options, System.Type workflowInterface)
@@ -135,8 +136,9 @@ namespace Neon.Cadence.Internal
             Covenant.Requires<ArgumentNullException>(dataConverter != null, nameof(dataConverter));
             Covenant.Requires<ArgumentNullException>(parentWorkflow != null, nameof(parentWorkflow));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
-            Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
             Covenant.Requires<ArgumentNullException>(workflowInterface != null, nameof(workflowInterface));
+
+            options = options ?? new ChildWorkflowOptions();
 
             return childConstructor.Invoke(new object[] { client, dataConverter, parentWorkflow, workflowTypeName, options, workflowInterface });
         }

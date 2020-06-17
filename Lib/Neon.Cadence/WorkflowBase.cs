@@ -151,7 +151,6 @@ namespace Neon.Cadence
         private static object                                           syncLock     = new object();
         private static INeonLogger                                      log          = LogManager.Default.GetLogger<WorkflowBase>();
         private static Dictionary<WorkflowInstanceKey, WorkflowBase>    idToWorkflow = new Dictionary<WorkflowInstanceKey, WorkflowBase>();
-        private static byte[]                                           emptyBytes   = new byte[0];
 
         // This dictionary is used to map workflow type names to the target workflow
         // registration.  Note that these mappings are scoped to specific cadence client
@@ -173,7 +172,7 @@ namespace Neon.Cadence
         private static Dictionary<string, WorkflowRegistration> nameToRegistration = new Dictionary<string, WorkflowRegistration>();
 
         /// <summary>
-        /// Holds ambient task state indicatring whether the current task executing
+        /// Holds ambient task state indicating whether the current task executing
         /// in the context of a workflow entry point, signal, or query.
         /// </summary>
         internal static AsyncLocal<WorkflowCallContext> CallContext { get; private set; } = new AsyncLocal<WorkflowCallContext>();
@@ -596,7 +595,7 @@ namespace Neon.Cadence
                     isReplaying:        request.ReplayStatus == InternalReplayStatus.Replaying,
                     methodMap:          registration.MethodMap);
 
-            Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information for workflow library code.
+            Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information.
 
             lock (syncLock)
             {
@@ -681,8 +680,8 @@ namespace Neon.Cadence
 
                 var workflowMethod   = registration.WorkflowMethod;
                 var resultType       = workflowMethod.ReturnType;
-                var args             = client.DataConverter.FromDataArray(request.Args, registration.WorkflowMethodParameterTypes);
-                var serializedResult = emptyBytes;
+                var args             = CadenceHelper.BytesToArgs(client.DataConverter, request.Args, registration.WorkflowMethodParameterTypes);
+                var serializedResult = Array.Empty<byte>();
 
                 if (resultType.IsGenericType)
                 {
@@ -724,10 +723,10 @@ namespace Neon.Cadence
                     ContinueAsNewWorkflow                     = e.Workflow,
                     ContinueAsNewDomain                       = e.Domain,
                     ContinueAsNewTaskList                     = e.TaskList,
-                    ContinueAsNewExecutionStartToCloseTimeout = CadenceHelper.ToCadence(e.ExecutionStartToCloseTimeout),
+                    ContinueAsNewExecutionStartToCloseTimeout = CadenceHelper.ToCadence(e.StartToCloseTimeout),
                     ContinueAsNewScheduleToCloseTimeout       = CadenceHelper.ToCadence(e.ScheduleToCloseTimeout),
                     ContinueAsNewScheduleToStartTimeout       = CadenceHelper.ToCadence(e.ScheduleToStartTimeout),
-                    ContinueAsNewStartToCloseTimeout          = CadenceHelper.ToCadence(e.TaskStartToCloseTimeout),
+                    ContinueAsNewStartToCloseTimeout          = CadenceHelper.ToCadence(e.DecisionTaskTimeout),
                 };
             }
             catch (CadenceException e)
@@ -783,7 +782,7 @@ namespace Neon.Cadence
             // between checks.
             //
             // I originally tried using [MutableSideEffectAsync()] for the polling and using
-            // [Task.DelayAsync()] for the poll delay, but that didn't work because it
+            // [Task.Delay()] for the poll delay, but that didn't work because it
             // appears that Cadence doesn't process queries when MutableSideEffectAsync() 
             // is running (perhaps this doesn't count as a real decision task).
             //
@@ -843,13 +842,13 @@ namespace Neon.Cadence
 
                 if (workflow != null)
                 {
-                    Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information for workflow library code.
+                    Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information.
 
                     var method = workflow.Workflow.MethodMap.GetSignalMethod(request.SignalName);
 
                     if (method != null)
                     {
-                        await (Task)(method.Invoke(workflow, client.DataConverter.FromDataArray(request.SignalArgs, method.GetParameterTypes())));
+                        await (Task)(method.Invoke(workflow, CadenceHelper.BytesToArgs(client.DataConverter, request.SignalArgs, method.GetParameterTypes())));
 
                         return new WorkflowSignalInvokeReply()
                         {
@@ -909,15 +908,15 @@ namespace Neon.Cadence
 
                 if (workflow != null)
                 {
-                    Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information for workflow library code.
+                    Workflow.Current = workflow.Workflow;   // Initialize the ambient workflow information.
 
                     // The signal arguments should be just a single [SyncSignalCall] that specifies
                     // the target signal and also includes its encoded arguments.
 
-                    var signalCallArgs = client.DataConverter.FromDataArray(request.SignalArgs, typeof(SyncSignalCall));
+                    var signalCallArgs = CadenceHelper.BytesToArgs(JsonDataConverter.Instance, request.SignalArgs, new Type[] { typeof(SyncSignalCall) });
                     var signalCall     = (SyncSignalCall)signalCallArgs[0];
                     var signalMethod   = workflow.Workflow.MethodMap.GetSignalMethod(signalCall.TargetSignal);
-                    var userSignalArgs = client.DataConverter.FromDataArray(signalCall.UserArgs, signalMethod.GetParameterTypes());
+                    var userSignalArgs = CadenceHelper.BytesToArgs(client.DataConverter, signalCall.UserArgs, signalMethod.GetParameterTypes());
 
                     Workflow.Current.SignalId = signalCall.SignalId;
 
@@ -1115,7 +1114,7 @@ namespace Neon.Cadence
                             // The arguments for this signal is the (string) ID of the target
                             // signal being polled for status.
 
-                            var syncSignalArgs   = client.DataConverter.FromDataArray(request.QueryArgs, typeof(string));
+                            var syncSignalArgs   = CadenceHelper.BytesToArgs(JsonDataConverter.Instance, request.QueryArgs, new Type[] { typeof(string) });
                             var syncSignalId     = (string) (syncSignalArgs.Length > 0 ? syncSignalArgs[0] : null);
                             var syncSignalStatus = (SyncSignalStatus)null;
 
@@ -1152,13 +1151,13 @@ namespace Neon.Cadence
                         var resultType           = method.ReturnType;
                         var methodParameterTypes = method.GetParameterTypes();
 
-                        var serializedResult = emptyBytes;
+                        var serializedResult = Array.Empty<byte>();
 
                         if (resultType.IsGenericType)
                         {
                             // Query method returns: Task<T>
 
-                            var result = await NeonHelper.GetTaskResultAsObjectAsync((Task)method.Invoke(workflow, client.DataConverter.FromDataArray(request.QueryArgs, methodParameterTypes)));
+                            var result = await NeonHelper.GetTaskResultAsObjectAsync((Task)method.Invoke(workflow, CadenceHelper.BytesToArgs(client.DataConverter, request.QueryArgs, methodParameterTypes)));
 
                             serializedResult = client.DataConverter.ToData(result);
                         }
@@ -1166,7 +1165,7 @@ namespace Neon.Cadence
                         {
                             // Query method returns: Task
 
-                            await (Task)method.Invoke(workflow, client.DataConverter.FromDataArray(request.QueryArgs, methodParameterTypes));
+                            await (Task)method.Invoke(workflow, CadenceHelper.BytesToArgs(client.DataConverter, request.QueryArgs, methodParameterTypes));
                         }
 
                         return new WorkflowQueryInvokeReply()
@@ -1238,7 +1237,7 @@ namespace Neon.Cadence
                     }
 
                     var workerArgs = new WorkerArgs() { Client = client, ContextId = request.ActivityContextId };
-                    var activity   = ActivityBase.Create(client, activityAction, null);
+                    var activity   = ActivityBase.CreateLocal(client, activityAction, request.ActivityContextId);
                     var result     = await activity.OnInvokeAsync(client, request.Args);
 
                     return new ActivityInvokeLocalReply()

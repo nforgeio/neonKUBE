@@ -1,5 +1,5 @@
 name: home-large
-datacenter: woodinville
+datacenter: sultan
 environment: development
 timeSources:
 - pool.ntp.org

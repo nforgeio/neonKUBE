@@ -18,11 +18,13 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Lib\Neon.Cadence\Neon.Cadence.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Couchbase\Neon.Couchbase.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Temporal\Neon.Temporal.csproj" />
     <ProjectReference Include="..\Test.Neon.Models.Definitions\Test.Neon.Models.Definitions.csproj" />
+    <ProjectReference Include="..\Test.Neon.Models.Temporal\Test.Neon.Models.Temporal.csproj" />
   </ItemGroup>
 
   <Target Name="ModelGen" BeforeTargets="BeforeCompile">
-    <Exec Command="&quot;%NF_ROOT%\Tools\neon-cli\bin\$(Configuration)\netcoreapp3.1\neon&quot; version --minimum=1.0.2" />
+    <Exec Command="&quot;%NF_ROOT%\Tools\neon-cli\bin\$(Configuration)\netcoreapp3.1\neon&quot; version --minimum=2.0.0" />
     <Exec Command="&quot;%NF_ROOT%\Tools\neon-cli\bin\$(Configuration)\netcoreapp3.1\neon&quot; generate models --target-namespace=Test.Neon.Models --persisted --debug-allow-stepinto &quot;$(SolutionDir)Test\Test.Neon.Models.Definitions\bin\$(Configuration)\netstandard2.0\Test.Neon.Models.Definitions.dll&quot; &quot;$(ProjectDir)GeneratedTypes.cs&quot;" />
     <Exec Command="&quot;%NF_ROOT%\Tools\neon-cli\bin\$(Configuration)\netcoreapp3.1\neon&quot; generate models --target-namespace=Test.Neon.UxModels --persisted --ux=xaml &quot;$(SolutionDir)Test\Test.Neon.Models.Definitions\bin\$(Configuration)\netstandard2.0\Test.Neon.Models.Definitions.dll&quot; &quot;$(ProjectDir)GeneratedUxTypes.cs&quot;" />
   </Target>

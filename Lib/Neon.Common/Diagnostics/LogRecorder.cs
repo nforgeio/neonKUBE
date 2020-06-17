@@ -88,6 +88,9 @@ namespace Neon.Diagnostics
         public bool IsLogDebugEnabled => log.IsLogDebugEnabled;
 
         /// <inheritdoc/>
+        public bool IsLogTransientEnabled => log.IsLogTransientEnabled;
+
+        /// <inheritdoc/>
         public bool IsLogSInfoEnabled => log.IsLogSInfoEnabled;
 
         /// <inheritdoc/>
@@ -116,6 +119,13 @@ namespace Neon.Diagnostics
         {
             log.LogDebug(message, activityId);
             capture.AppendLine($"[DEBUG] {message}");
+        }
+
+        /// <inheritdoc/>
+        public void LogTransient(object message, string activityId = null)
+        {
+            log.LogTransient(message, activityId);
+            capture.AppendLine($"[TRANSIENT] {message}");
         }
 
         /// <inheritdoc/>
@@ -165,6 +175,13 @@ namespace Neon.Diagnostics
         {
             log.LogDebug(message, e, activityId);
             capture.AppendLine($"[DEBUG] {message} {NeonHelper.ExceptionError(e)}");
+        }
+
+        /// <inheritdoc/>
+        public void LogTransient(object message, Exception e, string activityId = null)
+        {
+            log.LogTransient(message, e, activityId);
+            capture.AppendLine($"[TRANSIENT] {message} {NeonHelper.ExceptionError(e)}");
         }
 
         /// <inheritdoc/>

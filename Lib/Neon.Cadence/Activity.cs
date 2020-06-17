@@ -127,7 +127,7 @@ namespace Neon.Cadence
             var reply = (ActivityRecordHeartbeatReply)await Client.CallProxyAsync(
                 new ActivityRecordHeartbeatRequest()
                 {
-                    ContextId = parent.ContextId.Value,
+                    ContextId = parent.ContextId,
                     Details   = details
                 });
 
@@ -154,7 +154,7 @@ namespace Neon.Cadence
             var reply = (ActivityHasHeartbeatDetailsReply)await Client.CallProxyAsync(
                 new ActivityHasHeartbeatDetailsRequest()
                 {
-                    ContextId = parent.ContextId.Value
+                    ContextId = parent.ContextId
                 });
 
             reply.ThrowOnError();
@@ -182,7 +182,7 @@ namespace Neon.Cadence
             var reply = (ActivityGetHeartbeatDetailsReply)await Client.CallProxyAsync(
                 new ActivityGetHeartbeatDetailsRequest()
                 {
-                    ContextId = parent.ContextId.Value
+                    ContextId = parent.ContextId
                 });
 
             reply.ThrowOnError();

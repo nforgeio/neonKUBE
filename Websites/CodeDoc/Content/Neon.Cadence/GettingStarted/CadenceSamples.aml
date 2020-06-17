@@ -8,7 +8,7 @@
     <introduction>
       <para>
         This page describes our Cadence samples GitHub repository as well as the Xunit
-        <codeEntityReference qualifyHint="false">F:Neon.Xunit.Cadence.CadenceFixture</codeEntityReference>
+        <codeEntityReference qualifyHint="false">T:Neon.Xunit.Cadence.CadenceFixture</codeEntityReference>
         we use to run these samples and our unit tests against Cadence running as a local
         Docker container.
       </para>
@@ -40,7 +40,7 @@
           doesn't support this yet, but we'll be looking into adding this in the future.
           In the meantime, you can reference the <legacyBold>Neon.Xunit.Cadence</legacyBold> 
           nugate package in your unit test projects and use the
-          <codeEntityReference qualifyHint="false">F:Neon.Xunit.Cadence.CadenceFixture</codeEntityReference>
+          <codeEntityReference qualifyHint="false">T:Neon.Xunit.Cadence.CadenceFixture</codeEntityReference>
           to quickly spin up a 
           <externalLink>
             <linkText>nkubio/cadence-dev</linkText>
@@ -66,7 +66,7 @@
           </para>
         </alert>
         <para>
-          You'll find examples using <codeEntityReference qualifyHint="false">F:Neon.Xunit.Cadence.CadenceFixture</codeEntityReference>
+          You'll find examples using <codeEntityReference qualifyHint="false">T:Neon.Xunit.Cadence.CadenceFixture</codeEntityReference>
           in our samples reporistory:
           <externalLink>
             <linkText>nkubio/cadence-dev</linkText>

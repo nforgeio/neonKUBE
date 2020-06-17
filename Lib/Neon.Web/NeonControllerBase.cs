@@ -188,6 +188,11 @@ namespace Neon.Web
         public bool IsLogDebugEnabled => GetLogger().IsLogDebugEnabled;
 
         /// <summary>
+        /// Returns <c>true</c> if <b>transient</b> logging is enabled.
+        /// </summary>
+        public bool IsLogTransientEnabled => GetLogger().IsLogTransientEnabled;
+
+        /// <summary>
         /// Returns <c>true</c> if <b>sinfo</b> logging is enabled.
         /// </summary>
         public bool IsLogSInfoEnabled => GetLogger().IsLogSInfoEnabled;
@@ -257,6 +262,27 @@ namespace Neon.Web
         public void Debug(object message, Exception e, string activityId = null)
         {
             GetLogger().LogDebug(message, e, activityId ?? this.ActivityId);
+        }
+
+        /// <summary>
+        /// Logs a <b>transient</b> message along with exception information.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="e">The exception.</param>
+        /// <param name="activityId">Optional activity ID.</param>
+        public void Transient(object message, Exception e, string activityId = null)
+        {
+            GetLogger().LogTransient(message, e, activityId ?? this.ActivityId);
+        }
+
+        /// <summary>
+        /// Logs a <b>transient</b> message.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="activityId">Optional activity ID.</param>
+        public void Transient(object message, string activityId = null)
+        {
+            GetLogger().LogTransient(message, activityId ?? this.ActivityId);
         }
 
         /// <summary>
@@ -385,6 +411,16 @@ namespace Neon.Web
         }
 
         /// <summary>
+        /// Logs a <b>transient</b> message.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="activityId">The optional activity ID.</param>
+        public void LogTransient(object message, string activityId = null)
+        {
+            GetLogger().LogTransient(message, activityId);
+        }
+
+        /// <summary>
         /// Logs an <b>sinfo</b> message.
         /// </summary>
         /// <param name="message">The object that will be serialized into the message.</param>
@@ -453,6 +489,17 @@ namespace Neon.Web
         public void LogDebug(object message, Exception e, string activityId = null)
         {
             GetLogger().LogDebug(message, e, activityId);
+        }
+
+        /// <summary>
+        /// Logs a <b>transient</b> message along with exception information.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="e">The exception.</param>
+        /// <param name="activityId">The optional activity ID.</param>
+        public void LogTransient(object message, Exception e, string activityId = null)
+        {
+            GetLogger().LogTransient(message, e, activityId);
         }
 
         /// <summary>

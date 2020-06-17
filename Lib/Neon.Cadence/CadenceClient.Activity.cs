@@ -36,6 +36,36 @@ namespace Neon.Cadence
         // Cadence activity related operations.
 
         /// <summary>
+        /// Raised when a normal (non-local) is executed.  This is used internally
+        /// for unit tests that verify that activity options are configured correctly. 
+        /// </summary>
+        internal event EventHandler<ActivityOptions> ActivityExecuteEvent;
+
+        /// <summary>
+        /// Raised when a local is executed.  This is used internally for unit tests 
+        /// that verify that activity options are configured correctly. 
+        /// </summary>
+        internal event EventHandler<LocalActivityOptions> LocalActivityExecuteEvent;
+
+        /// <summary>
+        /// Raises the <see cref="ActivityExecuteEvent"/>.
+        /// </summary>
+        /// <param name="options">The activity options.</param>
+        internal void RaiseActivityExecuteEvent(ActivityOptions options)
+        {
+            ActivityExecuteEvent?.Invoke(this, options);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="LocalActivityExecuteEvent"/>.
+        /// </summary>
+        /// <param name="options">The activity options.</param>
+        internal void RaiseLocalActivityExecuteEvent(LocalActivityOptions options)
+        {
+            LocalActivityExecuteEvent?.Invoke(this, options);
+        }
+
+        /// <summary>
         /// Registers an activity implementation with Cadence.
         /// </summary>
         /// <typeparam name="TActivity">The <see cref="ActivityBase"/> derived class implementing the activity.</typeparam>
@@ -53,7 +83,9 @@ namespace Neon.Cadence
         /// </exception>
         /// <remarks>
         /// <note>
-        /// Be sure to register all of your activity implementations before starting workers.
+        /// Be sure to register all services you will be injecting into activities via
+        /// <see cref="NeonHelper.ServiceContainer"/> before you call this as well as 
+        /// registering of your activity implementations before starting workers.
         /// </note>
         /// </remarks>
         public async Task RegisterActivityAsync<TActivity>(string activityTypeName = null, string domain = null)
@@ -103,7 +135,9 @@ namespace Neon.Cadence
         /// </exception>
         /// <remarks>
         /// <note>
-        /// Be sure to register all of your activity implementations before starting workers.
+        /// Be sure to register all services you will be injecting into activities via
+        /// <see cref="NeonHelper.ServiceContainer"/> before you call this as well as 
+        /// registering of your activity implementations before starting workers.
         /// </note>
         /// </remarks>
         public async Task RegisterAssemblyActivitiesAsync(Assembly assembly, string domain = null)

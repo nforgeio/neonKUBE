@@ -60,10 +60,11 @@ namespace TestCadence
                 CreateDomain           = true,
                 Debug                  = CadenceTestHelper.Debug,
                 DebugPrelaunched       = CadenceTestHelper.DebugPrelaunched,
-                DebugDisableHeartbeats = CadenceTestHelper.DebugDisableHeartbeats
+                DebugDisableHeartbeats = CadenceTestHelper.DebugDisableHeartbeats,
+                ClientIdentity         = CadenceTestHelper.ClientIdentity
             };
 
-            if (fixture.Start(settings, keepConnection: true, keepOpen: CadenceTestHelper.KeepCadenceServerOpen) == TestFixtureStatus.Started)
+            if (fixture.Start(settings, image: CadenceTestHelper.CadenceImage, reconnect: true, keepRunning: CadenceTestHelper.KeepCadenceServerOpen) == TestFixtureStatus.Started)
             {
                 this.fixture     = fixture;
                 this.client      = fixture.Client;
@@ -91,7 +92,7 @@ namespace TestCadence
         [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface ISyncSignalString : IWorkflow
         {
-            [WorkflowMethod()]
+            [WorkflowMethod]
             Task RunAsync();
 
             [SignalMethod("signal")]
@@ -131,7 +132,7 @@ namespace TestCadence
         [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface ISyncSignalVoid : IWorkflow
         {
-            [WorkflowMethod()]
+            [WorkflowMethod]
             Task RunAsync();
 
             [SignalMethod("signal")]
@@ -170,7 +171,7 @@ namespace TestCadence
         [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IAsyncSignalString : IWorkflow
         {
-            [WorkflowMethod()]
+            [WorkflowMethod]
             Task RunAsync();
 
             [SignalMethod("signal", Synchronous = true)]
@@ -210,7 +211,7 @@ namespace TestCadence
         [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IAsyncSignalVoid : IWorkflow
         {
-            [WorkflowMethod()]
+            [WorkflowMethod]
             Task RunAsync();
 
             [SignalMethod("signal", Synchronous = true)]

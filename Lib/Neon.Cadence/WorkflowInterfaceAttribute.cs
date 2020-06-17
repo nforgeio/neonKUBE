@@ -35,22 +35,55 @@ namespace Neon.Cadence
     [AttributeUsage(AttributeTargets.Interface, AllowMultiple = false)]
     public class WorkflowInterfaceAttribute : Attribute
     {
+        private string      domain;
+        private string      taskList;
+
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="taskList">
-        /// Optionally specifies the Cadence task list identifying the workers
-        /// hosting this workflow.
-        /// </param>
-        public WorkflowInterfaceAttribute(string taskList = null)
+        public WorkflowInterfaceAttribute()
         {
-            this.TaskList = taskList;
+        }
+
+        /// <summary>
+        /// Optionally specifies the Cadence domain where the workflow is registered.
+        /// </summary>
+        public string Domain
+        {
+            get => domain;
+
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    domain = null;
+                }
+                else
+                {
+                    domain = value;
+                }
+            }
         }
 
         /// <summary>
         /// Optionally specifies the Cadence task list identifying the workers
         /// hosting this workflow.
         /// </summary>
-        public string TaskList { get; set; } = null;
+        public string TaskList
+        {
+            get => taskList;
+
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    taskList = null;
+                }
+                else
+                {
+                    taskList = value;
+                }
+            }
+        }
     }
 }

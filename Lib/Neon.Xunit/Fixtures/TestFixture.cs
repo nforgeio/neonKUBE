@@ -32,18 +32,18 @@ namespace Neon.Xunit
     /// <remarks>
     /// <note>
     /// <para>
-    /// <b>IMPORTANT:</b> The Neon <see cref="TestFixture"/> implementation <b>DOES NOT</b>
+    /// <b>IMPORTANT:</b> The base Neon <see cref="TestFixture"/> implementation <b>DOES NOT</b>
     /// support parallel test execution because fixtures may impact global machine state
-    /// like starting a Couchbase Docker container, modifying the local DNS <b>hosts</b>
-    /// file or managing a Docker Swarm or cluster.
+    /// like starting a Docker container, modifying the local DNS <b>hosts</b> file, configuring
+    /// environment variables or initializing a test database.
     /// </para>
     /// <para>
     /// You should explicitly disable parallel execution in all test assemblies that
-    /// rely on test fixtures by adding a C# file with:
+    /// rely on test fixtures by adding a C# file called <c>AssemblyInfo.cs</c> with:
+    /// </para>
     /// <code language="csharp">
     /// [assembly: CollectionBehavior(DisableTestParallelization = true, MaxParallelThreads = 1)]
     /// </code>
-    /// </para>
     /// </note>
     /// <para>
     /// Test fixtures that modify global machine or other environmental state must
@@ -88,7 +88,7 @@ namespace Neon.Xunit
                         // We see this for some assemblies like the test runner itself.
                         // We're going to ignore these.
 
-                        assemblyTypes = new Type[0];
+                        assemblyTypes = Array.Empty<Type>();
                     }
 
                     foreach (var type in assemblyTypes)
@@ -151,6 +151,7 @@ namespace Neon.Xunit
             this.IsDisposed = false;
             this.InAction   = false;
             this.IsRunning  = false;
+            this.State      = new Dictionary<string, object>();
         }
 
         /// <summary>
@@ -277,6 +278,7 @@ namespace Neon.Xunit
         /// <inheritdoc/>
         public virtual void Reset()
         {
+            State.Clear();
         }
 
         /// <summary>
@@ -293,5 +295,8 @@ namespace Neon.Xunit
         public virtual void OnRestart()
         {
         }
+
+        /// <inheritdoc/>
+        public IDictionary<string, object> State { get; private set; }
     }
 }

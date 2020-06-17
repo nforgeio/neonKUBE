@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,6 +22,7 @@ package compile
 
 import (
 	"fmt"
+	"math"
 
 	"go.uber.org/thriftrw/ast"
 )
@@ -102,6 +103,10 @@ type FieldSpec struct {
 
 // compileField compiles the given Field source into a FieldSpec.
 func compileField(src *ast.Field, options fieldOptions) (*FieldSpec, error) {
+	if src.ID < 1 || src.ID > math.MaxInt16 {
+		return nil, fieldIDOutOfBoundsError{ID: src.ID, Name: src.Name}
+	}
+
 	required, err := options.requiredness.isRequired(src)
 	if err != nil {
 		return nil, err
@@ -170,7 +175,7 @@ type FieldGroup []*FieldSpec
 
 // compileFields compiles a collection of AST fields into a FieldGroup.
 func compileFields(src []*ast.Field, options fieldOptions) (FieldGroup, error) {
-	fieldsNS := newNamespace(caseInsensitive)
+	fieldsNS := newNamespace(caseSensitive)
 	usedIDs := make(map[int16]string)
 
 	fields := make([]*FieldSpec, 0, len(src))

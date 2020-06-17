@@ -83,12 +83,12 @@ namespace Neon.Cadence.Internal
         public long TaskStartToCloseTimeout { get; set; } = 10 * CadenceHelper.NanosecondsPerSecond;
 
         /// <summary>
-        /// ChildPolicy defines the behavior of child workflow when parent workflow is terminated.
-        /// Optional: default to use ChildWorkflowPolicyAbandon. We currently only support this policy.
+        /// ChildClosePolicy defines the behavior of child workflow when parent workflow is terminated.
+        /// Optional: default to use ParentClosePolicy.RequestCancel. We currently only support this policy.
         /// </summary>
-        [JsonProperty(PropertyName = "ChildPolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue((int)Cadence.ParentClosePolicy.Abandon)]
-        public int ChildClosePolicy { get; set; } = (int)Cadence.ParentClosePolicy.Abandon;
+        [JsonProperty(PropertyName = "ChildClosePolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue((int)Cadence.ParentClosePolicy.RequestCancel)]
+        public int ChildClosePolicy { get; set; } = (int)Cadence.ParentClosePolicy.RequestCancel;
 
         /// <summary>
         /// WaitForCancellation - Whether to wait for cancelled child workflow to be ended (child workflow can be ended
@@ -102,11 +102,11 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// WorkflowIDReusePolicy - Whether server allow reuse of workflow ID, can be useful
         /// for dedup logic if set to WorkflowIdReusePolicyRejectDuplicate
-        /// Optional: defaulted to WorkflowIDReusePolicyAllowDuplicateFailedOnly.
+        /// Optional: defaulted to WorkflowIdReusePolicyAllowDuplicate.
         /// </summary>
         [JsonProperty(PropertyName = "WorkflowIdReusePolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly)]
-        public int WorkflowIdReusePolicy { get; set; } = (int)Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly;
+        [DefaultValue(Cadence.WorkflowIdReusePolicy.AllowDuplicate)]
+        public int WorkflowIdReusePolicy { get; set; } = (int)Cadence.WorkflowIdReusePolicy.AllowDuplicate;
 
         /// <summary>
         /// RetryPolicy - Optional retry policy for workflow. If a retry policy is specified, in case of workflow failure

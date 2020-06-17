@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -112,9 +112,16 @@ func (n *namespace) Rotate(base string) (string, error) {
 }
 
 func (n *namespace) Reserve(name string) error {
+	// A single Go file can have multiple init() functions so we don't need to
+	// reserve it.
+	if name == "init" {
+		return nil
+	}
+
 	if n.isTaken(name) {
 		return namespaceError{name}
 	}
+
 	n.taken[name] = struct{}{}
 	return nil
 }

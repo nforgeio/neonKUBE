@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Uber Technologies, Inc.
+// Copyright (c) 2019 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,11 @@
 
 package gen
 
-import "go.uber.org/thriftrw/compile"
+import (
+	"fmt"
+
+	"go.uber.org/thriftrw/compile"
+)
 
 // setGenerator generates logic to convert lists of arbitrary Thrift types to
 // and from ValueLists.
@@ -50,7 +54,7 @@ func (s *setGenerator) ValueList(g Generator, spec *compile.SetSpec) (string, er
 			<$f := newVar "f">
 			<$w := newVar "w">
 			func (<$v> <.Name>) ForEach(<$f> func(<$wire>.Value) error) error {
-				<- if isHashable .Spec.ValueSpec ->
+				<- if setUsesMap .Spec ->
 					for <$x> := range <$v> {
 				<- else ->
 					for _, <$x> := range <$v> {
@@ -108,7 +112,7 @@ func (s *setGenerator) Reader(g Generator, spec *compile.SetSpec) (string, error
 					return nil, nil
 				}
 
-				<if isHashable .Spec.ValueSpec>
+				<if setUsesMap .Spec>
 					<$o> := make(<$setType>, <$s>.Size())
 				<else>
 					<$o> := make(<$setType>, 0, <$s>.Size())
@@ -118,7 +122,7 @@ func (s *setGenerator) Reader(g Generator, spec *compile.SetSpec) (string, error
 					if err != nil {
 						return err
 					}
-					<if isHashable .Spec.ValueSpec>
+					<if setUsesMap .Spec>
 						<$o>[<$i>] = struct{}{}
 					<else>
 						<$o> = append(<$o>, <$i>)
@@ -164,7 +168,7 @@ func (s *setGenerator) Equals(g Generator, spec *compile.SetSpec) (string, error
 				<$x := newVar "x">
 				<$y := newVar "y">
 				<$ok := newVar "ok">
-				<if isHashable .Spec.ValueSpec>
+				<if setUsesMap .Spec>
 					for <$x> := range <$rhs> {
 						if _, <$ok> := <$lhs>[<$x>]; !<$ok> {
 							return false
@@ -196,4 +200,45 @@ func (s *setGenerator) Equals(g Generator, spec *compile.SetSpec) (string, error
 	)
 
 	return name, wrapGenerateError(spec.ThriftName(), err)
+}
+
+func (s *setGenerator) zapMarshaler(
+	g Generator,
+	root *compile.SetSpec,
+	fieldValue string,
+) (string, error) {
+	name := zapperName(g, root)
+	if err := g.EnsureDeclared(
+		`
+			<$zapcore := import "go.uber.org/zap/zapcore">
+
+			type <.Name> <typeReference .Type>
+			<$s := newVar "s">
+			<$v := newVar "v">
+			<$enc := newVar "enc">
+			// MarshalLogArray implements zapcore.ArrayMarshaler, enabling
+			// fast logging of <.Name>.
+			func (<$s> <.Name>) MarshalLogArray(<$enc> <$zapcore>.ArrayEncoder) (err error) {
+				<- if setUsesMap .Type ->
+					for <$v> := range <$s> {
+				<else ->
+					for _, <$v> := range <$s> {
+				<end ->
+					<zapEncodeBegin .Type.ValueSpec ->
+						<$enc>.Append<zapEncoder .Type.ValueSpec>(<zapMarshaler .Type.ValueSpec $v>)
+					<- zapEncodeEnd .Type.ValueSpec>
+				}
+				return err
+			}
+			`, struct {
+			Name string
+			Type *compile.SetSpec
+		}{
+			Name: name,
+			Type: root,
+		},
+	); err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("(%v)(%v)", name, fieldValue), nil
 }

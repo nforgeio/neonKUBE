@@ -307,7 +307,7 @@ namespace Renci.SshNet
                     throw new ArgumentException("EndExecute can only be called once for each asynchronous operation.");
                 }
 
-                //  wait for operation to complete (or time out)
+                //  wait for operation to complete (or timeout)
                 WaitOnHandle(_asyncResult.AsyncWaitHandle);
 
                 UnsubscribeFromEventsAndDisposeChannel(_channel);

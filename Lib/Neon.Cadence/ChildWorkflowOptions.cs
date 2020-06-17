@@ -42,20 +42,15 @@ namespace Neon.Cadence
         /// <param name="client">The associated Cadence client.</param>
         /// <param name="options">The input options or <c>null</c>.</param>
         /// <param name="workflowInterface">Optionally specifies the workflow interface definition.</param>
+        /// <param name="method">Optionally specifies the target workflow method.</param>
         /// <returns>The normalized options.</returns>
         /// <exception cref="ArgumentNullException">Thrown if a valid task list is not specified.</exception>
-        public static ChildWorkflowOptions Normalize(CadenceClient client, ChildWorkflowOptions options, Type workflowInterface = null)
+        public static ChildWorkflowOptions Normalize(CadenceClient client, ChildWorkflowOptions options, Type workflowInterface = null, MethodInfo method = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
 
-            WorkflowInterfaceAttribute interfaceAttribute = null;
-
-            if (workflowInterface != null)
-            {
-                CadenceHelper.ValidateWorkflowInterface(workflowInterface);
-
-                interfaceAttribute = workflowInterface.GetCustomAttribute<WorkflowInterfaceAttribute>();
-            }
+            WorkflowInterfaceAttribute  interfaceAttribute = null;
+            WorkflowMethodAttribute     methodAttribute    = null;
 
             if (options == null)
             {
@@ -66,26 +61,93 @@ namespace Neon.Cadence
                 options = options.Clone();
             }
 
-            if (!options.ScheduleToCloseTimeout.HasValue || options.ScheduleToCloseTimeout.Value <= TimeSpan.Zero)
+            if (workflowInterface != null)
             {
-                options.ScheduleToCloseTimeout = client.Settings.WorkflowScheduleToCloseTimeout;
+                CadenceHelper.ValidateWorkflowInterface(workflowInterface);
+
+                interfaceAttribute = workflowInterface.GetCustomAttribute<WorkflowInterfaceAttribute>();
             }
 
-            if (!options.ScheduleToStartTimeout.HasValue || options.ScheduleToStartTimeout.Value <= TimeSpan.Zero)
+            if (method != null)
             {
-                options.ScheduleToStartTimeout = client.Settings.WorkflowScheduleToStartTimeout;
+                methodAttribute = method.GetCustomAttribute<WorkflowMethodAttribute>();
             }
 
-            if (!options.TaskStartToCloseTimeout.HasValue || options.TaskStartToCloseTimeout.Value <= TimeSpan.Zero)
+            if (string.IsNullOrEmpty(options.Domain))
             {
-                options.TaskStartToCloseTimeout = client.Settings.WorkflowDecisionTimeout;
+                if (!string.IsNullOrEmpty(methodAttribute?.Domain))
+                {
+                    options.Domain = methodAttribute.Domain;
+                }
+
+                if (string.IsNullOrEmpty(options.Domain) && !string.IsNullOrEmpty(interfaceAttribute?.Domain))
+                {
+                    options.Domain = interfaceAttribute.Domain;
+                }
             }
 
             if (string.IsNullOrEmpty(options.TaskList))
             {
-                if (interfaceAttribute != null && !string.IsNullOrEmpty(interfaceAttribute.TaskList))
+                if (!string.IsNullOrEmpty(methodAttribute?.TaskList))
+                {
+                    options.TaskList = methodAttribute.TaskList;
+                }
+
+                if (string.IsNullOrEmpty(options.TaskList) && !string.IsNullOrEmpty(interfaceAttribute?.TaskList))
                 {
                     options.TaskList = interfaceAttribute.TaskList;
+                }
+            }
+
+            if (options.StartToCloseTimeout <= TimeSpan.Zero)
+            {
+                if (methodAttribute != null && methodAttribute.StartToCloseTimeoutSeconds > 0)
+                {
+                    options.StartToCloseTimeout = TimeSpan.FromSeconds(methodAttribute.StartToCloseTimeoutSeconds);
+                }
+
+                if (options.StartToCloseTimeout <= TimeSpan.Zero)
+                {
+                    options.StartToCloseTimeout = client.Settings.WorkflowStartToCloseTimeout;
+                }
+            }
+
+            if (options.ScheduleToStartTimeout <= TimeSpan.Zero)
+            {
+                if (methodAttribute != null && methodAttribute.ScheduleToStartTimeoutSeconds > 0)
+                {
+                    options.ScheduleToStartTimeout = TimeSpan.FromSeconds(methodAttribute.ScheduleToStartTimeoutSeconds);
+                }
+
+                if (options.ScheduleToStartTimeout <= TimeSpan.Zero)
+                {
+                    options.ScheduleToStartTimeout = client.Settings.WorkflowScheduleToStartTimeout;
+                }
+            }
+
+            if (options.DecisionTaskTimeout <= TimeSpan.Zero)
+            {
+                if (methodAttribute != null && methodAttribute.DecisionTaskTimeoutSeconds > 0)
+                {
+                    options.DecisionTaskTimeout = TimeSpan.FromSeconds(methodAttribute.DecisionTaskTimeoutSeconds);
+                }
+
+                if (options.DecisionTaskTimeout <= TimeSpan.Zero)
+                {
+                    options.DecisionTaskTimeout = client.Settings.WorkflowDecisionTaskTimeout;
+                }
+            }
+
+            if (options.WorkflowIdReusePolicy == Cadence.WorkflowIdReusePolicy.UseDefault)
+            {
+                if (methodAttribute != null && methodAttribute.WorkflowIdReusePolicy != WorkflowIdReusePolicy.UseDefault)
+                {
+                    options.WorkflowIdReusePolicy = methodAttribute.WorkflowIdReusePolicy;
+                }
+
+                if (options.WorkflowIdReusePolicy == Cadence.WorkflowIdReusePolicy.UseDefault)
+                {
+                    options.WorkflowIdReusePolicy = client.Settings.WorkflowIdReusePolicy;
                 }
             }
 
@@ -103,21 +165,12 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Specifies the task list where the child workflow will be scheduled.
+        /// Optionally specifies the target domain.  This defaults to the domain
+        /// specified by <see cref="WorkflowMethodAttribute.Domain"/>, 
+        /// <see cref="WorkflowInterfaceAttribute.Domain"/>, or 
+        /// to the client's default domain as specified by <see cref="CadenceSettings.DefaultDomain"/>
+        /// (in that order of precedence).
         /// </summary>
-        /// <remarks>
-        /// <para>
-        /// A task list must be specified when executing a workflow.  For workflows
-        /// started via a typed stub, this will default to the type list specified
-        /// by the <c>[WorkflowInterface(TaskList = "my-tasklist"]</c> tagging the
-        /// interface (if any).
-        /// </para>
-        /// <para>
-        /// For workflow stubs created from an interface without a specified task list
-        /// or workflows created via untyped or external stubs, this will need to
-        /// be explicitly set to a non-empty value.
-        /// </para>
-        /// </remarks>
         public string Domain { get; set; } = null;
 
         /// <summary>
@@ -127,34 +180,36 @@ namespace Neon.Cadence
         public string WorkflowId { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies the task list where the child workflow will be
-        /// scheduled.  This defaults to the parent's task list.
+        /// Optionally specifies the Cadence task list where the child workflow will be
+        /// scheduled.  This defaults to the domain specified by <see cref="WorkflowMethodAttribute.TaskList"/>
+        /// or <see cref="WorkflowInterfaceAttribute.TaskList"/>, or the parent workflow's
+        /// domain, in that order of precedence.
         /// </summary>
         public string TaskList { get; set; } = null;
 
         /// <summary>
         /// Specifies the maximum time the child workflow may execute from start
-        /// to finish.  This defaults to <see cref="CadenceSettings.WorkflowScheduleToCloseTimeoutSeconds"/>.
+        /// to finish.  This defaults to <see cref="CadenceSettings.WorkflowStartToCloseTimeoutSeconds"/>.
         /// </summary>
-        public TimeSpan? ScheduleToCloseTimeout { get; set; } = TimeSpan.Zero;
+        public TimeSpan StartToCloseTimeout { get; set; } = TimeSpan.Zero;
 
         /// <summary>
         /// Optionally specifies the default maximum time a workflow can wait between being scheduled
         /// and actually begin executing.  This defaults to <c>24 hours</c>.
         /// </summary>
-        public TimeSpan? ScheduleToStartTimeout { get; set; }
+        public TimeSpan ScheduleToStartTimeout { get; set; }
 
         /// <summary>
         /// Optionally specifies the decision task timeout for the child workflow.
-        /// This defaults to <see cref="CadenceSettings.WorkflowDecisionTimeout"/>.
+        /// This defaults to <see cref="CadenceSettings.WorkflowDecisionTaskTimeout"/>.
         /// </summary>
-        public TimeSpan? TaskStartToCloseTimeout { get; set; } = TimeSpan.FromSeconds(10);
+        public TimeSpan DecisionTaskTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
         /// <summary>
         /// Optionally specifies what happens to the child workflow when the parent is terminated.
-        /// This defaults to <see cref="ParentClosePolicy.Abandon"/>.
+        /// This defaults to <see cref="ParentClosePolicy.RequestCancel"/>.
         /// </summary>
-        public ParentClosePolicy ChildPolicy { get; set; } = ParentClosePolicy.Abandon;
+        public ParentClosePolicy ChildPolicy { get; set; } = ParentClosePolicy.RequestCancel;
 
         /// <summary>
         /// Optionally specifies whether to wait for the child workflow to finish for any
@@ -164,10 +219,10 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Optionally determines how Cadence handles workflows that attempt to reuse workflow IDs.
-        /// This generally defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicateFailedOnly"/>
+        /// This generally defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicate"/>
         /// but the default can be customized via the <see cref="WorkflowMethodAttribute"/> tagging
         /// the workflow entry point method or <see cref="CadenceSettings.WorkflowIdReusePolicy"/>
-        /// (which defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicateFailedOnly"/>.
+        /// (which also defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicate"/>.
         /// </summary>
         public WorkflowIdReusePolicy WorkflowIdReusePolicy { get; set; } = WorkflowIdReusePolicy.UseDefault;
 
@@ -246,15 +301,15 @@ namespace Neon.Cadence
             return new InternalChildWorkflowOptions()
             {
                 Domain                       = this.Domain,
-                ChildClosePolicy                  = (int)this.ChildPolicy,
+                ChildClosePolicy             = (int)this.ChildPolicy,
                 CronSchedule                 = this.CronSchedule,
-                ExecutionStartToCloseTimeout = CadenceHelper.ToCadence(this.ScheduleToCloseTimeout.Value),
+                ExecutionStartToCloseTimeout = CadenceHelper.ToCadence(this.StartToCloseTimeout),
                 RetryPolicy                  = this.RetryOptions?.ToInternal(),
                 TaskList                     = this.TaskList ?? string.Empty,
-                TaskStartToCloseTimeout      = CadenceHelper.ToCadence(this.TaskStartToCloseTimeout.Value),
+                TaskStartToCloseTimeout      = CadenceHelper.ToCadence(this.DecisionTaskTimeout),
                 WaitForCancellation          = this.WaitUntilFinished,
                 WorkflowID                   = this.WorkflowId,
-                WorkflowIdReusePolicy        = (int)(this.WorkflowIdReusePolicy == WorkflowIdReusePolicy.UseDefault ? Cadence.WorkflowIdReusePolicy.AllowDuplicateFailedOnly : this.WorkflowIdReusePolicy)
+                WorkflowIdReusePolicy        = (int)(this.WorkflowIdReusePolicy == WorkflowIdReusePolicy.UseDefault ? Cadence.WorkflowIdReusePolicy.AllowDuplicate : this.WorkflowIdReusePolicy)
             };
         }
 
@@ -266,17 +321,17 @@ namespace Neon.Cadence
         {
             return new ChildWorkflowOptions()
             {
-                Domain                       = this.Domain,
-                CronSchedule                 = this.CronSchedule,
-                ChildPolicy                  = this.ChildPolicy,
-                ScheduleToCloseTimeout       = this.ScheduleToCloseTimeout,
-                RetryOptions                 = this.RetryOptions,
-                ScheduleToStartTimeout       = this.ScheduleToStartTimeout,
-                TaskList                     = this.TaskList,
-                TaskStartToCloseTimeout      = this.TaskStartToCloseTimeout,
-                WaitUntilFinished            = this.WaitUntilFinished,
-                WorkflowId                   = this.WorkflowId,
-                WorkflowIdReusePolicy        = this.WorkflowIdReusePolicy
+                Domain                 = this.Domain,
+                CronSchedule           = this.CronSchedule,
+                ChildPolicy            = this.ChildPolicy,
+                StartToCloseTimeout    = this.StartToCloseTimeout,
+                RetryOptions           = this.RetryOptions,
+                ScheduleToStartTimeout = this.ScheduleToStartTimeout,
+                TaskList               = this.TaskList,
+                DecisionTaskTimeout    = this.DecisionTaskTimeout,
+                WaitUntilFinished      = this.WaitUntilFinished,
+                WorkflowId             = this.WorkflowId,
+                WorkflowIdReusePolicy  = this.WorkflowIdReusePolicy
             };
         }
 
@@ -289,15 +344,15 @@ namespace Neon.Cadence
         {
             return new WorkflowOptions()
             {
-                Domain                  = this.Domain,
-                Memo                    = null,
-                RetryOptions            = this.RetryOptions,
-                ScheduleToCloseTimeout  = this.ScheduleToCloseTimeout,
-                ScheduleToStartTimeout  = this.ScheduleToStartTimeout,
-                TaskList                = this.TaskList,
-                TaskStartToCloseTimeout = this.TaskStartToCloseTimeout,
-                WorkflowId              = this.WorkflowId,
-                WorkflowIdReusePolicy   = this.WorkflowIdReusePolicy
+                Domain                 = this.Domain,
+                Memo                   = null,
+                RetryOptions           = this.RetryOptions,
+                StartToCloseTimeout    = this.StartToCloseTimeout,
+                ScheduleToStartTimeout = this.ScheduleToStartTimeout,
+                TaskList               = this.TaskList,
+                DecisionTaskTimeout    = this.DecisionTaskTimeout,
+                WorkflowId             = this.WorkflowId,
+                WorkflowIdReusePolicy  = this.WorkflowIdReusePolicy
             };
         }
     }

@@ -40,7 +40,7 @@ namespace TestXunit
         {
             this.fixture = fixture;
 
-            fixture.Start("my-container", $"{KubeConst.NeonBranchRegistry}/test:latest");
+            fixture.Start("neon-unit-test-container", $"{KubeConst.NeonBranchRegistry}/test:latest");
         }
 
         [Fact]
@@ -49,10 +49,10 @@ namespace TestXunit
         {
             // All we need to do is verify that the container is running.
 
-            var result = NeonHelper.ExecuteCapture("docker", "ps");
+            var result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, "ps");
 
             Assert.Equal(0, result.ExitCode);
-            Assert.Contains("my-container", result.AllText);
+            Assert.Contains("neon-unit-test-container", result.AllText);
         }
     }
 }

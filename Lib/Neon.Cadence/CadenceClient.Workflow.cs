@@ -192,18 +192,23 @@ namespace Neon.Cadence
         /// </para>
         /// <note>
         /// <para>
-        /// .NET and Java workflows can implement multiple workflow method using attributes
+        /// .NET and Java workflows can implement multiple workflow methods using attributes
         /// and annotations to assign unique names to each.  Each workflow method is actually
         /// registered with Cadence as a distinct workflow type.  Workflow methods with a blank
         /// or <c>null</c> name will simply be registered using the workflow type name.
         /// </para>
         /// <para>
-        /// Workflow methods with a name will be registered using a combination  of the workflow
+        /// Workflow methods with a name will be registered using a combination of the workflow
         /// type name and the method name, using <b>"::"</b> as the separator, like:
         /// </para>
         /// <code>
         /// WORKFLOW-TYPENAME::METHOD-NAME
         /// </code>
+        /// <para>
+        /// GOLANG doesn't support the concept of workflow methods.  GOLANG workflows 
+        /// are just given a simple name which you'll pass here as <paramref name="workflowTypeName"/>
+        /// to make cross platform calls.
+        /// </para>
         /// </note>
         /// </remarks>
         public WorkflowStub NewUntypedWorkflowStub(string workflowTypeName, WorkflowOptions options)
@@ -211,6 +216,18 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
             EnsureNotDisposed();
+
+            options = WorkflowOptions.Normalize(this, options);
+
+            if (string.IsNullOrEmpty(options.TaskList))
+            {
+                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.TaskList)}] must be specified when the client doesn't set [{nameof(CadenceSettings)}.{nameof(CadenceSettings.DefaultTaskList)}].");
+            }
+
+            if (string.IsNullOrEmpty(options.Domain))
+            {
+                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.Domain)}] must be specified when the client doesn't set [{nameof(CadenceSettings)}.{nameof(CadenceSettings.DefaultDomain)}].");
+            }
 
             return new WorkflowStub(this)
             {
@@ -224,6 +241,11 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="workflowId">The workflow ID.</param>
         /// <param name="runId">Optionally specifies the workflow run ID.</param>
+        /// <param name="domain">
+        /// Optionally specifies the domain where the target workflow is running.
+        /// This will be required when default domain for the client isn't specified
+        /// or when the the target execution is running in a different domain.
+        /// </param>
         /// <returns>The <see cref="WorkflowStub"/>.</returns>
         /// <remarks>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
@@ -231,14 +253,22 @@ namespace Neon.Cadence
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
-        public WorkflowStub NewUntypedWorkflowStub(string workflowId, string runId = null)
+        public WorkflowStub NewUntypedWorkflowStub(string workflowId, string runId = null, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
             EnsureNotDisposed();
 
+            domain = ResolveDomain(domain);
+
+            if (string.IsNullOrEmpty(domain))
+            {
+                throw new ArgumentException($"The [{nameof(domain)} parameter must be specified when the client doesn't set [{nameof(CadenceSettings)}.{nameof(CadenceSettings.DefaultDomain)}].");
+            }
+
             return new WorkflowStub(this)
             {
-                Execution = new WorkflowExecution(workflowId, runId)
+                Execution = new WorkflowExecution(workflowId, runId),
+                Options   = new WorkflowOptions() { Domain = domain }
             };
         }
 
@@ -246,6 +276,11 @@ namespace Neon.Cadence
         /// Creates an untyped stub for a known workflow execution.
         /// </summary>
         /// <param name="execution">The workflow execution.</param>
+        /// <param name="domain">
+        /// Optionally specifies the domain where the target workflow is running.
+        /// This will be required when default domain for the client isn't specified
+        /// or when the the target execution is running in a different domain.
+        /// </param>
         /// <returns>The <see cref="WorkflowStub"/>.</returns>
         /// <remarks>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
@@ -253,14 +288,27 @@ namespace Neon.Cadence
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
-        public WorkflowStub NewUntypedWorkflowStub(WorkflowExecution execution)
+        public WorkflowStub NewUntypedWorkflowStub(WorkflowExecution execution, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
 
+            domain = ResolveDomain(domain);
+
+            if (string.IsNullOrEmpty(domain))
+            {
+                throw new ArgumentException($"The [{nameof(domain)} parameter must be specified when the client doesn't set [{nameof(CadenceSettings)}.{nameof(CadenceSettings.DefaultDomain)}].");
+            }
+
+            var options = new WorkflowOptions()
+            {
+                Domain = domain
+            };
+
             return new WorkflowStub(this)
             {
-                Execution = execution
+                Execution = execution,
+                Options   = options
             };
         }
 
@@ -295,7 +343,11 @@ namespace Neon.Cadence
         /// <typeparam name="TWorkflowInterface">Identifies the workflow interface.</typeparam>
         /// <param name="workflowId">Specifies the workflow ID.</param>
         /// <param name="runId">Optionally specifies the workflow's run ID.</param>
-        /// <param name="domain">Optionally specifies a domain that </param>
+        /// <param name="domain">
+        /// Optionally specifies the domain where the target workflow is running.
+        /// This will be required when default domain for the client isn't specified
+        /// or when the the target execution is running in a different domain.
+        /// </param>
         /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflowInterface"/>.</returns>
         /// <remarks>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
@@ -310,6 +362,13 @@ namespace Neon.Cadence
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             EnsureNotDisposed();
 
+            domain = ResolveDomain(domain);
+
+            if (string.IsNullOrEmpty(domain))
+            {
+                throw new ArgumentException($"The [{nameof(domain)} parameter must be specified when the client doesn't set [{nameof(CadenceSettings)}.{nameof(CadenceSettings.DefaultDomain)}].");
+            }
+
             return StubManager.NewWorkflowStub<TWorkflowInterface>(this, workflowId, runId, domain);
         }
 
@@ -320,6 +379,11 @@ namespace Neon.Cadence
         /// </summary>
         /// <typeparam name="TWorkflowInterface">Identifies the workflow interface.</typeparam>
         /// <param name="execution">Specifies the <see cref="WorkflowExecution"/>.</param>
+        /// <param name="domain">
+        /// Optionally specifies the domain where the target workflow is running.
+        /// This will be required when default domain for the client isn't specified
+        /// or when the the target execution is running in a different domain.
+        /// </param>
         /// <returns>The dynamically generated stub that implements the workflow methods defined by <typeparamref name="TWorkflowInterface"/>.</returns>
         /// <remarks>
         /// Unlike activity stubs, a workflow stub may only be used to launch a single
@@ -327,7 +391,7 @@ namespace Neon.Cadence
         /// invoke and then the first method called on a workflow stub must be
         /// the one of the methods tagged by <see cref="WorkflowMethodAttribute"/>.
         /// </remarks>
-        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(WorkflowExecution execution)
+        public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(WorkflowExecution execution, string domain = null)
             where TWorkflowInterface : class
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
@@ -336,7 +400,14 @@ namespace Neon.Cadence
             CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflowInterface));
             EnsureNotDisposed();
 
-            return StubManager.NewWorkflowStub<TWorkflowInterface>(this, execution.WorkflowId, execution.RunId);
+            domain = ResolveDomain(domain);
+
+            if (string.IsNullOrEmpty(domain))
+            {
+                throw new ArgumentException($"The [{nameof(domain)} parameter must be specified when the client doesn't set [{nameof(CadenceSettings)}.{nameof(CadenceSettings.DefaultDomain)}].");
+            }
+
+            return StubManager.NewWorkflowStub<TWorkflowInterface>(this, execution.WorkflowId, execution.RunId, domain);
         }
 
         /// <summary>
@@ -354,24 +425,41 @@ namespace Neon.Cadence
         /// </para>
         /// <note>
         /// <para>
-        /// .NET and Java workflows can implement multiple workflow method using attributes
+        /// .NET and Java workflows can implement multiple workflow methods using attributes
         /// and annotations to assign unique names to each.  Each workflow method is actually
         /// registered with Cadence as a distinct workflow type.  Workflow methods with a blank
         /// or <c>null</c> name will simply be registered using the workflow type name.
         /// </para>
         /// <para>
-        /// Workflow methods with a name will be registered using a combination  of the workflow
+        /// Workflow methods with a name will be registered using a combination of the workflow
         /// type name and the method name, using <b>"::"</b> as the separator, like:
         /// </para>
         /// <code>
         /// WORKFLOW-TYPENAME::METHOD-NAME
         /// </code>
+        /// <para>
+        /// GOLANG doesn't support the concept of workflow methods.  GOLANG workflows 
+        /// are just given a simple name which you'll pass here as <paramref name="workflowTypeName"/>
+        /// to make cross platform calls.
+        /// </para>
         /// </note>
         /// </remarks>
         public WorkflowStub NewWorkflowStub(string workflowTypeName, WorkflowOptions options = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             EnsureNotDisposed();
+
+            options = WorkflowOptions.Normalize(this, options);
+
+            if (string.IsNullOrEmpty(options.TaskList))
+            {
+                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.TaskList)}] must be specified when the client doesn't set [{nameof(CadenceSettings)}.{nameof(CadenceSettings.DefaultTaskList)}].");
+            }
+
+            if (string.IsNullOrEmpty(options.Domain))
+            {
+                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.Domain)}] must be specified when the client doesn't set [{nameof(CadenceSettings)}.{nameof(CadenceSettings.DefaultDomain)}].");
+            }
 
             return new WorkflowStub(this)
             {
@@ -401,18 +489,23 @@ namespace Neon.Cadence
         /// </para>
         /// <note>
         /// <para>
-        /// .NET and Java workflows can implement multiple workflow method using attributes
+        /// .NET and Java workflows can implement multiple workflow methods using attributes
         /// and annotations to assign unique names to each.  Each workflow method is actually
         /// registered with Cadence as a distinct workflow type.  Workflow methods with a blank
         /// or <c>null</c> name will simply be registered using the workflow type name.
         /// </para>
         /// <para>
-        /// Workflow methods with a name will be registered using a combination  of the workflow
+        /// Workflow methods with a name will be registered using a combination of the workflow
         /// type name and the method name, using <b>"::"</b> as the separator, like:
         /// </para>
         /// <code>
         /// WORKFLOW-TYPENAME::METHOD-NAME
         /// </code>
+        /// <para>
+        /// GOLANG doesn't support the concept of workflow methods.  GOLANG workflows 
+        /// are just given a simple name which you'll pass here as <paramref name="workflowTypeName"/>
+        /// to make cross platform calls.
+        /// </para>
         /// </note>
         /// </remarks>
         public TWorkflowInterface NewWorkflowStub<TWorkflowInterface>(WorkflowOptions options = null, string workflowTypeName = null)
@@ -466,7 +559,10 @@ namespace Neon.Cadence
         /// <exception cref="SyncSignalException">Thrown if the workflow is closed or the signal could not be executed for another reason.</exception>
         /// <exception cref="CadenceTimeoutException">Thrown when the workflow did not start running within a reasonable period of time.</exception>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task WaitUntilWorkflowRunningAsync(WorkflowExecution execution, string domain = null, TimeSpan? maxWait = null)
+        /// <remarks>
+        /// This method can be handy when writing non-emulated unit tests.
+        /// </remarks>
+        public async Task WaitForWorkflowStartAsync(WorkflowExecution execution, string domain = null, TimeSpan? maxWait = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null);
 
@@ -498,7 +594,7 @@ namespace Neon.Cadence
                     }
                     else if (description.Status.IsClosed)
                     {
-                        throw new SyncSignalException($"{typeof(SyncSignalException).FullName}:Wait for workflow [workflowID={execution.WorkflowId}, runID={execution.RunId}] is closed.");
+                        throw new SyncSignalException($"{typeof(SyncSignalException).FullName}: Wait for workflow [workflowID={execution.WorkflowId}, runID={execution.RunId}] failed because the worflow is closed.");
                     }
                     else
                     {
@@ -516,6 +612,36 @@ namespace Neon.Cadence
 
         //---------------------------------------------------------------------
         // Internal workflow related methods used by dynamically generated workflow stubs.
+
+        /// <summary>
+        /// Raised when an external workflow is executed.  This is used internally
+        /// for unit tests that verify that workflow options are configured correctly. 
+        /// </summary>
+        internal event EventHandler<WorkflowOptions> WorkflowExecuteEvent;
+
+        /// <summary>
+        /// Raised when a child workflow is executed.  This is used internally
+        /// for unit tests that verify that workflow options are configured correctly. 
+        /// </summary>
+        internal event EventHandler<ChildWorkflowOptions> ChildWorkflowExecuteEvent;
+
+        /// <summary>
+        /// Raises the <see cref="WorkflowExecuteEvent"/>.
+        /// </summary>
+        /// <param name="options">The workflow options.</param>
+        internal void RaiseWorkflowExecuteEvent(WorkflowOptions options)
+        {
+            WorkflowExecuteEvent?.Invoke(this, options);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ChildWorkflowExecuteEvent"/>.
+        /// </summary>
+        /// <param name="options">The workflow options.</param>
+        internal void RaiseChildWorkflowExecuteEvent(ChildWorkflowOptions options)
+        {
+            ChildWorkflowExecuteEvent?.Invoke(this, options);
+        }
 
         /// <summary>
         /// Starts an external workflow using a specific workflow type name, returning a <see cref="WorkflowExecution"/>
@@ -543,6 +669,8 @@ namespace Neon.Cadence
             EnsureNotDisposed();
 
             options = WorkflowOptions.Normalize(this, options);
+
+            RaiseWorkflowExecuteEvent(options);
 
             var reply = (WorkflowExecuteReply)await CallProxyAsync(
                 new WorkflowExecuteRequest()
@@ -575,12 +703,19 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
 
+            domain = ResolveDomain(domain);
+
+            if (string.IsNullOrEmpty(domain))
+            {
+                throw new ArgumentNullException($"The [{nameof(domain)}] parameter must be specified when the client doesn't set [{nameof(CadenceSettings)}.{nameof(CadenceSettings.DefaultDomain)}].");
+            }
+
             var reply = (WorkflowGetResultReply)await CallProxyAsync(
                 new WorkflowGetResultRequest()
                 {
                     WorkflowId = execution.WorkflowId,
                     RunId      = execution.RunId,
-                    Domain     = ResolveDomain(domain)
+                    Domain     = domain
                 });
 
             reply.ThrowOnError();
@@ -614,29 +749,9 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             EnsureNotDisposed();
 
-            if (options == null)
-            {
-                options = new ChildWorkflowOptions();
-            }
-            else
-            {
-                options = options.Clone();
-            }
-
-            if (!options.ScheduleToCloseTimeout.HasValue)
-            {
-                options.ScheduleToCloseTimeout = Settings.WorkflowScheduleToCloseTimeout;
-            }
-
-            if (!options.ScheduleToStartTimeout.HasValue)
-            {
-                options.ScheduleToStartTimeout = Settings.WorkflowScheduleToStartTimeout;
-            }
-
-            if (!options.TaskStartToCloseTimeout.HasValue)
-            {
-                options.TaskStartToCloseTimeout = Settings.WorkflowDecisionTimeout;
-            }
+            options = ChildWorkflowOptions.Normalize(this, options);
+            
+            RaiseChildWorkflowExecuteEvent(options);
 
             var reply = await parentWorkflow.ExecuteNonParallel(
                 async () =>
@@ -648,7 +763,7 @@ namespace Neon.Cadence
                             Workflow               = workflowTypeName,
                             Args                   = args,
                             Options                = options.ToInternal(),
-                            ScheduleToStartTimeout = options.ScheduleToStartTimeout ?? Settings.WorkflowScheduleToStartTimeout
+                            ScheduleToStartTimeout = options.ScheduleToStartTimeout > TimeSpan.Zero ? options.ScheduleToStartTimeout : Settings.WorkflowScheduleToStartTimeout
                         });
                 });
 
@@ -700,7 +815,7 @@ namespace Neon.Cadence
         /// <exception cref="EntityNotExistsException">Thrown if the workflow no longer exists.</exception>
         /// <exception cref="BadRequestException">Thrown if the request is invalid.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
-        internal async Task<WorkflowDescription> DescribeWorkflowAsync(WorkflowExecution execution, string domain = null)
+        internal async Task<WorkflowDescription> DescribeWorkflowExecutionAsync(WorkflowExecution execution, string domain = null)
         {
             Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
             EnsureNotDisposed();
@@ -922,8 +1037,8 @@ namespace Neon.Cadence
         /// <param name="execution">The <see cref="WorkflowExecution"/>.</param>
         /// <param name="signalName">The target signal name.</param>
         /// <param name="signalId">The globally unique signal transaction ID.</param>
-        /// <param name="signalArgs">Specifies the signal arguments as a byte array.</param>
-        /// <param name="domain">Optionally specifies the domain.  This defaults to the client domain.</param>
+        /// <param name="signalArgs">Specifies the <see cref="SyncSignalCall"/> as a single item array and encoded as a byte array.</param>
+        /// <param name="domain">Optionally specifies the domain.</param>
         /// <returns>The encoded signal results or <c>null</c> for signals that don't return a result.</returns>
         /// <exception cref="SyncSignalException">Thrown if the target synchronous signal doesn't exist or the workflow is already closed.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
@@ -951,7 +1066,7 @@ namespace Neon.Cadence
 
             // Detect whether the workflow is already closed or wait for it to start running.
 
-            await WaitUntilWorkflowRunningAsync(execution);
+            await WaitForWorkflowStartAsync(execution);
 
             // Send the signal.
 
@@ -959,7 +1074,7 @@ namespace Neon.Cadence
 
             // Poll for the result via queries.
 
-            byte[]              queryArgs = DataConverter.ToData(new object[] { signalId });
+            byte[]              queryArgs = CadenceHelper.ArgsToBytes(DataConverter, new object[] { signalId });
             byte[]              rawStatus = null;
             SyncSignalStatus    status    = null;
 
@@ -975,7 +1090,7 @@ namespace Neon.Cadence
                         //      https://github.com/nforgeio/neonKUBE/issues/751
 
                         rawStatus = await QueryWorkflowAsync(execution, QuerySyncSignal, queryArgs, domain);
-                        status    = DataConverter.FromData<SyncSignalStatus>(rawStatus);
+                        status    = JsonDataConverter.Instance.FromData<SyncSignalStatus>(rawStatus);
 
                         if (!status.Completed)
                         {
@@ -1015,7 +1130,7 @@ namespace Neon.Cadence
         /// <param name="childExecution">The child workflow execution.</param>
         /// <param name="signalName">The target signal name.</param>
         /// <param name="signalId">The globally unique signal transaction ID.</param>
-        /// <param name="signalArgs">Specifies the signal arguments as an encoded byte array.</param>
+        /// <param name="signalArgs">Specifies the <see cref="SyncSignalCall"/> as a single item array and encoded as a byte array.</param>
         /// <returns>The encoded signal results or <c>null</c> for signals that don't return a result.</returns>
         /// <exception cref="SyncSignalException">Thrown if the target synchronous signal doesn't exist or the workflow is already closed.</exception>
         /// <exception cref="InternalServiceException">Thrown for internal Cadence problems.</exception>
@@ -1044,7 +1159,7 @@ namespace Neon.Cadence
 
             // Detect whether the workflow is already closed or wait for it to start running.
 
-            await WaitUntilWorkflowRunningAsync(childExecution.Execution);
+            await WaitForWorkflowStartAsync(childExecution.Execution);
 
             // Send the signal.
 
@@ -1052,7 +1167,7 @@ namespace Neon.Cadence
 
             // Poll for the result via queries.
 
-            byte[]              queryArgs = DataConverter.ToData(new object[] { signalId });
+            byte[]              queryArgs = CadenceHelper.ArgsToBytes(DataConverter, new object[] { signalId });
             byte[]              rawStatus = null;
             SyncSignalStatus    status    = null;
 
@@ -1068,7 +1183,7 @@ namespace Neon.Cadence
                         //      https://github.com/nforgeio/neonKUBE/issues/751
 
                         rawStatus = await QueryWorkflowAsync(childExecution.Execution, QuerySyncSignal, queryArgs);
-                        status    = DataConverter.FromData<SyncSignalStatus>(rawStatus);
+                        status    = JsonDataConverter.Instance.FromData<SyncSignalStatus>(rawStatus);
 
                         if (!status.Completed)
                         {

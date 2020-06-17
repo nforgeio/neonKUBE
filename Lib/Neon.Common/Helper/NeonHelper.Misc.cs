@@ -120,22 +120,30 @@ namespace Neon.Common
         /// <param name="e">The exception.</param>
         /// <param name="stackTrace">Optionally include the stack track.</param>
         /// <param name="excludeInner">Optionally exclude information about any inner exception.</param>
+        /// <param name="depth"><b>INTERNAL USE ONLY:</b> Used to prevent infinite recursion when inner exceptions cycle.</param>
         /// <returns>The error string.</returns>
-        public static string ExceptionError(Exception e, bool stackTrace = false, bool excludeInner = false)
+        public static string ExceptionError(Exception e, bool stackTrace = false, bool excludeInner = false, int depth = 0)
         {
             Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
 
             var aggregate = e as AggregateException;
 
-            if (aggregate != null)
+            // Loopie encountered a strange situation where the inner exceptions apparently 
+            // form a cycle which can result in a stack overflow if we keep drilling down.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/737
+            //
+            // We're going to handle this by limiting the recursion depth to 8.
+
+            if (aggregate != null && depth < 4)
             {
                 if (aggregate.InnerException != null)
                 {
-                    return ExceptionError(aggregate.InnerException, stackTrace, excludeInner);
+                    return ExceptionError(aggregate.InnerException, stackTrace, excludeInner, depth++);
                 }
                 else if (aggregate.InnerExceptions.Count > 0)
                 {
-                    return ExceptionError(aggregate.InnerExceptions[0], stackTrace, excludeInner);
+                    return ExceptionError(aggregate.InnerExceptions[0], stackTrace, excludeInner, depth++);
                 }
             }
 
@@ -1195,7 +1203,7 @@ namespace Neon.Common
 
             int len = input.Length;
             if (len < 1)
-                return new byte[0];
+                return Array.Empty<byte>();
 
             ///////////////////////////////////////////////////////////////////
             // Step 1: Calculate the number of padding chars to append to this string.
@@ -1834,6 +1842,61 @@ namespace Neon.Common
             }
 
             return converters;
+        }
+
+        private static string dockerCli        = null;
+        private static string dockerComposeCli = null;
+
+        /// <summary>
+        /// Returns the name of the Docker CLI execuable for the current platform.  This will
+        /// be <b>docker.exe</b> on Windows and just <b>docker</b> on Linux and OS/x.
+        /// </summary>
+        public static string DockerCli
+        {
+            get
+            {
+                if (dockerCli != null)
+                {
+                    return dockerCli;
+                }
+
+                if (IsWindows)
+                {
+                    dockerCli = "docker.exe";
+                }
+                else
+                {
+                    dockerCli = "docker";
+                }
+
+                return dockerCli;
+            }
+        }
+
+        /// <summary>
+        /// Returns the name of the Docker Compose CLI execuable for the current platform.  This will
+        /// be <b>docker-compose.exe</b> on Windows and just <b>docker-compose</b> on Linux and OS/x.
+        /// </summary>
+        public static string DockerComposeCli
+        {
+            get
+            {
+                if (dockerComposeCli != null)
+                {
+                    return dockerComposeCli;
+                }
+
+                if (IsWindows)
+                {
+                    dockerComposeCli = "docker-compose.exe";
+                }
+                else
+                {
+                    dockerComposeCli = "docker-compose";
+                }
+
+                return dockerComposeCli;
+            }
         }
     }
 }

@@ -51,7 +51,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// The workflow type name.  This defaults to the fully qualified name
-        /// of the implemented workflow interface (without any leading "T").
+        /// of the implemented workflow interface (without any leading "I").
         /// </summary>
         public string Name { get; set; } = null;
 

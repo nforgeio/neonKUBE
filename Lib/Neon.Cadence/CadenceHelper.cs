@@ -21,15 +21,20 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime;
 using System.Runtime.Loader;
+using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
+using Neon.Data;
 using Neon.Diagnostics;
+
+using Newtonsoft.Json.Linq;
 
 namespace Neon.Cadence.Internal
 {
@@ -140,7 +145,7 @@ namespace Neon.Cadence.Internal
         {
             Covenant.Requires<ArgumentNullException>(type != null);
 
-            return TypeNameToSource(type.FullName);
+            return TypeNameToSource(TypeToCSharp(type));
         }
 
         /// <summary>
@@ -240,7 +245,7 @@ namespace Neon.Cadence.Internal
                 // We're going to strip the leading "I" from the unqualified
                 // type name (unless that's the only character).
 
-                fullName = fullName.Substring(0, fullName.Length - name.Length);
+                fullName  = fullName.Substring(0, fullName.Length - name.Length);
                 fullName += name.Substring(1);
             }
 
@@ -299,16 +304,26 @@ namespace Neon.Cadence.Internal
                     continue;
                 }
 
+                if (method.IsGenericMethod)
+                {
+                    throw new WorkflowTypeException($"Workflow entrypoint method [{workflowInterface.FullName}.{method.Name}()] is generic.  Generic methods are not supported by Cadence.");
+                }
+
                 if (!(CadenceHelper.IsTask(method.ReturnType) || CadenceHelper.IsTaskT(method.ReturnType)))
                 {
-                    throw new WorkflowTypeException($"Workflow workflow method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
+                    throw new WorkflowTypeException($"Workflow entrypoint method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
                 }
 
                 var name = workflowMethodAttribute.Name ?? string.Empty;
 
+                if (name == string.Empty && workflowMethodAttribute.IsFullName)
+                {
+                    throw new WorkflowTypeException($"Workflow entrypoint method [{workflowInterface.FullName}.{method.Name}()] specifies [WorkflowMethod(Name = \"\", IsFullName=true)].  Fully qualified names cannot be NULL or blank.");
+                }
+
                 if (workflowNames.Contains(name))
                 {
-                    throw new WorkflowTypeException($"Multiple workflow methods are tagged by [WorkflowMethod(Name = \"{name}\")].");
+                    throw new WorkflowTypeException($"Multiple workflow entrypoint [{workflowInterface.FullName}] methods are tagged by [WorkflowMethod(Name = \"{name}\")].");
                 }
 
                 workflowNames.Add(name);
@@ -316,7 +331,7 @@ namespace Neon.Cadence.Internal
 
             if (workflowNames.Count == 0)
             {
-                throw new ActivityTypeException($"Workflow interface [{workflowInterface.FullName}] does not define any methods tagged with [WorkflowMethod].");
+                throw new ActivityTypeException($"Workflow [{workflowInterface.FullName}] does not define any methods tagged with [WorkflowMethod].");
             }
 
             // Validate the signal method names and return types.
@@ -332,11 +347,16 @@ namespace Neon.Cadence.Internal
                     continue;
                 }
 
+                if (method.IsGenericMethod)
+                {
+                    throw new WorkflowTypeException($"Workflow signal method [{workflowInterface.FullName}.{method.Name}()] is generic.  Generic methods are not supported by Cadence.");
+                }
+
                 if (signalMethodAttribute.Synchronous)
                 {
                     if (!CadenceHelper.IsTask(method.ReturnType) && !CadenceHelper.IsTaskT(method.ReturnType))
                     {
-                        throw new WorkflowTypeException($"Synchronous workflow signal method [{workflowInterface.FullName}.{method.Name}()] must return a [Task] or [Task<T>].");
+                        throw new WorkflowTypeException($"Synchronous signal method [{workflowInterface.FullName}.{method.Name}()] must return a [Task] or [Task<T>].");
                     }
                 }
                 else
@@ -348,7 +368,7 @@ namespace Neon.Cadence.Internal
 
                     if (CadenceHelper.IsTaskT(method.ReturnType))
                     {
-                        throw new WorkflowTypeException($"Fire-and-forget workflow signal method [{workflowInterface.FullName}.{method.Name}()] cannot return a result via a [Task<T>].  Use [SignalMethod(Synchronous = true)] to enable this.");
+                        throw new WorkflowTypeException($"Fire-and-forget signal method [{workflowInterface.FullName}.{method.Name}()] cannot return a result via a [Task<T>].  Use [SignalMethod(Synchronous = true)] to enable this.");
                     }
                 }
 
@@ -356,7 +376,7 @@ namespace Neon.Cadence.Internal
 
                 if (signalNames.Contains(name))
                 {
-                    throw new WorkflowTypeException($"Multiple signal methods are tagged by [SignalMethod(name:\"{name}\")].");
+                    throw new WorkflowTypeException($"Multiple [{workflowInterface.FullName}] signal methods are tagged by [SignalMethod(name:\"{name}\")].");
                 }
 
                 signalNames.Add(name);
@@ -375,6 +395,11 @@ namespace Neon.Cadence.Internal
                     continue;
                 }
 
+                if (method.IsGenericMethod)
+                {
+                    throw new WorkflowTypeException($"Workflow query method [{workflowInterface.FullName}.{method.Name}()] is generic.  Generic methods are not supported by Cadence.");
+                }
+
                 if (!(CadenceHelper.IsTask(method.ReturnType) || CadenceHelper.IsTaskT(method.ReturnType)))
                 {
                     throw new WorkflowTypeException($"Workflow query method [{workflowInterface.FullName}.{method.Name}()] must return a Task.");
@@ -384,7 +409,7 @@ namespace Neon.Cadence.Internal
 
                 if (queryNames.Contains(name))
                 {
-                    throw new WorkflowTypeException($"Multiple query methods are tagged by [QueryMethod(name:\"{name}\")].");
+                    throw new WorkflowTypeException($"Multiple [{workflowInterface.FullName}] query methods are tagged by [QueryMethod(name:\"{name}\")].");
                 }
 
                 queryNames.Add(name);
@@ -556,6 +581,11 @@ namespace Neon.Cadence.Internal
 
                 var name = activityMethodAttribute.Name ?? string.Empty;
 
+                if (name == string.Empty && activityMethodAttribute.IsFullName)
+                {
+                    throw new WorkflowTypeException($"Activity method [{activityInterface.FullName}.{method.Name}()] specifies [ActivityMethod(Name = \"\", IsFullName=true)].  Fully qualified names cannot be NULL or blank.");
+                }
+
                 if (activityNames.Contains(name))
                 {
                     throw new ActivityTypeException($"Multiple [{activityInterface.FullName}] activity methods are tagged by [ActivityMethod(Name = \"{name}\")].");
@@ -688,6 +718,64 @@ namespace Neon.Cadence.Internal
             }
 
             throw new ArgumentException($"Workflow implementation class [{activityType.FullName}] does not implement a workflow interface.", nameof(activityType));
+        }
+
+        /// <summary>
+        /// Searches a workflow interface for a method with a <see cref="WorkflowMethodAttribute"/> 
+        /// with a matching name.
+        /// </summary>
+        /// <param name="workflowInterface">The workflow interface.</param>
+        /// <param name="methodName">The method name to be matched.</param>
+        /// <returns>The method information or <c>null</c> when there's no matching method.</returns>
+        internal static MethodInfo GetWorkflowMethod(Type workflowInterface, string methodName)
+        {
+            Covenant.Requires<ArgumentNullException>(workflowInterface != null, nameof(workflowInterface));
+
+            if (string.IsNullOrEmpty(methodName))
+            {
+                return null;
+            }
+
+            foreach (var method in workflowInterface.GetMethods())
+            {
+                var methodAttribute = method.GetCustomAttribute<WorkflowMethodAttribute>();
+
+                if (methodAttribute?.Name == methodName)
+                {
+                    return method;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Searches an activity interface for a method with a <see cref="ActivityMethodAttribute"/> 
+        /// with a matching name.
+        /// </summary>
+        /// <param name="activityInterface">The activity interface.</param>
+        /// <param name="methodName">The method name to be matched.</param>
+        /// <returns>The method information or <c>null</c> when there's no matching method.</returns>
+        internal static MethodInfo GetActivityMethod(Type activityInterface, string methodName)
+        {
+            Covenant.Requires<ArgumentNullException>(activityInterface != null, nameof(activityInterface));
+
+            if (string.IsNullOrEmpty(methodName))
+            {
+                return null;
+            }
+
+            foreach (var method in activityInterface.GetMethods())
+            {
+                var methodAttribute = method.GetCustomAttribute<ActivityMethodAttribute>();
+
+                if (methodAttribute?.Name == methodName)
+                {
+                    return method;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -1036,7 +1124,11 @@ namespace Neon.Cadence.Internal
 
             var activityTypeName = CadenceHelper.GetActivityTypeName(activityInterface, activityAttribute);
 
-            if (!string.IsNullOrEmpty(methodAttribute.Name))
+            if (methodAttribute.IsFullName)
+            {
+                activityTypeName = methodAttribute.Name;
+            }
+            else if (!string.IsNullOrEmpty(methodAttribute.Name))
             {
                 activityTypeName += $"::{methodAttribute.Name}";
             }
@@ -1113,7 +1205,11 @@ namespace Neon.Cadence.Internal
 
             var workflowTypeName = CadenceHelper.GetWorkflowTypeName(workflowInterface, workflowAttribute);
 
-            if (!string.IsNullOrEmpty(methodAttribute.Name))
+            if (methodAttribute.IsFullName)
+            {
+                workflowTypeName = methodAttribute.Name;
+            }
+            else if (!string.IsNullOrEmpty(methodAttribute.Name))
             {
                 workflowTypeName += $"::{methodAttribute.Name}";
             }
@@ -1185,20 +1281,20 @@ namespace Neon.Cadence.Internal
 
         /// <summary>
         /// <b>INTERNAL USE ONLY:</b> Appends a line of text to the debug log which is
-        /// used internally to debug generated code like stubs.  This works only for
-        /// DEBUG builds and hardcodes its output to <b>C:\Temp\cadence-debug.log</b>
-        /// so this only works on Windows.
+        /// used internally to debug generated code like stubs.  This hardcodes its
+        /// output to <b>C:\Temp\cadence-debug.log</b> so this currently only works
+        /// on Windows.
         /// </summary>
-        /// <param name="line">The line of text to be written.</param>
-        public static void DebugLog(string line)
+        /// <param name="text">The line of text to be written.</param>
+        public static void DebugLog(string text)
         {
             const string logPath = @"C:\Temp\cadence-debug.log";
 
-            var timestamp = DateTime.Now.ToString(NeonHelper.DateFormatTZ);
-
-            if (!string.IsNullOrEmpty(line) && !line.StartsWith("----"))
+            if (!string.IsNullOrEmpty(text) && !text.StartsWith("----"))
             {
-                line = timestamp + ": " + line;
+                var timestamp = DateTime.Now.ToString(NeonHelper.DateFormatTZ);
+
+                text = $"{timestamp}: {text}";
             }
 
             lock (syncLock)
@@ -1207,16 +1303,54 @@ namespace Neon.Cadence.Internal
                 {
                     Directory.CreateDirectory(Path.GetDirectoryName(logPath));
 
-                    if (line == null)
+                    if (text == null)
                     {
                         File.AppendAllText(logPath, "\r\n");
                     }
                     else
                     {
-                        File.AppendAllText(logPath, line + "\r\n");
+                        File.AppendAllText(logPath, text + "\r\n");
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Serializes an array of argument objects to bytes using
+        /// Cadence argument serialization conventions and the specified <see cref="IDataConverter"/>.
+        /// </summary>
+        /// <param name="converter">The data converter.</param>
+        /// <param name="args">The arguments.</param>
+        /// <returns>The serialized bytes or <c>null</c> when there are no arguments.</returns>
+        public static byte[] ArgsToBytes(IDataConverter converter, IEnumerable<object> args)
+        {
+            Covenant.Requires<ArgumentNullException>(converter != null, nameof(converter));
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+
+            return converter.ToDataArray(args.ToArray());
+        }
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Deserializes encoded bytes (or <c>null</c>) into an array of 
+        /// arguments using Cadence argument conventions and the specified <see cref="IDataConverter"/>.
+        /// </summary>
+        /// <param name="converter">The data converter.</param>
+        /// <param name="bytes">The serialized bytes or <c>null</c> when there are no arguments.</param>
+        /// <param name="argTypes">The expected argument types.</param>
+        /// <returns>The deserialized arguments as an array.</returns>
+        public static object[] BytesToArgs(IDataConverter converter, byte[] bytes, Type[] argTypes)
+        {
+            Covenant.Requires<ArgumentNullException>(converter != null, nameof(converter));
+            Covenant.Requires<ArgumentNullException>(argTypes != null, nameof(argTypes));
+
+            if (argTypes.Length == 0)
+            {
+                return Array.Empty<object>();
+            }
+
+            Covenant.Requires<ArgumentNullException>(bytes != null, nameof(bytes));
+
+            return converter.FromDataArray(bytes, argTypes);
         }
     }
 }

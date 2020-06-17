@@ -78,7 +78,7 @@ namespace TestCadence
                 message.SetJsonProperty(PropertyNames.TestPerson, new Person() { Name = "Jack", Age = 10 });
 
                 message.Attachments.Add(new byte[] { 0, 1, 2, 3, 4 });
-                message.Attachments.Add(new byte[0]);
+                message.Attachments.Add(Array.Empty<byte>());
                 message.Attachments.Add(null);
 
                 stream.SetLength(0);

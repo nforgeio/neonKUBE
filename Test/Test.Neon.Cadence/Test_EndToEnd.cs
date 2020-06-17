@@ -26,6 +26,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using Neon.Cadence;
 using Neon.Cadence.Internal;
 using Neon.Common;
@@ -52,6 +54,8 @@ namespace TestCadence
 
         public Test_EndToEnd(CadenceFixture fixture)
         {
+            // Initialize the Cadence fixture.
+
             var settings = new CadenceSettings()
             {
                 DefaultDomain          = CadenceFixture.DefaultDomain,
@@ -59,14 +63,23 @@ namespace TestCadence
                 CreateDomain           = true,
                 Debug                  = CadenceTestHelper.Debug,
                 DebugPrelaunched       = CadenceTestHelper.DebugPrelaunched,
-                DebugDisableHeartbeats = CadenceTestHelper.DebugDisableHeartbeats
+                DebugDisableHeartbeats = CadenceTestHelper.DebugDisableHeartbeats,
+                ClientIdentity         = CadenceTestHelper.ClientIdentity
             };
 
-            if (fixture.Start(settings, keepConnection: true, keepOpen: CadenceTestHelper.KeepCadenceServerOpen) == TestFixtureStatus.Started)
+            if (fixture.Start(settings, image: CadenceTestHelper.CadenceImage, reconnect: true, keepRunning: CadenceTestHelper.KeepCadenceServerOpen) == TestFixtureStatus.Started)
             {
                 this.fixture     = fixture;
                 this.client      = fixture.Client;
                 this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
+
+                // Setup a service for activity dependency injection testing if it doesn't
+                // already exist.
+
+                if (NeonHelper.ServiceContainer.GetService<ActivityDependency>() == null)
+                {
+                    NeonHelper.ServiceContainer.AddSingleton(typeof(ActivityDependency), new ActivityDependency() { Hello = "World!" });
+                }
 
                 // Auto register the test workflow and activity implementations.
 

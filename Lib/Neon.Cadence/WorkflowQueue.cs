@@ -308,7 +308,7 @@ namespace Neon.Cadence
                 throw new WorkflowQueueClosedException();
             }
 
-            return client.DataConverter.FromData<T>(reply.Data);
+            return JsonDataConverter.Instance.FromData<T>(reply.Data);
         }
 
         /// <summary>

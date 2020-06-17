@@ -81,7 +81,7 @@ type (
 	dispatcher interface {
 		// ExecuteUntilAllBlocked executes coroutines one by one in deterministic order
 		// until all of them are completed or blocked on Channel or Selector
-		ExecuteUntilAllBlocked() (err *workflowPanicError)
+		ExecuteUntilAllBlocked() (err error)
 		// IsDone returns true when all of coroutines are completed
 		IsDone() bool
 		Close()             // Destroys all coroutines without waiting for their completion
@@ -172,7 +172,6 @@ type (
 		taskStartToCloseTimeoutSeconds      *int32
 		domain                              *string
 		workflowID                          string
-		childPolicy                         ChildWorkflowPolicy
 		waitForCancellation                 bool
 		signalChannels                      map[string]Channel
 		queryHandlers                       map[string]func([]byte) ([]byte, error)
@@ -183,6 +182,7 @@ type (
 		contextPropagators                  []ContextPropagator
 		memo                                map[string]interface{}
 		searchAttributes                    map[string]interface{}
+		parentClosePolicy                   ParentClosePolicy
 	}
 
 	executeWorkflowParams struct {
@@ -849,7 +849,7 @@ func (d *dispatcherImpl) newState(name string) *coroutineState {
 	return c
 }
 
-func (d *dispatcherImpl) ExecuteUntilAllBlocked() (err *workflowPanicError) {
+func (d *dispatcherImpl) ExecuteUntilAllBlocked() (err error) {
 	d.mutex.Lock()
 	if d.closed {
 		panic("dispatcher is closed")
@@ -1250,21 +1250,6 @@ func (d *decodeFutureImpl) Get(ctx Context, value interface{}) error {
 	return d.futureImpl.err
 }
 
-func (p ChildWorkflowPolicy) toThriftChildPolicyPtr() *shared.ChildPolicy {
-	var childPolicy shared.ChildPolicy
-	switch p {
-	case ChildWorkflowPolicyTerminate:
-		childPolicy = shared.ChildPolicyTerminate
-	case ChildWorkflowPolicyRequestCancel:
-		childPolicy = shared.ChildPolicyRequestCancel
-	case ChildWorkflowPolicyAbandon:
-		childPolicy = shared.ChildPolicyAbandon
-	default:
-		panic(fmt.Sprintf("unknown child policy %v", p))
-	}
-	return &childPolicy
-}
-
 // newDecodeFuture creates a new future as well as associated Settable that is used to set its value.
 // fn - the decoded value needs to be validated against a function.
 func newDecodeFuture(ctx Context, fn interface{}) (Future, Settable) {
@@ -1327,7 +1312,7 @@ func (h *queryHandler) execute(input []byte) (result []byte, err error) {
 	}()
 
 	fnType := reflect.TypeOf(h.fn)
-	args := []reflect.Value{}
+	var args []reflect.Value
 
 	if fnType.NumIn() == 1 && isTypeByteSlice(fnType.In(0)) {
 		args = append(args, reflect.ValueOf(input))

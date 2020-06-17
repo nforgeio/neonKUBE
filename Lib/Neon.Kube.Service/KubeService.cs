@@ -29,6 +29,7 @@ using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
+using Neon.Retry;
 using Neon.Service;
 
 namespace Neon.Kube.Service
@@ -48,11 +49,11 @@ namespace Neon.Kube.Service
     /// This class is pretty easy to use.  Simply derive your service class from <see cref="KubeService"/>
     /// and implement the <see cref="OnRunAsync"/> method.  <see cref="OnRunAsync"/> will be called when 
     /// your service is started.  This is where you'll implement your service.  You should perform any
-    /// initialization and then call <see cref="SetRunning"/> to indicate that the service is ready for
+    /// initialization and then call <see cref="SetRunningAsync"/> to indicate that the service is ready for
     /// business.
     /// </para>
     /// <note>
-    /// Note that calling <see cref="SetRunning()"/> after your service has initialized is very important
+    /// Note that calling <see cref="SetRunningAsync()"/> after your service has initialized is very important
     /// because the <b>KubeServiceFixture</b> requires won't allow tests to proceed until the service
     /// indicates that it's ready.  This is necessary to avoid unit test race conditions.
     /// </note>
@@ -211,6 +212,20 @@ namespace Neon.Kube.Service
     /// Setting the global default log level like this will impact loggers created for all
     /// emulated services, but this shouldn't be a problem for more situations.
     /// </note>
+    /// <para><b>HEALTH PROBES</b></para>
+    /// <para>
+    /// Hosting environments such as Kubernetes will often require service instances
+    /// to be able to report their health via health probes.  These probes are typically
+    /// implemented as a script that is called periodically by the hosting environment
+    /// with the script return code indicating the service instance health.
+    /// </para>
+    /// <para>
+    /// The <see cref="Neon.Kube.Service.KubeService"/> class supports this by optionally
+    /// writing a text file with various strings indicating the health status.  This file
+    /// will consist of a single line of text <b>without line ending characters</b>.  You'll
+    /// need to specify the fully qualified path to this file as an optional parameter to the 
+    /// <see cref="KubeService"/> constructor.
+    /// </para>
     /// </remarks>
     public abstract class KubeService : IDisposable
     {
@@ -270,6 +285,7 @@ namespace Neon.Kube.Service
         private bool                            stopPending;
         private Dictionary<string, string>      environmentVariables;
         private Dictionary<string, FileInfo>    configFiles;
+        private string                          statusFilePath;
 
         /// <summary>
         /// Constructor.
@@ -279,6 +295,10 @@ namespace Neon.Kube.Service
         /// <param name="branch">Optionally specifies the build branch.</param>
         /// <param name="commit">Optionally specifies the branch commit.</param>
         /// <param name="isDirty">Optionally specifies whether there are uncommit changes to the branch.</param>
+        /// <param name="statusFilePath">
+        /// Optionally specifies the path where the service will update its status (for external health probes).
+        /// See the class documentation for more information <see cref="Neon.Kube.Service"/>.
+        /// </param>
         /// <exception cref="KeyNotFoundException">
         /// Thrown if there is no service description for <paramref name="name"/>
         /// within the <see cref="ServiceMap"/>.
@@ -299,9 +319,10 @@ namespace Neon.Kube.Service
         public KubeService(
             ServiceMap  serviceMap, 
             string      name, 
-            string      branch  = null, 
-            string      commit  = null, 
-            bool        isDirty = false)
+            string      branch         = null, 
+            string      commit         = null, 
+            bool        isDirty        = false,
+            string      statusFilePath = null)
         {
             Covenant.Requires<ArgumentNullException>(serviceMap != null, nameof(serviceMap));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
@@ -311,12 +332,18 @@ namespace Neon.Kube.Service
                 throw new KeyNotFoundException($"The service map does not include a service definition for [{name}].");
             }
 
+            if (string.IsNullOrEmpty(statusFilePath))
+            {
+                statusFilePath = null;
+            }
+
             this.ServiceMap           = serviceMap;
             this.Description          = description;
             this.InProduction         = !NeonHelper.IsDevWorkstation;
             this.Terminator           = new ProcessTerminator();
             this.environmentVariables = new Dictionary<string, string>();
             this.configFiles          = new Dictionary<string, FileInfo>();
+            this.statusFilePath       = statusFilePath;
 
             // Git version info:
 
@@ -486,6 +513,36 @@ namespace Neon.Kube.Service
         public KubeServiceStatus Status { get; private set; }
 
         /// <summary>
+        /// Updates the service status.  This is typically called internally by this
+        /// class but service code may set this to <see cref="KubeServiceStatus.Unhealthy"/>
+        /// when there's a problem and back to <see cref="KubeServiceStatus.Running"/>
+        /// when the service is healthy again.
+        /// </summary>
+        /// <param name="status">The new status.</param>
+        public async Task SetStatusAsync(KubeServiceStatus status)
+        {
+            this.Status = status;
+
+            if (statusFilePath != null)
+            {
+                // We're going to use a retry policy to handle the rare situations
+                // where the health poll and this method try to access this file 
+                // at the exact same moment.
+
+                var policy = new LinearRetryPolicy(e => e is IOException, maxAttempts: 10, retryInterval: TimeSpan.FromMilliseconds(100));
+
+                await policy.InvokeAsync(
+                    async () =>
+                    {
+                        using (var output = new FileStream(statusFilePath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                        {
+                            await output.WriteAsync(Encoding.UTF8.GetBytes(NeonHelper.EnumToString(status)));
+                        }
+                    });
+            }
+        }
+
+        /// <summary>
         /// Returns the exit code returned by the service.
         /// </summary>
         public int ExitCode { get; private set; }
@@ -516,9 +573,9 @@ namespace Neon.Kube.Service
         /// initialization and are ready for traffic.  This sets <see cref="Status"/> to
         /// <see cref="KubeServiceStatus.Running"/>.
         /// </summary>
-        public void SetRunning()
+        public async Task SetRunningAsync()
         {
-            Status = KubeServiceStatus.Running;
+            await SetStatusAsync(KubeServiceStatus.Running);
         }
 
         /// <summary>
@@ -629,7 +686,14 @@ namespace Neon.Kube.Service
             }
             catch (Exception e)
             {
+                // We're gping to consider any exceptions caught here to be errors
+                // and return a non-zero exit code.  The service's [main()] method
+                // can examine the [ExceptionException] property to decide whether
+                // the exception should be considered an error or whether to return
+                // a custom error code.
+
                 ExitException = e;
+                ExitCode      = 1;
 
                 Log.LogError(e);
             }
@@ -639,7 +703,7 @@ namespace Neon.Kube.Service
             Log.LogInfo(() => $"Exiting [{Name}] with [exitcode={ExitCode}].");
             Terminator.ReadyToExit();
 
-            Status = KubeServiceStatus.Terminated;
+            await SetStatusAsync(KubeServiceStatus.Terminated);
 
             return ExitCode;
         }
@@ -732,7 +796,7 @@ namespace Neon.Kube.Service
         /// <returns>The the progam exit code.</returns>
         /// <remarks>
         /// <para>
-        /// Services should perform any required initialization and then must call <see cref="SetRunning()"/>
+        /// Services should perform any required initialization and then must call <see cref="SetRunningAsync()"/>
         /// to indicate that the service should transition into the <see cref="KubeServiceStatus.Running"/>
         /// state.  This is very important because the service test fixture requires the service to be
         /// in the running state before it allows tests to proceed.  This is necessary to avoid unit test 

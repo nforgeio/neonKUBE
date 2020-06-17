@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Runtime.Serialization;
 using System.Text;
 
@@ -37,16 +38,41 @@ namespace Neon.Cadence
     /// UTF-8 encoded JSON text.
     /// </para>
     /// <note>
+    /// This converter uses the Newtonsoft <a href="https://www.newtonsoft.com/json">JSON.NET</a>
+    /// package so you can decorate your data types with attributes such as <c>[JsonProperty]</c>,
+    /// <c>[JsonIgnore]</c>,... to control how your data is serialized.
+    /// </note>
+    /// <note>
     /// This implementation also supports values that implement <see cref="IRoundtripData"/> to make
     /// it easier to manage data schema changes. 
     /// </note>
     /// </summary>
     public class JsonDataConverter : IDataConverter
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        private static byte[] commaBytes        = Encoding.UTF8.GetBytes(",");
+        private static byte[] newlineBytes     = new byte[] { 0x0A };
+        private static char[] newlineSeparator = new char[] { '\n' };
+
+        /// <summary>
+        /// Returns a global <see cref="JsonDataConverter"/> instance.  This is used
+        /// internally by <b>Neon.Cadence</b> library.
+        /// </summary>
+        public static JsonDataConverter Instance { get; } = new JsonDataConverter();
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         /// <inheritdoc/>
         public T FromData<T>(byte[] content)
         {
-            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
+            if (content == null)
+            {
+                return default(T);
+            }
+
             Covenant.Requires<ArgumentNullException>(content.Length > 0, nameof(content));
 
             var type = typeof(T);
@@ -65,7 +91,12 @@ namespace Neon.Cadence
         public object FromData(Type type, byte[] content)
         {
             Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
-            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
+
+            if (content == null)
+            {
+                return null;
+            }
+
             Covenant.Requires<ArgumentNullException>(content.Length > 0, nameof(content));
 
             if (type.Implements<IRoundtripData>())
@@ -81,34 +112,34 @@ namespace Neon.Cadence
         /// <inheritdoc/>
         public object[] FromDataArray(byte[] content, params Type[] valueTypes)
         {
-            Covenant.Requires<ArgumentNullException>(content != null, nameof(content));
-            Covenant.Requires<ArgumentNullException>(content.Length > 0, nameof(content));
             Covenant.Requires<ArgumentNullException>(valueTypes != null, nameof(valueTypes));
 
-            var jToken = JToken.Parse(Encoding.UTF8.GetString(content));
-
-            if (jToken.Type != JTokenType.Array)
+            if (valueTypes.Length == 0)
             {
-                throw new ArgumentException($"Content encodes a [{jToken.Type}] instead of the expected [{JTokenType.Array}].", nameof(jToken));
+                return Array.Empty<object>();
             }
 
-            var jArray = (JArray)jToken;
+            Covenant.Requires<ArgumentException>(content.Length > 0, nameof(content));
 
-            if (jArray.Count != valueTypes.Length)
+            var jsonText  = Encoding.UTF8.GetString(content);
+            var jsonLines = jsonText.Split(newlineSeparator, StringSplitOptions.RemoveEmptyEntries);
+
+            if (jsonLines.Length != valueTypes.Length)
             {
-                throw new ArgumentException($"Content array length [{jArray.Count}] does not match the expected number of values [{valueTypes.Length}].", nameof(jArray));
+                throw new ArgumentException($"Number of arguments [{jsonLines.Length}] passed does not match the method parameter count [{valueTypes.Length}].");
             }
 
             var output = new object[valueTypes.Length];
 
             for (int i = 0; i < valueTypes.Length; i++)
             {
-                var type = valueTypes[i];
-                var item = jArray[i];
+                var type   = valueTypes[i];
+                var line   = jsonLines[i];
+                var jToken = JToken.Parse(line);
 
                 if (type.Implements<IRoundtripData>())
                 {
-                    switch (item.Type)
+                    switch (jToken.Type)
                     {
                         case JTokenType.Null:
 
@@ -117,17 +148,18 @@ namespace Neon.Cadence
 
                         case JTokenType.Object:
 
-                            output[i] = RoundtripDataFactory.CreateFrom(type, (JObject)item);
+                            output[i] = RoundtripDataFactory.CreateFrom(type, (JObject)jToken);
                             break;
 
                         default:
 
-                            throw new ArgumentException($"Unexpected [{item.Type}] in JSON array.  Only [{nameof(JTokenType.Object)}] or [{nameof(JTokenType.Null)}] are allowed.", nameof(item));
+                            Covenant.Assert(false, $"Unexpected JSON token [{jToken}].");
+                            break;
                     }
                 }
                 else
                 {
-                    output[i] = item.ToObject(type);
+                    output[i] = NeonHelper.JsonDeserialize(type, line);
                 }
             }
 
@@ -146,6 +178,32 @@ namespace Neon.Cadence
             else
             {
                 return NeonHelper.JsonSerializeToBytes(value);
+            }
+        }
+
+        /// <inheritdoc/>
+        public byte[] ToDataArray(object[] values)
+        {
+            if (values == null || values.Length == 0)
+            {
+                return NeonHelper.JsonSerializeToBytes(null);
+            }
+            else
+            {
+                // The GOLANG and Java client JSON data converters serialize
+                // arguments with each element appearing on separate lines terminated
+                // with a NEWLINE (0x0A).  We're going to do the same to be compatible.
+
+                using (var output = new MemoryStream())
+                {
+                    foreach (var value in values)
+                    {
+                        output.Write(ToData(value));
+                        output.Write(newlineBytes);
+                    }
+
+                    return output.ToArray();
+                }
             }
         }
     }

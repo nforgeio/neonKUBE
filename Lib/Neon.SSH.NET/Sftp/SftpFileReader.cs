@@ -273,7 +273,7 @@ namespace Renci.SshNet.Sftp
                         break;
                     }
 
-                    // attempt to obtain the semaphore; this may time out when all semaphores are
+                    // attempt to obtain the semaphore; this may timeout when all semaphores are
                     // in use due to pending read-aheads (which in turn can happen when the server
                     // is slow to respond or when the session is broken)
                     if (!_semaphore.Wait(ReadAheadWaitTimeoutInMilliseconds))

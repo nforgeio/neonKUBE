@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Web;
 
 using Neon.Common;
@@ -83,6 +84,7 @@ namespace NeonBuild
                 Program.Exit(1);
             }
 
+            //-----------------------------------------------------------------
             // Read the [ContentLayout.content] file in the help project and then all of the
             // [*.aml] files within the [./Content] folder to create a map of the SHFB generated 
             // topic IDs to any custom topic IDs embedded in the content.
@@ -196,6 +198,7 @@ namespace NeonBuild
                 return;
             }
 
+            //-----------------------------------------------------------------
             // Munge the help files.
 
             Console.WriteLine($"neon-build gtag \"{gtagPath}\" \"{shfbFolder}\"");
@@ -375,11 +378,12 @@ namespace NeonBuild
                 Directory.Delete(htmlFolder);
             }
 
-            Console.WriteLine("Munging TOC files...");
-
+            //-----------------------------------------------------------------
             // Munge the [WebKI.xml], [WebTOC.xml], and [toc/*.xml] files by stripping any [html/] 
             // prefixes from  the Url attributes.  We're also going to replace any GUID based references
             // that map friendly topics to the friendly IDs.
+
+            Console.WriteLine("Munging TOC files...");
 
             var tocFilePaths = Directory.GetFiles(Path.Combine(outputFolder, "toc")).ToList();
 
@@ -456,10 +460,52 @@ namespace NeonBuild
                 File.WriteAllText(filePath, xml);
             }
 
+            //-----------------------------------------------------------------
+            // Munge the full text index:
+            //
+            //  * Remove the "/html" from all help page references
+            //  * Replace any conceptual topic GUIDs with the corresponding friendly names
+
+            Console.WriteLine("Munging FTI...");
+
+            var ftiJsonPath = Path.Combine(outputFolder, "fti", "FTI_Files.json");
+            var ftiJson     = File.ReadAllText(ftiJsonPath);
+
+            // Remove the "/html" from topic file refs.
+
+            ftiJson = ftiJson.Replace("\\u0000html/", "\\u0000");
+
+            // We're going to use a regex to list all of the GUIDs from the index
+            // file and then replace any GUIDs that map to a conceptual topic with 
+            // the topic's friendly name.
+
+            var guidRegex = new Regex(@"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}.htm", RegexOptions.IgnoreCase);
+
+            ftiJson = guidRegex.Replace(ftiJson,
+                match =>
+                {
+                    var path = match.ToString();
+                    var guid = path.Substring(0, path.Length - ".htm".Length);
+
+                    if (topicIdToContent.TryGetValue(guid, out var content))
+                    {
+                        return content.FileName;
+                    }
+                    else
+                    {
+                        return guid;
+                    }
+                });
+
+            File.WriteAllText(ftiJsonPath, ftiJson);
+
+            //-----------------------------------------------------------------
             // Copy any custom styles.
 
             if (!string.IsNullOrEmpty(stylesFolder))
             {
+                Console.WriteLine("Updating styles...");
+
                 foreach (var stylePath in Directory.EnumerateFiles(stylesFolder, "*.*", SearchOption.TopDirectoryOnly))
                 {
                     var targetPath = Path.Combine(outputFolder, "styles", Path.GetFileName(stylePath));

@@ -60,7 +60,7 @@
         </para>
         <mediaLink>
           <caption></caption>
-          <image xlink:href="deployment-simple"/>
+          <image xlink:href="cadence-deployment-simple"/>
         </mediaLink>
         <para>
           Cadence can be scaled horizontally by adding more Cassandra, Cadence, and Workflow Service machines.
@@ -71,7 +71,7 @@
         </para>
         <mediaLink>
           <caption></caption>
-          <image xlink:href="deployment-scaled"/>
+          <image xlink:href="cadence-deployment-scaled"/>
         </mediaLink>
         <para>
           Cadence supports multi-tenancy by allowing workflow and activity implementations to isolated
@@ -82,7 +82,7 @@
         </para>
         <mediaLink>
           <caption></caption>
-          <image xlink:href="deployment-multi-tenant"/>
+          <image xlink:href="cadence-deployment-multi-tenant"/>
         </mediaLink>
         <para>
           The diagram above depicts three Cadence domains, each with its own set of worker services 

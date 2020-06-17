@@ -409,16 +409,16 @@
             </summary>
             <param name="chartName">The Helm chart name.</param>
             <param name="branch">The branch to get the chart from. Defaults to master.</param>
-            <returns></returns>
+            <returns>The ZIP file encoded into bytes.</returns>
         </member>
         <member name="M:Neon.Kube.HeadendClient.AddGitFilesToZipAsync(System.IO.Compression.ZipArchive,System.String,System.String)">
             <summary>
-            
+            Adds GitHub files from a directory to a ZIP archive.
             </summary>
             <param name="zip">The zip file.</param>
             <param name="directory">The directory to add.</param>
             <param name="baseDirectory">The base directory.</param>
-            <returns>A zip </returns>
+            <returns>The <see cref="T:System.IO.Compression.ZipArchive"/>.</returns>
         </member>
         <member name="M:Neon.Kube.HeadendClient.Dispose">
             <inheritdoc/>
@@ -487,7 +487,7 @@
             Modified YAML for Dashboard 1.10.1
             </summary>
         </member>
-        <member name="F:Neon.Kube.KubeDashboardConfig.DashboardYaml_2_0_0_beta4">
+        <member name="F:Neon.Kube.KubeDashboardConfig.DashboardYaml_2_0_0_rc2">
             <summary>
             Modified YAML for Dashboard 2.0.0-rc4
             </summary>
@@ -742,7 +742,10 @@
             <inheritdoc/>
         </member>
         <member name="M:Neon.Kube.HostingManagerFactory.Validate(Neon.Kube.ClusterDefinition)">
-            <inheritdoc/>
+            <summary>
+            Ensures that that a cluster definition is valid.
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
         </member>
         <member name="T:Neon.Kube.HostingProviderAttribute">
             <summary>
@@ -1142,6 +1145,7 @@
             directories beneath the folder passed.  This also modifies the KUBECONFIG
             environment variable to reference the new location.
             </summary>
+            <param name="folder">Specifies the folder where the state will be persisted.</param>
         </member>
         <member name="M:Neon.Kube.KubeHelper.ResetTestMode">
             <summary>
@@ -1195,6 +1199,7 @@
             <summary>
             Loads or reloads the <see cref="P:Neon.Kube.KubeHelper.ClientConfig"/>.
             </summary>
+            <returns>The client configuration.</returns>
         </member>
         <member name="M:Neon.Kube.KubeHelper.SaveClientState">
             <summary>
@@ -1514,7 +1519,7 @@
             <param name="pod">The pod where the command should run.</param>
             <param name="namespace">The namespace where the pod is running.</param>
             <param name="command">The command to run.</param>
-            <returns></returns>
+            <returns>The command result.</returns>
         </member>
         <member name="M:Neon.Kube.KubeHelper.LookupPassword(System.String)">
             <summary>
@@ -1547,6 +1552,7 @@
             Path to a user archive directory.
             </summary>
             <param name="username">The username.</param>
+            <returns>The directory path.</returns>
         </member>
         <member name="F:Neon.Kube.KubeHostFolders.Bin">
             <summary>
@@ -1563,6 +1569,7 @@
             Path to the user download directory.
             </summary>
             <param name="username">The username.</param>
+            <returns>The directory path.</returns>
         </member>
         <member name="M:Neon.Kube.KubeHostFolders.Exec(System.String)">
             <summary>
@@ -1571,12 +1578,14 @@
             command output files.
             </summary>
             <param name="username">The username.</param>
+            <returns>The directory path.</returns>
         </member>
         <member name="M:Neon.Kube.KubeHostFolders.Home(System.String)">
             <summary>
             Path to a user archive directory.
             </summary>
             <param name="username">The username.</param>
+            <returns>The directory path.</returns>
         </member>
         <member name="F:Neon.Kube.KubeHostFolders.Scripts">
             <summary>
@@ -1604,6 +1613,7 @@
             Path to a user upload directory.
             </summary>
             <param name="username">The username.</param>
+            <returns>The directory path.</returns>
         </member>
         <member name="T:Neon.Kube.KubeHostPlatform">
             <summary>
@@ -2054,12 +2064,14 @@
             Explictly casts a <see cref="T:Neon.Kube.KubeContextName"/> into a <c>string</c>.
             </summary>
             <param name="name">The context name or <c>null</c>.</param>
+            <returns>The converted string.</returns>
         </member>
         <member name="M:Neon.Kube.KubeContextName.op_Explicit(System.String)~Neon.Kube.KubeContextName">
             <summary>
             Explictly casts a <c>string</c> into a <see cref="T:Neon.Kube.KubeContextName"/>.
             </summary>
             <param name="name">The context name or <c>null</c>.</param>
+            <returns>The converted context name.</returns>
         </member>
         <member name="M:Neon.Kube.KubeContextName.op_Equality(Neon.Kube.KubeContextName,Neon.Kube.KubeContextName)">
             <summary>
@@ -4335,6 +4347,7 @@
             <summary>
             Constructor.
             </summary>
+            <param name="node">The node definition.</param>
         </member>
         <member name="P:Neon.Kube.NodeLabels.Node">
             <summary>
@@ -5234,7 +5247,7 @@
             Returns the <see cref="T:Neon.Kube.SshProxy`1"/> instance for a named node.
             </summary>
             <param name="nodeName">The node name.</param>
-            <returns>The node proxy instance.</returns>
+            <returns>The node definition.</returns>
             <exception cref="T:System.Collections.Generic.KeyNotFoundException">Thrown if the name node is not present in the cluster.</exception>
         </member>
         <member name="M:Neon.Kube.ClusterProxy.FindNode(System.String)">
@@ -5558,6 +5571,7 @@
             <summary>
             Creates a <see cref="T:System.IO.TextReader"/> over the command's standard output result.
             </summary>
+            <returns>The <see cref="T:System.IO.TextReader"/>.</returns>
         </member>
         <member name="P:Neon.Kube.CommandResponse.ErrorText">
             <summary>
@@ -5568,6 +5582,7 @@
             <summary>
             Creates a <see cref="T:System.IO.TextReader"/> over the command's standard error result.
             </summary>
+            <returns>The <see cref="T:System.IO.TextReader"/>.</returns>
         </member>
         <member name="P:Neon.Kube.CommandResponse.AllText">
             <summary>
@@ -5578,6 +5593,7 @@
             <summary>
             Creates a <see cref="T:System.IO.TextReader"/> over the command's standard output and standard error results.
             </summary>
+            <returns>The <see cref="T:System.IO.TextReader"/>.</returns>
         </member>
         <member name="P:Neon.Kube.CommandResponse.OutputBinary">
             <summary>
@@ -5598,7 +5614,11 @@
             </summary>
         </member>
         <member name="M:Neon.Kube.CommandResponse.ToBash(System.String)">
-            <inheritdic/>
+            <summary>
+            Converts the original command into a Bash command.
+            </summary>
+            <param name="comment">Optionall specifies a comment string to be included.</param>
+            <returns>The Bash command string.</returns>
         </member>
         <member name="M:Neon.Kube.CommandResponse.EnsureSuccess">
             <summary>
@@ -6155,6 +6175,7 @@
             The caller is responsible for disposing the returned instance.
             </note>
             </summary>
+            <returns>The cloned client.</returns>
             <exception cref="T:Renci.SshNet.Common.SshConnectionException">Thrown if a connection could not be established.</exception>
         </member>
         <member name="M:Neon.Kube.SshProxy`1.CloneScpClient">
@@ -6167,6 +6188,7 @@
             The caller is responsible for disposing the returned instance.
             </note>
             </summary>
+            <returns>The cloned client.</returns>
             <exception cref="T:Renci.SshNet.Common.SshConnectionException">Thrown if a connection could not be established.</exception>
         </member>
         <member name="M:Neon.Kube.SshProxy`1.CreateHostFolders">
@@ -6454,7 +6476,7 @@
             </summary>
             <param name="command">The command.</param>
             <param name="args">The arguments.</param>
-            <returns>The command string.</returns>
+            <returns>The Bash command string.</returns>
         </member>
         <member name="M:Neon.Kube.SshProxy`1.RunCommand(System.String,Neon.Kube.RunOptions,System.Object[])">
             <summary>
@@ -6847,6 +6869,7 @@
             <param name="nodeName">The node name.</param>
             <param name="operationName">The idempotent operation name or <c>null</c> if the operation is not idempotent.</param>
             <param name="action">The action to be invoked.</param>
+            <returns>The <see cref="T:Neon.Kube.ActionStep"/>.</returns>
         </member>
         <member name="M:Neon.Kube.ActionStep.#ctor(System.String,System.String,System.Action{Neon.Kube.SshProxy{Neon.Kube.NodeDefinition}})">
             <summary>
@@ -6873,6 +6896,7 @@
             <param name="nodeName">The node name.</param>
             <param name="command">The Linux command.</param>
             <param name="args">The command arguments.</param>
+            <returns>The <see cref="T:Neon.Kube.CommandStep"/>.</returns>
         </member>
         <member name="M:Neon.Kube.CommandStep.CreateIdempotentSudo(System.String,System.String,System.String,System.Object[])">
             <summary>
@@ -6883,6 +6907,7 @@
             <param name="operationName">The idempotent operation name.</param>
             <param name="command">The Linux command.</param>
             <param name="args">The command arguments.</param>
+            <returns>The <see cref="T:Neon.Kube.CommandStep"/>.</returns>
         </member>
         <member name="M:Neon.Kube.CommandStep.#ctor(System.String,System.String,System.Object[])">
             <summary>
@@ -6949,7 +6974,7 @@
             </note>
             </summary>
             <param name="comment">Optional comment text (without a leading <b>#</b>).</param>
-            <returns>The command formatted for Bash.</returns>
+            <returns>The Bash command string.</returns>
             <exception cref="T:System.NotSupportedException">
             <see cref="M:Neon.Kube.CommandStep.ToBash(System.String)"/> does not support commands with attached files.
             </exception>
@@ -7241,6 +7266,7 @@
             <param name="tabStop">Optionally expands TABs into spaces when non-zero.</param>
             <param name="outputEncoding">Optionally specifies the output text encoding (defaults to UTF-8).</param>
             <param name="permissions">Optionally specifies target file permissions (compatible with the <c>chmod</c> command).</param>
+            <returns>The <see cref="T:Neon.Kube.UploadStep"/>.</returns>
         </member>
         <member name="M:Neon.Kube.UploadStep.#ctor(System.String,System.String,System.String,System.Int32,System.Text.Encoding,System.String)">
             <summary>
@@ -7413,46 +7439,46 @@
             <summary>IsDirtyString: true</summary>
         </member>
         <member name="F:ThisAssembly.Git.Branch">
-            <summary>Branch: master</summary>
+            <summary>Branch: jeff</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: cf52368af</summary>
+            <summary>Commit: 7d9cb5f01</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: cf52368af892190634a0859b6f7ee89c1d06a76c</summary>
+            <summary>Sha: 7d9cb5f019af32d8aba0549903f0698f2d17e772</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 10</summary>
+            <summary>Commits on top of base version: 11</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: v1.0.3-10-gcf52368af</summary>
+            <summary>Tag: v2.0.1-11-g7d9cb5f01</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
-            <summary>Base tag: v1.0.3</summary>
+            <summary>Base tag: v2.0.1</summary>
         </member>
         <member name="T:ThisAssembly.Git.BaseVersion">
             <summary>Provides access to the base version information used to determine the <see cref="T:ThisAssembly.Git.SemVer" />.</summary>      
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Major">
-            <summary>Major: 1</summary>
+            <summary>Major: 2</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Minor">
             <summary>Minor: 0</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Patch">
-            <summary>Patch: 3</summary>
+            <summary>Patch: 1</summary>
         </member>
         <member name="T:ThisAssembly.Git.SemVer">
             <summary>Provides access to SemVer information for the current assembly.</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Major">
-            <summary>Major: 1</summary>
+            <summary>Major: 2</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Minor">
             <summary>Minor: 0</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 13</summary>
+            <summary>Patch: 12</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: </summary>

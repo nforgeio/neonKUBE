@@ -89,6 +89,9 @@ namespace Neon.Diagnostics
         public bool IsLogDebugEnabled => logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Debug);
 
         /// <inheritdoc/>
+        public bool IsLogTransientEnabled => logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Debug); // TRANSIENT doesn't map directly to a Microsoft log level
+
+        /// <inheritdoc/>
         public bool IsLogErrorEnabled => logger.IsEnabled(Microsoft.Extensions.Logging.LogLevel.Error);
 
         /// <inheritdoc/>
@@ -117,15 +120,16 @@ namespace Neon.Diagnostics
         {
             switch (logLevel)
             {
-                case LogLevel.None:     return false;
-                case LogLevel.Critical: return IsLogCriticalEnabled;
-                case LogLevel.Debug:    return IsLogDebugEnabled;
-                case LogLevel.Error:    return IsLogErrorEnabled;
-                case LogLevel.Info:     return IsLogInfoEnabled;
-                case LogLevel.SError:   return IsLogSErrorEnabled;
-                case LogLevel.SInfo:    return IsLogSInfoEnabled;
-                case LogLevel.Warn:     return IsLogWarnEnabled;
-                default:                throw new NotImplementedException();
+                case LogLevel.None:         return false;
+                case LogLevel.Critical:     return IsLogCriticalEnabled;
+                case LogLevel.Debug:        return IsLogDebugEnabled;
+                case LogLevel.Transient:    return IsLogTransientEnabled;
+                case LogLevel.Error:        return IsLogErrorEnabled;
+                case LogLevel.Info:         return IsLogInfoEnabled;
+                case LogLevel.SError:       return IsLogSErrorEnabled;
+                case LogLevel.SInfo:        return IsLogSInfoEnabled;
+                case LogLevel.Warn:         return IsLogWarnEnabled;
+                default:                    throw new NotImplementedException();
             }
         }
 
@@ -189,6 +193,14 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
+        public void LogTransient(object message, string activityId = null)
+        {
+            // ILogger doesn't support TRANSIENT so we'll map these to DEBUG.
+
+            logger.LogDebug(FormatMessage(neonLogger, message, activityId));
+        }
+
+        /// <inheritdoc/>
         public void LogSInfo(object message, string activityId = null)
         {
             logger.LogInformation(FormatMessage(neonLogger, message, activityId));
@@ -227,6 +239,14 @@ namespace Neon.Diagnostics
         /// <inheritdoc/>
         public void LogDebug(object message, Exception e, string activityId = null)
         {
+            logger.LogDebug(e, FormatMessage(neonLogger, message, activityId));
+        }
+
+        /// <inheritdoc/>
+        public void LogTransient(object message, Exception e, string activityId = null)
+        {
+            // ILogger doesn't support TRANSIENT so we'll map these to DEBUG.
+
             logger.LogDebug(e, FormatMessage(neonLogger, message, activityId));
         }
 

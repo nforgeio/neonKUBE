@@ -1,0 +1,50 @@
+{
+  // Terminals for windows
+
+  "terminal.integrated.shell.windows": "C:\\WINDOWS\\System32\\cmd.exe",
+  "terminal.integrated.shellArgs.windows": [
+    "/k",
+    "C:\\Program Files\\Cmder\\vendor\\init.bat",
+    "/noautorun"
+  ],
+  "terminal.integrated.env.windows": {
+    "GOPATH": "${env:NF_ROOT}\\Go"
+  },
+
+  "breadcrumbs.enabled": true,
+
+  "editor.renderWhitespace": "all",
+  "editor.renderControlCharacters": true,
+
+  "git.ignoreLimitWarning": true,
+
+  "go.useLanguageServer": true,
+  "go.alternateTools": {
+    "go-langserver": "golsp"
+  },
+  "go.languageServerExperimentalFeatures": {
+    "format": false,
+    "autoComplete": true,
+    "signatureHelp": true,
+    "findReferences": true,
+    "goToDefinition": true,
+    "hover": true,
+    "workspaceSymbols": true,
+    "rename": true,
+    "goToTypeDefinition": true,
+    "diagnostics": true,
+    "documentSymbols": true
+  },
+  "[go]": {
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": false
+    }
+  },
+  "go.inferGopath": false,
+  "go.formatTool": "goimports",
+  "go.lintTool": "golint",
+  "go.lintOnSave": "file",
+  "go.buildOnSave": "off",
+
+  "window.zoomLevel": 0
+}

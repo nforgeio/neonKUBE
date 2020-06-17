@@ -170,8 +170,7 @@ namespace TestCadence
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void RoundTripDataWithType()
         {
-            // Verify that we can serialize and deserialize various roundtrip data items
-            // using the non-generic converter.
+            // Verify that we can serialize and deserialize various roundtrip data items.
 
             var     converter = new JsonDataConverter();
             byte[]  contents;
@@ -206,6 +205,40 @@ namespace TestCadence
             Assert.Equal("bar", (string)deserializedBob.__O["foo"]);
         }
 
+        private class ArrayFormatter
+        {
+            private List<string> items = new List<string>();
+
+            public void Clear()
+            {
+                items.Clear();
+            }
+
+            public void Append(string value)
+            {
+                items.Add(value);
+            }
+
+            public byte[] ToBytes()
+            {
+                if (items.Count == 0)
+                {
+                    return null;
+                }
+
+                using (var output = new MemoryStream())
+                {
+                    foreach (var item in items)
+                    {
+                        output.Write(Encoding.UTF8.GetBytes(item));
+                        output.WriteByte(0x0A);
+                    }
+
+                    return output.ToArray();
+                }
+            }
+        }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public void DataArray()
@@ -213,37 +246,36 @@ namespace TestCadence
             // Verify that we can deserialize arrays of data items.
 
             var         converter = new JsonDataConverter();
-            JArray      jArray;
+            var         formatter = new ArrayFormatter();
             byte[]      contents;
             object[]    items;
 
             // Empty array.
 
-            jArray   = new JArray();
-            contents = Encoding.UTF8.GetBytes(jArray.ToString());
-            items    = converter.FromDataArray(contents, new Type[0]);
+            contents = null;
+            items    = converter.FromDataArray(contents, Array.Empty<Type>());
 
             Assert.Empty(items);
 
             // Single item.
 
-            jArray = new JArray();
-            jArray.Add("foo");
+            formatter.Clear();
+            formatter.Append("\"foo\"");
 
-            contents = Encoding.UTF8.GetBytes(jArray.ToString());
+            contents = formatter.ToBytes();
             items    = converter.FromDataArray(contents, new Type[] { typeof(string) });
 
             Assert.Equal(new string[] { "foo" }, items);
 
             // Multiple object items
 
-            jArray = new JArray();
-            jArray.Add("foo");
-            jArray.Add(1234);
-            jArray.Add(JToken.FromObject(new TestData() { Hello = "World!" }));
-            jArray.Add(null);
+            formatter.Clear();
+            formatter.Append("\"foo\"");
+            formatter.Append("1234");
+            formatter.Append("{Hello: \"World!\"}");
+            formatter.Append("null");
 
-            contents = Encoding.UTF8.GetBytes(jArray.ToString());
+            contents = formatter.ToBytes();
             items    = converter.FromDataArray(contents, new Type[] { typeof(string), typeof(int), typeof(TestData), typeof(TestData) });
 
             Assert.Equal(4, items.Length);
@@ -264,13 +296,14 @@ namespace TestCadence
 
             bob.__O.Add("extra", "data");
 
-            jArray = new JArray();
-            jArray.Add("foo");
-            jArray.Add(1234);
-            jArray.Add(bob.ToJObject());
-            jArray.Add(null);
+            formatter.Clear();
+            formatter.Clear();
+            formatter.Append("\"foo\"");
+            formatter.Append("1234");
+            formatter.Append(bob.ToString(indented: false));
+            formatter.Append("null");
 
-            contents = Encoding.UTF8.GetBytes(jArray.ToString());
+            contents = formatter.ToBytes();
             items    = converter.FromDataArray(contents, new Type[] { typeof(string), typeof(int), typeof(Person), typeof(Person) });
 
             Assert.Equal(4, items.Length);
@@ -282,20 +315,21 @@ namespace TestCadence
 
             // Arrays of other types.
 
+            formatter.Clear();
+
             var guid = Guid.NewGuid();
 
-            jArray = new JArray();
-            jArray.Add(10);
-            jArray.Add(123.4);
-            jArray.Add("Hello World!");
-            jArray.Add(null);
-            jArray.Add(Gender.Female);
-            jArray.Add(true);
-            jArray.Add(new DateTime(2019, 7, 17, 12, 0, 0));
-            jArray.Add(TimeSpan.FromSeconds(1.5));
-            jArray.Add(guid);
-            
-            contents = Encoding.UTF8.GetBytes(jArray.ToString());
+            formatter.Append("10");
+            formatter.Append("123.4");
+            formatter.Append("\"Hello World!\"");
+            formatter.Append("null");
+            formatter.Append("\"female\"");
+            formatter.Append("true");
+            formatter.Append(NeonHelper.JsonSerialize(new DateTime(2019, 7, 17, 12, 0, 0)));
+            formatter.Append(NeonHelper.JsonSerialize(TimeSpan.FromSeconds(1.5)));
+            formatter.Append($"\"{guid}\"");
+
+            contents = formatter.ToBytes();
             items    = converter.FromDataArray(contents, new Type[] { typeof(int), typeof(double), typeof(string), typeof(string), typeof(Gender), typeof(bool), typeof(DateTime), typeof(TimeSpan), typeof(Guid) });
 
             Assert.Equal(9, items.Length);
@@ -308,6 +342,105 @@ namespace TestCadence
             Assert.Equal(new DateTime(2019, 7, 17, 12, 0, 0), (DateTime)items[6]);
             Assert.Equal(TimeSpan.FromSeconds(1.5), (TimeSpan)items[7]);
             Assert.Equal(guid, (Guid)items[8]);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void SerializeEnum()
+        {
+            // Verify that Enum values serialize correctly.
+
+            var     converter = new JsonDataConverter();
+            byte[]  contents;
+            string  json;
+
+            // Verify that an enum type with custom [EnumMemver] values
+            // serializes as expected.
+
+            var enumValue = new EnumEntity() { Gender = Gender.Male };
+
+            contents = converter.ToData(enumValue);
+            json     = Encoding.UTF8.GetString(contents);
+
+            Assert.Equal("{\"Gender\":\"male\"}", json);
+
+            // Verify that an enum type without custom [EnumMemver] values
+            // serializes as expected.
+
+            var enumNotCustomValue = new EnumNotCustomEntity() { Gender = GenderNotCustom.Male };
+
+            contents = converter.ToData(enumNotCustomValue);
+            json     = Encoding.UTF8.GetString(contents);
+
+            Assert.Equal("{\"Gender\":\"Male\"}", json);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void SerializeFlagsEnum()
+        {
+            var             converter = new JsonDataConverter();
+            byte[]          contents;
+            string          json;
+            EnumFlagsEntity value;
+
+            // Verify uncombined flags.
+
+            value    = new EnumFlagsEntity() { Gender = GenderFlags.Unspecified };
+            contents = converter.ToData(value);
+            json     = Encoding.UTF8.GetString(contents);
+
+            Assert.Equal("{\"Gender\":\"unspecified\"}", json);
+
+            //----------
+
+            value    = new EnumFlagsEntity() { Gender = GenderFlags.Male };
+            contents = converter.ToData(value);
+            json     = Encoding.UTF8.GetString(contents);
+
+            Assert.Equal("{\"Gender\":\"male\"}", json);
+
+            //----------
+
+            value    = new EnumFlagsEntity() { Gender = GenderFlags.Female };
+            contents = converter.ToData(value);
+            json     = Encoding.UTF8.GetString(contents);
+
+            Assert.Equal("{\"Gender\":\"female\"}", json);
+
+            //----------
+
+            value    = new EnumFlagsEntity() { Gender = GenderFlags.Other };
+            contents = converter.ToData(value);
+            json     = Encoding.UTF8.GetString(contents);
+
+            Assert.Equal("{\"Gender\":\"other\"}", json);
+
+            // Verifiy flag combinations
+
+            value    = new EnumFlagsEntity() { Gender = GenderFlags.Male | GenderFlags.Female };
+            contents = converter.ToData(value);
+            json     = Encoding.UTF8.GetString(contents);
+
+            Assert.Equal("{\"Gender\":\"male, female\"}", json);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public void SerializeDateTime()
+        {
+            // Verify that Enum values with the [Flags] attribute serialize correctly.
+
+            var     converter = new JsonDataConverter();
+            byte[]  contents;
+            string  json;
+
+            var enumValue = new EnumEntity() { Gender = Gender.Male };
+
+            contents = converter.ToData(enumValue);
+            json = Encoding.UTF8.GetString(contents);
+
+            Assert.Equal("{\"Gender\":\"male\"}", json);
         }
     }
 }

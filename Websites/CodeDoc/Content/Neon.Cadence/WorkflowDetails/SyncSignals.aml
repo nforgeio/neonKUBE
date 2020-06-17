@@ -101,7 +101,7 @@
           [WorkflowInterface]
           public interface : IMyWorkflow : IWorkflow
           {
-              [WorkflowMethod()]
+              [WorkflowMethod]
               Task MainAsync();
 
               [SignalMethod("standard-signal")]

@@ -99,7 +99,7 @@ namespace TestModelGen
                 throw new ArgumentException($"Cannot find method: Dispose()");
             }
 
-            method.Invoke(instance, new object[0]);
+            method.Invoke(instance, Array.Empty<object>());
         }
 
         /// <summary>

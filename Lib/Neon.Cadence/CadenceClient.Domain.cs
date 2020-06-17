@@ -69,7 +69,8 @@ namespace Neon.Cadence
         /// <param name="ownerEmail">Optionally specifies the owner's email address.</param>
         /// <param name="retentionDays">
         /// Optionally specifies the number of days to retain the history for workflows 
-        /// completed in this domain.  This defaults to <b>7 days</b>.
+        /// completed in this domain.  This defaults to <b>7 days</b> and may be as long
+        /// as <b>30 days</b>.
         /// </param>
         /// <param name="ignoreDuplicates">
         /// Optionally ignore duplicate domain registrations.  This defaults
@@ -85,6 +86,7 @@ namespace Neon.Cadence
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentException>(retentionDays > 0, nameof(retentionDays));
+            Covenant.Requires<ArgumentException>(retentionDays <= 30, nameof(retentionDays));
             EnsureNotDisposed();
 
             try

@@ -118,7 +118,7 @@ func (p *Peer) SetStatus(status peer.ConnectionStatus) {
 	p.notifyStatusChanged()
 }
 
-// StartRequest runs at the beginning of a request and returns a callback for when the request finished
+// StartRequest runs at the beginning of a request.
 func (p *Peer) StartRequest() {
 	p.pending.Inc()
 	p.notifyStatusChanged()

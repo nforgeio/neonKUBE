@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Kube</RootNamespace>
     <Authors>Jeff Lill</Authors>
-    <Version>1.2.2-internal</Version>
+    <Version>2.1.0-internal</Version>
     <Company>neonFORGE, LLC</Company>
     <Product>neonKUBE</Product>
     <Description>neonKUBE AWS Hosting.</Description>
@@ -21,7 +21,7 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <Configurations>Debug;Release;CodeDoc</Configurations>
-    <PackageIconUrl>https://doc.neonkube.com/images/nuget-icon.png</PackageIconUrl>
+    <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageTags>kubernetes</PackageTags>
   </PropertyGroup>
 
@@ -55,10 +55,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\LICENSE">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
+    <None Include="..\nuget-icon.png" Pack="true" PackagePath=""/>
+    <None Include="..\..\LICENSE" Pack="True" PackagePath=""/>
   </ItemGroup>
 
 </Project>

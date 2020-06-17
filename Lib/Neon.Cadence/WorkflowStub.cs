@@ -137,13 +137,12 @@ namespace Neon.Cadence
         /// </summary>
         /// <param name="stub">The source typed workflow stub.</param>
         /// <returns>The <see cref="WorkflowStub"/>.</returns>
-        /// 
         public static async Task<WorkflowStub> FromTypedAsync(object stub)
         {
             Covenant.Requires<ArgumentNullException>(stub != null, nameof(stub));
             Covenant.Requires<ArgumentException>(stub is ITypedWorkflowStub, nameof(stub), $"[{stub.GetType().FullName}] is not a typed workflow stub.");
 
-          return await ((ITypedWorkflowStub)stub).ToUntypedAsync();
+            return await ((ITypedWorkflowStub)stub).ToUntypedAsync();
         }
 
         //---------------------------------------------------------------------
@@ -282,7 +281,26 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Attempts to retrieve the associated workflow result.
+        /// Waits for the workflow to complete or throws an error exception.  Use this for 
+        /// workflows that don't return a result.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task GetResultAsync()
+        {
+            await SyncContext.ClearAsync;
+            EnsureStarted();
+
+            if (Execution == null)
+            {
+                throw new InvalidOperationException("The stub can't obtain the workflow result because it doesn't have the workflow execution.");
+            }
+
+            await client.GetWorkflowResultAsync(Execution, client.ResolveDomain(Options?.Domain));
+        }
+
+        /// <summary>
+        /// Waits for the workflow to complete and then returns the result or throws
+        /// an error exception.  This override accepts the result type as a type parameter.
         /// </summary>
         /// <typeparam name="TResult">The result type.</typeparam>
         /// <returns>The result.</returns>
@@ -300,8 +318,8 @@ namespace Neon.Cadence
         }
 
         /// <summary>
-        /// Attempts to retrieve the associated workflow result specifying 
-        /// expected result type as a parameter.
+        /// Waits for the workflow to complete and then returns the result or throws
+        /// an error exception.  This override accepts the result type as a normal parameter.
         /// </summary>
         /// <param name="resultType">Specifies the result type.</param>
         /// <returns>The result as a <c>dynamic</c>.</returns>
@@ -338,7 +356,7 @@ namespace Neon.Cadence
                 throw new InvalidOperationException("Query cannot be sent because the stub doesn't have the workflow execution.");
             }
 
-            var argBytes = client.DataConverter.ToData(args);
+            var argBytes = CadenceHelper.ArgsToBytes(client.DataConverter, args);
 
             return client.DataConverter.FromData<TResult>(await client.QueryWorkflowAsync(Execution, queryType, argBytes, client.ResolveDomain(Options?.Domain)));
         }
@@ -363,7 +381,7 @@ namespace Neon.Cadence
                 throw new InvalidOperationException("Query cannot be sent because the stub doesn't have the workflow execution.");
             }
 
-            var argBytes = client.DataConverter.ToData(args);
+            var argBytes = CadenceHelper.ArgsToBytes(client.DataConverter, args);
 
             return client.DataConverter.FromData(resultType, await client.QueryWorkflowAsync(Execution, queryType, argBytes, client.ResolveDomain(Options?.Domain)));
         }
@@ -386,7 +404,7 @@ namespace Neon.Cadence
                 throw new InvalidOperationException("Signal cannot be sent because the stub doesn't have the workflow execution.");
             }
 
-            var argBytes = client.DataConverter.ToData(args);
+            var argBytes = CadenceHelper.ArgsToBytes(client.DataConverter, args);
 
             await client.SignalWorkflowAsync(Execution, signalName, argBytes, client.ResolveDomain(Options?.Domain));
         }
@@ -405,8 +423,8 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(signalArgs != null, nameof(signalArgs));
             Covenant.Requires<ArgumentNullException>(startArgs != null, nameof(startArgs));
 
-            var signalArgBytes = client.DataConverter.ToData(signalArgs);
-            var startArgBytes  = client.DataConverter.ToData(startArgs);
+            var signalArgBytes = CadenceHelper.ArgsToBytes(client.DataConverter, signalArgs);
+            var startArgBytes  = CadenceHelper.ArgsToBytes(client.DataConverter, startArgs);
 
             return await client.SignalWorkflowWithStartAsync(this.WorkflowTypeName, signalName, signalArgBytes, startArgBytes, this.Options);
         }
@@ -422,11 +440,65 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
             EnsureNotStarted();
 
-            var argBytes = client.DataConverter.ToData(args);
+            var argBytes = CadenceHelper.ArgsToBytes(client.DataConverter, args);
 
             Execution = await client.StartWorkflowAsync(WorkflowTypeName, argBytes, Options);
 
             return Execution;
+        }
+
+        /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Used internally for unit tests that need to control
+        /// how the workflow arguments are encoded.
+        /// </summary>
+        /// <param name="argBytes">The encoded workflow arguments.</param>
+        /// <returns>The <see cref="WorkflowExecution"/>.</returns>
+        internal async Task<WorkflowExecution> StartAsync(byte[] argBytes)
+        {
+            await SyncContext.ClearAsync;
+            EnsureNotStarted();
+
+            Execution = await client.StartWorkflowAsync(WorkflowTypeName, argBytes, Options);
+
+            return Execution;
+        }
+
+        /// <summary>
+        /// Executes the associated workflow and waits for it to complete.
+        /// </summary>
+        /// <param name="args">The workflow arguments.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task ExecutesAsync(params object[] args)
+        {
+            await SyncContext.ClearAsync;
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+            EnsureNotStarted();
+
+            var argBytes = CadenceHelper.ArgsToBytes(client.DataConverter, args);
+
+            Execution = await client.StartWorkflowAsync(WorkflowTypeName, argBytes, Options);
+
+            await GetResultAsync();
+        }
+
+        /// <summary>
+        /// Executes the associated workflow and waits for it to complete,
+        /// returning the workflow result.
+        /// </summary>
+        /// <typeparam name="TResult">The workflow result type.</typeparam>
+        /// <param name="args">The workflow arguments.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task<TResult> ExecutesAsync<TResult>(params object[] args)
+        {
+            await SyncContext.ClearAsync;
+            Covenant.Requires<ArgumentNullException>(args != null, nameof(args));
+            EnsureNotStarted();
+
+            var argBytes = CadenceHelper.ArgsToBytes(client.DataConverter, args);
+
+            Execution = await client.StartWorkflowAsync(WorkflowTypeName, argBytes, Options);
+
+            return await GetResultAsync<TResult>();
         }
     }
 }

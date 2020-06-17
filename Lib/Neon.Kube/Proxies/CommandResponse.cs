@@ -131,7 +131,7 @@ namespace Neon.Kube
         /// <returns>The <see cref="Stream"/>.</returns>
         public Stream OpenOutputBinaryStream()
         {
-            return new MemoryStream(OutputBinary ?? new byte[0]);
+            return new MemoryStream(OutputBinary ?? Array.Empty<byte>());
         }
 
         /// <summary>

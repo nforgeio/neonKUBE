@@ -470,7 +470,7 @@ namespace Neon.Common
         {
             if (args == null)
             {
-                args = new object[0];
+                args = Array.Empty<object>();
             }
 
             List<string>    valueList = new List<string>();
