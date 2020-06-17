@@ -455,6 +455,14 @@ dashboards:
        gnetId: 11620
        revision: 1
        datasource: Prometheus
+     linux-node-alerts:
+       gnetId: 5984
+       revision: 4
+       datasource: Prometheus
+     k8s-summary:
+       gnetId: 8685
+       revision: 1
+       datasource: Prometheus
 
 ## Reference to external ConfigMap per provider. Use provider name as key and ConfiMap name as value.
 ## A provider dashboards must be defined either by external ConfigMaps or in values.yaml, not in both.
