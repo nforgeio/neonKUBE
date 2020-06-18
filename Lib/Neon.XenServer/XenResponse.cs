@@ -46,7 +46,7 @@ namespace Neon.Xen
         internal XenResponse(CommandResponse response)
         {
             this.Response = response;
-            this.Items  = new List<Dictionary<string, string>>();
+            this.Items    = new List<Dictionary<string, string>>();
 
             // We need to parse the [xe] results from the standard output.  This will 
             // look something like:
@@ -175,6 +175,12 @@ namespace Neon.Xen
         /// Returns the command exit code.
         /// </summary>
         public int ExitCode => Response.ExitCode;
+
+        /// <summary>
+        /// Ensures that the command executed successfully.
+        /// </summary>
+        /// <exception cref="ExecuteException">Thrown when the command failed.</exception>
+        public void EnsureSuccess() => Response.EnsureSuccess();
 
         /// <summary>
         /// The list of raw property dictionaries returned by the command.

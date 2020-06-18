@@ -46,7 +46,7 @@ namespace Neon.Xen
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
             public List<XenVirtualMachine> List()
             {
-                var response = client.SafeInvokeList("vm-list", "params=all");
+                var response = client.SafeInvokeItems("vm-list", "params=all");
                 var vms      = new List<XenVirtualMachine>();
 
                 foreach (var result in response.Items)
@@ -259,9 +259,9 @@ namespace Neon.Xen
                 //            policy-no-vendor-device ( RW): false
                 //             live-patching-disabled ( RW): false
 
-                var poolList = client.SafeInvokeList("pool-list").Items.First();
+                var poolList = client.SafeInvokeItems("pool-list").Items.First();
                 var poolUuid = poolList["uuid"];
-                var pool     = client.SafeInvokeList("pool-param-list", $"uuid={poolUuid}").Items.First();
+                var pool     = client.SafeInvokeItems("pool-param-list", $"uuid={poolUuid}").Items.First();
 
                 if (pool["ha-enabled"] == "false")
                 {
@@ -290,7 +290,7 @@ namespace Neon.Xen
 
                 if (diskBytes > 0)
                 {
-                    var disks = client.SafeInvokeList("vm-disk-list", $"uuid={vmUuid}").Items;
+                    var disks = client.SafeInvokeItems("vm-disk-list", $"uuid={vmUuid}").Items;
                     var vdi   = disks.FirstOrDefault(items => items.ContainsKey("Disk 0 VDI"));
 
                     if (vdi == null)

@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Dynamic;
@@ -29,6 +30,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Diagnostics;
 using Neon.Kube;
 
 namespace Neon.Xen
@@ -229,9 +231,46 @@ namespace Neon.Xen
         /// <param name="args">The optional arguments formatted as <b>name=value</b>.</param>
         /// <returns>The command <see cref="XenResponse"/>.</returns>
         /// <exception cref="XenException">Thrown if the operation failed.</exception>
-        public XenResponse SafeInvokeList(string command, params string[] args)
+        public XenResponse SafeInvokeItems(string command, params string[] args)
         {
             return new XenResponse(SafeInvoke(command, args));
+        }
+
+        /// <summary>
+        /// Returns information about the connected XenServer host machine.
+        /// </summary>
+        /// <returns>The <see cref="XenHostInfo"/>.</returns>
+        public XenHostInfo GetHostInfo()
+        {
+            // List the hosts to obtain the host UUID.  We're going to assume that only the
+            // current host will be returned and the confguring a resource pool doesn't change
+            // this.
+
+            var response = SafeInvokeItems("host-list");
+
+            Covenant.Assert(response.Items.Count == 1, "[xe host-list] is expected to return exactly one host.");
+
+            response = SafeInvokeItems("host-param-list", $"uuid={response.Items.Single()["uuid"]}");
+
+            var hostParams   = response.Items.Single();
+            var versionItems = hostParams["software-version"].Split(';');
+
+            for (int i = 0; i < versionItems.Length; i++)
+            {
+                versionItems[i] = versionItems[i].Trim();
+            }
+
+            var version = versionItems.Single(item => item.StartsWith("product_version:"));
+            var pos     = version.IndexOf(':');
+
+            version = version.Substring(pos + 1).Trim();
+
+            return new XenHostInfo()
+            {
+                Edition = hostParams["edition"],
+                Version = SemanticVersion.Parse(version),
+                Params  = new ReadOnlyDictionary<string, string>(hostParams)
+            };
         }
     }
 }
