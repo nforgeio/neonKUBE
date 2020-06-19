@@ -33,7 +33,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Kube;
 
-namespace Neon.Xen
+namespace Neon.XenServer
 {
     /// <summary>
     /// This class provides a simple light-weight XenServer or CXP-ng 

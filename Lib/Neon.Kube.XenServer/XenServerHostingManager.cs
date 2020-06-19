@@ -27,7 +27,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
-using Neon.Xen;
+using Neon.XenServer;
 
 namespace Neon.Kube
 {

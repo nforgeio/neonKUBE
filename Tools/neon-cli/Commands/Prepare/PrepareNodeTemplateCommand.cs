@@ -31,7 +31,7 @@ using Newtonsoft.Json;
 
 using Neon.Common;
 using Neon.Kube;
-using Neon.Xen;
+using Neon.XenServer;
 using Remotion.Linq.Parsing.Structure.IntermediateModel;
 
 namespace NeonCli

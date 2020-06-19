@@ -32,7 +32,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Kube;
 
-namespace Neon.Xen
+namespace Neon.XenServer
 {
     /// <summary>
     /// Holds the response from a XenServer command invoked using the <b>xe</b> CLI.
