@@ -102,7 +102,7 @@ module Fluent
             if !pod_id.nil? && pod_id.length <= 12
                 record["pid"] = pod_id;
             else
-                record["pid"] = pod_id[0,12];
+                record["pid"] = pod_id[0,12] rescue nil;
             end
 
             record["pid_full"] = pod_id;

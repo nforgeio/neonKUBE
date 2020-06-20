@@ -267,29 +267,8 @@ cat <<EOF > /etc/fluentd/template/logstash-template.json
           "client_ip": {
             "type": "ip"
           },
-          "conn_proxy": {
-            "type": "integer"
-          },
-          "conn_frontend": {
-            "type": "integer"
-          },
-          "conn_backend": {
-            "type": "integer"
-          },
-          "conn_server": {
-            "type": "integer"
-          },
           "mode": {
             "type": "keyword"
-          },
-          "queue_server": {
-            "type": "integer"
-          },
-          "queue_backend": {
-            "type": "integer"
-          },
-          "retries": {
-            "type": "short"
           },
           "route": {
             "type": "keyword"
@@ -303,19 +282,19 @@ cat <<EOF > /etc/fluentd/template/logstash-template.json
           "server_port": {
             "type": "integer"
           },
-          "time_queue": {
-            "type": "scaled_float",
-            "scaling_factor": 1000.0
+          "duration": {
+            "type": "integer"
           },
-          "time_connect": {
-            "type": "scaled_float",
-            "scaling_factor": 1000.0
+          "request_duration": {
+            "type": "integer"
           },
-          "time_session": {
-            "type": "scaled_float",
-            "scaling_factor": 1000.0
+          "response_duration": {
+            "type": "integer"
           },
-          "termination": {
+          "response_tx_duration": {
+            "type": "integer"
+          },
+          "response_flags": {
             "type": "keyword"
           },
           "tls_version": {
@@ -333,22 +312,6 @@ cat <<EOF > /etc/fluentd/template/logstash-template.json
           "http_status": {
             "type": "short"
           },
-          "http_time_active": {
-            "type": "scaled_float",
-            "scaling_factor": 1000.0
-          },
-          "http_time_idle": {
-            "type": "scaled_float",
-            "scaling_factor": 1000.0
-          },
-          "http_time_request": {
-            "type": "scaled_float",
-            "scaling_factor": 1000.0
-          },
-          "http_time_response": {
-            "type": "scaled_float",
-            "scaling_factor": 1000.0
-          },
           "http_uri": {
             "type": "keyword"
           },
@@ -356,6 +319,15 @@ cat <<EOF > /etc/fluentd/template/logstash-template.json
             "type": "keyword"
           },
           "http_user_agent": {
+            "type": "text"
+          },
+          "http_forwarded_host": {
+            "type": "text"
+          },
+          "http_forwarded_proto": {
+            "type": "text"
+          },
+          "http_referer": {
             "type": "text"
           },
           "http_version": {

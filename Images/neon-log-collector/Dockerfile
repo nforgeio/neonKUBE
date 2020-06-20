@@ -21,10 +21,19 @@ ENV TINI_VERSION v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /sbin/tini
 RUN chmod +x /sbin/tini
 
+RUN apt-get update \
+    && apt-get install -yq wget \
+    && apt-get clean -yq
+
 RUN /usr/local/bin/fluent-gem install fluent-plugin-dedot_filter \
     && /usr/local/bin/fluent-gem install fluent-plugin-record-modifier \
     && /usr/local/bin/fluent-gem install fluent-plugin-kubernetes_metadata_filter \
-    && /usr/local/bin/fluent-gem install fluent-plugin-elasticsearch
+    && /usr/local/bin/fluent-gem install fluent-plugin-elasticsearch \
+    && /usr/local/bin/fluent-gem install maxminddb \
+    && /usr/local/bin/fluent-gem install browser
+
+RUN mkdir -p /geoip \
+    && wget -nv "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key=t6BLPRL4ohFLbEJP&suffix=tar.gz" -O /geoip/database.mmdb.tar.gz
 
 COPY *.sh           /
 COPY _common/*.sh   /

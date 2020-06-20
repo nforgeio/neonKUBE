@@ -24,6 +24,10 @@ while read var; do export "${var}"; done < /etc/environment
 
 . log-info.sh "Starting [neon-log-collector]"
 
+if [ -f /geoip/database.mmdb.tar.gz ] ; then
+    tar -xzf /geoip/database.mmdb.tar.gz -C /geoip/ --strip-components 1
+fi
+
 # Generate the index template file.
 
 . /logstash-template.json.sh

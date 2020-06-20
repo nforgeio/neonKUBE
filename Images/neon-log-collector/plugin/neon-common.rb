@@ -213,7 +213,7 @@ module NeonCommon
 
             if !date.nil?
                 if is_numeric(date)
-                  record["@timestamp"] = formatTimestamp(Time.at(date));
+                  record["@timestamp"] = formatTimestamp(Time.at(date.to_f));
                 else
                   record["@timestamp"] = formatTimestamp(Time.parse(date));
                 end
