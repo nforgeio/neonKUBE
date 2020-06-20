@@ -11,11 +11,10 @@
 #   ORGANIZATION    - The Docker Hub organization
 #   BRANCH          - The current GitHub branch
 
-ARG         ORGANIZATION
-ARG         BRANCH
 FROM        gcr.io/google-containers/fluentd-elasticsearch:v2.4.0
 MAINTAINER  marcus@marcusbowyer.co.uk
 STOPSIGNAL  SIGTERM
+ARG         MAXMIND_KEY
 
 ENV TINI_VERSION v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /sbin/tini
@@ -33,7 +32,7 @@ RUN /usr/local/bin/fluent-gem install fluent-plugin-dedot_filter \
     && /usr/local/bin/fluent-gem install browser
 
 RUN mkdir -p /geoip \
-    && wget -nv "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key=t6BLPRL4ohFLbEJP&suffix=tar.gz" -O /geoip/database.mmdb.tar.gz
+    && wget -nv https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City\&license_key=${MAXMIND_KEY}\&suffix=tar.gz -O /geoip/database.mmdb.tar.gz
 
 COPY *.sh           /
 COPY _common/*.sh   /

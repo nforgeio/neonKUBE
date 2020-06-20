@@ -14,6 +14,12 @@ param
 
 )
 
+#----------------------------------------------------------
+# Global Includes
+$image_root = "$env:NF_ROOT\\Images"
+. $image_root/includes.ps1
+#----------------------------------------------------------
+
 "   "
 "======================================="
 "* neon-log-collector:" + $tag
@@ -30,8 +36,9 @@ mkdir _common
 copy ..\_common\*.* .\_common
 
 # Build the image.
-
-Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "BRANCH=$branch" . }
+$maxmind_key = neon run -- cat "_...$src_images_path\neon-log-collector\maxmind"
+echo $maxmind_key
+Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "BRANCH=$branch" --build-arg "BRANCH=$branch" --build-arg "MAXMIND_KEY=$maxmind_key" . }
 
 # Clean up
 

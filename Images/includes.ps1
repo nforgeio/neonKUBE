@@ -23,6 +23,7 @@ $ErrorActionPreference = "Stop"
 # Important source code paths.
 
 $src_path          = $env:NF_ROOT
+$src_images_path   = "$src_path\\Images"
 $src_lib_path      = "$src_path\\Lib"
 $src_services_path = "$src_path\\Services"
 $src_tools_path    = "$src_path\\Tools"
