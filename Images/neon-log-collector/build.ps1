@@ -37,7 +37,6 @@ copy ..\_common\*.* .\_common
 
 # Build the image.
 $maxmind_key = neon run -- cat "_...$src_images_path\neon-log-collector\maxmind"
-echo $maxmind_key
 Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "BRANCH=$branch" --build-arg "BRANCH=$branch" --build-arg "MAXMIND_KEY=$maxmind_key" . }
 
 # Clean up
