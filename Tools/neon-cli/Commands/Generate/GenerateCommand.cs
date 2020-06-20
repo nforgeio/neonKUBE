@@ -43,6 +43,7 @@ Code generation commands.
 
 USAGE:
 
+    neon generate iso    SOURCE-FOLDER ISO-PATH
     neon generate models [OPTIONS] ASSEMBLY-PATH [OUTPUT-PATH]
 ";
 
