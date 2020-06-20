@@ -1396,7 +1396,8 @@ namespace Neon.Kube
         /// Packages the files within a folder into an ISO file.
         /// </para>
         /// <note>
-        /// This requires Powershell to be installed.
+        /// This requires Powershell to be installed and this will favor using the version of
+        /// Powershell installed along with the neon-cli is present.
         /// </note>
         /// </summary>
         /// <param name="inputFolder">Path to the input folder.</param>
@@ -1513,6 +1514,26 @@ public class ISOFile
   } 
 } 
 ";
+            // Delete any existing ISO file.
+
+            File.Delete(isoPath);
+
+            // Use the version of Powershell installed along with the neon-cli, if present,
+            // otherwise just launch Powershell from the PATH.
+
+            var neonKubeProgramFolder = Environment.GetEnvironmentVariable("NEONKUBE_PROGRAM_FOLDER");
+            var powershellPath        = "powershell";
+
+            if (neonKubeProgramFolder != null)
+            {
+                var path = Path.Combine(neonKubeProgramFolder, powershellPath);
+
+                if (File.Exists(path))
+                {
+                    powershellPath = path;
+                }
+            }
+
             // Generate a temporary script file and run it.
 
             using (var tempFile = new TempFile(suffix: ".ps1"))
@@ -1523,7 +1544,7 @@ public class ISOFile
 
                 File.WriteAllText(tempFile.Path, script);
 
-                var result = NeonHelper.ExecuteCapture("powershell",
+                var result = NeonHelper.ExecuteCapture(powershellPath,
                     new object[]
                     {
                         "-f", tempFile.Path

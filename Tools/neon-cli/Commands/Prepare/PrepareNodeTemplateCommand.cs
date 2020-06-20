@@ -33,6 +33,9 @@ using Neon.Common;
 using Neon.Kube;
 using Neon.XenServer;
 using Remotion.Linq.Parsing.Structure.IntermediateModel;
+using Neon.IO;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Neon.HyperV;
 
 namespace NeonCli
 {
@@ -383,7 +386,7 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
                 // means that the [container] user will have no chance of
                 // logging into the machine.
 
-                Console.WriteLine("Create:   [container] user", RunOptions.FaultOnError);
+                Console.WriteLine("Create:   [container] user");
                 server.SudoCommand($"useradd --uid {KubeConst.ContainerUID} --no-create-home {KubeConst.ContainerUser}", RunOptions.FaultOnError);
 
                 // Configure the Linux guest integration services.
@@ -402,6 +405,143 @@ update-initramfs -u
 ";
                 Console.WriteLine("Install:  guest integration services");
                 server.SudoCommand(CommandBundle.FromScript(guestServicesScript), RunOptions.FaultOnError);
+
+                // Install and configure the [neon-node-prep] service.  This is a simple script
+                // that is configured to run as a oneshot systemd service before networking is
+                // started.  This is currently used to configure the node's static IP address
+                // configuration on first boot, so we don't need to rely on DHCP (which may not
+                // be available in some environments).
+                //
+                // [neon-node-prep] is intended to run the first time a node is booted after
+                // being created from a template.  It checks to see if a special ISO with a
+                // configuration script named [neon-node-prep.sh] is inserted into the VMs DVD
+                // drive and when present, the script will be executed and the [/etc/neon-node-prep]
+                // file will be created to indicate that the service no longer needs to do this for
+                // subsequent reboots.
+                //
+                // NOTE: The script won't create the [/etc/neon-node-prep] when the script
+                //       ISO doesn't exist for debugging purposes.
+
+                Console.WriteLine("Install:  [neon-node-prep] service");
+
+                var neonNodePrepScript =
+$@"# Ensure that the neon binary folder exists.
+
+mkdir -p {KubeHostFolders.Bin}
+
+# Create the systemd unit file.
+
+cat <<EOF > /etc/systemd/system/neon-node-prep.service
+
+[Unit]
+Description=neonKUBE one-time node preparation service 
+Before=network.target
+
+[Service]
+Type=oneshot
+ExecStart={KubeHostFolders.Bin}/neon-node-prep.sh
+RemainAfterExit=false
+StandardOutput=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Create the service script.
+
+cat <<EOF > {KubeHostFolders.Bin}/neon-node-prep.sh
+#!/bin/bash
+#------------------------------------------------------------------------------
+# FILE:	        neon-node-prep.sh
+# CONTRIBUTOR:  Jeff Lill
+# COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the ""License"");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an ""AS IS"" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# This script is run early during node boot before the netork is configured
+# as a poor man's way for neonKUBE cluster setup to configure the network
+# without requiring DHCP.  Here's how this works:
+#
+#       1. neonKUBE cluster setup creates a node VM from a template.
+#
+#       2. Setup creates a temporary ISO with a script named 
+#          [neon-node-prep.sh] on it and uploads this to the Hyper-V
+#          or XenServer host machine.
+#
+#       3. Setup inserts the ISO into the VM's DVD/CD and starts the VM.
+#
+#       4. The VM boots, eventually running this script.
+#
+#       5. This script checks whether a DVD/CD is present and mounts
+#          it and checks it for the [neon-node-prep.sh] script.
+#
+#       6. If the DVD/CD and script file are present, this service will
+#          execute the script via Bash, peforming any custom setup required 
+#          and then this script creates the [/etc/neon-node-prep] which will
+#          prevent the service from doing anything during subsequent node 
+#          reboots.
+#
+#       7. The service just exists if the DVD/CD and/or script file are 
+#          not present.  This shouldn't happen in production but is useful
+#          for debugging.
+
+# Run the prep script only once.
+
+if [ -f /etc/neon-node-prep ] ; then
+    # We've already run this once.
+    exit 0
+fi
+
+# Check for the DVD/CD and prep script.
+
+mkdir -p /mnt/neon-node-prep
+mount /dev/dvd /mnt/neon-node-prep
+
+if [ ! $? ] ; then
+    echo ""ERROR: No DVD/CD is present.""
+    rm -rf /mnt/neon-node-prep
+    exit 0
+fi
+
+if [ ! -f /mnt/neon-node-prep/neon-node-prep.sh ] ; then
+    echo ""ERROR: No [neon-node-prep.sh] script is present on the DVD/CD.""
+    rm -rf /mnt/neon-node-prep
+    exit 0
+fi
+
+# The script file is present so execute it.
+
+echo ""INFO: Running [neon-node-prep.sh]""
+bash /mnt/neon-node-prep/neon-node-prep.sh
+
+# Unmount the DVD/CD and cleanup.
+
+echo ""INFO: Cleanup""
+umount /mnt/neon-node-prep
+rm -rf /mnt/neon-node-prep
+
+# Disable any future preparations.
+
+touch /etc/neon-node-prep
+EOF
+
+chmod 744 {KubeHostFolders.Bin}/neon-node-prep.sh
+
+# Enable the service to start at boot.
+
+systemctl enable neon-node-prep
+";
+                server.SudoCommand(CommandBundle.FromScript(neonNodePrepScript), RunOptions.FaultOnError);
 
                 // Virtualization host specific initialization.
 
