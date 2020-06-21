@@ -88,5 +88,36 @@ namespace TestCommon
                 Directory.Delete(customRoot);
             }
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void CustomParent()
+        {
+            string customRoot = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("d"));
+            string testFolderPath;
+            string testFilePath;
+
+            try
+            {
+                using (var folder = new TempFolder(folder: customRoot))
+                {
+                    testFolderPath = folder.Path;
+
+                    Assert.Equal(customRoot, Path.GetFullPath(Path.Combine(folder.Path, "..")));
+
+                    testFilePath = Path.Combine(folder.Path, "test.txt");
+
+                    File.WriteAllText(testFilePath, "Hello World!");
+                    Assert.True(File.Exists(testFilePath));
+                }
+
+                Assert.False(Directory.Exists(testFolderPath));
+                Assert.False(File.Exists(testFilePath));
+            }
+            finally
+            {
+                Directory.Delete(customRoot);
+            }
+        }
     }
 }
