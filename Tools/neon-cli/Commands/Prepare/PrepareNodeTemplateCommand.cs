@@ -341,7 +341,7 @@ groupmod --gid {KubeConst.SysAdminGID} {KubeConst.SysAdminGroup}
 usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups root,sysadmin,sudo {KubeConst.SysAdminUser}
 ";
 
-                Console.WriteLine("Relocate: [sysadmin] user IDs");
+                Console.WriteLine("Relocate: [sysadmin] user/group IDs");
                 server.SudoCommand(CommandBundle.FromScript(sysadminUserScript), RunOptions.FaultOnError);
                 Console.WriteLine($"Logout");
             }
@@ -435,16 +435,18 @@ cat <<EOF > /etc/systemd/system/neon-node-prep.service
 
 [Unit]
 Description=neonKUBE one-time node preparation service 
-Before=network.target
+DefaultDependencies=no
+Before=cloud-init-local.service
+After=local-fs.target
 
 [Service]
 Type=oneshot
 ExecStart={KubeHostFolders.Bin}/neon-node-prep.sh
 RemainAfterExit=false
-StandardOutput=journal
+StandardOutput=journal+console
 
 [Install]
-WantedBy=multi-user.target
+RequiredBy=cloud-init-local.service
 EOF
 
 # Create the service script.
@@ -498,25 +500,32 @@ cat <<EOF > {KubeHostFolders.Bin}/neon-node-prep.sh
 # Run the prep script only once.
 
 if [ -f /etc/neon-node-prep ] ; then
-    # We've already run this once.
+    echo ""INFO: Machine is already prepared.""
     exit 0
 fi
 
 # Check for the DVD/CD and prep script.
 
 mkdir -p /mnt/neon-node-prep
-mount /dev/dvd /mnt/neon-node-prep
 
 if [ ! $? ] ; then
-    echo ""ERROR: No DVD/CD is present.""
+    echo ""ERROR: Cannot create DVD mount point.""
     rm -rf /mnt/neon-node-prep
-    exit 0
+    exit 1
+fi
+
+mount --read-only /dev/dvd /mnt/neon-node-prep
+
+if [ ! $? ] ; then
+    echo ""WARNING: No DVD/CD is present.""
+    rm -rf /mnt/neon-node-prep
+    exit 1
 fi
 
 if [ ! -f /mnt/neon-node-prep/neon-node-prep.sh ] ; then
-    echo ""ERROR: No [neon-node-prep.sh] script is present on the DVD/CD.""
+    echo ""WARNING: No [neon-node-prep.sh] script is present on the DVD/CD.""
     rm -rf /mnt/neon-node-prep
-    exit 0
+    exit 1
 fi
 
 # The script file is present so execute it.
@@ -530,16 +539,25 @@ echo ""INFO: Cleanup""
 umount /mnt/neon-node-prep
 rm -rf /mnt/neon-node-prep
 
-# Disable any future preparations.
+# Disable any future node prepping.
 
 touch /etc/neon-node-prep
 EOF
 
 chmod 744 {KubeHostFolders.Bin}/neon-node-prep.sh
 
-# Enable the service to start at boot.
+# Configure [neon-node-prep] to start at boot.
 
 systemctl enable neon-node-prep
+systemctl daemon-reload
+
+# Configure [cloud-init] for [NoCloud] datasource.
+
+cat <<EOF >> /etc/cloud/cloud.cfg
+
+datasource:
+  NoCloud:
+EOF
 ";
                 server.SudoCommand(CommandBundle.FromScript(neonNodePrepScript), RunOptions.FaultOnError);
 
@@ -552,6 +570,7 @@ systemctl enable neon-node-prep
 
                     var cleanScript =
 @"#!/bin/bash
+cloud-init clean
 apt-get clean
 rm -rf /var/lib/dhcp/*
 sfill -fllz /
@@ -678,6 +697,7 @@ eject /dev/dvd
 
                         var cleanupScript =
 @"
+cloud-init clean
 apt-get clean
 rm -rf /var/lib/dhcp/*
 sfill -fllz /

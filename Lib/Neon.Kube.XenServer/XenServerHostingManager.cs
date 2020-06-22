@@ -28,6 +28,8 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.Net;
 using Neon.XenServer;
+using Neon.IO;
+using k8s.Models;
 
 namespace Neon.Kube
 {
@@ -382,80 +384,42 @@ namespace Neon.Kube
                     primaryStorageRepository:   cluster.Definition.Hosting.XenServer.StorageRepository,
                     extraStorageRespository:    cluster.Definition.Hosting.XenServer.OsdStorageRepository);
 
-                xenSshProxy.Status = FormatVmStatus(vmName, "start: virtual machine");
+                // Create a temporary ISO with the [neon-node-prep.sh] script, mount it
+                // to the VM and then boot the VM for the first time so that it will
+                // pick up its network configuration.
 
-                xenHost.Machine.Start(vm);
-
-                // We need to wait for the virtual machine to start and obtain
-                // and IP address via DHCP.
-
-                var address = string.Empty;
-
-                xenSshProxy.Status = FormatVmStatus(vmName, "discover: ip address");
+                var tempIso    = (TempFile)null;
+                var xenTempIso = (XenTempIso)null;
 
                 try
                 {
-                    NeonHelper.WaitFor(
-                        () =>
-                        {
-                            while (true)
-                            {
-                                vm = xenHost.Machine.Find(vmName);
-
-                                if (!string.IsNullOrEmpty(vm.Address))
-                                {
-                                    address = vm.Address;
-                                    return true;
-                                }
-
-                                Thread.Sleep(1000);
-                            }
-                        },
-                        TimeSpan.FromMinutes(3));
-                }
-                catch (TimeoutException)
-                {
-                    xenSshProxy.Fault("Timeout waiting for virtual machine to start and set an IP address.");
-                }
-
-                // SSH into the VM using the DHCP address, configure the static IP
-                // address and extend the primary partition and file system to fill
-                // the drive and then reboot.
-
-                var subnet = NetworkCidr.Parse(cluster.Definition.Network.PremiseSubnet);
-
-                // We're going to temporarily set the node to the current VM address
-                // so we can connect via SSH.
-
-                var nodePrivateAddress = node.PrivateAddress;
-
-                try
-                {
-                    node.PrivateAddress = IPAddress.Parse(address);
-
                     using (var nodeProxy = cluster.GetNode(node.Name))
                     {
-                        xenSshProxy.Status = FormatVmStatus(vmName, "connect");
+                        // Create a temporary ISO with the prep script and insert it
+                        // into the node VM.
+
+                        node.Status = $"mount: neon-node-prep iso";
+
+                        tempIso    = KubeHelper.CreateNodePrepIso(node.Cluster.Definition, node.Metadata);
+                        xenTempIso = xenHost.CreateTempIso(tempIso.Path);
+
+                        xenHost.Invoke($"vm-cd-eject", $"uuid={vm.Uuid}");
+                        xenHost.Invoke($"vm-cd-insert", $"uuid={vm.Uuid}", $"cd-name={xenTempIso.CdName}");
+
+                        // Start the VM for the first time with the mounted ISO.  The network
+                        // configuration will happen automatically by the time we can connect.
+
+                        node.Status = $"start: virtual machine (first boot)";
+
+                        xenHost.Machine.Start(vm);
+                        node.Status = $"connecting...";
                         nodeProxy.WaitForBoot();
-
-                        // Configure the node's network stack to the static IP address
-                        // and upstream nameservers.
-
-                        node.Status = $"network config [IP={nodePrivateAddress}]";
-
-                        var primaryInterface = node.GetNetworkInterface(node.PrivateAddress);
-
-                        node.ConfigureNetwork(
-                            networkInterface:   primaryInterface,
-                            address:            nodePrivateAddress,
-                            gateway:            IPAddress.Parse(cluster.Definition.Network.Gateway),
-                            subnet:             NetworkCidr.Parse(cluster.Definition.Network.PremiseSubnet),
-                            nameservers:        cluster.Definition.Network.Nameservers.Select(ns => IPAddress.Parse(ns)));
 
                         // Extend the primary partition and file system to fill 
                         // the virtual the drive.  Note that we're not going to 
                         // do this if the specified drive size is less than or
-                        // equal to the node template's drive size.
+                        // equal to the node template's drive size (because that
+                        // would fail).
 
                         if (diskBytes > KubeConst.NodeTemplateDiskSize)
                         {
@@ -472,18 +436,22 @@ namespace Neon.Kube
                             nodeProxy.SudoCommand("growpart /dev/xvda 2");
                             nodeProxy.SudoCommand("resize2fs /dev/xvda2");
                         }
-
-                        // Reboot to pick up the changes.
-
-                        xenSshProxy.Status = FormatVmStatus(vmName, "restarting...");
-                        nodeProxy.Reboot(wait: false);
                     }
                 }
                 finally
                 {
-                    // Restore the node's IP address.
+                    // Ensure that the DVD is ejected from the VM.
 
-                    node.PrivateAddress = nodePrivateAddress;
+                    xenHost.Invoke($"vm-cd-eject", $"uuid={vm.Uuid}");
+
+                    // Be sure to delete the local and remote ISO files so these don't accumulate.
+
+                    tempIso?.Dispose();
+
+                    if (xenTempIso != null)
+                    {
+                        xenHost.RemoveTempIso(xenTempIso);
+                    }
                 }
             }
         }

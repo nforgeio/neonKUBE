@@ -459,12 +459,12 @@ namespace Neon.Kube
 
                 controller.SetOperationStatus("Scanning network adapters");
 
-                var switches       = hyperv.ListVMSwitches();
+                var switches       = hyperv.ListVmSwitches();
                 var externalSwitch = switches.FirstOrDefault(s => s.Type == VirtualSwitchType.External);
 
                 if (externalSwitch == null)
                 {
-                    hyperv.NewVMExternalSwitch(switchName = defaultSwitchName, IPAddress.Parse(cluster.Definition.Network.Gateway));
+                    hyperv.NewVmExternalSwitch(switchName = defaultSwitchName, IPAddress.Parse(cluster.Definition.Network.Gateway));
                 }
                 else
                 {
@@ -477,7 +477,7 @@ namespace Neon.Kube
 
                 controller.SetOperationStatus("Scanning virtual machines");
 
-                var existingMachines = hyperv.ListVMs();
+                var existingMachines = hyperv.ListVms();
                 var conflicts        = string.Empty;
 
                 controller.SetOperationStatus("Stopping virtual machines");
@@ -619,12 +619,12 @@ namespace Neon.Kube
                     }
                 }
 
-                // Stop and delete the virtual machine if one exists.
+                // Stop and delete the virtual machine if one already exists.
 
-                if (hyperv.VMExists(vmName))
+                if (hyperv.VmExists(vmName))
                 {
-                    hyperv.StopVM(vmName);
-                    hyperv.RemoveVM(vmName);
+                    hyperv.StopVm(vmName);
+                    hyperv.RemoveVm(vmName);
                 }
 
                 // Create the virtual machine if it doesn't already exist.
@@ -649,7 +649,7 @@ namespace Neon.Kube
                 var diskBytes   = node.Metadata.GetVmDisk(cluster.Definition);
 
                 node.Status = $"create: virtual machine";
-                hyperv.AddVM(
+                hyperv.AddVm(
                     vmName,
                     processorCount: processors,
                     diskSize:       diskBytes.ToString(),
@@ -658,61 +658,38 @@ namespace Neon.Kube
                     switchName:     switchName,
                     extraDrives:    extraDrives);
 
-                node.Status = $"start: virtual machine";
+                // Create a temporary ISO with the [neon-node-prep.sh] script, mount it
+                // to the VM and then boot the VM for the first time so that it will
+                // pick up its network configuration.
 
-                hyperv.StartVM(vmName);
-
-                // Retrieve the virtual machine's network adapters (there should only be one) 
-                // to obtain the IP address we'll use to SSH into the machine and configure
-                // it's static IP.
-
-                node.Status = $"discover: ip address";
-
-                var adapters = hyperv.ListVMNetworkAdapters(vmName, waitForAddresses: true);
-                var adapter  = adapters.FirstOrDefault();
-                var address  = adapter.Addresses.First();
-
-                if (adapter == null)
-                {
-                    throw new HyperVException($"Virtual machine [{vmName}] has no network adapters.");
-                }
-
-                // We're going to temporarily set the node to the current VM address
-                // so we can connect via SSH.
-
-                var nodePrivateAddress = node.PrivateAddress;
+                var tempIso = (TempFile)null;
 
                 try
                 {
-                    node.PrivateAddress = address;
-
                     using (var nodeProxy = cluster.GetNode(node.Name))
                     {
+                        // Create a temporary ISO with the prep script and mount it
+                        // to the node VM.
+
+                        node.Status = $"mount: neon-node-prep iso";
+                        tempIso     = KubeHelper.CreateNodePrepIso(node.Cluster.Definition, node.Metadata);
+
+                        hyperv.InsertVmDvd(vmName, tempIso.Path);
+
+                        // Start the VM for the first time with the mounted ISO.  The network
+                        // configuration will happen automatically by the time we can connect.
+
+                        node.Status = $"start: virtual machine (first boot)";
+
+                        hyperv.StartVm(vmName);
                         node.Status = $"connecting...";
                         nodeProxy.WaitForBoot();
-
-                        // We need to ensure that the host folders exist.
-
-                        nodeProxy.CreateHostFolders();
-
-                        // Configure the node's network stack to the static IP address
-                        // and upstream nameservers.
-
-                        node.Status = $"config: network [IP={node.PrivateAddress}]";
-
-                        var primaryInterface = node.GetNetworkInterface(address);
-
-                        node.ConfigureNetwork(
-                            networkInterface:   primaryInterface,
-                            address:            nodePrivateAddress,
-                            gateway:            IPAddress.Parse(cluster.Definition.Network.Gateway),
-                            subnet:             NetworkCidr.Parse(cluster.Definition.Network.PremiseSubnet),
-                            nameservers:        cluster.Definition.Network.Nameservers.Select(ns => IPAddress.Parse(ns)));
 
                         // Extend the primary partition and file system to fill 
                         // the virtual the drive.  Note that we're not going to 
                         // do this if the specified drive size is less than or
-                        // equal to the node template's drive size.
+                        // equal to the node template's drive size (because that
+                        // would fail).
 
                         if (diskBytes > KubeConst.NodeTemplateDiskSize)
                         {
@@ -729,18 +706,17 @@ namespace Neon.Kube
                             nodeProxy.SudoCommand("growpart /dev/sda 2");
                             nodeProxy.SudoCommand("resize2fs /dev/sda2");
                         }
-
-                        // Reboot to pick up the changes.
-
-                        node.Status = $"restarting...";
-                        nodeProxy.Reboot(wait: false);
                     }
                 }
                 finally
                 {
-                    // Restore the node's IP address.
+                    // Ensure that the DVD is ejected from the VM.
 
-                    node.PrivateAddress = nodePrivateAddress;
+                    hyperv.EjectVmDvd(vmName);
+
+                    // Be sure to delete the ISO file so these don't accumulate.
+
+                    tempIso?.Dispose();
                 }
             }
         }

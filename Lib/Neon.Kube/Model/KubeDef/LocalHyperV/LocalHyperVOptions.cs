@@ -29,7 +29,7 @@ namespace Neon.Kube
     /// </summary>
     public class LocalHyperVOptions
     {
-        private const string defaultHostVhdxUri = "https://s3-us-west-2.amazonaws.com/neonforge/kube/hyperv-ubuntu-18.04.latest.vhdx";
+        private const string defaultHostVhdxUri = "https://s3-us-west-2.amazonaws.com/neonforge/kube/hyperv-ubuntu-20.04.latest.vhdx";
 
         /// <summary>
         /// Default constructor.
@@ -40,8 +40,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// URI to the zipped VHDX image with the base cluster host operating system.  This defaults to
-        /// <b>https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/hyperv-ubuntu-18.04.latest.vhdx</b>
+        /// URI to the VHDX image with the base cluster host operating system.  This defaults to
+        /// <b>https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/hyperv-ubuntu-20.04.latest.vhdx</b>
         /// which is the latest supported Ubuntu image.
         /// </para>
         /// <note>

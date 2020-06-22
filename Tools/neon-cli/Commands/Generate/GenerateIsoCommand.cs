@@ -58,6 +58,8 @@ OPTIONS:
 
     --linux         - Process all source files by converting all line
                       endings to Linux format before creating the ISO.
+
+    --label=VALUE   - Specifies the volume label
 ";
 
         /// <inheritdoc/>
@@ -90,6 +92,7 @@ OPTIONS:
             var sourceFolder = commandLine.Arguments.ElementAtOrDefault(0);
             var isoPath      = commandLine.Arguments.ElementAtOrDefault(1);
             var linux        = commandLine.GetFlag("--linux");
+            var label        = commandLine.GetOption("--label");
 
             if (string.IsNullOrEmpty(sourceFolder) || string.IsNullOrEmpty(isoPath))
             {
@@ -109,7 +112,7 @@ OPTIONS:
                 }
             }
 
-            KubeHelper.NewIsoFile(sourceFolder, isoPath);
+            KubeHelper.CreateIsoFile(sourceFolder, isoPath, label);
 
             Program.Exit(0);
         }

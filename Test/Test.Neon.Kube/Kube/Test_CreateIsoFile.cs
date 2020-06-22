@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_NewIsoFile.cs
+// FILE:	    Test_CreateIsoFile.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -33,7 +33,7 @@ using Xunit;
 
 namespace TestKube
 {
-    public class Test_NewIsoFile
+    public class Test_CreateIsoFile
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonKube)]
@@ -50,7 +50,7 @@ namespace TestKube
                         File.WriteAllText(Path.Combine(tempFolder.Path, $"{i}.txt"), $"{i}");
                     }
 
-                    KubeHelper.NewIsoFile(tempFolder.Path, tempIso.Path);
+                    KubeHelper.CreateIsoFile(tempFolder.Path, tempIso.Path, "TEST");
 
                     using (var file = new FileStream(tempIso.Path, FileMode.Open, FileAccess.Read))
                     {

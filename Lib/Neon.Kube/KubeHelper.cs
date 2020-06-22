@@ -1402,13 +1402,16 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="inputFolder">Path to the input folder.</param>
         /// <param name="isoPath">Path to the output ISO file.</param>
+        /// <param name="label">Optionally specifies a volume label.</param>
         /// <exception cref="ExecuteException">Thrown if the operation failed.</exception>
-        public static void NewIsoFile(string inputFolder, string isoPath)
+        public static void CreateIsoFile(string inputFolder, string isoPath, string label = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(inputFolder), nameof(inputFolder));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(isoPath), nameof(isoPath));
             Covenant.Requires<ArgumentException>(!inputFolder.Contains('"'), nameof(inputFolder));      // We don't escape quotes below so we'll
             Covenant.Requires<ArgumentException>(!isoPath.Contains('"'), nameof(isoPath));              // reject paths including quotes.
+
+            label = label ?? string.Empty;
 
             // We're going to use a function from the Microsoft Technet Script Center:
             //
@@ -1540,7 +1543,7 @@ public class ISOFile
             {
                 var script = newIsoFileFunc;
 
-                script += $"Get-ChildItem \"{inputFolder}\" | New-ISOFile -path \"{isoPath}\"";
+                script += $"Get-ChildItem \"{inputFolder}\" | New-ISOFile -path \"{isoPath}\" -Title \"{label}\"";
 
                 File.WriteAllText(tempFile.Path, script);
 
@@ -1551,6 +1554,101 @@ public class ISOFile
                     });
 
                 result.EnsureSuccess();
+            }
+        }
+
+        /// <summary>
+        /// Creates an ISO file containing the <b>neon-node-prep.sh</b> script that 
+        /// will provide the information to <b>cloud-init</b> when cluster nodes
+        /// are prepared on non-cloud virtualization hosts like Hyper-V and XenServer.
+        /// </summary>
+        /// <param name="clusterDefinition"></param>
+        /// <param name="nodeDefinition"></param>
+        /// <returns>A <see cref="TempFile"/> that references the generated ISO file.</returns>
+        /// <remarks>
+        /// <para>
+        /// The hosting manager will call this for each node being prepared and then
+        /// insert the ISO into the node VM's DVD/CD drive before booting the node
+        /// for the first time.  The <b>neon-node-prep</b> service configured on
+        /// the corresponding node templates will look for this DVD and script and
+        /// execute it early during the node boot process, before <b>cloud-init</b>
+        /// runs.  When <b>cloud-init</b> runs, it will complete the basic node
+        /// preparation.
+        /// </para>
+        /// <para>
+        /// The ISO file reference is returned as a <see cref="TempFile"/>.  The
+        /// caller should call <see cref="TempFile.Dispose()"/> when it's done
+        /// with the file to ensure that it is deleted.
+        /// </para>
+        /// </remarks>
+        public static TempFile CreateNodePrepIso(
+            ClusterDefinition       clusterDefinition,
+            NodeDefinition          nodeDefinition)
+        {
+            var address       = nodeDefinition.PrivateAddress;
+            var gateway       = clusterDefinition.Network.Gateway;
+            var subnet        = NetworkCidr.Parse(clusterDefinition.Network.PremiseSubnet);
+            var nameservers   = clusterDefinition.Network.Nameservers;
+            var sbNameservers = new StringBuilder();
+
+            // Generate the [neon-node-prep.sh] script.
+
+            foreach (var nameserver in nameservers)
+            {
+                sbNameservers.AppendWithSeparator(nameserver.ToString(), ",");
+            }
+
+            var nodePrepScript =
+$@"# Write the network related cloud-init YAML to the VM.
+
+echo ""Copy: /etc/netplan/50-cloud-init.yaml""
+
+cat <<EOF > /etc/netplan/50-cloud-init.yaml
+# This file is generated from information provided by the [neon-node-prep.sh]
+# script inserted into the VM's DVD/CD driver before first boot, which acts
+# as the cloud-init datasource.  Changes to this will not persist across reboots.
+# To disable cloud-init's network configuration capabilities, write a file
+# /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg with the following:
+# network: {{config: disabled}}
+network:
+    ethernets:
+        eth0:
+            addresses: [{address}/{subnet.PrefixLength}]
+            gateway4: {gateway}
+            nameservers:
+              addresses: [{sbNameservers}]
+            dhcp4: no
+    version: 2
+EOF
+
+echo ""Done""
+";
+            nodePrepScript = nodePrepScript.Replace("\r\n", "\n");  // Linux line endings
+
+            // Create an ISO that includes the script and return the ISO TempFile.
+            //
+            // NOTE:
+            //
+            // that the ISO needs to be created in an unencrypted folder so that Hyper-V 
+            // can mount it to a VM.  By default, [neon-cli] will redirect the [TempFolder] 
+            // and [TempFile] classes locate their folder and files here:
+            //
+            //      /USER/.neonkube/...     - which is encrypted on Windows
+
+            var orgTempPath = Path.GetTempPath();
+
+            using (var tempFolder = new TempFolder(folder: orgTempPath))
+            {
+                File.WriteAllText(Path.Combine(tempFolder.Path, "neon-node-prep.sh"), nodePrepScript);
+
+                // Note that the ISO needs to be created in an unencrypted folder
+                // (not /USER/neonkube/...) so that Hyper-V can mount it to a VM.
+                //
+                var isoFile = new TempFile(suffix: ".iso", folder: orgTempPath);
+
+                KubeHelper.CreateIsoFile(tempFolder.Path, isoFile.Path, "cidata");
+
+                return isoFile;
             }
         }
     }

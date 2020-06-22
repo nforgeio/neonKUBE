@@ -284,7 +284,7 @@ namespace Neon.XenServer
         /// <summary>
         /// Used for temporarily uploading an ISO disk to a XenServer such that it can be mounted
         /// to a VM, typically for one-time initialization purposes.  neonKUBE uses this as a very
-        /// simple poor man's alternative to <b>cloud-init</b> for initializing a VM on first bboot.
+        /// simple poor man's alternative to <b>cloud-init</b> for initializing a VM on first boot.
         /// </summary>
         /// <param name="isoPath">Path to the source ISO file on the local workstation.</param>
         /// <param name="srName">Optionally specifies the storage repository name.  <b>neon-UUID</b> with a generated UUID will be used by default.</param>

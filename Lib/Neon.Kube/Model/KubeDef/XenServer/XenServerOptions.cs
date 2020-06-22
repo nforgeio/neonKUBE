@@ -31,8 +31,8 @@ namespace Neon.Kube
     /// </summary>
     public class XenServerOptions
     {
-        private const string defaultHostXvaUri        = "http://s3-us-west-2.amazonaws.com/neonforge/kube/xenserver-ubuntu-18.04.latest.xva";
-        private const string defaultTemplate          = "neonkube-ubuntu-18.04";
+        private const string defaultHostXvaUri        = "http://s3-us-west-2.amazonaws.com/neonforge/kube/xenserver-ubuntu-20.04.latest.xva";
+        private const string defaultTemplate          = "neonkube-ubuntu-20.04";
         private const string defaultStorageRepository = "Local storage";
         private const bool   defaultSnapshot          = false;
 
@@ -46,8 +46,8 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// URI to the XenServer XVA image to use as a template for creating the virtual machines.  This defaults to
-        /// <b>http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/xenserver-ubuntu-18.04.latest.xva</b>
-        /// which is the latest supported Ubuntu 16.04 image.
+        /// <b>http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/xenserver-ubuntu-20.04.latest.xva</b>
+        /// which is the latest supported Ubuntu image.
         /// </para>
         /// <note>
         /// Production cluster definitions should be configured with an XVA with a specific version
