@@ -129,7 +129,7 @@ namespace Neon.HyperV
         /// </summary>
         /// <param name="rawMachine">The dynamic machine properties.</param>
         /// <returns>The parsed <see cref="VirtualMachine"/>.</returns>
-        private VirtualMachine ExtractVM(dynamic rawMachine)
+        private VirtualMachine ExtractVm(dynamic rawMachine)
         {
             var vm = new VirtualMachine();
 
@@ -213,7 +213,7 @@ namespace Neon.HyperV
         /// in the enumeration.
         /// </note>
         /// </remarks>
-        public void AddVM(
+        public void AddVm(
             string                      machineName, 
             string                      memorySize        = "2GiB", 
             int                         processorCount    = 4,
@@ -238,7 +238,7 @@ namespace Neon.HyperV
                 driveFolder = Path.GetDirectoryName(Path.GetFullPath(drivePath));
             }
 
-            if (VMExists(machineName))
+            if (VmExists(machineName))
             {
                 throw new HyperVException($"Virtual machine [{machineName}] already exists.");
             }
@@ -371,13 +371,13 @@ namespace Neon.HyperV
         /// Removes a named virtual machine.
         /// </summary>
         /// <param name="machineName">The machine name.</param>
-        public void RemoveVM(string machineName)
+        public void RemoveVm(string machineName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
 
-            var machine = GetVM(machineName);
-            var drives  = GetVMDrives(machineName);
+            var machine = GetVm(machineName);
+            var drives  = GetVmDrives(machineName);
 
             // Remove the machine along with any of of its virtual hard drive files.
 
@@ -400,7 +400,7 @@ namespace Neon.HyperV
         /// Lists the virtual machines.
         /// </summary>
         /// <returns><see cref="IEnumerable{VirtualMachine}"/>.</returns>
-        public IEnumerable<VirtualMachine> ListVMs()
+        public IEnumerable<VirtualMachine> ListVms()
         {
             CheckDisposed();
 
@@ -411,7 +411,7 @@ namespace Neon.HyperV
 
                 foreach (dynamic rawMachine in table)
                 {
-                    machines.Add(ExtractVM(rawMachine));
+                    machines.Add(ExtractVm(rawMachine));
                 }
 
                 return machines;
@@ -428,7 +428,7 @@ namespace Neon.HyperV
         /// </summary>
         /// <param name="machineName">The machine name.</param>
         /// <returns>The <see cref="VirtualMachine"/>.</returns>
-        public VirtualMachine GetVM(string machineName)
+        public VirtualMachine GetVm(string machineName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
@@ -440,7 +440,7 @@ namespace Neon.HyperV
 
                 Covenant.Assert(table.Count == 1);
 
-                return ExtractVM(table.First());
+                return ExtractVm(table.First());
             }
             catch (Exception e)
             {
@@ -453,19 +453,19 @@ namespace Neon.HyperV
         /// </summary>
         /// <param name="machineName">The machine name.</param>
         /// <returns><c>true</c> if the machine exists.</returns>
-        public bool VMExists(string machineName)
+        public bool VmExists(string machineName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
 
-            return ListVMs().Count(vm => vm.Name.Equals(machineName, StringComparison.InvariantCultureIgnoreCase)) > 0;
+            return ListVms().Count(vm => vm.Name.Equals(machineName, StringComparison.InvariantCultureIgnoreCase)) > 0;
         }
 
         /// <summary>
         /// Starts the named virtual machine.
         /// </summary>
         /// <param name="machineName">The machine name.</param>
-        public void StartVM(string machineName)
+        public void StartVm(string machineName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
@@ -484,7 +484,7 @@ namespace Neon.HyperV
         /// Stops the named virtual machine.
         /// </summary>
         /// <param name="machineName">The machine name.</param>
-        public void StopVM(string machineName)
+        public void StopVm(string machineName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
             CheckDisposed();
@@ -505,8 +505,11 @@ namespace Neon.HyperV
         /// </summary>
         /// <param name="machineName">The machine name.</param>
         /// <returns>The list of fully qualified virtual drive file paths.</returns>
-        public List<string> GetVMDrives(string machineName)
+        public List<string> GetVmDrives(string machineName)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
+            CheckDisposed();
+
             try
             {
                 var drives    = new List<string>();
@@ -523,15 +526,43 @@ namespace Neon.HyperV
             {
                 throw new HyperVException(e.Message, e);
             }
+        }
 
+        /// <summary>
+        /// Inserts an ISO file as the DVD/CD for a virtual machine, ejecting any
+        /// existing VM first.
+        /// </summary>
+        /// <param name="machineName">The machine name.</param>
+        /// <param name="isoPath">Path to the ISO file.</param>
+        public void InsertVmDvd(string machineName, string isoPath)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
+            CheckDisposed();
+
+            EjectVmDvd(machineName);
+            powershell.Execute($"Add-VMDvdDrive -VMName \"{machineName}\" -Path \"{isoPath}\" -ControllerNumber 1 -ControllerLocation 0");
+        }
+
+        /// <summary>
+        /// Ejects any DVD/CD that's currently inserted into a virtual machine.
+        /// </summary>
+        /// <param name="machineName">The machine name.</param>
+        public void EjectVmDvd(string machineName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
+            CheckDisposed();
+
+            powershell.Execute($"Remove-VMDvdDrive -VMName \"{machineName}\" -ControllerNumber 1 -ControllerLocation 0");
         }
 
         /// <summary>
         /// Returns the virtual network switches.
         /// </summary>
         /// <returns>The list of switches.</returns>
-        public List<VirtualSwitch> ListVMSwitches()
+        public List<VirtualSwitch> ListVmSwitches()
         {
+            CheckDisposed();
+
             try
             {
                 var switches    = new List<VirtualSwitch>();
@@ -577,7 +608,6 @@ namespace Neon.HyperV
             {
                 throw new HyperVException(e.Message, e);
             }
-
         }
 
         /// <summary>
@@ -586,10 +616,11 @@ namespace Neon.HyperV
         /// </summary>
         /// <param name="switchName">The new switch name.</param>
         /// <param name="gateway">Address of the cluster network gateway, used to identify a connected network interface.</param>
-        public void NewVMExternalSwitch(string switchName, IPAddress gateway)
+        public void NewVmExternalSwitch(string switchName, IPAddress gateway)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(switchName), nameof(switchName));
             Covenant.Requires<ArgumentNullException>(gateway != null, nameof(gateway));
+            CheckDisposed();
 
             if (!NetworkInterface.GetIsNetworkAvailable())
             {
@@ -670,8 +701,11 @@ namespace Neon.HyperV
         /// <param name="machineName">The machine name.</param>
         /// <param name="waitForAddresses">Optionally waits until at least one adapter has been able to acquire at least one IPv4 address.</param>
         /// <returns>The list of network adapters.</returns>
-        public List<VirtualNetworkAdapter> ListVMNetworkAdapters(string machineName, bool waitForAddresses = false)
+        public List<VirtualNetworkAdapter> ListVmNetworkAdapters(string machineName, bool waitForAddresses = false)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
+            CheckDisposed();
+
             try
             {
                 var stopwatch = new Stopwatch();
