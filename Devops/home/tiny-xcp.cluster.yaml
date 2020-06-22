@@ -15,19 +15,19 @@ hosting:
   vmNamePrefix: jeff
   vmHosts:
   - name: XCP-HOME
-    address: 10.0.172.188
+    address: 10.0.0.5
   xenServer:
      snapshot: true
 network:
   premiseSubnet: 10.0.0.0/16
-  nodesSubnet: 10.0.173.0/24
+  nodesSubnet: 10.0.0.0/16
 nodeOptions:
    upgrade: none
    passwordLength: 20
 nodes:
    master-0:
      role: master
-     privateAddress: 10.0.173.0
+     privateAddress: 10.0.1.30
      vmHost: XCP-HOME
      vmProcessors: 4
      vmMemory: 2GiB
