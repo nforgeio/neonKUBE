@@ -662,7 +662,7 @@ namespace Neon.Kube
                 // to the VM and then boot the VM for the first time so that it will
                 // pick up its network configuration.
 
-                var tempIso = (TempFile)null;
+                var tempVfd = (TempFile)null;
 
                 try
                 {
@@ -672,9 +672,9 @@ namespace Neon.Kube
                         // to the node VM.
 
                         node.Status = $"mount: neon-node-prep iso";
-                        tempIso     = KubeHelper.CreateNodePrepIso(node.Cluster.Definition, node.Metadata);
+                        tempVfd     = KubeHelper.CreateNodePrepVfd(node.Cluster.Definition, node.Metadata);
 
-                        hyperv.InsertVmDvd(vmName, tempIso.Path);
+                        hyperv.InsertVmFloppy(vmName, tempVfd.Path);
 
                         // Start the VM for the first time with the mounted ISO.  The network
                         // configuration will happen automatically by the time we can connect.
@@ -703,8 +703,8 @@ namespace Neon.Kube
                             // to delay for a few seconds before performing the operations.
 
                             Thread.Sleep(TimeSpan.FromSeconds(5));
-                            nodeProxy.SudoCommand("growpart /dev/sda 2");
-                            nodeProxy.SudoCommand("resize2fs /dev/sda2");
+                            nodeProxy.SudoCommand("growpart /dev/sdb 2");
+                            nodeProxy.SudoCommand("resize2fs /dev/sdb2");
                         }
                     }
                 }
@@ -712,11 +712,11 @@ namespace Neon.Kube
                 {
                     // Ensure that the DVD is ejected from the VM.
 
-                    hyperv.EjectVmDvd(vmName);
+                    hyperv.EjectVmFloppy(vmName);
 
-                    // Be sure to delete the ISO file so these don't accumulate.
+                    // Be sure to delete the VFD file so these don't accumulate.
 
-                    tempIso?.Dispose();
+                    tempVfd?.Dispose();
                 }
             }
         }

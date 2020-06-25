@@ -388,7 +388,7 @@ namespace Neon.Kube
                 // to the VM and then boot the VM for the first time so that it will
                 // pick up its network configuration.
 
-                var tempIso    = (TempFile)null;
+                var tempVfd    = (TempFile)null;
                 var xenTempIso = (XenTempIso)null;
 
                 try
@@ -400,8 +400,8 @@ namespace Neon.Kube
 
                         node.Status = $"mount: neon-node-prep iso";
 
-                        tempIso    = KubeHelper.CreateNodePrepIso(node.Cluster.Definition, node.Metadata);
-                        xenTempIso = xenHost.CreateTempIso(tempIso.Path);
+                        tempVfd    = KubeHelper.CreateNodePrepVfd(node.Cluster.Definition, node.Metadata);
+                        xenTempIso = xenHost.CreateTempIso(tempVfd.Path);
 
                         xenHost.Invoke($"vm-cd-eject", $"uuid={vm.Uuid}");
                         xenHost.Invoke($"vm-cd-insert", $"uuid={vm.Uuid}", $"cd-name={xenTempIso.CdName}");
@@ -446,7 +446,7 @@ namespace Neon.Kube
 
                     // Be sure to delete the local and remote ISO files so these don't accumulate.
 
-                    tempIso?.Dispose();
+                    tempVfd?.Dispose();
 
                     if (xenTempIso != null)
                     {

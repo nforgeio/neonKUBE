@@ -530,7 +530,7 @@ namespace Neon.HyperV
 
         /// <summary>
         /// Inserts an ISO file as the DVD/CD for a virtual machine, ejecting any
-        /// existing VM first.
+        /// existing disc first.
         /// </summary>
         /// <param name="machineName">The machine name.</param>
         /// <param name="isoPath">Path to the ISO file.</param>
@@ -553,6 +553,33 @@ namespace Neon.HyperV
             CheckDisposed();
 
             powershell.Execute($"Remove-VMDvdDrive -VMName \"{machineName}\" -ControllerNumber 1 -ControllerLocation 0");
+        }
+
+        /// <summary>
+        /// Inserts an VFD file as the floppy for a virtual machine, ejecting any
+        /// existing disc first.
+        /// </summary>
+        /// <param name="machineName">The machine name.</param>
+        /// <param name="vfdPath">Path to the VFD file.</param>
+        public void InsertVmFloppy(string machineName, string vfdPath)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
+            CheckDisposed();
+
+            EjectVmFloppy(machineName);
+            powershell.Execute($"Set-VMFloppyDiskDrive -VMName \"{machineName}\" -Path \"{vfdPath}\"");
+        }
+
+        /// <summary>
+        /// Ejects any floppy that's currently inserted into a virtual machine.
+        /// </summary>
+        /// <param name="machineName">The machine name.</param>
+        public void EjectVmFloppy(string machineName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName), nameof(machineName));
+            CheckDisposed();
+
+            powershell.Execute($"Set-VMFloppyDiskDrive -VMName \"{machineName}\" -Path $null");
         }
 
         /// <summary>

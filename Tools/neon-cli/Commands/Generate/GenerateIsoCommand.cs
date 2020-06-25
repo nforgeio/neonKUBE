@@ -51,7 +51,6 @@ USAGE:
 ARGUMENTS:
 
     SOURCE-FOLDER   - Path to the input folder.
-
     ISO-PATH        - Path to the output ISO file.
 
 OPTIONS:

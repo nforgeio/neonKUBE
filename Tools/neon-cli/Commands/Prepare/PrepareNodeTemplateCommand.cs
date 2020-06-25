@@ -406,6 +406,48 @@ update-initramfs -u
                 Console.WriteLine("Install:  guest integration services");
                 server.SudoCommand(CommandBundle.FromScript(guestServicesScript), RunOptions.FaultOnError);
 
+                // Delete the pre-installed [/etc/netplan/*] files and add [no-dhcp.yaml]
+                // which will effectively disable the network on first boot from the template.
+
+                Console.WriteLine("Network:  disable DHCP");
+
+                var initNetPlanScript =
+$@"
+rm /etc/netplan/*
+
+cat <<EOF > /etc/netplan/no-dhcp.yaml
+# This file is used to disable the network when a new VM created from
+# a template is booted.  The [neon-node-prep] service handles network
+# provisioning in conjunction with the cluster prepare step.
+#
+# Cluster prepare inserts a virtual floppy disc with a script that
+# handles the network configuration which [neon-node-prep] will
+# execute.
+
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth0:
+      dhcp4: no
+EOF
+";
+                server.SudoCommand(CommandBundle.FromScript(initNetPlanScript), RunOptions.FaultOnError);
+
+                // We're going to disable [cloud-init] because we couldn't get it to work with
+                // the NoCloud datasource.  There were just too many moving parts and it was 
+                // really hard to figure out what [cloud-init] was doing or not doing.  Mounting
+                // a floppy with a script that [neon-node-prep] executes is just as flexible
+                // and is much easier to understand.
+
+                Console.WriteLine("Disable:  [cloud-init]");
+
+                var disableCloudInitScript =
+$@"
+touch /etc/cloud/cloud-init.disabled
+";
+                server.SudoCommand(CommandBundle.FromScript(disableCloudInitScript), RunOptions.FaultOnError);
+
                 // Install and configure the [neon-node-prep] service.  This is a simple script
                 // that is configured to run as a oneshot systemd service before networking is
                 // started.  This is currently used to configure the node's static IP address
@@ -435,9 +477,7 @@ cat <<EOF > /etc/systemd/system/neon-node-prep.service
 
 [Unit]
 Description=neonKUBE one-time node preparation service 
-DefaultDependencies=no
-Before=cloud-init-local.service
-After=local-fs.target
+After=systemd-networkd.service
 
 [Service]
 Type=oneshot
@@ -446,7 +486,7 @@ RemainAfterExit=false
 StandardOutput=journal+console
 
 [Install]
-RequiredBy=cloud-init-local.service
+WantedBy=multi-user.target
 EOF
 
 # Create the service script.
@@ -476,26 +516,27 @@ cat <<EOF > {KubeHostFolders.Bin}/neon-node-prep.sh
 #
 #       1. neonKUBE cluster setup creates a node VM from a template.
 #
-#       2. Setup creates a temporary ISO with a script named 
+#       2. Setup creates a temporary VFD (floppy) image with a script named 
 #          [neon-node-prep.sh] on it and uploads this to the Hyper-V
 #          or XenServer host machine.
 #
-#       3. Setup inserts the ISO into the VM's DVD/CD and starts the VM.
+#       3. Setup inserts the VFD into the VM's FLOPPY drive and starts the VM.
 #
-#       4. The VM boots, eventually running this script.
+#       4. The VM boots, eventually running this script (via the
+#          [neon-node-prep] service).
 #
-#       5. This script checks whether a DVD/CD is present and mounts
+#       5. This script checks whether a FLOPPY is present, mounts
 #          it and checks it for the [neon-node-prep.sh] script.
 #
-#       6. If the DVD/CD and script file are present, this service will
-#          execute the script via Bash, peforming any custom setup required 
-#          and then this script creates the [/etc/neon-node-prep] which will
-#          prevent the service from doing anything during subsequent node 
+#       6. If the FLOPPY and script file are present, this service will
+#          execute the script via Bash, peforming any required custom setup.
+#          Then this script creates the [/etc/neon-node-prep] file which 
+#          prevents the service from doing anything during subsequent node 
 #          reboots.
 #
-#       7. The service just exists if the DVD/CD and/or script file are 
+#       7. The service just exists if the FLOPPY and/or script file are 
 #          not present.  This shouldn't happen in production but is useful
-#          for debugging.
+#          for script debugging.
 
 # Run the prep script only once.
 
@@ -504,40 +545,41 @@ if [ -f /etc/neon-node-prep ] ; then
     exit 0
 fi
 
-# Check for the DVD/CD and prep script.
+# Check for the FLOPPY and prep script.
 
-mkdir -p /mnt/neon-node-prep
-
-if [ ! $? ] ; then
-    echo ""ERROR: Cannot create DVD mount point.""
-    rm -rf /mnt/neon-node-prep
-    exit 1
-fi
-
-mount --read-only /dev/dvd /mnt/neon-node-prep
+mkdir -p /media/neon-node-prep
 
 if [ ! $? ] ; then
-    echo ""WARNING: No DVD/CD is present.""
-    rm -rf /mnt/neon-node-prep
+    echo ""ERROR: Cannot create FLOPPY mount point.""
+    rm -rf /media/neon-node-prep
     exit 1
 fi
 
-if [ ! -f /mnt/neon-node-prep/neon-node-prep.sh ] ; then
-    echo ""WARNING: No [neon-node-prep.sh] script is present on the DVD/CD.""
-    rm -rf /mnt/neon-node-prep
-    exit 1
+mount /dev/fd0 /media/neon-node-prep
+
+if [ ! $? ] ; then
+    echo ""WARNING: No FLOPPY is present.""
+    rm -rf /media/neon-node-prep
+    exit 0
 fi
 
-# The script file is present so execute it.
+if [ ! -f /media/neon-node-prep/neon-node-prep.sh ] ; then
+    echo ""WARNING: No [neon-node-prep.sh] script is present on the FLOPPY.""
+    rm -rf /media/neon-node-prep
+    exit 0
+fi
+
+# The script file is present so execute it.  Note that we're
+# passing the path where the floppy is mounted as a parameter.
 
 echo ""INFO: Running [neon-node-prep.sh]""
-bash /mnt/neon-node-prep/neon-node-prep.sh
+bash /media/neon-node-prep/neon-node-prep.sh /media/neon-node-prep
 
-# Unmount the DVD/CD and cleanup.
+# Unmount the FLOPPY and cleanup.
 
 echo ""INFO: Cleanup""
-umount /mnt/neon-node-prep
-rm -rf /mnt/neon-node-prep
+umount /media/neon-node-prep
+rm -rf /media/neon-node-prep
 
 # Disable any future node prepping.
 
@@ -550,14 +592,6 @@ chmod 744 {KubeHostFolders.Bin}/neon-node-prep.sh
 
 systemctl enable neon-node-prep
 systemctl daemon-reload
-
-# Configure [cloud-init] for [NoCloud] datasource.
-
-cat <<EOF >> /etc/cloud/cloud.cfg
-
-datasource:
-  NoCloud:
-EOF
 ";
                 server.SudoCommand(CommandBundle.FromScript(neonNodePrepScript), RunOptions.FaultOnError);
 
@@ -680,9 +714,11 @@ sfill -fllz /
 
                         var guestToolsScript =
 @"
-mount /dev/dvd /mnt
-/mnt/Linux/install.sh -n
+mkdir -p /media/guest-tools
+mount /dev/dvd /media/guest-tools
+/media/guest-tools/Linux/install.sh -n
 eject /dev/dvd
+rm -rf /media/guest-tools
 ";
                         Console.WriteLine("Install:  XenServer Tools");
                         server.SudoCommand(CommandBundle.FromScript(guestToolsScript), RunOptions.FaultOnError);
