@@ -44,6 +44,7 @@ using Neon.HyperV;
 using Neon.IO;
 using Neon.Net;
 using Neon.Time;
+using Org.BouncyCastle.Utilities;
 
 namespace Neon.Kube
 {
@@ -662,7 +663,7 @@ namespace Neon.Kube
                 // to the VM and then boot the VM for the first time so that it will
                 // pick up its network configuration.
 
-                var tempVfd = (TempFile)null;
+                var tempIso = (TempFile)null;
 
                 try
                 {
@@ -672,9 +673,9 @@ namespace Neon.Kube
                         // to the node VM.
 
                         node.Status = $"mount: neon-node-prep iso";
-                        tempVfd     = KubeHelper.CreateNodePrepVfd(node.Cluster.Definition, node.Metadata);
+                        tempIso     = KubeHelper.CreateNodePrepIso(node.Cluster.Definition, node.Metadata);
 
-                        hyperv.InsertVmFloppy(vmName, tempVfd.Path);
+                        hyperv.InsertVmDvd(vmName, tempIso.Path);
 
                         // Start the VM for the first time with the mounted ISO.  The network
                         // configuration will happen automatically by the time we can connect.
@@ -686,37 +687,25 @@ namespace Neon.Kube
                         nodeProxy.WaitForBoot();
 
                         // Extend the primary partition and file system to fill 
-                        // the virtual the drive.  Note that we're not going to 
-                        // do this if the specified drive size is less than or
-                        // equal to the node template's drive size (because that
+                        // the virtual drive.  Note that we're not going to do
+                        // this if the specified drive size is less than or equal
+                        // to the node template's drive size (because that
                         // would fail).
 
                         if (diskBytes > KubeConst.NodeTemplateDiskSize)
                         {
                             node.Status = $"resize: primary drive";
 
-                            // $hack(jefflill):
-                            //
-                            // I've seen a transient error here but can't reproduce it.  I'm going
-                            // to assume for now that the file system might not be quite ready for
-                            // this operation directly after the VM has been rebooted, so we're going
-                            // to delay for a few seconds before performing the operations.
-
-                            Thread.Sleep(TimeSpan.FromSeconds(5));
-                            nodeProxy.SudoCommand("growpart /dev/sdb 2");
-                            nodeProxy.SudoCommand("resize2fs /dev/sdb2");
+                            nodeProxy.SudoCommand("growpart /dev/sda 2");
+                            nodeProxy.SudoCommand("resize2fs /dev/sda2");
                         }
                     }
                 }
                 finally
                 {
-                    // Ensure that the DVD is ejected from the VM.
+                    // Be sure to delete the ISO file so these don't accumulate.
 
-                    hyperv.EjectVmFloppy(vmName);
-
-                    // Be sure to delete the VFD file so these don't accumulate.
-
-                    tempVfd?.Dispose();
+                    tempIso?.Dispose();
                 }
             }
         }

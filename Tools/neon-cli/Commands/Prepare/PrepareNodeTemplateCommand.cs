@@ -30,12 +30,10 @@ using Newtonsoft;
 using Newtonsoft.Json;
 
 using Neon.Common;
+using Neon.HyperV;
+using Neon.IO;
 using Neon.Kube;
 using Neon.XenServer;
-using Remotion.Linq.Parsing.Structure.IntermediateModel;
-using Neon.IO;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using Neon.HyperV;
 
 namespace NeonCli
 {
@@ -82,8 +80,7 @@ OPTIONS:
 
                           ""xenserver-ubuntu-neon""
 
-    --upgrade       - Upgrades an existing template VM to the latest 
-                      Ubuntu distribution bits.
+    --upgrade       - Applies any distribution upgrades to the template. 
 
 REMARKS:
 
@@ -145,21 +142,7 @@ node template.
             var upgrade       = commandLine.GetFlag("--upgrade");
             var hostIpAddress = (IPAddress)null;
 
-            if (!upgrade)
-            {
-                if (!hyperv && !xenserver)
-                {
-                    Console.Error.WriteLine("**** ERROR: One of [--hyperv] or [--xenserver] must be specified.");
-                    Program.Exit(1);
-                }
-                else if (hyperv && xenserver)
-                {
-                    Console.Error.WriteLine("**** ERROR: Only one of [--hyperv] or [--xenserver] can be specified.");
-                    Program.Exit(1);
-                }
-            }
-
-            if (xenserver && !upgrade)
+            if (xenserver)
             {
                 if (string.IsNullOrEmpty(hostAddress))
                 {
@@ -242,7 +225,7 @@ node template.
                 return;
             }
 
-            // Perform the full template initialization.
+            // Prepare the template.
 
             Console.WriteLine();
             Console.WriteLine($"** Prepare {vmHost} VM Template ***");
@@ -266,6 +249,12 @@ node template.
                 Console.WriteLine("Install:  packages");
                 server.SudoCommand("apt-get update", RunOptions.FaultOnError);
                 server.SudoCommand("apt-get install -yq --allow-downgrades zip secure-delete", RunOptions.FaultOnError);
+
+                if (upgrade)
+                {
+                    Console.WriteLine("Run:      apt-get dist-upgrade -yq");
+                    server.SudoCommand("apt-get dist-upgrade -yq");
+                }
 
                 // Disable SWAP by editing [/etc/fstab] to remove the [/swap.img] line:
 
@@ -420,7 +409,7 @@ cat <<EOF > /etc/netplan/no-dhcp.yaml
 # a template is booted.  The [neon-node-prep] service handles network
 # provisioning in conjunction with the cluster prepare step.
 #
-# Cluster prepare inserts a virtual floppy disc with a script that
+# Cluster prepare inserts a virtual DVD disc with a script that
 # handles the network configuration which [neon-node-prep] will
 # execute.
 
@@ -437,7 +426,7 @@ EOF
                 // We're going to disable [cloud-init] because we couldn't get it to work with
                 // the NoCloud datasource.  There were just too many moving parts and it was 
                 // really hard to figure out what [cloud-init] was doing or not doing.  Mounting
-                // a floppy with a script that [neon-node-prep] executes is just as flexible
+                // a DVD with a script that [neon-node-prep] executes is just as flexible
                 // and is much easier to understand.
 
                 Console.WriteLine("Disable:  [cloud-init]");
@@ -516,25 +505,25 @@ cat <<EOF > {KubeHostFolders.Bin}/neon-node-prep.sh
 #
 #       1. neonKUBE cluster setup creates a node VM from a template.
 #
-#       2. Setup creates a temporary VFD (floppy) image with a script named 
+#       2. Setup creates a temporary ISO (DVD) image with a script named 
 #          [neon-node-prep.sh] on it and uploads this to the Hyper-V
 #          or XenServer host machine.
 #
-#       3. Setup inserts the VFD into the VM's FLOPPY drive and starts the VM.
+#       3. Setup inserts the VFD into the VM's DVD drive and starts the VM.
 #
 #       4. The VM boots, eventually running this script (via the
 #          [neon-node-prep] service).
 #
-#       5. This script checks whether a FLOPPY is present, mounts
+#       5. This script checks whether a DVD is present, mounts
 #          it and checks it for the [neon-node-prep.sh] script.
 #
-#       6. If the FLOPPY and script file are present, this service will
+#       6. If the DVD and script file are present, this service will
 #          execute the script via Bash, peforming any required custom setup.
 #          Then this script creates the [/etc/neon-node-prep] file which 
 #          prevents the service from doing anything during subsequent node 
 #          reboots.
 #
-#       7. The service just exists if the FLOPPY and/or script file are 
+#       7. The service just exists if the DVD and/or script file are 
 #          not present.  This shouldn't happen in production but is useful
 #          for script debugging.
 
@@ -545,37 +534,37 @@ if [ -f /etc/neon-node-prep ] ; then
     exit 0
 fi
 
-# Check for the FLOPPY and prep script.
+# Check for the DVD and prep script.
 
 mkdir -p /media/neon-node-prep
 
 if [ ! $? ] ; then
-    echo ""ERROR: Cannot create FLOPPY mount point.""
+    echo ""ERROR: Cannot create DVD mount point.""
     rm -rf /media/neon-node-prep
     exit 1
 fi
 
-mount /dev/fd0 /media/neon-node-prep
+mount /dev/dvd /media/neon-node-prep
 
 if [ ! $? ] ; then
-    echo ""WARNING: No FLOPPY is present.""
+    echo ""WARNING: No DVD is present.""
     rm -rf /media/neon-node-prep
     exit 0
 fi
 
 if [ ! -f /media/neon-node-prep/neon-node-prep.sh ] ; then
-    echo ""WARNING: No [neon-node-prep.sh] script is present on the FLOPPY.""
+    echo ""WARNING: No [neon-node-prep.sh] script is present on the DVD.""
     rm -rf /media/neon-node-prep
     exit 0
 fi
 
 # The script file is present so execute it.  Note that we're
-# passing the path where the floppy is mounted as a parameter.
+# passing the path where the DVD is mounted as a parameter.
 
 echo ""INFO: Running [neon-node-prep.sh]""
 bash /media/neon-node-prep/neon-node-prep.sh /media/neon-node-prep
 
-# Unmount the FLOPPY and cleanup.
+# Unmount the DVD and cleanup.
 
 echo ""INFO: Cleanup""
 umount /media/neon-node-prep

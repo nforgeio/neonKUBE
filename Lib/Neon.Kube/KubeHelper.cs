@@ -1587,7 +1587,7 @@ public class ISOFile
         {
             var address       = nodeDefinition.PrivateAddress;
             var gateway       = clusterDefinition.Network.Gateway;
-            var subnet        = NetworkCidr.Parse(clusterDefinition.Network.PremiseSubnet);
+            var premiseSubnet = NetworkCidr.Parse(clusterDefinition.Network.PremiseSubnet);
             var nameservers   = clusterDefinition.Network.Nameservers;
             var sbNameservers = new StringBuilder();
 
@@ -1599,29 +1599,46 @@ public class ISOFile
             }
 
             var nodePrepScript =
-$@"# Write the network related cloud-init YAML to the VM.
+$@"# This script is called by the [neon-node-prep] service when the prep
+# floppy is inserted on first boot.  This script handles configuring the
+# network.
+#
+# The first parameter will be passed as the path where the floppy is mounted.
 
-echo ""Copy: /etc/netplan/50-cloud-init.yaml""
+floppyFolder=${1}
 
-cat <<EOF > /etc/netplan/50-cloud-init.yaml
-# This file is generated from information provided by the [neon-node-prep.sh]
-# script inserted into the VM's DVD/CD driver before first boot, which acts
-# as the cloud-init datasource.  Changes to this will not persist across reboots.
-# To disable cloud-init's network configuration capabilities, write a file
-# /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg with the following:
-# network: {{config: disabled}}
+echo ""Configure network: {address}""
+
+rm /etc/netplan/*
+
+cat <<EOF > /etc/netplan/static.yaml
+# Static network configuration initialized during first boot by the 
+# [neon-node-prep] service from a virtual floppy inserted during
+# cluster prepare.
+
 network:
-    ethernets:
-        eth0:
-            addresses: [{address}/{subnet.PrefixLength}]
-            gateway4: {gateway}
-            nameservers:
-              addresses: [{sbNameservers}]
-            dhcp4: no
-    version: 2
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth0:
+     dhcp4: no
+     addresses: [{address}/{premiseSubnet.PrefixLength}]
+     gateway4: {gateway}
+     nameservers:
+       addresses: [{sbNameservers}]
 EOF
 
+echo ""Restart network""
+
+netplan apply
+
+if [ ! $? ] ; then
+    echo ""ERROR: Network restart failed.""
+    exit 1
+fi
+
 echo ""Done""
+exit 0
 ";
             nodePrepScript = nodePrepScript.Replace("\r\n", "\n");  // Linux line endings
 
@@ -1651,7 +1668,6 @@ echo ""Done""
                 return isoFile;
             }
         }
-
 
         /// <summary>
         /// Creates an floppy VFD file containing the <b>neon-node-prep.sh</b> script that 

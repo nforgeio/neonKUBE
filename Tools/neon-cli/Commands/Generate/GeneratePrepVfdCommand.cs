@@ -38,7 +38,7 @@ using System.ComponentModel;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>generate init-floppy</b> command.
+    /// Implements the <b>generate prep-vfd</b> command.
     /// </summary>
     public class GeneratePrepVfdCommand : CommandBase
     {

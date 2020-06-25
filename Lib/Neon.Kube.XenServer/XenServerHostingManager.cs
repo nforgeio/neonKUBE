@@ -416,34 +416,22 @@ namespace Neon.Kube
                         nodeProxy.WaitForBoot();
 
                         // Extend the primary partition and file system to fill 
-                        // the virtual the drive.  Note that we're not going to 
-                        // do this if the specified drive size is less than or
-                        // equal to the node template's drive size (because that
+                        // the virtual drive.  Note that we're not going to do
+                        // this if the specified drive size is less than or equal
+                        // to the node template's drive size (because that
                         // would fail).
 
                         if (diskBytes > KubeConst.NodeTemplateDiskSize)
                         {
-                            xenSshProxy.Status = FormatVmStatus(vmName, $"resize: primary drive");
+                            node.Status = $"resize: primary drive";
 
-                            // $hack(jefflill):
-                            //
-                            // I've seen a transient error here but can't reproduce it.  I'm going
-                            // to assume for now that the file system might not be quite ready for
-                            // this operation directly after the VM has been rebooted, so we're going
-                            // to delay for a few seconds before performing the operations.
-
-                            Thread.Sleep(TimeSpan.FromSeconds(5));
-                            nodeProxy.SudoCommand("growpart /dev/xvda 2");
-                            nodeProxy.SudoCommand("resize2fs /dev/xvda2");
+                            nodeProxy.SudoCommand("growpart /dev/sda 2");
+                            nodeProxy.SudoCommand("resize2fs /dev/sda2");
                         }
                     }
                 }
                 finally
                 {
-                    // Ensure that the DVD is ejected from the VM.
-
-                    xenHost.Invoke($"vm-cd-eject", $"uuid={vm.Uuid}");
-
                     // Be sure to delete the local and remote ISO files so these don't accumulate.
 
                     tempVfd?.Dispose();
