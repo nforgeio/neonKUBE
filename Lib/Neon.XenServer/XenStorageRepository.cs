@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using Neon.Common;
 using Neon.Kube;
 
-namespace Neon.Xen
+namespace Neon.XenServer
 {
     /// <summary>
     /// Describes a XenServer storage repository.

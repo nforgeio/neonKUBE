@@ -18,13 +18,13 @@ nodeOptions:
 nodes:
   master-0:
     role: master
-    privateAddress: 10.0.0.30
+    privateAddress: 10.0.1.30
   worker-0:
     role: worker
-    privateAddress: 10.0.0.40
+    privateAddress: 10.0.1.40
   worker-1:
     role: worker
-    privateAddress: 10.0.0.41
+    privateAddress: 10.0.1.41
   worker-2:
     role: worker
-    privateAddress: 10.0.0.42
+    privateAddress: 10.0.1.42

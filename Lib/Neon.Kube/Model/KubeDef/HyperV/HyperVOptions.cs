@@ -30,7 +30,7 @@ namespace Neon.Kube
     /// </summary>
     public class HyperVOptions
     {
-        private const string defaultHostVhdxUri = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-Ubuntu-18.04.latest.vhdx";
+        private const string defaultHostVhdxUri = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/hyperv-ubuntu-20.04.latest.vhdx";
 
         /// <summary>
         /// Default constructor.
@@ -41,9 +41,9 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// URI to the zipped VHDX image with the base cluster host operating system.  This defaults to
-        /// <b>https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-Ubuntu-18.04.latest.vhdx</b>
-        /// which is the latest supported Ubuntu 16.04 image.
+        /// URI to the VHDX image with the base cluster host operating system.  This defaults to
+        /// <b>https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/hyperv-ubuntu-20.04.latest.vhdx</b>
+        /// which is the latest supported Ubuntu image.
         /// </para>
         /// <note>
         /// Production cluster definitions should be configured with an VHDX with a specific version
@@ -51,7 +51,7 @@ namespace Neon.Kube
         /// operating system version.
         /// </note>
         /// <note>
-        /// The image file is actually a Hyper-V VHDX zipped using <b>neon zip create PATH-TO-VHDX PATH-TO-ZIP</b>.
+        /// The image file is actually a Hyper-V VHDX.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "HostVhdxUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

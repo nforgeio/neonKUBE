@@ -31,7 +31,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Kube;
 
-namespace Neon.Xen
+namespace Neon.XenServer
 {
     public partial class XenClient
     {
@@ -58,7 +58,7 @@ namespace Neon.Xen
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
             public List<XenTemplate> List()
             {
-                var response  = client.SafeInvokeList("template-list", "params=all");
+                var response  = client.SafeInvokeItems("template-list", "params=all");
                 var templates = new List<XenTemplate>();
 
                 foreach (var result in response.Items)

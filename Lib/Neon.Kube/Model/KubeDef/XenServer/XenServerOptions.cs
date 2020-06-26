@@ -31,8 +31,8 @@ namespace Neon.Kube
     /// </summary>
     public class XenServerOptions
     {
-        private const string defaultHostXvaUri        = "http://s3-us-west-2.amazonaws.com/neonforge/kube/xenserver-ubuntu-18.04.latest.xva";
-        private const string defaultTemplate          = "neonkube-ubuntu-18.04";
+        private const string defaultHostXvaUri        = "http://s3-us-west-2.amazonaws.com/neonforge/kube/xenserver-ubuntu-20.04.latest.xva";
+        private const string defaultTemplate          = "neonkube-ubuntu-20.04";
         private const string defaultStorageRepository = "Local storage";
         private const bool   defaultSnapshot          = false;
 
@@ -46,8 +46,8 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// URI to the XenServer XVA image to use as a template for creating the virtual machines.  This defaults to
-        /// <b>http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-Ubuntu-18.04.latest.xva</b>
-        /// which is the latest supported Ubuntu 16.04 image.
+        /// <b>http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/xenserver-ubuntu-20.04.latest.xva</b>
+        /// which is the latest supported Ubuntu image.
         /// </para>
         /// <note>
         /// Production cluster definitions should be configured with an XVA with a specific version
@@ -66,7 +66,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Names the XenServer template to be used when creating cluster nodes.  This defaults
-        /// to <b>ubuntu-template</b>.
+        /// to <b>neonkube-ubuntu-18.04</b>.
         /// </summary>
         [JsonProperty(PropertyName = "TemplateName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "templateName", ApplyNamingConventions = false)]
@@ -82,15 +82,6 @@ namespace Neon.Kube
         [YamlMember(Alias = "storageRepository", ApplyNamingConventions = false)]
         [DefaultValue(defaultStorageRepository)]
         public string StorageRepository { get; set; } = defaultStorageRepository;
-
-        /// <summary>
-        /// Identifies the XenServer storage repository to be used to for any Ceph OSD
-        /// drives created for the cluster.  This defaults to <b>Local storage</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "OsdStorageRepository", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "osdStorageRepository", ApplyNamingConventions = false)]
-        [DefaultValue(defaultStorageRepository)]
-        public string OsdStorageRepository { get; set; } = defaultStorageRepository;
 
         /// <summary>
         /// Optionally directs XenCenter to create the virtual machines using a snapshot of
@@ -134,10 +125,9 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            HostXvaUri           = HostXvaUri ?? defaultHostXvaUri;
-            TemplateName         = TemplateName ?? defaultTemplate;
-            StorageRepository    = StorageRepository ?? defaultStorageRepository;
-            OsdStorageRepository = OsdStorageRepository ?? defaultStorageRepository;
+            HostXvaUri        = HostXvaUri ?? defaultHostXvaUri;
+            TemplateName      = TemplateName ?? defaultTemplate;
+            StorageRepository = StorageRepository ?? defaultStorageRepository;
 
             if (string.IsNullOrEmpty(HostXvaUri) || !Uri.TryCreate(HostXvaUri, UriKind.Absolute, out Uri uri))
             {
@@ -147,11 +137,6 @@ namespace Neon.Kube
             if (string.IsNullOrEmpty(StorageRepository))
             {
                 throw new ClusterDefinitionException($"[{nameof(XenServerOptions)}.{nameof(StorageRepository)}] is required when deploying to XenServer.");
-            }
-
-            if (string.IsNullOrEmpty(OsdStorageRepository))
-            {
-                OsdStorageRepository = StorageRepository;
             }
 
             clusterDefinition.ValidatePrivateNodeAddresses();                                           // Private node IP addresses must be assigned and valid.

@@ -78,6 +78,8 @@ COMMAND SUMMARY:
     neon cluster prepare    [CLUSTER-DEF]
     neon cluster setup      [CLUSTER-DEF]
     neon couchbase          COMMNAND
+    neon generate iso       SOURCE-FOLDER ISO-PATH
+    neon generate prep-fvd  IP-ADDRESS VFD-PATH
     neon generate models    [OPTIONS] ASSEMBLY-PATH [OUTPUT-PATH]
     neon login              COMMAND
     neon logout
@@ -238,6 +240,8 @@ You can disable the use of this encrypted folder by specifying
                     new CouchbaseQueryCommand(),
                     new CouchbaseUpsertCommand(),
                     new GenerateCommand(),
+                    new GeneratePrepVfdCommand(),
+                    new GenerateIsoCommand(),
                     new GenerateModelsCommand(),
                     new LoginCommand(),
                     new LoginExportCommand(),

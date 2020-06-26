@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GenerateCommand.cs
+// FILE:	    XenHostInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -18,52 +18,39 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Newtonsoft;
-using Newtonsoft.Json;
-
 using Neon.Common;
 using Neon.Kube;
 
-namespace NeonCli
+namespace Neon.XenServer
 {
     /// <summary>
-    /// Implements the <b>generate</b> command.
+    /// Holds information about a XenServer or XCP-ng host machine.
     /// </summary>
-    public class GenerateCommand : CommandBase
+    public class XenHostInfo
     {
-        private const string usage = @"
-Code generation commands.
+        /// <summary>
+        /// Indicates the installed edition.  This will be <b>xcp-ng</b> or <b>xenserver</b>.
+        /// </summary>
+        public string Edition { get; internal set; }
 
-USAGE:
+        /// <summary>
+        /// Indicates the XenServer/XCP-ng version number.
+        /// </summary>
+        public SemanticVersion Version { get; internal set; }
 
-    neon generate iso      SOURCE-FOLDER ISO-PATH
-    neon generate prep-vfd IP-ADDRESS VFD-PATH
-    neon generate models   [OPTIONS] ASSEMBLY-PATH [OUTPUT-PATH]
-";
-
-        /// <inheritdoc/>
-        public override string[] Words
-        {
-            get { return new string[] { "generate" }; }
-        }
-
-        /// <inheritdoc/>
-        public override void Help()
-        {
-            Console.WriteLine(usage);
-        }
-
-        /// <inheritdoc/>
-        public override void Run(CommandLine commandLine)
-        {
-            Help();
-        }
+        /// <summary>
+        /// Holds the raw host parameters.
+        /// </summary>
+        public IDictionary<string, string> Params { get; internal set; }
     }
 }
