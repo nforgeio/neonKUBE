@@ -264,5 +264,10 @@ namespace Neon.Kube
         /// when node templates are periodically created.
         /// </summary>
         public const decimal NodeTemplateDiskSize = 10 * ByteUnits.GibiBytes;
+
+        /// <summary>
+        /// The minimum supported XenServer/XCP-ng hypervisor host version.
+        /// </summary>
+        public static readonly SemanticVersion MinXenServerVersion = SemanticVersion.Parse("7.5.0");
     }
 }

@@ -351,7 +351,13 @@ namespace Neon.Kube
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
         private void ProvisionVirtualMachines(SshProxy<XenClient> xenSshProxy)
         {
-            var xenHost = xenSshProxy.Metadata;
+            var xenHost  = xenSshProxy.Metadata;
+            var hostInfo = xenHost.GetHostInfo();
+
+            if (hostInfo.Version < KubeConst.MinXenServerVersion)
+            {
+                throw new NotSupportedException($"neonKUBE cannot provision a cluster on a XenServer/XCP-ng host older than [v{KubeConst.MinXenServerVersion}].  [{hostInfo.Params["name-label"]}] is running version [{hostInfo.Version}]. ");
+            }
 
             foreach (var node in GetHostedNodes(xenHost))
             {
