@@ -212,7 +212,7 @@ module NeonCommon
             end
 
             if !date.nil?
-                if is_numeric(date)
+                if isNumeric(date)
                   record["@timestamp"] = formatTimestamp(Time.at(date.to_f));
                 else
                   record["@timestamp"] = formatTimestamp(Time.parse(date));
@@ -451,7 +451,14 @@ module NeonCommon
     end
 
     # Returns whether a string is numeric or not.
-    def is_numeric(string)
+    def isNumeric(string)
       true if Float(string) rescue false
+    end
+
+    def validJson(json)
+        JSON.parse(json)
+        return true
+      rescue JSON::ParserError => e
+        return false
     end
 end
