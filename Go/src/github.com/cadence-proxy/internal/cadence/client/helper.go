@@ -19,11 +19,12 @@ package proxyclient
 
 import (
 	"context"
-	"errors"
+	"reflect"
 	"strings"
 	"sync"
 	"time"
 
+	"go.uber.org/cadence"
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/client"
@@ -32,8 +33,6 @@ import (
 	"go.uber.org/cadence/workflow"
 	"go.uber.org/yarpc"
 	"go.uber.org/zap"
-
-	proxyerror "github.com/cadence-proxy/internal/cadence/error"
 )
 
 const (
@@ -63,10 +62,10 @@ type (
 	// *zap.Logger -> reference to a zap.Logger to log cadence client output to the console.
 	// *WorkflowClientBuilder -> reference to a WorkflowClientBuilder used to build the cadence
 	// domain and workflow clients.
-	// client.DomainClient -> cadence domain client instance used to interact with Cadence domains.
-	// *WorkfloClientsMap -> a thread-safe map of cadence workflow client instance mapped to their respective domains.
-	// time.Duration -> specifies the amount of time in seconds a reply has to be sent after
-	// a request has been received by the cadence-proxy.
+	// *RegisterDomainRequest -> reference to a RegisterDomainRequest that contains configuration details
+	// for registering a cadence domain.
+	// client.DomainClient -> cadence domain client instance.
+	// client.Client -> cadence workflow client instance.
 	ClientHelper struct {
 		Service         workflowserviceclient.Interface
 		Config          clientConfiguration
@@ -209,8 +208,6 @@ func (helper *ClientHelper) SetupServiceConfig(
 	var service workflowserviceclient.Interface
 
 	// build the service client
-	// retry n number of times
-
 	for i := 0; i <= n; i++ {
 		service, err = helper.Builder.BuildServiceClient()
 		if err != nil {
@@ -225,12 +222,9 @@ func (helper *ClientHelper) SetupServiceConfig(
 		return err
 	}
 
-	// check if the cadence client version is compatible with the GOSDK version
-
 	helper.Service = service
 
 	// build the domain client
-
 	domainClient, err := helper.Builder.BuildCadenceDomainClient()
 	if err != nil {
 		helper.Logger.Error("failed to build domain cadence client.", zap.Error(err))
@@ -242,42 +236,17 @@ func (helper *ClientHelper) SetupServiceConfig(
 	// validate that a connection has been established
 	// make a channel that waits for a connection to be established
 	// until returning ready
-
 	connectChan := make(chan error)
 	defer close(connectChan)
 
 	// poll on system domain
-
 	err = helper.pollDomain(ctx, connectChan, _cadenceSystemDomain)
 	if err != nil {
 		helper = nil
 		return err
 	}
 
-	// // get cluster info
-
-	// infoCtx, cancel := context.WithTimeout(ctx, time.Second*30)
-	// defer cancel()
-
-	// clusterInfo, err := helper.Service.GetClusterInfo(infoCtx)
-
-	// if err != nil {
-	// 	helper = nil
-	// 	return err
-	// }
-
-	// // check minimum supported version
-
-	// if supportedVersions := clusterInfo.SupportedClientVersions.GetGoSdk(); supportedVersions != cadence.LibraryVersion {
-	// 	err = fmt.Errorf("CadenceCompatibilityError{Message: Incompatible Cadence server and SDK versions. Server: %s, GOSDK: %s}", supportedVersions, cadence.LibraryVersion)
-	// 	helper.Logger.Error("Incompatible versions.", zap.Error(err))
-	// 	helper = nil
-
-	// 	return err
-	// }
-
 	// build the workflow client
-
 	workflowClient, err := helper.Builder.BuildCadenceClient()
 	if err != nil {
 		helper.Logger.Error("failed to build domain cadence client.", zap.Error(err))
@@ -803,16 +772,16 @@ func (helper *ClientHelper) CompleteActivity(
 	taskToken []byte,
 	domain string,
 	result interface{},
-	cadenceError *proxyerror.CadenceError,
+	completionErr error,
 ) error {
-	var e error
-	if cadenceError != nil {
-		e = errors.New(cadenceError.ToString())
+	var cadenceError error
+	if completionErr != nil && !reflect.ValueOf(completionErr).IsNil() {
+		cadenceError = cadence.NewCustomError(completionErr.Error())
 	}
 
 	// query the workflow
 	workflowClient := helper.GetOrCreateWorkflowClient(domain)
-	err := workflowClient.CompleteActivity(ctx, taskToken, result, e)
+	err := workflowClient.CompleteActivity(ctx, taskToken, result, cadenceError)
 	if err != nil {
 		helper.Logger.Error("failed to complete activity", zap.Error(err))
 		return err
@@ -820,7 +789,7 @@ func (helper *ClientHelper) CompleteActivity(
 
 	helper.Logger.Info("Successfully Completed Activity",
 		zap.Any("Result", result),
-		zap.Error(e))
+		zap.Error(cadenceError))
 
 	return nil
 }
@@ -843,11 +812,11 @@ func (helper *ClientHelper) CompleteActivityByID(
 	runID string,
 	activityID string,
 	result interface{},
-	cadenceError *proxyerror.CadenceError,
+	completionErr error,
 ) error {
-	var e error
-	if cadenceError != nil {
-		e = errors.New(cadenceError.ToString())
+	var cadenceError error
+	if completionErr != nil && !reflect.ValueOf(completionErr).IsNil() {
+		cadenceError = cadence.NewCustomError(completionErr.Error())
 	}
 
 	// query the workflow
@@ -859,7 +828,7 @@ func (helper *ClientHelper) CompleteActivityByID(
 		runID,
 		activityID,
 		result,
-		e)
+		cadenceError)
 
 	if err != nil {
 		helper.Logger.Error("failed to complete activity", zap.Error(err))
@@ -869,7 +838,7 @@ func (helper *ClientHelper) CompleteActivityByID(
 	helper.Logger.Info("Successfully Completed Activity",
 		zap.String("ActivityId", activityID),
 		zap.Any("Result", result),
-		zap.Error(e))
+		zap.Error(cadenceError))
 
 	return nil
 }

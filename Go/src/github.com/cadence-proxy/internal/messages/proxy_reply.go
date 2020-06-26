@@ -18,8 +18,8 @@
 package messages
 
 import (
-	"github.com/cadence-proxy/internal/cadence/error"
 	internal "github.com/cadence-proxy/internal"
+	"github.com/cadence-proxy/internal/cadence/error"
 )
 
 type (

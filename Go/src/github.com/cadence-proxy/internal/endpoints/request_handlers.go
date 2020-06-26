@@ -25,6 +25,7 @@ import (
 	"reflect"
 	"time"
 
+	"go.uber.org/cadence"
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/activity"
 	"go.uber.org/cadence/client"
@@ -637,6 +638,12 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 				panic("force-replay")
 			}
 
+			if v, ok := s.(*proxyerror.CadenceError); ok {
+				if v.GetType() == proxyerror.Custom {
+					s = cadence.NewCustomError(v.Error())
+				}
+			}
+
 			Logger.Error("Workflow Failed With Error",
 				zap.String("Workflow", workflowName),
 				zap.Int64("ClientId", clientID),
@@ -906,7 +913,7 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 		if v, ok := a.(*proxyerror.CadenceError); ok {
 			if _v, _ok := b.(*proxyerror.CadenceError); _ok {
 				if v.GetType() == _v.GetType() &&
-					v.ToString() == _v.ToString() {
+					v.Error() == _v.Error() {
 					return true
 				}
 				return false
@@ -1616,7 +1623,6 @@ func handleWorkflowSetQueryHandlerRequest(requestCtx context.Context, request *m
 			zap.Int64("RequestId", requestID),
 			zap.Int("ProcessId", os.Getpid()))
 
-		// wait for ActivityInvokeReply
 		result := <-op.GetChannel()
 		switch s := result.(type) {
 		case error:
@@ -2146,10 +2152,6 @@ func handleActivityExecuteRequest(requestCtx context.Context, request *messages.
 	ctx = workflow.WithWorkflowDomain(ctx, *request.GetDomain())
 	future := workflow.ExecuteActivity(ctx, activityName, request.GetArgs())
 
-	// Send ACK: Commented out because its no longer needed.
-	// op := sendFutureACK(contextID, requestID, clientID)
-	// <-op.GetChannel()
-
 	// execute the activity
 	var result []byte
 	if err := future.Get(ctx, &result); err != nil {
@@ -2245,6 +2247,7 @@ func handleActivityGetResultRequest(requestCtx context.Context, request *message
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
+
 	buildReply(reply, nil, result)
 
 	return reply
@@ -2293,6 +2296,7 @@ func handleActivityGetHeartbeatDetailsRequest(requestCtx context.Context, reques
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
+
 	buildReply(reply, nil, details)
 
 	return reply

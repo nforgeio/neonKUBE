@@ -48,8 +48,7 @@ namespace Neon.Cadence.Internal
         /// ID - The business identifier of the workflow execution.
         /// Optional: defaulted to a uuid.
         /// </summary>
-        [JsonProperty(PropertyName = "ID", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
+        [JsonProperty(PropertyName = "ID")]
         public string ID { get; set; } = null;
 
         /// <summary>
@@ -72,8 +71,7 @@ namespace Neon.Cadence.Internal
         /// pulled this task. If a decision task is lost, it is retried after this timeout.
         /// Expressed as nanoseconds.  Optional: defaulted to 10 secs.
         /// </summary>
-        [JsonProperty(PropertyName = "DecisionTaskStartToCloseTimeout", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(10 * CadenceHelper.NanosecondsPerSecond)]
+        [JsonProperty(PropertyName = "DecisionTaskStartToCloseTimeout")]
         public long DecisionTaskStartToCloseTimeout { get; set; } = 10 * CadenceHelper.NanosecondsPerSecond;
 
         /// <summary>
@@ -81,16 +79,14 @@ namespace Neon.Cadence.Internal
         /// for dedup logic if set to WorkflowIdReusePolicyRejectDuplicate.
         /// Optional: defaulted to WorkflowIdReusePolicyAllowDuplicate.
         /// </summary>
-        [JsonProperty(PropertyName = "WorkflowIdReusePolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(Cadence.WorkflowIdReusePolicy.AllowDuplicate)]
+        [JsonProperty(PropertyName = "WorkflowIdReusePolicy")]
         public int WorkflowIdReusePolicy { get; set; } = (int)Cadence.WorkflowIdReusePolicy.AllowDuplicate;
         
         /// <summary>
         /// RetryPolicy - Optional retry policy for workflow. If a retry policy is specified, in case of workflow failure
         /// server will start new workflow execution if needed based on the retry policy.
         /// </summary>
-        [JsonProperty(PropertyName = "RetryPolicy", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
+        [JsonProperty(PropertyName = "RetryPolicy")]
         public InternalRetryPolicy RetryPolicy { get; set; } = null;
 
         /// <summary>
@@ -114,15 +110,13 @@ namespace Neon.Cadence.Internal
         /// * * * * *
         /// </code>
         /// </summary>
-        [JsonProperty(PropertyName = "CronSchedule", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
+        [JsonProperty(PropertyName = "CronSchedule")]
         public string CronSchedule { get; set; } = null;
 
         /// <summary>
         /// Memo - Optional info that will be shown in list workflow.
         /// </summary>
-        [JsonProperty(PropertyName = "Memo", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
+        [JsonProperty(PropertyName = "Memo")]
         public Dictionary<string, byte[]> Memo = null;
     }
 }
