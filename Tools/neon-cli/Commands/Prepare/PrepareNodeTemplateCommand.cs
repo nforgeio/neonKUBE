@@ -188,43 +188,6 @@ node template.
 
             Covenant.Assert(Program.MachineUsername == KubeConst.SysAdminUser);
 
-            // Handle upgrade only here.
-
-            if (upgrade)
-            {
-                Console.WriteLine();
-                Console.WriteLine($"** Upgrade {vmHost} VM Template ***");
-                Console.WriteLine();
-
-                using (var server = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
-                {
-                    Console.WriteLine($"Login:    [{KubeConst.SysAdminUser}]");
-                    server.WaitForBoot();
-
-                    Console.WriteLine("Run:      apt-get update");
-                    server.SudoCommand("apt-get update");
-
-                    Console.WriteLine("Run:      apt-get dist-upgrade -yq");
-                    server.SudoCommand("apt-get dist-upgrade -yq");
-
-                    Console.WriteLine("Run:      apt-get clean");
-                    server.SudoCommand("apt-get clean");
-
-                    Console.WriteLine("Run:      rm -rf /var/lib/dhcp/*");
-                    server.SudoCommand("rm -rf /var/lib/dhcp/*");
-
-                    Console.WriteLine("Run:      sfill -fllz /");
-                    server.SudoCommand("sfill -fllz /");
-
-                    Console.WriteLine("Shutdown: VM");
-                    server.Shutdown();
-                }
-
-                Console.WriteLine();
-                Console.WriteLine("*** Node template is upgraded ***");
-                return;
-            }
-
             // Prepare the template.
 
             Console.WriteLine();
