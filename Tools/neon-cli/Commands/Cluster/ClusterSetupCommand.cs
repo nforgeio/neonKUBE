@@ -306,6 +306,7 @@ OPTIONS:
                     //-----------------------------------------------------------------
                     // Kubernetes configuration.
 
+                    controller.AddGlobalStep("setup neon-proxy", SetupNeonProxy);
                     controller.AddStep("setup kubernetes", SetupKubernetes);
                     controller.AddGlobalStep("setup cluster", SetupCluster);
                     //controller.AddGlobalStep("label nodes", LabelNodes);
@@ -816,12 +817,72 @@ echo ""vm.swappiness = 1"" >> /etc/sysctl.conf
             sbHosts.Append(
 $@"
 127.0.0.1	    localhost
+127.0.0.1       kubernetes-masters
 {nodeAddress}{separator}{node.Name}
 ::1             localhost ip6-localhost ip6-loopback
 ff02::1         ip6-allnodes
 ff02::2         ip6-allrouters
 ");
             node.UploadText("/etc/hosts", sbHosts, 4, Encoding.UTF8);
+        }
+
+        private void SetupNeonProxy()
+        {
+            var sbHaProxy = new StringBuilder();
+
+            sbHaProxy.Append(
+$@"global
+    daemon
+    log stdout  format raw  local0  info
+    maxconn 32000
+
+defaults
+    balance                 roundrobin
+    retries                 2
+    http-reuse              safe
+    timeout connect         5000
+    timeout client          50000
+    timeout server          50000
+    timeout check           5000
+    timeout http-keep-alive 500
+
+frontend kubernetes-masters
+    bind                    *:6442
+    mode                    tcp
+    log                     global
+    option                  tcplog
+    use_backend             kubernetes-masters
+
+backend kubernetes-masters
+    mode                    tcp
+    balance                 roundrobin");
+
+            foreach (var master in cluster.Masters)
+            {
+                sbHaProxy.Append(
+$@"
+server {master.Name}         {master.PrivateAddress}:6443");
+            }
+
+            foreach (var node in cluster.Nodes)
+            {
+                node.InvokeIdempotentAction("setup/setup-neon-proxy",
+                    () =>
+                    {
+                        node.Status = "setup: neon-proxy";
+
+                        node.UploadText("/etc/neonkube/neon-proxy.cfg", sbHaProxy);
+
+                        node.SudoCommand(@"docker run \
+                                            --name neon-proxy \
+                                            --detach \
+                                            --restart=always \
+                                            -v /etc/neonkube/neon-proxy.cfg:/etc/haproxy/haproxy.cfg \
+                                            --network host
+                                            --log-driver json-file \
+                                            nkubeio/haproxy");
+                    });
+            }
         }
 
         /// <summary>
@@ -930,7 +991,7 @@ rm -rf helm
                             // the certificate SAN names to include each master IP address as well
                             // as the HOSTNAME/ADDRESS of the API load balancer (if any).
 
-                            var controlPlaneEndpoint = $"{cluster.FirstMaster.PrivateAddress}:{KubeHostPorts.KubeApiServer}";
+                            var controlPlaneEndpoint = $"kubernetes-masters:6442";
                             var sbCertSANs           = new StringBuilder();
 
                             if (!string.IsNullOrEmpty(cluster.Definition.Kubernetes.ApiLoadBalancer))
@@ -1317,7 +1378,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                             }
                         });
 
-                    // Install Istio.
+                    // Label Nodes.
 
                     firstMaster.InvokeIdempotentAction("setup/cluster-label-nodes",
                         () =>
@@ -1554,6 +1615,37 @@ rm /tmp/calico.yaml
             }
 
             master.Status = "deploy: istio";
+
+//            var istioScript0 =
+//$@"#!/bin/bash
+
+//curl -sL https://istio.io/downloadIstioctl | sh -
+
+//export PATH=$PATH:$HOME/.istioctl/bin
+
+//istioctl operator init
+
+//kubectl create ns istio-system
+
+//cat <<EOF > istio-cni.yaml
+//apiVersion: install.istio.io/v1alpha1
+//kind: IstioOperator
+//spec:
+//  components:
+//    cni:
+//      enabled: true
+//    egressGateways:
+//      enabled: true
+//  values:
+//    cni:
+//      excludeNamespaces:
+//       - istio-system
+//       - kube-system
+//      logLevel: info
+//EOF
+
+//istioctl install -f istio-cni.yaml
+//";
 
             var istioScript1 =
 $@"#!/bin/bash
