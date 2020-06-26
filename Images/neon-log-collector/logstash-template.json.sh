@@ -67,14 +67,9 @@ cat <<EOF > /etc/fluentd/template/logstash-template.json
       },
       "location": {
         "properties": {
-          "latitude": {
-            "type": "scaled_float",
-            "scaling_factor": 100000.0
-          },
-          "longitude": {
-            "type": "scaled_float",
-            "scaling_factor": 100000.0
-          },
+          "coordinates": {
+            "type": "geo_point"
+          }
           "metro_code": {
             "type": "integer"
           },

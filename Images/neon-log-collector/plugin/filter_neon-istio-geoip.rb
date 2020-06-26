@@ -109,11 +109,8 @@ module Fluent
 
             location = {};
 
-            unless geoip.location.latitude.nil? then
-                location['latitude'] = geoip.location.latitude;
-            end
             unless geoip.location.longitude.nil? then
-                location['longitude'] = geoip.location.longitude;
+                location['coordinates'] = [geoip.location.longitude, geoip.location.latitude] ;
             end
             unless geoip.location.metro_code.nil? then
                 location['metro_code'] = geoip.location.metro_code;

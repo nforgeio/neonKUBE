@@ -29,6 +29,7 @@ RUN /usr/local/bin/fluent-gem install fluent-plugin-dedot_filter \
     && /usr/local/bin/fluent-gem install fluent-plugin-kubernetes_metadata_filter \
     && /usr/local/bin/fluent-gem install fluent-plugin-elasticsearch \
     && /usr/local/bin/fluent-gem install maxminddb \
+    && /usr/local/bin/fluent-gem install ipaddress \
     && /usr/local/bin/fluent-gem install browser
 
 RUN mkdir -p /geoip \
