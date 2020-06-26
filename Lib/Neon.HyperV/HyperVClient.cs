@@ -202,7 +202,7 @@ namespace Neon.HyperV
         /// <param name="switchName">Optional name of the virtual switch.</param>
         /// <param name="extraDrives">
         /// Optionally specifies any additional virtual drives to be created and 
-        /// then attached to the new virtual machine (e.g. for Ceph OSD).
+        /// then attached to the new virtual machine.
         /// </param>
         /// <remarks>
         /// <note>

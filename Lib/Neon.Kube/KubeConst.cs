@@ -49,12 +49,12 @@ namespace Neon.Kube
         public static string NeonBranchRegistry => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase) ? NeonProdRegistry : NeonDevRegistry;
 
         /// <summary>
-        /// The default username for component dashboards and management tools (like Ceph and RabbitMQ).
+        /// The default username for component dashboards and management tools.
         /// </summary>
         public const string DefaultUsername = "sysadmin";
 
         /// <summary>
-        /// The default password for component dashboards and management tools (like Ceph and RabbitMQ).
+        /// The default password for component dashboards and management tools.
         /// </summary>
         public const string DefaultPassword = "password";
 

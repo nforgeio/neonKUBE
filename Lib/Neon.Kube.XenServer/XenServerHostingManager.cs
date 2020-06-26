@@ -132,15 +132,6 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
-            // Identify the OSD Bluestore block device for OSD nodes.
-
-            if (cluster.Definition.Ceph.Enabled)
-            {
-                foreach (var node in cluster.Definition.Nodes.Where(n => n.Labels.CephOSD))
-                {
-                    node.Labels.CephOSDDevice = "xvdb";
-                }
-            }
         }
 
         /// <inheritdoc/>
@@ -368,27 +359,13 @@ namespace Neon.Kube
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "create: virtual machine");
 
-                // We need to create a raw drive if the node hosts a Ceph OSD.
-
-                var extraDrives = new List<XenVirtualDrive>();
-
-                if (node.Metadata.Labels.CephOSD)
-                {
-                    extraDrives.Add(
-                        new XenVirtualDrive()
-                        {
-                            Size = node.Metadata.GetCephOSDDriveSize(cluster.Definition)
-                        });
-                }
-
                 var vm = xenHost.Machine.Create(vmName, cluster.Definition.Hosting.XenServer.TemplateName,
                     processors:                 processors,
                     memoryBytes:                memoryBytes,
                     diskBytes:                  diskBytes,
                     snapshot:                   cluster.Definition.Hosting.XenServer.Snapshot,
-                    extraDrives:                extraDrives,
-                    primaryStorageRepository:   cluster.Definition.Hosting.XenServer.StorageRepository,
-                    extraStorageRespository:    cluster.Definition.Hosting.XenServer.OsdStorageRepository);
+                    extraDrives:                null,
+                    primaryStorageRepository:   cluster.Definition.Hosting.XenServer.StorageRepository);;
 
                 // Create a temporary ISO with the [neon-node-prep.sh] script, mount it
                 // to the VM and then boot the VM for the first time so that it will

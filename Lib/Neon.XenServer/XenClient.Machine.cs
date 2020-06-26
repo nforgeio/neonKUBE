@@ -104,7 +104,7 @@ namespace Neon.XenServer
             /// <param name="snapshot">Optionally specifies that the virtual machine should snapshot the template.  This defaults to <c>false</c>.</param>
             /// <param name="extraDrives">
             /// Optionally specifies any additional virtual drives to be created and 
-            /// then attached to the new virtual machine (e.g. for Ceph OSD).
+            /// then attached to the new virtual machine.
             /// </param>
             /// <param name="primaryStorageRepository">
             /// Optionally specifies the storage repository where the virtual machine's

@@ -145,15 +145,6 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
-            // Identify the OSD Bluestore block device for OSD nodes.
-
-            if (cluster.Definition.Ceph.Enabled)
-            {
-                foreach (var node in cluster.Definition.Nodes.Where(n => n.Labels.CephOSD))
-                {
-                    node.Labels.CephOSDDevice = "sdb";
-                }
-            }
         }
 
         /// <inheritdoc/>
@@ -630,21 +621,6 @@ namespace Neon.Kube
 
                 // Create the virtual machine if it doesn't already exist.
 
-                // We need to create a raw drive if the node hosts a Ceph OSD.
-
-                var extraDrives = new List<VirtualDrive>();
-
-                if (node.Metadata.Labels.CephOSD)
-                {
-                    extraDrives.Add(
-                        new VirtualDrive()
-                        {
-                            IsDynamic = true,
-                            Size      = node.Metadata.GetCephOSDDriveSize(cluster.Definition),
-                            Path      = Path.Combine(vmDriveFolder, $"{vmName}-[1].vhdx")
-                        });
-                }
-
                 var processors  = node.Metadata.GetVmProcessors(cluster.Definition);
                 var memoryBytes = node.Metadata.GetVmMemory(cluster.Definition);
                 var diskBytes   = node.Metadata.GetVmDisk(cluster.Definition);
@@ -656,8 +632,7 @@ namespace Neon.Kube
                     diskSize:       diskBytes.ToString(),
                     memorySize:     memoryBytes.ToString(),
                     drivePath:      drivePath,
-                    switchName:     switchName,
-                    extraDrives:    extraDrives);
+                    switchName:     switchName);
 
                 // Create a temporary ISO with the [neon-node-prep.sh] script, mount it
                 // to the VM and then boot the VM for the first time so that it will

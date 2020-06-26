@@ -6,8 +6,6 @@ timeSources:
 allowUnitTesting: true
 kubernetes:
   allowPodsOnMasters: true
-ceph:
-  osdDriveSize: 32GiB
 hosting:
   environment: xenserver
   vmHostUsername: $<<XENSERVER_USERNAME>>

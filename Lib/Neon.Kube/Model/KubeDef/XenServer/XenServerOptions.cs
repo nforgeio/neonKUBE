@@ -84,15 +84,6 @@ namespace Neon.Kube
         public string StorageRepository { get; set; } = defaultStorageRepository;
 
         /// <summary>
-        /// Identifies the XenServer storage repository to be used to for any Ceph OSD
-        /// drives created for the cluster.  This defaults to <b>Local storage</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "OsdStorageRepository", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "osdStorageRepository", ApplyNamingConventions = false)]
-        [DefaultValue(defaultStorageRepository)]
-        public string OsdStorageRepository { get; set; } = defaultStorageRepository;
-
-        /// <summary>
         /// Optionally directs XenCenter to create the virtual machines using a snapshot of
         /// the virtual machine template rather than creating a full copy.  This defaults
         /// to <c>false</c>.
@@ -134,10 +125,9 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            HostXvaUri           = HostXvaUri ?? defaultHostXvaUri;
-            TemplateName         = TemplateName ?? defaultTemplate;
-            StorageRepository    = StorageRepository ?? defaultStorageRepository;
-            OsdStorageRepository = OsdStorageRepository ?? defaultStorageRepository;
+            HostXvaUri        = HostXvaUri ?? defaultHostXvaUri;
+            TemplateName      = TemplateName ?? defaultTemplate;
+            StorageRepository = StorageRepository ?? defaultStorageRepository;
 
             if (string.IsNullOrEmpty(HostXvaUri) || !Uri.TryCreate(HostXvaUri, UriKind.Absolute, out Uri uri))
             {
@@ -147,11 +137,6 @@ namespace Neon.Kube
             if (string.IsNullOrEmpty(StorageRepository))
             {
                 throw new ClusterDefinitionException($"[{nameof(XenServerOptions)}.{nameof(StorageRepository)}] is required when deploying to XenServer.");
-            }
-
-            if (string.IsNullOrEmpty(OsdStorageRepository))
-            {
-                OsdStorageRepository = StorageRepository;
             }
 
             clusterDefinition.ValidatePrivateNodeAddresses();                                           // Private node IP addresses must be assigned and valid.
