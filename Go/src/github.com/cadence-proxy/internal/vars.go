@@ -42,8 +42,8 @@ var (
 
 	// DebugPrelaunched INTERNAL USE ONLY: Optionally indicates that the cadence-proxy will
 	// already be running for debugging purposes.  When this is true, the
-	// cadence-client be hardcoded to listen on 127.0.0.2:5001 and
-	// the cadence-proxy will be assumed to be listening on 127.0.0.2:5000.
+	// cadence-client be hardcoded to listen on 127.0.0.1:5001 and
+	// the cadence-proxy will be assumed to be listening on 127.0.0.1:5000.
 	// This defaults to false.
 	DebugPrelaunched = false
 
@@ -56,7 +56,7 @@ var (
 
 	// ErrConnection is the custom error that is thrown when the cadence-proxy
 	// is not able to establish a connection with the cadence server
-	ErrConnection = errors.New("CadenceConnectionError{Message: Could not establish a connection with the cadence server.}")
+	ErrConnection = errors.New("CadenceConnectionError{Messages: Could not establish a connection with the cadence server.}")
 
 	// ErrEntityNotExist is the custom error that is thrown when a cadence
 	// entity cannot be found in the cadence server

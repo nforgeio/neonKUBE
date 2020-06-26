@@ -18,7 +18,6 @@
 package endpoints
 
 import (
-	"errors"
 	"sync"
 
 	"github.com/cadence-proxy/internal"
@@ -151,7 +150,7 @@ func (op *Operation) SendChannel(result interface{}, cadenceError *proxyerror.Ca
 	defer close(op.channel)
 
 	if cadenceError != nil {
-		op.channel <- errors.New(cadenceError.ToString())
+		op.channel <- cadenceError
 	} else {
 		op.channel <- result
 	}

@@ -44,7 +44,7 @@ const (
 	Timeout CadenceErrorType = 5
 )
 
-func (t CadenceErrorType) String() string {
+func (t *CadenceErrorType) String() string {
 	return [...]string{
 		"cancelled",
 		"custom",
@@ -52,7 +52,7 @@ func (t CadenceErrorType) String() string {
 		"panic",
 		"terminated",
 		"timeout",
-	}[t]
+	}[*t]
 }
 
 // ToCadenceError takes a string value and converts it into the corresponding

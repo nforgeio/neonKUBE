@@ -30,7 +30,6 @@ import (
 	"github.com/cadence-proxy/internal"
 	proxyactivity "github.com/cadence-proxy/internal/cadence/activity"
 	proxyclient "github.com/cadence-proxy/internal/cadence/client"
-	proxyerror "github.com/cadence-proxy/internal/cadence/error"
 	proxyworker "github.com/cadence-proxy/internal/cadence/worker"
 	proxyworkflow "github.com/cadence-proxy/internal/cadence/workflow"
 	"github.com/cadence-proxy/internal/messages"
@@ -185,16 +184,8 @@ func sendMessage(message messages.IProxyMessage) {
 
 // isCanceledError checks a golang error or a
 // CadenceError to see if it is a canceledError.
-func isCanceledErr(err interface{}) bool {
-	var errStr string
-	if v, ok := err.(*proxyerror.CadenceError); ok {
-		errStr = v.ToString()
-	}
-	if v, ok := err.(error); ok {
-		errStr = v.Error()
-	}
-
-	return strings.Contains(errStr, "CanceledError")
+func isCanceledErr(err error) bool {
+	return strings.Contains(err.Error(), "CanceledError")
 }
 
 // isForceReplayError checks if an error is

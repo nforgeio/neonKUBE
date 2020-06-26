@@ -39,7 +39,7 @@ type (
 // returns *CadenceError -> pointer to a newly initialized CadenceError
 // in memory.
 func NewCadenceErrorEmpty() *CadenceError {
-	return new(CadenceError)
+	return &CadenceError{}
 }
 
 // NewCadenceError is the constructor for a CadenceError
@@ -48,35 +48,44 @@ func NewCadenceErrorEmpty() *CadenceError {
 // param err error -> error to set.
 //
 // param errorType ...interface{} -> the cadence error type.
-func NewCadenceError(err error, errType ...CadenceErrorType) *CadenceError {
-	cadenceError := NewCadenceErrorEmpty()
+func NewCadenceError(err error, errTypes ...CadenceErrorType) *CadenceError {
 	if err == nil {
 		return nil
 	}
-	errStr := err.Error()
-	cadenceError.String = &errStr
 
-	if len(errType) > 0 {
-		cadenceError.SetType(errType[0])
+	var errType CadenceErrorType
+	if len(errTypes) > 0 {
+		errType = errTypes[0]
 	} else {
 		if cadence.IsCanceledError(err) {
-			cadenceError.SetType(Cancelled)
+			errType = Cancelled
 		} else if cadence.IsCustomError(err) {
-			cadenceError.SetType(Custom)
+			errType = Custom
 		} else if cadence.IsGenericError(err) {
-			cadenceError.SetType(Generic)
+			errType = Generic
 		} else if cadence.IsPanicError(err) {
-			cadenceError.SetType(Panic)
+			errType = Panic
 		} else if cadence.IsTerminatedError(err) {
-			cadenceError.SetType(Terminated)
+			errType = Terminated
 		} else if cadence.IsTimeoutError(err) {
-			cadenceError.SetType(Timeout)
+			errType = Timeout
 		} else {
-			cadenceError.SetType(Custom)
+			errType = Custom
 		}
 	}
 
-	return cadenceError
+	errStr := err.Error()
+	errTypeStr := errType.String()
+
+	return &CadenceError{String: &errStr, Type: &errTypeStr}
+}
+
+func (c *CadenceError) Error() string {
+	if c.String == nil {
+		return ""
+	}
+
+	return *c.String
 }
 
 // GetType gets the CadenceErrorType from a CadenceError
@@ -109,36 +118,3 @@ func (c *CadenceError) GetType() CadenceErrorType {
 	}
 }
 
-// SetType sets the *string to the corresponding CadenceErrorType
-// in a CadenceError instance
-//
-// param errorType CadenceErrorType -> the CadenceErrorType to set as a string
-// in a CadenceError instance
-func (c *CadenceError) SetType(errorType CadenceErrorType) {
-	var typeString string
-	switch errorType {
-	case Cancelled:
-		typeString = "cancelled"
-	case Custom:
-		typeString = "custom"
-	case Generic:
-		typeString = "generic"
-	case Panic:
-		typeString = "panic"
-	case Terminated:
-		typeString = "terminated"
-	case Timeout:
-		typeString = "timeout"
-	default:
-		err := fmt.Errorf("unrecognized error type %s", errorType)
-		panic(err)
-	}
-	c.Type = &typeString
-}
-
-// ToString returns the string representation of a CadenceError
-//
-// returns string -> a CadenceError as a string (CadenceError.String field)
-func (c *CadenceError) ToString() string {
-	return *c.String
-}
