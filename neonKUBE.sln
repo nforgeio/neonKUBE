@@ -15,6 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doc", "Doc", "{2CFE7466-98C
 		Doc\SUDO and WinSCP.docx = Doc\SUDO and WinSCP.docx
 		Doc\Ubuntu-18.04 Hyper-V Template.docx = Doc\Ubuntu-18.04 Hyper-V Template.docx
 		Doc\Ubuntu-18.04 XenServer Template.docx = Doc\Ubuntu-18.04 XenServer Template.docx
+		Doc\Ubuntu-20.04 Hyper-V Template.docx = Doc\Ubuntu-20.04 Hyper-V Template.docx
+		Doc\Ubuntu-20.04 XenServer Template.docx = Doc\Ubuntu-20.04 XenServer Template.docx
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{4442F115-52D3-4E88-BE9B-9E4B32AD33A0}"

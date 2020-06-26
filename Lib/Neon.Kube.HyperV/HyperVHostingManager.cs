@@ -100,15 +100,6 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
-            // Identify the OSD Bluestore block device for OSD nodes.
-
-            if (cluster.Definition.Ceph.Enabled)
-            {
-                foreach (var node in cluster.Definition.Nodes.Where(n => n.Labels.CephOSD))
-                {
-                    node.Labels.CephOSDDevice = "sdb";
-                }
-            }
         }
 
         /// <inheritdoc/>

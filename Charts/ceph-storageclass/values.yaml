@@ -1,5 +1,0 @@
-# Default values for ceph-pool.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
-monitors: rook-ceph-mon-a.rook-ceph:6789

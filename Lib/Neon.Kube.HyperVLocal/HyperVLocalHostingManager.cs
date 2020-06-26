@@ -44,6 +44,7 @@ using Neon.HyperV;
 using Neon.IO;
 using Neon.Net;
 using Neon.Time;
+using Org.BouncyCastle.Utilities;
 
 namespace Neon.Kube
 {
@@ -144,15 +145,6 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
-            // Identify the OSD Bluestore block device for OSD nodes.
-
-            if (cluster.Definition.Ceph.Enabled)
-            {
-                foreach (var node in cluster.Definition.Nodes.Where(n => n.Labels.CephOSD))
-                {
-                    node.Labels.CephOSDDevice = "sdb";
-                }
-            }
         }
 
         /// <inheritdoc/>
@@ -459,12 +451,12 @@ namespace Neon.Kube
 
                 controller.SetOperationStatus("Scanning network adapters");
 
-                var switches       = hyperv.ListVMSwitches();
+                var switches       = hyperv.ListVmSwitches();
                 var externalSwitch = switches.FirstOrDefault(s => s.Type == VirtualSwitchType.External);
 
                 if (externalSwitch == null)
                 {
-                    hyperv.NewVMExternalSwitch(switchName = defaultSwitchName, IPAddress.Parse(cluster.Definition.Network.Gateway));
+                    hyperv.NewVmExternalSwitch(switchName = defaultSwitchName, IPAddress.Parse(cluster.Definition.Network.Gateway));
                 }
                 else
                 {
@@ -477,7 +469,7 @@ namespace Neon.Kube
 
                 controller.SetOperationStatus("Scanning virtual machines");
 
-                var existingMachines = hyperv.ListVMs();
+                var existingMachines = hyperv.ListVms();
                 var conflicts        = string.Empty;
 
                 controller.SetOperationStatus("Stopping virtual machines");
@@ -619,128 +611,76 @@ namespace Neon.Kube
                     }
                 }
 
-                // Stop and delete the virtual machine if one exists.
+                // Stop and delete the virtual machine if one already exists.
 
-                if (hyperv.VMExists(vmName))
+                if (hyperv.VmExists(vmName))
                 {
-                    hyperv.StopVM(vmName);
-                    hyperv.RemoveVM(vmName);
+                    hyperv.StopVm(vmName);
+                    hyperv.RemoveVm(vmName);
                 }
 
                 // Create the virtual machine if it doesn't already exist.
-
-                // We need to create a raw drive if the node hosts a Ceph OSD.
-
-                var extraDrives = new List<VirtualDrive>();
-
-                if (node.Metadata.Labels.CephOSD)
-                {
-                    extraDrives.Add(
-                        new VirtualDrive()
-                        {
-                            IsDynamic = true,
-                            Size      = node.Metadata.GetCephOSDDriveSize(cluster.Definition),
-                            Path      = Path.Combine(vmDriveFolder, $"{vmName}-[1].vhdx")
-                        });
-                }
 
                 var processors  = node.Metadata.GetVmProcessors(cluster.Definition);
                 var memoryBytes = node.Metadata.GetVmMemory(cluster.Definition);
                 var diskBytes   = node.Metadata.GetVmDisk(cluster.Definition);
 
                 node.Status = $"create: virtual machine";
-                hyperv.AddVM(
+                hyperv.AddVm(
                     vmName,
                     processorCount: processors,
                     diskSize:       diskBytes.ToString(),
                     memorySize:     memoryBytes.ToString(),
                     drivePath:      drivePath,
-                    switchName:     switchName,
-                    extraDrives:    extraDrives);
+                    switchName:     switchName);
 
-                node.Status = $"start: virtual machine";
+                // Create a temporary ISO with the [neon-node-prep.sh] script, mount it
+                // to the VM and then boot the VM for the first time so that it will
+                // pick up its network configuration.
 
-                hyperv.StartVM(vmName);
-
-                // Retrieve the virtual machine's network adapters (there should only be one) 
-                // to obtain the IP address we'll use to SSH into the machine and configure
-                // it's static IP.
-
-                node.Status = $"discover: ip address";
-
-                var adapters = hyperv.ListVMNetworkAdapters(vmName, waitForAddresses: true);
-                var adapter  = adapters.FirstOrDefault();
-                var address  = adapter.Addresses.First();
-
-                if (adapter == null)
-                {
-                    throw new HyperVException($"Virtual machine [{vmName}] has no network adapters.");
-                }
-
-                // We're going to temporarily set the node to the current VM address
-                // so we can connect via SSH.
-
-                var nodePrivateAddress = node.PrivateAddress;
+                var tempIso = (TempFile)null;
 
                 try
                 {
-                    node.PrivateAddress = address;
-
                     using (var nodeProxy = cluster.GetNode(node.Name))
                     {
+                        // Create a temporary ISO with the prep script and mount it
+                        // to the node VM.
+
+                        node.Status = $"mount: neon-node-prep iso";
+                        tempIso     = KubeHelper.CreateNodePrepIso(node.Cluster.Definition, node.Metadata);
+
+                        hyperv.InsertVmDvd(vmName, tempIso.Path);
+
+                        // Start the VM for the first time with the mounted ISO.  The network
+                        // configuration will happen automatically by the time we can connect.
+
+                        node.Status = $"start: virtual machine (first boot)";
+
+                        hyperv.StartVm(vmName);
                         node.Status = $"connecting...";
                         nodeProxy.WaitForBoot();
 
-                        // We need to ensure that the host folders exist.
-
-                        nodeProxy.CreateHostFolders();
-
-                        // Configure the node's network stack to the static IP address
-                        // and upstream nameservers.
-
-                        node.Status = $"config: network [IP={node.PrivateAddress}]";
-
-                        var primaryInterface = node.GetNetworkInterface(address);
-
-                        node.ConfigureNetwork(
-                            networkInterface:   primaryInterface,
-                            address:            nodePrivateAddress,
-                            gateway:            IPAddress.Parse(cluster.Definition.Network.Gateway),
-                            subnet:             NetworkCidr.Parse(cluster.Definition.Network.PremiseSubnet),
-                            nameservers:        cluster.Definition.Network.Nameservers.Select(ns => IPAddress.Parse(ns)));
-
                         // Extend the primary partition and file system to fill 
-                        // the virtual the drive.  Note that we're not going to 
-                        // do this if the specified drive size is less than or
-                        // equal to the node template's drive size.
+                        // the virtual drive.  Note that we're not going to do
+                        // this if the specified drive size is less than or equal
+                        // to the node template's drive size (because that
+                        // would fail).
 
                         if (diskBytes > KubeConst.NodeTemplateDiskSize)
                         {
                             node.Status = $"resize: primary drive";
 
-                            // $hack(jefflill):
-                            //
-                            // I've seen a transient error here but can't reproduce it.  I'm going
-                            // to assume for now that the file system might not be quite ready for
-                            // this operation directly after the VM has been rebooted, so we're going
-                            // to delay for a few seconds before performing the operations.
-
-                            Thread.Sleep(TimeSpan.FromSeconds(5));
                             nodeProxy.SudoCommand("growpart /dev/sda 2");
                             nodeProxy.SudoCommand("resize2fs /dev/sda2");
                         }
-
-                        // Reboot to pick up the changes.
-
-                        node.Status = $"restarting...";
-                        nodeProxy.Reboot(wait: false);
                     }
                 }
                 finally
                 {
-                    // Restore the node's IP address.
+                    // Be sure to delete the ISO file so these don't accumulate.
 
-                    node.PrivateAddress = nodePrivateAddress;
+                    tempIso?.Dispose();
                 }
             }
         }

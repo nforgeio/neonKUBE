@@ -49,12 +49,12 @@ namespace Neon.Kube
         public static string NeonBranchRegistry => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase) ? NeonProdRegistry : NeonDevRegistry;
 
         /// <summary>
-        /// The default username for component dashboards and management tools (like Ceph and RabbitMQ).
+        /// The default username for component dashboards and management tools.
         /// </summary>
         public const string DefaultUsername = "sysadmin";
 
         /// <summary>
-        /// The default password for component dashboards and management tools (like Ceph and RabbitMQ).
+        /// The default password for component dashboards and management tools.
         /// </summary>
         public const string DefaultPassword = "password";
 
@@ -264,5 +264,10 @@ namespace Neon.Kube
         /// when node templates are periodically created.
         /// </summary>
         public const decimal NodeTemplateDiskSize = 10 * ByteUnits.GibiBytes;
+
+        /// <summary>
+        /// The minimum supported XenServer/XCP-ng hypervisor host version.
+        /// </summary>
+        public static readonly SemanticVersion MinXenServerVersion = SemanticVersion.Parse("7.5.0");
     }
 }

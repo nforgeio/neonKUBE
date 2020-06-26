@@ -47,9 +47,9 @@ namespace NeonCli
 
             // $todo(jefflill): We're currently hardcoded to Ubuntu 18.04.x
 
-            if (!node.OsName.Equals("Ubuntu", StringComparison.InvariantCultureIgnoreCase) || node.OsVersion < Version.Parse("18.04"))
+            if (!node.OsName.Equals("Ubuntu", StringComparison.InvariantCultureIgnoreCase) || node.OsVersion < Version.Parse("20.04"))
             {
-                node.Fault("Expected: Ubuntu 18.04.x");
+                node.Fault("Expected: Ubuntu 20.04+");
             }
         }
 

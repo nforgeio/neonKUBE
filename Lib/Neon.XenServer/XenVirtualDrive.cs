@@ -26,7 +26,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 
-namespace Neon.Xen
+namespace Neon.XenServer
 {
     /// <summary>
     /// Specifies virtual drive creation parameters.

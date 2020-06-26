@@ -124,5 +124,11 @@ namespace Neon.IO
         /// Returns the file name only.
         /// </summary>
         public string Name => System.IO.Path.GetFileName(Path);
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return Path;
+        }
     }
 }

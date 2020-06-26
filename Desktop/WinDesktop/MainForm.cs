@@ -1030,43 +1030,6 @@ namespace WinDesktop
                 dashboardsMenu.MenuItems.Add(new MenuItem("Kiali", OnKialiDashboardCommand) { Enabled = loggedIn && !operationInProgress });
                 dashboardsMenu.MenuItems.Add(new MenuItem("Grafana", OnGrafanaDashboardCommand) { Enabled = loggedIn && !operationInProgress });
 
-#if TODO
-                var addedDashboardSeparator = false;
-
-                if (KubeHelper.CurrentContext.Extension.ClusterDefinition.Ceph.Enabled)
-                {
-                    if (!addedDashboardSeparator)
-                    {
-                        dashboardsMenu.MenuItems.Add(new MenuItem("-"));
-                        addedDashboardSeparator = true;
-                    }
-
-                    dashboardsMenu.MenuItems.Add(new MenuItem("Ceph", OnCephDashboardCommand) { Enabled = loggedIn && !operationInProgress });
-                }
-
-                if (KubeHelper.CurrentContext.Extension.ClusterDefinition.EFK.Enabled)
-                {
-                    if (!addedDashboardSeparator)
-                    {
-                        dashboardsMenu.MenuItems.Add(new MenuItem("-"));
-                        addedDashboardSeparator = true;
-                    }
-
-                    dashboardsMenu.MenuItems.Add(new MenuItem("Kibana", OnKibanaDashboardCommand) { Enabled = loggedIn && !operationInProgress });
-                }
-
-                if (KubeHelper.CurrentContext.Extension.ClusterDefinition.Prometheus.Enabled)
-                {
-                    if (!addedDashboardSeparator)
-                    {
-                        dashboardsMenu.MenuItems.Add(new MenuItem("-"));
-                        addedDashboardSeparator = true;
-                    }
-
-                    dashboardsMenu.MenuItems.Add(new MenuItem("Prometheus", OnPrometheusDashboardCommand) { Enabled = loggedIn && !operationInProgress });
-                }
-#endif
-
                 contextMenu.MenuItems.Add(dashboardsMenu);
             }
 
@@ -1282,16 +1245,6 @@ namespace WinDesktop
         private void OnGrafanaDashboardCommand(object sender, EventArgs args)
         {
             NeonHelper.OpenBrowser($"http://localhost:{KubeHelper.ClientConfig.GrafanaDashboardProxyPort}/");
-        }
-
-        /// <summary>
-        /// Handles the <b>Ceph Dashboard</b> command.
-        /// </summary>
-        /// <param name="sender">The sender.</param>
-        /// <param name="args">The arguments.</param>
-        private void OnCephDashboardCommand(object sender, EventArgs args)
-        {
-            MessageBox.Show("$todo(jefflill): Not implemented yet.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
 
         /// <summary>

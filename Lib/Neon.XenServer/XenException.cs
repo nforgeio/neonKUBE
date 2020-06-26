@@ -27,7 +27,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.IO;
 
-namespace Neon.Xen
+namespace Neon.XenServer
 {
     /// <summary>
     /// Thrown by <see cref="XenClient"/> when an error is detected.

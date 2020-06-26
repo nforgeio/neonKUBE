@@ -97,6 +97,12 @@ Handy ASP.NET related extensions and utilities including new base controller cla
 
 **Changes:** No significant changes for this release.
 
+### <img src="https://doc.neonkube.com/media/release.png"/> Neon.XenServer
+
+This package provides an easy way for .NET code to interact with the XenServer/XCP-ng virtualization host machines via SSH.
+
+**Changes:** No significant changes for this release.
+
 ### <img src="https://doc.neonkube.com/media/release.png"/> Neon.Xunit
 
 This package includes generally useful test fixtures for ASP.NET, Containers, Docker, NATS as well as a fixture that can be used to compose fixtures including your custom fixtures.

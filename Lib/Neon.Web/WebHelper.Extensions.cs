@@ -91,7 +91,7 @@ namespace Neon.Web
         /// <returns>The <paramref name="builder"/>.</returns>
         public static IMvcBuilder AddNeon(
             IMvcBuilder         builder, 
-            IServiceContainer   source = null,
+            IServiceContainer   source                     = null,
             bool                disableResponseCompression = false)
         {
             Covenant.Requires<ArgumentNullException>(builder != null, nameof(builder));
@@ -141,8 +141,8 @@ namespace Neon.Web
         /// </remarks>
         public static IMvcBuilder AddNeon(
             this IMvcBuilder    builder, 
-            bool                disableRoundTripFormatters  = false, 
-            Func<Type, bool>    allowRoundtripFormatter     = null)
+            bool                disableRoundTripFormatters = false, 
+            Func<Type, bool>    allowRoundtripFormatter    = null)
         {
             if (!disableRoundTripFormatters)
             {
