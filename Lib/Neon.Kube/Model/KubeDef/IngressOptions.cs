@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Ingress.cs
+// FILE:	    IngressOptions.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -41,7 +41,7 @@ namespace Neon.Kube
     /// <summary>
     /// Specifies the ingress rules for the cluster.
     /// </summary>
-    public class Ingress
+    public class IngressOptions
     {
         /// <summary>
         /// The name of the ingress rule.
@@ -85,22 +85,22 @@ namespace Neon.Kube
         {
             if (string.IsNullOrEmpty(Name))
             {
-                throw new ClusterDefinitionException($"[{nameof(Ingress)}.{nameof(Name)}] is required when specifying an ingress rule.");
+                throw new ClusterDefinitionException($"[{nameof(IngressOptions)}.{nameof(Name)}] is required when specifying an ingress rule.");
             }
 
             if (Port == null)
             {
-                throw new ClusterDefinitionException($"[{nameof(Ingress)}.{nameof(Port)}] is required when specifying an ingress rule.");
+                throw new ClusterDefinitionException($"[{nameof(IngressOptions)}.{nameof(Port)}] is required when specifying an ingress rule.");
             }
 
             if (TargetPort == null)
             {
-                throw new ClusterDefinitionException($"[{nameof(Ingress)}.{nameof(TargetPort)}] is required when specifying an ingress rule.");
+                throw new ClusterDefinitionException($"[{nameof(IngressOptions)}.{nameof(TargetPort)}] is required when specifying an ingress rule.");
             }
 
             if (NodePort == null)
             {
-                throw new ClusterDefinitionException($"[{nameof(Ingress)}.{nameof(NodePort)}] is required when specifying an ingress rule.");
+                throw new ClusterDefinitionException($"[{nameof(IngressOptions)}.{nameof(NodePort)}] is required when specifying an ingress rule.");
             }
         }
     }

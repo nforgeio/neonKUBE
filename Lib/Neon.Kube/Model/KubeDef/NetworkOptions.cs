@@ -176,7 +176,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Ingress", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "ingress", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public List<Ingress> Ingress { get; set; } = new List<Ingress>();
+        public List<IngressOptions> Ingress { get; set; } = new List<IngressOptions>();
 
         /// <summary>
         /// Used for checking subnet conflicts below.
