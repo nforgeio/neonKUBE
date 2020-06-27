@@ -219,6 +219,18 @@ namespace Neon.Kube
         public string Name { get; set; }
 
         /// <summary>
+        /// <para>
+        /// Specifies cluster debugging options.
+        /// </para>
+        /// <note>
+        /// These options are generally intended for neonKUBE developers only.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "Debug", Required = Required.Always)]
+        [YamlMember(Alias = "debug", ApplyNamingConventions = false)]
+        public DebugOptions Debug { get; set; } = new DebugOptions();
+
+        /// <summary>
         /// Identifies the tool/version used to provision the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "Provisioner", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -523,6 +535,7 @@ namespace Neon.Kube
 
             // Validate the properties.
 
+            Debug       = Debug ?? new DebugOptions();
             Provisioner = Provisioner ?? defaultProvisioner;
             Kubernetes  = Kubernetes ?? new KubernetesOptions();
             Docker      = Docker ?? new DockerOptions();
@@ -534,6 +547,7 @@ namespace Neon.Kube
             NodeOptions = NodeOptions ?? new NodeOptions();
             Network     = Network ?? new NetworkOptions();
 
+            Debug.Validate(this);
             Kubernetes.Validate(this);
             Docker.Validate(this);
             Mon.Validate(this);
