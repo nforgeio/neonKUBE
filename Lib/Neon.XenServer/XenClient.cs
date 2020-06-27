@@ -360,7 +360,7 @@ namespace Neon.XenServer
             // Create the SR subfolder and upload the ISO file.
 
             tempIso.SrPath = LinuxPath.Combine(NeonTempSrPath, Guid.NewGuid().ToString("d"));
-            tempIso.CdName = $"neon-cd-{Guid.NewGuid().ToString("d")}.iso";
+            tempIso.CdName = $"neon-dvd-{Guid.NewGuid().ToString("d")}.iso";
 
             SshProxy.SudoCommand("mkdir", RunOptions.LogOutput | RunOptions.FaultOnError, tempIso.SrPath);
 

@@ -68,7 +68,7 @@ namespace Neon.XenServer
 
         /// <summary>
         /// Returns the name of the CD/DVD that can be insterted into a VM.  This
-        /// is currently set to a unique name like <b>neon-cd-UUID.iso</b> to avoid
+        /// is currently set to a unique name like <b>neon-dvd-UUID.iso</b> to avoid
         /// conflicts.
         /// </summary>
         public string CdName { get; internal set; }

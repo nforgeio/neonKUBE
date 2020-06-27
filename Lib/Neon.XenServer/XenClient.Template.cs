@@ -122,9 +122,9 @@ namespace Neon.XenServer
 
                 var sr = client.Repository.GetTargetStorageRepository(repositoryNameOrUuid);
 
-                if (uriParsed.Scheme != "http" && uriParsed.Scheme != "ftp")
+                if (uriParsed.Scheme != "http" && uriParsed.Scheme != "https" && uriParsed.Scheme != "ftp")
                 {
-                    throw new ArgumentException($"[{uri}] uses an unsupported scheme.  Only [http/ftp] are allowed.", nameof(uri));
+                    throw new ArgumentException($"[{uri}] uses an unsupported scheme.  Only [http or ftp] are allowed.", nameof(uri));
                 }
 
                 var response = client.SafeInvoke("vm-import", $"url={uri}", $"sr-uuid={sr.Uuid}");

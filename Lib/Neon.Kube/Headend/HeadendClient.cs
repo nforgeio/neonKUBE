@@ -217,7 +217,12 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        linuxTemplateUri = $"https://s3-us-west-2.amazonaws.com/neonforge/kube/xenserver-{clusterDefinition.Hosting.LinuxDistribution}-{clusterDefinition.Hosting.LinuxVersion}.xva";
+                        // $todo(jefflill): 
+                        //
+                        // XenServer/XCP-ng doesn't support HTTPS!  This seems super odd.  Perhaps they
+                        // don't want to update public certificates or something.
+
+                        linuxTemplateUri = $"http://s3-us-west-2.amazonaws.com/neonforge/kube/xenserver-{clusterDefinition.Hosting.LinuxDistribution}-{clusterDefinition.Hosting.LinuxVersion}.xva";
                     }
                     break;
 

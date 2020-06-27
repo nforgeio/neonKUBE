@@ -97,6 +97,10 @@ namespace Neon.Kube
         /// You may set this to a custom URI which may be useful for setting up air-gapped 
         /// clusters for for testing purposes.  This defaults to <c>null</c>.
         /// </para>
+        /// <note>
+        /// This URI can use HTTP, HTTPS, or FTP for all hosting environments except <see cref="HostingEnvironments.XenServer"/>
+        /// which doesn't support HTTPS.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "LinuxTemplateUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "linuxTemplateUri", ApplyNamingConventions = false)]

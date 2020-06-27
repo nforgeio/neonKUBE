@@ -31,7 +31,6 @@ namespace Neon.Kube
     /// </summary>
     public class XenServerOptions
     {
-        private const string defaultTemplate          = "neonkube-ubuntu-18.04";
         private const string defaultStorageRepository = "Local storage";
         private const bool   defaultSnapshot          = false;
 
@@ -94,8 +93,15 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            StorageRepository    = StorageRepository ?? defaultStorageRepository;
-            OsdStorageRepository = OsdStorageRepository ?? defaultStorageRepository;
+            if (!string.IsNullOrEmpty(clusterDefinition.Hosting.LinuxTemplateUri))
+            {
+                if (Uri.TryCreate(clusterDefinition.Hosting.LinuxTemplateUri, UriKind.Absolute, out var uri) && uri.Scheme == "https")
+                {
+                    throw new ClusterDefinitionException($"[{nameof(clusterDefinition.Hosting)}.{nameof(clusterDefinition.Hosting.LinuxTemplateUri)}={uri}] uses HTTPS which is not supported by XenServer.");
+                }
+            }
+
+            StorageRepository = StorageRepository ?? defaultStorageRepository;
 
             if (string.IsNullOrEmpty(StorageRepository))
             {
