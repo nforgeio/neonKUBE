@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -81,6 +82,7 @@ namespace Neon.Kube
         // Instance members
 
         private ClusterProxy                cluster;
+        private KubeSetupInfo               setupInfo;
         private string                      logFolder;
         private List<XenClient>             xenHosts;
         private SetupController<XenClient>  controller;
@@ -90,14 +92,19 @@ namespace Neon.Kube
         /// Constructor.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="setupInfo">Specifies the cluster setup information.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public XenServerHostingManager(ClusterProxy cluster, string logFolder = null)
+        public XenServerHostingManager(ClusterProxy cluster, KubeSetupInfo setupInfo, string logFolder = null)
         {
+            Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
+            Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
+
             this.cluster                = cluster;
             this.cluster.HostingManager = this;
+            this.setupInfo              = setupInfo;
             this.logFolder              = logFolder;
             this.maxVmNameWidth         = cluster.Definition.Nodes.Max(n => n.Name.Length) + cluster.Definition.Hosting.GetVmNamePrefix(cluster.Definition).Length;
         }
@@ -299,20 +306,29 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Returns the name to use for the node template to be persisted on the XenServers.
+        /// </summary>
+        /// <returns>The template name.</returns>
+        private string GetXenTemplateName()
+        {
+            return $"neon-{cluster.Definition.Hosting.LinuxDistribution}-{cluster.Definition.Hosting.LinuxVersion}"; ;
+        }
+
+        /// <summary>
         /// Install the virtual machine template on the XenServer if it's not already present.
         /// </summary>
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
         private void CheckVmTemplate(SshProxy<XenClient> xenSshProxy)
         {
             var xenHost      = xenSshProxy.Metadata;
-            var templateName = cluster.Definition.Hosting.XenServer.TemplateName;
+            var templateName = GetXenTemplateName();
 
             xenSshProxy.Status = "check: template";
 
             if (xenHost.Template.Find(templateName) == null)
             {
                 xenSshProxy.Status = "download: vm template (slow)";
-                xenHost.Template.Install(cluster.Definition.Hosting.XenServer.HostXvaUri, templateName, cluster.Definition.Hosting.XenServer.StorageRepository);
+                xenHost.Template.Install(setupInfo.LinuxTemplateUri, templateName, cluster.Definition.Hosting.XenServer.StorageRepository);
             }
         }
 

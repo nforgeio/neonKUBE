@@ -38,6 +38,7 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.Time;
 using Neon.Tasks;
+using Couchbase.Configuration.Server.Serialization;
 
 namespace Neon.Kube
 {
@@ -175,6 +176,56 @@ namespace Neon.Kube
             await SyncContext.ClearAsync;
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            // Determine the node template URI.
+            // $todo(jefflill): Hardcoded
+
+            var linuxTemplateUri = (string)null;
+
+            switch (clusterDefinition.Hosting.Environment)
+            {
+                case HostingEnvironments.Aws:
+                case HostingEnvironments.Azure:
+                case HostingEnvironments.Google:
+
+                    // Node templates are provided by virtual machine images in the cloud.
+
+                    linuxTemplateUri = null;
+                    break;
+
+                case HostingEnvironments.HyperV:
+                case HostingEnvironments.HyperVLocal:
+
+                    if (!string.IsNullOrEmpty(clusterDefinition.Hosting.LinuxTemplateUri))
+                    {
+                        linuxTemplateUri = clusterDefinition.Hosting.LinuxTemplateUri;
+                    }
+                    else
+                    {
+                        linuxTemplateUri = $"https://s3-us-west-2.amazonaws.com/neonforge/kube/hyperv-{clusterDefinition.Hosting.LinuxDistribution}-{clusterDefinition.Hosting.LinuxVersion}.vhdx";
+                    }
+                    break;
+
+                case HostingEnvironments.Machine:
+
+                    break;
+
+                case HostingEnvironments.XenServer:
+
+                    if (!string.IsNullOrEmpty(clusterDefinition.Hosting.LinuxTemplateUri))
+                    {
+                        linuxTemplateUri = clusterDefinition.Hosting.LinuxTemplateUri;
+                    }
+                    else
+                    {
+                        linuxTemplateUri = $"https://s3-us-west-2.amazonaws.com/neonforge/kube/xenserver-{clusterDefinition.Hosting.LinuxDistribution}-{clusterDefinition.Hosting.LinuxVersion}.xva";
+                    }
+                    break;
+
+                default:
+
+                    throw new NotImplementedException($"Hosting environment [{clusterDefinition.Hosting.Environment}] is not implemented.");
+            }
+
             var kubeVersion = Version.Parse(defaultKubeVersion);
 
             if (!clusterDefinition.Kubernetes.Version.Equals("default", StringComparison.InvariantCultureIgnoreCase))
@@ -258,6 +309,8 @@ namespace Neon.Kube
 
             var setupInfo = new KubeSetupInfo()
             {
+                LinuxTemplateUri            = linuxTemplateUri,
+
                 KubeAdmLinuxUri             = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/linux/amd64/kubeadm",
                 KubeCtlLinuxUri             = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/linux/amd64/kubectl",
                 KubeletLinuxUri             = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/linux/amd64/kubelet",
