@@ -195,13 +195,13 @@ namespace Neon.Kube
                 case HostingEnvironments.HyperV:
                 case HostingEnvironments.HyperVLocal:
 
-                    if (!string.IsNullOrEmpty(clusterDefinition.Hosting.LinuxTemplateUri))
+                    if (!string.IsNullOrEmpty(clusterDefinition.LinuxTemplateUri))
                     {
-                        linuxTemplateUri = clusterDefinition.Hosting.LinuxTemplateUri;
+                        linuxTemplateUri = clusterDefinition.LinuxTemplateUri;
                     }
                     else
                     {
-                        linuxTemplateUri = $"https://s3-us-west-2.amazonaws.com/neonforge/kube/hyperv-{clusterDefinition.Hosting.LinuxDistribution}-{clusterDefinition.Hosting.LinuxVersion}.vhdx";
+                        linuxTemplateUri = $"https://s3-us-west-2.amazonaws.com/neonforge/kube/hyperv-{clusterDefinition.LinuxDistribution}-{clusterDefinition.LinuxVersion}.vhdx";
                     }
                     break;
 
@@ -211,9 +211,9 @@ namespace Neon.Kube
 
                 case HostingEnvironments.XenServer:
 
-                    if (!string.IsNullOrEmpty(clusterDefinition.Hosting.LinuxTemplateUri))
+                    if (!string.IsNullOrEmpty(clusterDefinition.LinuxTemplateUri))
                     {
-                        linuxTemplateUri = clusterDefinition.Hosting.LinuxTemplateUri;
+                        linuxTemplateUri = clusterDefinition.LinuxTemplateUri;
                     }
                     else
                     {
@@ -222,7 +222,7 @@ namespace Neon.Kube
                         // XenServer/XCP-ng doesn't support HTTPS!  This seems super odd.  Perhaps they
                         // don't want to update public certificates or something.
 
-                        linuxTemplateUri = $"http://s3-us-west-2.amazonaws.com/neonforge/kube/xenserver-{clusterDefinition.Hosting.LinuxDistribution}-{clusterDefinition.Hosting.LinuxVersion}.xva";
+                        linuxTemplateUri = $"http://s3-us-west-2.amazonaws.com/neonforge/kube/xenserver-{clusterDefinition.LinuxDistribution}-{clusterDefinition.LinuxVersion}.xva";
                     }
                     break;
 

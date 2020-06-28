@@ -1,6 +1,8 @@
 name: home-tiny
 datacenter: sultan
 environment: development
+linuxDistribution: ubuntu
+linuxVersion: 20.04.0
 timeSources:
 - pool.ntp.org
 allowUnitTesting: true

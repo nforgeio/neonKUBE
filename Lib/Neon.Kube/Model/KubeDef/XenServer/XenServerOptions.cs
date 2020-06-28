@@ -93,11 +93,11 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            if (!string.IsNullOrEmpty(clusterDefinition.Hosting.LinuxTemplateUri))
+            if (!string.IsNullOrEmpty(clusterDefinition.LinuxTemplateUri))
             {
-                if (Uri.TryCreate(clusterDefinition.Hosting.LinuxTemplateUri, UriKind.Absolute, out var uri) && uri.Scheme == "https")
+                if (Uri.TryCreate(clusterDefinition.LinuxTemplateUri, UriKind.Absolute, out var uri) && uri.Scheme == "https")
                 {
-                    throw new ClusterDefinitionException($"[{nameof(clusterDefinition.Hosting)}.{nameof(clusterDefinition.Hosting.LinuxTemplateUri)}={uri}] uses HTTPS which is not supported by XenServer.");
+                    throw new ClusterDefinitionException($"[{nameof(clusterDefinition.Hosting)}.{nameof(clusterDefinition.LinuxTemplateUri)}={uri}] uses HTTPS which is not supported by XenServer.");
                 }
             }
 
