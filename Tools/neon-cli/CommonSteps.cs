@@ -294,6 +294,8 @@ TCPKeepAlive yes
             //-----------------------------------------------------------------
             // Package manager configuration.
 
+            node.Status = "configure: [apt] package manager";
+
             if (!clusterDefinition.NodeOptions.AllowPackageManagerIPv6)
             {
                 // Restrict the [apt] package manager to using IPv4 to communicate
@@ -309,11 +311,37 @@ TCPKeepAlive yes
             node.SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-retries");
 
             //-----------------------------------------------------------------
+            // We're going to stop and mask the [snapd.service] if it's running
+            // because we don't want it to randomlly update apps on cluster nodes.
+
+            node.Status = "disable: [snapd.service]";
+
+            var disableSnapScript =
+@"
+# Stop and mask [snapd.service] when it's not already masked.
+
+systemctl status --no-pager snapd.service
+
+if [ $? ]; then
+    systemctl stop snapd.service
+    systemctl mask snapd.service
+fi
+";
+            node.SudoCommand(CommandBundle.FromScript(disableSnapScript), RunOptions.FaultOnError);
+
+            //-----------------------------------------------------------------
             // Other configuration.
 
+            node.Status = "configure: openssh";
+
             ConfigureOpenSSH(node, TimeSpan.Zero);
+
+            node.Status = "upload: prepare files";
+
             node.UploadConfigFiles(clusterDefinition, kubeSetupInfo);
             node.UploadResources(clusterDefinition, kubeSetupInfo);
+
+            node.Status = "configure: environment vars";
 
             if (clusterDefinition != null)
             {
@@ -325,7 +353,7 @@ TCPKeepAlive yes
             node.InvokeIdempotentAction("setup/prep-node",
                 () =>
                 {
-                    node.Status = "preparing";
+                    node.Status = "prepare: node";
                     node.SudoCommand("setup-prep.sh");
                     node.Reboot(wait: true);
                 });
@@ -338,8 +366,6 @@ TCPKeepAlive yes
             // We may need an option that allows an operator to pre-build a hardware
             // based drive array or something.  I'm going to defer this to later and
             // concentrate on commodity hardware and cloud deployments for now. 
-
-            CommonSteps.ConfigureEnvironmentVariables(node, clusterDefinition);
 
             node.Status = "setup: disk";
             node.SudoCommand("setup-disk.sh");

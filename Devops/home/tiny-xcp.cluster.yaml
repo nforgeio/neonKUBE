@@ -8,6 +8,8 @@ kubernetes:
   allowPodsOnMasters: true
 hosting:
   environment: xenserver
+  linuxDistribution: ubuntu
+  linuxVersion: 20.04.latest
   vmHostUsername: $<<XENSERVER_USERNAME>>
   vmHostPassword: $<<XENSERVER_PASSWORD>>
   vmNamePrefix: jeff
