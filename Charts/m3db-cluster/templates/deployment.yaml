@@ -13,7 +13,7 @@ spec:
     effect: NoSchedule
     operator: Exists
   etcdEndpoints:
-  - http://etcd-m3db-client.monitoring:2379
+  - http://m3db-etcd.monitoring:2379
   podIdentityConfig:
     sources: []
   namespaces:
