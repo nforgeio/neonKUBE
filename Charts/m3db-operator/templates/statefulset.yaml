@@ -1,32 +1,30 @@
----
-# Source: m3db-operator/templates/stateful_set.yaml
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: m3db-operator
-  namespace: monitoring
+  name: {{ .Values.operator.name }}
+  namespace: {{ .Release.Namespace }}
 spec:
-  serviceName: m3db-operator
+  serviceName: {{ .Values.operator.name }}
   replicas: 1
   selector:
     matchLabels:
-      name: m3db-operator
+      name: {{ .Values.operator.name }}
   template:
     metadata:
       labels:
-        name: m3db-operator
+        name: {{ .Values.operator.name }}
     spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
         runAsGroup: 65534
       containers:
-        - name: m3db-operator
-          image: quay.io/m3db/m3db-operator:v0.2.0
+        - name: {{ .Values.operator.name }}
+          image: {{ .Values.image.repository}}:{{ .Values.image.tag }}
           command:
           - m3db-operator
           imagePullPolicy: Always
           env:
             - name: ENVIRONMENT
-              value: production
-      serviceAccount: m3db-operator
+              value: {{ .Values.environment }}
+      serviceAccount: {{ .Values.operator.name }}

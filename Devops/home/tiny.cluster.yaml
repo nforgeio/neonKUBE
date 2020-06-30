@@ -18,4 +18,4 @@ nodeOptions:
 nodes:
   master-0:
     role: master
-    privateAddress: 10.0.0.30
+    privateAddress: 10.0.1.30

@@ -31,8 +31,6 @@ namespace Neon.Kube
     /// </summary>
     public class XenServerOptions
     {
-        private const string defaultHostXvaUri        = "http://s3-us-west-2.amazonaws.com/neonforge/kube/xenserver-ubuntu-18.04.latest.xva";
-        private const string defaultTemplate          = "neonkube-ubuntu-18.04";
         private const string defaultStorageRepository = "Local storage";
         private const bool   defaultSnapshot          = false;
 
@@ -44,36 +42,6 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// <para>
-        /// URI to the XenServer XVA image to use as a template for creating the virtual machines.  This defaults to
-        /// <b>http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-Ubuntu-18.04.latest.xva</b>
-        /// which is the latest supported Ubuntu 16.04 image.
-        /// </para>
-        /// <note>
-        /// Production cluster definitions should be configured with an XVA with a specific version
-        /// of the host operating system to ensure that cluster nodes are provisioned with the same
-        /// operating system version.
-        /// </note>
-        /// <note>
-        /// The XenServer <b>xe</b> CLI <b>does not support</b> downloading XVA images <b>via HTTPS</b>.
-        /// You'll need to use HTTP or FTP.
-        /// </note>
-        /// </summary>
-        [JsonProperty(PropertyName = "HostXvaUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "hostXvaUri", ApplyNamingConventions = false)]
-        [DefaultValue(defaultHostXvaUri)]
-        public string HostXvaUri { get; set; } = defaultHostXvaUri;
-
-        /// <summary>
-        /// Names the XenServer template to be used when creating cluster nodes.  This defaults
-        /// to <b>ubuntu-template</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "TemplateName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "templateName", ApplyNamingConventions = false)]
-        [DefaultValue(defaultTemplate)]
-        public string TemplateName { get; set; } = defaultTemplate;
-
-        /// <summary>
         /// Identifies the XenServer storage repository to be used to store the XenServer
         /// node template as well as the cluster virtual machine images.  This defaults to
         /// <b>Local storage</b>.
@@ -82,15 +50,6 @@ namespace Neon.Kube
         [YamlMember(Alias = "storageRepository", ApplyNamingConventions = false)]
         [DefaultValue(defaultStorageRepository)]
         public string StorageRepository { get; set; } = defaultStorageRepository;
-
-        /// <summary>
-        /// Identifies the XenServer storage repository to be used to for any Ceph OSD
-        /// drives created for the cluster.  This defaults to <b>Local storage</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "OsdStorageRepository", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "osdStorageRepository", ApplyNamingConventions = false)]
-        [DefaultValue(defaultStorageRepository)]
-        public string OsdStorageRepository { get; set; } = defaultStorageRepository;
 
         /// <summary>
         /// Optionally directs XenCenter to create the virtual machines using a snapshot of
@@ -134,24 +93,19 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            HostXvaUri           = HostXvaUri ?? defaultHostXvaUri;
-            TemplateName         = TemplateName ?? defaultTemplate;
-            StorageRepository    = StorageRepository ?? defaultStorageRepository;
-            OsdStorageRepository = OsdStorageRepository ?? defaultStorageRepository;
-
-            if (string.IsNullOrEmpty(HostXvaUri) || !Uri.TryCreate(HostXvaUri, UriKind.Absolute, out Uri uri))
+            if (!string.IsNullOrEmpty(clusterDefinition.Hosting.LinuxTemplateUri))
             {
-                throw new ClusterDefinitionException($"[{nameof(XenServerOptions)}.{nameof(HostXvaUri)}] is required when deploying to XenServer.");
+                if (Uri.TryCreate(clusterDefinition.Hosting.LinuxTemplateUri, UriKind.Absolute, out var uri) && uri.Scheme == "https")
+                {
+                    throw new ClusterDefinitionException($"[{nameof(clusterDefinition.Hosting)}.{nameof(clusterDefinition.Hosting.LinuxTemplateUri)}={uri}] uses HTTPS which is not supported by XenServer.");
+                }
             }
+
+            StorageRepository = StorageRepository ?? defaultStorageRepository;
 
             if (string.IsNullOrEmpty(StorageRepository))
             {
                 throw new ClusterDefinitionException($"[{nameof(XenServerOptions)}.{nameof(StorageRepository)}] is required when deploying to XenServer.");
-            }
-
-            if (string.IsNullOrEmpty(OsdStorageRepository))
-            {
-                OsdStorageRepository = StorageRepository;
             }
 
             clusterDefinition.ValidatePrivateNodeAddresses();                                           // Private node IP addresses must be assigned and valid.

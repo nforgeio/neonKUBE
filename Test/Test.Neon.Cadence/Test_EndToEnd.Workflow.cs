@@ -2255,16 +2255,16 @@ namespace TestCadence
             try
             {
                 await stub.RunAsync();
-                Assert.True(false, "CadenceGenericException expected");
+                Assert.True(false, "CadenceCustomException expected");
             }
-            catch (CadenceGenericException e)
+            catch (CadenceCustomException e)
             {
                 Assert.Contains("ArgumentException", e.Message);
                 Assert.Contains("forced-failure", e.Details);
             }
             catch
             {
-                Assert.True(false, "CadenceGenericException expected");
+                Assert.True(false, "CadenceCustomException expected");
             }
         }
 

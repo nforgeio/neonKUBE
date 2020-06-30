@@ -2,12 +2,14 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 image:
-  repository: gcr.io/google-containers/fluentd-elasticsearch
-  tag: v2.4.0
+  repository: nkubedev/neon-log-collector
+  tag: latest
   pullPolicy: IfNotPresent
   # pullSecrets:
   #   - secret1
   #   - secret2
+
+logLevel: info
 
 output:
   host: elasticsearch-master.monitoring
@@ -125,7 +127,7 @@ configMaps:
     <match **>
       @id elasticsearch
       @type elasticsearch
-      @log_level info
+
       include_tag_key true
       # Replace with the host/port to your Elasticsearch cluster.
       host "#{ENV['OUTPUT_HOST']}"

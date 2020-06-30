@@ -60,6 +60,54 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Specifies the distribution of Linux to be installed on the cluster nodes.  Currently
+        /// only <b>ubuntu</b> is supported.  This defaults to <b>ubuntu</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "LinuxDistribution", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "linuxDistribution", ApplyNamingConventions = false)]
+        [DefaultValue("ubuntu")]
+        public string LinuxDistribution { get; set; } = "ubuntu";
+
+        /// <summary>
+        /// <para>
+        /// Specifies the version of <see cref="LinuxDistribution"/> to be installed.  This is
+        /// formatted like <b>20.04.#</b> where <b>#</b> is the minor release or <b>20.04-latest</b>
+        /// for the latest release.
+        /// </para>
+        /// <para>
+        /// Currently, only <b>Ubuntu 20.04.#</b> releases are supported.  You'll need to check the
+        /// cluster install documentation to discover which point releases are currently available.
+        /// </para>
+        /// <para>
+        /// This defaults to <b>20.04.latest</b>.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "LinuxVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "linuxVersion", ApplyNamingConventions = false)]
+        [DefaultValue("20.04.latest")]
+        public string LinuxVersion { get; set; } = "20.04.latest";
+
+        /// <summary>
+        /// <para>
+        /// Optionally overrides the location of the Linux node template URI.  This is usually
+        /// located on a neonFORGE managed server and derived from <see cref="LinuxDistribution"/>
+        /// and <see cref="LinuxVersion"/> which should work for most users.
+        /// </para>
+        /// <para>
+        /// You may set this to a custom URI which may be useful for setting up air-gapped 
+        /// clusters for for testing purposes.  This defaults to <c>null</c>.
+        /// </para>
+        /// <note>
+        /// This URI can use HTTP, HTTPS, or FTP for all hosting environments except <see cref="HostingEnvironments.XenServer"/>
+        /// which doesn't support HTTPS.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "LinuxTemplateUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "linuxTemplateUri", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string LinuxTemplateUri { get; set; } = null;
+
+        /// <summary>
         /// Identifies the cloud or other hosting platform.  This defaults to <see cref="HostingEnvironments.Machine"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Environment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -392,11 +440,57 @@ namespace Neon.Kube
                     throw new NotImplementedException();
             }
 
+            // Validate the VM name prefix.
+
             if (!string.IsNullOrWhiteSpace(VmNamePrefix))
             {
                 if (!ClusterDefinition.IsValidName(VmNamePrefix))
                 {
                     throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(VmNamePrefix)}={VmNamePrefix}] must include only letters, digits, underscores, or periods.");
+                }
+            }
+
+            // Validate the Linux distribution.
+
+            var distribution = LinuxDistribution ?? "(null)";
+
+            switch (distribution)
+            {
+                // Supported distributions
+
+                case "ubuntu":
+
+                    break;
+
+                default:
+
+                    throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(LinuxDistribution)}={distribution}] is not one of the supported distributions: ubuntu.");
+            }
+
+            // Validate the Linux version.  This needs to look like one of:
+            //
+            //      #.#.#
+            //      #.#.latest
+
+            var version       = LinuxVersion ?? "(null)";
+            var versionFields = version.Split('.');
+            int v;
+
+            if (versionFields.Length != 3 ||
+                !int.TryParse(versionFields[0], out v) ||
+                !int.TryParse(versionFields[1], out v) ||
+                (!int.TryParse(versionFields[2], out v) && versionFields[2] != "latest"))
+            {
+                throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(LinuxVersion)}={version}] is not a valid Linux distribution version.");
+            }
+
+            // Validate the optional override VM template URI.
+
+            if (!string.IsNullOrEmpty(LinuxTemplateUri))
+            {
+                if (!Uri.TryCreate(LinuxTemplateUri, UriKind.Absolute, out var uri))
+                {
+                    throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(LinuxTemplateUri)}={LinuxTemplateUri}] is not a valid URI.");
                 }
             }
         }

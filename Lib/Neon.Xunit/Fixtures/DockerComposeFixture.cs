@@ -27,7 +27,6 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.IO;
 using Neon.Retry;
-using Org.BouncyCastle.Utilities;
 
 namespace Neon.Xunit
 {

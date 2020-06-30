@@ -3,12 +3,27 @@ rbac:
   pspEnabled: true
   pspUseAppArmor: true
   namespaced: false
+  extraRoleRules: []
+  # - apiGroups: []
+  #   resources: []
+  #   verbs: []
+  extraClusterRoleRules: []
+  # - apiGroups: []
+  #   resources: []
+  #   verbs: []
 serviceAccount:
   create: true
   name:
   nameTest:
+#  annotations:
 
 replicas: 1
+
+## See `kubectl explain poddisruptionbudget.spec` for more
+## ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
+podDisruptionBudget: {}
+#  minAvailable: 1
+#  maxUnavailable: 1
 
 ## See `kubectl explain deployment.spec.strategy` for more
 ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
@@ -35,7 +50,7 @@ livenessProbe:
 
 image:
   repository: grafana/grafana
-  tag: 6.2.5
+  tag: 7.0.3
   pullPolicy: IfNotPresent
 
   ## Optionally specify an array of imagePullSecrets.
@@ -46,18 +61,22 @@ image:
   #   - myRegistrKeySecretName
 
 testFramework:
-  image: "dduportal/bats"
-  tag: "0.4.0"
+  enabled: true
+  image: "bats/bats"
+  tag: "v1.1.0"
+  imagePullPolicy: IfNotPresent
   securityContext: {}
 
 securityContext:
   runAsUser: 472
+  runAsGroup: 472
   fsGroup: 472
 
 
 extraConfigmapMounts: []
   # - name: certs-configmap
   #   mountPath: /etc/grafana/ssl/
+  #   subPath: certificates.crt # (optional)
   #   configMap: certs-configmap
   #   readOnly: true
 
@@ -71,15 +90,21 @@ extraEmptyDirMounts: []
 # priorityClassName:
 
 downloadDashboardsImage:
-  repository: appropriate/curl
-  tag: latest
+  repository: curlimages/curl
+  tag: 7.70.0
   pullPolicy: IfNotPresent
 
 downloadDashboards:
   env: {}
+  resources: {}
 
 ## Pod Annotations
 # podAnnotations: {}
+
+## Pod Labels
+# podLabels: {}
+
+podPortName: grafana
 
 ## Deployment annotations
 # annotations: {}
@@ -95,9 +120,17 @@ service:
     # targetPort: 4181 To be used with a proxy extraContainer
   annotations: {}
   labels: {}
+  portName: service
+
+extraExposePorts: []
+ # - name: keycloak
+ #   port: 8080
+ #   targetPort: 8080
+ #   type: ClusterIP
 
 ingress:
   enabled: false
+  # Values can be templated
   annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
@@ -105,6 +138,12 @@ ingress:
   path: /
   hosts:
     - chart-example.local
+  ## Extra paths to prepend to every host configuration. This is useful when working with annotation based services.
+  extraPaths: []
+  # - path: /*
+  #   backend:
+  #     serviceName: ssl-redirect
+  #     servicePort: use-annotation
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
@@ -152,10 +191,19 @@ extraContainers: |
 #     - name: proxy-web
 #       containerPort: 4181
 
+## Volumes that can be used in init containers that will not be mounted to deployment pods
+extraContainerVolumes: []
+#  - name: volume-from-secret
+#    secret:
+#      secretName: secret-to-mount
+#  - name: empty-dir-volume
+#    emptyDir: {}
+
 ## Enable persistence using Persistent Volume Claims
 ## ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
 ##
 persistence:
+  type: pvc
   enabled: false
   # storageClassName: default
   accessModes:
@@ -177,7 +225,7 @@ initChownData:
   ##
   image:
     repository: busybox
-    tag: "1.30"
+    tag: "1.31.1"
     pullPolicy: IfNotPresent
 
   ## initChownData resource requests and limits
@@ -217,9 +265,23 @@ admin:
 ## Extra environment variables that will be pass onto deployment pods
 env: {}
 
+## "valueFrom" environment variable references that will be added to deployment pods
+## ref: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#envvarsource-v1-core
+## Renders in container spec as:
+##   env:
+##     ...
+##     - name: <key>
+##       valueFrom:
+##         <value rendered as YAML>
+envValueFrom: {}
+
 ## The name of a secret in the same kubernetes namespace which contain values to be added to the environment
-## This can be useful for auth tokens, etc
+## This can be useful for auth tokens, etc. Value is templated.
 envFromSecret: ""
+
+## Sensible environment variables that will be rendered as new secret object
+## This can be useful for auth tokens, etc
+envRenderSecret: {}
 
 ## Additional grafana server secret mounts
 # Defines additional mounts with secrets. Secrets must be manually created in the namespace.
@@ -228,6 +290,7 @@ extraSecretMounts: []
   #   mountPath: /etc/secrets
   #   secretName: grafana-secret-files
   #   readOnly: true
+  #   subPath: ""
 
 ## Additional grafana server volume mounts
 # Defines additional volume mounts.
@@ -239,9 +302,15 @@ extraVolumeMounts: []
 
 ## Pass the plugins you want installed as a list.
 ##
-plugins: []
-  # - digrich-bubblechart-panel
-  # - grafana-clock-panel
+plugins:
+  - digrich-bubblechart-panel
+  - grafana-clock-panel
+  - grafana-worldmap-panel
+  - briangann-gauge-panel
+  - grafana-kubernetes-app
+  - xginn8-pagerduty-datasource
+  - camptocamp-prometheus-alertmanager-datasource
+  - grafana-piechart-panel
 
 ## Configure grafana datasources
 ## ref: http://docs.grafana.org/administration/provisioning/#datasources
@@ -252,20 +321,32 @@ datasources:
     datasources:
     - name: Prometheus
       type: prometheus
-      url: http://prometheus-operated.monitoring:9090
-      access: proxy
-      isDefault: false
-      jsonData:
-        timeInterval: 5s
-      editable: true
-    - name: M3
-      type: prometheus
       url: http://m3coordinator-m3db-prometheus.monitoring:7201
       access: proxy
       isDefault: true
       jsonData:
         timeInterval: 5s
-      editable: true
+      editable: false
+    - name: alertmanager
+      type: camptocamp-prometheus-alertmanager-datasource
+      access: proxy
+      org_id: 1
+      url: http://prometheus-operator-alertmanager.monitoring:9093
+      version: 1
+      editable: false
+      jsonData:
+        severity_critical: critical
+        severity_high: error
+        severity_warning: warning
+        severity_info: information
+    - name: Elastic
+      type: elasticsearch
+      access: proxy
+      database: "[logstash-]YYYY.MM.DD"
+      url: http://elasticsearch-master.monitoring:9200
+      jsonData:
+        interval: Daily
+        timeField: "@timestamp"
 
 ## Configure notifiers
 ## ref: http://docs.grafana.org/administration/provisioning/#alert-notification-channels
@@ -290,18 +371,18 @@ notifiers: {}
 ##
 ## `path` must be /var/lib/grafana/dashboards/<provider_name>
 ##
-dashboardProviders: {}
-#  dashboardproviders.yaml:
-#    apiVersion: 1
-#    providers:
-#    - name: 'default'
-#      orgId: 1
-#      folder: ''
-#      type: file
-#      disableDeletion: false
-#      editable: true
-#      options:
-#        path: /var/lib/grafana/dashboards/default
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+    - name: 'default'
+      orgId: 1
+      folder: ''
+      type: file
+      disableDeletion: false
+      editable: true
+      options:
+        path: /var/lib/grafana/dashboards/default
 
 ## Configure grafana dashboard to import
 ## NOTE: To use dashboards you must also enable/configure dashboardProviders
@@ -309,22 +390,79 @@ dashboardProviders: {}
 ##
 ## dashboards per provider, use provider name as key.
 ##
-dashboards: {}
-  # default:
-  #   some-dashboard:
-  #     json: |
+dashboards:
+  default:
+  #  some-dashboard:
+  #    json: |
   #       $RAW_JSON
-  #   custom-dashboard:
-  #     file: dashboards/custom-dashboard.json
-  #   prometheus-stats:
-  #     gnetId: 2
-  #     revision: 2
-  #     datasource: Prometheus
-  #   local-dashboard:
-  #     url: https://example.com/repository/test.json
-  #   local-dashboard-base64:
-  #     url: https://example.com/repository/test-b64.json
-  #     b64content: true
+     galley-dashboard:
+       gnetId: 7648
+       revision: 3
+       datasource: Prometheus
+     istio-mesh-dashboard:
+       gnetId: 7639
+       revision: 13
+       datasource: Prometheus
+     istio-performance-dashboard:
+       gnetId: 12153
+       revision: 1
+       datasource: Prometheus
+     istio-service-dashboard:
+       gnetId: 7636
+       revision: 13
+       datasource: Prometheus
+     istio-workload-dashboard:
+       gnetId: 7630
+       revision: 13
+       datasource: Prometheus
+     istio-mixer-dashboard:
+       gnetId: 7642
+       revision: 13
+       datasource: Prometheus
+     istio-control-plane-dashboard:
+       gnetId: 7645
+       revision: 13
+       datasource: Prometheus
+     prometheus-alertmanager:
+       gnetId: 9578
+       revision: 4
+       datasource: Prometheus
+     node-metrics:
+       gnetId: 1860
+       revision: 19
+       datasource: Prometheus
+     open-ebs:
+       gnetId: 12171
+       revision: 2
+       datasource: Prometheus
+     ceph:
+       gnetId: 2842
+       revision: 11
+       datasource: Prometheus
+     all-nodes:
+       gnetId: 11074
+       revision: 2
+       datasource: Prometheus
+     m3-dashboard:
+       gnetId: 8126
+       revision: 1
+       datasource: Prometheus
+     fluentd:
+       gnetId: 9950
+       revision: 3
+       datasource: Prometheus
+     fluentd:
+       gnetId: 11620
+       revision: 1
+       datasource: Prometheus
+     linux-node-alerts:
+       gnetId: 5984
+       revision: 4
+       datasource: Prometheus
+     k8s-summary:
+       gnetId: 8685
+       revision: 1
+       datasource: Prometheus
 
 ## Reference to external ConfigMap per provider. Use provider name as key and ConfiMap name as value.
 ## A provider dashboards must be defined either by external ConfigMaps or in values.yaml, not in both.
@@ -353,16 +491,28 @@ grafana.ini:
     mode: console
   grafana_net:
     url: https://grafana.net
-  auth.proxy:
-    # Defaults to false, but set to true to enable this feature
+  auth.anonymous:
     enabled: true
-    # HTTP Header name that will contain the username or email
-    header_name: X-WEBAUTH-USER
-    # HTTP Header property, defaults to `username` but can also be `email`
-    header_property: username
-    # Set to `true` to enable auto sign up of users who do not exist in Grafana DB. Defaults to `true`.
-    auto_sign_up: true
-
+    org_name: Main Org.
+    org_role: Admin
+  auth.basic:
+    enabled: false
+## grafana Authentication can be enabled with the following values on grafana.ini
+ # server:
+      # The full public facing url you use in browser, used for redirects and emails
+ #    root_url:
+ # https://grafana.com/docs/grafana/latest/auth/github/#enable-github-in-grafana
+ # auth.github:
+ #    enabled: false
+ #    allow_sign_up: false
+ #    scopes: user:email,read:org
+ #    auth_url: https://github.com/login/oauth/authorize
+ #    token_url: https://github.com/login/oauth/access_token
+ #    api_url: https://github.com/user
+ #    team_ids:
+ #    allowed_organizations:
+ #    client_id:
+ #    client_secret:
 ## LDAP Authentication can be enabled with the following values on grafana.ini
 ## NOTE: Grafana will fail to start if the value for ldap.toml is invalid
   # auth.ldap:
@@ -376,6 +526,7 @@ grafana.ini:
 ## ref: http://docs.grafana.org/installation/configuration/#auth-ldap
 ## ref: http://docs.grafana.org/installation/ldap/#configuration
 ldap:
+  enabled: false
   # `existingSecret` is a reference to an existing secret containing the ldap configuration
   # for Grafana in a key `ldap-toml`.
   existingSecret: ""
@@ -405,7 +556,7 @@ smtp:
 ## Sidecars that collect the configmaps with specified label and stores the included files them into the respective folders
 ## Requires at least Grafana 5 to work and can't be used together with parameters dashboardProviders, datasources and dashboards
 sidecar:
-  image: kiwigrid/k8s-sidecar:0.0.18
+  image: kiwigrid/k8s-sidecar:0.1.151
   imagePullPolicy: IfNotPresent
   resources: {}
 #   limits:
@@ -418,6 +569,7 @@ sidecar:
   # skipTlsVerify: true
   dashboards:
     enabled: false
+    SCProvider: true
     # label that the configmaps with dashboards are marked with
     label: grafana_dashboard
     # folder in the pod that should hold the collected dashboards (unless `defaultFolderName` is set)
@@ -440,6 +592,8 @@ sidecar:
       type: file
       # disableDelete to activate a import-only behaviour
       disableDelete: false
+      # allow updating provisioned dashboards from the UI
+      allowUiUpdates: false
   datasources:
     enabled: false
     # label that the configmaps with datasources are marked with
@@ -448,3 +602,7 @@ sidecar:
     # Otherwise the namespace in which the sidecar is running will be used.
     # It's also possible to specify ALL to search in all namespaces
     searchNamespace: null
+
+## Override the deployment namespace
+##
+namespaceOverride: ""

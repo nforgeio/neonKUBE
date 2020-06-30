@@ -294,11 +294,20 @@ Server Requirements:
                 }
 
                 //-----------------------------------------------------------------
+                // Obtain setup configuration and other details from the neonKUBE
+                // headend service.
+
+                using (var client = new HeadendClient())
+                {
+                    kubeSetupInfo = client.GetSetupInfoAsync(cluster.Definition).Result;
+                }
+
+                //-----------------------------------------------------------------
                 // Perform basic environment provisioning.  This creates basic cluster components
                 // such as virtual machines, networks, load balancers, public IP addresses, security
                 // groups,... as required for the environment.
 
-                hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetMaster(cluster, Program.LogPath);
+                hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManager(cluster, kubeSetupInfo, Program.LogPath);
 
                 if (hostingManager == null)
                 {
@@ -387,15 +396,6 @@ Server Requirements:
                         ShowStatus  = !Program.Quiet,
                         MaxParallel = Program.MaxParallel
                     };
-
-                controller.AddGlobalStep("setup details",
-                    () =>
-                    {
-                        using (var client = new HeadendClient())
-                        {
-                            kubeSetupInfo = client.GetSetupInfoAsync(cluster.Definition).Result;
-                        }
-                    });
 
                 // Prepare the nodes.
 

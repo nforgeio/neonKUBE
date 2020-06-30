@@ -219,6 +219,18 @@ namespace Neon.Kube
         public string Name { get; set; }
 
         /// <summary>
+        /// <para>
+        /// Specifies cluster debugging options.
+        /// </para>
+        /// <note>
+        /// These options are generally intended for neonKUBE developers only.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "Debug", Required = Required.Always)]
+        [YamlMember(Alias = "debug", ApplyNamingConventions = false)]
+        public DebugOptions Debug { get; set; } = new DebugOptions();
+
+        /// <summary>
         /// Identifies the tool/version used to provision the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "Provisioner", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -242,15 +254,6 @@ namespace Neon.Kube
         [YamlMember(Alias = "docker", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public DockerOptions Docker { get; set; } = new DockerOptions();
-
-        /// <summary>
-        /// Returns the options to be used for configuring the cluster integrated
-        /// Ceph file system.
-        /// </summary>
-        [JsonProperty(PropertyName = "Ceph", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "ceph", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public CephOptions Ceph { get; set; } = new CephOptions();
 
         /// <summary>
         /// Returns the options to be used for configuring the cluster integrated
@@ -532,21 +535,21 @@ namespace Neon.Kube
 
             // Validate the properties.
 
+            Debug       = Debug ?? new DebugOptions();
             Provisioner = Provisioner ?? defaultProvisioner;
             Kubernetes  = Kubernetes ?? new KubernetesOptions();
             Docker      = Docker ?? new DockerOptions();
-            Ceph        = Ceph ?? new CephOptions() { Enabled = false };
             Mon         = Mon ?? new MonOptions() { Enabled = false };
-            Prometheus = Prometheus ?? new PrometheusOptions() { Enabled = false };
+            Prometheus  = Prometheus ?? new PrometheusOptions() { Enabled = false };
             DrivePrefix = DrivePrefix ?? defaultDrivePrefix;
             Setup       = Setup ?? new SetupOptions();
             Hosting     = Hosting ?? new HostingOptions();
             NodeOptions = NodeOptions ?? new NodeOptions();
             Network     = Network ?? new NetworkOptions();
 
+            Debug.Validate(this);
             Kubernetes.Validate(this);
             Docker.Validate(this);
-            Ceph.Validate(this);
             Mon.Validate(this);
             Prometheus.Validate(this);
             Setup.Validate(this);

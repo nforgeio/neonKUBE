@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -27,7 +28,9 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
-using Neon.Xen;
+using Neon.XenServer;
+using Neon.IO;
+using k8s.Models;
 
 namespace Neon.Kube
 {
@@ -79,6 +82,7 @@ namespace Neon.Kube
         // Instance members
 
         private ClusterProxy                cluster;
+        private KubeSetupInfo               setupInfo;
         private string                      logFolder;
         private List<XenClient>             xenHosts;
         private SetupController<XenClient>  controller;
@@ -88,14 +92,19 @@ namespace Neon.Kube
         /// Constructor.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="setupInfo">Specifies the cluster setup information.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public XenServerHostingManager(ClusterProxy cluster, string logFolder = null)
+        public XenServerHostingManager(ClusterProxy cluster, KubeSetupInfo setupInfo, string logFolder = null)
         {
+            Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
+            Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
+
             this.cluster                = cluster;
             this.cluster.HostingManager = this;
+            this.setupInfo              = setupInfo;
             this.logFolder              = logFolder;
             this.maxVmNameWidth         = cluster.Definition.Nodes.Max(n => n.Name.Length) + cluster.Definition.Hosting.GetVmNamePrefix(cluster.Definition).Length;
         }
@@ -130,15 +139,6 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
-            // Identify the OSD Bluestore block device for OSD nodes.
-
-            if (cluster.Definition.Ceph.Enabled)
-            {
-                foreach (var node in cluster.Definition.Nodes.Where(n => n.Labels.CephOSD))
-                {
-                    node.Labels.CephOSDDevice = "xvdb";
-                }
-            }
         }
 
         /// <inheritdoc/>
@@ -306,20 +306,29 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Returns the name to use for the node template to be persisted on the XenServers.
+        /// </summary>
+        /// <returns>The template name.</returns>
+        private string GetXenTemplateName()
+        {
+            return $"neon-{cluster.Definition.Hosting.LinuxDistribution}-{cluster.Definition.Hosting.LinuxVersion}"; ;
+        }
+
+        /// <summary>
         /// Install the virtual machine template on the XenServer if it's not already present.
         /// </summary>
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
         private void CheckVmTemplate(SshProxy<XenClient> xenSshProxy)
         {
             var xenHost      = xenSshProxy.Metadata;
-            var templateName = cluster.Definition.Hosting.XenServer.TemplateName;
+            var templateName = GetXenTemplateName();
 
             xenSshProxy.Status = "check: template";
 
             if (xenHost.Template.Find(templateName) == null)
             {
                 xenSshProxy.Status = "download: vm template (slow)";
-                xenHost.Template.Install(cluster.Definition.Hosting.XenServer.HostXvaUri, templateName, cluster.Definition.Hosting.XenServer.StorageRepository);
+                xenHost.Template.Install(setupInfo.LinuxTemplateUri, templateName, cluster.Definition.Hosting.XenServer.StorageRepository);
             }
         }
 
@@ -349,7 +358,13 @@ namespace Neon.Kube
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
         private void ProvisionVirtualMachines(SshProxy<XenClient> xenSshProxy)
         {
-            var xenHost = xenSshProxy.Metadata;
+            var xenHost  = xenSshProxy.Metadata;
+            var hostInfo = xenHost.GetHostInfo();
+
+            if (hostInfo.Version < KubeConst.MinXenServerVersion)
+            {
+                throw new NotSupportedException($"neonKUBE cannot provision a cluster on a XenServer/XCP-ng host older than [v{KubeConst.MinXenServerVersion}].  [{hostInfo.Params["name-label"]}] is running version [{hostInfo.Version}]. ");
+            }
 
             foreach (var node in GetHostedNodes(xenHost))
             {
@@ -360,130 +375,71 @@ namespace Neon.Kube
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "create: virtual machine");
 
-                // We need to create a raw drive if the node hosts a Ceph OSD.
-
-                var extraDrives = new List<XenVirtualDrive>();
-
-                if (node.Metadata.Labels.CephOSD)
-                {
-                    extraDrives.Add(
-                        new XenVirtualDrive()
-                        {
-                            Size = node.Metadata.GetCephOSDDriveSize(cluster.Definition)
-                        });
-                }
-
-                var vm = xenHost.Machine.Create(vmName, cluster.Definition.Hosting.XenServer.TemplateName,
+                var vm = xenHost.Machine.Create(vmName, GetXenTemplateName(),
                     processors:                 processors,
                     memoryBytes:                memoryBytes,
                     diskBytes:                  diskBytes,
                     snapshot:                   cluster.Definition.Hosting.XenServer.Snapshot,
-                    extraDrives:                extraDrives,
-                    primaryStorageRepository:   cluster.Definition.Hosting.XenServer.StorageRepository,
-                    extraStorageRespository:    cluster.Definition.Hosting.XenServer.OsdStorageRepository);
+                    extraDrives:                null,
+                    primaryStorageRepository:   cluster.Definition.Hosting.XenServer.StorageRepository);;
 
-                xenSshProxy.Status = FormatVmStatus(vmName, "start: virtual machine");
+                // Create a temporary ISO with the [neon-node-prep.sh] script, mount it
+                // to the VM and then boot the VM for the first time so that it will
+                // pick up its network configuration.
 
-                xenHost.Machine.Start(vm);
-
-                // We need to wait for the virtual machine to start and obtain
-                // and IP address via DHCP.
-
-                var address = string.Empty;
-
-                xenSshProxy.Status = FormatVmStatus(vmName, "discover: ip address");
+                var tempIso    = (TempFile)null;
+                var xenTempIso = (XenTempIso)null;
 
                 try
                 {
-                    NeonHelper.WaitFor(
-                        () =>
-                        {
-                            while (true)
-                            {
-                                vm = xenHost.Machine.Find(vmName);
-
-                                if (!string.IsNullOrEmpty(vm.Address))
-                                {
-                                    address = vm.Address;
-                                    return true;
-                                }
-
-                                Thread.Sleep(1000);
-                            }
-                        },
-                        TimeSpan.FromMinutes(3));
-                }
-                catch (TimeoutException)
-                {
-                    xenSshProxy.Fault("Timeout waiting for virtual machine to start and set an IP address.");
-                }
-
-                // SSH into the VM using the DHCP address, configure the static IP
-                // address and extend the primary partition and file system to fill
-                // the drive and then reboot.
-
-                var subnet = NetworkCidr.Parse(cluster.Definition.Network.PremiseSubnet);
-
-                // We're going to temporarily set the node to the current VM address
-                // so we can connect via SSH.
-
-                var nodePrivateAddress = node.PrivateAddress;
-
-                try
-                {
-                    node.PrivateAddress = IPAddress.Parse(address);
-
                     using (var nodeProxy = cluster.GetNode(node.Name))
                     {
-                        xenSshProxy.Status = FormatVmStatus(vmName, "connect");
+                        // Create a temporary ISO with the prep script and insert it
+                        // into the node VM.
+
+                        node.Status = $"mount: neon-node-prep iso";
+
+                        tempIso    = KubeHelper.CreateNodePrepIso(node.Cluster.Definition, node.Metadata);
+                        xenTempIso = xenHost.CreateTempIso(tempIso.Path);
+
+                        xenHost.Invoke($"vm-cd-eject", $"uuid={vm.Uuid}");
+                        xenHost.Invoke($"vm-cd-insert", $"uuid={vm.Uuid}", $"cd-name={xenTempIso.CdName}");
+
+                        // Start the VM for the first time with the mounted ISO.  The network
+                        // configuration will happen automatically by the time we can connect.
+
+                        node.Status = $"start: virtual machine (first boot)";
+
+                        xenHost.Machine.Start(vm);
+                        node.Status = $"connecting...";
                         nodeProxy.WaitForBoot();
 
-                        // Configure the node's network stack to the static IP address
-                        // and upstream nameservers.
-
-                        node.Status = $"network config [IP={nodePrivateAddress}]";
-
-                        var primaryInterface = node.GetNetworkInterface(node.PrivateAddress);
-
-                        node.ConfigureNetwork(
-                            networkInterface:   primaryInterface,
-                            address:            nodePrivateAddress,
-                            gateway:            IPAddress.Parse(cluster.Definition.Network.Gateway),
-                            subnet:             NetworkCidr.Parse(cluster.Definition.Network.PremiseSubnet),
-                            nameservers:        cluster.Definition.Network.Nameservers.Select(ns => IPAddress.Parse(ns)));
-
                         // Extend the primary partition and file system to fill 
-                        // the virtual the drive.  Note that we're not going to 
-                        // do this if the specified drive size is less than or
-                        // equal to the node template's drive size.
+                        // the virtual drive.  Note that we're not going to do
+                        // this if the specified drive size is less than or equal
+                        // to the node template's drive size (because that
+                        // would fail).
 
                         if (diskBytes > KubeConst.NodeTemplateDiskSize)
                         {
-                            xenSshProxy.Status = FormatVmStatus(vmName, $"resize: primary drive");
+                            node.Status = $"resize: primary drive";
 
-                            // $hack(jefflill):
-                            //
-                            // I've seen a transient error here but can't reproduce it.  I'm going
-                            // to assume for now that the file system might not be quite ready for
-                            // this operation directly after the VM has been rebooted, so we're going
-                            // to delay for a few seconds before performing the operations.
-
-                            Thread.Sleep(TimeSpan.FromSeconds(5));
-                            nodeProxy.SudoCommand("growpart /dev/xvda 2");
-                            nodeProxy.SudoCommand("resize2fs /dev/xvda2");
+                            nodeProxy.SudoCommand("growpart /dev/sda 2");
+                            nodeProxy.SudoCommand("resize2fs /dev/sda2");
                         }
-
-                        // Reboot to pick up the changes.
-
-                        xenSshProxy.Status = FormatVmStatus(vmName, "restarting...");
-                        nodeProxy.Reboot(wait: false);
                     }
                 }
                 finally
                 {
-                    // Restore the node's IP address.
+                    // Be sure to delete the local and remote ISO files so these don't accumulate.
 
-                    node.PrivateAddress = nodePrivateAddress;
+                    tempIso?.Dispose();
+
+                    if (xenTempIso != null)
+                    {
+                        xenHost.Invoke($"vm-cd-eject", $"uuid={vm.Uuid}");
+                        xenHost.RemoveTempIso(xenTempIso);
+                    }
                 }
             }
         }

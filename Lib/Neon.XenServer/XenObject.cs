@@ -22,7 +22,7 @@ using System.Collections.ObjectModel;
 using Neon.Common;
 using Neon.Kube;
 
-namespace Neon.Xen
+namespace Neon.XenServer
 {
     /// <summary>
     /// Base class for all XenServer objects that implement common properties.

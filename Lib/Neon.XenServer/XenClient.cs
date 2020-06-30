@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Dynamic;
@@ -29,9 +30,13 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Diagnostics;
+using Neon.IO;
 using Neon.Kube;
+using Org.BouncyCastle.Bcpg;
+using Renci.SshNet;
 
-namespace Neon.Xen
+namespace Neon.XenServer
 {
     /// <summary>
     /// This class provides a simple light-weight XenServer or CXP-ng 
@@ -61,6 +66,11 @@ namespace Neon.Xen
     /// <threadsafety instance="false"/>
     public sealed partial class XenClient : IDisposable, IXenClient
     {
+        /// <summary>
+        /// Path to the parent folder for all temporary Neon local storage repositories.
+        /// </summary>
+        public const string NeonTempSrPath = "/var/opt/neon-temp-sr";
+
         // Implementation Note:
         // --------------------
         // The following PDF documents are handy resources for learning about the
@@ -229,9 +239,184 @@ namespace Neon.Xen
         /// <param name="args">The optional arguments formatted as <b>name=value</b>.</param>
         /// <returns>The command <see cref="XenResponse"/>.</returns>
         /// <exception cref="XenException">Thrown if the operation failed.</exception>
-        public XenResponse SafeInvokeList(string command, params string[] args)
+        public XenResponse SafeInvokeItems(string command, params string[] args)
         {
             return new XenResponse(SafeInvoke(command, args));
+        }
+
+        /// <summary>
+        /// Returns information about the connected XenServer host machine.
+        /// </summary>
+        /// <returns>The <see cref="XenHostInfo"/>.</returns>
+        public XenHostInfo GetHostInfo()
+        {
+            // List the hosts to obtain the host UUID.  We're going to assume that only the
+            // current host will be returned and the confguring a resource pool doesn't change
+            // this.
+
+            var response = SafeInvokeItems("host-list");
+
+            Covenant.Assert(response.Items.Count == 1, "[xe host-list] is expected to return exactly one host.");
+
+            response = SafeInvokeItems("host-param-list", $"uuid={response.Items.Single()["uuid"]}");
+
+            var hostParams   = response.Items.Single();
+            var versionItems = hostParams["software-version"].Split(';');
+
+            for (int i = 0; i < versionItems.Length; i++)
+            {
+                versionItems[i] = versionItems[i].Trim();
+            }
+
+            var version = versionItems.Single(item => item.StartsWith("product_version:"));
+            var pos     = version.IndexOf(':');
+
+            version = version.Substring(pos + 1).Trim();
+
+            return new XenHostInfo()
+            {
+                Edition = hostParams["edition"],
+                Version = SemanticVersion.Parse(version),
+                Params  = new ReadOnlyDictionary<string, string>(hostParams)
+            };
+        }
+
+        /// <summary>
+        /// Used for temporarily uploading an ISO disk to a XenServer such that it can be mounted
+        /// to a VM, typically for one-time initialization purposes.  neonKUBE uses this as a very
+        /// simple poor man's alternative to <b>cloud-init</b> for initializing a VM on first boot.
+        /// </summary>
+        /// <param name="isoPath">Path to the source ISO file on the local workstation.</param>
+        /// <param name="srName">Optionally specifies the storage repository name.  <b>neon-UUID</b> with a generated UUID will be used by default.</param>
+        /// <returns>A <see cref="XenTempIso"/> with information about the new storage repository and its contents.</returns>
+        /// <remarks>
+        /// <para>
+        /// During cluster setup on virtualization platforms like XenServer and Hyper-V, neonKUBE needs
+        /// to configure new VMs with IP addresses, hostnames, etc.  Traditionally, we've relied on
+        /// being able to SSH into the VM to perform all of these actions, but this relied on being
+        /// VM being able to obtain an IP address via DHCP and for setup to be able to discover the
+        /// assigned address.
+        /// </para>
+        /// <para>
+        /// The dependency on DHCP is somewhat problematic, because it's conceivable that this may
+        /// not be available for more controlled environments.  We looked into using Linux <b>cloud-init</b>
+        /// for this, but that requires additional local infrastructure for non-cloud deployments and
+        /// was also a bit more complex than what we had time for.
+        /// </para>
+        /// <para>
+        /// Instead of <b>cloud-init</b>, we provisioned our XenServer and Hyper-V node templates
+        /// with a <b>neon-node-init</b> service that runs before the network service to determine
+        /// whether a DVD (ISO) is inserted into the VM and runs the <b>neon-node-init.sh</b> script
+        /// one time, if it exists.  This script will initialize the node's IP address and could also
+        /// be used for other configuration.
+        /// </para>
+        /// <note>
+        /// In theory, we could have used the same technique for mounting a <b>cloud-init</b> data source
+        /// via this ISO, but we decided not to go there, at least for now.
+        /// </note>
+        /// <note>
+        /// neonKUBE doesn't use this technique for true cloud deployments (AWS, Azure, Google,...) because
+        /// we can configure VM networking directly via the cloud APIs.  
+        /// </note>
+        /// <para>
+        /// The XenServer requires the temporary ISO implementation to be a bit odd.  We want these temporary
+        /// ISOs to be created directly on the XenServer host machine so users won't have to configure any
+        /// additional infrastructure as well as to simplify cluster setup.  We'll be creating a local
+        /// ISO storage repository from a folder on the host.  Any files to be added to the repository
+        /// must exist when the repository is created and it is not possible to add, modify, or remove
+        /// files from a repository after its been created.
+        /// </para>
+        /// <note>
+        /// XenServer hosts have only 4GB of free space at the root Linux level, so you must take care 
+        /// not to create large ISOs or to allow these to accumulate.
+        /// </note>
+        /// <para>
+        /// This method uploads the ISO file <paramref name="isoPath"/> from the local workstation to
+        /// the XenServer host, creating a new folder named with a UUID.  Then a new storage repository
+        /// will be created from this folder and a <see cref="XenTempIso"/> will be returned holding
+        /// details about the new storage repository and its contents.  The setup code will use this to 
+        /// insert the ISO into a VM.
+        /// </para>
+        /// <para>
+        /// Once the setup code is done with the ISO, it will eject it from the VM and call
+        /// <see cref="RemoveTempIso(XenTempIso)"/> to remove the storage repository.
+        /// </para>
+        /// </remarks>
+        public XenTempIso CreateTempIso(string isoPath, string srName = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(isoPath), nameof(isoPath));
+
+            if (string.IsNullOrEmpty(srName))
+            {
+                srName = "neon-" + Guid.NewGuid().ToString("d");
+            }
+
+            var tempIso = new XenTempIso();
+
+            // Ensure that the root temporary local SR folder exists.
+
+            SshProxy.SudoCommand("mkdir", RunOptions.LogOutput, NeonTempSrPath);
+
+            // Create the SR subfolder and upload the ISO file.
+
+            tempIso.SrPath = LinuxPath.Combine(NeonTempSrPath, Guid.NewGuid().ToString("d"));
+            tempIso.CdName = $"neon-dvd-{Guid.NewGuid().ToString("d")}.iso";
+
+            SshProxy.SudoCommand("mkdir", RunOptions.LogOutput | RunOptions.FaultOnError, tempIso.SrPath);
+
+            var xenIsoPath = LinuxPath.Combine(tempIso.SrPath, tempIso.CdName);
+
+            using (var isoInput = File.OpenRead(isoPath))
+            {
+                SshProxy.Upload(xenIsoPath, isoInput);
+            }
+
+            // Create the new storage repository.  This command returns the sr-uuid.
+
+            var response = SafeInvoke("sr-create",
+                $"name-label={tempIso.CdName}",
+                $"type=iso",
+                $"device-config:location={tempIso.SrPath}",
+                $"device-config:legacy_mode=true",
+                $"content-type=iso");
+
+            tempIso.SrUuid = response.OutputText.Trim();
+
+            // XenServer created a PBD behind the scenes for the new SR.  We're going
+            // to need its UUID so we can completely remove the SR later.
+
+            var result = SafeInvokeItems("pbd-list", $"sr-uuid={tempIso.SrUuid}");
+
+            tempIso.PdbUuid = result.Items.Single()["uuid"];
+
+            // Obtain the UUID for the ISO's VDI within the SR.
+
+            result = SafeInvokeItems("vdi-list", $"sr-uuid={tempIso.SrUuid}");
+
+            tempIso.VdiUuid = result.Items.Single()["uuid"];
+
+            return tempIso;
+        }
+
+        /// <summary>
+        /// Removes a temporary ISO disk along with its PBD and storage repository.
+        /// </summary>
+        /// <param name="tempIso">The ISO disk information returned by <see cref="CreateTempIso(string, string)"/>.</param>
+        /// <remarks>
+        /// <see cref="CreateTempIso(string, string)"/> for more information.
+        /// </remarks>
+        public void RemoveTempIso(XenTempIso tempIso)
+        {
+            Covenant.Requires<ArgumentNullException>(tempIso != null, nameof(tempIso));
+
+            // Remove the PBD and SR.
+
+            SafeInvoke("pbd-unplug", $"uuid={tempIso.PdbUuid}");
+            SafeInvoke("sr-forget", $"uuid={tempIso.SrUuid}");
+
+            // Remove the SR folder.
+
+            SshProxy.SudoCommand("rm", "-rf", tempIso.SrPath);
         }
     }
 }

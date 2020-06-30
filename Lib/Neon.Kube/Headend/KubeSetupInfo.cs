@@ -53,6 +53,22 @@ namespace Neon.Kube
         {
         }
 
+        //---------------------------------------------------------------------
+        // Cluster prepare details.
+
+        /// <summary>
+        /// Returns the URI for the Linux node template for the specified hosting enviroment 
+        /// and Linux distribution and version.  This may be null for some hosting environments
+        /// like bare metal and clouds.
+        /// </summary>
+        [JsonProperty(PropertyName = "LinuxTemplateUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "linuxTemplateUri", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string LinuxTemplateUri { get; set; } = null;
+
+        //---------------------------------------------------------------------
+        // Component versions.
+
         /// <summary>
         /// Lists the installed component versions.
         /// </summary>

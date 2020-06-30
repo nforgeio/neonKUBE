@@ -31,7 +31,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Kube;
 
-namespace Neon.Xen
+namespace Neon.XenServer
 {
     public partial class XenClient
     {

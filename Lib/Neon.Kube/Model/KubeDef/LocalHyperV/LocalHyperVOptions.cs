@@ -29,31 +29,12 @@ namespace Neon.Kube
     /// </summary>
     public class LocalHyperVOptions
     {
-        private const string defaultHostVhdxUri = "https://s3-us-west-2.amazonaws.com/neonforge/kube/hyperv-ubuntu-18.04.latest.vhdx";
-
         /// <summary>
         /// Default constructor.
         /// </summary>
         public LocalHyperVOptions()
         {
         }
-
-        /// <summary>
-        /// <para>
-        /// URI to the zipped VHDX image with the base cluster host operating system.  This defaults to
-        /// <b>https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-Ubuntu-18.04.latest.vhdx</b>
-        /// which is the latest supported Ubuntu 16.04 image.
-        /// </para>
-        /// <note>
-        /// Production cluster definitions should be configured with an VHDX with a specific version
-        /// of the host operating system to ensure that cluster nodes are provisioned with the same
-        /// operating system version.
-        /// </note>
-        /// </summary>
-        [JsonProperty(PropertyName = "HostVhdxUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "hostVhdxUri", ApplyNamingConventions = false)]
-        [DefaultValue(defaultHostVhdxUri)]
-        public string HostVhdxUri { get; set; } = defaultHostVhdxUri;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -65,11 +46,6 @@ namespace Neon.Kube
         public void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
-
-            if (string.IsNullOrEmpty(HostVhdxUri) || !Uri.TryCreate(HostVhdxUri, UriKind.Absolute, out Uri uri))
-            {
-                throw new ClusterDefinitionException($"[{nameof(LocalHyperVOptions)}.{nameof(HostVhdxUri)}] is required when deploying to Hyper-V.");
-            }
 
             clusterDefinition.ValidatePrivateNodeAddresses();                                           // Private node IP addresses must be assigned and valid.
             clusterDefinition.Hosting.ValidateHypervisor(clusterDefinition, remoteHypervisors: false);  // Hypervisor options must be valid.
