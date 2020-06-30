@@ -1037,18 +1037,16 @@ namespace TestCadence
             try
             {
                 await task;
+                Assert.True(false, $"Expected [{nameof(CadenceGenericException)}]");
             }
-            catch (CadenceCustomException e)
+            catch (CadenceGenericException e)
             {
                 Assert.Equal("external activity failed", e.Message);
-                return;
             }
             catch (Exception e)
             {
-                Assert.True(false, $"Expected [{nameof(CadenceCustomException)}] not [{e.GetType().Name}]");
+                Assert.True(false, $"Expected [{nameof(CadenceGenericException)}] not [{e.GetType().Name}]");
             }
-
-            Assert.True(false, $"Expected [{nameof(CadenceCustomException)}]");
         }
 
         [Fact]
@@ -1071,18 +1069,17 @@ namespace TestCadence
             try
             {
                 await task;
+                Assert.True(false, $"Expected [{nameof(CadenceGenericException)}]");
             }
-            catch (CadenceCustomException e)
+            catch (CadenceGenericException e)
             {
                 Assert.Equal("external activity failed", e.Message);
                 return;
             }
             catch (Exception e)
             {
-                Assert.True(false, $"Expected [{nameof(CadenceCustomException)}] not [{e.GetType().Name}]");
+                Assert.True(false, $"Expected [{nameof(CadenceGenericException)}] not [{e.GetType().Name}]");
             }
-
-            Assert.True(false, $"Expected [{nameof(CadenceCustomException)}]");
         }
 
         [Fact]
@@ -1102,9 +1099,19 @@ namespace TestCadence
 
             await client.ActivityCancelByTokenAsync(activity.Task.TaskToken);
 
-            // $todo(jefflill): Need to work on exception mapping for this to work.
-
-            // await Assert.ThrowsAsync<CadenceCancelledException>(async () => await task);
+            try
+            {
+                await task;
+                Assert.True(false, $"Expected [{nameof(CancelledException)}]");
+            }
+            catch (CancelledException)
+            {
+                // Expected
+            }
+            catch (Exception e)
+            {
+                Assert.True(false, $"Expected [{nameof(CancelledException)}] not [{e.GetType().Name}]");
+            }
         }
 
         [Fact]
@@ -1124,9 +1131,19 @@ namespace TestCadence
 
             await client.ActivityCancelByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId);
 
-            // $todo(jefflill): Need to work on exception mapping for this to work.
-
-            // await Assert.ThrowsAsync<CadenceCancelledException>(async () => await task);
+            try
+            {
+                await task;
+                Assert.True(false, $"Expected [{nameof(CancelledException)}]");
+            }
+            catch (CancelledException)
+            {
+                // Expected
+            }
+            catch (Exception e)
+            {
+                Assert.True(false, $"Expected [{nameof(CancelledException)}] not [{e.GetType().Name}]");
+            }
         }
 
         //---------------------------------------------------------------------
