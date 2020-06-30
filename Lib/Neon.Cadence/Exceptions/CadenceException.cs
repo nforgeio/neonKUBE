@@ -28,6 +28,8 @@ namespace Neon.Cadence
     /// </summary>
     public abstract class CadenceException : Exception
     {
+        private string reason;
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -40,8 +42,8 @@ namespace Neon.Cadence
 
         /// <summary>
         /// Returns the Cadence GOLANG client's error string corresponding to the
-        /// exception or <c>null</c> when the exception does not map to an
-        /// error string.
+        /// exception or <c>null</c> when the exception does not map directly to a
+        /// Cadence error string.
         /// </summary>
         internal virtual string CadenceError => null;
 
@@ -51,15 +53,14 @@ namespace Neon.Cadence
         internal abstract CadenceErrorTypes CadenceErrorType { get; }
 
         /// <summary>
-        /// Returns the Cadence error reason used for specifying non-retryable errors
-        /// for a <see cref="RetryOptions"/> instance.
+        /// The Cadence error reason used for specifying non-retryable errors
+        /// within a <see cref="RetryOptions"/> instance.
         /// </summary>
-        internal abstract string Reason { get; }
-
-        /// <summary>
-        /// Returns the additional details about the exception.
-        /// </summary>
-        public string Details { get; internal set; }
+        internal string Reason
+        {
+            get => reason ?? CadenceError;
+            set => reason = value;
+        }
 
         /// <summary>
         /// Converts the exception into a <see cref="CadenceError"/>.

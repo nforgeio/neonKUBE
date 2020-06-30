@@ -828,7 +828,7 @@ namespace TestCadence
                 }
                 catch (CadenceException e)
                 {
-                    return $"{e.Message}: {e.Details}";
+                    return $"{e.Reason}: {e.Message}";
                 }
             }
         }

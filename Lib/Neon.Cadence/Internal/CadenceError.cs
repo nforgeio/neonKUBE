@@ -44,7 +44,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         static CadenceError()
         {
-            // Initialize a dictionary that maps GOLANG error strings to CadenceError
+            // Initialize a dictionary that maps GOLANG error strings to CadenceExcep[tion
             // derived exception constructors.  These constructors must have signatures
             // like:
             //
@@ -191,17 +191,17 @@ namespace Neon.Cadence.Internal
             //
             // We're depending on cadence error strings looking like this:
             //
-            //      ERROR{MESSAGE}
+            //      REASON{MESSAGE}
             //
             // where:
             //
-            //      ERROR       - identifies the error
+            //      REASON      - identifies the error
             //      MESSAGE     - describes the error in more detail
             //
             // For robustness, we'll also handle the situation where there
-            // is no {MESSAGE} part.
+            // is no {message} part.
 
-            string error;
+            string reason;
             string message;
 
             var startingBracePos = String.IndexOf('{');
@@ -209,33 +209,27 @@ namespace Neon.Cadence.Internal
 
             if (startingBracePos != -1 && endingBracePos != 1)
             {
-                error   = String.Substring(0, startingBracePos);
+                reason  = String.Substring(0, startingBracePos);
                 message = String.Substring(startingBracePos + 1, endingBracePos - (startingBracePos + 1));
             }
             else
             {
-                error   = String;
+                reason  = String;
                 message = string.Empty;
             }
 
-            // We're going to save the error in the exception [Message] property and
-            // save the message to the [Reasons] property and then  we'll encode the
-            // error as the exception message.  This seems a bit confusing but that's
-            // the way we're doing it.
-
-            var details = message;
-
-            message = error;
-
-            // First, we're going to try mapping the error identifier to one of the
+            // We're going to save the details as the exception [Message] property and
+            // save the error to the [Reason] property.
+            //
+            // First, we're going to try mapping the error reason to one of the
             // predefined Cadence exceptions and if that doesn't work, we'll generate
             // a more generic exception.
 
-            if (goErrorToConstructor.TryGetValue(error, out var constructor))
+            if (goErrorToConstructor.TryGetValue(reason, out var constructor))
             {
-                var e = (CadenceException)constructor.Invoke(new object[] { error, null });
+                var e = (CadenceException)constructor.Invoke(new object[] { message, null });
 
-                e.Details = details;
+                e.Reason = reason;
 
                 return e;
             }
@@ -246,29 +240,29 @@ namespace Neon.Cadence.Internal
             {
                 case CadenceErrorTypes.Cancelled:
 
-                    return new CancelledException(message) { Details = details };
+                    return new CancelledException(message) { Reason = reason };
 
                 case CadenceErrorTypes.Custom:
 
-                    return new CadenceCustomException(message) { Details = details };
+                    return new CadenceCustomException(message) { Reason = reason };
 
                 case CadenceErrorTypes.Generic:
 
-                    return new CadenceGenericException(message) { Details = details };
+                    return new CadenceGenericException(message) { Reason = reason };
 
                 case CadenceErrorTypes.Panic:
 
-                    return new CadencePanicException(message) { Details = details };
+                    return new CadencePanicException(message) { Reason = reason };
 
                 case CadenceErrorTypes.Terminated:
 
-                    return new TerminatedException(message) { Details = details };
+                    return new TerminatedException(message) { Reason = reason };
 
                 case CadenceErrorTypes.Timeout:
 
-                    // Special case some timeout exceptions.
+                    // Special case timeout exceptions.
 
-                    switch (message)
+                    switch (reason)
                     {
                         case "TimeoutType: START_TO_CLOSE":
 

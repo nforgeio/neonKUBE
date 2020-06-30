@@ -38,8 +38,5 @@ namespace Neon.Temporal
 
         /// <inheritdoc/>
         internal override TemporalErrorTypes TemporalErrorType => TemporalErrorTypes.Cancelled;
-
-        /// <inheritdoc/>
-        internal override string Reason => null;
     }
 }

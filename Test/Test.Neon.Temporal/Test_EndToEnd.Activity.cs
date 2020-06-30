@@ -828,7 +828,7 @@ namespace TestTemporal
                 }
                 catch (TemporalException e)
                 {
-                    return $"{e.Message}: {e.Details}";
+                    return $"{e.Reason}: {e.Message}";
                 }
             }
         }

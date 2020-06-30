@@ -38,8 +38,5 @@ namespace Neon.Cadence
 
         /// <inheritdoc/>
         internal override CadenceErrorTypes CadenceErrorType => CadenceErrorTypes.Panic;
-
-        /// <inheritdoc/>
-        internal override string Reason => "cadenceInternal:Panic";
     }
 }

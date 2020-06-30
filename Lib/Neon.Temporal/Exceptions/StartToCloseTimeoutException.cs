@@ -34,6 +34,7 @@ namespace Neon.Temporal
         public StartToCloseTimeoutException(string message = null, Exception innerException = null)
             : base(message, innerException)
         {
+            base.Reason = "cadenceInternal:Timeout START_TO_CLOSE";
         }
 
         /// <inheritdoc/>
@@ -41,8 +42,5 @@ namespace Neon.Temporal
 
         /// <inheritdoc/>
         internal override string TemporalError => "StartToCloseTimeoutError";
-
-        /// <inheritdoc/>
-        internal override string Reason => "cadenceInternal:Timeout START_TO_CLOSE";
     }
 }

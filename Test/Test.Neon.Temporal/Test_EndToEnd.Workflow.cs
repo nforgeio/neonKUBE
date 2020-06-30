@@ -2259,8 +2259,8 @@ namespace TestTemporal
             }
             catch (TemporalGenericException e)
             {
-                Assert.Contains("ArgumentException", e.Message);
-                Assert.Contains("forced-failure", e.Details);
+                Assert.Contains("ArgumentException", e.Reason);
+                Assert.Contains("forced-failure", e.Message);
             }
             catch
             {
@@ -4245,7 +4245,7 @@ namespace TestTemporal
                         return false;
                     }
 
-                    if (e.Details != "This is a test!")
+                    if (e.Message != "This is a test!")
                     {
                         return false;
                     }

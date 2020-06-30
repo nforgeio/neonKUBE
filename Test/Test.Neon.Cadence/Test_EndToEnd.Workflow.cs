@@ -2259,8 +2259,8 @@ namespace TestCadence
             }
             catch (CadenceCustomException e)
             {
-                Assert.Contains("ArgumentException", e.Message);
-                Assert.Contains("forced-failure", e.Details);
+                Assert.Contains("ArgumentException", e.Reason);
+                Assert.Contains("forced-failure", e.Message);
             }
             catch
             {
@@ -4241,12 +4241,12 @@ namespace TestCadence
                 }
                 catch (CadenceGenericException e)
                 {
-                    if (e.Message != typeof(TransientException).FullName)
+                    if (e.Reason != typeof(TransientException).FullName)
                     {
                         return false;
                     }
 
-                    if (e.Details != "This is a test!")
+                    if (e.Message != "This is a test!")
                     {
                         return false;
                     }
