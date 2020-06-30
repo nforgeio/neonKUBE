@@ -107,8 +107,8 @@ namespace Neon.Temporal.Internal
         /// Constructs an error from parameters.
         /// </summary>
         /// <param name="error">The GOLANG error string.</param>
-        /// <param name="type">Optionally specifies the error type.</param>
-        public TemporalError(string error, TemporalErrorTypes type = TemporalErrorTypes.Custom)
+        /// <param name="type">Optionally specifies the error type. This defaults to <see cref="TemporalErrorTypes.Generic"/>.</param>
+        public TemporalError(string error, TemporalErrorTypes type = TemporalErrorTypes.Generic)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(error), nameof(error));
 

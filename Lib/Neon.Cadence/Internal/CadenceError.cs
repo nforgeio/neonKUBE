@@ -107,8 +107,8 @@ namespace Neon.Cadence.Internal
         /// Constructs an error from parameters.
         /// </summary>
         /// <param name="error">The GOLANG error string.</param>
-        /// <param name="type">Optionally specifies the error type.</param>
-        public CadenceError(string error, CadenceErrorTypes type = CadenceErrorTypes.Custom)
+        /// <param name="type">Optionally specifies the error type.  This defaults to <see cref="CadenceErrorTypes.Generic"/>.</param>
+        public CadenceError(string error, CadenceErrorTypes type = CadenceErrorTypes.Generic)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(error), nameof(error));
 
