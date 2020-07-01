@@ -51,9 +51,27 @@ echo
 # runs once (first boot) during node provisioning configures the network and 
 # and services.
 
-echo "** Remove neon-node-prep service"
+if [ -f /etc/systemd/system/neon-node-prep.service ]; then
+    echo "** Remove: neon-node-prep.service"
+    rm -f /etc/systemd/system/neon-node-prep.service
+fi
 
-rm /etc/systemd/system/neon-node-prep.service
+#------------------------------------------------------------------------------
+# Stop and mask the [apt-daily.timer] and [apt-daily.service] services if they're
+# enabled.  For on-premise hypervisor based deployments, these will have already
+# been stopped and masked by the script mounted to the VM during provisioning.
+
+if systemctl status apt-daily.timer; then
+    echo "** Stop and mask: apt-daily.timer"
+    systemctl stop apt-daily.timer
+    systemctl mask apt-daily.timer
+fi
+
+if systemctl status apt-daily.service; then
+    echo "** Stop and mask: apt-daily.service"
+    systemctl stop apt-daily.service
+    systemctl mask apt-daily.service
+fi
 
 #------------------------------------------------------------------------------
 # We need to configure things such that [apt-get] won't complain
