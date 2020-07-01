@@ -47,24 +47,6 @@ echo "**********************************************" 1>&2
 echo
 
 #------------------------------------------------------------------------------
-# Disable the [apt-timer] and [apt-daily] services.  We're doing this 
-# for two reasons:
-#
-#   1. These services interfere with with [apt-get] usage during
-#      cluster setup and is also likely to interfere with end-user
-#      configuration activities as well.
-#
-#   2. Automatic updates for production and even test clusters is
-#      just not a great idea.  You just don't want a random update
-#      applied in the middle of the night that might cause trouble.
-
-systemctl stop apt-daily.timer
-systemctl mask apt-daily.timer
-
-systemctl stop apt-daily.service
-systemctl mask apt-daily.service
-
-#------------------------------------------------------------------------------
 # We need to configure things such that [apt-get] won't complain
 # about being unable to initialize Dialog when called from 
 # non-interactive SSH sessions.

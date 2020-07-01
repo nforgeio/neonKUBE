@@ -1607,6 +1607,27 @@ $@"# This script is called by the [neon-node-prep] service when the prep
 
 floppyFolder=${1}
 
+#------------------------------------------------------------------------------
+# Disable the [apt-timer] and [apt-daily] services.  We're doing this 
+# for two reasons:
+#
+#   1. These services interfere with with [apt-get] usage during
+#      cluster setup and is also likely to interfere with end-user
+#      configuration activities as well.
+#
+#   2. Automatic updates for production and even test clusters is
+#      just not a great idea.  You just don't want a random update
+#      applied in the middle of the night that might cause trouble.
+
+systemctl stop apt-daily.timer
+systemctl mask apt-daily.timer
+
+systemctl stop apt-daily.service
+systemctl mask apt-daily.service
+
+#------------------------------------------------------------------------------
+# Configure the network.
+
 echo ""Configure network: {address}""
 
 rm /etc/netplan/*
@@ -1674,8 +1695,9 @@ exit 0
         /// will provide the information to <b>cloud-init</b> when cluster nodes
         /// are prepared on non-cloud virtualization hosts like Hyper-V and XenServer.
         /// </summary>
-        /// <param name="clusterDefinition"></param>
-        /// <param name="nodeDefinition"></param>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="nodeDefinition">The node definition.</param>
+        /// <param name="nodePrepScript">The node preparation script.</param>
         /// <returns>A <see cref="TempFile"/> that references the generated VFD file.</returns>
         /// <remarks>
         /// <para>
@@ -1699,8 +1721,11 @@ exit 0
         /// </remarks>
         public static TempFile CreateNodePrepVfd(
             ClusterDefinition       clusterDefinition,
-            NodeDefinition          nodeDefinition)
+            NodeDefinition          nodeDefinition,
+            string                  nodePrepScript)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodePrepScript), nameof(nodePrepScript));
+
             // This is the special purpose VFD file contents compressed via GZIP.
 
             var vfdGzip = new byte[]
@@ -1793,48 +1818,6 @@ exit 0
                 sbNameservers.AppendWithSeparator(nameserver.ToString(), ",");
             }
 
-            var nodePrepScript =
-$@"# This script is called by the [neon-node-prep] service when the prep
-# floppy is inserted on first boot.  This script handles configuring the
-# network.
-#
-# The first parameter will be passed as the path where the floppy is mounted.
-
-floppyFolder=${1}
-
-echo ""Configure network: {address}""
-
-rm /etc/netplan/*
-
-cat <<EOF > /etc/netplan/static.yaml
-# Static network configuration initialized during first boot by the 
-# [neon-node-prep] service from a virtual floppy inserted during
-# cluster prepare.
-
-network:
-  version: 2
-  renderer: networkd
-  ethernets:
-    eth0:
-     dhcp4: no
-     addresses: [{address}/{premiseSubnet.PrefixLength}]
-     gateway4: {gateway}
-     nameservers:
-       addresses: [{sbNameservers}]
-EOF
-
-echo ""Restart network""
-
-netplan apply
-
-if [ ! $? ] ; then
-    echo ""ERROR: Network restart failed.""
-    exit 1
-fi
-
-echo ""Done""
-exit 0
-";
             nodePrepScript = nodePrepScript.Replace("\r\n", "\n");  // Linux line endings
 
             // This is the tricky part.  The floppy image contains only the [neon-node-prep.sh]
