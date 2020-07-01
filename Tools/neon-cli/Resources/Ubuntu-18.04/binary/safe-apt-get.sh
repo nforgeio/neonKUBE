@@ -93,6 +93,8 @@ do
             $TRANSIENT_ERROR=$true
         elif grep -q "^gpg: no valid OpenPGP data found" $STDALL_PATH ; then
             $TRANSIENT_ERROR=$true
+        elif grep -q "^E: Could not get lock /var/lib/dpkg/lock-frontend." $STDALL_PATH ; then
+            $TRANSIENT_ERROR=$true
         fi
 
         if ! $TRANSIENT_ERROR ; then
