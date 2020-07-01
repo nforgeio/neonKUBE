@@ -47,6 +47,15 @@ echo "**********************************************" 1>&2
 echo
 
 #------------------------------------------------------------------------------
+# Remove the [neon-node-prep] service.  This is no longer required after it
+# runs once (first boot) during node provisioning configures the network and 
+# and services.
+
+echo "** Remove neon-node-prep service"
+
+rm /etc/systemd/system/neon-node-prep.service
+
+#------------------------------------------------------------------------------
 # We need to configure things such that [apt-get] won't complain
 # about being unable to initialize Dialog when called from 
 # non-interactive SSH sessions.
