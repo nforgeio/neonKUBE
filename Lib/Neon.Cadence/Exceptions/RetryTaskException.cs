@@ -40,6 +40,6 @@ namespace Neon.Cadence
         internal override string CadenceError => "RetryTaskError";
 
         /// <inheritdoc/>
-        internal override CadenceErrorTypes CadenceErrorType => CadenceErrorTypes.Custom;
+        internal override CadenceErrorType CadenceErrorType => CadenceErrorType.Custom;
     }
 }

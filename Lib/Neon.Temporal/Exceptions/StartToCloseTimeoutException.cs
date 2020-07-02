@@ -38,7 +38,7 @@ namespace Neon.Temporal
         }
 
         /// <inheritdoc/>
-        internal override TemporalErrorTypes TemporalErrorType => TemporalErrorTypes.Timeout;
+        internal override TemporalErrorType TemporalErrorType => TemporalErrorType.Timeout;
 
         /// <inheritdoc/>
         internal override string TemporalError => "StartToCloseTimeoutError";

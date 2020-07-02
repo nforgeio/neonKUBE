@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CadenceErrorTypes.cs
+// FILE:	    TemporalErrorType.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -20,15 +20,15 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
-using Neon.Cadence;
 using Neon.Common;
+using Neon.Temporal;
 
-namespace Neon.Cadence.Internal
+namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// <b>INTERNAL USE ONLY:</b> Enumerates the Cadence error types.
+    /// <b>INTERNAL USE ONLY:</b> Enumerates the Temporal error types.
     /// </summary>
-    public enum CadenceErrorTypes
+    public enum TemporalErrorType
     {
         /// <summary>
         /// An operation was cancelled.

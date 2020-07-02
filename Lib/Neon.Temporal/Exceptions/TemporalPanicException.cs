@@ -37,6 +37,6 @@ namespace Neon.Temporal
         }
 
         /// <inheritdoc/>
-        internal override TemporalErrorTypes TemporalErrorType => TemporalErrorTypes.Panic;
+        internal override TemporalErrorType TemporalErrorType => TemporalErrorType.Panic;
     }
 }

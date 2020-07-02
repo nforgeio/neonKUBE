@@ -37,6 +37,6 @@ namespace Neon.Cadence
         }
 
         /// <inheritdoc/>
-        internal override CadenceErrorTypes CadenceErrorType => CadenceErrorTypes.Generic;
+        internal override CadenceErrorType CadenceErrorType => CadenceErrorType.Generic;
     }
 }
