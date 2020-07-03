@@ -1,6 +1,0 @@
-[submodule "temporal-proto"]
-	path = temporal-proto
-	url = https://github.com/temporalio/temporal-proto.git
-[submodule "protobuf"]
-	path = protobuf
-	url = https://github.com/protocolbuffers/protobuf.git
