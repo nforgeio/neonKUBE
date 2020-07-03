@@ -47,19 +47,31 @@ echo "**********************************************" 1>&2
 echo
 
 #------------------------------------------------------------------------------
-# Disable the [apt-daily] service.  We're doing this for two reasons:
-#
-#   1. This service interferes with with [apt-get] usage during
-#      cluster setup and is also likely to interfere with end-user
-#      configuration activities as well.
-#
-#   2. Automatic updates for production and even test clusters is
-#      just not a great idea.  You just don't want a random update
-#      applied in the middle of the night that might cause trouble.
+# Remove the [neon-node-prep] service.  This is no longer required after it
+# runs once (first boot) during node provisioning configures the network and 
+# and services.
 
-systemctl stop apt-daily.service
-systemctl disable apt-daily.service
-systemctl disable apt-daily.timer
+if [ -f /etc/systemd/system/neon-node-prep.service ]; then
+    echo "** Remove: neon-node-prep.service"
+    rm -f /etc/systemd/system/neon-node-prep.service
+fi
+
+#------------------------------------------------------------------------------
+# Stop and mask the [apt-daily.timer] and [apt-daily.service] services if they're
+# enabled.  For on-premise hypervisor based deployments, these will have already
+# been stopped and masked by the script mounted to the VM during provisioning.
+
+if systemctl status apt-daily.timer; then
+    echo "** Stop and mask: apt-daily.timer"
+    systemctl stop apt-daily.timer
+    systemctl mask apt-daily.timer
+fi
+
+if systemctl status apt-daily.service; then
+    echo "** Stop and mask: apt-daily.service"
+    systemctl stop apt-daily.service
+    systemctl mask apt-daily.service
+fi
 
 #------------------------------------------------------------------------------
 # We need to configure things such that [apt-get] won't complain

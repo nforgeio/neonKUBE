@@ -293,7 +293,7 @@ cat <<EOF > /etc/sysctl.conf
 
 # Explicitly set the maximum number of file descriptors for the
 # entire system.  This looks like it defaults to [398327] for
-# Ubuntu 16.04 so we're going to pin this value to enforce
+# Ubuntu 20.04 so we're going to pin this value to enforce
 # consistency across Linux updates, etc.
 
 fs.file-max=398327

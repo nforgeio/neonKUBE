@@ -40,6 +40,6 @@ namespace Neon.Cadence
         internal override string CadenceError => "WorkflowExecutionAlreadyStartedError";
 
         /// <inheritdoc/>
-        internal override CadenceErrorTypes CadenceErrorType => CadenceErrorTypes.Custom;
+        internal override CadenceErrorType CadenceErrorType => CadenceErrorType.Custom;
     }
 }

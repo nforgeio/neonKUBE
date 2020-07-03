@@ -41,6 +41,6 @@ namespace Neon.Temporal
         internal override string TemporalError => "WorkflowRunningError";
 
         /// <inheritdoc/>
-        internal override TemporalErrorTypes TemporalErrorType => TemporalErrorTypes.Custom;
+        internal override TemporalErrorType TemporalErrorType => TemporalErrorType.Custom;
     }
 }

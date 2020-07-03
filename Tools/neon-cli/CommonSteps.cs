@@ -45,7 +45,7 @@ namespace NeonCli
         {
             node.Status = "check: OS";
 
-            // $todo(jefflill): We're currently hardcoded to Ubuntu 18.04.x
+            // $todo(jefflill): We're currently hardcoded to Ubuntu 20.04.x
 
             if (!node.OsName.Equals("Ubuntu", StringComparison.InvariantCultureIgnoreCase) || node.OsVersion < Version.Parse("20.04"))
             {

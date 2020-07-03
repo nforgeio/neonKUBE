@@ -50,7 +50,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Returns the Cadence error type.
         /// </summary>
-        internal abstract CadenceErrorTypes CadenceErrorType { get; }
+        internal abstract CadenceErrorType CadenceErrorType { get; }
 
         /// <summary>
         /// The Cadence error reason used for specifying non-retryable errors

@@ -50,7 +50,7 @@ namespace Neon.Temporal
         /// <summary>
         /// Returns the Temporal error type.
         /// </summary>
-        internal abstract TemporalErrorTypes TemporalErrorType { get; }
+        internal abstract TemporalErrorType TemporalErrorType { get; }
 
         /// <summary>
         /// The Temporal error reason used for specifying non-retryable errors
