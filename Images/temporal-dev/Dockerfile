@@ -93,7 +93,7 @@ RUN npm install --production \
     && mkdir app && mv package.json server.js webpack.config.js server dist node_modules temporal-proto ./app \
     && mkdir -p ./app/protobuf/src && mv protobuf/src ./app/protobuf
 
-# Ubuntu16.04 base image
+# Ubuntu-16.04 base image
 
 FROM nkubedev/ubuntu-16.04 AS ubuntu
 ENV NODE_VERSION=8.x
