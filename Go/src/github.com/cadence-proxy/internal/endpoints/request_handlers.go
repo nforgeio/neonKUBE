@@ -2200,10 +2200,6 @@ func handleActivityStartRequest(requestCtx context.Context, request *messages.Ac
 	ctx = workflow.WithWorkflowDomain(ctx, *request.GetDomain())
 	future := workflow.ExecuteActivity(ctx, activity, request.GetArgs())
 
-	// Send ACK: Commented out because its no longer needed.
-	// op := sendFutureACK(contextID, requestID, clientID)
-	// <-op.GetChannel()
-
 	// add to workflow context map
 	_ = wectx.AddActivityFuture(activityID, future)
 
