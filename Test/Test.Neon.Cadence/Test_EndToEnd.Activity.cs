@@ -1037,15 +1037,15 @@ namespace TestCadence
             try
             {
                 await task;
-                Assert.True(false, $"Expected [{nameof(CadenceGenericException)}]");
+                Assert.True(false, $"Expected [{nameof(CadenceCustomException)}]");
             }
-            catch (CadenceGenericException e)
+            catch (CadenceCustomException e)
             {
                 Assert.Equal("external activity failed", e.Message);
             }
             catch (Exception e)
             {
-                Assert.True(false, $"Expected [{nameof(CadenceGenericException)}] not [{e.GetType().Name}]");
+                Assert.True(false, $"Expected [{nameof(CadenceCustomException)}] not [{e.GetType().Name}]");
             }
         }
 
@@ -1069,16 +1069,16 @@ namespace TestCadence
             try
             {
                 await task;
-                Assert.True(false, $"Expected [{nameof(CadenceGenericException)}]");
+                Assert.True(false, $"Expected [{nameof(CadenceCustomException)}]");
             }
-            catch (CadenceGenericException e)
+            catch (CadenceCustomException e)
             {
                 Assert.Equal("external activity failed", e.Message);
                 return;
             }
             catch (Exception e)
             {
-                Assert.True(false, $"Expected [{nameof(CadenceGenericException)}] not [{e.GetType().Name}]");
+                Assert.True(false, $"Expected [{nameof(CadenceCustomException)}] not [{e.GetType().Name}]");
             }
         }
 
