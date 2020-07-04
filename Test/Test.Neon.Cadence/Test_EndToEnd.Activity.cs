@@ -631,7 +631,7 @@ namespace TestCadence
                 {
                     case HeartbeatMode.SendHeartbeat:
 
-                        await Activity.SendHeartbeatAsync(new byte[] { 0, 1, 2, 3, 4 });
+                        await Activity.RecordHeartbeatAsync(new byte[] { 0, 1, 2, 3, 4 });
                         break;
 
                     case HeartbeatMode.HeartbeatWithDefaults:

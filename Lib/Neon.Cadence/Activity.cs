@@ -70,7 +70,7 @@ namespace Neon.Cadence
         /// <para>
         /// We recommend that all non-local activities that execute for relatively long periods,
         /// monitor <see cref="CancellationToken"/> for activity cancellation so that they
-        /// can gracefully terminate including potentially calling <see cref="SendHeartbeatAsync(byte[])"/>
+        /// can gracefully terminate including potentially calling <see cref="RecordHeartbeatAsync(byte[])"/>
         /// to checkpoint the current activity state.
         /// </para>
         /// <para>
@@ -95,7 +95,7 @@ namespace Neon.Cadence
 
         /// <summary>
         /// <para>
-        /// Sends a heartbeat with optional details to Cadence.
+        /// Records a heartbeat with optional details to Cadence.
         /// </para>
         /// <note>
         /// <b>IMPORTANT:</b> Heartbeats are not supported for local activities.
@@ -118,7 +118,7 @@ namespace Neon.Cadence
         /// also possible to enable automatic heartbeats sent by the Cadence client.
         /// </note>
         /// </remarks>
-        public async Task SendHeartbeatAsync(byte[] details = null)
+        public async Task RecordHeartbeatAsync(byte[] details = null)
         {
             await SyncContext.ClearAsync;
             Client.EnsureNotDisposed();
@@ -245,7 +245,7 @@ namespace Neon.Cadence
             {
                 var details = detailsFunc != null ? detailsFunc() : null;
 
-                await SendHeartbeatAsync(details);
+                await RecordHeartbeatAsync(details);
 
                 nextHeartbeatUtc = DateTime.UtcNow + nextInterval;
 
