@@ -828,7 +828,7 @@ namespace TestTemporal
                 }
                 catch (TemporalException e)
                 {
-                    return $"{e.Message}: {e.Details}";
+                    return $"{e.Reason}: {e.Message}";
                 }
             }
         }
@@ -1037,18 +1037,17 @@ namespace TestTemporal
             try
             {
                 await task;
+                Assert.True(false, $"Expected [{nameof(TemporalCustomException)}]");
             }
             catch (TemporalCustomException e)
             {
+                Assert.Equal(typeof(TestException).FullName, e.Reason);
                 Assert.Equal("external activity failed", e.Message);
-                return;
             }
             catch (Exception e)
             {
                 Assert.True(false, $"Expected [{nameof(TemporalCustomException)}] not [{e.GetType().Name}]");
             }
-
-            Assert.True(false, $"Expected [{nameof(TemporalCustomException)}]");
         }
 
         [Fact]
@@ -1071,18 +1070,17 @@ namespace TestTemporal
             try
             {
                 await task;
+                Assert.True(false, $"Expected [{nameof(TemporalCustomException)}]");
             }
             catch (TemporalCustomException e)
             {
+                Assert.Equal(typeof(TestException).FullName, e.Reason);
                 Assert.Equal("external activity failed", e.Message);
-                return;
             }
             catch (Exception e)
             {
                 Assert.True(false, $"Expected [{nameof(TemporalCustomException)}] not [{e.GetType().Name}]");
             }
-
-            Assert.True(false, $"Expected [{nameof(TemporalCustomException)}]");
         }
 
         [Fact]
@@ -1102,9 +1100,18 @@ namespace TestTemporal
 
             await client.ActivityCancelByTokenAsync(activity.Task.TaskToken);
 
-            // $todo(jefflill): Need to work on exception mapping for this to work.
-
-            // await Assert.ThrowsAsync<TemporalCancelledException>(async () => await task);
+            try
+            {
+                await task;
+            }
+            catch (CancelledException)
+            {
+                // Expected
+            }
+            catch (Exception e)
+            {
+                Assert.True(false, $"Expected [{nameof(CancelledException)}] not [{e.GetType().Name}]");
+            }
         }
 
         [Fact]
@@ -1124,9 +1131,18 @@ namespace TestTemporal
 
             await client.ActivityCancelByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId);
 
-            // $todo(jefflill): Need to work on exception mapping for this to work.
-
-            // await Assert.ThrowsAsync<TemporalCancelledException>(async () => await task);
+            try
+            {
+                await task;
+            }
+            catch (CancelledException)
+            {
+                // Expected
+            }
+            catch (Exception e)
+            {
+                Assert.True(false, $"Expected [{nameof(CancelledException)}] not [{e.GetType().Name}]");
+            }
         }
 
         //---------------------------------------------------------------------

@@ -1,6 +1,8 @@
 name: home-large
 datacenter: sultan
 environment: development
+linuxDistribution: ubuntu
+linuxVersion: 20.04.latest
 timeSources:
 - pool.ntp.org
 allowUnitTesting: true

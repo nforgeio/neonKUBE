@@ -2255,16 +2255,16 @@ namespace TestCadence
             try
             {
                 await stub.RunAsync();
-                Assert.True(false, "CadenceCustomException expected");
+                Assert.True(false, $"[{nameof(CadenceGenericException)}] expected");
             }
-            catch (CadenceCustomException e)
+            catch (CadenceGenericException e)
             {
-                Assert.Contains("ArgumentException", e.Message);
-                Assert.Contains("forced-failure", e.Details);
+                Assert.Contains("ArgumentException", e.Reason);
+                Assert.Contains("forced-failure", e.Message);
             }
-            catch
+            catch (Exception e)
             {
-                Assert.True(false, "CadenceCustomException expected");
+                Assert.True(false, $"Expected [{nameof(CadenceGenericException)}] not [{e.GetType().Name}]");
             }
         }
 
@@ -4241,12 +4241,12 @@ namespace TestCadence
                 }
                 catch (CadenceGenericException e)
                 {
-                    if (e.Message != typeof(TransientException).FullName)
+                    if (e.Reason != typeof(TransientException).FullName)
                     {
                         return false;
                     }
 
-                    if (e.Details != "This is a test!")
+                    if (e.Message != "This is a test!")
                     {
                         return false;
                     }

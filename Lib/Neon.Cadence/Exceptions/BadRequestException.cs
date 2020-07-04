@@ -40,9 +40,6 @@ namespace Neon.Cadence
         internal override string CadenceError => "BadRequestError";
 
         /// <inheritdoc/>
-        internal override CadenceErrorTypes CadenceErrorType => CadenceErrorTypes.Custom;
-
-        /// <inheritdoc/>
-        internal override string Reason => CadenceError;
+        internal override CadenceErrorType CadenceErrorType => CadenceErrorType.Custom;
     }
 }

@@ -828,7 +828,7 @@ namespace TestCadence
                 }
                 catch (CadenceException e)
                 {
-                    return $"{e.Message}: {e.Details}";
+                    return $"{e.Reason}: {e.Message}";
                 }
             }
         }
@@ -1032,23 +1032,22 @@ namespace TestCadence
             var task     = stub.RunAsync();
             var activity = ActivityExternalCompletion.WaitForActivity();
 
-            await client.ActivityErrorByTokenAsync(activity.Task.TaskToken, new Exception("external activity failed"));
+            await client.ActivityErrorByTokenAsync(activity.Task.TaskToken, new TestException("external activity failed"));
 
             try
             {
                 await task;
+                Assert.True(false, $"Expected [{nameof(CadenceCustomException)}]");
             }
             catch (CadenceCustomException e)
             {
+                Assert.Equal(typeof(TestException).FullName, e.Reason);
                 Assert.Equal("external activity failed", e.Message);
-                return;
             }
             catch (Exception e)
             {
                 Assert.True(false, $"Expected [{nameof(CadenceCustomException)}] not [{e.GetType().Name}]");
             }
-
-            Assert.True(false, $"Expected [{nameof(CadenceCustomException)}]");
         }
 
         [Fact]
@@ -1066,14 +1065,16 @@ namespace TestCadence
             var task     = stub.RunAsync();
             var activity = ActivityExternalCompletion.WaitForActivity();
 
-            await client.ActivityErrorByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId, new Exception("external activity failed"));
+            await client.ActivityErrorByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId, new TestException("external activity failed"));
 
             try
             {
                 await task;
+                Assert.True(false, $"Expected [{nameof(CadenceCustomException)}]");
             }
             catch (CadenceCustomException e)
             {
+                Assert.Equal(typeof(TestException).FullName, e.Reason);
                 Assert.Equal("external activity failed", e.Message);
                 return;
             }
@@ -1081,8 +1082,6 @@ namespace TestCadence
             {
                 Assert.True(false, $"Expected [{nameof(CadenceCustomException)}] not [{e.GetType().Name}]");
             }
-
-            Assert.True(false, $"Expected [{nameof(CadenceCustomException)}]");
         }
 
         [Fact]
@@ -1102,9 +1101,19 @@ namespace TestCadence
 
             await client.ActivityCancelByTokenAsync(activity.Task.TaskToken);
 
-            // $todo(jefflill): Need to work on exception mapping for this to work.
-
-            // await Assert.ThrowsAsync<CadenceCancelledException>(async () => await task);
+            try
+            {
+                await task;
+                Assert.True(false, $"Expected [{nameof(CancelledException)}]");
+            }
+            catch (CancelledException)
+            {
+                // Expected
+            }
+            catch (Exception e)
+            {
+                Assert.True(false, $"Expected [{nameof(CancelledException)}] not [{e.GetType().Name}]");
+            }
         }
 
         [Fact]
@@ -1124,9 +1133,19 @@ namespace TestCadence
 
             await client.ActivityCancelByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId);
 
-            // $todo(jefflill): Need to work on exception mapping for this to work.
-
-            // await Assert.ThrowsAsync<CadenceCancelledException>(async () => await task);
+            try
+            {
+                await task;
+                Assert.True(false, $"Expected [{nameof(CancelledException)}]");
+            }
+            catch (CancelledException)
+            {
+                // Expected
+            }
+            catch (Exception e)
+            {
+                Assert.True(false, $"Expected [{nameof(CancelledException)}] not [{e.GetType().Name}]");
+            }
         }
 
         //---------------------------------------------------------------------

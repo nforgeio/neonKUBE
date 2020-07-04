@@ -267,6 +267,82 @@ namespace TestTemporal
                 arrayResult = await stub.GetResultAsync<int[]>();
 
                 Assert.Equal(new int[] { 0, 1, 2, 3, 4 }, arrayResult);
+
+                //-----------------------------------------
+                // Workflow that returns just an error:
+
+                // Verify that things work when the workflow DOESN'T return an error.
+
+                options = new WorkflowOptions()
+                {
+                    WorkflowId = "ErrorWorkflow-NOERROR-" + Guid.NewGuid().ToString("d"),
+                    TaskList   = TemporalTestHelper.TaskList_TwfArgs
+                };
+
+                stub      = client.NewUntypedWorkflowStub("main.ErrorWorkflow", options);
+                execution = await stub.StartAsync("");
+
+                await stub.GetResultAsync();
+
+                // Verify that things work when the workflow DOES return an error.
+
+                options = new WorkflowOptions()
+                {
+                    WorkflowId = "ErrorWorkflow-ERROR-" + Guid.NewGuid().ToString("d"),
+                    TaskList   = TemporalTestHelper.TaskList_TwfArgs
+                };
+
+                stub      = client.NewUntypedWorkflowStub("main.ErrorWorkflow", options);
+                execution = await stub.StartAsync("error message");
+
+                try
+                {
+                    await stub.GetResultAsync();
+                }
+                catch (TemporalGenericException e)
+                {
+                    Assert.Equal("error message", e.Reason);
+                }
+                catch (Exception e)
+                {
+                    Assert.True(false, $"Expected [{typeof(TemporalGenericException).FullName}] not [{e.GetType().FullName}].");
+                }
+
+                //-----------------------------------------
+                // Workflow that returns a string or an error:
+
+                // Verify that things work when the workflow DOESN'T return an error.
+
+                options = new WorkflowOptions()
+                {
+                    WorkflowId = "StringErrorWorkflow-NOERROR-" + Guid.NewGuid().ToString("d"),
+                    TaskList   = TemporalTestHelper.TaskList_TwfArgs
+                };
+
+                stub      = client.NewUntypedWorkflowStub("main.StringErrorWorkflow", options);
+                execution = await stub.StartAsync("JEFF", "");
+
+                Assert.Equal("Hello JEFF!", await stub.GetResultAsync<string>());
+
+                // Verify that things work when the workflow DOES return an error.
+
+                options = new WorkflowOptions()
+                {
+                    WorkflowId = "StringErrorWorkflow-ERROR-" + Guid.NewGuid().ToString("d"),
+                    TaskList   = TemporalTestHelper.TaskList_TwfArgs
+                };
+
+                stub      = client.NewUntypedWorkflowStub("main.ErrorWorkflow", options);
+                execution = await stub.StartAsync("", "error message");
+
+                try
+                {
+                    await stub.GetResultAsync<string>();
+                }
+                catch (Exception e)
+                {
+                    Assert.Equal("error message", e.Message);
+                }
             }
         }
 

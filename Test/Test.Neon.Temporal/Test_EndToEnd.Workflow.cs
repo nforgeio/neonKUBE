@@ -2255,16 +2255,16 @@ namespace TestTemporal
             try
             {
                 await stub.RunAsync();
-                Assert.True(false, "TemporalGenericException expected");
+                Assert.True(false, $"[{nameof(TemporalGenericException)}] expected");
             }
             catch (TemporalGenericException e)
             {
-                Assert.Contains("ArgumentException", e.Message);
-                Assert.Contains("forced-failure", e.Details);
+                Assert.Contains("ArgumentException", e.Reason);
+                Assert.Contains("forced-failure", e.Message);
             }
-            catch
+            catch (Exception e)
             {
-                Assert.True(false, "TemporalGenericException expected");
+                Assert.True(false, $"Expected [{nameof(TemporalGenericException)}] not [{e.GetType().Name}]");
             }
         }
 
@@ -4245,7 +4245,7 @@ namespace TestTemporal
                         return false;
                     }
 
-                    if (e.Details != "This is a test!")
+                    if (e.Message != "This is a test!")
                     {
                         return false;
                     }

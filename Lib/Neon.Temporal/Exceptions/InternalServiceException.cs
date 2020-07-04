@@ -40,9 +40,6 @@ namespace Neon.Temporal
         internal override string TemporalError => "InternalServiceError";
 
         /// <inheritdoc/>
-        internal override TemporalErrorTypes TemporalErrorType => TemporalErrorTypes.Custom;
-
-        /// <inheritdoc/>
-        internal override string Reason => TemporalError;
+        internal override TemporalErrorType TemporalErrorType => TemporalErrorType.Custom;
     }
 }

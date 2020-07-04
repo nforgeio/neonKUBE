@@ -43,7 +43,7 @@ namespace NeonCli
 {
     /// <summary>
     /// This tool is used to configure the nodes of a cluster.
-    /// See <b>$/Doc/Ubuntu-18.04 cluster Deploy.docx</b> for more information.
+    /// See <b>$/Doc/Ubuntu-20.04 cluster Deploy.docx</b> for more information.
     /// </summary>
     public static class Program
     {
@@ -188,7 +188,7 @@ You can disable the use of this encrypted folder by specifying
                 {
                     cmdLine.DefineOption("--machine-username");
                     cmdLine.DefineOption("--machine-password");
-                    cmdLine.DefineOption("-os").Default = "Ubuntu-18.04";
+                    cmdLine.DefineOption("-os").Default = "Ubuntu-20.04";
                     cmdLine.DefineOption("-q", "--quiet");
                     cmdLine.DefineOption("-m", "--max-parallel").Default = "6";
                     cmdLine.DefineOption("-w", "--wait").Default = "60";
@@ -721,7 +721,7 @@ You can disable the use of this encrypted folder by specifying
         /// <summary>
         /// Returns the folder holding the Linux resource files for the target operating system.
         /// </summary>
-        public static ResourceFiles.Folder LinuxFolder => ResourceFiles.Root.GetFolder("Ubuntu-18.04");
+        public static ResourceFiles.Folder LinuxFolder => ResourceFiles.Root.GetFolder("Ubuntu-20.04");
 
         /// <summary>
         /// Presents the user with a yes/no question and waits for a response.

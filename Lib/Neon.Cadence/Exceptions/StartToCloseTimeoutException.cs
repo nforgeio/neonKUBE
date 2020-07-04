@@ -34,15 +34,13 @@ namespace Neon.Cadence
         public StartToCloseTimeoutException(string message = null, Exception innerException = null)
             : base(message, innerException)
         {
+            base.Reason = "cadenceInternal:Timeout START_TO_CLOSE";
         }
 
         /// <inheritdoc/>
-        internal override CadenceErrorTypes CadenceErrorType => CadenceErrorTypes.Timeout;
+        internal override CadenceErrorType CadenceErrorType => CadenceErrorType.Timeout;
 
         /// <inheritdoc/>
         internal override string CadenceError => "StartToCloseTimeoutError";
-
-        /// <inheritdoc/>
-        internal override string Reason => "cadenceInternal:Timeout START_TO_CLOSE";
     }
 }

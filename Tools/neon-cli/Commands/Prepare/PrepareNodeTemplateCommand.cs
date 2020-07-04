@@ -80,7 +80,7 @@ OPTIONS:
 
                           ""xenserver-ubuntu-neon""
 
-    --upgrade       - Applies any distribution upgrades to the template. 
+    --update        - Applies any distribution updates to the template. 
 
 REMARKS:
 
@@ -115,7 +115,7 @@ node template.
         }
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--hyperv", "--xenserver", "--host-address", "--host-username", "--host-password", "--vm-name", "--upgrade" };
+        public override string[] ExtendedOptions => new string[] { "--hyperv", "--xenserver", "--host-address", "--host-username", "--host-password", "--vm-name", "--update" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -139,7 +139,7 @@ node template.
             var hostAddress   = commandLine.GetOption("--host-address");
             var hostUsername  = commandLine.GetOption("--host-username", "root");
             var hostPassword  = commandLine.GetOption("--host-password");
-            var upgrade       = commandLine.GetFlag("--upgrade");
+            var update        = commandLine.GetFlag("--update");
             var hostIpAddress = (IPAddress)null;
 
             if (xenserver)
@@ -213,13 +213,15 @@ node template.
                 server.SudoCommand("apt-get update", RunOptions.FaultOnError);
                 server.SudoCommand("apt-get install -yq --allow-downgrades zip secure-delete", RunOptions.FaultOnError);
 
-                if (upgrade)
+                if (update)
                 {
                     Console.WriteLine("Run:      apt-get dist-upgrade -yq");
                     server.SudoCommand("apt-get dist-upgrade -yq");
                 }
 
                 // Disable SWAP by editing [/etc/fstab] to remove the [/swap.img] line:
+
+                Console.WriteLine("Disable:  swap");
 
                 var sbFsTab = new StringBuilder();
 
@@ -234,7 +236,6 @@ node template.
                     }
                 }
 
-                Console.WriteLine("Disable:  SWAP");
                 server.UploadText("/etc/fstab", sbFsTab, permissions: "644", owner: "root:root");
 
                 // We need to relocate the [sysadmin] UID/GID to 1234 so we
@@ -310,16 +311,16 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
 
             Program.MachineUsername = KubeConst.SysAdminUser;
 
-            using (var server = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
+            using (var node = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
             {
                 Console.WriteLine($"Login:    [{KubeConst.SysAdminUser}]");
-                server.WaitForBoot();
+                node.WaitForBoot();
 
                 // Ensure that the owner and group for files in the [sysadmin]
                 // home folder are correct.
 
                 Console.WriteLine("Set:      [sysadmin] home folder owner");
-                server.SudoCommand($"chown -R {KubeConst.SysAdminUser}:{KubeConst.SysAdminGroup} .*", RunOptions.FaultOnError);
+                node.SudoCommand($"chown -R {KubeConst.SysAdminUser}:{KubeConst.SysAdminGroup} .*", RunOptions.FaultOnError);
 
                 // Beginning with Ubuntu 20.04 we're seeing systemd/(sd-pam) processes 
                 // hanging around for a while for the [temp] process which prevents us 
@@ -327,19 +328,19 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
                 // killing any [temp] user processes first.
 
                 Console.WriteLine("Kill:     [temp] user processes");
-                server.SudoCommand("pkill -u temp");
+                node.SudoCommand("pkill -u temp");
 
                 // Remove the [temp] user.
 
                 Console.WriteLine("Remove:   [temp] user");
-                server.SudoCommand($"rm -rf /home/temp", RunOptions.FaultOnError);
+                node.SudoCommand($"rm -rf /home/temp", RunOptions.FaultOnError);
 
                 // Create the [container] user with no home directory.  This
                 // means that the [container] user will have no chance of
                 // logging into the machine.
 
                 Console.WriteLine("Create:   [container] user");
-                server.SudoCommand($"useradd --uid {KubeConst.ContainerUID} --no-create-home {KubeConst.ContainerUser}", RunOptions.FaultOnError);
+                node.SudoCommand($"useradd --uid {KubeConst.ContainerUID} --no-create-home {KubeConst.ContainerUser}", RunOptions.FaultOnError);
 
                 // Configure the Linux guest integration services.
 
@@ -356,7 +357,7 @@ apt-get install -yq --allow-downgrades linux-virtual linux-cloud-tools-virtual l
 update-initramfs -u
 ";
                 Console.WriteLine("Install:  guest integration services");
-                server.SudoCommand(CommandBundle.FromScript(guestServicesScript), RunOptions.FaultOnError);
+                node.SudoCommand(CommandBundle.FromScript(guestServicesScript), RunOptions.FaultOnError);
 
                 // Delete the pre-installed [/etc/netplan/*] files and add [no-dhcp.yaml]
                 // which will effectively disable the network on first boot from the template.
@@ -384,7 +385,7 @@ network:
       dhcp4: no
 EOF
 ";
-                server.SudoCommand(CommandBundle.FromScript(initNetPlanScript), RunOptions.FaultOnError);
+                node.SudoCommand(CommandBundle.FromScript(initNetPlanScript), RunOptions.FaultOnError);
 
                 // We're going to disable [cloud-init] because we couldn't get it to work with
                 // the NoCloud datasource.  There were just too many moving parts and it was 
@@ -398,7 +399,27 @@ EOF
 $@"
 touch /etc/cloud/cloud-init.disabled
 ";
-                server.SudoCommand(CommandBundle.FromScript(disableCloudInitScript), RunOptions.FaultOnError);
+                node.SudoCommand(CommandBundle.FromScript(disableCloudInitScript), RunOptions.FaultOnError);
+
+                // We're going to stop and mask the [snapd.service] because we don't want it
+                // automatically updating stuff randomly.
+
+                Console.WriteLine("Disable:  [snapd.service]");
+
+                node.Status = "disable: [snapd.service]";
+
+                var disableSnapScript =
+@"
+# Stop and mask [snapd.service] when it's not already masked.
+
+systemctl status --no-pager snapd.service
+
+if [ $? ]; then
+    systemctl stop snapd.service
+    systemctl mask snapd.service
+fi
+";
+                node.SudoCommand(CommandBundle.FromScript(disableSnapScript), RunOptions.FaultOnError);
 
                 // Install and configure the [neon-node-prep] service.  This is a simple script
                 // that is configured to run as a oneshot systemd service before networking is
@@ -545,7 +566,7 @@ chmod 744 {KubeHostFolders.Bin}/neon-node-prep.sh
 systemctl enable neon-node-prep
 systemctl daemon-reload
 ";
-                server.SudoCommand(CommandBundle.FromScript(neonNodePrepScript), RunOptions.FaultOnError);
+                node.SudoCommand(CommandBundle.FromScript(neonNodePrepScript), RunOptions.FaultOnError);
 
                 // Virtualization host specific initialization.
 
@@ -562,13 +583,13 @@ rm -rf /var/lib/dhcp/*
 sfill -fllz /
 ";
                     Console.WriteLine("Clean:    VM");
-                    server.SudoCommand(CommandBundle.FromScript(cleanScript), RunOptions.FaultOnError);
+                    node.SudoCommand(CommandBundle.FromScript(cleanScript), RunOptions.FaultOnError);
                  
                     // Shut the the VM down so the user can compress and upload
                     // the disk image.
 
                     Console.WriteLine("Shutdown: VM");
-                    server.Shutdown();
+                    node.Shutdown();
                 }
                 else if (xenserver)
                 {
@@ -577,7 +598,7 @@ sfill -fllz /
                     // to disable it.
 
                     Console.WriteLine($"Disable:  hv-kvp-daemon.service");
-                    server.SudoCommand("systemctl disable hv-kvp-daemon.service");
+                    node.SudoCommand("systemctl disable hv-kvp-daemon.service");
 
                     // Establish an SSH connection to the XenServer host so we'll
                     // be able to mount and eject the XenServer tools ISO to the VM.
@@ -673,7 +694,7 @@ eject /dev/dvd
 rm -rf /media/guest-tools
 ";
                         Console.WriteLine("Install:  XenServer Tools");
-                        server.SudoCommand(CommandBundle.FromScript(guestToolsScript), RunOptions.FaultOnError);
+                        node.SudoCommand(CommandBundle.FromScript(guestToolsScript), RunOptions.FaultOnError);
 
                         // Eject the CD/DVD at the host level (we're going to ignore any errors 
                         // in case the [eject] in the script above already ejected the disk at
@@ -691,7 +712,7 @@ rm -rf /var/lib/dhcp/*
 sfill -fllz /
 ";
                         Console.WriteLine("Cleanup:  VM");
-                        server.SudoCommand(CommandBundle.FromScript(cleanupScript), RunOptions.FaultOnError);
+                        node.SudoCommand(CommandBundle.FromScript(cleanupScript), RunOptions.FaultOnError);
 
                         Console.WriteLine("Shutdown: VM");
                         xenHost.SafeInvoke("vm-shutdown", $"uuid={vmUuid}");

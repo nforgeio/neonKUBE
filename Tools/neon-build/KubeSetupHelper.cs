@@ -235,26 +235,6 @@ namespace NeonBuild
         }
 
         /// <summary>
-        /// URL to the latest preconfigured Ubuntu 16.04 Hyper-V virtual machine VHDX file.
-        /// </summary>
-        public string Ubuntu1604VhdxUrl => "https://s3-us-west-2.amazonaws.com/neonforge/ksetup/ubuntu-16.04.base.vhdx";
-
-        /// <summary>
-        /// The name of the base Ubuntu 16.04 image downloaded to the cache (VHDX file).
-        /// </summary>
-        public string Ubuntu1604BaseName => "ubuntu-16.04.base.vhdx";
-
-        /// <summary>
-        /// The root username for the <see cref="Ubuntu1604VhdxUrl"/> virtual machine image.
-        /// </summary>
-        public string Ubuntu1604Username => "sysadmin";
-
-        /// <summary>
-        /// The root password for the <see cref="Ubuntu1604VhdxUrl"/> virtual machine image.
-        /// </summary>
-        public string Ubuntu1604Password => "sysadmin0000";
-
-        /// <summary>
         /// Returns the target <b>kubectl</b> tool version (from the <c>NF_KUBE_VERSION</c> environment variable).
         /// </summary>
         public string KubeVersion { get; private set; }
