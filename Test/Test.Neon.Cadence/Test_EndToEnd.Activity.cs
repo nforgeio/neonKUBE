@@ -1032,20 +1032,21 @@ namespace TestCadence
             var task     = stub.RunAsync();
             var activity = ActivityExternalCompletion.WaitForActivity();
 
-            await client.ActivityErrorByTokenAsync(activity.Task.TaskToken, new Exception("external activity failed"));
+            await client.ActivityErrorByTokenAsync(activity.Task.TaskToken, new TestException("external activity failed"));
 
             try
             {
                 await task;
-                Assert.True(false, $"Expected [{nameof(CadenceGenericException)}]");
+                Assert.True(false, $"Expected [{nameof(CadenceCustomException)}]");
             }
-            catch (CadenceGenericException e)
+            catch (CadenceCustomException e)
             {
+                Assert.Equal(typeof(TestException).FullName, e.Reason);
                 Assert.Equal("external activity failed", e.Message);
             }
             catch (Exception e)
             {
-                Assert.True(false, $"Expected [{nameof(CadenceGenericException)}] not [{e.GetType().Name}]");
+                Assert.True(false, $"Expected [{nameof(CadenceCustomException)}] not [{e.GetType().Name}]");
             }
         }
 
@@ -1064,21 +1065,22 @@ namespace TestCadence
             var task     = stub.RunAsync();
             var activity = ActivityExternalCompletion.WaitForActivity();
 
-            await client.ActivityErrorByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId, new Exception("external activity failed"));
+            await client.ActivityErrorByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId, new TestException("external activity failed"));
 
             try
             {
                 await task;
-                Assert.True(false, $"Expected [{nameof(CadenceGenericException)}]");
+                Assert.True(false, $"Expected [{nameof(CadenceCustomException)}]");
             }
-            catch (CadenceGenericException e)
+            catch (CadenceCustomException e)
             {
+                Assert.Equal(typeof(TestException).FullName, e.Reason);
                 Assert.Equal("external activity failed", e.Message);
                 return;
             }
             catch (Exception e)
             {
-                Assert.True(false, $"Expected [{nameof(CadenceGenericException)}] not [{e.GetType().Name}]");
+                Assert.True(false, $"Expected [{nameof(CadenceCustomException)}] not [{e.GetType().Name}]");
             }
         }
 

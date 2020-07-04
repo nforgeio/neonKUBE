@@ -43,6 +43,20 @@ namespace TestCadence
 {
     public partial class Test_EndToEnd : IClassFixture<CadenceFixture>, IDisposable
     {
+        //---------------------------------------------------------------------
+        // Private types
+
+        private class TestException : Exception
+        {
+            public TestException(string message)
+                : base(message)
+            {
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         private const int maxWaitSeconds = 5;
 
         private static readonly TimeSpan allowedVariation = TimeSpan.FromSeconds(10);

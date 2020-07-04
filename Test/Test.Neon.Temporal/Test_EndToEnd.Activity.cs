@@ -1037,15 +1037,16 @@ namespace TestTemporal
             try
             {
                 await task;
-                Assert.True(false, $"Expected [{nameof(TemporalGenericException)}]");
+                Assert.True(false, $"Expected [{nameof(TemporalCustomException)}]");
             }
-            catch (TemporalGenericException e)
+            catch (TemporalCustomException e)
             {
+                Assert.Equal(typeof(TestException).FullName, e.Reason);
                 Assert.Equal("external activity failed", e.Message);
             }
             catch (Exception e)
             {
-                Assert.True(false, $"Expected [{nameof(TemporalGenericException)}] not [{e.GetType().Name}]");
+                Assert.True(false, $"Expected [{nameof(TemporalCustomException)}] not [{e.GetType().Name}]");
             }
         }
 
@@ -1069,15 +1070,16 @@ namespace TestTemporal
             try
             {
                 await task;
+                Assert.True(false, $"Expected [{nameof(TemporalCustomException)}]");
             }
-            catch (TemporalGenericException e)
+            catch (TemporalCustomException e)
             {
+                Assert.Equal(typeof(TestException).FullName, e.Reason);
                 Assert.Equal("external activity failed", e.Message);
-                Assert.True(false, $"Expected [{nameof(TemporalGenericException)}]");
             }
             catch (Exception e)
             {
-                Assert.True(false, $"Expected [{nameof(TemporalGenericException)}] not [{e.GetType().Name}]");
+                Assert.True(false, $"Expected [{nameof(TemporalCustomException)}] not [{e.GetType().Name}]");
             }
         }
 
