@@ -4137,6 +4137,36 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IActivityTimeout : IActivity
+        {
+            [ActivityMethod(Name = "sleep")]
+            Task SleepAsync(TimeSpan sleepTime);
+
+            [ActivityMethod(Name = "throw-transient")]
+            Task ThrowTransientAsync();
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ActivityTimeout : ActivityBase, IActivityTimeout
+        {
+            public async Task SleepAsync(TimeSpan sleepTime)
+            {
+                await Task.Delay(sleepTime);
+            }
+
+            public async Task ThrowTransientAsync()
+            {
+                // Throw a [TransientException] so the calling workflow can verify
+                // that the GOLANG error is generated properly and that it ends up
+                // being wrapped in a [CadenceGenericException] as expected.
+
+                await Task.CompletedTask;
+
+                throw new TransientException("This is a test!");
+            }
+        }
+
         [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
         public interface IWorkflowTimeout : IWorkflow
         {
@@ -4151,16 +4181,6 @@ namespace TestCadence
 
             [WorkflowMethod(Name = "activity-dotnetexception")]
             Task<bool> ActivityDotNetException();
-        }
-
-        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
-        public interface IActivityTimeout : IActivity
-        {
-            [ActivityMethod(Name = "sleep")]
-            Task SleepAsync(TimeSpan sleepTime);
-
-            [ActivityMethod(Name = "throw-transient")]
-            Task ThrowTransientAsync();
         }
 
         [Workflow(AutoRegister = true)]
@@ -4178,7 +4198,7 @@ namespace TestCadence
                 // detect that the heartbeat time was exceeded and
                 // throw an [ActivityHeartbeatTimeoutException].
                 //
-                // The method returns TRUE if we catch ther desired
+                // The method returns TRUE if we catch the desired
                 // exception.
 
                 var sleepTime   = TimeSpan.FromSeconds(5);
@@ -4258,26 +4278,6 @@ namespace TestCadence
             }
         }
 
-        [Activity(AutoRegister = true)]
-        public class ActivityTimeout : ActivityBase, IActivityTimeout
-        {
-            public async Task SleepAsync(TimeSpan sleepTime)
-            {
-                await Task.Delay(sleepTime);
-            }
-
-            public async Task ThrowTransientAsync()
-            {
-                // Throw a [TransientException] so the calling workflow can verify
-                // that the GOLANG error is generated properly and that it ends up
-                // being wrapped in a [CadenceGenericException] as expected.
-
-                await Task.CompletedTask;
-
-                throw new TransientException("This is a test!");
-            }
-        }
-
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Workflow_StartToCloseTimeout()
@@ -4315,7 +4315,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Activity_HeartbeatTimeout()
+        public async Task Activity_Heartbeat_Timeout()
         {
             await SyncContext.ClearAsync;
 
