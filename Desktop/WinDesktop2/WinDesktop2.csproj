@@ -1,0 +1,94 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>neonKUBE-win</AssemblyName>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <OutputPath>bin\Debug\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>bin\Release\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Images\about-logo.png" />
+    <None Remove="Images\app.ico" />
+    <None Remove="Images\connected.ico" />
+    <None Remove="Images\connecting-0.ico" />
+    <None Remove="Images\connecting-1.ico" />
+    <None Remove="Images\disconnected.ico" />
+    <None Remove="Images\error-0.ico" />
+    <None Remove="Images\error-1.ico" />
+    <None Remove="Images\error.ico" />
+    <None Remove="Images\working-0.ico" />
+    <None Remove="Images\working-1.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Images\about-logo.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\app.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\connected.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\connecting-0.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\connecting-1.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\disconnected.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\error-0.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\error-1.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\error.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\working-0.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\working-1.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Cryptography\Neon.Cryptography.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.Aws\Neon.Kube.Aws.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.Azure\Neon.Kube.Azure.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.Google\Neon.Kube.Google.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.Hosting\Neon.Kube.Hosting.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.HyperVLocal\Neon.Kube.HyperVLocal.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.HyperV\Neon.Kube.HyperV.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.Machine\Neon.Kube.Machine.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube.XenServer\Neon.Kube.XenServer.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.SSH.NET\Neon.SSH.NET.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
+</Project>
