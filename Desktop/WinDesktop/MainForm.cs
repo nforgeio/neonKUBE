@@ -69,7 +69,7 @@ namespace WinDesktop
         private AnimatedIcon        connectingAnimation;
         private AnimatedIcon        workingAnimation;
         private AnimatedIcon        errorAnimation;
-        private ContextMenu         contextMenu;
+        private ContextMenuStrip    contextMenuStrip;
         private bool                operationInProgress;
         private RemoteOperation     remoteOperation;
         private Stack<NotifyState>  notifyStack;
@@ -164,10 +164,10 @@ namespace WinDesktop
 
             SetBalloonText(Build.ProductName);
 
-            notifyIcon.Icon        = disconnectedIcon;
-            notifyIcon.ContextMenu = contextMenu = new ContextMenu();
-            notifyIcon.Visible     = true;
-            contextMenu.Popup     += Menu_Popup;
+            notifyIcon.Icon             = disconnectedIcon;
+            notifyIcon.ContextMenuStrip = contextMenuStrip = new ContextMenuStrip();
+            notifyIcon.Visible          = true;
+            contextMenuStrip.Opening    += ContextMenuOpening;
 
             // Setup a timer to periodically keep the UI in sync with any changes.
 
@@ -967,9 +967,9 @@ namespace WinDesktop
         /// </summary>
         /// <param name="sender">The sender.</param>
         /// <param name="args">The arguments.</param>
-        private void Menu_Popup(object sender, EventArgs args)
+        private void ContextMenuOpening(object sender, EventArgs args)
         {
-            contextMenu.MenuItems.Clear();
+            contextMenuStrip.Items.Clear();
 
             // Append submenus for each of the cluster contexts that have
             // neonKUBE extensions.  We're not going to try to manage 
@@ -988,13 +988,13 @@ namespace WinDesktop
 
             if (contexts.Length > 0)
             {
-                var contextsMenu = new MenuItem(loggedIn ? currentContextName : "Login to") { Checked = loggedIn, Enabled = !operationInProgress };
+                var contextMenu = new ToolStripMenuItem(loggedIn ? currentContextName : "Login to") { Checked = loggedIn, Enabled = !operationInProgress };
 
-                contextsMenu.RadioCheck = loggedIn;
+                contextMenu.Checked = loggedIn;
 
                 if (loggedIn)
                 {
-                    contextsMenu.MenuItems.Add(new MenuItem(currentContextName) { Checked = true, Enabled = !operationInProgress });
+                    contextMenu.DropDownItems.Add(new ToolStripMenuItem(currentContextName) { Checked = true, Enabled = !operationInProgress });
                 }
 
                 var addedContextsSeparator = false;
@@ -1003,47 +1003,47 @@ namespace WinDesktop
                 {
                     if (!addedContextsSeparator)
                     {
-                        contextsMenu.MenuItems.Add("-");
+                        contextMenu.DropDownItems.Add("-");
                         addedContextsSeparator = true;
                     }
 
-                    contextsMenu.MenuItems.Add(new MenuItem(context.Name, OnClusterContext) { Enabled = !operationInProgress });
+                    contextMenu.DropDownItems.Add(new ToolStripMenuItem(context.Name, null, OnClusterContext) { Enabled = !operationInProgress });
                 }
 
-                contextsMenu.MenuItems.Add("-");
-                contextsMenu.MenuItems.Add(new MenuItem("Logout", OnLogoutCommand) { Enabled = loggedIn && !operationInProgress });
+                contextMenu.DropDownItems.Add("-");
+                contextMenu.DropDownItems.Add(new ToolStripMenuItem("Logout", null, OnLogoutCommand) { Enabled = loggedIn && !operationInProgress });
 
-                contextMenu.MenuItems.Add(contextsMenu);
+                contextMenuStrip.Items.Add(contextMenu);
             }
 
             // Append cluster-specific menus.
 
             if (loggedIn)
             {
-                contextMenu.MenuItems.Add("-");
+                contextMenuStrip.Items.Add("-");
 
-                var dashboardsMenu = new MenuItem("Dashboard") { Enabled = loggedIn && !operationInProgress };
+                var dashboardsMenu = new ToolStripMenuItem("Dashboard") { Enabled = loggedIn && !operationInProgress };
 
-                dashboardsMenu.MenuItems.Add(new MenuItem("Kubernetes", OnKubernetesDashboardCommand) { Enabled = loggedIn && !operationInProgress });
-                dashboardsMenu.MenuItems.Add(new MenuItem("Kibana", OnKibanaDashboardCommand) { Enabled = loggedIn && !operationInProgress });
-                dashboardsMenu.MenuItems.Add(new MenuItem("Prometheus", OnPrometheusDashboardCommand) { Enabled = loggedIn && !operationInProgress });
-                dashboardsMenu.MenuItems.Add(new MenuItem("Kiali", OnKialiDashboardCommand) { Enabled = loggedIn && !operationInProgress });
-                dashboardsMenu.MenuItems.Add(new MenuItem("Grafana", OnGrafanaDashboardCommand) { Enabled = loggedIn && !operationInProgress });
+                dashboardsMenu.DropDownItems.Add(new ToolStripMenuItem("Kubernetes", null, OnKubernetesDashboardCommand) { Enabled = loggedIn && !operationInProgress });
+                dashboardsMenu.DropDownItems.Add(new ToolStripMenuItem("Kibana", null, OnKibanaDashboardCommand) { Enabled = loggedIn && !operationInProgress });
+                dashboardsMenu.DropDownItems.Add(new ToolStripMenuItem("Prometheus", null, OnPrometheusDashboardCommand) { Enabled = loggedIn && !operationInProgress });
+                dashboardsMenu.DropDownItems.Add(new ToolStripMenuItem("Kiali", null, OnKialiDashboardCommand) { Enabled = loggedIn && !operationInProgress });
+                dashboardsMenu.DropDownItems.Add(new ToolStripMenuItem("Grafana", null, OnGrafanaDashboardCommand) { Enabled = loggedIn && !operationInProgress });
 
-                contextMenu.MenuItems.Add(dashboardsMenu);
+                contextMenuStrip.Items.Add(dashboardsMenu);
             }
 
             // Append the static commands.
 
-            contextMenu.MenuItems.Add("-");
-            contextMenu.MenuItems.Add(new MenuItem("GitHub", OnGitHubCommand));
-            contextMenu.MenuItems.Add(new MenuItem("Help", OnHelpCommand));
-            contextMenu.MenuItems.Add(new MenuItem("About", OnAboutCommand));
-            contextMenu.MenuItems.Add("-");
-            contextMenu.MenuItems.Add(new MenuItem("Settings", OnSettingsCommand));
-            contextMenu.MenuItems.Add(new MenuItem("Check for Updates", OnCheckForUpdatesCommand) { Enabled = !operationInProgress });
-            contextMenu.MenuItems.Add("-");
-            contextMenu.MenuItems.Add(new MenuItem("Exit", OnExitCommand));
+            contextMenuStrip.Items.Add("-");
+            contextMenuStrip.Items.Add(new ToolStripMenuItem("GitHub", null, OnGitHubCommand));
+            contextMenuStrip.Items.Add(new ToolStripMenuItem("Help", null, OnHelpCommand));
+            contextMenuStrip.Items.Add(new ToolStripMenuItem("About", null, OnAboutCommand));
+            contextMenuStrip.Items.Add("-");
+            contextMenuStrip.Items.Add(new ToolStripMenuItem("Settings", null, OnSettingsCommand));
+            contextMenuStrip.Items.Add(new ToolStripMenuItem("Check for Updates", null, OnCheckForUpdatesCommand) { Enabled = !operationInProgress });
+            contextMenuStrip.Items.Add("-");
+            contextMenuStrip.Items.Add(new ToolStripMenuItem("Exit", null, OnExitCommand));
         }
 
         /// <summary>
@@ -1162,7 +1162,7 @@ namespace WinDesktop
         {
             // The cluster context name is the text of the sending menu item.
 
-            var menuItem    = (MenuItem)sender;
+            var menuItem    = (ToolStripMenuItem)sender;
             var contextName = menuItem.Text;
 
             StartOperation(connectingAnimation);
