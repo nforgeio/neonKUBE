@@ -31,7 +31,7 @@ namespace NeonBuild
     {
         private const string usage =
 @"
-Internal neonKUBE project build related utilities.
+Internal neonKUBE project build related utilities: v1.1
 
 neon-build clean [-all]
 -----------------------
