@@ -1041,6 +1041,7 @@ namespace WinDesktop
             contextMenuStrip.Items.Add(new ToolStripMenuItem("About", null, OnAboutCommand));
             contextMenuStrip.Items.Add("-");
             contextMenuStrip.Items.Add(new ToolStripMenuItem("Settings", null, OnSettingsCommand));
+            contextMenuStrip.Items.Add(new ToolStripMenuItem("Command", null, OnCmdCommand));
             contextMenuStrip.Items.Add(new ToolStripMenuItem("Check for Updates", null, OnCheckForUpdatesCommand) { Enabled = !operationInProgress });
             contextMenuStrip.Items.Add("-");
             contextMenuStrip.Items.Add(new ToolStripMenuItem("Exit", null, OnExitCommand));
@@ -1118,6 +1119,69 @@ namespace WinDesktop
         private void OnSettingsCommand(object sender, EventArgs args)
         {
             MessageBox.Show("$todo(jefflill): Not implemented yet.", Text, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+
+        /// <summary>
+        /// Implements the <b>Cmd Window</b> command.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="args">The arguments.</param>
+        /// <remarks>
+        /// <para>
+        /// This command opens a CMD window with the PATH environment variable specifying the
+        /// path to the neonDESKTOP installation folder with <b>kubectl.exe</b> before other
+        /// folders that may include other versions of <b>kubectl.exe</b>, like Docker.
+        /// </para>
+        /// <para>
+        /// Note that this will not update the PATH before launching the CMD window if
+        /// the neonDESKTOP installation folder cannot be found or if it doesn't include
+        /// <b>kubectl.exe</b>.  In this case, we'll just use the current PATH and live
+        /// with that.  This won't happen for real users who have installed neonDESKTOP,
+        /// just us neonKUBE developers messing with stuff.
+        /// </para>
+        /// </remarks>
+        private void OnCmdCommand(object sender, EventArgs args)
+        {
+            var neonProgramFolder = Environment.GetEnvironmentVariable("NEONKUBE_PROGRAM_FOLDER");
+            var orgPATH           = Environment.GetEnvironmentVariable("PATH");
+
+            try
+            {
+                if (!string.IsNullOrEmpty(neonProgramFolder) && File.Exists(Path.Combine(neonProgramFolder, "kubectl.exe")))
+                {
+                    // We found the neonKUBE installation folder so munge the path to make
+                    // it first in line.
+
+                    var pathFolders = orgPATH.Split(';', StringSplitOptions.RemoveEmptyEntries);
+                    var sbPATH      = new StringBuilder();
+
+                    sbPATH.AppendWithSeparator(neonProgramFolder, ";");
+
+                    foreach (var folder in pathFolders.Where(f => f != neonProgramFolder))
+                    {
+                        sbPATH.AppendWithSeparator(folder, ";");
+                    }
+
+                    Environment.SetEnvironmentVariable("PATH", sbPATH.ToString());
+
+                    // Open the CMD window.
+
+                    var startInfo = new ProcessStartInfo("cmd.exe", "")
+                    {
+                        CreateNoWindow   = false,
+                        WindowStyle      = ProcessWindowStyle.Normal,
+                        WorkingDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+                    };
+
+                    Process.Start(startInfo);
+                }
+            }
+            finally
+            {
+                // Restore the orignal PATH.
+
+                Environment.SetEnvironmentVariable("PATH", orgPATH);
+            }
         }
 
         /// <summary>
