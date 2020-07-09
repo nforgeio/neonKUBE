@@ -18,7 +18,9 @@ param
 "* cluster-manager:" + $tag
 "======================================="
 
-$appname = "cluster-manager"
+$appname      = "cluster-manager"
+$organization = DockerOrg
+$branch       = GitBranch
 
 # Copy the common scripts.
 
@@ -41,7 +43,7 @@ Exec { core-layers $appname "$pwd\bin" }
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "APPNAME=$appname" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "ORGANIZATION=$organization" --build-arg "APPNAME=$appname" . }
 
 # Clean up
 

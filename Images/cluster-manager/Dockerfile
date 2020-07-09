@@ -14,8 +14,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# ARGUMENTS:
+#
+#   ORGANIZATION    - The Docker Hub organization
 
-FROM        nkubedev/aspnet:master-3.1.0-bionic
+ARG         ORGANIZATION
+FROM        ${ORGANIZATION}/dotnet
 MAINTAINER  marcus@loopie.io
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
