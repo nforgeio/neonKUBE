@@ -405,9 +405,9 @@
       <Project>{468e440f-2284-483d-a54a-ec540c85f76e}</Project>
       <Name>Neon.Xunit</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Test.Neon.Models.Temporal\Test.Neon.Models.Temporal.csproj">
+    <ProjectReference Include="..\Test.Neon.Models.Cadence\Test.Neon.Models.Cadence.csproj">
       <Project>{f19ff67a-660d-4b3f-8590-01de5f14744d}</Project>
-      <Name>Test.Neon.Models.Temporal</Name>
+      <Name>Test.Neon.Models.Cadence</Name>
     </ProjectReference>
     <ProjectReference Include="..\Test.Neon.Models\Test.Neon.Models.csproj">
       <Project>{df8a6f39-7a8d-477f-8a19-8b467671b542}</Project>
