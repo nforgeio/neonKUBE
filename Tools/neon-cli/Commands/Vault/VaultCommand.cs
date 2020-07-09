@@ -60,7 +60,7 @@ sensitive files to developers, operators, and CI/CD build environments.
 This works by referencing named passwords stored in a secure location.
 These passwords are stored in the current user folder at:
 
-    %USERPROFILE\.neonkube\password     - on Windows
+    %USERPROFILE%\.neonkube\passwords   - on Windows
     $HOME/.neonkube/passwords           - on OS/X and Linux
 
 These files are encrypted at rest when possible (e.g. for Windows 10/PRO+).
