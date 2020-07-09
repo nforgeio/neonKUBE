@@ -22,6 +22,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{4442F1
 	ProjectSection(SolutionItems) = preProject
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
+		.password-name = .password-name
 		buildenv.cmd = buildenv.cmd
 		kube-version.txt = kube-version.txt
 		LICENSE = LICENSE
