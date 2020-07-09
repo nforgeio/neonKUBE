@@ -58,8 +58,8 @@ within the SOURCE file.
 
 NOTE: We explicitly don't support decrypting a file in-place to discourage
       temporarily decrypting a sensitive file within a source repository
-      and then potentially accidentially commiting the unencrypted file
-      (which is really easy to do).
+      and then accidentially commiting the unencrypted file, which is really
+      easy to do.
 ";
         /// <inheritdoc/>
         public override string[] Words
