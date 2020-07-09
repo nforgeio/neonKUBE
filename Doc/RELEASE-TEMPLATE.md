@@ -135,6 +135,12 @@ This package includes a fixture for running Temporal locally as a Docker contain
 
 **Changes:** No significant changes for this release.
 
+### Docker Images
+
+neonKUBE production Docker images can be found [here](https://hub.docker.com/orgs/nkubeio/repositories)
+
+**Changes:** No significant changes for this release.
+
 ### <img src="https://doc.neonkube.com/media/alpha.png"/> neonKUBE Desktop
 
 We're working on yet another Kubernetes distribution but this is still very much a work in progress.  Although we include the install binaries for this, we recommend that you folks avoid these until we're further along.
@@ -146,7 +152,7 @@ We're working on yet another Kubernetes distribution but this is still very much
   </tr>
   <tr>
     <td><img src="https://doc.neonkube.com/media/alpha.png"/></td>
-    <td><b>neonKUBE-setup-#.#.#.exe:</b> Installs the neonKUBE Desktop as well as the <b>neon-cli</b> command line tool.</td>
+    <td><b>neonKUBE-setup-#.#.#.exe:</b> installs the neonKUBE Desktop as well as the <b>neon-cli</b> command line tool.</td>
   </tr>
 </table>
 
@@ -174,19 +180,19 @@ Neon components are released using versions compatible with [Semantic Versioning
 <table>
   <tr>
     <td width="85px" align="center"><img src="https://doc.neonkube.com/media/release.png"/></td>
-    <td>indicates that the release is expected suitable for production use. Released binary versions follow the semantic version 2.0 specification and don't include a pre-release identifier.</td>
+    <td>Indicates that the release is expected suitable for production use. Released binary versions follow the semantic version 2.0 specification and don't include a pre-release identifier.</td>
   </tr>
   <tr>
     <td><img src="https://doc.neonkube.com/media/preview.png"/></td>
-    <td>indicates that the released binary still has some work in progress but is relatively stable and also that we expect that we we'll try to avoid making significant breaking changes to the API surface area. This may be suitable for production but you should take care.</td>
+    <td>Indicates that the released binary still has some work in progress but is relatively stable and also that we expect that we we'll try to avoid making significant breaking changes to the API surface area. This may be suitable for production but you should take care.</td>
   </tr>
   <tr>
     <td><img src="https://doc.neonkube.com/media/alpha.png"/></td>
-    <td>indicates that the released binary is not ready for general production use. There are likely to be serious bugs and implementation gaps and it is also very likely that the API may still see very significant changes. We do early alpha releases to give interested parties a chance to review what we're doing and also so that we and close partners can give these a spin in test and sometimes production.</td>
+    <td>Indicates that the released binary is not ready for general production use. There are likely to be serious bugs and implementation gaps and it is also very likely that the API may still see very significant changes. We do early alpha releases to give interested parties a chance to review what we're doing and also so that we and close partners can give these a spin in test and sometimes production.</td>
   </tr>
   <tr>
     <td><img src="https://doc.neonkube.com/media/internal.png"/></td>
-    <td>indicates that the released binary is not intended for general consumption. These are typically referenced by other neonKUBE libraries and tools. </td>
+    <td>Indicates that the released binary is not intended for general consumption. These are typically referenced by other neonKUBE libraries and tools. </td>
   </tr>
 </table>
 
