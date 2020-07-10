@@ -79,11 +79,11 @@ namespace Neon.Diagnostics
         /// Indicates a transient error, typically logged by a <see cref="Neon.Retry.IRetryPolicy"/>
         /// implementations.
         /// </summary>
-        Transient = 650,
+        Transient = 700,
 
         /// <summary>
         /// Describes detailed debug or diagnostic information.
         /// </summary>
-        Debug = 700
+        Debug = 800
     }
 }
