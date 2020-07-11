@@ -3422,7 +3422,7 @@ namespace TestCadence
                 await stub.SignalAsync("signal", "test");
                 await future.GetAsync();
 
-                return WorkflowUntypedChildFuture.HasExecuted;
+                return WorkflowUntypedChildFuture.HasExecuted && ReceivedSignal == "test";
             }
 
             public async Task<bool> WithResult()
@@ -3441,7 +3441,7 @@ namespace TestCadence
 
                 var result = await future.GetAsync();
 
-                return WorkflowUntypedChildFuture.HasExecuted && result == "Hello Jeff!";
+                return WorkflowUntypedChildFuture.HasExecuted && ReceivedSignal == "test" && result == "Hello Jeff!";
             }
 
             public async Task SignalAsync(string signal)
