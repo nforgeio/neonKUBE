@@ -535,7 +535,7 @@ namespace Neon.Cadence
             /// <param name="settings">The Cadence settings.</param>
             private void InitializeNetFramework(IPAddress address, CadenceSettings settings)
             {
-                var openPort         = NetHelper.GetUnusedTcpPort(address);
+                var openPort         = NetHelper.GetUnusedIpPort(address);
                 var listenerSettings = new WebListenerSettings();
 
                 ListenUri = new Uri($"http://{address}:{openPort}");
@@ -1461,7 +1461,7 @@ namespace Neon.Cadence
                     // Determine the port we'll have [cadence-proxy] listen on and then
                     // fire up the cadence-proxy process.
 
-                    proxyPort = !settings.DebugPrelaunched ? NetHelper.GetUnusedTcpPort(Address) : debugProxyPort;
+                    proxyPort = !settings.DebugPrelaunched ? NetHelper.GetUnusedIpPort(Address) : debugProxyPort;
 
                     if (!Settings.DebugPrelaunched && proxyProcess == null)
                     {

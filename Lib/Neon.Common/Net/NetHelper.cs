@@ -839,12 +839,12 @@ namespace Neon.Net
         }
 
         /// <summary>
-        /// Returns a free TCP port for a local IP address.
+        /// Returns a free TCP/UDP port for a local IP address.
         /// </summary>
         /// <param name="address">The IP address.</param>
         /// <returns>The free port number.</returns>
         /// <exception cref="NetworkException">Thrown when there are no available ports.</exception>
-        public static int GetUnusedTcpPort(IPAddress address)
+        public static int GetUnusedIpPort(IPAddress address)
         {
             Covenant.Requires<ArgumentNullException>(address != null, nameof(address));
 
