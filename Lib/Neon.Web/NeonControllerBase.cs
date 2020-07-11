@@ -74,6 +74,7 @@ namespace Neon.Web
     /// this easy.
     /// </para>
     /// </remarks>
+    [TypeFilter(typeof(LoggingExceptionFilter))]
     public abstract class NeonControllerBase : ControllerBase, INeonLogger
     {
         private INeonLogger     log;
