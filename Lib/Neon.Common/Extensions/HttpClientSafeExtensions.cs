@@ -22,6 +22,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -30,6 +31,7 @@ using System.Threading.Tasks;
 using Neon.Diagnostics;
 using Neon.Collections;
 using Neon.Tasks;
+using Neon.Net;
 
 namespace System.Net.Http
 {
@@ -39,13 +41,26 @@ namespace System.Net.Http
     /// </summary>
     public static partial class HttpClientExtensions
     {
-        private static HttpMethod deleteMethod  = new HttpMethod("DELETE");
-        private static HttpMethod headMethod    = new HttpMethod("HEAD");
-        private static HttpMethod optionsMethod = new HttpMethod("OPTIONS");
-        private static HttpMethod patchMethod   = new HttpMethod("PATCH");
+        /// <summary>
+        /// Ensures that an HTTP operation succedded but thrown an exception if it didn't.
+        /// </summary>
+        /// <param name="response">The response to be checked.</param>
+        /// <returns>The <paramref name="response"/> on success.</returns>
+        /// <exception cref="HttpException">Thrown for failures.</exception>
+        private static HttpResponseMessage EnsureSuccess(HttpResponseMessage response)
+        {
+            Covenant.Requires<ArgumentNullException>(response != null, nameof(response));
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpException($"{response.StatusCode}: {response.ReasonPhrase}", requestUri: response.RequestMessage.RequestUri.ToString());
+            }
+
+            return response;
+        }
 
         /// <summary>
-        /// Sends a GET request to the specified string URI.
+        /// Sends a GET request to the specified string URI ensuring that the operation succeeded.
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="requestUri">The request URI.</param>
@@ -58,7 +73,9 @@ namespace System.Net.Http
         /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The response.</returns>
         /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
-        public static async Task<HttpResponseMessage> GetAsync(
+        /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
+        /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        public static async Task<HttpResponseMessage> GetSafeAsync(
             this HttpClient         client, 
             Uri                     requestUri, 
             ArgDictionary           headers           = null,
@@ -83,11 +100,11 @@ namespace System.Net.Http
                 }
             }
 
-            return await client.SendAsync(request, completionOption, cancellationToken);
+            return EnsureSuccess(await client.SendAsync(request, completionOption, cancellationToken));
         }
 
         /// <summary>
-        /// Sends a GET request to a specified <see cref="Uri"/>.
+        /// Sends a GET request to a specified <see cref="Uri"/> ensuring that the operation succeeded.
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="requestUri">The request URI.</param>
@@ -100,7 +117,9 @@ namespace System.Net.Http
         /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The response.</returns>
         /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
-        public static async Task<HttpResponseMessage> GetAsync(
+        /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
+        /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        public static async Task<HttpResponseMessage> GetSafeAsync(
             this HttpClient         client, 
             string                  requestUri, 
             ArgDictionary           headers           = null,
@@ -125,11 +144,11 @@ namespace System.Net.Http
                 }
             }
 
-            return await client.SendAsync(request, completionOption, cancellationToken);
+            return EnsureSuccess(await client.SendAsync(request, completionOption, cancellationToken));
         }
 
         /// <summary>
-        /// Sends a GET to a specified string URI and returns the response body as a byte array.
+        /// Sends a GET to a specified string URI and returns the response body as a byte array ensuring that the operation succeeded.
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="requestUri">The request URI.</param>
@@ -137,7 +156,9 @@ namespace System.Net.Http
         /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The response byte array.</returns>
         /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
-        public static async Task<byte[]> GetByteArrayAsync(
+        /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
+        /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        public static async Task<byte[]> GetByteArraySafeAsync(
             this HttpClient         client, 
             string                  requestUri, 
             ArgDictionary           headers  = null,
@@ -160,13 +181,13 @@ namespace System.Net.Http
                 }
             }
 
-            var response = await client.SendAsync(request);
+            var response = EnsureSuccess(await client.SendAsync(request));
 
             return await response.Content.ReadAsByteArrayAsync();
         }
 
         /// <summary>
-        /// Sends a GET to a specified <see cref="Uri"/> and returns the response body as a byte array.
+        /// Sends a GET to a specified <see cref="Uri"/> and returns the response body as a byte array ensuring that the operation succeeded.
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="requestUri">The request URI.</param>
@@ -174,7 +195,9 @@ namespace System.Net.Http
         /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The response byte array.</returns>
         /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
-        public static async Task<byte[]> GetByteArrayAsync(
+        /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
+        /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        public static async Task<byte[]> GetByteArraySafeAsync(
             this HttpClient         client,
             Uri                     requestUri,
             ArgDictionary           headers  = null,
@@ -197,13 +220,13 @@ namespace System.Net.Http
                 }
             }
 
-            var response = await client.SendAsync(request);
+            var response = EnsureSuccess(await client.SendAsync(request));
 
             return await response.Content.ReadAsByteArrayAsync();
         }
 
         /// <summary>
-        /// Sends a GET to a specified string URI and returns the response body as a <see cref="Stream"/>.
+        /// Sends a GET to a specified string URI and returns the response body as a <see cref="Stream"/> ensuring that the operation succeeded.
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="requestUri">The request URI.</param>
@@ -211,7 +234,9 @@ namespace System.Net.Http
         /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The response stream.</returns>
         /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
-        public static async Task<Stream> GetStreamAsync(
+        /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
+        /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        public static async Task<Stream> GetStreamSafeAsync(
             this HttpClient         client, 
             string                  requestUri, 
             ArgDictionary           headers  = null,
@@ -234,13 +259,13 @@ namespace System.Net.Http
                 }
             }
 
-            var response = await client.SendAsync(request);
+            var response = EnsureSuccess(await client.SendAsync(request));
 
             return await response.Content.ReadAsStreamAsync();
         }
 
         /// <summary>
-        /// Sends a GET to a specified <see cref="Uri"/> and returns the response body as a <see cref="Stream"/>.
+        /// Sends a GET to a specified <see cref="Uri"/> and returns the response body as a <see cref="Stream"/> ensuring that the operation succeeded.
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="requestUri">The request URI.</param>
@@ -248,7 +273,9 @@ namespace System.Net.Http
         /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The response stream.</returns>
         /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
-        public static async Task<Stream> GetStreamAsync(
+        /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
+        /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        public static async Task<Stream> GetStreamSafeAsync(
             this HttpClient         client,
             Uri                     requestUri, 
             ArgDictionary           headers  = null,
@@ -271,13 +298,13 @@ namespace System.Net.Http
                 }
             }
 
-            var response = await client.SendAsync(request);
+            var response = EnsureSuccess(await client.SendAsync(request));
 
             return await response.Content.ReadAsStreamAsync();
         }
 
         /// <summary>
-        /// Sends a GET request to a string URI and returns the response as a string.
+        /// Sends a GET request to a string URI and returns the response as a string ensuring that the operation succeeded.
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="requestUri">The request URI.</param>
@@ -285,7 +312,9 @@ namespace System.Net.Http
         /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The response string.</returns>
         /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
-        public static async Task<string> GetStringAsync(
+        /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
+        /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        public static async Task<string> GetStringSafeAsync(
             this HttpClient         client, 
             string                  requestUri,
             ArgDictionary           headers  = null,
@@ -308,13 +337,13 @@ namespace System.Net.Http
                 }
             }
 
-            var response = await client.SendAsync(request);
+            var response = EnsureSuccess(await client.SendAsync(request));
 
             return await response.Content.ReadAsStringAsync();
         }
 
         /// <summary>
-        /// Sends a GET request to a <see cref="Uri"/> and returns the response as a string.
+        /// Sends a GET request to a <see cref="Uri"/> and returns the response as a string ensuring that the operation succeeded.
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="requestUri">The request URI.</param>
@@ -322,7 +351,9 @@ namespace System.Net.Http
         /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The response string.</returns>
         /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
-        public static async Task<string> GetStringAsync(
+        /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
+        /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        public static async Task<string> GetStringSafeAsync(
             this HttpClient         client,
             Uri                     requestUri,
             ArgDictionary           headers  = null,
@@ -345,13 +376,13 @@ namespace System.Net.Http
                 }
             }
 
-            var response = await client.SendAsync(request);
+            var response = EnsureSuccess(await client.SendAsync(request));
 
             return await response.Content.ReadAsStringAsync();
         }
 
         /// <summary>
-        /// Sends a POST request to a string URI.
+        /// Sends a POST request to a string URI ensuring that the operation succeeded.
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="requestUri">The request URI.</param>
@@ -365,7 +396,9 @@ namespace System.Net.Http
         /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The response.</returns>
         /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
-        public static async Task<HttpResponseMessage> PostAsync(
+        /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
+        /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        public static async Task<HttpResponseMessage> PostSafeAsync(
             this HttpClient         client, 
             string                  requestUri,
             HttpContent             content,
@@ -393,11 +426,11 @@ namespace System.Net.Http
                 }
             }
 
-            return await client.SendAsync(request, completionOption, cancellationToken);
+            return EnsureSuccess(await client.SendAsync(request, completionOption, cancellationToken));
         }
 
         /// <summary>
-        /// Sends a POST request to a <see cref="Uri"/>.
+        /// Sends a POST request to a <see cref="Uri"/> ensuring that the operation succeeded.
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="requestUri">The request URI.</param>
@@ -411,7 +444,9 @@ namespace System.Net.Http
         /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The response.</returns>
         /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
-        public static async Task<HttpResponseMessage> PostAsync(
+        /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
+        /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        public static async Task<HttpResponseMessage> PostSafeAsync(
             this HttpClient         client,
             Uri                     requestUri, 
             HttpContent             content, 
@@ -439,11 +474,11 @@ namespace System.Net.Http
                 }
             }
 
-            return await client.SendAsync(request, completionOption, cancellationToken);
+            return EnsureSuccess(await client.SendAsync(request, completionOption, cancellationToken));
         }
 
         /// <summary>
-        /// Sends a PUT request to a string URI.
+        /// Sends a PUT request to a string URI ensuring that the operation succeeded.
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="requestUri">The request URI.</param>
@@ -457,7 +492,9 @@ namespace System.Net.Http
         /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The response.</returns>
         /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
-        public static async Task<HttpResponseMessage> PutAsync(
+        /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
+        /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        public static async Task<HttpResponseMessage> PutSafeAsync(
             this HttpClient         client,
             string                  requestUri, 
             HttpContent             content, 
@@ -485,11 +522,11 @@ namespace System.Net.Http
                 }
             }
 
-            return await client.SendAsync(request, completionOption, cancellationToken);
+            return EnsureSuccess(await client.SendAsync(request, completionOption, cancellationToken));
         }
 
         /// <summary>
-        /// Sends a PUT request to a <see cref="Uri"/>.
+        /// Sends a PUT request to a <see cref="Uri"/> ensuring that the operation succeeded.
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="requestUri">The request URI.</param>
@@ -503,7 +540,9 @@ namespace System.Net.Http
         /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The response.</returns>
         /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
-        public static async Task<HttpResponseMessage> PutAsync(
+        /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
+        /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        public static async Task<HttpResponseMessage> PutSafeAsync(
             this HttpClient         client,
             Uri                     requestUri, 
             HttpContent             content, 
@@ -531,12 +570,12 @@ namespace System.Net.Http
                 }
             }
 
-            return await client.SendAsync(request, completionOption, cancellationToken);
+            return EnsureSuccess(await client.SendAsync(request, completionOption, cancellationToken));
         }
 
 
         /// <summary>
-        /// Sends a DELETE request to a string URI.
+        /// Sends a DELETE request to a string URI ensuring that the operation succeeded.
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="requestUri">The request URI.</param>
@@ -550,7 +589,9 @@ namespace System.Net.Http
         /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The response.</returns>
         /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
-        public static async Task<HttpResponseMessage> DeleteAsync(
+        /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
+        /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        public static async Task<HttpResponseMessage> DeleteSafeAsync(
             this HttpClient         client, 
             string                  requestUri, 
             HttpContent             content           = null, 
@@ -581,11 +622,11 @@ namespace System.Net.Http
                 }
             }
 
-            return await client.SendAsync(request, completionOption, cancellationToken);
+            return EnsureSuccess(await client.SendAsync(request, completionOption, cancellationToken));
         }
 
         /// <summary>
-        /// Sends a DELETE request to a <see cref="Uri"/>.
+        /// Sends a DELETE request to a <see cref="Uri"/> ensuring that the operation succeeded.
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="requestUri">The request URI.</param>
@@ -599,7 +640,9 @@ namespace System.Net.Http
         /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The response.</returns>
         /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
-        public static async Task<HttpResponseMessage> DeleteAsync(
+        /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
+        /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        public static async Task<HttpResponseMessage> DeleteSafeAsync(
             this HttpClient         client,
             Uri                     requestUri, 
             HttpContent             content           = null, 
@@ -630,11 +673,11 @@ namespace System.Net.Http
                 }
             }
 
-            return await client.SendAsync(request, completionOption, cancellationToken);
+            return EnsureSuccess(await client.SendAsync(request, completionOption, cancellationToken));
         }
 
         /// <summary>
-        /// Sends a PATCH request to a string URI.
+        /// Sends a PATCH request to a string URI ensuring that the operation succeeded.
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="requestUri">The request URI.</param>
@@ -648,7 +691,9 @@ namespace System.Net.Http
         /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The response.</returns>
         /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
-        public static async Task<HttpResponseMessage> PatchAsync(
+        /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
+        /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        public static async Task<HttpResponseMessage> PatchSafeAsync(
             this HttpClient         client, 
             string                  requestUri, 
             HttpContent             content, 
@@ -676,11 +721,11 @@ namespace System.Net.Http
                 }
             }
 
-            return await client.SendAsync(request, completionOption, cancellationToken);
+            return EnsureSuccess(await client.SendAsync(request, completionOption, cancellationToken));
         }
 
         /// <summary>
-        /// Sends a PATCH request to a <see cref="Uri"/>.
+        /// Sends a PATCH request to a <see cref="Uri"/> ensuring that the operation succeeded.
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="requestUri">The request URI.</param>
@@ -694,7 +739,9 @@ namespace System.Net.Http
         /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The response.</returns>
         /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
-        public static async Task<HttpResponseMessage> PatchAsync(
+        /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
+        /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        public static async Task<HttpResponseMessage> PatchSafeAsync(
             this HttpClient         client,
             Uri                     requestUri, 
             HttpContent             content, 
@@ -722,11 +769,11 @@ namespace System.Net.Http
                 }
             }
 
-            return await client.SendAsync(request, completionOption, cancellationToken);
+            return EnsureSuccess(await client.SendAsync(request, completionOption, cancellationToken));
         }
 
         /// <summary>
-        /// Sends a OPTIONS request to a string URI.
+        /// Sends a OPTIONS request to a string URI ensuring that the operation succeeded.
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="requestUri">The request URI.</param>
@@ -740,7 +787,9 @@ namespace System.Net.Http
         /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The response.</returns>
         /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
-        public static async Task<HttpResponseMessage> OptionsAsync(
+        /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
+        /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        public static async Task<HttpResponseMessage> OptionsSafeAsync(
             this HttpClient         client,
             string                  requestUri,
             HttpContent             content           = null, 
@@ -771,11 +820,11 @@ namespace System.Net.Http
                 }
             }
 
-            return await client.SendAsync(request, completionOption, cancellationToken);
+            return EnsureSuccess(await client.SendAsync(request, completionOption, cancellationToken));
         }
 
         /// <summary>
-        /// Sends a OPTIONS request to a <see cref="Uri"/>.
+        /// Sends a OPTIONS request to a <see cref="Uri"/> ensuring that the operation succeeded.
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="requestUri">The request URI.</param>
@@ -789,7 +838,9 @@ namespace System.Net.Http
         /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The response.</returns>
         /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
-        public static async Task<HttpResponseMessage> OptionsAsync(
+        /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
+        /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        public static async Task<HttpResponseMessage> OptionsSafeAsync(
             this HttpClient         client,
             Uri                     requestUri,
             HttpContent             content           = null,
@@ -820,11 +871,11 @@ namespace System.Net.Http
                 }
             }
 
-            return await client.SendAsync(request, completionOption, cancellationToken);
+            return EnsureSuccess(await client.SendAsync(request, completionOption, cancellationToken));
         }
 
         /// <summary>
-        /// Sends a HEAD request to a string URI.
+        /// Sends a HEAD request to a string URI ensuring that the operation succeeded.
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="requestUri">The request URI.</param>
@@ -838,7 +889,9 @@ namespace System.Net.Http
         /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The response.</returns>
         /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
-        public static async Task<HttpResponseMessage> HeadAsync(
+        /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
+        /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        public static async Task<HttpResponseMessage> HeadSafeAsync(
             this HttpClient         client,
             string                  requestUri, 
             HttpContent             content           = null, 
@@ -869,11 +922,11 @@ namespace System.Net.Http
                 }
             }
 
-            return await client.SendAsync(request, completionOption, cancellationToken);
+            return EnsureSuccess(await client.SendAsync(request, completionOption, cancellationToken));
         }
 
         /// <summary>
-        /// Sends a HEAD request to a <see cref="Uri"/>.
+        /// Sends a HEAD request to a <see cref="Uri"/> ensuring that the operation succeeded.
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="requestUri">The request URI.</param>
@@ -887,7 +940,9 @@ namespace System.Net.Http
         /// <param name="activity">Optional <see cref="LogActivity"/> whose ID is to be included in the request.</param>
         /// <returns>The response.</returns>
         /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
-        public static async Task<HttpResponseMessage> HeadAsync(
+        /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
+        /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        public static async Task<HttpResponseMessage> HeadSafeAsync(
             this HttpClient         client, 
             Uri                     requestUri, 
             HttpContent             content           = null, 
@@ -918,11 +973,11 @@ namespace System.Net.Http
                 }
             }
 
-            return await client.SendAsync(request, completionOption, cancellationToken);
+            return EnsureSuccess(await client.SendAsync(request, completionOption, cancellationToken));
         }
 
         /// <summary>
-        /// Sends an <see cref="HttpRequestMessage"/>.
+        /// Sends an <see cref="HttpRequestMessage"/> ensuring that the operation succeeded.
         /// </summary>
         /// <param name="client">The client.</param>
         /// <param name="request">The request.</param>
@@ -936,7 +991,9 @@ namespace System.Net.Http
         /// <returns>The response.</returns>
         /// <exception cref="ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
         /// <exception cref="InvalidOperationException">Thrown when the request has already been sent by the <see cref="HttpClient"/> class.</exception>
-        public static async Task<HttpResponseMessage> SendAsync(
+        /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
+        /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        public static async Task<HttpResponseMessage> SendSafeAsync(
             this HttpClient         client,
             HttpRequestMessage      request,
             ArgDictionary           headers           = null,
@@ -959,7 +1016,7 @@ namespace System.Net.Http
                 }
             }
 
-            return await client.SendAsync(request, completionOption, cancellationToken);
+            return EnsureSuccess(await client.SendAsync(request, completionOption, cancellationToken));
         }
     }
 }
