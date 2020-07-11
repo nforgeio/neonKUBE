@@ -125,6 +125,8 @@ func (a *ActivityMap) Add(activityID int64, activity Activity) int64 {
 func (a *ActivityMap) Remove(activityID int64) int64 {
 	a.Lock()
 	defer a.Unlock()
+	activity := a.Get(activityID)
+	activity.cancelFunc()
 	delete(a.activites, activityID)
 	return activityID
 }

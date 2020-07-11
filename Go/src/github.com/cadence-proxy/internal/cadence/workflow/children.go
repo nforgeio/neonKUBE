@@ -124,6 +124,8 @@ func (c *ChildMap) Add(childID int64, child *Child) int64 {
 func (c *ChildMap) Remove(childID int64) int64 {
 	c.Lock()
 	defer c.Unlock()
+	child := c.Get(childID)
+	child.cancelFunc()
 	delete(c.contexts, childID)
 	return childID
 }
