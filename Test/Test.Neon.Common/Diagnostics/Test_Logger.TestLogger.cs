@@ -239,7 +239,7 @@ namespace TestCommon
                 Assert.Empty(events.Where(evt => evt.LogLevel == LogLevel.Debug));
 
                 //-----------------------------------------
-                // LogLevel.Critical
+                // LogLevel.Warn
 
                 TestLogger.ClearEvents();
 

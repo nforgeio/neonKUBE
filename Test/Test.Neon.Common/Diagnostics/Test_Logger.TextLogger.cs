@@ -230,7 +230,7 @@ namespace TestCommon
                 Assert.Empty(lines.Where(line => line.Contains("[DEBUG]")));
 
                 //-----------------------------------------
-                // LogLevel.Critical
+                // LogLevel.Warn
 
                 logBuilder.Clear();
 
