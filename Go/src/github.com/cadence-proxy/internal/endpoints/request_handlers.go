@@ -1395,16 +1395,12 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 	ctx, cancel := workflow.WithCancel(ctx)
 	childFuture := workflow.ExecuteChildWorkflow(ctx, workflowName, request.GetArgs())
 
-	// Send ACK: Commented out because its no longer needed.
-	// op := sendFutureACK(contextID, requestID, clientID)
-	// <-op.GetChannel()
-
 	// create the new Child
 	// add the ChildWorkflowFuture and the cancel func to the
 	// Childs map in the parent workflow's entry
 	// in the WorkflowContexts map
-	cctx := proxyworkflow.NewChild(childFuture, cancel)
-	childID := wectx.AddChild(wectx.NextChildID(), cctx)
+	child := proxyworkflow.NewChild(childFuture, cancel)
+	childID := wectx.AddChild(wectx.NextChildID(), child)
 
 	// get the child workflow execution
 	childWE := new(workflow.Execution)
@@ -1438,8 +1434,8 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 		return reply
 	}
 
-	cctx := wectx.GetChild(childID)
-	if cctx == nil {
+	child := wectx.GetChild(childID)
+	if child == nil {
 		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
 		return reply
 	}
@@ -1450,7 +1446,7 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 
 	// wait on the child workflow
 	var result []byte
-	if err := cctx.GetFuture().Get(ctx, &result); err != nil {
+	if err := child.GetFuture().Get(ctx, &result); err != nil {
 		var cadenceError *proxyerror.CadenceError
 		if isCanceledErr(err) {
 			cadenceError = proxyerror.NewCadenceError(err, proxyerror.Cancelled)
@@ -1494,8 +1490,8 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 		return reply
 	}
 
-	cctx := wectx.GetChild(childID)
-	if cctx == nil {
+	child := wectx.GetChild(childID)
+	if child == nil {
 		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
 		return reply
 	}
@@ -1505,7 +1501,7 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 	setReplayStatus(ctx, reply)
 
 	// signal the child workflow
-	future := cctx.GetFuture().SignalChildWorkflow(
+	future := child.GetFuture().SignalChildWorkflow(
 		ctx,
 		signalName,
 		request.GetSignalArgs())
@@ -1546,8 +1542,8 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 		return reply
 	}
 
-	cctx := wectx.GetChild(childID)
-	if cctx == nil {
+	child := wectx.GetChild(childID)
+	if child == nil {
 		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
 		return reply
 	}
@@ -1557,7 +1553,7 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 
 	// get cancel function
 	// call the cancel function
-	cancel := cctx.GetCancelFunction()
+	cancel := child.GetCancelFunction()
 	cancel()
 
 	buildReply(reply, nil)
