@@ -51,8 +51,13 @@ namespace Neon.Kube
         /// <param name="cluster">The cluster being managed.</param>
         /// <param name="setupInfo">Specifies the cluster setup information.</param>
         /// <param name="logFolder">
+        /// <para>
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
+        /// </para>
+        /// <note>
+        /// Specific hosting managers may choose to ignore this when it doesn't make sense.
+        /// </note>
         /// </param>
         /// <returns>
         /// The <see cref="HostingManager"/> or <c>null</c> if no hosting manager

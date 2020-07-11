@@ -154,7 +154,6 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-
             branch = commandLine.GetOption("--branch") ?? "master";
 
             var contextName = KubeContextName.Parse(commandLine.Arguments[0]);

@@ -1559,11 +1559,13 @@ public class ISOFile
 
         /// <summary>
         /// Creates an ISO file containing the <b>neon-node-prep.sh</b> script that 
-        /// will provide the information to <b>cloud-init</b> when cluster nodes
-        /// are prepared on non-cloud virtualization hosts like Hyper-V and XenServer.
+        /// will be used for confguring the node on first boot.  This includes disabling
+        /// the APT package update services, setting a secure password for the [sysadmin]
+        /// account, and configuring the network interface with the configured static IP.
         /// </summary>
-        /// <param name="clusterDefinition"></param>
-        /// <param name="nodeDefinition"></param>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="nodeDefinition">The node definition.</param>
+        /// <param name="securePassword">The new secure SSH password.</param>
         /// <returns>A <see cref="TempFile"/> that references the generated ISO file.</returns>
         /// <remarks>
         /// <para>
@@ -1571,9 +1573,7 @@ public class ISOFile
         /// insert the ISO into the node VM's DVD/CD drive before booting the node
         /// for the first time.  The <b>neon-node-prep</b> service configured on
         /// the corresponding node templates will look for this DVD and script and
-        /// execute it early during the node boot process, before <b>cloud-init</b>
-        /// runs.  When <b>cloud-init</b> runs, it will complete the basic node
-        /// preparation.
+        /// execute it early during the node boot process.
         /// </para>
         /// <para>
         /// The ISO file reference is returned as a <see cref="TempFile"/>.  The
@@ -1583,8 +1583,13 @@ public class ISOFile
         /// </remarks>
         public static TempFile CreateNodePrepIso(
             ClusterDefinition       clusterDefinition,
-            NodeDefinition          nodeDefinition)
+            NodeDefinition          nodeDefinition,
+            string                  securePassword)
         {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<ArgumentNullException>(nodeDefinition != null, nameof(nodeDefinition));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(securePassword), nameof(securePassword));
+
             var address       = nodeDefinition.PrivateAddress;
             var gateway       = clusterDefinition.Network.Gateway;
             var premiseSubnet = NetworkCidr.Parse(clusterDefinition.Network.PremiseSubnet);
@@ -1600,12 +1605,12 @@ public class ISOFile
 
             var nodePrepScript =
 $@"# This script is called by the [neon-node-prep] service when the prep
-# floppy is inserted on first boot.  This script handles configuring the
+# DVD is inserted on first boot.  This script handles configuring the
 # network.
 #
-# The first parameter will be passed as the path where the floppy is mounted.
+# The first parameter will be passed as the path where the DVD is mounted.
 
-floppyFolder=${1}
+mountFolder=${{1}}
 
 #------------------------------------------------------------------------------
 # Disable the [apt-timer] and [apt-daily] services.  We're doing this 
@@ -1624,6 +1629,14 @@ systemctl mask apt-daily.timer
 
 systemctl stop apt-daily.service
 systemctl mask apt-daily.service
+
+#------------------------------------------------------------------------------
+# Change the [sysadmin] user password from the hardcoded [sysadmin0000] password
+# to something secure.  Doing this here before the network is configured means 
+# that there's no time when bad guys can SSH into the node using the insecure
+# password.
+
+echo 'sysadmin:{securePassword}' | chpasswd
 
 #------------------------------------------------------------------------------
 # Configure the network.
@@ -1689,6 +1702,13 @@ exit 0
                 return isoFile;
             }
         }
+
+#if NO_BUILD
+        // $note(jefflill):
+        //
+        // I'm commenting this out because we went with DVDs rather than floppy discs
+        // for first boot node node configuration on hypervisors but I want to keep
+        // this around in case we want to do something like this again in the future.
 
         /// <summary>
         /// Creates an floppy VFD file containing the <b>neon-node-prep.sh</b> script that 
@@ -1930,5 +1950,6 @@ exit 0
 
             return vfdFile;
         }
+#endif // NO_BUILD
     }
 }
