@@ -49,64 +49,55 @@ namespace Test.Neon.Web.ControllerBase
 
     public class TestController : NeonControllerBase
     {
-        [HttpGet]
-        [Route("/LogCritical")]
+        [HttpGet("/NeonControllerBaseLogCritical")]
         public void LogCritical()
         {
             LogCritical("critical");
         }
 
-        [HttpGet]
-        [Route("/LogSError")]
+        [HttpGet("/NeonControllerBaseLogSError")]
         public void LogSError()
         {
             LogSError("serror");
         }
 
-        [HttpGet]
-        [Route("/LogError")]
+        [HttpGet("/NeonControllerBaseLogError")]
         public void LogError()
         {
             LogError("error");
         }
 
-        [HttpGet]
-        [Route("/LogWarn")]
+        [HttpGet("/NeonControllerBaseLogWarn")]
         public void LogWarn()
         {
             LogWarn("warn");
         }
 
-        [HttpGet]
-        [Route("/LogSInfo")]
+        [HttpGet("/NeonControllerBaseLogSInfo")]
         public void LogSInfo()
         {
             LogSInfo("sinfo");
         }
 
-        [HttpGet]
-        [Route("/LogInfo")]
+        [HttpGet("/NeonControllerBaseLogInfo")]
         public void LogInfo()
         {
             LogInfo("info");
         }
 
-        [HttpGet]
-        [Route("/LogTransient")]
+        [HttpGet("/NeonControllerBaseLogTransient")]
         public void LogTransient()
         {
             LogTransient("transient");
         }
 
-        [HttpGet]
-        [Route("/LogDebug")]
+        [HttpGet("/NeonControllerBaseLogDebug")]
         public void LogDebug()
         {
             LogDebug("debug");
         }
 
-        [HttpGet]
-        [Route("/ThrowException")]
+        [HttpGet("/NeonControllerBaseThrowException")]
         public void ThrowException()
         {
             // Throw an unhandled exception.
@@ -127,7 +118,7 @@ namespace Test.Neon.Web.ControllerBase
         public void ConfigureServices(IServiceCollection services)
         {
             services
-                .AddMvc()
+                .AddControllers()
                 .AddNeon();
         }
 
@@ -197,14 +188,14 @@ namespace Test.Neon.Web.ControllerBase
 
                 logManager.LogLevel = LogLevel.None;
 
-                await httpClient.GetSafeAsync("/LogCritical");
-                await httpClient.GetSafeAsync("/LogSError");
-                await httpClient.GetSafeAsync("/LogError");
-                await httpClient.GetSafeAsync("/LogWarn");
-                await httpClient.GetSafeAsync("/LogSInfo");
-                await httpClient.GetSafeAsync("/LogInfo");
-                await httpClient.GetSafeAsync("/LogTransient");
-                await httpClient.GetSafeAsync("/LogDebug");
+                await httpClient.GetSafeAsync("/NeonController/LogCritical");
+                await httpClient.GetSafeAsync("/NeonController/LogSError");
+                await httpClient.GetSafeAsync("/NeonController/LogError");
+                await httpClient.GetSafeAsync("/NeonController/LogWarn");
+                await httpClient.GetSafeAsync("/NeonController/LogSInfo");
+                await httpClient.GetSafeAsync("/NeonController/LogInfo");
+                await httpClient.GetSafeAsync("/NeonController/LogTransient");
+                await httpClient.GetSafeAsync("/NeonController/LogDebug");
 
                 var events = TestLogger.GetEvents();
 
@@ -224,14 +215,14 @@ namespace Test.Neon.Web.ControllerBase
 
                 logManager.LogLevel = LogLevel.Critical;
 
-                await httpClient.GetSafeAsync("/LogCritical");
-                await httpClient.GetSafeAsync("/LogSError");
-                await httpClient.GetSafeAsync("/LogError");
-                await httpClient.GetSafeAsync("/LogWarn");
-                await httpClient.GetSafeAsync("/LogSInfo");
-                await httpClient.GetSafeAsync("/LogInfo");
-                await httpClient.GetSafeAsync("/LogTransient");
-                await httpClient.GetSafeAsync("/LogDebug");
+                await httpClient.GetSafeAsync("/NeonController/LogCritical");
+                await httpClient.GetSafeAsync("/NeonController/LogSError");
+                await httpClient.GetSafeAsync("/NeonController/LogError");
+                await httpClient.GetSafeAsync("/NeonController/LogWarn");
+                await httpClient.GetSafeAsync("/NeonController/LogSInfo");
+                await httpClient.GetSafeAsync("/NeonController/LogInfo");
+                await httpClient.GetSafeAsync("/NeonController/LogTransient");
+                await httpClient.GetSafeAsync("/NeonController/LogDebug");
 
                 events = TestLogger.GetEvents();
 
@@ -251,14 +242,14 @@ namespace Test.Neon.Web.ControllerBase
 
                 logManager.LogLevel = LogLevel.SError;
 
-                await httpClient.GetSafeAsync("/LogCritical");
-                await httpClient.GetSafeAsync("/LogSError");
-                await httpClient.GetSafeAsync("/LogError");
-                await httpClient.GetSafeAsync("/LogWarn");
-                await httpClient.GetSafeAsync("/LogSInfo");
-                await httpClient.GetSafeAsync("/LogInfo");
-                await httpClient.GetSafeAsync("/LogTransient");
-                await httpClient.GetSafeAsync("/LogDebug");
+                await httpClient.GetSafeAsync("/NeonController/LogCritical");
+                await httpClient.GetSafeAsync("/NeonController/LogSError");
+                await httpClient.GetSafeAsync("/NeonController/LogError");
+                await httpClient.GetSafeAsync("/NeonController/LogWarn");
+                await httpClient.GetSafeAsync("/NeonController/LogSInfo");
+                await httpClient.GetSafeAsync("/NeonController/LogInfo");
+                await httpClient.GetSafeAsync("/NeonController/LogTransient");
+                await httpClient.GetSafeAsync("/NeonController/LogDebug");
 
                 events = TestLogger.GetEvents();
 
@@ -278,14 +269,14 @@ namespace Test.Neon.Web.ControllerBase
 
                 logManager.LogLevel = LogLevel.Error;
 
-                await httpClient.GetSafeAsync("/LogCritical");
-                await httpClient.GetSafeAsync("/LogSError");
-                await httpClient.GetSafeAsync("/LogError");
-                await httpClient.GetSafeAsync("/LogWarn");
-                await httpClient.GetSafeAsync("/LogSInfo");
-                await httpClient.GetSafeAsync("/LogInfo");
-                await httpClient.GetSafeAsync("/LogTransient");
-                await httpClient.GetSafeAsync("/LogDebug");
+                await httpClient.GetSafeAsync("/NeonController/LogCritical");
+                await httpClient.GetSafeAsync("/NeonController/LogSError");
+                await httpClient.GetSafeAsync("/NeonController/LogError");
+                await httpClient.GetSafeAsync("/NeonController/LogWarn");
+                await httpClient.GetSafeAsync("/NeonController/LogSInfo");
+                await httpClient.GetSafeAsync("/NeonController/LogInfo");
+                await httpClient.GetSafeAsync("/NeonController/LogTransient");
+                await httpClient.GetSafeAsync("/NeonController/LogDebug");
 
                 events = TestLogger.GetEvents();
 
@@ -305,14 +296,14 @@ namespace Test.Neon.Web.ControllerBase
 
                 logManager.LogLevel = LogLevel.Warn;
 
-                await httpClient.GetSafeAsync("/LogCritical");
-                await httpClient.GetSafeAsync("/LogSError");
-                await httpClient.GetSafeAsync("/LogError");
-                await httpClient.GetSafeAsync("/LogWarn");
-                await httpClient.GetSafeAsync("/LogSInfo");
-                await httpClient.GetSafeAsync("/LogInfo");
-                await httpClient.GetSafeAsync("/LogTransient");
-                await httpClient.GetSafeAsync("/LogDebug");
+                await httpClient.GetSafeAsync("/NeonController/LogCritical");
+                await httpClient.GetSafeAsync("/NeonController/LogSError");
+                await httpClient.GetSafeAsync("/NeonController/LogError");
+                await httpClient.GetSafeAsync("/NeonController/LogWarn");
+                await httpClient.GetSafeAsync("/NeonController/LogSInfo");
+                await httpClient.GetSafeAsync("/NeonController/LogInfo");
+                await httpClient.GetSafeAsync("/NeonController/LogTransient");
+                await httpClient.GetSafeAsync("/NeonController/LogDebug");
 
                 events = TestLogger.GetEvents();
 
@@ -332,14 +323,14 @@ namespace Test.Neon.Web.ControllerBase
 
                 logManager.LogLevel = LogLevel.SInfo;
 
-                await httpClient.GetSafeAsync("/LogCritical");
-                await httpClient.GetSafeAsync("/LogSError");
-                await httpClient.GetSafeAsync("/LogError");
-                await httpClient.GetSafeAsync("/LogWarn");
-                await httpClient.GetSafeAsync("/LogSInfo");
-                await httpClient.GetSafeAsync("/LogInfo");
-                await httpClient.GetSafeAsync("/LogTransient");
-                await httpClient.GetSafeAsync("/LogDebug");
+                await httpClient.GetSafeAsync("/NeonController/LogCritical");
+                await httpClient.GetSafeAsync("/NeonController/LogSError");
+                await httpClient.GetSafeAsync("/NeonController/LogError");
+                await httpClient.GetSafeAsync("/NeonController/LogWarn");
+                await httpClient.GetSafeAsync("/NeonController/LogSInfo");
+                await httpClient.GetSafeAsync("/NeonController/LogInfo");
+                await httpClient.GetSafeAsync("/NeonController/LogTransient");
+                await httpClient.GetSafeAsync("/NeonController/LogDebug");
 
                 events = TestLogger.GetEvents();
 
@@ -359,14 +350,14 @@ namespace Test.Neon.Web.ControllerBase
 
                 logManager.LogLevel = LogLevel.Info;
 
-                await httpClient.GetSafeAsync("/LogCritical");
-                await httpClient.GetSafeAsync("/LogSError");
-                await httpClient.GetSafeAsync("/LogError");
-                await httpClient.GetSafeAsync("/LogWarn");
-                await httpClient.GetSafeAsync("/LogSInfo");
-                await httpClient.GetSafeAsync("/LogInfo");
-                await httpClient.GetSafeAsync("/LogTransient");
-                await httpClient.GetSafeAsync("/LogDebug");
+                await httpClient.GetSafeAsync("/NeonController/LogCritical");
+                await httpClient.GetSafeAsync("/NeonController/LogSError");
+                await httpClient.GetSafeAsync("/NeonController/LogError");
+                await httpClient.GetSafeAsync("/NeonController/LogWarn");
+                await httpClient.GetSafeAsync("/NeonController/LogSInfo");
+                await httpClient.GetSafeAsync("/NeonController/LogInfo");
+                await httpClient.GetSafeAsync("/NeonController/LogTransient");
+                await httpClient.GetSafeAsync("/NeonController/LogDebug");
 
                 events = TestLogger.GetEvents();
 
@@ -386,14 +377,14 @@ namespace Test.Neon.Web.ControllerBase
 
                 logManager.LogLevel = LogLevel.Transient;
 
-                await httpClient.GetSafeAsync("/LogCritical");
-                await httpClient.GetSafeAsync("/LogSError");
-                await httpClient.GetSafeAsync("/LogError");
-                await httpClient.GetSafeAsync("/LogWarn");
-                await httpClient.GetSafeAsync("/LogSInfo");
-                await httpClient.GetSafeAsync("/LogInfo");
-                await httpClient.GetSafeAsync("/LogTransient");
-                await httpClient.GetSafeAsync("/LogDebug");
+                await httpClient.GetSafeAsync("/NeonController/LogCritical");
+                await httpClient.GetSafeAsync("/NeonController/LogSError");
+                await httpClient.GetSafeAsync("/NeonController/LogError");
+                await httpClient.GetSafeAsync("/NeonController/LogWarn");
+                await httpClient.GetSafeAsync("/NeonController/LogSInfo");
+                await httpClient.GetSafeAsync("/NeonController/LogInfo");
+                await httpClient.GetSafeAsync("/NeonController/LogTransient");
+                await httpClient.GetSafeAsync("/NeonController/LogDebug");
 
                 events = TestLogger.GetEvents();
 
@@ -413,14 +404,14 @@ namespace Test.Neon.Web.ControllerBase
 
                 logManager.LogLevel = LogLevel.Debug;
 
-                await httpClient.GetSafeAsync("/LogCritical");
-                await httpClient.GetSafeAsync("/LogSError");
-                await httpClient.GetSafeAsync("/LogError");
-                await httpClient.GetSafeAsync("/LogWarn");
-                await httpClient.GetSafeAsync("/LogSInfo");
-                await httpClient.GetSafeAsync("/LogInfo");
-                await httpClient.GetSafeAsync("/LogTransient");
-                await httpClient.GetSafeAsync("/LogDebug");
+                await httpClient.GetSafeAsync("/NeonController/LogCritical");
+                await httpClient.GetSafeAsync("/NeonController/LogSError");
+                await httpClient.GetSafeAsync("/NeonController/LogError");
+                await httpClient.GetSafeAsync("/NeonController/LogWarn");
+                await httpClient.GetSafeAsync("/NeonController/LogSInfo");
+                await httpClient.GetSafeAsync("/NeonController/LogInfo");
+                await httpClient.GetSafeAsync("/NeonController/LogTransient");
+                await httpClient.GetSafeAsync("/NeonController/LogDebug");
 
                 events = TestLogger.GetEvents();
 
@@ -434,13 +425,16 @@ namespace Test.Neon.Web.ControllerBase
                 Assert.NotEmpty(events.Where(evt => evt.LogLevel == LogLevel.Debug));
 
                 //-----------------------------------------
-                // Verify that an unhandled exception is logged as an error.
+                // Verify that an unhandled exception is logged as an error.  Note
+                // that this request is going to throw an internal server exception
+                // because we're throwing an unhandled exception, so we'll use the
+                // non-safe GET method.
 
                 TestLogger.ClearEvents();
 
                 logManager.LogLevel = LogLevel.Debug;
 
-                await httpClient.GetSafeAsync("/ThrowException");
+                await httpClient.GetAsync("/NeonController/ThrowException");
 
                 events = TestLogger.GetEvents();
 
