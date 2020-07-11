@@ -25,116 +25,116 @@ import (
 
 type (
 
-	// ChildContextsMap thread-safe map of
+	// ChildMap thread-safe map of
 	// ChildContexts to their contextID's
-	ChildContextsMap struct {
-		sync.Mutex                         // protects read and writes to the map
-		contexts   map[int64]*ChildContext // map of childID to ChildContext
+	ChildMap struct {
+		sync.Mutex                  // protects read and writes to the map
+		contexts   map[int64]*Child // map of childID to ChildContext
 	}
 
-	// ChildContext represents a cadence child workflow execution.
+	// Child represents a cadence child workflow execution.
 	// It holds a workflow Future and cancellation function
-	ChildContext struct {
+	Child struct {
 		future     workflow.ChildWorkflowFuture // cadence ChildWorkflowFuture
 		cancelFunc workflow.CancelFunc          // cadence workflow CancelFunc for canceling the child
 	}
 )
 
 //----------------------------------------------------------------------------
-// ChildContext instance methods
+// Child instance methods
 
-// NewChildContext is the default constructor
-// for a ChildContext struct
+// NewChild is the default constructor
+// for a Child struct
 //
 // param future workflow.ChildWorkflowFuture -> the ChildWorkflowFuture associated
 // with an instance of a child workflow.
 //
 // param cancel workflow.CancelFunc -> the child workflow's cancellation function.
 //
-// returns *ChildContext -> pointer to a newly initialized
-// ChildContext in memory
-func NewChildContext(future workflow.ChildWorkflowFuture, cancel workflow.CancelFunc) *ChildContext {
-	cctx := new(ChildContext)
-	cctx.SetFuture(future)
-	cctx.SetCancelFunction(cancel)
-	return cctx
+// returns *Child -> pointer to a newly initialized
+// Child in memory
+func NewChild(future workflow.ChildWorkflowFuture, cancel workflow.CancelFunc) *Child {
+	child := new(Child)
+	child.SetFuture(future)
+	child.SetCancelFunction(cancel)
+	return child
 }
 
-// GetCancelFunction gets a ChildContext's context cancel function
+// GetCancelFunction gets a Child's context cancel function
 //
 // returns workflow.CancelFunc -> a cadence workflow context cancel function
-func (cctx *ChildContext) GetCancelFunction() workflow.CancelFunc {
-	return cctx.cancelFunc
+func (child *Child) GetCancelFunction() workflow.CancelFunc {
+	return child.cancelFunc
 }
 
-// SetCancelFunction sets a ChildContext's cancel function
+// SetCancelFunction sets a Child's cancel function
 //
 // param value workflow.CancelFunc -> a cadence workflow context cancel function
-func (cctx *ChildContext) SetCancelFunction(value workflow.CancelFunc) {
-	cctx.cancelFunc = value
+func (child *Child) SetCancelFunction(value workflow.CancelFunc) {
+	child.cancelFunc = value
 }
 
-// GetFuture gets a ChildContext's workflow.ChildWorkflowFuture
+// GetFuture gets a Child's workflow.ChildWorkflowFuture
 //
 // returns workflow.ChildWorkflowFuture -> a cadence workflow.ChildWorkflowFuture
-func (cctx *ChildContext) GetFuture() workflow.ChildWorkflowFuture {
-	return cctx.future
+func (child *Child) GetFuture() workflow.ChildWorkflowFuture {
+	return child.future
 }
 
-// SetFuture sets a ChildContext's workflow.ChildWorkflowFuture
+// SetFuture sets a Child's workflow.ChildWorkflowFuture
 //
 // param value workflow.ChildWorkflowFuture -> a cadence workflow.ChildWorkflowFuture to be
-// set as a ChildContext's cadence workflow.ChildWorkflowFuture
-func (cctx *ChildContext) SetFuture(value workflow.ChildWorkflowFuture) {
-	cctx.future = value
+// set as a Child's cadence workflow.ChildWorkflowFuture
+func (child *Child) SetFuture(value workflow.ChildWorkflowFuture) {
+	child.future = value
 }
 
 //----------------------------------------------------------------------------
-// ChildContextsMap instance methods
+// ChildMap instance methods
 
-// NewChildContextsMap is the constructor for an ChildContextsMap
-func NewChildContextsMap() *ChildContextsMap {
-	o := new(ChildContextsMap)
-	o.contexts = make(map[int64]*ChildContext)
+// NewChildMap is the constructor for an ChildMap
+func NewChildMap() *ChildMap {
+	o := new(ChildMap)
+	o.contexts = make(map[int64]*Child)
 	return o
 }
 
 // Add adds a new cadence context and its corresponding ContextId into
-// the ChildContextsMap map.  This method is thread-safe.
+// the ChildMap map.  This method is thread-safe.
 //
 // param childID int64 -> the long childID. This will be the mapped key.
 //
-// param cctx *ChildContext -> pointer to the new ChildContex used to
+// param child *Child -> pointer to the new ChildContex used to
 // execute child workflow function. This will be the mapped value
 //
-// returns int64 -> the long childID of the newly added ChildContext.
-func (c *ChildContextsMap) Add(childID int64, cctx *ChildContext) int64 {
+// returns int64 -> the long childID of the newly added Child.
+func (c *ChildMap) Add(childID int64, child *Child) int64 {
 	c.Lock()
 	defer c.Unlock()
-	c.contexts[childID] = cctx
+	c.contexts[childID] = child
 	return childID
 }
 
-// Remove removes key/value entry from the ChildContextsMap map at the specified
+// Remove removes key/value entry from the ChildMap map at the specified
 // ContextId.  This is a thread-safe method.
 //
 // param childID int64 -> the long childID. This will be the mapped key.
 //
-// returns int64 -> the long childID of the removed ChildContext.
-func (c *ChildContextsMap) Remove(childID int64) int64 {
+// returns int64 -> the long childID of the removed Child.
+func (c *ChildMap) Remove(childID int64) int64 {
 	c.Lock()
 	defer c.Unlock()
 	delete(c.contexts, childID)
 	return childID
 }
 
-// Get gets a ChildContext from the ChildContextsMap at the specified
+// Get gets a Child from the ChildMap at the specified
 // ContextID.  This method is thread-safe.
 //
 // param childID int64 -> the long childID. This will be the mapped key.
 //
-// returns *ChildContext -> ChildContext at the specified childID.
-func (c *ChildContextsMap) Get(childID int64) *ChildContext {
+// returns *Child -> Child at the specified childID.
+func (c *ChildMap) Get(childID int64) *Child {
 	c.Lock()
 	defer c.Unlock()
 	return c.contexts[childID]

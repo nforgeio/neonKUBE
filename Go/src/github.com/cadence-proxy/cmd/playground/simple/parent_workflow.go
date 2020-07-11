@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"time"
-
-	"go.uber.org/zap"
 
 	"go.uber.org/cadence/activity"
 	"go.uber.org/cadence/workflow"
@@ -22,38 +20,44 @@ const ApplicationName = "simpleGroup"
 // and activity function handlers.
 func init() {
 	workflow.Register(SampleWorkflow)
-	activity.Register(getGreetingActivity)
-	activity.Register(getNameActivity)
-	activity.Register(sayGreetingActivity)
+	activity.Register(waitForCompletionActivity)
 }
 
 // SampleWorkflow Workflow Decider.
 func SampleWorkflow(ctx workflow.Context) (string, error) {
-
-	// workflow sleep
-	var err error
 	logger := workflow.GetLogger(ctx)
-	err = workflow.Sleep(ctx, time.Second*5)
-	if err != nil {
-		logger.Error("Sleep failed", zap.Error(err))
-		return "", err
+	logger.Info("Workflow started")
+
+	heartbeatDuration := time.Second * 2
+	ao := workflow.ActivityOptions{
+		ActivityID:             "wait-for-completion",
+		ScheduleToStartTimeout: time.Minute,
+		StartToCloseTimeout:    time.Minute,
+		HeartbeatTimeout:       heartbeatDuration,
+		WaitForCancellation:    true,
 	}
 
-	return "success", nil
+	ctx = workflow.WithActivityOptions(ctx, ao)
+	activityCtx, cancel := workflow.WithCancel(ctx)
+	future := workflow.ExecuteActivity(activityCtx, waitForCompletionActivity)
+	workflow.Sleep(ctx, 5*time.Second)
+	cancel()
+
+	var result string
+	err := future.Get(ctx, &result)
+	workflow.Sleep(ctx, 10*time.Second)
+
+	return result, err
 }
 
-// Get Name Activity.
-func getNameActivity() (string, error) {
-	return "Cadence", nil
-}
-
-// Get Greeting Activity.
-func getGreetingActivity() (string, error) {
-	return "Hello", nil
-}
-
-// Say Greeting Activity.
-func sayGreetingActivity(greeting string, name string) (string, error) {
-	result := fmt.Sprintf("Greeting: %s %s!\n", greeting, name)
-	return result, nil
+// Activity to be externally completed.
+func waitForCompletionActivity(ctx context.Context) error {
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(time.Second * 1):
+			activity.RecordHeartbeat(ctx, "I am alive")
+		}
+	}
 }

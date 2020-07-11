@@ -1399,12 +1399,12 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 	// op := sendFutureACK(contextID, requestID, clientID)
 	// <-op.GetChannel()
 
-	// create the new ChildContext
+	// create the new Child
 	// add the ChildWorkflowFuture and the cancel func to the
-	// ChildContexts map in the parent workflow's entry
+	// Childs map in the parent workflow's entry
 	// in the WorkflowContexts map
-	cctx := proxyworkflow.NewChildContext(childFuture, cancel)
-	childID := wectx.AddChildContext(wectx.NextChildID(), cctx)
+	cctx := proxyworkflow.NewChild(childFuture, cancel)
+	childID := wectx.AddChild(wectx.NextChildID(), cctx)
 
 	// get the child workflow execution
 	childWE := new(workflow.Execution)
@@ -1438,7 +1438,7 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 		return reply
 	}
 
-	cctx := wectx.GetChildContext(childID)
+	cctx := wectx.GetChild(childID)
 	if cctx == nil {
 		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
 		return reply
@@ -1465,7 +1465,7 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 
 	buildReply(reply, nil, result)
 
-	defer wectx.RemoveChildContext(childID)
+	defer wectx.RemoveChild(childID)
 
 	return reply
 }
@@ -1494,7 +1494,7 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 		return reply
 	}
 
-	cctx := wectx.GetChildContext(childID)
+	cctx := wectx.GetChild(childID)
 	if cctx == nil {
 		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
 		return reply
@@ -1546,7 +1546,7 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 		return reply
 	}
 
-	cctx := wectx.GetChildContext(childID)
+	cctx := wectx.GetChild(childID)
 	if cctx == nil {
 		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
 		return reply
@@ -2196,12 +2196,17 @@ func handleActivityStartRequest(requestCtx context.Context, request *messages.Ac
 
 	// get the activity options, the context,
 	// and set the activity options on the context
+	// and set cancelation
+	var cancel workflow.CancelFunc
 	ctx := workflow.WithActivityOptions(wectx.GetContext(), opts)
 	ctx = workflow.WithWorkflowDomain(ctx, *request.GetDomain())
+	ctx, cancel = workflow.WithCancel(ctx)
+
+	//execute workflow
 	future := workflow.ExecuteActivity(ctx, activity, request.GetArgs())
 
 	// add to workflow context map
-	_ = wectx.AddActivityFuture(activityID, future)
+	_ = wectx.AddActivity(activityID, *proxyworkflow.NewActivity(future, cancel))
 
 	buildReply(reply, nil)
 
@@ -2230,16 +2235,16 @@ func handleActivityGetResultRequest(requestCtx context.Context, request *message
 		return reply
 	}
 
-	future := wectx.GetActivityFuture(activityID)
-	if future == nil {
+	activity := wectx.GetActivity(activityID)
+	if activity.GetFuture() == nil {
 		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
 		return reply
 	}
-	defer wectx.RemoveActivityFuture(activityID)
+	defer wectx.RemoveActivity(activityID)
 
 	// execute the activity
 	var result []byte
-	if err := future.Get(wectx.GetContext(), &result); err != nil {
+	if err := activity.GetFuture().Get(wectx.GetContext(), &result); err != nil {
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
@@ -2670,15 +2675,14 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 
 	// set the activity options on the context
 	// execute local activity
+	var cancel workflow.CancelFunc
 	ctx := workflow.WithLocalActivityOptions(wectx.GetContext(), opts)
+	ctx, cancel = workflow.WithCancel(ctx)
 	future := workflow.ExecuteLocalActivity(ctx, localActivityFunc, request.GetArgs())
 
-	// Send ACK: Commented out because its no longer needed.
-	// op := sendFutureACK(contextID, requestID, clientID)
-	// <-op.GetChannel()
-
 	// add to workflow context map
-	_ = wectx.AddActivityFuture(activityID, future)
+	_ = wectx.AddActivity(activityID, *proxyworkflow.NewActivity(future, cancel))
+
 	buildReply(reply, nil)
 
 	return reply
@@ -2706,16 +2710,16 @@ func handleActivityGetLocalResultRequest(requestCtx context.Context, request *me
 		return reply
 	}
 
-	future := wectx.GetActivityFuture(activityID)
-	if future == nil {
+	activity := wectx.GetActivity(activityID)
+	if activity.GetFuture() == nil {
 		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
 		return reply
 	}
 
-	defer wectx.RemoveActivityFuture(activityID)
+	defer wectx.RemoveActivity(activityID)
 
 	var result []byte
-	if err := future.Get(wectx.GetContext(), &result); err != nil {
+	if err := activity.GetFuture().Get(wectx.GetContext(), &result); err != nil {
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}

@@ -40,12 +40,11 @@ type (
 	}
 
 	// Context holds a Cadence activity
-	// context, the registered activity function, and a context cancel function.
+	// context, the registered activity function.
 	// This struct is used as an intermediate for storing worklfow information
 	// and state while registering and executing cadence activitys
 	Context struct {
 		ctx          context.Context
-		cancelFunc   context.CancelFunc
 		activityName *string
 	}
 )
@@ -111,20 +110,6 @@ func (actx *Context) GetActivityName() *string {
 // param value *string -> a cadence activity function name
 func (actx *Context) SetActivityName(value *string) {
 	actx.activityName = value
-}
-
-// GetCancelFunction gets a ActivityContext's context cancel function
-//
-// returns context.CancelFunc -> a cadence activity context cancel function
-func (actx *Context) GetCancelFunction() context.CancelFunc {
-	return actx.cancelFunc
-}
-
-// SetCancelFunction sets a ActivityContext's cancel function
-//
-// param value context.CancelFunc -> a cadence activity context cancel function
-func (actx *Context) SetCancelFunction(value context.CancelFunc) {
-	actx.cancelFunc = value
 }
 
 //----------------------------------------------------------------------------

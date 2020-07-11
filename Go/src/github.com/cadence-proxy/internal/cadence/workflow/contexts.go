@@ -21,8 +21,6 @@ import (
 	"sync"
 
 	"go.uber.org/cadence/workflow"
-
-	proxyactivity "github.com/cadence-proxy/internal/cadence/activity"
 )
 
 var (
@@ -45,15 +43,15 @@ type (
 	// Context represents a running cadence
 	// workflow instance
 	Context struct {
-		sync.Mutex                              // allows us to safely iterate ID iterator
-		workflowName  *string                   // string name of the workflow
-		ctx           workflow.Context          // the cadence workflow context
-		cancelFunc    workflow.CancelFunc       // cadence workflow context cancel function
-		childContexts *ChildContextsMap         // maps child workflow instances to childID
-		activities    *proxyactivity.FuturesMap // maps activity futures launched by the workflow instance to activityID
-		queues        *QueueMap                 // map of workflow queues (queueID to workflow.Channel queue)
-		childID       int64                     // childID iterator
-		queueID       int64                     // queueID iterator
+		sync.Mutex                       // allows us to safely iterate ID iterator
+		workflowName *string             // string name of the workflow
+		ctx          workflow.Context    // the cadence workflow context
+		cancelFunc   workflow.CancelFunc // cadence workflow context cancel function
+		children     *ChildMap           // maps child workflow instances to childID
+		activities   *ActivityMap        // maps activity futures launched by the workflow instance to activityID
+		queues       *QueueMap           // map of workflow queues (queueID to workflow.Channel queue)
+		childID      int64               // childID iterator
+		queueID      int64               // queueID iterator
 	}
 )
 
@@ -87,8 +85,8 @@ func GetContextID() int64 {
 // workflow ExecutionContext in memory
 func NewWorkflowContext(ctx workflow.Context) *Context {
 	wectx := new(Context)
-	wectx.childContexts = NewChildContextsMap()
-	wectx.activities = proxyactivity.NewActivityFuturesMap()
+	wectx.children = NewChildMap()
+	wectx.activities = NewActivityMap()
 	wectx.queues = NewQueueMap()
 	wectx.SetContext(ctx)
 	return wectx
@@ -137,97 +135,97 @@ func (wectx *Context) SetCancelFunction(value workflow.CancelFunc) {
 	wectx.cancelFunc = value
 }
 
-// GetChildContexts gets a WorkflowContext's child contexts map
+// GetChildren gets a WorkflowContext's child contexts map
 //
-// returns *ChildContextsMap -> a cadence workflow child contexts map
-func (wectx *Context) GetChildContexts() *ChildContextsMap {
-	return wectx.childContexts
+// returns *ChildMap -> a cadence workflow child contexts map
+func (wectx *Context) GetChildren() *ChildMap {
+	return wectx.children
 }
 
-// SetChildContexts sets a WorkflowContext's child contexts map
+// SetChildren sets a WorkflowContext's child contexts map
 //
-// param value *ChildContextsMap -> a cadence workflow child contexts map
-func (wectx *Context) SetChildContexts(value *ChildContextsMap) {
-	wectx.childContexts = value
+// param value *ChildMap -> a cadence workflow child contexts map
+func (wectx *Context) SetChildren(value *ChildMap) {
+	wectx.children = value
 }
 
-// AddChildContext adds a new cadence context and its corresponding ContextId into
-// the WorkflowContext's childContexts map.  This method is thread-safe.
+// AddChild adds a new cadence context and its corresponding ContextId into
+// the WorkflowContext's children map.  This method is thread-safe.
 //
 // param id int64 -> the long childId. This will be the mapped key
 //
-// param cctx *ChildContext -> pointer to the new WorkflowContex used to
+// param cctx *Child -> pointer to the new WorkflowContex used to
 // execute workflow functions. This will be the mapped value
 //
-// returns int64 -> long id of the new ChildContext added to the map
-func (wectx *Context) AddChildContext(id int64, cctx *ChildContext) int64 {
-	return wectx.childContexts.Add(id, cctx)
+// returns int64 -> long id of the new Child added to the map
+func (wectx *Context) AddChild(id int64, cctx *Child) int64 {
+	return wectx.children.Add(id, cctx)
 }
 
-// RemoveChildContext removes key/value entry from the WorkflowContext's
-// childContexts map at the specified
+// RemoveChild removes key/value entry from the WorkflowContext's
+// children map at the specified
 // ContextId.  This is a thread-safe method.
 //
 // param id int64 -> the long childId.
 //
-// returns int64 -> long id of the ChildContext removed from the map
-func (wectx *Context) RemoveChildContext(id int64) int64 {
-	return wectx.childContexts.Remove(id)
+// returns int64 -> long id of the Child removed from the map
+func (wectx *Context) RemoveChild(id int64) int64 {
+	return wectx.children.Remove(id)
 }
 
-// GetChildContext gets a childContext from the WorkflowContext's
-// ChildContextsMap at the specified ContextID.
+// GetChild gets a childContext from the WorkflowContext's
+// ChildMap at the specified ContextID.
 // This method is thread-safe.
 //
 // param id int64 -> the long childId. This will be the mapped key
 //
-// returns *WorkflowContext -> pointer to ChildContext with the specified id
-func (wectx *Context) GetChildContext(id int64) *ChildContext {
-	return wectx.childContexts.Get(id)
+// returns *WorkflowContext -> pointer to Child with the specified id
+func (wectx *Context) GetChild(id int64) *Child {
+	return wectx.children.Get(id)
 }
 
-// GetActivityFutures gets a WorkflowContext's activity futures map
+// GetActivities gets a WorkflowContext's activity futures map
 //
 // returns *proxyactivity.FuturesMap -> map of an executing workflow's activities.
-func (wectx *Context) GetActivityFutures() *proxyactivity.FuturesMap {
+func (wectx *Context) GetActivities() *ActivityMap {
 	return wectx.activities
 }
 
-// SetActivityFutures sets a WorkflowContext's activity futures.
+// SetActivities sets a WorkflowContext's activity futures.
 //
 // param value *proxyactivity.FuturesMap -> a cadence workflow activity futures map
-func (wectx *Context) SetActivityFutures(value *proxyactivity.FuturesMap) {
+func (wectx *Context) SetActivities(value *ActivityMap) {
 	wectx.activities = value
 }
 
-// AddActivityFuture adds a new future to the ActivityFuturesMap
+// AddActivity adds a new Activity to the ActivityMap
 //
 // param id int64 -> the long activity id.
 //
-// param future workflow.Future -> the future for the executing activity.
+// param activity Activity -> executing activity.
 //
 // returns int64 -> activity id.
-func (wectx *Context) AddActivityFuture(id int64, future workflow.Future) int64 {
-	return wectx.activities.Add(id, future)
+func (wectx *Context) AddActivity(id int64, activity Activity) int64 {
+	return wectx.activities.Add(id, activity)
 }
 
-// RemoveActivityFuture removes key/value entry from the WorkflowContext's
+// RemoveActivity removes key/value entry from the WorkflowContext's
 // activities map at the specified id.  This is a thread-safe method.
 //
 // param id int64 -> the long activity id.
 //
-// returns int64 -> activity id of removed future.
-func (wectx *Context) RemoveActivityFuture(id int64) int64 {
+// returns int64 -> activity id of removed activity.
+func (wectx *Context) RemoveActivity(id int64) int64 {
 	return wectx.activities.Remove(id)
 }
 
-// GetActivityFuture gets the future of an executing workflow activity at
+// GetActivity gets the activity of an executing workflow activity at
 // the specified activity id.
 //
 // param id int64 -> the long activity id.
 //
-// returns workflow.Future -> the workflow future of the specified activity.
-func (wectx *Context) GetActivityFuture(id int64) workflow.Future {
+// returns Activity -> the activity at the specified Id.
+func (wectx *Context) GetActivity(id int64) Activity {
 	return wectx.activities.Get(id)
 }
 
