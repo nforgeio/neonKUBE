@@ -2336,8 +2336,17 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 				return reply
 			}
 
-			activity.RecordHeartbeat(ActivityContexts.Get(contextID).GetContext(), details)
-
+			// get the context, heartbeat and then check
+			// the context for any errors
+			activityContext := ActivityContexts.Get(contextID).GetContext()
+			activity.RecordHeartbeat(activityContext, details)
+			if heartbeatErr := activityContext.Err(); heartbeatErr != nil {
+				if heartbeatErr == context.Canceled {
+					err = cadence.NewCanceledError()
+				} else {
+					err = heartbeatErr
+				}
+			}
 		} else {
 			err = clientHelper.RecordActivityHeartbeatByID(
 				ctx,
@@ -2347,7 +2356,6 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 				*request.GetActivityID(),
 				details)
 		}
-
 	} else {
 		err = clientHelper.RecordActivityHeartbeat(
 			ctx,
