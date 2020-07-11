@@ -468,6 +468,13 @@
             no updates.
             </summary>
         </member>
+        <member name="P:Neon.Kube.KubeClientInfo.VmTemplateSitePrefix">
+            <summary>
+            Returns the URI prefix for the web server with the neonKUBE virtual machine
+            templates.  Simply append a template file name like <b>hyperv-ubuntu-20.04.latest.vhdx</b>
+            to this to get the URI for a specific template.
+            </summary>
+        </member>
         <member name="T:Neon.Kube.KubeDashboardConfig">
             <summary>
             Manages the Kubernetes dashboard YAML configurations.
@@ -500,6 +507,13 @@
         <member name="M:Neon.Kube.KubeSetupInfo.#ctor">
             <summary>
             Default constructor.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.KubeSetupInfo.LinuxTemplateUri">
+            <summary>
+            Returns the URI for the Linux node template for the specified hosting enviroment 
+            and Linux distribution and version.  This may be null for some hosting environments
+            like bare metal and clouds.
             </summary>
         </member>
         <member name="P:Neon.Kube.KubeSetupInfo.Versions">
@@ -735,7 +749,7 @@
             Ensures that the factory has been initialized.
             </summary>
         </member>
-        <member name="M:Neon.Kube.HostingManagerFactory.GetMaster(Neon.Kube.ClusterProxy,System.String)">
+        <member name="M:Neon.Kube.HostingManagerFactory.GetManager(Neon.Kube.ClusterProxy,Neon.Kube.KubeSetupInfo,System.String)">
             <inheritdoc/>
         </member>
         <member name="M:Neon.Kube.HostingManagerFactory.IsCloudEnvironment(Neon.Kube.HostingEnvironments)">
@@ -772,11 +786,12 @@
             implementations without having to bake this into the <b>Neon.Kube</b> assembly.
             </summary>
         </member>
-        <member name="M:Neon.Kube.IHostingLoader.GetManager(Neon.Kube.ClusterProxy,System.String)">
+        <member name="M:Neon.Kube.IHostingLoader.GetManager(Neon.Kube.ClusterProxy,Neon.Kube.KubeSetupInfo,System.String)">
             <summary>
             Returns the <see cref="T:Neon.Kube.HostingManager"/> for a specific environment.
             </summary>
             <param name="cluster">The cluster being managed.</param>
+            <param name="setupInfo">Specifies the cluster setup information.</param>
             <param name="logFolder">
             The folder where log files are to be written, otherwise or <c>null</c> or 
             empty if logging is disabled.
@@ -871,11 +886,12 @@
             a concrete <see cref="T:Neon.Kube.IHostingManager"/> implementation.
             </summary>
         </member>
-        <member name="M:Neon.Kube.IHostingManagerFactory.GetMaster(Neon.Kube.ClusterProxy,System.String)">
+        <member name="M:Neon.Kube.IHostingManagerFactory.GetManager(Neon.Kube.ClusterProxy,Neon.Kube.KubeSetupInfo,System.String)">
             <summary>
             Returns the <see cref="T:Neon.Kube.HostingManager"/> implementation for a specific environment.
             </summary>
             <param name="cluster">The cluster being managed.</param>
+            <param name="setupInfo">Specifies the cluster setup information.</param>
             <param name="logFolder">
             The folder where log files are to be written, otherwise or <c>null</c> or 
             empty if logging is disabled.
@@ -917,12 +933,12 @@
         </member>
         <member name="F:Neon.Kube.KubeConst.DefaultUsername">
             <summary>
-            The default username for component dashboards and management tools (like Ceph and RabbitMQ).
+            The default username for component dashboards and management tools.
             </summary>
         </member>
         <member name="F:Neon.Kube.KubeConst.DefaultPassword">
             <summary>
-            The default password for component dashboards and management tools (like Ceph and RabbitMQ).
+            The default password for component dashboards and management tools.
             </summary>
         </member>
         <member name="F:Neon.Kube.KubeConst.MaxJitter">
@@ -1114,6 +1130,18 @@
             This is temporary, once Kubernetes supports dynamic provisioning of local storage volumes, we'll use
             that instead.
             </note>
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeConst.NodeTemplateDiskSize">
+            <summary>
+            The primary disk size in bytes for VMs created using the standard neonKUBE
+            node templates (XenServer and Hyper-V).  This is configured manually
+            when node templates are periodically created.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeConst.MinXenServerVersion">
+            <summary>
+            The minimum supported XenServer/XCP-ng hypervisor host version.
             </summary>
         </member>
         <member name="T:Neon.Kube.KubeHelper">
@@ -1528,6 +1556,78 @@
             <param name="passwordName">The password name.</param>
             <returns>The password value.</returns>
             <exception cref="T:System.Collections.Generic.KeyNotFoundException">Thrown if the password doesn't exist.</exception>
+        </member>
+        <member name="M:Neon.Kube.KubeHelper.CreateIsoFile(System.String,System.String,System.String)">
+            <summary>
+            <para>
+            Packages the files within a folder into an ISO file.
+            </para>
+            <note>
+            This requires Powershell to be installed and this will favor using the version of
+            Powershell installed along with the neon-cli is present.
+            </note>
+            </summary>
+            <param name="inputFolder">Path to the input folder.</param>
+            <param name="isoPath">Path to the output ISO file.</param>
+            <param name="label">Optionally specifies a volume label.</param>
+            <exception cref="T:Neon.Common.ExecuteException">Thrown if the operation failed.</exception>
+        </member>
+        <member name="M:Neon.Kube.KubeHelper.CreateNodePrepIso(Neon.Kube.ClusterDefinition,Neon.Kube.NodeDefinition)">
+            <summary>
+            Creates an ISO file containing the <b>neon-node-prep.sh</b> script that 
+            will provide the information to <b>cloud-init</b> when cluster nodes
+            are prepared on non-cloud virtualization hosts like Hyper-V and XenServer.
+            </summary>
+            <param name="clusterDefinition"></param>
+            <param name="nodeDefinition"></param>
+            <returns>A <see cref="T:Neon.IO.TempFile"/> that references the generated ISO file.</returns>
+            <remarks>
+            <para>
+            The hosting manager will call this for each node being prepared and then
+            insert the ISO into the node VM's DVD/CD drive before booting the node
+            for the first time.  The <b>neon-node-prep</b> service configured on
+            the corresponding node templates will look for this DVD and script and
+            execute it early during the node boot process, before <b>cloud-init</b>
+            runs.  When <b>cloud-init</b> runs, it will complete the basic node
+            preparation.
+            </para>
+            <para>
+            The ISO file reference is returned as a <see cref="T:Neon.IO.TempFile"/>.  The
+            caller should call <see cref="M:Neon.IO.TempFile.Dispose"/> when it's done
+            with the file to ensure that it is deleted.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Neon.Kube.KubeHelper.CreateNodePrepVfd(Neon.Kube.ClusterDefinition,Neon.Kube.NodeDefinition,System.String)">
+            <summary>
+            Creates an floppy VFD file containing the <b>neon-node-prep.sh</b> script that 
+            will provide the information to <b>cloud-init</b> when cluster nodes
+            are prepared on non-cloud virtualization hosts like Hyper-V and XenServer.
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
+            <param name="nodeDefinition">The node definition.</param>
+            <param name="nodePrepScript">The node preparation script.</param>
+            <returns>A <see cref="T:Neon.IO.TempFile"/> that references the generated VFD file.</returns>
+            <remarks>
+            <para>
+            The hosting manager will call this for each node being prepared and then
+            insert the ISO into the node VM's floppy drive before booting the node
+            for the first time.  The <b>neon-node-prep</b> service configured on
+            the corresponding node templates will look for this DVD and script and
+            execute it early during the node boot process, before <b>cloud-init</b>
+            runs.  When <b>cloud-init</b> runs, it will complete the basic node
+            preparation.
+            </para>
+            <para>
+            The VFD file reference is returned as a <see cref="T:Neon.IO.TempFile"/>.  The
+            caller should call <see cref="M:Neon.IO.TempFile.Dispose"/> when it's done
+            with the file to ensure that it is deleted.
+            </para>
+            <note>
+            This method uses a special purpose floppy drive image generated via the
+            <b>neon generate init-floppy</b> command.
+            </note>
+            </remarks>
         </member>
         <member name="T:Neon.Kube.KubeHostFolders">
             <summary>
@@ -2886,159 +2986,6 @@
             Enumerates the possible Azure VM sizes.
             </summary>
         </member>
-        <member name="T:Neon.Kube.CephOptions">
-            <summary>
-            Specifies the options for configuring the cluster integrated
-            <a href="https://ceph.com/">Ceph Distributed Storage</a>
-            cluster.
-            </summary>
-        </member>
-        <member name="F:Neon.Kube.CephOptions.SupportedReleases">
-            <summary>
-            Returns the names of the supported Ceph releases.
-            </summary>
-        </member>
-        <member name="F:Neon.Kube.CephOptions.CacheSizeFudge">
-            <summary>
-            The fudge factor to apply to Ceph cache sizes before actually
-            configuring the services.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.CephOptions.Enabled">
-            <summary>
-            Indicates whether Ceph storage is to be enabled for the cluster.  
-            This defaults to <c>true</c>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.CephOptions.Username">
-            <summary>
-            Returns the Linux user for the Ceph components.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.CephOptions.Release">
-            <summary>
-            Specifies the Ceph software major release name. This defaults to <b>mimic</b>.
-            </summary>
-            <remarks>
-            <para>
-            The following major Ceph releases are supported:
-            </para>
-            <list type="table">
-            <item>
-                <term><b>mimic</b></term>
-                <description>
-                Released 07-2018 (<b>default</b>)
-                </description>
-            </item>
-            </list>
-            </remarks>
-        </member>
-        <member name="P:Neon.Kube.CephOptions.OSDDriveSize">
-            <summary>
-            <para>
-            Specifies the default size of the Ceph OSD drives created for cloud and
-            hypervisor based environments (<see cref="T:Neon.Common.ByteUnits"/>).  This can be 
-            overridden  for specific nodes.  This defaults to <b>16Gi</b>.
-            </para>
-            <note>
-            The default may be too small for production environments
-            </note>
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.CephOptions.OSDCacheSize">
-            <summary>
-            <para>
-            Specifies the default amount of RAM to allocate to Ceph OSD processes for 
-            caching (<see cref="T:Neon.Common.ByteUnits"/>).  his can be overridden for specific nodes. 
-            This defaults to <b>256Mi</b>.
-            </para>
-            <note>
-            <para>
-            The <a href="https://ceph.com/community/new-luminous-bluestore/">Ceph documentation</a>
-            states that OSD may tend to underestimate the RAM it's using by up to 1.5 times.
-            To avoid potential memory issues, neonKUBE  will adjust this value by dividing it 
-            by 1.5 to when actually configuring OSD services.
-            </para>
-            <para>
-            You should also take care to leave 1-2GB of RAM for the host Linux operating system
-            as well as the OSD non-cache related memory when you're configuring this property.
-            </para>
-            <note>
-            The default may be too small for production environments
-            </note>
-            </note>
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.CephOptions.OSDJournalSize">
-            <summary>
-            <para>
-            Specifies the default size to allocate for the OSD journals  (<see cref="T:Neon.Common.ByteUnits"/>).  
-            This  can be overridden for specific nodes.  This defaults to <b>1Gi</b>.
-            </para>
-            <note>
-            The default may be too small for production environments
-            </note>
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.CephOptions.OSDObjectSizeMax">
-            <summary>
-            Specifies the maximum size of a Ceph RADOS object in bytes (<see cref="T:Neon.Common.ByteUnits"/>).  
-            This can be overridden for specific nodes.  This defaults to <b>5Gi</b>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.CephOptions.OSDReplicaCount">
-            <summary>
-            Specifies the default number of object replicas to be stored in the cluster.
-            This defaults to the minimum of 3 or the number of OSD nodes provisioned
-            in the cluster.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.CephOptions.OSDReplicaCountMin">
-            <summary>
-            Specifies the minimum number of objects replicas required when the
-            Ceph storage cluster is operating in a degraded state.  This defaults
-            to <see cref="P:Neon.Kube.CephOptions.OSDReplicaCount"/><b>-1</b> unless <see cref="P:Neon.Kube.CephOptions.OSDReplicaCount"/><b>==1</b>
-            in which case this will also default to 1.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.CephOptions.OSDPlacementGroups">
-            <summary>
-            Specifies the default number of placement groups assigned to each OSD.
-            This defaults to <b>100</b>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.CephOptions.MDSCacheSize">
-            <summary>
-            <para>
-            Specifies the default amount of RAM to allocate to Ceph MDS processes for 
-            caching (<see cref="T:Neon.Common.ByteUnits"/>). This can be overridden for specific nodes. 
-            This defaults to <b>64Mi</b>.
-            </para>
-            <note>
-            <para>
-            The Ceph documentation states that MDS may tend to underestimate the RAM it's 
-            using by up to 1.5 times.  To avoid potential memory issues, neonKUBE will 
-            adjust this value by dividing it by 1.5 to when actually configuring the 
-            MDS services.
-            </para>
-            <para>
-            You should also take care to leave 1-2GB of RAM for the host Linux operating system
-            as well as the OSD non-cache related memory when you're configuring this property.
-            </para>
-            </note>
-            <note>
-            The default is probably too small for production environments
-            </note>
-            </summary>
-        </member>
-        <member name="M:Neon.Kube.CephOptions.Validate(Neon.Kube.ClusterDefinition)">
-            <summary>
-            Validates the options and also ensures that all <c>null</c> properties are
-            initialized to their default values.
-            </summary>
-            <param name="clusterDefinition">The cluster definition.</param>
-            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        </member>
         <member name="T:Neon.Kube.ClusterDefinition">
             <summary>
             Describes a Kubernetes cluster.
@@ -3124,6 +3071,16 @@
             </note>
             </remarks>
         </member>
+        <member name="P:Neon.Kube.ClusterDefinition.Debug">
+            <summary>
+            <para>
+            Specifies cluster debugging options.
+            </para>
+            <note>
+            These options are generally intended for neonKUBE developers only.
+            </note>
+            </summary>
+        </member>
         <member name="P:Neon.Kube.ClusterDefinition.Provisioner">
             <summary>
             Identifies the tool/version used to provision the cluster.
@@ -3138,12 +3095,6 @@
             <summary>
             Returns the options to be used when installing Docker on each
             of the cluster nodes.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.Ceph">
-            <summary>
-            Returns the options to be used for configuring the cluster integrated
-            Ceph file system.
             </summary>
         </member>
         <member name="P:Neon.Kube.ClusterDefinition.Mon">
@@ -3201,6 +3152,45 @@
         <member name="P:Neon.Kube.ClusterDefinition.Environment">
             <summary>
             Indicates how the cluster is being used.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.LinuxDistribution">
+            <summary>
+            Specifies the distribution of Linux to be installed on the cluster nodes.  Currently
+            only <b>ubuntu</b> is supported.  This defaults to <b>ubuntu</b>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.LinuxVersion">
+            <summary>
+            <para>
+            Specifies the version of <see cref="P:Neon.Kube.ClusterDefinition.LinuxDistribution"/> to be installed.  This is
+            formatted like <b>20.04.#</b> where <b>#</b> is the minor release or <b>20.04-latest</b>
+            for the latest release.
+            </para>
+            <para>
+            Currently, only <b>Ubuntu 20.04.#</b> releases are supported.  You'll need to check the
+            cluster install documentation to discover which point releases are currently available.
+            </para>
+            <para>
+            This defaults to <b>20.04.latest</b>.
+            </para>
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.LinuxTemplateUri">
+            <summary>
+            <para>
+            Optionally overrides the location of the Linux node template URI.  This is usually
+            located on a neonFORGE managed server and derived from <see cref="P:Neon.Kube.ClusterDefinition.LinuxDistribution"/>
+            and <see cref="P:Neon.Kube.ClusterDefinition.LinuxVersion"/> which should work for most users.
+            </para>
+            <para>
+            You may set this to a custom URI which may be useful for setting up air-gapped 
+            clusters for for testing purposes.  This defaults to <c>null</c>.
+            </para>
+            <note>
+            This URI can use HTTP, HTTPS, or FTP for all hosting environments except <see cref="F:Neon.Kube.HostingEnvironments.XenServer"/>
+            which doesn't support HTTPS.
+            </note>
             </summary>
         </member>
         <member name="P:Neon.Kube.ClusterDefinition.TimeSources">
@@ -3310,6 +3300,37 @@
             Adds a node to the cluster.
             </summary>
             <param name="node">The new node.</param>
+        </member>
+        <member name="T:Neon.Kube.DebugOptions">
+            <summary>
+            <para>
+            Specifies cluster debug options.
+            </para>
+            <note>
+            <b>WARNING:</b> In general, you should not customize any debugging options for
+            production clusters.
+            </note>
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.DebugOptions.InsecureNodeCredentials">
+            <summary>
+            <para>
+            Indicates that the cluster node credentials should remain as the insecure
+            <b>sysadmin/sysadmin0000</b> to make it easier for neonKUBE developers to
+            inspect nodes while debugging cluster setup.  Normally, a secure password
+            will be generated and set while nodes are being prepared before cluster setup.
+            </para>
+            <note>
+            <b>WARNING:</b> You should <b>never set this to true for production clusters!</b>
+            </note>
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.DebugOptions.Validate(Neon.Kube.ClusterDefinition)">
+            <summary>
+            Validates the options.
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
+            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         </member>
         <member name="T:Neon.Kube.DockerOptions">
             <summary>
@@ -3715,23 +3736,6 @@
             Default constructor.
             </summary>
         </member>
-        <member name="P:Neon.Kube.HyperVOptions.HostVhdxUri">
-            <summary>
-            <para>
-            URI to the zipped VHDX image with the base cluster host operating system.  This defaults to
-            <b>https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-Ubuntu-18.04.latest.vhdx</b>
-            which is the latest supported Ubuntu 16.04 image.
-            </para>
-            <note>
-            Production cluster definitions should be configured with an VHDX with a specific version
-            of the host operating system to ensure that cluster nodes are provisioned with the same
-            operating system version.
-            </note>
-            <note>
-            The image file is actually a Hyper-V VHDX zipped using <b>neon zip create PATH-TO-VHDX PATH-TO-ZIP</b>.
-            </note>
-            </summary>
-        </member>
         <member name="M:Neon.Kube.HyperVOptions.Validate(Neon.Kube.ClusterDefinition)">
             <summary>
             Validates the options and also ensures that all <c>null</c> properties are
@@ -3740,32 +3744,32 @@
             <param name="clusterDefinition">The cluster definition.</param>
             <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         </member>
-        <member name="T:Neon.Kube.Ingress">
+        <member name="T:Neon.Kube.IngressOptions">
             <summary>
             Specifies the ingress rules for the cluster.
             </summary>
         </member>
-        <member name="P:Neon.Kube.Ingress.Name">
+        <member name="P:Neon.Kube.IngressOptions.Name">
             <summary>
             The name of the ingress rule.
             </summary>
         </member>
-        <member name="P:Neon.Kube.Ingress.Port">
+        <member name="P:Neon.Kube.IngressOptions.Port">
             <summary>
             The ingress port.
             </summary>
         </member>
-        <member name="P:Neon.Kube.Ingress.TargetPort">
+        <member name="P:Neon.Kube.IngressOptions.TargetPort">
             <summary>
             The target port for the ingress rule.
             </summary>
         </member>
-        <member name="P:Neon.Kube.Ingress.NodePort">
+        <member name="P:Neon.Kube.IngressOptions.NodePort">
             <summary>
             The Kubernetes NodePort. This is where the ingress gateway will listen.
             </summary>
         </member>
-        <member name="M:Neon.Kube.Ingress.Validate(Neon.Kube.ClusterDefinition)">
+        <member name="M:Neon.Kube.IngressOptions.Validate(Neon.Kube.ClusterDefinition)">
             <summary>
             Validates the options.
             </summary>
@@ -3875,20 +3879,6 @@
         <member name="M:Neon.Kube.LocalHyperVOptions.#ctor">
             <summary>
             Default constructor.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.LocalHyperVOptions.HostVhdxUri">
-            <summary>
-            <para>
-            URI to the zipped VHDX image with the base cluster host operating system.  This defaults to
-            <b>https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-Ubuntu-18.04.latest.vhdx</b>
-            which is the latest supported Ubuntu 16.04 image.
-            </para>
-            <note>
-            Production cluster definitions should be configured with an VHDX with a specific version
-            of the host operating system to ensure that cluster nodes are provisioned with the same
-            operating system version.
-            </note>
             </summary>
         </member>
         <member name="M:Neon.Kube.LocalHyperVOptions.Validate(Neon.Kube.ClusterDefinition)">
@@ -4256,41 +4246,6 @@
             <param name="clusterDefinition">The cluster definition.</param>
             <returns>The size in bytes.</returns>
         </member>
-        <member name="M:Neon.Kube.NodeDefinition.GetCephOSDDriveSize(Neon.Kube.ClusterDefinition)">
-            <summary>
-            Returns the size in bytes of the Ceph drive created for this node if 
-            integrated Ceph storage cluster is enabled.
-            </summary>
-            <param name="clusterDefinition">The cluster definition.</param>
-            <returns>The size in bytes or zero if Ceph is not enabled.</returns>
-        </member>
-        <member name="M:Neon.Kube.NodeDefinition.GetCephOSDCacheSize(Neon.Kube.ClusterDefinition)">
-            <summary>
-            Returns the size in bytes of RAM to allocate to the OSD cache
-            on this node integrated Ceph storage cluster is enabled and
-            OSD is deployed to the node.
-            </summary>
-            <param name="clusterDefinition">The cluster definition.</param>
-            <returns>The size in bytes or zero if Ceph is not enabled.</returns>
-        </member>
-        <member name="M:Neon.Kube.NodeDefinition.GetCephOSDJournalSize(Neon.Kube.ClusterDefinition)">
-            <summary>
-            Returns the size in bytes of drive space to allocate to the
-            OSD journal on this node integrated Ceph storage cluster is 
-            enabled and OSD is deployed to the node.
-            </summary>
-            <param name="clusterDefinition">The cluster definition.</param>
-            <returns>The size in bytes or zero if Ceph is not enabled.</returns>
-        </member>
-        <member name="M:Neon.Kube.NodeDefinition.GetCephMDSCacheSize(Neon.Kube.ClusterDefinition)">
-            <summary>
-            Returns the size in bytes of RAM to allocate to the MDS cache
-            on this node integrated Ceph storage cluster is enabled and
-            MDS is deployed to the node.
-            </summary>
-            <param name="clusterDefinition">The cluster definition.</param>
-            <returns>The size in bytes or zero if Ceph is not enabled.</returns>
-        </member>
         <member name="P:Neon.Kube.NodeDefinition.StepDelay">
             <summary>
             <b>HACK:</b> This used by <see cref="T:Neon.Kube.SetupController`1"/> to introduce a delay for this
@@ -4648,183 +4603,6 @@
             This defaults to <c>false</c>.
             </summary>
         </member>
-        <member name="F:Neon.Kube.NodeLabels.LabelCephMON">
-            <summary>
-            Reserved label name for <see cref="P:Neon.Kube.NodeLabels.CephMON"/>.
-            </summary>
-        </member>
-        <member name="F:Neon.Kube.NodeLabels.LabelCephOSD">
-            <summary>
-            Reserved label name for <see cref="P:Neon.Kube.NodeLabels.CephOSD"/>.
-            </summary>
-        </member>
-        <member name="F:Neon.Kube.NodeLabels.LabelCephOSDDevice">
-            <summary>
-            Reserved label name for <see cref="P:Neon.Kube.NodeLabels.CephOSDDevice"/>.
-            </summary>
-        </member>
-        <member name="F:Neon.Kube.NodeLabels.LabelCephMDS">
-            <summary>
-            Reserved label name for <see cref="P:Neon.Kube.NodeLabels.CephMDS"/>.
-            </summary>
-        </member>
-        <member name="F:Neon.Kube.NodeLabels.LabelCephMGR">
-            <summary>
-            Reserved label name for <see cref="P:Neon.Kube.NodeLabels.CephMGR"/>.
-            </summary>
-        </member>
-        <member name="F:Neon.Kube.NodeLabels.LabelCephOSDDriveSize">
-            <summary>
-            Reserved label name for <see cref="P:Neon.Kube.NodeLabels.CephOSDDriveSize"/>.
-            </summary>
-        </member>
-        <member name="F:Neon.Kube.NodeLabels.LabelCephOSDCacheSize">
-            <summary>
-            Reserved label name for <see cref="P:Neon.Kube.NodeLabels.CephOSDCacheSize"/>.
-            </summary>
-        </member>
-        <member name="F:Neon.Kube.NodeLabels.LabelCephOSDJournalSize">
-            <summary>
-            Reserved label name for <see cref="P:Neon.Kube.NodeLabels.CephOSDJournalSize"/>.
-            </summary>
-        </member>
-        <member name="F:Neon.Kube.NodeLabels.LabelCephMDSCacheSize">
-            <summary>
-            Reserved label name for <see cref="P:Neon.Kube.NodeLabels.CephOSDJournalSize"/>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.NodeLabels.CephMON">
-            <summary>
-            <b>io.neonkube.ceph.monitor</b> [<c>bool</c>]: Indicates that the Ceph 
-            monitor and manager services  will be deployed to this node if 
-            <see cref="P:Neon.Kube.CephOptions.Enabled"/> is <c>true</c>.  This defaults 
-            to <c>false</c>.
-            </summary>
-            <remarks>
-            <para>
-            Monitors maintain maps of the Ceph file system state state, including 
-            the monitor map, manager map, the OSD map, and the CRUSH map. These maps 
-            are critical cluster state required for Ceph daemons to coordinate with
-            each other.  Monitors are also responsible for managing authentication
-            between daemons and clients. At least three monitors are normally required 
-            for redundancy and high availability.
-            </para>
-            <para>
-            Managers are responsible for keeping track of runtime metrics and the
-            current state of the Ceph cluster, including storage utilization, 
-            current performance metrics, and system load. The Ceph Manager daemons
-            also host python-based plugins to manage and expose Ceph cluster information,
-            including a web-based dashboard and REST API. At least two managers are
-            normally required for high availability.
-            </para>
-            </remarks>
-        </member>
-        <member name="P:Neon.Kube.NodeLabels.CephOSD">
-            <summary>
-            <b>io.neonkube.ceph.osd</b> [<c>bool</c>]: Indicates that a Ceph OSD 
-            (object storage daemon) will be deployed to this node if 
-            <see cref="P:Neon.Kube.CephOptions.Enabled"/> is <c>true</c>.  
-            This defaults to <c>false</c>.
-            </summary>
-            <remarks>
-            OSDs store data, handles data replication, recovery, rebalancing, and
-            provides some monitoring information to Ceph Monitors and Managers by 
-            checking other Ceph OSD Daemons for a heartbeat. At least 3 Ceph OSDs 
-            are normally required for redundancy and high availability.
-            </remarks>
-        </member>
-        <member name="P:Neon.Kube.NodeLabels.CephOSDDevice">
-            <summary>
-            <b>io.neonkube.ceph.osd_device</b> (<c>string</c>]: The path to the block
-            device where the OSD data will be persisted (like: <b>/dev/sdb</b>)
-            when <see cref="P:Neon.Kube.NodeLabels.CephOSD"/> is <c>true</c>.  This will be initialized 
-            automatically for most hosting environments but will need to be specified 
-            explicitly for <see cref="F:Neon.Kube.HostingEnvironments.Machine"/>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.NodeLabels.CephMDS">
-            <summary>
-            <b>io.neonkube.ceph.mds</b> [<c>bool</c>]: Indicates that a Ceph MDS 
-            (metadata server) will be deployed to this node if <see cref="P:Neon.Kube.CephOptions.Enabled"/> 
-            is <c>true</c>.  This defaults to <c>false</c>.
-            </summary>
-            <remarks>
-            Metadata servers store metadata on behalf of the Ceph Filesystem 
-            (e.g. Ceph Block Devices and Ceph Object Storage do not use MDS). 
-            Ceph Metadata Servers allow POSIX file system users to execute basic 
-            commands (like ls, find, etc.) without placing an enormous burden on
-            the Ceph Storage Cluster.
-            </remarks>
-        </member>
-        <member name="P:Neon.Kube.NodeLabels.CephMGR">
-            <summary>
-            <b>io.neonkube.ceph.mgr</b> [<c>bool</c>]: Indicates that a Ceph MGR 
-            (manager server) will be deployed to this node if <see cref="P:Neon.Kube.CephOptions.Enabled"/> 
-            is <c>true</c>.  This defaults to <c>false</c>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.NodeLabels.CephOSDDriveSize">
-            <summary>
-            <b>io.neonkube.ceph.drivesize</b> [<c>int</c>]: Specifies the size in bytes
-            (<see cref="T:Neon.Common.ByteUnits"/>) of the Ceph OSD drive created for cloud and hypervisor
-            based environments if the integrated Ceph storage cluster is enabled and <see cref="P:Neon.Kube.NodeLabels.CephOSD"/>
-            is <c>true</c> for this node.  This defaults to <see cref="P:Neon.Kube.CephOptions.OSDDriveSize"/>
-            (<b>128GiB</b>).
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.NodeLabels.CephOSDCacheSize">
-            <summary>
-            <para>
-            <b>io.neonkube.ceph.cachesize</b> [<c>int</c>]: Specifies the RAM in bytes
-            <see cref="T:Neon.Common.ByteUnits"/>) to assign to the Ceph OSDs for caching if the integrated 
-            Ceph storage cluster is enabled and <see cref="P:Neon.Kube.NodeLabels.CephOSD"/> is <c>true</c> for this 
-            node.  This defaults to <see cref="P:Neon.Kube.CephOptions.OSDCacheSize"/> (<b>1GB</b>) (which
-            is probably too small for production clusters).
-            </para>
-            <note>
-            <para>
-            The <a href="https://ceph.com/community/new-luminous-bluestore/">Ceph documentation</a>
-            states that OSDs may tend to underestimate the RAM it's using by up to 1.5 times.
-            To avoid potential memory issues, neonKUBE will adjust this value by dividing it 
-            by 1.5 to when actually configuring the OSD services.
-            </para>
-            <para>
-            You should also take care to leave 1-2GB of RAM for the host Linux operating system
-            as well as the OSD non-cache related memory when you're configuring this property.
-            </para>
-            </note>
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.NodeLabels.CephOSDJournalSize">
-            <summary>
-            <b>io.neonkube.ceph.journalsize</b> [<c>int</c>]: Specifies the disk capacity
-            in bytes <see cref="T:Neon.Common.ByteUnits"/>) to assign to the Ceph OSD journal if the integrated 
-            Ceph storage cluster is enabled and <see cref="P:Neon.Kube.NodeLabels.CephOSD"/> is <c>true</c> for this node.
-            This defaults to <see cref="P:Neon.Kube.CephOptions.OSDJournalSize"/>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.NodeLabels.CephMDSCacheSize">
-            <summary>
-            <para>
-            <b>io.neonkube.ceph.mds_cachesize_mb</b> [<c>int</c>]: Specifies the RAM in bytes
-            <see cref="T:Neon.Common.ByteUnits"/>) to assign to the Ceph MDS services for caching if the integrated
-            Ceph storage cluster is enabled and <see cref="P:Neon.Kube.NodeLabels.CephMDS"/> is <c>true</c> for this node.
-            This defaults to <see cref="P:Neon.Kube.CephOptions.MDSCacheSize"/> (<b>1GB</b>) (which is 
-            probably too small for production clusters).
-            </para>
-            <note>
-            <para>
-            The Ceph documentation states that OSDs may tend to underestimate the RAM it's using
-            by up to 1.5 times.  To avoid potential memory issues, neonKUBE  will adjust this
-            value by dividing it  by 1.5 to when actually configuring the MDS services.
-            </para>
-            <para>
-            You should also take care to leave 1-2GB of RAM for the host Linux operating system
-            as well as the OSD non-cache related memory when you're configuring this property.
-            </para>
-            </note>
-            </summary>
-        </member>
         <member name="P:Neon.Kube.NodeLabels.Custom">
             <summary>
             Custom node labels.
@@ -5030,41 +4808,11 @@
             Default constructor.
             </summary>
         </member>
-        <member name="P:Neon.Kube.XenServerOptions.HostXvaUri">
-            <summary>
-            <para>
-            URI to the XenServer XVA image to use as a template for creating the virtual machines.  This defaults to
-            <b>http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-Ubuntu-18.04.latest.xva</b>
-            which is the latest supported Ubuntu 16.04 image.
-            </para>
-            <note>
-            Production cluster definitions should be configured with an XVA with a specific version
-            of the host operating system to ensure that cluster nodes are provisioned with the same
-            operating system version.
-            </note>
-            <note>
-            The XenServer <b>xe</b> CLI <b>does not support</b> downloading XVA images <b>via HTTPS</b>.
-            You'll need to use HTTP or FTP.
-            </note>
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.XenServerOptions.TemplateName">
-            <summary>
-            Names the XenServer template to be used when creating cluster nodes.  This defaults
-            to <b>ubuntu-template</b>.
-            </summary>
-        </member>
         <member name="P:Neon.Kube.XenServerOptions.StorageRepository">
             <summary>
             Identifies the XenServer storage repository to be used to store the XenServer
             node template as well as the cluster virtual machine images.  This defaults to
             <b>Local storage</b>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.XenServerOptions.OsdStorageRepository">
-            <summary>
-            Identifies the XenServer storage repository to be used to for any Ceph OSD
-            drives created for the cluster.  This defaults to <b>Local storage</b>.
             </summary>
         </member>
         <member name="P:Neon.Kube.XenServerOptions.Snapshot">
@@ -6784,59 +6532,6 @@
             </summary>
             <returns>The machine's current <see cref="T:System.DateTime"/> (UTC).</returns>
         </member>
-        <member name="M:Neon.Kube.SshProxy`1.ConfigureNetwork(System.String,System.Net.IPAddress,System.Net.IPAddress,Neon.Net.NetworkCidr,System.Collections.Generic.IEnumerable{System.Net.IPAddress})">
-            <summary>
-            Configures a network interface's IP address, mask, nameservers, etc.
-            </summary>
-            <param name="networkInterface">Identifies the network interface.</param>
-            <param name="address">The IPv4 address.</param>
-            <param name="gateway">The IPv4 default gateway.</param>
-            <param name="subnet">The subnet.</param>
-            <param name="nameservers">The optional list of IPv4 nameservers.</param>
-            <remarks>
-            <note>
-            This method <b>doesn't</b> immediately apply the changes because
-            that would break the SSH connection.  You'll typically need to
-            reboot the remote machine to accomplish this.
-            </note>
-            </remarks>
-        </member>
-        <member name="M:Neon.Kube.SshProxy`1.ConfigureNetwork_Ubuntu1604(System.String,System.Net.IPAddress,System.Net.IPAddress,Neon.Net.NetworkCidr,System.Collections.Generic.IEnumerable{System.Net.IPAddress})">
-            <summary>
-            Configures a network interface's IP address, mask, nameservers, etc.
-            for an Ubuntu 16.04 machine.
-            </summary>
-            <param name="networkInterface">Identifies the network interface.</param>
-            <param name="address">The IPv4 address.</param>
-            <param name="gateway">The IPv4 default gateway.</param>
-            <param name="subnet">The subnet.</param>
-            <param name="nameservers">The optional list of IPv4 nameservers.</param>
-            <remarks>
-            <note>
-            This method <b>doesn't</b> immediately apply the changes because
-            that would break the SSH connection.  You'll typically need to
-            reboot the remote machine to accomplish this.
-            </note>
-            </remarks>
-        </member>
-        <member name="M:Neon.Kube.SshProxy`1.ConfigureNetwork_Ubuntu1804(System.String,System.Net.IPAddress,System.Net.IPAddress,Neon.Net.NetworkCidr,System.Collections.Generic.IEnumerable{System.Net.IPAddress})">
-            <summary>
-            Configures a network interface's IP address, mask, nameservers, etc.
-            for an Ubuntu 18.04 machine.
-            </summary>
-            <param name="networkInterface">Identifies the network interface.</param>
-            <param name="address">The IPv4 address.</param>
-            <param name="gateway">The IPv4 default gateway.</param>
-            <param name="subnet">The subnet.</param>
-            <param name="nameservers">The optional list of IPv4 nameservers.</param>
-            <remarks>
-            <note>
-            This method <b>doesn't</b> immediately apply the changes because
-            that would break the SSH connection.  You'll typically need to
-            reboot the remote machine to accomplish this.
-            </note>
-            </remarks>
-        </member>
         <member name="M:Neon.Kube.SshProxy`1.KubectlApply(System.String,Neon.Kube.RunOptions)">
             <summary>
             Uses <c>kubectl apply -f</c> to apply a YAML file.
@@ -7442,43 +7137,43 @@
             <summary>Branch: jeff</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: 7d9cb5f01</summary>
+            <summary>Commit: e7cd0e53a</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: 7d9cb5f019af32d8aba0549903f0698f2d17e772</summary>
+            <summary>Sha: e7cd0e53a1241b487d9977259692d7a5c0d918fa</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 11</summary>
+            <summary>Commits on top of base version: 6048</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: v2.0.1-11-g7d9cb5f01</summary>
+            <summary>Tag: c2.1.0-150-ge7cd0e53a</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
-            <summary>Base tag: v2.0.1</summary>
+            <summary>Base tag: c2.1.0</summary>
         </member>
         <member name="T:ThisAssembly.Git.BaseVersion">
             <summary>Provides access to the base version information used to determine the <see cref="T:ThisAssembly.Git.SemVer" />.</summary>      
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Major">
-            <summary>Major: 2</summary>
+            <summary>Major: 0</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Minor">
             <summary>Minor: 0</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Patch">
-            <summary>Patch: 1</summary>
+            <summary>Patch: 0</summary>
         </member>
         <member name="T:ThisAssembly.Git.SemVer">
             <summary>Provides access to SemVer information for the current assembly.</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Major">
-            <summary>Major: 2</summary>
+            <summary>Major: 0</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Minor">
             <summary>Minor: 0</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 12</summary>
+            <summary>Patch: 6048</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: </summary>
@@ -7487,7 +7182,7 @@
             <summary>Label with dash prefix: </summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Source">
-            <summary>Source: Tag</summary>
+            <summary>Source: Default</summary>
         </member>
     </members>
 </doc>

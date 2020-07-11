@@ -16,7 +16,7 @@ case "${LOG_LEVEL}" in
         LOG=true
         ;;
     "SINFO")
-        LOG=true
+        LOG=false
         ;;
     "INFO")
         LOG=true

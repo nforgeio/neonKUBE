@@ -19,7 +19,7 @@ case "${LOG_LEVEL}" in
         LOG=true
         ;;
     "INFO")
-        LOG=false
+        LOG=true
         ;;
     "WARN")
         LOG=false

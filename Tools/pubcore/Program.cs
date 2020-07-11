@@ -39,7 +39,7 @@ namespace pubcore
         /// <summary>
         /// Tool version number.
         /// </summary>
-        public const string Version = "1.5";
+        public const string Version = "1.6";
 
         /// <summary>
         /// Program entrypoint.
@@ -243,9 +243,9 @@ or:
                         }
 
                         File.WriteAllText(Path.Combine(publishDir, $"{targetName}.cmd"),
-    $@"@echo off
-    ""%~dp0\{targetName}\{targetName}.exe"" %*
-    ");
+$@"@echo off
+""%~dp0\{targetName}\{targetName}.exe"" %*
+");
 
                         // Remove the output folder and then recreate it to ensure
                         // that all old files will be removed.

@@ -60,7 +60,7 @@ sensitive files to developers, operators, and CI/CD build environments.
 This works by referencing named passwords stored in a secure location.
 These passwords are stored in the current user folder at:
 
-    %USERPROFILE\.neonkube\password     - on Windows
+    %USERPROFILE%\.neonkube\passwords   - on Windows
     $HOME/.neonkube/passwords           - on OS/X and Linux
 
 These files are encrypted at rest when possible (e.g. for Windows 10/PRO+).
@@ -88,19 +88,19 @@ the [export/import] commands provide a way to share passwords using encrypted
 ZIP files.
 
 A password name must be specified when creating or encrypting a file.  This
-may be done explicitly pass passing the password name on the command line
+may be done by explicitly passing the password name on the command line
 or implicitly by creating a [.password-name] file in the same directory as
 the target file or in one of its ancestor directories.
 
 [neon] will search the current and ancestor directores up to the file 
 system root for the first [.password-name] file when no password name is 
-exspelcitly specified.  The [.password-name] file simply holds the name 
+explicitly specified.  The [.password-name] file simply holds the name 
 of the password.  This is a convenient way to specified default passwords
 for a project.
 
 Vault commands like [create] and [edit] will decrypt and launch a text
 editor so that the file can be edited.  The default platform editor will
-be launched (NotePad.exe for Windows or Vim for OS/x and Linux).  You can
+be launched (NotePad.exe for Windows or Vim for OS/X and Linux).  You can
 customize the editor by setting the EDITOR environment variable to the path
 to the editor executable file.
 ";

@@ -406,7 +406,7 @@
       <Name>Neon.Xunit</Name>
     </ProjectReference>
     <ProjectReference Include="..\Test.Neon.Models.Temporal\Test.Neon.Models.Temporal.csproj">
-      <Project>{f19ff67a-660d-4b3f-8590-01de5f14744d}</Project>
+      <Project>{fca5010a-0cc8-4c22-8284-f63c592e94fd}</Project>
       <Name>Test.Neon.Models.Temporal</Name>
     </ProjectReference>
     <ProjectReference Include="..\Test.Neon.Models\Test.Neon.Models.csproj">

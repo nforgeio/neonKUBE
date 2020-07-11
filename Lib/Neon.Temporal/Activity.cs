@@ -49,7 +49,7 @@ namespace Neon.Temporal
             Covenant.Requires<ArgumentNullException>(parent != null, nameof(parent));
 
             this.parent = parent;
-            this.Logger = LogManager.Default.GetLogger(sourceModule: Client.Settings.ClientIdentity, contextId: parent.ActivityTask?.WorkflowExecution?.RunId);
+            this.Logger = LogManager.Default.GetLogger(module: Client.Settings.ClientIdentity, contextId: parent.ActivityTask?.WorkflowExecution?.RunId);
         }
 
         /// <summary>

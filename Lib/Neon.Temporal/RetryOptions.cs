@@ -129,6 +129,73 @@ namespace Neon.Temporal
         /// Cancellation is not a failure, so that won't be retried.
         /// </note>
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// You can specify non-retryable error reasons directly here or use the <see cref="DoNotRetry(string)"/> method
+        /// to append a specific reason string or <see cref="DoNotRetry{ExceptionType}()"/> to specify the error reason for an
+        /// exception type.
+        /// </para>
+        /// <para>
+        /// We recommend that you use <see cref="DoNotRetry{ExceptionType}()"/> most of the time and reserve
+        /// <see cref="DoNotRetry(string)"/> for interop situations where you need to integrate 
+        /// with something written in another language.
+        /// </para>
+        /// <para>
+        /// For native Temporal exceptions like <see cref="TemporalTimeoutException"/>, <see cref="DoNotRetry{ExceptionType}()"/> is smart
+        /// enough to append the proper error reason.  For other exception types, this method will use the fully qualified
+        /// exception type name as the reason.
+        /// </para>
+        /// </remarks>
         public List<string> NonRetriableErrors { get; set; } = new List<string>();
+
+        /// <summary>
+        /// <para>
+        /// Appends the error reason corresponding to an exception type.  For built-in Temporal exceptions, this
+        /// will append the apporpriate reason string and for other exception type, this will append the fully
+        /// qualified exception type name.
+        /// </para>
+        /// <note>
+        /// We generally recommend that you use <see cref="DoNotRetry{ExceptionType}()"/> by default and
+        /// reserve this for situations where you need to specify a specific reason, probably for interoperating
+        /// with workflows and activities written in other lanagues, etc.
+        /// </note>
+        /// </summary>
+        /// <typeparam name="ExceptionType">The exception type.</typeparam>
+        public void DoNotRetry<ExceptionType>()
+            where ExceptionType : Exception
+        {
+            var type = typeof(ExceptionType);
+
+            if (type.Inherits<TemporalException>())
+            {
+                // We need to construct an instance to discover the associated error reason.
+
+                var temporalException = Activator.CreateInstance<ExceptionType>() as TemporalException;
+
+                NonRetriableErrors.Add(temporalException.Reason);
+            }
+            else
+            {
+                NonRetriableErrors.Add(type.FullName);
+            }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Appends the string passed to <see cref="NonRetriableErrors"/> as a reason not to be retried.
+        /// </para>
+        /// <note>
+        /// We generally recommend that you use <see cref="DoNotRetry{ExceptionType}()"/> by default and
+        /// reserve this for situations where you need to specify a specific reason, probably for interoperating
+        /// with workflows and activities written in other lanagues, etc.
+        /// </note>
+        /// </summary>
+        /// <param name="reason">The reason string.</param>
+        public void DoNotRetry(string reason)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(reason));
+
+            NonRetriableErrors.Add(reason);
+        }
     }
 }

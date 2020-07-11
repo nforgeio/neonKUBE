@@ -71,7 +71,7 @@ namespace NeonBuild
                 }
             }
 
-            Console.WriteLine($"GZIP: [{sourcePath}] --> [{targetPath}].");
+            Console.WriteLine($"GZIP: [{sourcePath}] --> [{targetPath}]");
 
             var uncompressed = File.ReadAllBytes(sourcePath);
             var compressed   = NeonHelper.GzipBytes(uncompressed);

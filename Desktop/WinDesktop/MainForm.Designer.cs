@@ -40,27 +40,30 @@
             // productNameLabel
             // 
             this.productNameLabel.AutoSize = true;
-            this.productNameLabel.Location = new System.Drawing.Point(12, 10);
+            this.productNameLabel.Location = new System.Drawing.Point(14, 12);
+            this.productNameLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.productNameLabel.Name = "productNameLabel";
-            this.productNameLabel.Size = new System.Drawing.Size(78, 13);
+            this.productNameLabel.Size = new System.Drawing.Size(90, 15);
             this.productNameLabel.TabIndex = 0;
             this.productNameLabel.Text = "[product name]";
             // 
             // copyrightLabel
             // 
             this.copyrightLabel.AutoSize = true;
-            this.copyrightLabel.Location = new System.Drawing.Point(12, 35);
+            this.copyrightLabel.Location = new System.Drawing.Point(14, 40);
+            this.copyrightLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.copyrightLabel.Name = "copyrightLabel";
-            this.copyrightLabel.Size = new System.Drawing.Size(56, 13);
+            this.copyrightLabel.Size = new System.Drawing.Size(66, 15);
             this.copyrightLabel.TabIndex = 1;
             this.copyrightLabel.Text = "[copyright]";
             // 
             // licenseLinkLabel
             // 
             this.licenseLinkLabel.AutoSize = true;
-            this.licenseLinkLabel.Location = new System.Drawing.Point(13, 61);
+            this.licenseLinkLabel.Location = new System.Drawing.Point(15, 70);
+            this.licenseLinkLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.licenseLinkLabel.Name = "licenseLinkLabel";
-            this.licenseLinkLabel.Size = new System.Drawing.Size(65, 13);
+            this.licenseLinkLabel.Size = new System.Drawing.Size(73, 15);
             this.licenseLinkLabel.TabIndex = 2;
             this.licenseLinkLabel.TabStop = true;
             this.licenseLinkLabel.Text = "[license link]";
@@ -72,13 +75,14 @@
             // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(323, 93);
+            this.ClientSize = new System.Drawing.Size(377, 107);
             this.Controls.Add(this.licenseLinkLabel);
             this.Controls.Add(this.copyrightLabel);
             this.Controls.Add(this.productNameLabel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "MainForm";

@@ -61,7 +61,7 @@
             Reads a byte from the specified <see cref="T:System.Net.Sockets.Socket"/>.
             </summary>
             <param name="socket">The <see cref="T:System.Net.Sockets.Socket"/> to read from.</param>
-            <param name="timeout">Specifies the amount of time after which the call will time out.</param>
+            <param name="timeout">Specifies the amount of time after which the call will timeout.</param>
             <returns>
             The byte read, or <c>-1</c> if the socket was closed.
             </returns>
@@ -82,7 +82,7 @@
             </summary>
             <param name="socket"></param>
             <param name="size">The number of bytes to receive.</param>
-            <param name="timeout">Specifies the amount of time after which the call will time out.</param>
+            <param name="timeout">Specifies the amount of time after which the call will timeout.</param>
             <returns>
             The bytes received.
             </returns>
@@ -102,7 +102,7 @@
             <param name="buffer">An array of type <see cref="T:System.Byte"/> that is the storage location for the received data. </param>
             <param name="offset">The position in <paramref name="buffer"/> parameter to store the received data.</param>
             <param name="size">The number of bytes to receive.</param>
-            <param name="timeout">Specifies the amount of time after which the call will time out.</param>
+            <param name="timeout">Specifies the amount of time after which the call will timeout.</param>
             <returns>
             The number of bytes received.
             </returns>
