@@ -579,7 +579,7 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public void GetUnusedTcpPort()
+        public void GetUnusedIpPort()
         {
             // Verify that we can obtain 100 unique ports on [127.0.0.1].
             // Note that this is a tiny bit fragile because it's possible,
@@ -592,7 +592,7 @@ namespace TestCommon
 
             for (int i = 0; i < 100; i++)
             {
-                var port = NetHelper.GetUnusedTcpPort(address);
+                var port = NetHelper.GetUnusedIpPort(address);
 
                 Assert.DoesNotContain(ports, p => p == port);
 
