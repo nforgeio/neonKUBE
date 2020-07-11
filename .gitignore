@@ -72,10 +72,8 @@ wwwroot/
 # Custom rules added for this repository.
 ################################################################################
 
-/.vs
-/.vs/**
-/.vscode
-/.vscode/**
+**/.vs/**
+**/.vscode/**
 
 # Build artifacts: 
 #
