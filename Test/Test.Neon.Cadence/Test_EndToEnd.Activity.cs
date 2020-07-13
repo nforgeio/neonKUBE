@@ -160,6 +160,132 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IActivityWithError : IActivity
+        {
+            [ActivityMethod]
+            Task RunAsync();
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ActivityWithError : ActivityBase, IActivityWithError
+        {
+            public async Task RunAsync()
+            {
+                await Task.CompletedTask;
+
+                throw new TestException("activity failed");
+            }
+        }
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IActivityWorkflowWithError : IWorkflow
+        {
+            // These methods return NULL on success, otherwise the error reason.
+
+            [WorkflowMethod(Name = "normal-activity-error")]
+            Task<string> ActivityErrorAsync();
+
+            [WorkflowMethod(Name = "local-activity-error")]
+            Task<string> LocalActivityErrorAsync();
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class ActivityWorkflowWithError : WorkflowBase, IActivityWorkflowWithError
+        {
+            public async Task<string> ActivityErrorAsync()
+            {
+                var stub = Workflow.NewActivityStub<IActivityWithError>();
+
+                try
+                {
+                    await stub.RunAsync();
+
+                    return "Exception expected";
+                }
+                catch (CadenceCustomException e)
+                {
+                    if (e.Reason != typeof(TestException).FullName)
+                    {
+                        return $"Expected REASON=[{typeof(TestException).FullName}] ACTUAL=[{e.Reason}]";
+                    }
+                    else if (e.Message != "activity failed")
+                    {
+                        return $"Expected MESSAGE=[\"activity failed\"] ACTUAL=[{e.Message}]";
+                    }
+                    else
+                    {
+                        return null; // Exception is OK
+                    }
+                }
+                catch (Exception e)
+                {
+                    return $"Expected EXCEPTION={typeof(CadenceCustomException).FullName}] ACTUAL[{e.GetType().FullName}]";
+                }
+            }
+
+            public async Task<string> LocalActivityErrorAsync()
+            {
+                var stub = Workflow.NewLocalActivityStub<IActivityWithError, ActivityWithError>();
+
+                try
+                {
+                    await stub.RunAsync();
+
+                    return "Exception expected";
+                }
+                catch (CadenceCustomException e)
+                {
+                    if (e.Reason != typeof(TestException).FullName)
+                    {
+                        return $"Expected REASON=[{typeof(TestException).FullName}] ACTUAL=[{e.Reason}]";
+                    }
+                    else if (e.Message != "activity failed")
+                    {
+                        return $"Expected MESSAGE=[\"activity failed\"] ACTUAL=[{e.Message}]";
+                    }
+                    else
+                    {
+                        return null; // Exception is OK
+                    }
+                }
+                catch (Exception e)
+                {
+                    return $"Expected EXCEPTION={typeof(CadenceCustomException).FullName}] ACTUAL[{e.GetType().FullName}]";
+                }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_WithError()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that an exception thrown by an normal activity can be caught
+            // and verified by the parent workflow.
+
+            var stub = client.NewWorkflowStub<IActivityWorkflowWithError>();
+
+            Assert.Null(await stub.ActivityErrorAsync());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task ActivityLocal_WithError()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that an exception thrown by an normal activity can be caught
+            // and verified by the parent workflow.
+
+            var stub = client.NewWorkflowStub<IActivityWorkflowWithError>();
+
+            Assert.Null(await stub.LocalActivityErrorAsync());
+        }
+
+        //---------------------------------------------------------------------
+
         [ActivityInterface()]
         public interface ILocalActivityWithResult : IActivity
         {

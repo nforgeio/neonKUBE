@@ -2221,25 +2221,25 @@ namespace TestTemporal
         //---------------------------------------------------------------------
 
         [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
-        public interface IWorkflowFail : IWorkflow
+        public interface IWorkflowWithError : IWorkflow
         {
             [WorkflowMethod]
             Task RunAsync();
         }
 
         [Workflow(AutoRegister = true)]
-        public class WorkflowFail : WorkflowBase, IWorkflowFail
+        public class WorkflowWithError : WorkflowBase, IWorkflowWithError
         {
             public async Task RunAsync()
             {
                 await Task.CompletedTask;
-                throw new ArgumentException("forced-failure");
+                throw new ArgumentException("test-failure");
             }
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public async Task Workflow_Fail()
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_WithError()
         {
             await SyncContext.ClearAsync;
 
@@ -2250,21 +2250,21 @@ namespace TestTemporal
                 DecisionTaskTimeout = TimeSpan.FromSeconds(5)
             };
 
-            var stub = client.NewWorkflowStub<IWorkflowFail>(options);
+            var stub = client.NewWorkflowStub<IWorkflowWithError>(options);
 
             try
             {
                 await stub.RunAsync();
-                Assert.True(false, $"[{nameof(TemporalGenericException)}] expected");
+                Assert.True(false, $"[{nameof(TemporalCustomException)}] expected");
             }
-            catch (TemporalGenericException e)
+            catch (TemporalCustomException e)
             {
-                Assert.Contains("ArgumentException", e.Reason);
-                Assert.Contains("forced-failure", e.Message);
+                Assert.Equal(typeof(ArgumentException).FullName, e.Reason);
+                Assert.Equal("test-failure", e.Message);
             }
             catch (Exception e)
             {
-                Assert.True(false, $"Expected [{nameof(TemporalGenericException)}] not [{e.GetType().Name}]");
+                Assert.True(false, $"Expected [{typeof(TemporalCustomException).FullName}] not [{e.GetType().FullName}]");
             }
         }
 
