@@ -1256,69 +1256,6 @@ namespace TestTemporal
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public async Task Activity_External_CancelByToken()
-        {
-            await SyncContext.ClearAsync;
-
-            // Verify that we can externally cancel an activity
-            // using the activity token.
-
-            ActivityExternalCompletion.Reset();
-
-            var stub     = client.NewWorkflowStub<IWorkflowActivityExternalCompletion>();
-            var task     = stub.RunAsync();
-            var activity = ActivityExternalCompletion.WaitForActivity();
-
-            await client.ActivityCancelByTokenAsync(activity.Task.TaskToken);
-
-            try
-            {
-                await task;
-            }
-            catch (CancelledException)
-            {
-                // Expected
-            }
-            catch (Exception e)
-            {
-                Assert.True(false, $"Expected [{nameof(CancelledException)}] not [{e.GetType().Name}]");
-            }
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public async Task Activity_External_CancelById()
-        {
-            await SyncContext.ClearAsync;
-
-            // Verify that we can externally cancel an activity
-            // using the workflow execution and the activity ID.
-
-            ActivityExternalCompletion.Reset();
-
-            var stub     = client.NewWorkflowStub<IWorkflowActivityExternalCompletion>();
-            var task     = stub.RunAsync();
-            var activity = ActivityExternalCompletion.WaitForActivity();
-
-            await client.ActivityCancelByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId);
-
-            try
-            {
-                await task;
-            }
-            catch (CancelledException)
-            {
-                // Expected
-            }
-            catch (Exception e)
-            {
-                Assert.True(false, $"Expected [{nameof(CancelledException)}] not [{e.GetType().Name}]");
-            }
-        }
-
-
-        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Activity_External_HeartbeatTimeout()
         {
