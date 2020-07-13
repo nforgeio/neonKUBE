@@ -178,7 +178,7 @@ namespace Neon.Cadence.Internal
             }
             else
             {
-                this.Type   = "custom";
+                this.Type = "custom";
             }
         }
 

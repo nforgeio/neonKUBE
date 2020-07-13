@@ -172,58 +172,6 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Used to externally cancel an activity identified by task token.
-        /// </summary>
-        /// <param name="taskToken">The opaque base-64 encoded activity task token.</param>
-        /// <param name="namespace">Optionally overrides the default <see cref="TemporalClient"/> namespace.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="EntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task ActivityCancelByTokenAsync(string taskToken, string @namespace = null)
-        {
-            await SyncContext.ClearAsync;
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskToken), nameof(taskToken));
-            EnsureNotDisposed();
-
-            var reply = (ActivityCompleteReply)await CallProxyAsync(
-                new ActivityCompleteRequest()
-                {
-                    Namespace = ResolveNamespace(@namespace),
-                    TaskToken = Convert.FromBase64String(taskToken),
-                    Error     = new TemporalError(new CancelledException("Cancelled"))
-                });
-
-            reply.ThrowOnError();
-        }
-
-        /// <summary>
-        /// Used to externally cancel an activity identified by <see cref="WorkflowExecution"/> and activity ID.
-        /// </summary>
-        /// <param name="execution">The workflow execution.</param>
-        /// <param name="activityId">The activity ID.</param>
-        /// <param name="namespace">Optionally overrides the default <see cref="TemporalClient"/> namespace.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        /// <exception cref="EntityNotExistsException">Thrown if the activity no longer exists.</exception>
-        public async Task ActivityCancelByIdAsync(WorkflowExecution execution, string activityId, string @namespace = null)
-        {
-            await SyncContext.ClearAsync;
-            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(activityId), nameof(activityId));
-            EnsureNotDisposed();
-
-            var reply = (ActivityCompleteReply)await CallProxyAsync(
-                new ActivityCompleteRequest()
-                {
-                    Namespace  = ResolveNamespace(@namespace),
-                    WorkflowId = execution.WorkflowId,
-                    RunId      = execution.RunId,
-                    ActivityId = activityId,
-                    Error      = new TemporalError(new CancelledException("Cancelled"))
-                });
-
-            reply.ThrowOnError();
-        }
-
-        /// <summary>
         /// Used to externally fail an activity by task token.
         /// </summary>
         /// <param name="taskToken">The opaque base-64 encoded activity task token.</param>

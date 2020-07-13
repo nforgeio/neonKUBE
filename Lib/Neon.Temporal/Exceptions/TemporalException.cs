@@ -68,7 +68,7 @@ namespace Neon.Temporal
         /// <returns>The <see cref="TemporalError"/>.</returns>
         internal virtual TemporalError ToTemporalError()
         {
-            return new TemporalError($"{TemporalError}{{{Message}}}", TemporalErrorType);
+            return new TemporalError($"{Reason}{{{Message}}}", TemporalErrorType);
         }
     }
 }
