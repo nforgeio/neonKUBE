@@ -112,6 +112,7 @@ namespace Neon.Kube
         private string                          driveTemplatePath;
         private string                          vmDriveFolder;
         private string                          switchName;
+        private string                          secureSshPassword;
 
         /// <summary>
         /// Constructor.
@@ -154,8 +155,12 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override bool Provision(bool force)
+        public override bool Provision(bool force, string secureSshPassword, string orgSshPassword = null)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
+
+            this.secureSshPassword = secureSshPassword;
+
             if (IsProvisionNOP)
             {
                 // There's nothing to do here.
@@ -654,7 +659,7 @@ namespace Neon.Kube
                         // to the node VM.
 
                         node.Status = $"mount: neon-node-prep iso";
-                        tempIso     = KubeHelper.CreateNodePrepIso(node.Cluster.Definition, node.Metadata);
+                        tempIso     = KubeHelper.CreateNodePrepIso(node.Cluster.Definition, node.Metadata, secureSshPassword);
 
                         hyperv.InsertVmDvd(vmName, tempIso.Path);
 

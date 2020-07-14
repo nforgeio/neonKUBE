@@ -66,8 +66,17 @@ namespace Neon.Kube
         /// are to be replaced or overwritten during privisioning.  The actual interpretation
         /// of this parameter is specific to each hosting manager implementation.
         /// </param>
-        /// <returns><c>true</c> if the operation was successful.</returns>
-        bool Provision(bool force);
+        /// <param name="secureSshPassword">
+        /// The secure SSH password to be set for all node VMs. This is required.
+        /// </param>
+        /// <param name="orgSshPassword">
+        /// The starting SSH password for the VMs.  This may be passed as <c>null</c> when
+        /// the provisioning manager is able to configure the passwords when the VMs are
+        /// born, such as in the cloud or when hosted via on-premise hypervisors.  This
+        /// is currently used only by the bare metal hosting manager which will need to
+        /// be able to log into existing nodes provisioned manually by the cluster operator.
+        /// </param>
+        bool Provision(bool force, string secureSshPassword, string orgSshPassword = null);
 
         /// <summary>
         /// Returns the FQDN or IP address (as a string) and the port to use

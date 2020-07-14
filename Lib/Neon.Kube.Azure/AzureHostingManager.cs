@@ -45,6 +45,8 @@ namespace Neon.Kube
     /// <summary>
     /// Manages cluster provisioning on the Google Cloud Platform.
     /// </summary>
+    /// <remarks>
+    /// </remarks>
     [HostingProvider(HostingEnvironments.Azure)]
     public class AzureHostingManager : HostingManager
     {
@@ -101,8 +103,10 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override bool Provision(bool force)
+        public override bool Provision(bool force, string secureSshPassword, string orgSshPassword = null)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
+
             throw new NotImplementedException("$todo(jefflill): Implement this.");
         }
 

@@ -74,14 +74,14 @@ namespace Neon.Kube
         /// host node virtual machine templates.  This is also used as the username
         /// for hosts provisioned to clouds like Azure, Aws, and Google Cloud. 
         /// </summary>
-        public const string DefaulVmTemplateUsername = "sysadmin";
+        public const string DefaultVmTemplateUsername = "sysadmin";
 
         /// <summary>
         /// The root account password baked into the Hyper-V and XenServer cluster
         /// host node virtual machine templates.  Note that this will not be
         /// used for hosts provisioned on public clouds for security reasons.
         /// </summary>
-        public const string DefaulVmTemplatePassword = "sysadmin0000";
+        public const string DefaultVmTemplatePassword = "sysadmin0000";
 
         /// <summary>
         /// The maximum number of cluster master nodes.

@@ -70,23 +70,6 @@ namespace Neon.Kube
         public bool SetupPending { get; set; } = false;
 
         /// <summary>
-        /// Temporarily holds the strong password during cluster setup.
-        /// </summary>
-        [JsonProperty(PropertyName = "SshStrongPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "sshStrongPassword", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string SshStrongPassword { get; set; }
-
-        /// <summary>
-        /// Indicates whether a strong host SSH password was generated for the cluster.
-        /// This defaults to <c>false</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "HasStrongSshPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "hasStrongSshPassword", ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public bool HasStrongSshPassword { get; set; }
-
-        /// <summary>
         /// The command to be used join nodes to an existing cluster.
         /// </summary>
         [JsonProperty(PropertyName = "ClusterJoinCommand", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

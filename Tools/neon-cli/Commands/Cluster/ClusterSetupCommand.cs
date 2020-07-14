@@ -332,42 +332,7 @@ OPTIONS:
                         },
                         node => node.Metadata.IsWorker);
 
-                    //-----------------------------------------------------------------
-                    // Update the node security to use a strong password and also 
-                    // configure the SSH client certificate.
-
-                    // $todo(jefflill):
-                    //
-                    // Note that this step isn't entirely idempotent.  The problem happens
-                    // when the password change fails on one or more of the nodes and succeeds
-                    // on others.  This will result in SSH connection failures for the nodes
-                    // that had their passwords changes.
-                    //
-                    // One solution would be to store credentials in the node definitions
-                    // rather than using common credentials across all nodes.
-                    //
-                    //      https://github.com/nforgeio/neonKUBE/issues/397
-
-                    kubeContextExtension.SetupDetails.SshStrongPassword = NeonHelper.GetCryptoRandomPassword(cluster.Definition.NodeOptions.PasswordLength);
-                    kubeContextExtension.Save();
-
-                    controller.AddStep("set strong password",
-                        (node, stepDelay) =>
-                        {
-                            SetStrongPassword(node, TimeSpan.Zero);
-                        });
-
-                    controller.AddGlobalStep("passwords set",
-                        () =>
-                        {
-                            // This hidden step sets the SSH provisioning password to NULL to 
-                            // indicate that the final password has been set for all of the nodes.
-
-                            kubeContextExtension.SshPassword = kubeContextExtension.SetupDetails.SshStrongPassword;
-                            kubeContextExtension.SetupDetails.HasStrongSshPassword = true;
-                            kubeContextExtension.Save();
-                        },
-                        quiet: true);
+                    // Generate and set the private SSH key for all cluster nodes.
 
                     controller.AddGlobalStep("set ssh certs", () => ConfigureSshCerts());
 
@@ -2584,7 +2549,7 @@ chmod 666 /run/ssh-key*
 
                     var script =
 $@"
-echo '{kubeContextExtension.SshUsername}:{kubeContextExtension.SetupDetails.SshStrongPassword}' | chpasswd
+echo '{kubeContextExtension.SshUsername}:{kubeContextExtension.SshPassword}' | chpasswd
 ";
                     var response = node.SudoCommand(CommandBundle.FromScript(script));
 
@@ -2594,7 +2559,7 @@ echo '{kubeContextExtension.SshUsername}:{kubeContextExtension.SetupDetails.SshS
                         Program.Exit(response.ExitCode);
                     }
 
-                    node.UpdateCredentials(SshCredentials.FromUserPassword(kubeContextExtension.SshUsername, kubeContextExtension.SetupDetails.SshStrongPassword));
+                    node.UpdateCredentials(SshCredentials.FromUserPassword(kubeContextExtension.SshUsername, kubeContextExtension.SshPassword));
                 });
         }
 

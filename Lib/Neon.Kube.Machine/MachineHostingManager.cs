@@ -67,6 +67,7 @@ namespace Neon.Kube
         private ClusterProxy                    cluster;
         private KubeSetupInfo                   setupInfo;
         private SetupController<NodeDefinition> controller;
+        private string                          orgSshPassword;
 
         /// <summary>
         /// Constructor.
@@ -109,8 +110,13 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override bool Provision(bool force)
+        public override bool Provision(bool force, string secureSshPassword, string orgSshPassword = null)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword));
+
+            this.orgSshPassword = orgSshPassword;
+
             // Perform the provisioning operations.
 
             controller = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
@@ -118,6 +124,8 @@ namespace Neon.Kube
                 ShowStatus  = this.ShowStatus,
                 MaxParallel = this.MaxParallel
             };
+
+            // $todo(jefflill): We need to reset all of the node passwords here.
 
             controller.AddStep("node labels", (node, stepDelay) => SetLabels(node));
 

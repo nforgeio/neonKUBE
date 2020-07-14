@@ -111,10 +111,8 @@ OPTIONS:
                                           configured in parallel [default=6]
 
     --machine-password=PASSWORD         - Overrides default initial machine
-                                          password: sysadmin0000
-
-    --machine-username=USERNAME         - Overrides default initial machine
-                                          username: sysadmin
+                                          password for the [sysadmin] account.
+                                          This defaults to: sysadmin0000
 
     -q, --quiet                         - Disables operation progress
 
@@ -186,7 +184,6 @@ You can disable the use of this encrypted folder by specifying
 
                 foreach (var cmdLine in new CommandLine[] { CommandLine, LeftCommandLine })
                 {
-                    cmdLine.DefineOption("--machine-username");
                     cmdLine.DefineOption("--machine-password");
                     cmdLine.DefineOption("-os").Default = "Ubuntu-20.04";
                     cmdLine.DefineOption("-q", "--quiet");
@@ -201,7 +198,6 @@ You can disable the use of this encrypted folder by specifying
                 validOptions.Add("--help");
                 validOptions.Add("--insecure");
                 validOptions.Add("--log-folder");
-                validOptions.Add("--machine-username");
                 validOptions.Add("--machine-password");
                 validOptions.Add("-m");
                 validOptions.Add("--max-parallel");
@@ -337,8 +333,8 @@ You can disable the use of this encrypted folder by specifying
 
                 // Load the user name and password from the command line options, if present.
 
-                MachineUsername = LeftCommandLine.GetOption("--machine-username", "sysadmin");
-                MachinePassword = LeftCommandLine.GetOption("--machine-password", "sysadmin0000");
+                MachineUsername = KubeConst.DefaultVmTemplateUsername;
+                MachinePassword = LeftCommandLine.GetOption("--machine-password", KubeConst.DefaultVmTemplatePassword);
 
                 // Handle the other options.
 
@@ -353,10 +349,9 @@ You can disable the use of this encrypted folder by specifying
 
                 Program.MaxParallel = maxParallel;
 
-                var     waitSecondsOption = LeftCommandLine.GetOption("--wait");
-                double  waitSeconds;
+                var waitSecondsOption = LeftCommandLine.GetOption("--wait");
 
-                if (!double.TryParse(waitSecondsOption, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out waitSeconds) || waitSeconds < 0)
+                if (!double.TryParse(waitSecondsOption, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var waitSeconds) || waitSeconds < 0)
                 {
                     Console.Error.WriteLine($"*** ERROR: [--wait={waitSecondsOption}] option is not valid.");
                     Program.Exit(1);
@@ -404,15 +399,11 @@ You can disable the use of this encrypted folder by specifying
                     if (string.IsNullOrWhiteSpace(MachineUsername) || string.IsNullOrEmpty(MachinePassword))
                     {
                         Console.WriteLine();
-                        Console.WriteLine("    Enter cluster SSH credentials:");
-                        Console.WriteLine("    -------------------------------");
+                        Console.WriteLine("    Enter cluster SSH password for [sysadmin]:");
+                        Console.WriteLine("    ------------------------------------------");
                     }
 
-                    while (string.IsNullOrWhiteSpace(MachineUsername))
-                    {
-                        Console.Write("    username: ");
-                        MachineUsername = Console.ReadLine();
-                    }
+                    MachineUsername = KubeConst.DefaultVmTemplateUsername;
 
                     while (string.IsNullOrEmpty(MachinePassword))
                     {

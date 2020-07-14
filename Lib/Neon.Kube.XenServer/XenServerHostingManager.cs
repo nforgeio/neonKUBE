@@ -87,6 +87,7 @@ namespace Neon.Kube
         private List<XenClient>             xenHosts;
         private SetupController<XenClient>  controller;
         private int                         maxVmNameWidth;
+        private string                      secureSshPassword;
 
         /// <summary>
         /// Constructor.
@@ -142,8 +143,12 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override bool Provision(bool force)
+        public override bool Provision(bool force, string secureSshPassword, string orgSshPassword = null)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
+
+            this.secureSshPassword = secureSshPassword;
+
             // $todo(jefflill):
             //
             // I'm not implementing [force] here.  I'm not entirely sure
@@ -399,7 +404,7 @@ namespace Neon.Kube
 
                         node.Status = $"mount: neon-node-prep iso";
 
-                        tempIso    = KubeHelper.CreateNodePrepIso(node.Cluster.Definition, node.Metadata);
+                        tempIso    = KubeHelper.CreateNodePrepIso(node.Cluster.Definition, node.Metadata, secureSshPassword);
                         xenTempIso = xenHost.CreateTempIso(tempIso.Path);
 
                         xenHost.Invoke($"vm-cd-eject", $"uuid={vm.Uuid}");

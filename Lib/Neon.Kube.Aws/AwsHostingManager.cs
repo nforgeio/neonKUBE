@@ -101,8 +101,10 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override bool Provision(bool force)
+        public override bool Provision(bool force, string secureSshPassword, string orgSshPassword = null)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
+
             throw new NotImplementedException("$todo(jefflill): Implement this.");
         }
 
