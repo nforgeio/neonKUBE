@@ -247,10 +247,10 @@ TCPKeepAlive yes
                 sb.AppendLine($"NEON_NODE_HDD={node.Metadata.Labels.StorageHDD.ToString().ToLowerInvariant()}");
             }
 
-            sb.AppendLine($"NEON_ARCHIVE_FOLDER={KubeHostFolders.Archive(KubeConst.SysAdminUser)}");
+            sb.AppendLine($"NEON_ARCHIVE_FOLDER={KubeHostFolders.Archive(KubeConst.SysAdminUsername)}");
             sb.AppendLine($"NEON_BIN_FOLDER={KubeHostFolders.Bin}");
             sb.AppendLine($"NEON_CONFIG_FOLDER={KubeHostFolders.Config}");
-            sb.AppendLine($"NEON_EXEC_FOLDER={KubeHostFolders.Exec(KubeConst.SysAdminUser)}");
+            sb.AppendLine($"NEON_EXEC_FOLDER={KubeHostFolders.Exec(KubeConst.SysAdminUsername)}");
             sb.AppendLine($"NEON_SETUP_FOLDER={KubeHostFolders.Setup}");
             sb.AppendLine($"NEON_STATE_FOLDER={KubeHostFolders.State}");
             sb.AppendLine($"NEON_TMPFS_FOLDER={KubeHostFolders.Tmpfs}");

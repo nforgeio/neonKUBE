@@ -133,7 +133,7 @@ node template.
             var vmHost        = hyperv ? "Hyper-V" : "XenServer";
             var vmName        = commandLine.GetOption("--vm-name", "xenserver-ubuntu-neon");
             var hostAddress   = commandLine.GetOption("--host-address");
-            var hostUsername  = KubeConst.DefaultVmTemplateUsername;
+            var hostUsername  = KubeConst.SysAdminUsername;
             var hostPassword  = commandLine.GetOption("--host-password");
             var update        = commandLine.GetFlag("--update");
             var hostIpAddress = (IPAddress)null;
@@ -176,7 +176,7 @@ node template.
             Program.MachineUsername = hostUsername;
             Program.MachinePassword = hostPassword;
 
-            Covenant.Assert(Program.MachineUsername == KubeConst.SysAdminUser);
+            Covenant.Assert(Program.MachineUsername == KubeConst.SysAdminUsername);
 
             // Prepare the template.
 
@@ -194,7 +194,7 @@ node template.
 
             using (var node = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
             {
-                Console.WriteLine($"Login:    [{KubeConst.SysAdminUser}]");
+                Console.WriteLine($"Login:    [{KubeConst.SysAdminUsername}]");
                 node.WaitForBoot();
 
                 // Install required packages:
@@ -276,12 +276,12 @@ $@"#!/bin/bash
 # user and group IDs:
 
 find / -group 1000 -exec chgrp -h {KubeConst.SysAdminGroup} {{}} \;
-find / -user 1000 -exec chown -h {KubeConst.SysAdminUser} {{}} \;
+find / -user 1000 -exec chown -h {KubeConst.SysAdminUsername} {{}} \;
 
 # Relocate the [sysadmin] UID and GID:
 
 groupmod --gid {KubeConst.SysAdminGID} {KubeConst.SysAdminGroup}
-usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups root,sysadmin,sudo {KubeConst.SysAdminUser}
+usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups root,sysadmin,sudo {KubeConst.SysAdminUsername}
 ";
 
                 Console.WriteLine("Relocate: [sysadmin] user/group IDs");
@@ -299,18 +299,18 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
             // We're going to work around this be rebooting by killing all
             // [sysadmin] processes.
 
-            Program.MachineUsername = KubeConst.SysAdminUser;
+            Program.MachineUsername = KubeConst.SysAdminUsername;
 
             using (var node = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
             {
-                Console.WriteLine($"Login:    [{KubeConst.SysAdminUser}]");
+                Console.WriteLine($"Login:    [{KubeConst.SysAdminUsername}]");
                 node.WaitForBoot();
 
                 // Ensure that the owner and group for files in the [sysadmin]
                 // home folder are correct.
 
                 Console.WriteLine("Set:      [sysadmin] home folder owner");
-                node.SudoCommand($"chown -R {KubeConst.SysAdminUser}:{KubeConst.SysAdminGroup} .*", RunOptions.FaultOnError);
+                node.SudoCommand($"chown -R {KubeConst.SysAdminUsername}:{KubeConst.SysAdminGroup} .*", RunOptions.FaultOnError);
 
                 // Beginning with Ubuntu 20.04 we're seeing systemd/(sd-pam) processes 
                 // hanging around for a while for the [temp] process which prevents us 
@@ -330,7 +330,7 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
                 // logging into the machine.
 
                 Console.WriteLine("Create:   [container] user");
-                node.SudoCommand($"useradd --uid {KubeConst.ContainerUID} --no-create-home {KubeConst.ContainerUser}", RunOptions.FaultOnError);
+                node.SudoCommand($"useradd --uid {KubeConst.ContainerUID} --no-create-home {KubeConst.ContainerUsername}", RunOptions.FaultOnError);
 
                 // Configure the Linux guest integration services.
 

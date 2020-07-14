@@ -333,8 +333,8 @@ You can disable the use of this encrypted folder by specifying
 
                 // Load the user name and password from the command line options, if present.
 
-                MachineUsername = KubeConst.DefaultVmTemplateUsername;
-                MachinePassword = LeftCommandLine.GetOption("--machine-password", KubeConst.DefaultVmTemplatePassword);
+                MachineUsername = KubeConst.SysAdminUsername;
+                MachinePassword = LeftCommandLine.GetOption("--machine-password", KubeConst.VmTemplatePassword);
 
                 // Handle the other options.
 
@@ -403,7 +403,7 @@ You can disable the use of this encrypted folder by specifying
                         Console.WriteLine("    ------------------------------------------");
                     }
 
-                    MachineUsername = KubeConst.DefaultVmTemplateUsername;
+                    MachineUsername = KubeConst.SysAdminUsername;
 
                     while (string.IsNullOrEmpty(MachinePassword))
                     {

@@ -647,7 +647,7 @@ OPTIONS:
                     for (int i = 0; i < 100; i++)
                     {
                         sbVolumesScript.AppendLineLinux($"mkdir -p {KubeConst.LocalVolumePath}/{i}");
-                        sbVolumesScript.AppendLineLinux($"chown {KubeConst.ContainerUser}:{KubeConst.ContainerGroup} {KubeConst.LocalVolumePath}/{i}");
+                        sbVolumesScript.AppendLineLinux($"chown {KubeConst.ContainerUsername}:{KubeConst.ContainerGroup} {KubeConst.LocalVolumePath}/{i}");
                         sbVolumesScript.AppendLineLinux($"chmod 770 {KubeConst.LocalVolumePath}/{i}");
                     }
 

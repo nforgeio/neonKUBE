@@ -189,7 +189,7 @@ Server Requirements:
 
             var orgSshPassword = Program.MachinePassword;
 
-            if (Program.MachinePassword == KubeConst.DefaultVmTemplatePassword)
+            if (Program.MachinePassword == KubeConst.VmTemplatePassword)
             {
                 Program.MachinePassword = NeonHelper.GetCryptoRandomPassword(clusterDefinition.NodeOptions.PasswordLength);
 
