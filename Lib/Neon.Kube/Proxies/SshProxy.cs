@@ -749,7 +749,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
             // after 10 seconds so I essentially reconnected to the server
             // with the reboot still pending.
             //
-            // To ensure against this, I'm going to do the following:
+            // To ensure we avoid this, I'm going to do the following:
             //
             //      1. Create a transient file at [/dev/shm/neonkube/rebooting]. 
             //         Since [/dev/shm] is a TMPFS, this file will no longer
@@ -774,6 +774,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
             {
                 SudoCommand($"mkdir -p {KubeHostFolders.Tmpfs} && touch {RebootStatusPath}");
                 LogLine("*** REBOOT");
+                SudoCommand("systemctl stop systemd-logind.service", RunOptions.LogOutput);
                 SudoCommand("reboot", RunOptions.Defaults | RunOptions.Shutdown);
                 LogLine("*** REBOOT submitted");
             }
