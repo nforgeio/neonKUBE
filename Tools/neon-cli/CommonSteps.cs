@@ -332,6 +332,22 @@ fi
             //-----------------------------------------------------------------
             // Other configuration.
 
+            node.Status = "configure: journald filters";
+
+            var filterScript =
+@"
+# neonKUBE: 
+#
+# Filter [rsyslog.service] log events we don't care about.
+
+cat <<EOF > /etc/rsyslog.d/60-filter.conf
+if $programname == ""systemd"" and ($msg startswith ""Created slice "" or $msg startswith ""Removed slice z"") then stop
+EOF
+
+systemctl restart rsyslog.service
+";
+            node.SudoCommand(CommandBundle.FromScript(filterScript), RunOptions.FaultOnError);
+
             node.Status = "configure: openssh";
 
             ConfigureOpenSSH(node, TimeSpan.Zero);
