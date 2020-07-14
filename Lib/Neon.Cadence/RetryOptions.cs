@@ -193,7 +193,7 @@ namespace Neon.Cadence
         /// <param name="reason">The reason string.</param>
         public void DoNotRetry(string reason)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(reason));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(reason), nameof(reason));
 
             NonRetriableErrors.Add(reason);
         }

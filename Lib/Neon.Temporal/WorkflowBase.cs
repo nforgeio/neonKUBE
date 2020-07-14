@@ -241,7 +241,7 @@ namespace Neon.Temporal
         /// <returns>The <see cref="SyncSignalStatus"/> for the signal.</returns>
         internal SyncSignalStatus GetSignalStatus(string signalId)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalId), nameof(signalId));
 
             // Lookup the status for the signal.
 

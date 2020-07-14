@@ -66,10 +66,6 @@ OPTIONS:
                       the VM being used to create the template.  This is
                       required for [--xenserver] mode.
 
-    --host-username - Specifies the username required to login into the
-                      machine hosting the VM used to create the template.
-                      This defaults to [root].
-
     --host-password - Specifies the password required to login into the
                       machine hosting the VM used to create the template
                       this is required for [--xenserver] mode.
@@ -115,7 +111,7 @@ node template.
         }
 
         /// <inheritdoc/>
-        public override string[] ExtendedOptions => new string[] { "--hyperv", "--xenserver", "--host-address", "--host-username", "--host-password", "--vm-name", "--update" };
+        public override string[] ExtendedOptions => new string[] { "--hyperv", "--xenserver", "--host-address", "--host-password", "--vm-name", "--update" };
 
         /// <inheritdoc/>
         public override void Help()
@@ -137,7 +133,7 @@ node template.
             var vmHost        = hyperv ? "Hyper-V" : "XenServer";
             var vmName        = commandLine.GetOption("--vm-name", "xenserver-ubuntu-neon");
             var hostAddress   = commandLine.GetOption("--host-address");
-            var hostUsername  = commandLine.GetOption("--host-username", "root");
+            var hostUsername  = KubeConst.DefaultVmTemplateUsername;
             var hostPassword  = commandLine.GetOption("--host-password");
             var update        = commandLine.GetFlag("--update");
             var hostIpAddress = (IPAddress)null;
@@ -147,12 +143,6 @@ node template.
                 if (string.IsNullOrEmpty(hostAddress))
                 {
                     Console.Error.WriteLine("**** ERROR: [--host-address] must be specified for [--xenserver].");
-                    Program.Exit(1);
-                }
-
-                if (string.IsNullOrEmpty(hostUsername))
-                {
-                    Console.Error.WriteLine("**** ERROR: [--host-username] must be specified for [--xenserver].");
                     Program.Exit(1);
                 }
 
@@ -183,8 +173,8 @@ node template.
                 Program.Exit(1);
             }
 
-            Program.MachineUsername = Program.CommandLine.GetOption("--machine-username", "sysadmin");
-            Program.MachinePassword = Program.CommandLine.GetOption("--machine-password", "sysadmin0000");
+            Program.MachineUsername = hostUsername;
+            Program.MachinePassword = hostPassword;
 
             Covenant.Assert(Program.MachineUsername == KubeConst.SysAdminUser);
 
@@ -194,29 +184,29 @@ node template.
             Console.WriteLine($"** Prepare {vmHost} VM Template ***");
             Console.WriteLine();
 
-            using (var server = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
+            using (var node = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
             {
                 // Disable sudo password prompts.
 
                 Console.WriteLine("Disable:  [sudo] password");
-                server.DisableSudoPrompt(Program.MachinePassword);
+                node.DisableSudoPrompt(Program.MachinePassword);
             }
 
-            using (var server = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
+            using (var node = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
             {
                 Console.WriteLine($"Login:    [{KubeConst.SysAdminUser}]");
-                server.WaitForBoot();
+                node.WaitForBoot();
 
                 // Install required packages:
 
                 Console.WriteLine("Install:  packages");
-                server.SudoCommand("apt-get update", RunOptions.FaultOnError);
-                server.SudoCommand("apt-get install -yq --allow-downgrades zip secure-delete", RunOptions.FaultOnError);
+                node.SudoCommand("apt-get update", RunOptions.FaultOnError);
+                node.SudoCommand("apt-get install -yq --allow-downgrades zip secure-delete", RunOptions.FaultOnError);
 
                 if (update)
                 {
                     Console.WriteLine("Run:      apt-get dist-upgrade -yq");
-                    server.SudoCommand("apt-get dist-upgrade -yq");
+                    node.SudoCommand("apt-get dist-upgrade -yq");
                 }
 
                 // Disable SWAP by editing [/etc/fstab] to remove the [/swap.img] line:
@@ -225,7 +215,7 @@ node template.
 
                 var sbFsTab = new StringBuilder();
 
-                using (var reader = new StringReader(server.DownloadText("/etc/fstab")))
+                using (var reader = new StringReader(node.DownloadText("/etc/fstab")))
                 {
                     foreach (var line in reader.Lines())
                     {
@@ -236,7 +226,7 @@ node template.
                     }
                 }
 
-                server.UploadText("/etc/fstab", sbFsTab, permissions: "644", owner: "root:root");
+                node.UploadText("/etc/fstab", sbFsTab, permissions: "644", owner: "root:root");
 
                 // We need to relocate the [sysadmin] UID/GID to 1234 so we
                 // can create the [container] user and group at 1000.  We'll
@@ -255,7 +245,7 @@ echo 'temp:{Program.MachinePassword}' | chpasswd
 adduser temp sudo
 chown temp:temp /home/temp
 ";
-                server.SudoCommand(CommandBundle.FromScript(tempUserScript), RunOptions.FaultOnError);
+                node.SudoCommand(CommandBundle.FromScript(tempUserScript), RunOptions.FaultOnError);
                 Console.WriteLine($"Logout");
             }
 
@@ -264,10 +254,10 @@ chown temp:temp /home/temp
 
             Program.MachineUsername = "temp";
 
-            using (var server = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
+            using (var node = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
             {
                 Console.WriteLine($"Login:    [temp]");
-                server.WaitForBoot(createHomeFolders: true);
+                node.WaitForBoot(createHomeFolders: true);
 
                 // Beginning with Ubuntu 20.04 we're seeing systemd/(sd-pam) processes 
                 // hanging around for a while for the [temp] process which prevents us 
@@ -275,7 +265,7 @@ chown temp:temp /home/temp
                 // killing any [temp] user processes first.
 
                 Console.WriteLine("Kill:     [sysadmin] processes");
-                server.SudoCommand("pkill -u sysadmin");
+                node.SudoCommand("pkill -u sysadmin");
 
                 // Relocate the [sysadmin] user to from [uid=1000:gid=1000} to [1234:1234]:
 
@@ -295,7 +285,7 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
 ";
 
                 Console.WriteLine("Relocate: [sysadmin] user/group IDs");
-                server.SudoCommand(CommandBundle.FromScript(sysadminUserScript), RunOptions.FaultOnError);
+                node.SudoCommand(CommandBundle.FromScript(sysadminUserScript), RunOptions.FaultOnError);
                 Console.WriteLine($"Logout");
             }
 

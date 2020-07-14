@@ -306,7 +306,7 @@ namespace Neon.Common
         public ExecuteResponse ExecuteWithInput(ProgramEntrypoint main, string inputText, params string[] args)
         {
             Covenant.Requires<ArgumentNullException>(main != null, nameof(main));
-            Covenant.Requires<ArgumentNullException>(inputText != null);
+            Covenant.Requires<ArgumentNullException>(inputText != null, nameof(inputText));
 
             return ExecuteWithInput(main, Encoding.UTF8.GetBytes(inputText), args);
         }

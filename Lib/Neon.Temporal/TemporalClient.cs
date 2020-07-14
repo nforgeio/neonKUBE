@@ -653,7 +653,7 @@ namespace Neon.Temporal
         /// <param name="folderPath">Path to the output folder.</param>
         public static void ExtractTemporalProxy(string folderPath)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folderPath));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folderPath), nameof(folderPath));
 
             var resources = new string[]
             {

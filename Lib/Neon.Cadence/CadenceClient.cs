@@ -655,7 +655,7 @@ namespace Neon.Cadence
         /// <param name="folderPath">Path to the output folder.</param>
         public static void ExtractCadenceProxy(string folderPath)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folderPath));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folderPath), nameof(folderPath));
 
             var resources = new string[]
             {

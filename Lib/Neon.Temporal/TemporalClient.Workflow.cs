@@ -462,7 +462,7 @@ namespace Neon.Temporal
         public async Task<WorkflowDescription> DescribeWorkflowExecutionAsync(string workflowId, string runid = null, string @namespace = null)
         {
             await SyncContext.ClearAsync;
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
             EnsureNotDisposed();
 
             @namespace = ResolveNamespace(@namespace);
@@ -525,7 +525,7 @@ namespace Neon.Temporal
         /// </remarks>
         public async Task WaitForWorkflowStartAsync(WorkflowExecution execution, string @namespace = null, TimeSpan? maxWait = null)
         {
-            Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
 
             maxWait = maxWait ?? Settings.MaxWorkflowWaitUntilRunning;
 
