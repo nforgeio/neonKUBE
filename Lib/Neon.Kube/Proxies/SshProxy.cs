@@ -941,7 +941,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
         }
 
         /// <summary>
-        /// Establishes a connection to the server.
+        /// Establishes a connection to the server, disconnecting first if the proxy is already connected.
         /// </summary>
         /// <param name="timeout">Maximum amount of time to wait for a connection (defaults to <see cref="ConnectTimeout"/>).</param>
         public void Connect(TimeSpan timeout = default)
@@ -949,6 +949,12 @@ rm {KubeHostFolders.Home(Username)}/askpass
             if (timeout == default(TimeSpan))
             {
                 timeout = ConnectTimeout;
+            }
+
+            if (sshClient != null)
+            {
+                sshClient.Disconnect();
+                sshClient = null;
             }
 
             try
@@ -997,8 +1003,9 @@ rm {KubeHostFolders.Home(Username)}/askpass
                             sshClient.Connect();
                         }
 
-                        // We need to make sure requiretty is turned off and that sudo can execute commands without a password.
+                        // We need to make sure [requiretty] is turned off and that sudo can execute commands without a password.
                         // The sleeps are required when using the ShellStream, otherwise the commands won't work.
+
                         using (var sh = sshClient.CreateShellStream("terminal", 80, 40, 80, 40, 1024))
                         {
                             sh.WriteLine("grep -qxF 'Defaults !requiretty' /etc/sudoers.d/notty || echo 'Defaults !requiretty' >> /etc/sudoers.d/notty");
@@ -1091,49 +1098,59 @@ rm {KubeHostFolders.Home(Username)}/askpass
             //    VERSION_CODENAME=bionic
             //    UBUNTU_CODENAME=bionic
 
-
-            var osRelease = DownloadText("/etc/os-release");
-
-            using (var reader = new StringReader(osRelease))
+            try
             {
-                foreach (var line in reader.Lines())
+                var osRelease = DownloadText("/etc/os-release");
+
+                using (var reader = new StringReader(osRelease))
                 {
-                    if (string.IsNullOrWhiteSpace(line))
+                    foreach (var line in reader.Lines())
                     {
-                        continue;
-                    }
+                        if (string.IsNullOrWhiteSpace(line))
+                        {
+                            continue;
+                        }
 
-                    var split = line.Split(new char[] { '=' }, 2);
+                        var split = line.Split(new char[] { '=' }, 2);
 
-                    if (split.Length < 2)
-                    {
-                        continue;
-                    }
+                        if (split.Length < 2)
+                        {
+                            continue;
+                        }
 
-                    var name  = split[0];
-                    var value = split[1];
+                        var name = split[0];
+                        var value = split[1];
 
-                    switch (name)
-                    {
-                        case "NAME":
+                        switch (name)
+                        {
+                            case "NAME":
 
-                            OsName = value.Replace("\"", string.Empty);
-                            break;
+                                OsName = value.Replace("\"", string.Empty);
+                                break;
 
-                        case "VERSION":
+                            case "VERSION":
 
-                            var version = value.Replace("\"", string.Empty);
-                            var pSpace  = version.IndexOf(' ');
+                                var version = value.Replace("\"", string.Empty);
+                                var pSpace = version.IndexOf(' ');
 
-                            if (pSpace != -1)
-                            {
-                                version = version.Substring(0, pSpace);
-                            }
+                                if (pSpace != -1)
+                                {
+                                    version = version.Substring(0, pSpace);
+                                }
 
-                            OsVersion = new Version(version);
-                            break;
+                                OsVersion = new Version(version);
+                                break;
+                        }
                     }
                 }
+            }
+            catch
+            {
+                // It is possible for this to fail when the host folders
+                // haven't been created yet.
+
+                OsName    = "unknown";
+                OsVersion = new Version();
             }
         }
 

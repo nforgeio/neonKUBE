@@ -1951,5 +1951,207 @@ exit 0
             return vfdFile;
         }
 #endif // NO_BUILD
+
+        /// <summary>
+        /// Writes a message to a log writer action when it's not <c>null</c>.
+        /// </summary>
+        /// <param name="logWriter">The log writer action ot <c>null</c>.</param>
+        /// <param name="message">The message or <c>null</c> to wtite a blank line.</param>
+        private static void WriteLog(Action<string> logWriter, string message = null)
+        {
+            if (logWriter != null)
+            {
+                logWriter(message ?? string.Empty);
+            }
+        }
+
+        /// <summary>
+        /// Performs low-level initialization of a cluster node.  This is applied one time to
+        /// Hyper-V and XenServer/XCP-ng node templates when they are created and at cluster
+        /// creation time for cloud and bare metal based clusters.  The node must already
+        /// be booted and running.
+        /// </summary>
+        /// <param name="node">The node's SSH proxy.</param>
+        /// <param name="sshPassword">The current <b>sysadmin</b> password.</param>
+        /// <param name="updateDistribution">Controls whether the node's Linux distribution is upgraded.</param>
+        /// <param name="logWriter">Action that writes a line of text to the operation output log or console (or <c>null</c>).</param>
+        internal static void InitializeNode(SshProxy<string> node, string sshPassword, bool updateDistribution, Action<string> logWriter)
+        {
+            Covenant.Requires<ArgumentNullException>(logWriter != null, nameof(logWriter));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sshPassword), nameof(sshPassword));
+
+            // $hack(jefflill):
+            //
+            // This method is going to be called for two different scenarios that will each
+            // call for different logging mechanisms.
+            //
+            //      1. For the [neon prepare node-termplate] command, we're simply going 
+            //         to write status to the console as lines via the [logWriter].
+            //
+            //      2. For node preparation for cloud and bare metal clusters, we're
+            //         going to set the node status and use the standard setup progress
+            //         mechanism to display the status.
+            //
+            // [logWriter] will be NULL for the second scenario so we'll call the log helper
+            // method above which won't do anything.
+            //
+            // For scenario #1, there is no setup display mechanism, so updating node status
+            // won't actually display anything, so we'll just set the status as well without
+            // harming anything.
+
+            // Wait for boot/connect.
+
+            WriteLog(logWriter, $"Login:    [{KubeConst.SysAdminUsername}]");
+            node.Status = $"login: [{KubeConst.SysAdminUsername}]";
+
+            node.WaitForBoot(createHomeFolders: true);
+
+            // Disable sudo password prompts and reconnect.
+
+            WriteLog(logWriter, "Disable:  [sudo] password");
+            node.Status = "disable: sudo password";
+            node.DisableSudoPrompt(sshPassword);
+
+            WriteLog(logWriter, $"Login:    [{KubeConst.SysAdminUsername}]");
+            node.Status = "reconnecting...";
+            node.WaitForBoot();
+
+            // Install required packages and ugrade the distribution if requested.
+
+            WriteLog(logWriter, "Install:  packages");
+            node.Status = "install: packages";
+            node.SudoCommand("apt-get update", RunOptions.FaultOnError);
+            node.SudoCommand("apt-get install -yq --allow-downgrades zip secure-delete", RunOptions.FaultOnError);
+
+            if (updateDistribution)
+            {
+                WriteLog(logWriter, "Run:      apt-get dist-upgrade -yq");
+                node.Status = "upgrade distribution";
+                node.SudoCommand("apt-get dist-upgrade -yq");
+            }
+
+            // Disable SWAP by editing [/etc/fstab] to remove the [/swap.img] line.
+
+            WriteLog(logWriter, "Disable:  swap");
+            node.Status = "disable: swap";
+
+            var sbFsTab = new StringBuilder();
+
+            using (var reader = new StringReader(node.DownloadText("/etc/fstab")))
+            {
+                foreach (var line in reader.Lines())
+                {
+                    if (!line.Contains("/swap.img"))
+                    {
+                        sbFsTab.AppendLine(line);
+                    }
+                }
+            }
+
+            node.UploadText("/etc/fstab", sbFsTab, permissions: "644", owner: "root:root");
+
+            // We need to relocate the [sysadmin] UID/GID to 1234 so we
+            // can create the [container] user and group at 1000.  We'll
+            // need to create a temporary user with root permissions to
+            // delete and then recreate the [sysadmin] account.
+
+            WriteLog(logWriter, "Create:   [temp] user");
+            node.Status = "create: [temp] user";
+
+            var tempUserScript =
+$@"#!/bin/bash
+
+# Create the [temp] user.
+
+useradd --uid 5000 --create-home --groups root temp
+echo 'temp:{sshPassword}' | chpasswd
+adduser temp sudo
+chown temp:temp /home/temp
+";
+            node.SudoCommand(CommandBundle.FromScript(tempUserScript), RunOptions.FaultOnError);
+
+            // Reconnect with the [temp] account so we can relocate the [sysadmin]
+            // user and its group ID to ID=1234.
+
+            WriteLog(logWriter, $"Login:    [temp]");
+            node.Status = "login: [temp]";
+
+            node.UpdateCredentials(SshCredentials.FromUserPassword("temp", sshPassword));
+            node.Connect();
+            node.WaitForBoot(createHomeFolders: true);
+
+            // Beginning with Ubuntu 20.04 we're seeing [systemd/(sd-pam)] processes 
+            // hanging around for a while for the [sysadmin] user which prevents us 
+            // from deleting the [temp] user below.  We're going to handle this by
+            // killing any [temp] user processes first.
+
+            WriteLog(logWriter, "Kill:     [sysadmin] user processes");
+            node.Status = "kill: [sysadmin] processes";
+            node.SudoCommand("pkill -u sysadmin");
+
+            // Relocate the [sysadmin] user to from [uid=1000:gid=1000} to [1234:1234]:
+
+            var sysadminUserScript =
+$@"#!/bin/bash
+
+# Update all file references from the old to new [sysadmin]
+# user and group IDs:
+
+find / -group 1000 -exec chgrp -h {KubeConst.SysAdminGroup} {{}} \;
+find / -user 1000 -exec chown -h {KubeConst.SysAdminUsername} {{}} \;
+
+# Relocate the [sysadmin] UID and GID:
+
+groupmod --gid {KubeConst.SysAdminGID} {KubeConst.SysAdminGroup}
+usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups root,sysadmin,sudo {KubeConst.SysAdminUsername}
+";
+
+            WriteLog(logWriter, "Relocate: [sysadmin] user/group IDs");
+            node.Status = "relocate: [sysadmin] user/group IDs";
+            node.SudoCommand(CommandBundle.FromScript(sysadminUserScript), RunOptions.FaultOnError);
+            WriteLog(logWriter, $"Logout");
+            node.Status = "logout";
+
+            // We need to reconnect again with [sysadmin] so we can remove
+            // the [temp] user, create the [container] user and then
+            // wrap things up.
+
+            node.SudoCommand(CommandBundle.FromScript(tempUserScript), RunOptions.FaultOnError);
+            WriteLog(logWriter, $"Login:    [{KubeConst.SysAdminUsername}]");
+            node.Status = $"login: [{KubeConst.SysAdminUsername}]";
+
+            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, sshPassword));
+            node.Connect();
+
+            // Beginning with Ubuntu 20.04 we're seeing systemd/(sd-pam) processes 
+            // hanging around for a while for the [temp] process which prevents us 
+            // from deleting the [temp] user below.  We're going to handle this by
+            // killing any [temp] user processes first.
+
+            WriteLog(logWriter, "Kill:     [temp] user processes");
+            node.Status = "kill: [temp] user processes";
+            node.SudoCommand("pkill -u temp");
+
+            // Remove the [temp] user.
+
+            WriteLog(logWriter, "Remove:   [temp] user");
+            node.Status = "remove: [temp] user";
+            node.SudoCommand($"rm -rf /home/temp", RunOptions.FaultOnError);
+
+            // Ensure that the owner and group for files in the [sysadmin]
+            // home folder are correct.
+
+            WriteLog(logWriter, "Set:      [sysadmin] home folder owner");
+            node.Status = "set: [sysadmin] home folder owner";
+            node.SudoCommand($"chown -R {KubeConst.SysAdminUsername}:{KubeConst.SysAdminGroup} .*", RunOptions.FaultOnError);
+
+            // Create the [container] user with no home directory.  This
+            // means that the [container] user will have no chance of
+            // logging into the machine.
+
+            WriteLog(logWriter, $"Create:   [{KubeConst.ContainerUsername}] user");
+            node.Status = $"create: [{KubeConst.ContainerUsername}] user";
+            node.SudoCommand($"useradd --uid {KubeConst.ContainerUID} --no-create-home {KubeConst.ContainerUsername}", RunOptions.FaultOnError);
+        }
     }
 }

@@ -67,14 +67,16 @@ OPTIONS:
                       required for [--xenserver] mode.
 
     --host-password - Specifies the password required to login into the
-                      machine hosting the VM used to create the template
-                      this is required for [--xenserver] mode.
+                      machine hosting the VM used to create the template.
+                      This is required for [--xenserver] mode.
 
     --vm-name       - Identifies the VM being used to generate the node
                       template.  This defaults to the name specified in
                       the setup instructions:
 
                           ""xenserver-ubuntu-neon""
+
+                      This is required for [--xenserver] mode.
 
     --update        - Applies any distribution updates to the template. 
 
@@ -118,6 +120,9 @@ node template.
         {
             Console.WriteLine(usage);
         }
+
+        /// <inheritdoc/>
+        public override bool NeedsSshCredentials(CommandLine commandLine) => true;
 
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
@@ -173,164 +178,18 @@ node template.
                 Program.Exit(1);
             }
 
-            Program.MachineUsername = hostUsername;
-            Program.MachinePassword = hostPassword;
-
-            Covenant.Assert(Program.MachineUsername == KubeConst.SysAdminUsername);
-
             // Prepare the template.
 
             Console.WriteLine();
             Console.WriteLine($"** Prepare {vmHost} VM Template ***");
             Console.WriteLine();
 
-            using (var node = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
-            {
-                // Disable sudo password prompts.
-
-                Console.WriteLine("Disable:  [sudo] password");
-                node.DisableSudoPrompt(Program.MachinePassword);
-            }
-
-            using (var node = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
-            {
-                Console.WriteLine($"Login:    [{KubeConst.SysAdminUsername}]");
-                node.WaitForBoot();
-
-                // Install required packages:
-
-                Console.WriteLine("Install:  packages");
-                node.SudoCommand("apt-get update", RunOptions.FaultOnError);
-                node.SudoCommand("apt-get install -yq --allow-downgrades zip secure-delete", RunOptions.FaultOnError);
-
-                if (update)
-                {
-                    Console.WriteLine("Run:      apt-get dist-upgrade -yq");
-                    node.SudoCommand("apt-get dist-upgrade -yq");
-                }
-
-                // Disable SWAP by editing [/etc/fstab] to remove the [/swap.img] line:
-
-                Console.WriteLine("Disable:  swap");
-
-                var sbFsTab = new StringBuilder();
-
-                using (var reader = new StringReader(node.DownloadText("/etc/fstab")))
-                {
-                    foreach (var line in reader.Lines())
-                    {
-                        if (!line.Contains("/swap.img"))
-                        {
-                            sbFsTab.AppendLine(line);
-                        }
-                    }
-                }
-
-                node.UploadText("/etc/fstab", sbFsTab, permissions: "644", owner: "root:root");
-
-                // We need to relocate the [sysadmin] UID/GID to 1234 so we
-                // can create the [container] user and group at 1000.  We'll
-                // need to create a temporary user with root permissions to
-                // delete and then recreate the [sysadmin] account.
-
-                Console.WriteLine("Create:   [temp] user");
-
-                var tempUserScript =
-$@"#!/bin/bash
-
-# Create the [temp] user.
-
-useradd --uid 5000 --create-home --groups root temp
-echo 'temp:{Program.MachinePassword}' | chpasswd
-adduser temp sudo
-chown temp:temp /home/temp
-";
-                node.SudoCommand(CommandBundle.FromScript(tempUserScript), RunOptions.FaultOnError);
-                Console.WriteLine($"Logout");
-            }
-
-            // We need to reconnect with the new temporary account so
-            // we can relocate the [sysadmin] user to its new UID.
-
-            Program.MachineUsername = "temp";
-
-            using (var node = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
-            {
-                Console.WriteLine($"Login:    [temp]");
-                node.WaitForBoot(createHomeFolders: true);
-
-                // Beginning with Ubuntu 20.04 we're seeing systemd/(sd-pam) processes 
-                // hanging around for a while for the [temp] process which prevents us 
-                // from deleting the [temp] user below.  We're going to handle this by
-                // killing any [temp] user processes first.
-
-                Console.WriteLine("Kill:     [sysadmin] processes");
-                node.SudoCommand("pkill -u sysadmin");
-
-                // Relocate the [sysadmin] user to from [uid=1000:gid=1000} to [1234:1234]:
-
-                var sysadminUserScript =
-$@"#!/bin/bash
-
-# Update all file references from the old to new [sysadmin]
-# user and group IDs:
-
-find / -group 1000 -exec chgrp -h {KubeConst.SysAdminGroup} {{}} \;
-find / -user 1000 -exec chown -h {KubeConst.SysAdminUsername} {{}} \;
-
-# Relocate the [sysadmin] UID and GID:
-
-groupmod --gid {KubeConst.SysAdminGID} {KubeConst.SysAdminGroup}
-usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups root,sysadmin,sudo {KubeConst.SysAdminUsername}
-";
-
-                Console.WriteLine("Relocate: [sysadmin] user/group IDs");
-                node.SudoCommand(CommandBundle.FromScript(sysadminUserScript), RunOptions.FaultOnError);
-                Console.WriteLine($"Logout");
-            }
-
-            // We need to reconnect again with [sysadmin] so we can remove
-            // the [temp] user, create the [container] user and then
-            // wrap things up.  Beginning with Ubuntu 20.04 we're seeing
-            // [systemd/(sd-pam)] processes hanging around for a while for
-            // the [temp] user which prevents us from deleting the [temp]
-            // user below.
-            //
-            // We're going to work around this be rebooting by killing all
-            // [sysadmin] processes.
-
             Program.MachineUsername = KubeConst.SysAdminUsername;
+            Program.MachinePassword = KubeConst.VmTemplatePassword;
 
-            using (var node = Program.CreateNodeProxy<string>("vm-template", address, ipAddress, appendToLog: false))
+            using (var node = Program.CreateNodeProxy<string>("node-template", address, ipAddress, appendToLog: false))
             {
-                Console.WriteLine($"Login:    [{KubeConst.SysAdminUsername}]");
-                node.WaitForBoot();
-
-                // Ensure that the owner and group for files in the [sysadmin]
-                // home folder are correct.
-
-                Console.WriteLine("Set:      [sysadmin] home folder owner");
-                node.SudoCommand($"chown -R {KubeConst.SysAdminUsername}:{KubeConst.SysAdminGroup} .*", RunOptions.FaultOnError);
-
-                // Beginning with Ubuntu 20.04 we're seeing systemd/(sd-pam) processes 
-                // hanging around for a while for the [temp] process which prevents us 
-                // from deleting the [temp] user below.  We're going to handle this by
-                // killing any [temp] user processes first.
-
-                Console.WriteLine("Kill:     [temp] user processes");
-                node.SudoCommand("pkill -u temp");
-
-                // Remove the [temp] user.
-
-                Console.WriteLine("Remove:   [temp] user");
-                node.SudoCommand($"rm -rf /home/temp", RunOptions.FaultOnError);
-
-                // Create the [container] user with no home directory.  This
-                // means that the [container] user will have no chance of
-                // logging into the machine.
-
-                Console.WriteLine("Create:   [container] user");
-                node.SudoCommand($"useradd --uid {KubeConst.ContainerUID} --no-create-home {KubeConst.ContainerUsername}", RunOptions.FaultOnError);
+                KubeHelper.InitializeNode(node, Program.MachinePassword, update, message => Console.WriteLine(message));
 
                 // Configure the Linux guest integration services.
 
@@ -592,6 +451,9 @@ sfill -fllz /
 
                     // Establish an SSH connection to the XenServer host so we'll
                     // be able to mount and eject the XenServer tools ISO to the VM.
+
+                    Program.MachineUsername = hostUsername;
+                    Program.MachinePassword = hostPassword;
 
                     using (var xenHost = new XenClient(hostAddress, hostUsername, hostPassword, name: hostAddress, logFolder: KubeHelper.LogFolder))
                     {

@@ -29,3 +29,6 @@ neon cluster setup --unredacted root@wrt-jeff-small
 
 # Cadence Testing
 taskkill /f /FI "imagename eq cadence-proxy*"
+
+# Other
+neon prepare node-template --machine-password=sysadmin0000 --hyperv 10.0.0.114

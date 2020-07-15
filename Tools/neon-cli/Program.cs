@@ -412,14 +412,7 @@ You can disable the use of this encrypted folder by specifying
                 }
                 else
                 {
-                    // $hack(jefflill):
-                    //
-                    // Only the [neon cluster prepare ...] command recognizes the [--machine-username] and
-                    // [--machine-password] options.  These can cause problems for other commands
-                    // so we're going to set both to NULL here.
-                    //
-                    // It would be cleaner to enable these only for the prepare command but the SSH proxy
-                    // authentication code is already a bit twisted and I don't want to mess with it.
+                    // Reset these for commands that don't need it.
 
                     MachineUsername = null;
                     MachinePassword = null;
