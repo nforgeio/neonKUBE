@@ -2123,8 +2123,8 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
             node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, sshPassword));
             node.Connect();
 
-            // Beginning with Ubuntu 20.04 we're seeing systemd/(sd-pam) processes 
-            // hanging around for a while for the [temp] process which prevents us 
+            // Beginning with Ubuntu 20.04 we're seeing [systemd/(sd-pam)] processes 
+            // hanging around for a while for the [temp] user which prevents us 
             // from deleting the [temp] user below.  We're going to handle this by
             // killing any [temp] user processes first.
 

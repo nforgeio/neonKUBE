@@ -453,7 +453,9 @@ You can disable the use of this encrypted folder by specifying
         /// <summary>
         /// Returns the Git source code branch.
         /// </summary>
+#pragma warning disable 0436
         public static string GitBranch => ThisAssembly.Git.Branch;
+#pragma warning restore 0436
 
         /// <summary>
         /// Path to the WinSCP program executable.
@@ -548,7 +550,9 @@ You can disable the use of this encrypted folder by specifying
         {
             get
             {
+#pragma warning disable 0436
                 var version = $"{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}";
+#pragma warning restore 0436
 
 #pragma warning disable 162 // Unreachable code
 
@@ -591,7 +595,9 @@ You can disable the use of this encrypted folder by specifying
         /// Returns <c>true</c> if the program was built from the production <b>PROD</b> 
         /// source code branch.
         /// </summary>
+#pragma warning disable 0436
         public static bool IsRelease => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase);
+#pragma warning restore 0436
 
         /// <summary>
         /// Returns the username used to secure the cluster nodes before they are setup.  This
@@ -1018,7 +1024,9 @@ You can disable the use of this encrypted folder by specifying
                 }
                 else
                 {
+#pragma warning disable 0436
                     return normalized.Replace(":latest", $":{ThisAssembly.Git.Branch.ToLowerInvariant()}-latest");
+#pragma warning restore 0436
                 }
             }
             else
