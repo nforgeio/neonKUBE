@@ -1421,7 +1421,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// TLS certificates.
         /// </note>
         /// </remarks>
-        private void PrepareHostAndUser(bool neonKUBE = false)
+        public void PrepareHostAndUser(bool neonKUBE = false)
         {
             // We need to be connected.
 
@@ -1435,30 +1435,31 @@ rm {KubeHostFolders.Home(Username)}/askpass
 
             Status = "prepare: user folders";
 
-            // [download]
+            // [~/.neonkube]
 
-            var folderPath = KubeHostFolders.Download(Username);
+            var folderPath = KubeHostFolders.NeonKubeHome(Username);
+            sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
-            sshClient.RunCommand($"sudo mkdir -p {folderPath}");
-            sshClient.RunCommand($"sudo chmod 777 {folderPath}");
+            // [~/.neonkube/download]
 
-            // [exec]
+            folderPath = KubeHostFolders.Download(Username);
+            sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
+
+            // [~/.neonkube/exec]
 
             folderPath = KubeHostFolders.Exec(Username);
-            sshClient.RunCommand($"sudo mkdir -p {folderPath}");
-            sshClient.RunCommand($"sudo chmod 777 {folderPath}");
+            sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
-            // [upload]
+            // [~/.neonkube/upload]
 
             folderPath = KubeHostFolders.Upload(Username);
-            sshClient.RunCommand($"sudo mkdir -p {folderPath}");
-            sshClient.RunCommand($"sudo chmod 777 {folderPath}");
+            sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
             //-----------------------------------------------------------------
-            // Disable SUDO password prompts of this hasn't already been done for this machine.
-            // We can tell be checking whether a file exists at:
+            // Disable SUDO password prompts if this hasn't already been done for this machine.
+            // We can tell be checking whether this file exists:
             //
-            //      /etc/sshproxy-initial
+            //      /etc/sshproxy-init
 
             const string sshProxyInitPath = "/etc/sshproxy-init";
 
@@ -1494,23 +1495,23 @@ rm {KubeHostFolders.Home(Username)}/askpass
             {
                 Status = "prepare: neonKUBE host folders";
 
-                SudoCommand($"mkdir -p {KubeHostFolders.Archive(Username)}", RunOptions.LogOnErrorOnly);
-                SudoCommand($"chmod 750 {KubeHostFolders.Archive(Username)}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"sudo mkdir -p {KubeHostFolders.Archive(Username)}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"sudo chmod 750 {KubeHostFolders.Archive(Username)}", RunOptions.LogOnErrorOnly);
 
-                SudoCommand($"mkdir -p {KubeHostFolders.Bin}", RunOptions.LogOnErrorOnly);
-                SudoCommand($"chmod 750 {KubeHostFolders.Bin}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"sudo mkdir -p {KubeHostFolders.Bin}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"sudo chmod 750 {KubeHostFolders.Bin}", RunOptions.LogOnErrorOnly);
 
-                SudoCommand($"mkdir -p {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
-                SudoCommand($"chmod 750 {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"sudo mkdir -p {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"sudo chmod 750 {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
 
-                SudoCommand($"mkdir -p {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
-                SudoCommand($"chmod 750 {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"sudo mkdir -p {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"sudo chmod 750 {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
 
-                SudoCommand($"mkdir -p {KubeHostFolders.State}", RunOptions.LogOnErrorOnly);
-                SudoCommand($"chmod 750 {KubeHostFolders.State}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"sudo mkdir -p {KubeHostFolders.State}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"sudo chmod 750 {KubeHostFolders.State}", RunOptions.LogOnErrorOnly);
 
-                SudoCommand($"mkdir -p {KubeHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
-                SudoCommand($"chmod 750 {KubeHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
+                SudoCommand($"sudo mkdir -p {KubeHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
+                SudoCommand($"sudo chmod 750 {KubeHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
             }
         }
 
@@ -2340,10 +2341,10 @@ rm {KubeHostFolders.Home(Username)}/askpass
 
             // Create the command folder.
 
-            var execFolder = $"{KubeHostFolders.Exec(Username)}/cmd";
+            var execFolder = $"{KubeHostFolders.Exec(Username)}";
             var cmdFolder  = LinuxPath.Combine(execFolder, Guid.NewGuid().ToString("d"));
 
-            SafeSshOperation("create folder", () => sshClient.RunCommand($"mkdir -p {cmdFolder} && chmod 777 {cmdFolder}"));    // $todo(jefflill): Security issue 777?
+            SafeSshOperation("create folder", () => sshClient.RunCommand($"mkdir -p {cmdFolder} && chmod 700 {cmdFolder}"));
 
             // Generate the command script.
 

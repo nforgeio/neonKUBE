@@ -89,6 +89,13 @@ namespace Neon.Kube
         public static string Home(string username) => $"/home/{username}";
 
         /// <summary>
+        /// Path to a user <b>.neonkube</b> home directory.
+        /// </summary>
+        /// <param name="username">The username.</param>
+        /// <returns>The directory path.</returns>
+        public static string NeonKubeHome(string username) => $"/home/{username}/.neonkube";
+
+        /// <summary>
         /// Path to the cluster management scripts directory.
         /// </summary>
         public const string Scripts = "/lib/neonkube/scripts";
