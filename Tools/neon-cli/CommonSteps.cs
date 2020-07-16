@@ -287,11 +287,6 @@ TCPKeepAlive yes
             }
 
             //-----------------------------------------------------------------
-            // Ensure that the cluster host folders exist.
-
-            node.CreateHostFolders();
-
-            //-----------------------------------------------------------------
             // Package manager configuration.
 
             node.Status = "configure: [apt] package manager";

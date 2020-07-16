@@ -569,21 +569,21 @@ do
 
     # Clean the [SshProxy] temporary download files.
 
-    if [ -d "${HOME}/.download" ] ; then
-        echo "[INFO] Cleaning: ${HOME}/.download"
-        find "${HOME}/.download/*" -type d -ctime +1 | xargs rm -rf
+    if [ -d "$/home/sysadmin/.neonkube/download" ] ; then
+        echo "[INFO] Cleaning: /home/sysadmin/.neonkube/download"
+        find "/home/sysadmin/.neonkube/download/*" -type d -ctime +1 | xargs rm -rf
     fi
 
     # Clean the [SshProxy] temporary exec files.
 
-    if [ -d "${HOME}/.exec" ] ; then
-        echo "[INFO] Cleaning: "${HOME}/.exec""
-        find "${HOME}/.exec/*" -type d -ctime +1 | xargs rm -rf
+    if [ -d "/home/sysadmin/.neonkube/exec" ] ; then
+        echo "[INFO] Cleaning: "/home/sysadmin/.neonkube/exec""
+        find "/home/sysadmin/.neonklube/exec/*" -type d -ctime +1 | xargs rm -rf
     fi
 
-    if [ -d "${HOME}/.upload" ] ; then
-        echo "[INFO] Cleaning: ${HOME}/.upload"
-        find "${HOME}/.upload/*" -type d -ctime +1 | xargs rm -rf
+    if [ -d "/home/sysadmin/.neonkube/upload" ] ; then
+        echo "[INFO] Cleaning: /home/sysadmin/.neonkube/upload"
+        find "/home/sysadmin/.neonkube/upload/*" -type d -ctime +1 | xargs rm -rf
     fi
 
     # Sleep for a while before trying again.

@@ -138,7 +138,6 @@ node template.
             var vmHost        = hyperv ? "Hyper-V" : "XenServer";
             var vmName        = commandLine.GetOption("--vm-name", "xenserver-ubuntu-neon");
             var hostAddress   = commandLine.GetOption("--host-address");
-            var hostUsername  = KubeConst.SysAdminUsername;
             var hostPassword  = commandLine.GetOption("--host-password");
             var update        = commandLine.GetFlag("--update");
             var hostIpAddress = (IPAddress)null;
@@ -183,9 +182,6 @@ node template.
             Console.WriteLine();
             Console.WriteLine($"** Prepare {vmHost} VM Template ***");
             Console.WriteLine();
-
-            Program.MachineUsername = KubeConst.SysAdminUsername;
-            Program.MachinePassword = KubeConst.VmTemplatePassword;
 
             using (var node = Program.CreateNodeProxy<string>("node-template", address, ipAddress, appendToLog: false))
             {
@@ -452,10 +448,9 @@ sfill -fllz /
                     // Establish an SSH connection to the XenServer host so we'll
                     // be able to mount and eject the XenServer tools ISO to the VM.
 
-                    Program.MachineUsername = hostUsername;
                     Program.MachinePassword = hostPassword;
 
-                    using (var xenHost = new XenClient(hostAddress, hostUsername, hostPassword, name: hostAddress, logFolder: KubeHelper.LogFolder))
+                    using (var xenHost = new XenClient(hostAddress, "root", hostPassword, name: hostAddress, logFolder: KubeHelper.LogFolder))
                     {
                         // Ensure that the XenServer host version is [7.5.0].  This is the minimum host version
                         // supported by neonKUBE clusters and it's important that node templates be created on

@@ -53,7 +53,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="username">The username.</param>
         /// <returns>The directory path.</returns>
-        public static string Archive(string username) => $"/home/{username}/.archive";
+        public static string Archive(string username) => $"/home/{username}/.neonkube/archive";
 
         /// <summary>
         /// Path to the cluster executable files directory.
@@ -70,7 +70,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="username">The username.</param>
         /// <returns>The directory path.</returns>
-        public static string Download(string username) => $"/home/{username}/.download";
+        public static string Download(string username) => $"/home/{username}/.neonkube/download";
 
         /// <summary>
         /// The user folder where cluster tools can upload, unpack, and then
@@ -79,7 +79,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="username">The username.</param>
         /// <returns>The directory path.</returns>
-        public static string Exec(string username) => $"/home/{username}/.exec";
+        public static string Exec(string username) => $"/home/{username}/.neonkube/exec";
 
         /// <summary>
         /// Path to a user archive directory.
@@ -114,6 +114,6 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="username">The username.</param>
         /// <returns>The directory path.</returns>
-        public static string Upload(string username) => $"/home/{username}/.upload";
+        public static string Upload(string username) => $"/home/{username}/.neonkube/upload";
     }
 }

@@ -2004,7 +2004,7 @@ exit 0
             WriteLog(logWriter, $"Login:    [{KubeConst.SysAdminUsername}]");
             node.Status = $"login: [{KubeConst.SysAdminUsername}]";
 
-            node.WaitForBoot(createHomeFolders: true);
+            node.WaitForBoot();
 
             // Disable sudo password prompts and reconnect.
 
@@ -2065,8 +2065,17 @@ $@"#!/bin/bash
 
 useradd --uid 5000 --create-home --groups root temp
 echo 'temp:{sshPassword}' | chpasswd
-adduser temp sudo
 chown temp:temp /home/temp
+
+# Add [temp] to the same groups that [sysadmin] belongs to
+# other than [sysadmin].
+
+adduser temp adm
+adduser temp cdrom
+adduser temp sudo
+adduser temp dip
+adduser temp plugdev
+adduser temp lxd
 ";
             node.SudoCommand(CommandBundle.FromScript(tempUserScript), RunOptions.FaultOnError);
 
@@ -2078,7 +2087,6 @@ chown temp:temp /home/temp
 
             node.UpdateCredentials(SshCredentials.FromUserPassword("temp", sshPassword));
             node.Connect();
-            node.WaitForBoot(createHomeFolders: true);
 
             // Beginning with Ubuntu 20.04 we're seeing [systemd/(sd-pam)] processes 
             // hanging around for a while for the [sysadmin] user which prevents us 
@@ -2105,16 +2113,16 @@ find / -user 1000 -exec chown -h {KubeConst.SysAdminUsername} {{}} \;
 groupmod --gid {KubeConst.SysAdminGID} {KubeConst.SysAdminGroup}
 usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups root,sysadmin,sudo {KubeConst.SysAdminUsername}
 ";
-
             WriteLog(logWriter, "Relocate: [sysadmin] user/group IDs");
             node.Status = "relocate: [sysadmin] user/group IDs";
             node.SudoCommand(CommandBundle.FromScript(sysadminUserScript), RunOptions.FaultOnError);
-            WriteLog(logWriter, $"Logout");
-            node.Status = "logout";
 
             // We need to reconnect again with [sysadmin] so we can remove
             // the [temp] user, create the [container] user and then
             // wrap things up.
+
+            WriteLog(logWriter, $"Logout");
+            node.Status = "logout";
 
             node.SudoCommand(CommandBundle.FromScript(tempUserScript), RunOptions.FaultOnError);
             WriteLog(logWriter, $"Login:    [{KubeConst.SysAdminUsername}]");

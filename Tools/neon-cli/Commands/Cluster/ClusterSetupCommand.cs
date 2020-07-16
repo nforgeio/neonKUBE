@@ -560,7 +560,6 @@ OPTIONS:
 
             // Upload the setup and configuration files.
 
-            node.CreateHostFolders();
             node.UploadConfigFiles(cluster.Definition, kubeSetupInfo);
             node.UploadResources(cluster.Definition, kubeSetupInfo);
         }

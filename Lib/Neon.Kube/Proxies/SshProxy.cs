@@ -21,6 +21,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -37,6 +38,7 @@ using Neon.Time;
 using ICSharpCode.SharpZipLib.Zip;
 using Renci.SshNet;
 using Renci.SshNet.Common;
+using Couchbase.Management;
 
 // $todo(jefflill):
 //
@@ -191,8 +193,6 @@ namespace Neon.Kube
         private TextWriter      logWriter;
         private bool            isReady;
         private string          status;
-        private bool            hasUploadFolder;
-        private bool            hasDownloadFolder;
         private string          faultMessage;
 
         /// <summary>
@@ -644,7 +644,7 @@ namespace Neon.Kube
         /// The connected user must already be a member of the <b>root</b> group.
         /// </note>
         /// <note>
-        /// You do not need to call <see cref="Connect(TimeSpan)"/> or <see cref="WaitForBoot(TimeSpan?, bool)"/>
+        /// You do not need to call <see cref="Connect(TimeSpan)"/> or <see cref="WaitForBoot(TimeSpan?)"/>
         /// before calling this method (in fact, calling those methods will probably fail).
         /// </note>
         /// </summary>
@@ -669,7 +669,11 @@ $@"#!/bin/bash
 cat <<EOF > {KubeHostFolders.Home(Username)}/sudo-disable-prompt
 #!/bin/bash
 echo ""%sudo    ALL=NOPASSWD: ALL"" > /etc/sudoers.d/nopasswd
+
+chown root /etc/sudoers.d/*
+chmod 440 /etc/sudoers.d/*
 EOF
+
 chmod 770 {KubeHostFolders.Home(Username)}/sudo-disable-prompt
 
 cat <<EOF > {KubeHostFolders.Home(Username)}/askpass
@@ -944,6 +948,17 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// Establishes a connection to the server, disconnecting first if the proxy is already connected.
         /// </summary>
         /// <param name="timeout">Maximum amount of time to wait for a connection (defaults to <see cref="ConnectTimeout"/>).</param>
+        /// <exception cref="SshProxyException">
+        /// Thrown if the host hasn't been prepared yet and the SSH connection credentials are not username/password
+        /// or if there's problem with low-level host configuration.
+        /// </exception>
+        /// <remarks>
+        /// <note>
+        /// The first time a connection is established is called on a particular host, password credentials 
+        /// must be used so that low-level <b>sudo</b> configuration cxan be performed.  Subsequent connections
+        /// can use TLS certificates.
+        /// </note>
+        /// </remarks>
         public void Connect(TimeSpan timeout = default)
         {
             if (timeout == default(TimeSpan))
@@ -963,11 +978,11 @@ rm {KubeHostFolders.Home(Username)}/askpass
             }
             catch (SshAuthenticationException e)
             {
-                throw new KubeException("Access Denied: Invalid credentials.", e);
+                throw new SshProxyException("Access Denied: Invalid credentials.", e);
             }
             catch (Exception e)
             {
-                throw new KubeException($"Unable to connect to the cluster within [{timeout}].", e);
+                throw new SshProxyException($"Unable to connect to the cluster within [{timeout}].", e);
             }
         }
 
@@ -975,16 +990,24 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// Waits for the server to boot by continuously attempting to establish an SSH session.
         /// </summary>
         /// <param name="timeout">The operation timeout (defaults to <b>10 minutes</b>).</param>
-        /// <param name="createHomeFolders">Optionally ensure that the required HOME folders for the user account exist.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="SshProxyException">
+        /// Thrown if the host hasn't been prepared yet and the SSH connection credentials are not username/password
+        /// or if there's problem with low-level host configuration.
+        /// </exception>
         /// <remarks>
+        /// <note>
+        /// The first time a connection is established is called on a particular host, password credentials 
+        /// must be used so that low-level <b>sudo</b> configuration cxan be performed.  Subsequent connections
+        /// can use TLS certificates.
+        /// </note>
         /// <para>
         /// The method will attempt to connect to the server every 10 seconds up to the specified
         /// timeout.  If it is unable to connect during this time, the exception thrown by the
         /// SSH client will be rethrown.
         /// </para>
         /// </remarks>
-        public void WaitForBoot(TimeSpan? timeout = null, bool createHomeFolders = false)
+        public void WaitForBoot(TimeSpan? timeout = null)
         {
             Covenant.Requires<ArgumentException>(timeout != null ? timeout >= TimeSpan.Zero : true, nameof(timeout));
 
@@ -1003,23 +1026,9 @@ rm {KubeHostFolders.Home(Username)}/askpass
                             sshClient.Connect();
                         }
 
-                        // We need to make sure [requiretty] is turned off and that sudo can execute commands without a password.
-                        // The sleeps are required when using the ShellStream, otherwise the commands won't work.
+                        // Perform any required low-level host and user initialization.
 
-                        using (var sh = sshClient.CreateShellStream("terminal", 80, 40, 80, 40, 1024))
-                        {
-                            sh.WriteLine("grep -qxF 'Defaults !requiretty' /etc/sudoers.d/notty || echo 'Defaults !requiretty' >> /etc/sudoers.d/notty");
-                            Thread.Sleep(500);
-                            sh.WriteLine("grep -qxF '%sudo    ALL=NOPASSWD: ALL' /etc/sudoers.d/nopasswd || echo '%sudo    ALL=NOPASSWD: ALL' >> /etc/sudoers.d/nopasswd");
-                            Thread.Sleep(500);
-                        }
-
-                        if (createHomeFolders)
-                        {
-                            sshClient.RunCommand($"mkdir -f {KubeHostFolders.Download(Username)}");
-                            sshClient.RunCommand($"mkdir -f {KubeHostFolders.Exec(Username)}");
-                            sshClient.RunCommand($"mkdir -f {KubeHostFolders.Upload(Username)}");
-                        }
+                        PrepareHostAndUser();
 
                         // We need to verify that the [/dev/shm/neonkube/rebooting] file is not present
                         // to ensure that the machine has actually restarted (see [Reboot()]
@@ -1170,7 +1179,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
 
                 if (credentials == null || credentials == SshCredentials.None)
                 {
-                    throw new KubeException("Cannot establish a SSH connection because no credentials are available.");
+                    throw new SshProxyException("Cannot establish a SSH connection because no credentials are available.");
                 }
 
                 // We're going to retry connecting up to 10 times.
@@ -1232,7 +1241,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
 
                 if (credentials == null || credentials == SshCredentials.None)
                 {
-                    throw new KubeException("Cannot establish a SSH connection because no credentials are available.");
+                    throw new SshProxyException("Cannot establish a SSH connection because no credentials are available.");
                 }
 
                 if (sshClient != null)
@@ -1342,50 +1351,17 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// <summary>
         /// Returns the path to the user's home folder on the server.
         /// </summary>
-        public string HomeFolderPath
-        {
-            get { return $"/home/{credentials.Username}"; }
-        }
-
-        /// <summary>
-        /// Returns the path to the user's upload folder on the server.
-        /// </summary>
-        public string UploadFolderPath
-        {
-            get { return $"{HomeFolderPath}/.upload"; }
-        }
-
-        /// <summary>
-        /// Ensures that the [~/.upload] folder exists on the server.
-        /// </summary>
-        private void EnsureUploadFolder()
-        {
-            if (!hasUploadFolder)
-            {
-                RunCommand($"mkdir -p {UploadFolderPath}", RunOptions.LogOnErrorOnly | RunOptions.IgnoreRemotePath);
-                hasUploadFolder = true;
-            }
-        }
+        public string HomeFolderPath => KubeHostFolders.Home(Username);
 
         /// <summary>
         /// Returns the path to the user's download folder on the server.
         /// </summary>
-        public string DownloadFolderPath
-        {
-            get { return $"{HomeFolderPath}/.download"; }
-        }
+        public string DownloadFolderPath => KubeHostFolders.Download(Username);
 
         /// <summary>
-        /// Ensures that the [~/.download] folder exists on the server.
+        /// Returns the path to the user's upload folder on the server.
         /// </summary>
-        private void EnsureDownloadFolder()
-        {
-            if (!hasDownloadFolder)
-            {
-                RunCommand($"mkdir -p {DownloadFolderPath}", RunOptions.LogOnErrorOnly | RunOptions.IgnoreRemotePath);
-                hasDownloadFolder = true;
-            }
-        }
+        public string UploadFolderPath => KubeHostFolders.Upload(Username);
 
         /// <summary>
         /// <para>
@@ -1420,91 +1396,122 @@ rm {KubeHostFolders.Home(Username)}/askpass
         }
 
         /// <summary>
-        /// Ensures that the configuration and setup folders required for a Neon host
-        /// node exist and have the appropriate permissions.
+        /// <para>
+        /// Ensures that the node is configured such that <see cref="SshProxy{TMetadata}"/> can function properly.
+        /// This includes disabling <b>requiretty</b> as well as restricting <b>sudo</b> from requiring passwords
+        /// as well as creating the minimum user home folders required by the proxy for executing scripts as well
+        /// as uploading and downloading files.
+        /// </para>
+        /// <para>
+        /// This method creates the <b>/etc/sshproxy-init</b> file such that these operations will only
+        /// be performed once.
+        /// </para>
         /// </summary>
-        public void CreateHostFolders()
+        /// <param name="neonKUBE">
+        /// Optionally specifies that all neonKUBE related folders should be created as well.
+        /// </param>
+        /// <exception cref="SshProxyException">
+        /// Thrown if the host hasn't been prepared yet and the SSH connection credentials are not username/password
+        /// or if there's problem with low-level host configuration.
+        /// </exception>
+        /// <remarks>
+        /// <note>
+        /// The first time this method is called on a particular host, password credentials must be used so
+        /// that low-level <b>sudo</b> configuration can be performed.  Subsequent connections can use
+        /// TLS certificates.
+        /// </note>
+        /// </remarks>
+        private void PrepareHostAndUser(bool neonKUBE = false)
         {
-            Status = "prepare: host folders";
-
             // We need to be connected.
 
             EnsureSshConnection();
             EnsureScpConnection();
 
-            // We need to create this folder first without using the safe SshProxy
-            // SudoCommand/RunCommand methods because those methods depend on the 
-            // existence of this folder.
+            //-----------------------------------------------------------------
+            // Ensure that the minimum set of user folders required by [SshProxy] exist
+            // for the current user.  These are all located in the user's home folder
+            // so SUDO is not required to create them.
 
-            var result = sshClient.RunCommand($"sudo mkdir -p {KubeHostFolders.Exec(Username)}");
+            Status = "prepare: user folders";
 
-            if (result.ExitStatus != 0)
-            {
-                Log($"Cannot create folder [{KubeHostFolders.Exec(Username)}]\n");
-                Log($"BEGIN-ERROR [{result.ExitStatus}]:\n");
-                Log(result.Error);
-                Log("END-ERROR:\n");
-                throw new IOException(result.Error);
-            }
+            // [download]
 
-            result = sshClient.RunCommand($"sudo chmod 777 {KubeHostFolders.Exec(Username)}");  // $todo(jefflill): Is this a potential security problem?
-                                                                                                //                   SCP uploads fail for 770
-            if (result.ExitStatus != 0)
-            {
-                Log($"Cannot chmod folder [{KubeHostFolders.Exec(Username)}]\n");
-                Log($"BEGIN-ERROR [{result.ExitStatus}]:\n");
-                Log(result.Error);
-                Log("END-ERROR:\n");
-                throw new IOException(result.Error);
-            }
+            var folderPath = KubeHostFolders.Download(Username);
 
-            // Create the folders.
+            sshClient.RunCommand($"sudo mkdir -p {folderPath}");
+            sshClient.RunCommand($"sudo chmod 777 {folderPath}");
 
-            SudoCommand($"mkdir -p {KubeHostFolders.Archive(Username)}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {KubeHostFolders.Archive(Username)}", RunOptions.LogOnErrorOnly);
+            // [exec]
 
-            SudoCommand($"mkdir -p {KubeHostFolders.Bin}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {KubeHostFolders.Bin}", RunOptions.LogOnErrorOnly);
+            folderPath = KubeHostFolders.Exec(Username);
+            sshClient.RunCommand($"sudo mkdir -p {folderPath}");
+            sshClient.RunCommand($"sudo chmod 777 {folderPath}");
 
-            SudoCommand($"mkdir -p {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
+            // [upload]
 
-            SudoCommand($"mkdir -p {KubeHostFolders.Download(Username)}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {KubeHostFolders.Download(Username)}", RunOptions.LogOnErrorOnly);
+            folderPath = KubeHostFolders.Upload(Username);
+            sshClient.RunCommand($"sudo mkdir -p {folderPath}");
+            sshClient.RunCommand($"sudo chmod 777 {folderPath}");
 
-            SudoCommand($"mkdir -p {KubeHostFolders.Exec(Username)}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {KubeHostFolders.Exec(Username)}", RunOptions.LogOnErrorOnly);
-
-            SudoCommand($"mkdir -p {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
-
-            SudoCommand($"mkdir -p {KubeHostFolders.State}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {KubeHostFolders.State}", RunOptions.LogOnErrorOnly);
-
-            SudoCommand($"mkdir -p {KubeHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {KubeHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
-
-            SudoCommand($"mkdir -p {KubeHostFolders.Upload(Username)}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {KubeHostFolders.Upload(Username)}", RunOptions.LogOnErrorOnly);
-
-            // $hack(jefflill):
+            //-----------------------------------------------------------------
+            // Disable SUDO password prompts of this hasn't already been done for this machine.
+            // We can tell be checking whether a file exists at:
             //
-            // All of a sudden, I find that I need these folders too.
+            //      /etc/sshproxy-initial
 
-            SudoCommand($"mkdir -p /home/root", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chown root:root /home/root", RunOptions.LogOnErrorOnly);
+            const string sshProxyInitPath = "/etc/sshproxy-init";
 
-            SudoCommand($"mkdir -p {KubeHostFolders.Archive("root")}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 750 {KubeHostFolders.Archive("root")}", RunOptions.LogOnErrorOnly);
+            if (!FileExists(sshProxyInitPath))
+            {
+                Status = "prepare: sudo";
 
-            SudoCommand($"mkdir -p {KubeHostFolders.Download("root")}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 777 {KubeHostFolders.Download("root")}", RunOptions.LogOnErrorOnly);    // $todo(jefflill): Another potential security problem?
+                // We need to obtain the SSH password used to establish the current connection.  This means
+                // that TLS based credentials won't work for the first connection to a host.  We're going
+                // use reflection to get at the password itself.
 
-            SudoCommand($"mkdir -p {KubeHostFolders.Exec("root")}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 777 {KubeHostFolders.Exec("root")}", RunOptions.LogOnErrorOnly);
+                var authMethod = credentials.AuthenticationMethod as PasswordAuthenticationMethod;
 
-            SudoCommand($"mkdir -p {KubeHostFolders.Upload("root")}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 777 {KubeHostFolders.Upload("root")}", RunOptions.LogOnErrorOnly);      // $todo(jefflill): Another potential security problem?
+                if (authMethod == null)
+                {
+                    throw new SshProxyException("You must use password credentials the first time you connect to a particular host machine.");
+                }
+
+                var passwordProperty = authMethod.GetType().GetProperty("Password", BindingFlags.Instance | BindingFlags.NonPublic);
+                var passwordBytes    = (byte[])passwordProperty.GetValue(authMethod);
+                var sshPassword      = Encoding.UTF8.GetString(passwordBytes);
+
+                DisableSudoPrompt(sshPassword);
+
+                // Indicate that we shouldn't perform these initialization operations again on this machine.
+
+                sshClient.RunCommand($"sudo touch {sshProxyInitPath}");
+            }
+
+            // Create the neonKUBE folders if requested.
+
+            if (neonKUBE)
+            {
+                Status = "prepare: neonKUBE host folders";
+
+                SudoCommand($"mkdir -p {KubeHostFolders.Archive(Username)}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"chmod 750 {KubeHostFolders.Archive(Username)}", RunOptions.LogOnErrorOnly);
+
+                SudoCommand($"mkdir -p {KubeHostFolders.Bin}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"chmod 750 {KubeHostFolders.Bin}", RunOptions.LogOnErrorOnly);
+
+                SudoCommand($"mkdir -p {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"chmod 750 {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
+
+                SudoCommand($"mkdir -p {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"chmod 750 {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
+
+                SudoCommand($"mkdir -p {KubeHostFolders.State}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"chmod 750 {KubeHostFolders.State}", RunOptions.LogOnErrorOnly);
+
+                SudoCommand($"mkdir -p {KubeHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
+                SudoCommand($"chmod 750 {KubeHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
+            }
         }
 
         /// <summary>
@@ -1517,7 +1524,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
 
             if (response.ExitCode != 0)
             {
-                throw new KubeException(response.ErrorSummary);
+                throw new SshProxyException(response.ErrorSummary);
             }
         }
 
@@ -1547,20 +1554,18 @@ rm {KubeHostFolders.Home(Username)}/askpass
 
             try
             {
-                EnsureDownloadFolder();
-
                 var response = SudoCommand("cp", source, downloadPath);
 
                 if (response.ExitCode != 0)
                 {
-                    throw new KubeException(response.ErrorSummary);
+                    throw new SshProxyException(response.ErrorSummary);
                 }
 
                 response = SudoCommand("chmod", "444", downloadPath);
 
                 if (response.ExitCode != 0)
                 {
-                    throw new KubeException(response.ErrorSummary);
+                    throw new SshProxyException(response.ErrorSummary);
                 }
 
                 SafeDownload(downloadPath, output);
@@ -1614,11 +1619,15 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// Determines whether a directory exists on the remote server.
         /// </summary>
         /// <param name="path">The directory path.</param>
-        /// <param name="runOptions">Optional command execution options.</param>
         /// <returns><c>true</c> if the directory exists.</returns>
-        public bool DirectoryExists(string path, RunOptions runOptions = RunOptions.None)
+        public bool DirectoryExists(string path)
         {
-            var response = SudoCommand($"if [ -d \"{path}\" ] ; then exit 0; else exit 1; fi", runOptions);
+            var response = SudoCommand($"if [ -d \"{path}\" ] ; then exit 0; else exit 1; fi");
+
+            // $todo(jefflill):
+            //
+            // This doesn't really handle the case where the operation fails
+            // due to a permissions restriction.
 
             return response.ExitCode == 0;
         }
@@ -1631,6 +1640,11 @@ rm {KubeHostFolders.Home(Username)}/askpass
         public bool FileExists(string path)
         {
             var response = SudoCommand($"if [ -f \"{path}\" ] ; then exit 0; else exit 1; fi", RunOptions.None);
+
+            // $todo(jefflill):
+            //
+            // This doesn't really handle the case where the operation fails
+            // due to a permissions restriction.
 
             return response.ExitCode == 0;
         }
@@ -1674,8 +1688,6 @@ rm {KubeHostFolders.Home(Username)}/askpass
 
             try
             {
-                EnsureUploadFolder();
-
                 SafeUpload(input, uploadPath);
 
                 SudoCommand($"mkdir -p {LinuxPath.GetDirectoryName(target)}", RunOptions.LogOnErrorOnly);
@@ -2296,12 +2308,12 @@ rm {KubeHostFolders.Home(Username)}/askpass
             // it completed, potentially after we've been disconnected and then were
             // able to reestablish the connection.
             //
-            // We're going to use the [/home/sysadmin/.exec] folder coordinate
+            // We're going to use the [~/.neonkube/exec] folder coordinate
             // this by:
             //
             //      1. Generating a GUID for the operation.
             //
-            //      2. Creating a folder named [/home/sysadmin/.exec] for the 
+            //      2. Creating a folder named [~/.neonkube/exec] for the 
             //         operation.  This folder will be referred to as [$] below.
             //
             //      3. Generating a script called [$/cmd.sh] that 
@@ -2331,7 +2343,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
             var execFolder = $"{KubeHostFolders.Exec(Username)}/cmd";
             var cmdFolder  = LinuxPath.Combine(execFolder, Guid.NewGuid().ToString("d"));
 
-            SafeSshOperation("create folder", () => sshClient.RunCommand($"mkdir -p {cmdFolder} && chmod 770 {cmdFolder}"));
+            SafeSshOperation("create folder", () => sshClient.RunCommand($"mkdir -p {cmdFolder} && chmod 777 {cmdFolder}"));    // $todo(jefflill): Security issue 777?
 
             // Generate the command script.
 
@@ -3186,7 +3198,7 @@ echo $? > {cmdFolder}/exit
         /// </summary>
         /// <param name="address">The target IP address.</param>
         /// <returns>The network interface name.</returns>
-        /// <exception cref="KubeException">Thrown if the interface was not found.</exception>
+        /// <exception cref="SshProxyException">Thrown if the interface was not found.</exception>
         /// <remarks>
         /// <para>
         /// In the olden days, network devices were assigned names like <b>eth0</b>,
@@ -3246,7 +3258,7 @@ echo $? > {cmdFolder}/exit
                 }
             }
 
-            throw new KubeException($"Cannot find network interface for [address={address}].");
+            throw new SshProxyException($"Cannot find network interface for [address={address}].");
         }
 
         /// <summary>
