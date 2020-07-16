@@ -966,11 +966,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
                 timeout = ConnectTimeout;
             }
 
-            if (sshClient != null)
-            {
-                sshClient.Disconnect();
-                sshClient = null;
-            }
+            Disconnect();
 
             try
             {
