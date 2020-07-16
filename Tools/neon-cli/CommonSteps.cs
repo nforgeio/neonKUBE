@@ -325,6 +325,26 @@ fi
             node.SudoCommand(CommandBundle.FromScript(disableSnapScript), RunOptions.FaultOnError);
 
             //-----------------------------------------------------------------
+            // Create the standard neonKUBE host folders.
+
+            node.Status = "prepare: neonKUBE host folders";
+
+            node.SudoCommand($"mkdir -p {KubeHostFolders.Bin}", RunOptions.LogOnErrorOnly);
+            node.SudoCommand($"chmod 750 {KubeHostFolders.Bin}", RunOptions.LogOnErrorOnly);
+
+            node.SudoCommand($"mkdir -p {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
+            node.SudoCommand($"chmod 750 {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
+
+            node.SudoCommand($"mkdir -p {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
+            node.SudoCommand($"chmod 750 {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
+
+            node.SudoCommand($"mkdir -p {KubeHostFolders.State}", RunOptions.LogOnErrorOnly);
+            node.SudoCommand($"chmod 750 {KubeHostFolders.State}", RunOptions.LogOnErrorOnly);
+
+            node.SudoCommand($"mkdir -p {KubeHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
+            node.SudoCommand($"chmod 750 {KubeHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
+
+            //-----------------------------------------------------------------
             // Other configuration.
 
             node.Status = "configure: journald filters";
@@ -336,7 +356,7 @@ fi
 # Filter [rsyslog.service] log events we don't care about.
 
 cat <<EOF > /etc/rsyslog.d/60-filter.conf
-if $programname == ""systemd"" and ($msg startswith ""Created slice "" or $msg startswith ""Removed slice z"") then stop
+if $programname == ""systemd"" and ($msg startswith ""Created slice "" or $msg startswith ""Removed slice "") then stop
 EOF
 
 systemctl restart rsyslog.service

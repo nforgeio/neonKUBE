@@ -140,8 +140,17 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.XenServer", "Lib\Neon.XenServer\Neon.XenServer.csproj", "{1A6C061D-83FD-4B53-8E96-80A1546C8F4B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home", "home", "{E4CB108C-A8C4-4B30-A07E-44D56027B98B}"
+	ProjectSection(SolutionItems) = preProject
+		Devops\jefflill\home\large.cluster.yaml = Devops\jefflill\home\large.cluster.yaml
+		Devops\jefflill\home\small.cluster.yaml = Devops\jefflill\home\small.cluster.yaml
+		Devops\jefflill\home\tiny-xcp.cluster.yaml = Devops\jefflill\home\tiny-xcp.cluster.yaml
+		Devops\jefflill\home\tiny.cluster.yaml = Devops\jefflill\home\tiny.cluster.yaml
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "wrt", "wrt", "{68D2B92F-A5C0-4E29-9E53-64F600400568}"
+	ProjectSection(SolutionItems) = preProject
+		Devops\jefflill\wrt\jeff-small.cluster.yaml = Devops\jefflill\wrt\jeff-small.cluster.yaml
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Kube", "Test\Test.Neon.Kube\Test.Neon.Kube.csproj", "{41302EE4-1607-4BE1-A2C6-C881C3D05740}"
 EndProject

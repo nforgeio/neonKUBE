@@ -1403,9 +1403,6 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// be performed once.
         /// </para>
         /// </summary>
-        /// <param name="neonKUBE">
-        /// Optionally specifies that all neonKUBE related folders should be created as well.
-        /// </param>
         /// <exception cref="SshProxyException">
         /// Thrown if the host hasn't been prepared yet and the SSH connection credentials are not username/password
         /// or if there's problem with low-level host configuration.
@@ -1417,7 +1414,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// TLS certificates.
         /// </note>
         /// </remarks>
-        public void PrepareHostAndUser(bool neonKUBE = false)
+        private void PrepareHostAndUser()
         {
             // We need to be connected.
 
@@ -1434,6 +1431,11 @@ rm {KubeHostFolders.Home(Username)}/askpass
             // [~/.neonkube]
 
             var folderPath = KubeHostFolders.NeonKubeHome(Username);
+            sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
+
+            // [~/.neonkube/archive]
+
+            folderPath = KubeHostFolders.Archive(Username);
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
             // [~/.neonkube/download]
@@ -1483,31 +1485,6 @@ rm {KubeHostFolders.Home(Username)}/askpass
                 // Indicate that we shouldn't perform these initialization operations again on this machine.
 
                 sshClient.RunCommand($"sudo touch {sshProxyInitPath}");
-            }
-
-            // Create the neonKUBE folders if requested.
-
-            if (neonKUBE)
-            {
-                Status = "prepare: neonKUBE host folders";
-
-                SudoCommand($"sudo mkdir -p {KubeHostFolders.Archive(Username)}", RunOptions.LogOnErrorOnly);
-                SudoCommand($"sudo chmod 750 {KubeHostFolders.Archive(Username)}", RunOptions.LogOnErrorOnly);
-
-                SudoCommand($"sudo mkdir -p {KubeHostFolders.Bin}", RunOptions.LogOnErrorOnly);
-                SudoCommand($"sudo chmod 750 {KubeHostFolders.Bin}", RunOptions.LogOnErrorOnly);
-
-                SudoCommand($"sudo mkdir -p {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
-                SudoCommand($"sudo chmod 750 {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
-
-                SudoCommand($"sudo mkdir -p {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
-                SudoCommand($"sudo chmod 750 {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
-
-                SudoCommand($"sudo mkdir -p {KubeHostFolders.State}", RunOptions.LogOnErrorOnly);
-                SudoCommand($"sudo chmod 750 {KubeHostFolders.State}", RunOptions.LogOnErrorOnly);
-
-                SudoCommand($"sudo mkdir -p {KubeHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
-                SudoCommand($"sudo chmod 750 {KubeHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
             }
         }
 
@@ -1653,7 +1630,10 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// <param name="input">The input stream.</param>
         /// <param name="permissions">Optionally specifies the file permissions (must be <c>chmod</c> compatible).</param>
         /// <param name="owner">Optionally specifies the file owner (must be <c>chown</c> compatible).</param>
-        /// <param name="userPermissions">Optionally indicates that the operation should be performed with user-level permissions.</param>
+        /// <param name="userPermissions">
+        /// Optionally indicates that the operation should be performed with user-level permissions
+        /// rather than <b>sudo</b>, which is the default.
+        /// </param>
         /// <remarks>
         /// <note>
         /// <para>
@@ -2005,15 +1985,12 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// </summary>
         /// <param name="bundle">The bundle.</param>
         /// <param name="runOptions">The command execution options.</param>
-        /// <param name="userPermissions">Indicates whether the upload should be performed with user or root permissions.</param>
         /// <returns>The path to the folder where the bundle was unpacked.</returns>
-        private string UploadBundle(CommandBundle bundle, RunOptions runOptions, bool userPermissions)
+        private string UploadBundle(CommandBundle bundle, RunOptions runOptions)
         {
             Covenant.Requires<ArgumentNullException>(bundle != null, nameof(bundle));
 
             bundle.Validate();
-
-            var executePermissions = userPermissions ? 777 : 700;
 
             using (var ms = new MemoryStream())
             {
@@ -2068,14 +2045,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
 
                     foreach (var file in bundle.Where(f => f.IsExecutable))
                     {
-                        if (file.Path.Contains(' '))
-                        {
-                            sb.AppendLineLinux($"chmod {executePermissions} \"{file.Path}\"");
-                        }
-                        else
-                        {
-                            sb.AppendLineLinux($"chmod {executePermissions} {file.Path}");
-                        }
+                        sb.AppendLineLinux($"chmod 700 \"{file.Path}\"");
                     }
 
                     sb.AppendLineLinux(FormatCommand(bundle.Command, bundle.Args));
@@ -2111,11 +2081,10 @@ rm {KubeHostFolders.Home(Username)}/askpass
                 var bundleFolder = $"{KubeHostFolders.Exec(Username)}/{Guid.NewGuid().ToString("d")}";
                 var zipPath      = LinuxPath.Combine(bundleFolder, "__bundle.zip");
 
-                SudoCommand($"mkdir -p", RunOptions.LogOnErrorOnly, bundleFolder);
-                SudoCommand($"chmod 777", RunOptions.LogOnErrorOnly, bundleFolder);
+                RunCommand($"mkdir {bundleFolder} && chmod 700 {bundleFolder}", RunOptions.LogOnErrorOnly);
 
                 ms.Position = 0;
-                Upload(zipPath, ms, userPermissions: true);
+                Upload(zipPath, ms);
 
                 // Unzip the bundle. 
 
@@ -2123,7 +2092,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
 
                 // Make [__run.sh] executable.
 
-                SudoCommand($"chmod {executePermissions}", RunOptions.LogOnErrorOnly, LinuxPath.Combine(bundleFolder, "__run.sh"));
+                RunCommand($"chmod 700", RunOptions.LogOnErrorOnly, LinuxPath.Combine(bundleFolder, "__run.sh"));
 
                 return bundleFolder;
             }
@@ -2340,7 +2309,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
             var execFolder = $"{KubeHostFolders.Exec(Username)}";
             var cmdFolder  = LinuxPath.Combine(execFolder, Guid.NewGuid().ToString("d"));
 
-            SafeSshOperation("create folder", () => sshClient.RunCommand($"mkdir -p {cmdFolder} && chmod 700 {cmdFolder}"));
+            SafeSshOperation("create command folder", () => sshClient.RunCommand($"mkdir {cmdFolder} && chmod 700 {cmdFolder}"));
 
             // Generate the command script.
 
@@ -2361,7 +2330,7 @@ echo $? > {cmdFolder}/exit
             SafeSshOperation("execute script", () => sshClient.RunCommand($"if [ ! -f {LinuxPath.Combine(cmdFolder, "invoked")} ] ; then bash {LinuxPath.Combine(cmdFolder, "cmd.sh")}; fi;"));
 
             // Wait for the command to exit by looking for the [exit] file.
-            // Note that if everything went the command will have completed
+            // Note that if everything went well, the command will have completed
             // synchronously above and the [exit] file will be present for
             // the first iteration, so there shouldn't be too much delay.
             //
@@ -2764,7 +2733,7 @@ echo $? > {cmdFolder}/exit
 
             // Upload and extract the bundle and then run the "__run.sh" script.
 
-            var bundleFolder = UploadBundle(bundle, runOptions, userPermissions: true);
+            var bundleFolder = UploadBundle(bundle, runOptions);
 
             try
             {
@@ -3005,7 +2974,7 @@ echo $? > {cmdFolder}/exit
 
             // Upload and extract the bundle and then run the "__run.sh" script.
 
-            var bundleFolder = UploadBundle(bundle, runOptions, userPermissions: false);
+            var bundleFolder = UploadBundle(bundle, runOptions);
 
             try
             {

@@ -2025,8 +2025,8 @@ exit 0
 
             if (updateDistribution)
             {
-                WriteLog(logWriter, "Run:      apt-get dist-upgrade -yq");
-                node.Status = "upgrade distribution";
+                WriteLog(logWriter, "Upgrade:  linux");
+                node.Status = "upgrade linux";
                 node.SudoCommand("apt-get dist-upgrade -yq");
             }
 
@@ -2068,7 +2068,7 @@ echo 'temp:{sshPassword}' | chpasswd
 chown temp:temp /home/temp
 
 # Add [temp] to the same groups that [sysadmin] belongs to
-# other than [sysadmin].
+# other than the [sysadmin] group.
 
 adduser temp adm
 adduser temp cdrom
@@ -2117,12 +2117,12 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
             node.Status = "relocate: [sysadmin] user/group IDs";
             node.SudoCommand(CommandBundle.FromScript(sysadminUserScript), RunOptions.FaultOnError);
 
+            WriteLog(logWriter, $"Logout");
+            node.Status = "logout";
+
             // We need to reconnect again with [sysadmin] so we can remove
             // the [temp] user, create the [container] user and then
             // wrap things up.
-
-            WriteLog(logWriter, $"Logout");
-            node.Status = "logout";
 
             node.SudoCommand(CommandBundle.FromScript(tempUserScript), RunOptions.FaultOnError);
             WriteLog(logWriter, $"Login:    [{KubeConst.SysAdminUsername}]");
