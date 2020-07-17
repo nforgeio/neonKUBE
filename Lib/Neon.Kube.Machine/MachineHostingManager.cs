@@ -40,6 +40,7 @@ using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
 using Neon.Time;
+using Couchbase.IO;
 
 namespace Neon.Kube
 {
@@ -68,6 +69,8 @@ namespace Neon.Kube
         private KubeSetupInfo                   setupInfo;
         private SetupController<NodeDefinition> controller;
         private string                          orgSshPassword;
+        private string                          secureSshPassword;
+        private Dictionary<string, string>      nodeToPassword;
 
         /// <summary>
         /// Constructor.
@@ -85,8 +88,9 @@ namespace Neon.Kube
 
             cluster.HostingManager = this;
 
-            this.cluster   = cluster;
-            this.setupInfo = setupInfo;
+            this.cluster        = cluster;
+            this.setupInfo      = setupInfo;
+            this.nodeToPassword = new Dictionary<string, string>();
         }
 
         /// <inheritdoc/>
@@ -115,7 +119,8 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword));
 
-            this.orgSshPassword = orgSshPassword;
+            this.secureSshPassword = secureSshPassword;
+            this.orgSshPassword    = orgSshPassword;
 
             // Perform the provisioning operations.
 
@@ -125,9 +130,15 @@ namespace Neon.Kube
                 MaxParallel = this.MaxParallel
             };
 
-            // $todo(jefflill): We need to reset all of the node passwords here.
+            controller.AddStep("connect nodes", (node, stepDelay) => Connect(node));
+            controller.AddStep("configure nodes", (node, stepDelay) => Initialize(node));
 
-            controller.AddStep("node labels", (node, stepDelay) => SetLabels(node));
+            if (secureSshPassword != orgSshPassword)
+            {
+                controller.AddStep("secure node passwords", (node, stepDelay) => SecurePassword(node));
+            }
+
+            controller.AddStep("configure node labels", (node, stepDelay) => SetLabels(node));
 
             if (!controller.Run())
             {
@@ -150,15 +161,104 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string DrivePrefix
+        public override string DrivePrefix => "sd";
+
+        /// <summary>
+        /// Connects the proxy to the node.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        private void Connect(SshProxy<NodeDefinition> node)
         {
-            get { return "sd"; }
+            // We'll start by using the insecure credentials to connect to the node.
+            // It is possible though that a first provisiong run failed the first time
+            // and was partially completed with some node passwords being changed to
+            // the secure password and with other nodes still having the insecure
+            // default password.
+            //
+            // We don't want to make the operator have to go back and reset the secure
+            // passwords on those nodes, so we'll try the secure password if the insecure
+            // one fails.
+            //
+            // Note that we're going to use the [nodeToPassword] dictionary to record
+            // the password for the node (by name) so that this will be available when
+            // we'll need to pass it to [KubeHelper.InitializeNode()].
+
+            try
+            {
+                node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, orgSshPassword));
+                node.Connect();
+
+                lock (nodeToPassword)
+                {
+                    nodeToPassword[node.Name] = orgSshPassword;
+                }
+            }
+            catch (SshProxyException)
+            {
+                // Fall back to the original password if it is different from the secure one,
+                // otherwise rethrow the error.
+
+                if (orgSshPassword == secureSshPassword)
+                {
+                    throw;
+                }
+
+                node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, secureSshPassword));
+                node.Connect();
+
+                lock (nodeToPassword)
+                {
+                    nodeToPassword[node.Name] = secureSshPassword;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Performs low-level node initialization.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        private void Initialize(SshProxy<NodeDefinition> node)
+        {
+            string nodeSshPassword;
+
+            lock (nodeToPassword)
+            {
+                nodeSshPassword = nodeToPassword[node.Metadata.Name];
+            }
+
+            KubeHelper.InitializeNode(node, nodeSshPassword);
+        }
+
+        /// <summary>
+        /// Changes the password for the [sysadmin] account on the node to the new
+        /// secure password and reconnects the node using the new password.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        private void SecurePassword(SshProxy<NodeDefinition> node)
+        {
+            node.Status = "setting secure password";
+
+            var script =
+$@"
+echo '{KubeConst.SysAdminUsername}:{secureSshPassword}' | chpasswd
+";
+            var response = node.SudoCommand(CommandBundle.FromScript(script));
+
+            if (response.ExitCode != 0)
+            {
+                throw new KubeException($"*** ERROR: Unable to set a strong password [exitcode={response.ExitCode}].");
+            }
+
+            // Update the node credentials and then reconnect. 
+
+            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, secureSshPassword));
+            node.Connect();
         }
 
         /// <summary>
         /// Inspects the node to determine physical machine capabilities like
         /// processor count, RAM, and primary disk capacity and then sets the
-        /// corresponding node labels.
+        /// corresponding node labels in the cluster definition.
         /// </summary>
         /// <param name="node">The target node.</param>
         private void SetLabels(SshProxy<NodeDefinition> node)

@@ -238,10 +238,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string DrivePrefix
-        {
-            get { return "sd"; }
-        }
+        public override string DrivePrefix => "sd";
 
         /// <inheritdoc/>
         public override bool RequiresAdminPrivileges

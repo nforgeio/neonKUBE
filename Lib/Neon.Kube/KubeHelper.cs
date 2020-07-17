@@ -1973,11 +1973,10 @@ exit 0
         /// </summary>
         /// <param name="node">The node's SSH proxy.</param>
         /// <param name="sshPassword">The current <b>sysadmin</b> password.</param>
-        /// <param name="updateDistribution">Controls whether the node's Linux distribution is upgraded.</param>
+        /// <param name="updateDistribution">Optionally upgrade the node's Linux distribution.  This defaults to <c>false</c>.</param>
         /// <param name="logWriter">Action that writes a line of text to the operation output log or console (or <c>null</c>).</param>
-        internal static void InitializeNode(SshProxy<string> node, string sshPassword, bool updateDistribution, Action<string> logWriter)
+        public static void InitializeNode(SshProxy<NodeDefinition> node, string sshPassword, bool updateDistribution = false, Action<string> logWriter = null)
         {
-            Covenant.Requires<ArgumentNullException>(logWriter != null, nameof(logWriter));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sshPassword), nameof(sshPassword));
 
             // $hack(jefflill):
@@ -2095,7 +2094,7 @@ adduser temp lxd
 
             WriteLog(logWriter, "Kill:     [sysadmin] user processes");
             node.Status = "kill: [sysadmin] processes";
-            node.SudoCommand("pkill -u sysadmin");
+            node.SudoCommand("pkill -u sysadmin --signal 9");
 
             // Relocate the [sysadmin] user to from [uid=1000:gid=1000} to [1234:1234]:
 

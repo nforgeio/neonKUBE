@@ -244,10 +244,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string DrivePrefix
-        {
-            get { return "xvd"; }
-        }
+        public override string DrivePrefix => "xvd";
 
         /// <summary>
         /// Returns the list of <see cref="NodeDefinition"/> instances describing which cluster

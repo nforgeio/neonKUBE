@@ -183,7 +183,7 @@ node template.
             Console.WriteLine($"** Prepare {vmHost} VM Template ***");
             Console.WriteLine();
 
-            using (var node = Program.CreateNodeProxy<string>("node-template", address, ipAddress, appendToLog: false))
+            using (var node = Program.CreateNodeProxy<NodeDefinition>("node-template", address, ipAddress, appendToLog: false))
             {
                 KubeHelper.InitializeNode(node, Program.MachinePassword, update, message => Console.WriteLine(message));
 

@@ -4,6 +4,12 @@ neon login rm --force root@home-tiny
 neon cluster prepare %NF_ROOT%/devops/jefflill/home/tiny.cluster.yaml --unredacted
 neon cluster setup --unredacted root@home-tiny
 
+# HOME: tiny-bare
+neon logout
+neon login rm --force root@home-tiny-bare
+neon cluster prepare %NF_ROOT%/devops/jefflill/home/tiny-bare.cluster.yaml --unredacted
+neon cluster setup --unredacted root@home-tiny-bare
+
 # HOME: small
 neon logout
 neon login rm --force root@home-small

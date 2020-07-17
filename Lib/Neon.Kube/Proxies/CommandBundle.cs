@@ -388,7 +388,7 @@ namespace Neon.Kube
                 // going format it on the same line.
                 //
                 // This is a decent, but not perfect, heuristic because it
-                // treat the first non-option argument as belonging to the
+                // treats the first non-option argument as belonging to the
                 // last command line option without a value.
                 //
                 // The workaround is to add a [CommandStep.ArgBreak] string 

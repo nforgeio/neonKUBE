@@ -143,6 +143,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home", "home", "{E4CB108C-A
 	ProjectSection(SolutionItems) = preProject
 		Devops\jefflill\home\large.cluster.yaml = Devops\jefflill\home\large.cluster.yaml
 		Devops\jefflill\home\small.cluster.yaml = Devops\jefflill\home\small.cluster.yaml
+		Devops\jefflill\home\tiny-bare.cluster.yaml = Devops\jefflill\home\tiny-bare.cluster.yaml
 		Devops\jefflill\home\tiny-xcp.cluster.yaml = Devops\jefflill\home\tiny-xcp.cluster.yaml
 		Devops\jefflill\home\tiny.cluster.yaml = Devops\jefflill\home\tiny.cluster.yaml
 	EndProjectSection
