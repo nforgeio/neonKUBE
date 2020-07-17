@@ -568,7 +568,7 @@ namespace Neon.Cadence
                 SecurityToken                          = this.SecurityToken,
                 Servers                                = this.Servers,
                 WorkflowIdReusePolicy                  = this.WorkflowIdReusePolicy,
-                WorkflowStartToCloseTimeoutSeconds  = this.WorkflowStartToCloseTimeoutSeconds,
+                WorkflowStartToCloseTimeoutSeconds     = this.WorkflowStartToCloseTimeoutSeconds,
                 WorkflowScheduleToStartTimeoutSeconds  = this.WorkflowScheduleToStartTimeoutSeconds,
                 WorkflowDecisionTaskTimeoutSeconds     = this.WorkflowDecisionTaskTimeoutSeconds
             };
