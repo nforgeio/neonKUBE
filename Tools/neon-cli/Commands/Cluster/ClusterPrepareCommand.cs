@@ -333,10 +333,6 @@ Server Requirements:
                     Program.Exit(1);
                 }
 
-                // Get the mounted drive prefix from the hosting manager.
-
-                cluster.Definition.DrivePrefix = hostingManager.DrivePrefix;
-
                 // Ensure that the nodes have valid IP addresses.
 
                 cluster.Definition.ValidatePrivateNodeAddresses();

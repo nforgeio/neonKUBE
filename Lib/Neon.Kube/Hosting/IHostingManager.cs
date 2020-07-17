@@ -99,21 +99,6 @@ namespace Neon.Kube
         void AddPostProvisionSteps(SetupController<NodeDefinition> controller);
 
         /// <summary>
-        /// <para>
-        /// Returns the prefix for block devices that will be attached to
-        /// the host machines.  For many hosting environments this will be
-        /// <b>sd</b>, indicating that drives will be attached like: 
-        /// <b>/dev/sda</b>, <b>/dev/sdb</b>, <b>/dev/sdc</b>...
-        /// </para>
-        /// <para>
-        /// This may be different though for some hosting environment.
-        /// XenServer for example, uses the <b>xvd</b> prefix and attaches
-        /// drives as <b>/dev/sda</b>, <b>/dev/sdb</b>, <b>/dev/sdc</b>...
-        /// </para>
-        /// </summary>
-        string DrivePrefix { get; }
-
-        /// <summary>
         /// Returns <c>true</c> if provisoning requires that the user has
         /// administrator privileges.
         /// </summary>

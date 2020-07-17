@@ -103,9 +103,6 @@ namespace Neon.Kube
         public abstract void AddPostProvisionSteps(SetupController<NodeDefinition> controller);
 
         /// <inheritdoc/>
-        public abstract string DrivePrefix { get; }
-
-        /// <inheritdoc/>
         public virtual bool RequiresAdminPrivileges
         {
             get { return false; }

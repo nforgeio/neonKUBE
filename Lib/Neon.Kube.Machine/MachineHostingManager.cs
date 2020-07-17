@@ -160,9 +160,6 @@ namespace Neon.Kube
         {
         }
 
-        /// <inheritdoc/>
-        public override string DrivePrefix => "sd";
-
         /// <summary>
         /// Connects the proxy to the node.
         /// </summary>

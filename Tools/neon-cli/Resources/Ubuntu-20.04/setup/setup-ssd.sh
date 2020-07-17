@@ -98,8 +98,7 @@ if ! ${NEON_NODE_HDD} ; then
 EOF
 
 	# Note that $<node.driveprefix> will be replaced with something
-	# like [sd] or [xvd].  This comes from the hosting manager used to
-	# provision the cluster.
+	# like [sd] or [xvd].  This is detected during node setup.
 
     for DEVICE in $<node.driveprefix>a $<node.driveprefix>b $<node.driveprefix>c $<node.driveprefix>d $<node.driveprefix>e $<node.driveprefix>f $<node.driveprefix>g $<node.driveprefix>h $<node.driveprefix>i $<node.driveprefix>j
     do

@@ -276,27 +276,6 @@ namespace Neon.Kube
         public PrometheusOptions Prometheus { get; set; } = new PrometheusOptions();
 
         /// <summary>
-        /// <para>
-        /// Returns the prefix for block devices that will be attached to
-        /// the host machines.  For many hosting environments this will be
-        /// <b>sd</b>, indicating that drives will be attached like: 
-        /// <b>/dev/sda</b>, <b>/dev/sdb</b>, <b>/dev/sdc</b>...
-        /// </para>
-        /// <para>
-        /// This may be different though for some hosting environments.
-        /// XenServer for example, uses the <b>xvd</b> prefix and attaches
-        /// drives as <b>/dev/sda</b>, <b>/dev/sdb</b>, <b>/dev/sdc</b>...
-        /// </para>
-        /// <note>
-        /// This property is set automatically during cluster provisioning.
-        /// </note>
-        /// </summary>
-        [JsonProperty(PropertyName = "DrivePrefix", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "drivePrefix", ApplyNamingConventions = false)]
-        [DefaultValue(defaultDrivePrefix)]
-        public string DrivePrefix { get; set; } = defaultDrivePrefix;
-
-        /// <summary>
         /// Optionally enable unit testing on this cluster.  This is disabled by 
         /// default for safety.
         /// </summary>
@@ -591,7 +570,6 @@ namespace Neon.Kube
             Docker      = Docker ?? new DockerOptions();
             Mon         = Mon ?? new MonOptions() { Enabled = false };
             Prometheus  = Prometheus ?? new PrometheusOptions() { Enabled = false };
-            DrivePrefix = DrivePrefix ?? defaultDrivePrefix;
             Setup       = Setup ?? new SetupOptions();
             Hosting     = Hosting ?? new HostingOptions();
             NodeOptions = NodeOptions ?? new NodeOptions();

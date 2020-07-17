@@ -120,8 +120,5 @@ namespace Neon.Kube
         public override void AddPostProvisionSteps(SetupController<NodeDefinition> controller)
         {
         }
-
-        /// <inheritdoc/>
-        public override string DrivePrefix => "sd";
     }
 }
