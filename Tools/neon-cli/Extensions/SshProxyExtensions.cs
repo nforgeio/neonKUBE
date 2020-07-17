@@ -333,9 +333,7 @@ namespace NeonCli
 
             SetBashVariable(preprocessReader, "node.driveprefix", drivePrefix);
 
-            SetBashVariable(preprocessReader, "neon.folders.archive", KubeHostFolders.Archive(KubeConst.SysAdminUsername));
             SetBashVariable(preprocessReader, "neon.folders.bin", KubeHostFolders.Bin);
-            SetBashVariable(preprocessReader, "neon.folders.exec", KubeHostFolders.Exec(KubeConst.SysAdminUsername));
             SetBashVariable(preprocessReader, "neon.folders.config", KubeHostFolders.Config);
             SetBashVariable(preprocessReader, "neon.folders.setup", KubeHostFolders.Setup);
             SetBashVariable(preprocessReader, "neon.folders.state", KubeHostFolders.State);

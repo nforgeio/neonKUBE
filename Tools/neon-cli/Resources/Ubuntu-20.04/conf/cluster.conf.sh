@@ -73,10 +73,8 @@ export CURL_RETRY="--retry 10 --retry-delay 30"
 #------------------------------------------------------------------------------
 # Describe important host machine folders.
 
-export NEON_ARCHIVE_FOLDER=$<neon.folders.archive>
 export NEON_BIN_FOLDER=$<neon.folders.bin>
 export NEON_CONFIG_FOLDER=$<neon.folders.config>
-export NEON_EXEC_FOLDER=$<neon.folders.exec>
 export NEON_SETUP_FOLDER=$<neon.folders.setup>
 export NEON_STATE_FOLDER=$<neon.folders.state>
 export NEON_TMPFS_FOLDER=$<neon.folders.tmpfs>
@@ -122,10 +120,8 @@ if $summary ; then
     echo "NEON_NODE_HDD                      = ${NEON_NODE_HDD}" 1>&2
     echo "NEON_PACKAGE_PROXY                 = ${NEON_PACKAGE_PROXY}" 1>&2
     echo 1>&2
-    echo "NEON_ARCHIVE_FOLDER                = ${NEON_ARCHIVE_FOLDER}" 1>&2
     echo "NEON_BIN_FOLDER                    = ${NEON_BIN_FOLDER}" 1>&2
     echo "NEON_CONFIG_FOLDER                 = ${NEON_CONFIG_FOLDER}" 1>&2
-    echo "NEON_EXEC_FOLDER                   = ${NEON_EXEC_FOLDER}" 1>&2
     echo "NEON_SETUP_FOLDER                  = ${NEON_SETUP_FOLDER}" 1>&2
     echo "NEON_STATE_FOLDER                  = ${NEON_STATE_FOLDER}" 1>&2
     echo "NEON_TMPFS_FOLDER                  = ${NEON_TMPFS_FOLDER}" 1>&2
