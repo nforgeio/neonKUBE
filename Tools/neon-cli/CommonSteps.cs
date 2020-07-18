@@ -64,11 +64,31 @@ namespace NeonCli
             // then disconnect and wait for the OpenSSH to restart.
 
             var openSshConfig =
-@"# Package generated configuration file
+@"# FILE:	       sshd_config
+# CONTRIBUTOR: Jeff Lill
+# COPYRIGHT:   Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the ""License"");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an ""AS IS"" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# This file is written to neonKUBE nodes during cluster preparation.
+#
 # See the sshd_config(5) manpage for details
 
+# Make it easy for operators to customize this config.
+Include /etc/ssh/sshd_config.d/*
+
 # What ports, IPs and protocols we listen for
-Port 22
+# Port 22
 # Use these options to restrict which interfaces/protocols sshd will bind to
 #ListenAddress ::
 #ListenAddress 0.0.0.0
@@ -91,7 +111,7 @@ LogLevel INFO
 
 # Authentication:
 LoginGraceTime 120
-PermitRootLogin prohibit-password
+PermitRootLogin no
 StrictModes yes
 
 RSAAuthentication yes
@@ -130,9 +150,11 @@ ChallengeResponseAuthentication no
 AllowTcpForwarding no
 X11Forwarding no
 X11DisplayOffset 10
+PermitTunnel no
 PrintMotd no
 PrintLastLog yes
 TCPKeepAlive yes
+UsePrivilegeSeparation yes
 #UseLogin no
 
 #MaxStartups 10:30:60

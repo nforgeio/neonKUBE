@@ -131,14 +131,14 @@ namespace Neon.Kube
             };
 
             controller.AddStep("connect nodes", (node, stepDelay) => Connect(node));
-            controller.AddStep("configure nodes", (node, stepDelay) => Initialize(node));
+            controller.AddStep("initialize nodes", (node, stepDelay) => Initialize(node));
 
             if (secureSshPassword != orgSshPassword)
             {
                 controller.AddStep("secure node passwords", (node, stepDelay) => SecurePassword(node));
             }
 
-            controller.AddStep("configure node labels", (node, stepDelay) => SetLabels(node));
+            controller.AddStep("detect node labels", (node, stepDelay) => DetectLabels(node));
 
             if (!controller.Run())
             {
@@ -258,7 +258,7 @@ echo '{KubeConst.SysAdminUsername}:{secureSshPassword}' | chpasswd
         /// corresponding node labels in the cluster definition.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void SetLabels(SshProxy<NodeDefinition> node)
+        private void DetectLabels(SshProxy<NodeDefinition> node)
         {
             CommandResponse result;
 
