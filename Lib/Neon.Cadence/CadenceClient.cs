@@ -900,7 +900,7 @@ namespace Neon.Cadence
                 try
                 {
                     // We're going to wait up to 30 seconds for [cadence-proxy] to initialize
-                    // itself to be ready to receive requests.  We're going to ping the proxy's
+                    // itself to become ready to receive requests.  We're going to ping the proxy's
                     // HTTP endpoint with GET requests until we see an HTTP response.
                     //
                     // Note that [cadence-proxy] accepts only POST requests, so these GETs will
