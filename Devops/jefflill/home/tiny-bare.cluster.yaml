@@ -14,9 +14,10 @@ hosting:
 network:
   premiseSubnet: 10.0.0.0/16
   nodesSubnet: 10.0.0.0/16
+security:
+  keepNodePassword: true
 nodeOptions:
   upgrade: none
-  passwordLength: 20
 nodes:
   master-0:
     role: master

@@ -52,7 +52,6 @@ namespace Neon.Kube
         private const string        defaultDatacenter         = "DATACENTER";
         private const string        defaultProvisioner        = "unknown";
         private readonly string[]   defaultTimeSources        = new string[] { "pool.ntp.org" };
-        private const string        defaultDrivePrefix        = "sd";
         private const int           defaultStepStaggerSeconds = 5;
         private const bool          defaultAllowUnitTesting   = false;
         private const string        defaultLinuxDistribution  = "ubuntu";
@@ -231,6 +230,13 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Debug", Required = Required.Always)]
         [YamlMember(Alias = "debug", ApplyNamingConventions = false)]
         public DebugOptions Debug { get; set; } = new DebugOptions();
+
+        /// <summary>
+        /// Specifies cluster security options.
+        /// </summary>
+        [JsonProperty(PropertyName = "Security", Required = Required.Always)]
+        [YamlMember(Alias = "security", ApplyNamingConventions = false)]
+        public SecurityOptions Security { get; set; } = new SecurityOptions();
 
         /// <summary>
         /// Identifies the tool/version used to provision the cluster.
@@ -565,6 +571,7 @@ namespace Neon.Kube
             // Validate the properties.
 
             Debug       = Debug ?? new DebugOptions();
+            Security    = Security ?? new SecurityOptions();
             Provisioner = Provisioner ?? defaultProvisioner;
             Kubernetes  = Kubernetes ?? new KubernetesOptions();
             Docker      = Docker ?? new DockerOptions();
@@ -576,6 +583,7 @@ namespace Neon.Kube
             Network     = Network ?? new NetworkOptions();
 
             Debug.Validate(this);
+            Security.Validate(this);
             Kubernetes.Validate(this);
             Docker.Validate(this);
             Mon.Validate(this);

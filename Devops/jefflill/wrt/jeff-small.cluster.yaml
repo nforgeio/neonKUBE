@@ -29,7 +29,6 @@ network:
   nodesSubnet: 10.100.32.0/22
 nodeOptions:
    upgrade: none
-   passwordLength: 20
 nodes:
    master-0:
      role: master

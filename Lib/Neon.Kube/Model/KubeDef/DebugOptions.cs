@@ -50,22 +50,6 @@ namespace Neon.Kube
     public class DebugOptions
     {
         /// <summary>
-        /// <para>
-        /// Indicates that the cluster node credentials should remain as the insecure
-        /// <b>sysadmin/sysadmin0000</b> to make it easier for neonKUBE developers to
-        /// inspect nodes while debugging cluster setup.  Normally, a secure password
-        /// will be generated and set while nodes are being prepared before cluster setup.
-        /// </para>
-        /// <note>
-        /// <b>WARNING:</b> You should <b>never set this to true for production clusters!</b>
-        /// </note>
-        /// </summary>
-        [JsonProperty(PropertyName = "InsecureNodeCredentials", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "InsecureNodeCredentials", ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public bool InsecureNodeCredentials { get; set; } = false;
-
-        /// <summary>
         /// Validates the options.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>

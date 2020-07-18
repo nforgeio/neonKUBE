@@ -185,13 +185,14 @@ Server Requirements:
             // service to mount a virtual DVD that will change the password before
             // configuring the network on first boot.
             //
-            // For bare metal, we're going to change to a secure password.
+            // For bare metal, we're going to change to a secure password unless
+            // [SecurityOptions.RetainNodePassword=true].
 
             var orgSshPassword = Program.MachinePassword;
 
-            if (Program.MachinePassword == KubeConst.VmTemplatePassword)
+            if (!clusterDefinition.Security.KeepNodePassword)
             {
-                Program.MachinePassword = NeonHelper.GetCryptoRandomPassword(clusterDefinition.NodeOptions.PasswordLength);
+                Program.MachinePassword = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
 
                 if (clusterDefinition.Hosting.IsCloudProvider)
                 {
@@ -386,7 +387,7 @@ Server Requirements:
                 cluster.LogLine(logBeginMarker);
 
                 var nodesText = cluster.Nodes.Count() == 1 ? "node" : "nodes";
-                var operation = $"Preparing [{cluster.Definition.Name}] {nodesText}";
+                var operation = $"Preparing [{cluster.Definition.Name}] cluster {nodesText}";
 
                 var controller = 
                     new SetupController<NodeDefinition>(operation, cluster.Nodes)
