@@ -43,14 +43,7 @@ namespace NeonCli
         /// <param name="stepDelay">Ignored.</param>
         public static void VerifyOS(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
-            node.Status = "check: OS";
-
-            // $todo(jefflill): We're currently hardcoded to Ubuntu 20.04.x
-
-            if (!node.OsName.Equals("Ubuntu", StringComparison.InvariantCultureIgnoreCase) || node.OsVersion < Version.Parse("20.04"))
-            {
-                node.Fault("Expected: Ubuntu 20.04+");
-            }
+            KubeHelper.VerifyNodeOs(node);
         }
 
         /// <summary>

@@ -2160,5 +2160,24 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
             node.Status = $"create: [{KubeConst.ContainerUsername}] user";
             node.SudoCommand($"useradd --uid {KubeConst.ContainerUID} --no-create-home {KubeConst.ContainerUsername}", RunOptions.FaultOnError);
         }
+
+        /// <summary>
+        /// Ensures that the node operating system and version is supported for a neonKUBE
+        /// cluster.  This faults the nodeproxy on faliure.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        internal static void VerifyNodeOs(SshProxy<NodeDefinition> node)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+
+            node.Status = "check: OS";
+
+            // $todo(jefflill): We're currently hardcoded to Ubuntu 20.04.x
+
+            if (!node.OsName.Equals("Ubuntu", StringComparison.InvariantCultureIgnoreCase) || node.OsVersion < Version.Parse("20.04"))
+            {
+                node.Fault("Expected: Ubuntu 20.04+");
+            }
+        }
     }
 }

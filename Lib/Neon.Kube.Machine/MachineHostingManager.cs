@@ -131,11 +131,12 @@ namespace Neon.Kube
             };
 
             controller.AddStep("connect nodes", (node, stepDelay) => Connect(node));
+            controller.AddStep("verify OS", (node, stepDelay) => KubeHelper.VerifyNodeOs(node));
             controller.AddStep("initialize nodes", (node, stepDelay) => Initialize(node));
 
             if (secureSshPassword != orgSshPassword)
             {
-                controller.AddStep("secure node passwords", (node, stepDelay) => SecurePassword(node));
+                controller.AddStep("secure node passwords", (node, stepDelay) => SetSecurePassword(node));
             }
 
             controller.AddStep("detect node labels", (node, stepDelay) => DetectLabels(node));
@@ -231,7 +232,7 @@ namespace Neon.Kube
         /// secure password and reconnects the node using the new password.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void SecurePassword(SshProxy<NodeDefinition> node)
+        private void SetSecurePassword(SshProxy<NodeDefinition> node)
         {
             node.Status = "setting secure password";
 
