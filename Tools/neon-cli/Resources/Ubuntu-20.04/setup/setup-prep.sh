@@ -172,7 +172,7 @@ safe-apt-get install -yq --allow-downgrades unzip
 # sources because there's no mouse, keyboard, or active video card.  Outside
 # of the new CPU instruction, the only sources are the HDD and network drivers.
 # [haveged] works by timing running code at very high resolution and hoping for
-# execution time variations.  This looksa like it'll be better than nothing.
+# execution time jitter.  This looks like it'll be better than nothing.
 
 safe-apt-get install -yq --allow-downgrades haveged
 

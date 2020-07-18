@@ -58,6 +58,15 @@ if [ -f $STDALL_PATH ] ; then
     rm $STDALL_PATH
 fi
 
+# Explicitly wait for the apt lock file to be released.  This will help in situations
+# where the current node needs has pending updates and auto update hasn't been disabled
+# yet.  We're still going to check for errors and retry below because I've seen situations
+# in the past where we had a race condition between our script and the auto updater.
+
+while sudo fuser /var/{lib/{dpkg,apt/lists},cache/apt/archives}/lock >/dev/null 2>&1; do
+   sleep 1
+done
+
 # Peform the operation.
 
 RETRY=false

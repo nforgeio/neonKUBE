@@ -1623,12 +1623,21 @@ mountFolder=${{1}}
 #   2. Automatic updates for production and even test clusters is
 #      just not a great idea.  You just don't want a random update
 #      applied in the middle of the night that might cause trouble.
+#
+# We're going to implement our cluster updating machanism.
 
 systemctl stop apt-daily.timer
 systemctl mask apt-daily.timer
 
 systemctl stop apt-daily.service
 systemctl mask apt-daily.service
+
+# It may be possible for the auto updater to already be running so we'll
+# wait here for it to release any lock files it holds.
+
+while fuser /var/{{lib /{{dpkg,apt/lists}},cache/apt/archives}}/lock; do
+    sleep 1
+done
 
 #------------------------------------------------------------------------------
 # Change the [sysadmin] user password from the hardcoded [sysadmin0000] password
@@ -2004,6 +2013,29 @@ exit 0
             node.Status = $"login: [{KubeConst.SysAdminUsername}]";
 
             node.WaitForBoot();
+
+            // Disable and mask the auto update services to avoid conflicts with
+            // our package operations.  We're going to implement our own cluster
+            // updating mechanism.
+
+            WriteLog(logWriter, $"Disable:  auto updates");
+            node.Status = "disable: auto updates";
+
+            node.SudoCommand("systemctl stop apt-daily.timer", RunOptions.None);
+            node.SudoCommand("systemctl mask apt-daily.timer", RunOptions.None);
+
+            node.SudoCommand("systemctl stop apt-daily.service", RunOptions.None);
+            node.SudoCommand("systemctl mask apt-daily.service", RunOptions.None);
+
+            // Wait for the apt-get lock to be released if somebody is holding it.
+
+            WriteLog(logWriter, $"Wait:     for pending updates");
+            node.Status = "wait: for pending updates";
+
+            while (node.SudoCommand("fuser /var/{lib/{dpkg,apt/lists},cache/apt/archives}/lock", RunOptions.None).ExitCode == 0)
+            {
+                Thread.Sleep(TimeSpan.FromSeconds(1));
+            }
 
             // Disable sudo password prompts and reconnect.
 
