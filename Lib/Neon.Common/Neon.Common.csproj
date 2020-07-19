@@ -64,12 +64,12 @@
     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="YamlDotNet" Version="6.1.2" />
+    <PackageReference Include="YamlDotNet" Version="8.1.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\nuget-icon.png" Pack="true" PackagePath=""/>
-    <None Include="..\..\LICENSE" Pack="True" PackagePath=""/>
+    <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+    <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
   </ItemGroup>
 
 </Project>

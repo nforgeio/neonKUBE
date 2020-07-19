@@ -143,7 +143,7 @@ unmatched: Hello
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void YamlException()
         {
-            // Verify that we beautify exception messages. 
+            // Verify that exception messages explain the issue.
 
             const string unmatched =
 @"name: Jeff
@@ -156,7 +156,7 @@ unmatched: Hello
             }
             catch (YamlException e)
             {
-                Assert.StartsWith("(line: ", e.Message);
+                Assert.Contains("Property 'unmatched' not found", e.Message);
             }
 
             const string badSyntax =
@@ -169,7 +169,7 @@ age: 56
             }
             catch (YamlException e)
             {
-                Assert.StartsWith("(line: ", e.Message);
+                Assert.Contains("invalid mapping", e.Message);
             }
         }
 
