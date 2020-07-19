@@ -246,7 +246,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Text.Encoding.CodePages, Version=4.1.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\System.Text.Encoding.CodePages.4.7.0\lib\net461\System.Text.Encoding.CodePages.dll</HintPath>
+      <HintPath>..\..\packages\System.Text.Encoding.CodePages.4.7.1\lib\net461\System.Text.Encoding.CodePages.dll</HintPath>
     </Reference>
     <Reference Include="System.Text.RegularExpressions, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\..\packages\System.Text.RegularExpressions.4.3.1\lib\net463\System.Text.RegularExpressions.dll</HintPath>
