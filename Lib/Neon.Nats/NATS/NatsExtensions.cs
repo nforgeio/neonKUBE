@@ -115,7 +115,7 @@ namespace NATS.Client
 
             return new Msg<TResponse>(response.Subject, response.Reply, payload)
             {
-                ArrivalSubscription = response.ArrivalSubcription
+                ArrivalSubscription = response.ArrivalSubscription
             };
         }
 
@@ -153,7 +153,7 @@ namespace NATS.Client
 
             return new Msg<TResponse>(response.Subject, response.Reply, payload)
             {
-                ArrivalSubscription = response.ArrivalSubcription
+                ArrivalSubscription = response.ArrivalSubscription
             };
         }
 
@@ -210,7 +210,7 @@ namespace NATS.Client
 
             return new Msg<TResponse>(response.Subject, response.Reply, payload)
             {
-                ArrivalSubscription = response.ArrivalSubcription
+                ArrivalSubscription = response.ArrivalSubscription
             };
         }
 

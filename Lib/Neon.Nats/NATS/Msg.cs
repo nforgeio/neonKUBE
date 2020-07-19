@@ -99,7 +99,7 @@ namespace NATS.Client
             this.subject = msg.Subject;
             this.reply   = msg.Reply;
             this.data    = RoundtripDataFactory.CreateFrom<TMessage>(msg.Data);
-            this.sub     = msg.ArrivalSubcription;
+            this.sub     = msg.ArrivalSubscription;
             this.cached  = msg;
         }
 
@@ -163,6 +163,12 @@ namespace NATS.Client
                 }
             }
         }
+
+        /// <summary>
+        /// Returns the <see cref="ISubscription"/> which received the message.
+        /// </summary>
+        [Obsolete("NATS.Client has corrected this misspelling of the [ArrivalSubcription] property to [ArrivalSubscription] by adding the missing 's' in 'Subscription'.  We've corrected this in our wrapper class as well.  Please update your code to use [ArrivalSubscription].", error: true)]
+        public ISubscription ArrivalSubcription => ArrivalSubscription;
 
         /// <summary>
         /// Returns the <see cref="ISubscription"/> which received the message.
