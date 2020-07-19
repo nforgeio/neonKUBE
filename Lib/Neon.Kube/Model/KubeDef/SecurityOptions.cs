@@ -61,7 +61,7 @@ namespace Neon.Kube
         /// characters.  This happens during cluster provisioning.
         /// </para>
         /// <para>
-        /// You can disable these secure passwords by setting <see cref="RetainNodePassword"/> to 
+        /// You can disable these secure passwords by setting <see cref="KeepNodePassword"/> to 
         /// <c>true</c>.  In general, this means that the <b>sysadmin</b> password will generally
         /// remain as the insecure <b>sysadmin0000</b> password.
         /// </para>
