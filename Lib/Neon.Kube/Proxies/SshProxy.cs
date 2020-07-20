@@ -55,7 +55,7 @@ namespace Neon.Kube
     /// <note>
     /// This is class is <b>not intended</b> to be a <b>general purpose SSH wrapper</b> 
     /// at this time.  It currently assumes that the remote side is running some variant
-    /// of Linux and it makes some globale changes including overwriting the 
+    /// of Linux and it makes some global changes including overwriting the 
     /// <b>/etc/sudoers.d/nopasswd</b> file to disable password prompts for all
     /// users and creating some global directories.
     /// </note>
