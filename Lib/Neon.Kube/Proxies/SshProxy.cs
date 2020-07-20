@@ -649,26 +649,60 @@ namespace Neon.Kube
         /// </note>
         /// </summary>
         /// <param name="password">The current user's password.</param>
+        /// <remarks>
+        /// <para>
+        /// This method uses the existance of a <b>/etc/sshproxy-init</b> file to
+        /// ensure that it only executes once per machine.  This file will be
+        /// created the first time this method is called on the machine.
+        /// </para>
+        /// </remarks>
         public void DisableSudoPrompt(string password)
         {
             Covenant.Requires<ArgumentNullException>(password != null, nameof(password));
 
+            const string sshProxyInitPath = "/etc/sshproxy-init";
+
             var connectionInfo = GetConnectionInfo();
 
-            using (var sshClient = new SshClient(connectionInfo))
+            if (!FileExists(sshProxyInitPath))
             {
-                sshClient.Connect();
-
-                using (var scpClient = new ScpClient(connectionInfo))
+                using (var sshClient = new SshClient(connectionInfo))
                 {
-                    scpClient.Connect();
+                    sshClient.Connect();
 
-                    var sudoDisableScript =
+                    // We need to make sure [requiretty] is turned off and that [visiblepw] is allowed such
+                    // that sudo can execute commands without a password.  We have to do this using a 
+                    // TTY shell because the CentOS distribution deployed by XenServer/XCP-ng requires
+                    // a TTY by default; bless their hearts :)
+                    //
+                    //      https://github.com/nforgeio/neonKUBE/issues/926
+                    //
+                    // We're going to quickly do this here using a SSH.NET shell stream and then follow up
+                    // with a moe definitive config just below.
+
+                    using (var sh = sshClient.CreateShellStream("terminal", 80, 40, 80, 40, 1024))
+                    {
+                        sh.WriteLine("echo 'Defaults !requiretty' > /etc/sudoers.d/notty");
+                        sh.WriteLine("echo 'Defaults visiblepw'  >> /etc/sudoers.d/notty");
+                        sh.Flush();
+                        Thread.Sleep(500);
+                        sh.WriteLine("echo '%sudo    ALL=NOPASSWD: ALL' >> /etc/sudoers.d/nopasswd");
+                        sh.Flush();
+                        Thread.Sleep(500);
+                    }
+
+                    using (var scpClient = new ScpClient(connectionInfo))
+                    {
+                        scpClient.Connect();
+
+                        var sudoDisableScript =
 $@"#!/bin/bash
 
 cat <<EOF > {KubeHostFolders.Home(Username)}/sudo-disable-prompt
 #!/bin/bash
 echo ""%sudo    ALL=NOPASSWD: ALL"" > /etc/sudoers.d/nopasswd
+echo ""Defaults    !requiretty""  > /etc/sudoers.d/notty
+echo ""Defaults    visiblepw""   >> /etc/sudoers.d/notty
 
 chown root /etc/sudoers.d/*
 chmod 440 /etc/sudoers.d/*
@@ -688,17 +722,22 @@ sudo -A {KubeHostFolders.Home(Username)}/sudo-disable-prompt
 rm {KubeHostFolders.Home(Username)}/sudo-disable-prompt
 rm {KubeHostFolders.Home(Username)}/askpass
 ";
-                    using (var stream = new MemoryStream())
-                    {
-                        stream.Write(Encoding.UTF8.GetBytes(sudoDisableScript.Replace("\r", string.Empty)));
-                        stream.Position = 0;
+                        using (var stream = new MemoryStream())
+                        {
+                            stream.Write(Encoding.UTF8.GetBytes(sudoDisableScript.Replace("\r", string.Empty)));
+                            stream.Position = 0;
 
-                        scpClient.Upload(stream, $"{KubeHostFolders.Home(Username)}/sudo-disable");
-                        sshClient.RunCommand($"chmod 770 {KubeHostFolders.Home(Username)}/sudo-disable");
+                            scpClient.Upload(stream, $"{KubeHostFolders.Home(Username)}/sudo-disable");
+                            sshClient.RunCommand($"chmod 770 {KubeHostFolders.Home(Username)}/sudo-disable");
+                        }
+
+                        sshClient.RunCommand($"{KubeHostFolders.Home(Username)}/sudo-disable");
+                        sshClient.RunCommand($"rm {KubeHostFolders.Home(Username)}/sudo-disable");
+
+                        // Indicate that we shouldn't perform these operations again on this machine.
+
+                        sshClient.RunCommand($"sudo touch {sshProxyInitPath}");
                     }
-
-                    sshClient.RunCommand($"{KubeHostFolders.Home(Username)}/sudo-disable");
-                    sshClient.RunCommand($"rm {KubeHostFolders.Home(Username)}/sudo-disable");
                 }
             }
         }
@@ -1454,38 +1493,24 @@ rm {KubeHostFolders.Home(Username)}/askpass
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
             //-----------------------------------------------------------------
-            // Disable SUDO password prompts if this hasn't already been done for this machine.
-            // We can tell be checking whether this file exists:
-            //
-            //      /etc/sshproxy-init
+            // Disable SUDO password prompts.
 
-            const string sshProxyInitPath = "/etc/sshproxy-init";
+            // We need to obtain the SSH password used to establish the current connection.  This means
+            // that TLS based credentials won't work for the first connection to a host.  We're going
+            // use reflection to get at the password itself.
 
-            if (!FileExists(sshProxyInitPath))
+            var authMethod = credentials.AuthenticationMethod as PasswordAuthenticationMethod;
+
+            if (authMethod == null)
             {
-                Status = "prepare: sudo";
-
-                // We need to obtain the SSH password used to establish the current connection.  This means
-                // that TLS based credentials won't work for the first connection to a host.  We're going
-                // use reflection to get at the password itself.
-
-                var authMethod = credentials.AuthenticationMethod as PasswordAuthenticationMethod;
-
-                if (authMethod == null)
-                {
-                    throw new SshProxyException("You must use password credentials the first time you connect to a particular host machine.");
-                }
-
-                var passwordProperty = authMethod.GetType().GetProperty("Password", BindingFlags.Instance | BindingFlags.NonPublic);
-                var passwordBytes    = (byte[])passwordProperty.GetValue(authMethod);
-                var sshPassword      = Encoding.UTF8.GetString(passwordBytes);
-
-                DisableSudoPrompt(sshPassword);
-
-                // Indicate that we shouldn't perform these initialization operations again on this machine.
-
-                sshClient.RunCommand($"sudo touch {sshProxyInitPath}");
+                throw new SshProxyException("You must use password credentials the first time you connect to a particular host machine.");
             }
+
+            var passwordProperty = authMethod.GetType().GetProperty("Password", BindingFlags.Instance | BindingFlags.NonPublic);
+            var passwordBytes    = (byte[])passwordProperty.GetValue(authMethod);
+            var sshPassword      = Encoding.UTF8.GetString(passwordBytes);
+
+            DisableSudoPrompt(sshPassword);
         }
 
         /// <summary>
