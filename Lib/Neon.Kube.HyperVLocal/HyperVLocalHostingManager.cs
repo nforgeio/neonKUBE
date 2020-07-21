@@ -233,15 +233,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void AddPostProvisionSteps(SetupController<NodeDefinition> controller)
-        {
-        }
-
-        /// <inheritdoc/>
-        public override bool RequiresAdminPrivileges
-        {
-            get { return true; }
-        }
+        public override bool RequiresAdminPrivileges => true;
 
         /// <summary>
         /// Returns the name to use for naming the virtual machine hosting the node.

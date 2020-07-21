@@ -161,6 +161,9 @@ namespace Neon.Kube
         {
         }
 
+        /// <inheritdoc/>
+        public override bool RequiresAdminPrivileges => true;
+
         /// <summary>
         /// Connects the proxy to the node.
         /// </summary>

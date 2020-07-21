@@ -100,12 +100,11 @@ namespace Neon.Kube
         public abstract (string Address, int Port) GetSshEndpoint(string nodeName);
 
         /// <inheritdoc/>
-        public abstract void AddPostProvisionSteps(SetupController<NodeDefinition> controller);
+        public virtual void AddPostProvisionSteps(SetupController<NodeDefinition> controller)
+        {
+        }
 
         /// <inheritdoc/>
-        public virtual bool RequiresAdminPrivileges
-        {
-            get { return false; }
-        }
+        public abstract bool RequiresAdminPrivileges { get; }
     }
 }

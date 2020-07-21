@@ -99,7 +99,7 @@ namespace Neon.Kube
         void AddPostProvisionSteps(SetupController<NodeDefinition> controller);
 
         /// <summary>
-        /// Returns <c>true</c> if provisoning requires that the user has
+        /// Returns <c>true</c> if provisoning requires that the user have
         /// administrator privileges.
         /// </summary>
         bool RequiresAdminPrivileges { get; }

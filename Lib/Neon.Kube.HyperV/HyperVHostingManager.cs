@@ -123,8 +123,6 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void AddPostProvisionSteps(SetupController<NodeDefinition> controller)
-        {
-        }
+        public override bool RequiresAdminPrivileges => true;
     }
 }
