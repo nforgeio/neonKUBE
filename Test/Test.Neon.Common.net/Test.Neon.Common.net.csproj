@@ -285,6 +285,9 @@
     <Compile Include="..\Test.Neon.Common\Common\Test_JsonExtensions.cs">
       <Link>Common\Test_JsonExtensions.cs</Link>
     </Compile>
+    <Compile Include="..\Test.Neon.Common\Common\Test_LabelSelector.cs">
+      <Link>Common\Test_LabelSelector.cs</Link>
+    </Compile>
     <Compile Include="..\Test.Neon.Common\Common\Test_LinuxPermissions.cs">
       <Link>Common\Test_LinuxPermissions.cs</Link>
     </Compile>
