@@ -135,6 +135,7 @@ namespace Neon.Xunit
         private IEnumerable<string>     env;
         private bool                    noRemove;
         private bool                    keepOpen;
+        private ContainerLimits         limits;
 
         /// <summary>
         /// Constructor.
@@ -168,7 +169,7 @@ namespace Neon.Xunit
         /// Starts the container.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(string, string, string[], IEnumerable{string}, IEnumerable{string}, bool, bool)"/>
+        /// You'll need to call <see cref="StartAsComposed(string, string, string[], IEnumerable{string}, IEnumerable{string}, bool, bool, ContainerLimits)"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>
@@ -182,6 +183,7 @@ namespace Neon.Xunit
         /// Optionally indicates that the container should continue to run after the fixture is disposed.  
         /// This implies <see cref="noRemove"/><c>=true</c> and defaults to <c>false</c>.
         /// </param>
+        /// <param name="limits">Optionally specifies Docker container resource limits.</param>
         /// <returns>
         /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
         /// this method call started it or <see cref="TestFixtureStatus.AlreadyRunning"/> if the 
@@ -199,12 +201,20 @@ namespace Neon.Xunit
         /// debugging before ensuring that the container is stopped.
         /// </note>
         /// </remarks>
-        public TestFixtureStatus Start(string name, string image, string[] dockerArgs = null, IEnumerable<string> containerArgs = null, IEnumerable<string> env = null, bool noRemove = false, bool keepOpen = false)
+        public TestFixtureStatus Start(
+            string              name, 
+            string              image, 
+            string[]            dockerArgs    = null, 
+            IEnumerable<string> containerArgs = null, 
+            IEnumerable<string> env           = null, 
+            bool                noRemove      = false, 
+            bool                keepOpen      = false,
+            ContainerLimits     limits        = null)
         {
             return base.Start(
                 () =>
                 {
-                    StartAsComposed(name, image, dockerArgs, containerArgs, env, noRemove, keepOpen);
+                    StartAsComposed(name, image, dockerArgs, containerArgs, env, noRemove, keepOpen, limits);
                 });
         }
 
@@ -221,6 +231,7 @@ namespace Neon.Xunit
         /// Optionally indicates that the container should continue to run after the fixture is disposed.  
         /// This implies <see cref="noRemove"/><c>=true</c> and defaults to <c>true</c>.
         /// </param>
+        /// <param name="limits">Optionally specifies Docker container resource limits.</param>
         /// <exception cref="InvalidOperationException">
         /// Thrown if this is not called from  within the <see cref="Action"/> method 
         /// passed <see cref="ITestFixture.Start(Action)"/>
@@ -233,7 +244,15 @@ namespace Neon.Xunit
         /// debugging before ensuring that the container is stopped.
         /// </note>
         /// </remarks>
-        public void StartAsComposed(string name, string image, string[] dockerArgs = null, IEnumerable<string> containerArgs = null, IEnumerable<string> env = null, bool noRemove = false, bool keepOpen = false)
+        public void StartAsComposed(
+            string              name, 
+            string              image, 
+            string[]            dockerArgs    = null, 
+            IEnumerable<string> containerArgs = null, 
+            IEnumerable<string> env           = null, 
+            bool                noRemove      = false, 
+            bool                keepOpen      = false,
+            ContainerLimits     limits        = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image), nameof(image));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
@@ -257,6 +276,7 @@ namespace Neon.Xunit
             this.env           = env;
             this.noRemove      = noRemove;
             this.keepOpen      = keepOpen;
+            this.limits        = limits;
 
             StartContainer();
         }
@@ -335,12 +355,7 @@ namespace Neon.Xunit
             }
 
             dockerArgs.Add("--detach");
-#if TODO
-            // This requires Docker experimental features.
 
-            dockerArgs.Add("--platform");
-            dockerArgs.Add("linux");
-#endif
             if (!string.IsNullOrEmpty(name))
             {
                 dockerArgs.Add("--name");
@@ -361,17 +376,42 @@ namespace Neon.Xunit
                 dockerArgs.Add("--rm");
             }
 
-            dockerArgs.Add(image);
-
-            if (containerArgs != null)
+            if (limits != null)
             {
-                foreach (var arg in containerArgs)
+                var error = limits.Validate();
+
+                if (error != null)
                 {
-                    dockerArgs.Add(arg);
+                    throw new Exception($"Container Limits: {error}");
+                }
+
+                if (limits.Memory != null)
+                {
+                    dockerArgs.Add($"--memory={ByteUnits.Parse(limits.Memory)}");
+                }
+
+                if (limits.MemorySwap != null)
+                {
+                    dockerArgs.Add($"--memory-swap={ByteUnits.Parse(limits.MemorySwap)}");
+                }
+
+                if (limits.MemoryReservation != null)
+                {
+                    dockerArgs.Add($"--memory-reservation={ByteUnits.Parse(limits.MemoryReservation)}");
+                }
+
+                if (limits.KernelMemory != null)
+                {
+                    dockerArgs.Add($"--kernel-memory={ByteUnits.Parse(limits.KernelMemory)}");
+                }
+
+                if (limits.OomKillDisable)
+                {
+                    dockerArgs.Add($"--oom-kill-disable");
                 }
             }
 
-            argsString = NeonHelper.NormalizeExecArgs("run", dockerArgs);
+            argsString = NeonHelper.NormalizeExecArgs("run", dockerArgs, image, containerArgs);
             result     = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, argsString);
 
             if (result.ExitCode != 0)
