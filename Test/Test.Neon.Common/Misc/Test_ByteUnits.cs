@@ -327,5 +327,83 @@ namespace TestCommon
             Assert.Equal("2Ei", ByteUnits.ToEiString(2 * ByteUnits.ExbiBytes));
             Assert.Equal("0.5Ei", ByteUnits.ToEiString(ByteUnits.ExbiBytes / 2));
         }
+
+        [Fact]
+        public void CaseInsensitive()
+        {
+            decimal value;
+
+            Assert.True(ByteUnits.TryParse("1k", out value));
+            Assert.Equal(ByteUnits.KiloBytes, value);
+
+            Assert.True(ByteUnits.TryParse("1kb", out value));
+            Assert.Equal(ByteUnits.KiloBytes, value);
+
+            Assert.True(ByteUnits.TryParse("2ki", out value));
+            Assert.Equal(ByteUnits.KibiBytes * 2, value);
+
+            Assert.True(ByteUnits.TryParse("2kib", out value));
+            Assert.Equal(ByteUnits.KibiBytes * 2, value);
+
+            Assert.True(ByteUnits.TryParse("1m", out value));
+            Assert.Equal(ByteUnits.MegaBytes, value);
+
+            Assert.True(ByteUnits.TryParse("1mb", out value));
+            Assert.Equal(ByteUnits.MegaBytes, value);
+
+            Assert.True(ByteUnits.TryParse("2mi", out value));
+            Assert.Equal(ByteUnits.MebiBytes * 2, value);
+
+            Assert.True(ByteUnits.TryParse("2mib", out value));
+            Assert.Equal(ByteUnits.MebiBytes * 2, value);
+
+            Assert.True(ByteUnits.TryParse("1g", out value));
+            Assert.Equal(ByteUnits.GigaBytes, value);
+
+            Assert.True(ByteUnits.TryParse("1gb", out value));
+            Assert.Equal(ByteUnits.GigaBytes, value);
+
+            Assert.True(ByteUnits.TryParse("2gi", out value));
+            Assert.Equal(ByteUnits.GibiBytes * 2, value);
+
+            Assert.True(ByteUnits.TryParse("2gib", out value));
+            Assert.Equal(ByteUnits.GibiBytes * 2, value);
+
+            Assert.True(ByteUnits.TryParse("1t", out value));
+            Assert.Equal(ByteUnits.TeraBytes, value);
+
+            Assert.True(ByteUnits.TryParse("1tb", out value));
+            Assert.Equal(ByteUnits.TeraBytes, value);
+
+            Assert.True(ByteUnits.TryParse("2ti", out value));
+            Assert.Equal(ByteUnits.TebiBytes * 2, value);
+
+            Assert.True(ByteUnits.TryParse("2tib", out value));
+            Assert.Equal(ByteUnits.TebiBytes * 2, value);
+
+            Assert.True(ByteUnits.TryParse("1p", out value));
+            Assert.Equal(ByteUnits.PetaBytes, value);
+
+            Assert.True(ByteUnits.TryParse("1pb", out value));
+            Assert.Equal(ByteUnits.PetaBytes, value);
+
+            Assert.True(ByteUnits.TryParse("2pi", out value));
+            Assert.Equal(ByteUnits.PebiBytes * 2, value);
+
+            Assert.True(ByteUnits.TryParse("2pib", out value));
+            Assert.Equal(ByteUnits.PebiBytes * 2, value);
+
+            Assert.True(ByteUnits.TryParse("1e", out value));
+            Assert.Equal(ByteUnits.ExaBytes, value);
+
+            Assert.True(ByteUnits.TryParse("1eb", out value));
+            Assert.Equal(ByteUnits.ExaBytes, value);
+
+            Assert.True(ByteUnits.TryParse("2ei", out value));
+            Assert.Equal(ByteUnits.ExbiBytes * 2, value);
+
+            Assert.True(ByteUnits.TryParse("2eib", out value));
+            Assert.Equal(ByteUnits.ExbiBytes * 2, value);
+        }
     }
 }

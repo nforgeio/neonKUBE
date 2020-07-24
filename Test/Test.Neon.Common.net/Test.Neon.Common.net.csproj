@@ -321,9 +321,6 @@
     <Compile Include="..\Test.Neon.Common\Diagnostics\Test_Logger.TextLogger.cs">
       <Link>Diagnostics\Test_Logger.TextLogger.cs</Link>
     </Compile>
-    <Compile Include="..\Test.Neon.Common\Helper\Test_ByteUnits.cs">
-      <Link>Helper\Test_ByteUnits.cs</Link>
-    </Compile>
     <Compile Include="..\Test.Neon.Common\Helper\Test_NeonHelper.Compression.cs">
       <Link>Helper\Test_NeonHelper.Compression.cs</Link>
     </Compile>
@@ -359,6 +356,9 @@
     </Compile>
     <Compile Include="..\Test.Neon.Common\IO\Test_TextReader.cs">
       <Link>IO\Test_TextReader.cs</Link>
+    </Compile>
+    <Compile Include="..\Test.Neon.Common\Misc\Test_ByteUnits.cs">
+      <Link>Misc\Test_ByteUnits.cs</Link>
     </Compile>
     <Compile Include="..\Test.Neon.Common\Net\Test_JsonClient.cs">
       <Link>Net\Test_JsonClient.cs</Link>

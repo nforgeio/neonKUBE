@@ -33,12 +33,6 @@ using Newtonsoft.Json.Serialization;
 
 using Neon.Diagnostics;
 
-// $todo(jefflill):
-//
-// PB and PiB units aren't working due to flowting point precision issues.
-// I'm going to disable this for now.  Perhaps we can address this by using
-// [decimal] instead of [double].
-
 namespace Neon.Common
 {
     /// <summary>
@@ -47,51 +41,51 @@ namespace Neon.Common
     /// </para>
     /// <list type="table">
     /// <item>
-    ///     <term><b>K</b></term>
+    ///     <term><b>K</b> or <b>KB</b></term>
     ///     <description>1,000</description>
     /// </item>
     /// <item>
-    ///     <term><b>Ki</b></term>
+    ///     <term><b>Ki</b> or <b>kiB</b></term>
     ///     <description>1,024</description>
     /// </item>
     /// <item>
-    ///     <term><b>M</b></term>
+    ///     <term><b>M</b> or <b>MB</b></term>
     ///     <description>1000000</description>
     /// </item>
     /// <item>
-    ///     <term><b>Mi</b></term>
+    ///     <term><b>Mi</b> or <b>MiB</b></term>
     ///     <description>1,048,576</description>
     /// </item>
     /// <item>
-    ///     <term><b>G</b></term>
+    ///     <term><b>G</b> or <b>GB</b></term>
     ///     <description>1,000,000,000</description>
     /// </item>
     /// <item>
-    ///     <term><b>Gi</b></term>
+    ///     <term><b>Gi</b> or <b>GiB</b></term>
     ///     <description>1,073,741,824</description>
     /// </item>
     /// <item>
-    ///     <term><b>T</b></term>
+    ///     <term><b>T</b> or <b>TB</b></term>
     ///     <description>1,000,000,000,000</description>
     /// </item>
     /// <item>
-    ///     <term><b>Ti</b></term>
+    ///     <term><b>Ti</b> or <b>TiB</b></term>
     ///     <description>1,099,511,627,776</description>
     /// </item>
     /// <item>
-    ///     <term><b>P</b></term>
+    ///     <term><b>P</b> or <b>PB</b></term>
     ///     <description>1,000,000,000,000,000</description>
     /// </item>
     /// <item>
-    ///     <term><b>Pi</b></term>
+    ///     <term><b>Pi</b> or <b>PiB</b></term>
     ///     <description>1,125,899,906,842,624</description>
     /// </item>
     /// <item>
-    ///     <term><b>Ei</b></term>
+    ///     <term><b>E</b> or <b>EB</b></term>
     ///     <description>1,000,000,000,000,000,000‬</description>
     /// </item>
     /// <item>
-    ///     <term><b>Ei</b></term>
+    ///     <term><b>Ei</b> or <b>EiB</b></term>
     ///     <description>1,152,921,504,606,846,976‬</description>
     /// </item>
     /// </list>
@@ -204,7 +198,7 @@ namespace Neon.Common
             }
 
             unitLabel = temp.Trim();
-            //unitLabel = unitLabel.ToUpperInvariant();
+            unitLabel = unitLabel.ToUpperInvariant();
 
             // Map the unit label to a count.
 
@@ -213,24 +207,42 @@ namespace Neon.Common
                 switch (unitLabel)
                 {
                     case "B":   units = 1;          break;
-                    case "K":   units = KiloBytes;  break;
-                    case "Ki":  units = KibiBytes;  break;
-                    case "KiB": units = KibiBytes;  break;
-                    case "M":   units = MegaBytes;  break;
-                    case "Mi":  units = MebiBytes;  break;
-                    case "MiB": units = MebiBytes;  break;
-                    case "G":   units = GigaBytes;  break;
-                    case "Gi":  units = GibiBytes;  break;
-                    case "GiB": units = GibiBytes;  break;
-                    case "T":   units = TeraBytes;  break;
-                    case "Ti":  units = TebiBytes;  break;
-                    case "TiB": units = TebiBytes;  break;
-                    case "P":   units = PetaBytes;  break;
-                    case "Pi":  units = PebiBytes;  break;
-                    case "PiB": units = PebiBytes;  break;
-                    case "E":   units = ExaBytes;   break;
-                    case "Ei":  units = ExbiBytes;  break;
-                    case "EiB": units = ExbiBytes;  break;
+
+                    case "K":
+                    case "KB":  units = KiloBytes;  break;
+
+                    case "KI":
+                    case "KIB": units = KibiBytes;  break;
+
+                    case "M":
+                    case "MB":  units = MegaBytes;  break;
+
+                    case "MI":
+                    case "MIB": units = MebiBytes;  break;
+
+                    case "G":
+                    case "GB":  units = GigaBytes;  break;
+
+                    case "GI":
+                    case "GIB": units = GibiBytes;  break;
+
+                    case "T":  
+                    case "TB":  units = TeraBytes; break;
+
+                    case "TI":  
+                    case "TIB": units = TebiBytes;  break;
+
+                    case "P":
+                    case "PB":  units = PetaBytes;  break;
+
+                    case "PI":  
+                    case "PIB": units = PebiBytes;  break;
+
+                    case "E":
+                    case "EB":  units = ExaBytes;   break;
+
+                    case "EI":
+                    case "EIB": units = ExbiBytes;  break;
 
                     default:
 
