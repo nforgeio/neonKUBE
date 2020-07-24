@@ -125,5 +125,7 @@ RUN chmod a+x entrypoint.sh \
     && chmod a+x setup.sh \
     && /bin/bash setup.sh $CADENCE_HOME
 
+COPY ./cassandra-env.sh /etc/cassandra/cassandra-env.sh
+
 # Docker entrypiont
 ENTRYPOINT ./entrypoint.sh $CADENCE_HOME $UI_HOME
