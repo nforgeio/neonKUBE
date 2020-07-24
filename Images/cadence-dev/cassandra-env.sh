@@ -1,5 +1,3 @@
-λ docker run -it --rm --entrypoint bash nkubeio/cadence-dev:release-2.0.1-latest
-root@aeb5086cb51f:/cadence# cat /etc/cassandra/cassandra-env.sh
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
