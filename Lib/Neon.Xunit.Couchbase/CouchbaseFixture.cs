@@ -114,7 +114,7 @@ namespace Neon.Xunit.Couchbase
         /// but may be customized.  This needs to be an IPv4 address.
         /// </param>
         /// <param name="limits">
-        /// Specifies the Docker container limits to use for hosting Couchbase.  Note that
+        /// Optionally specifies the Docker container limits to use for hosting Couchbase.  Note that
         /// this method will use reasonable default limits when this is <c>null</c>.
         /// </param>
         /// <returns>
@@ -210,7 +210,7 @@ namespace Neon.Xunit.Couchbase
         /// but may be customized.  This needs to be an IPv4 address.
         /// </param>
         /// <param name="limits">
-        /// Specifies the Docker container limits to use for hosting Couchbase.  Note that
+        /// Optionally specifies the Docker container limits to use for hosting Couchbase.  Note that
         /// this method will use reasonably small default limits when this is <c>null</c>.
         /// </param>
         public void StartAsComposed(

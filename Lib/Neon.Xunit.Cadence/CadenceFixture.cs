@@ -56,7 +56,7 @@ namespace Neon.Xunit.Cadence
     /// are not true.
     /// </para>
     /// <para>
-    /// See <see cref="Start(CadenceSettings, string, string, string[], string, LogLevel, bool, string, bool, bool, bool)"/>
+    /// See <see cref="Start(CadenceSettings, string, string, string[], string, LogLevel, bool, bool, string, bool, bool, ContainerLimits)"/>
     /// for more information about how this works.
     /// </para>
     /// <note>
@@ -94,7 +94,7 @@ namespace Neon.Xunit.Cadence
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string[], string, LogLevel, bool, bool, string, bool, bool)"/>
+        /// You'll need to call <see cref="StartAsComposed(CadenceSettings, string, string, string[], string, LogLevel, bool, bool, string, bool, bool, ContainerLimits)"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>
@@ -128,6 +128,10 @@ namespace Neon.Xunit.Cadence
         /// put the Cadence client library into its initial state before the fixture starts as well
         /// as when the fixture itself is reset.
         /// </param>
+        /// <param name="limits">
+        /// Specifies the Docker container limits to use for hosting Couchbase.  Note that
+        /// this method will use reasonably small default limits when this is <c>null</c>.
+        /// </param>
         /// <returns>
         /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
         /// this method call started it or <see cref="TestFixtureStatus.AlreadyRunning"/> if the 
@@ -147,17 +151,18 @@ namespace Neon.Xunit.Cadence
         /// </note>
         /// </remarks>
         public TestFixtureStatus Start(
-            CadenceSettings     settings      = null,
-            string              image         = "nkubeio/cadence-dev:latest",
-            string              name          = "cadence-dev",
-            string[]            env           = null,
-            string              defaultDomain = DefaultDomain,
-            LogLevel            logLevel      = LogLevel.None,
-            bool                reconnect     = false,
-            string              hostInterface = null,
-            bool                keepRunning   = false,
-            bool                noClient      = false,
-            bool                noReset       = false)
+            CadenceSettings     settings        = null,
+            string              image           = "nkubeio/cadence-dev:latest",
+            string              name            = "cadence-dev",
+            string[]            env             = null,
+            string              defaultDomain   = DefaultDomain,
+            LogLevel            logLevel        = LogLevel.None,
+            bool                reconnect       = false,
+            bool                keepRunning     = false,
+            string              hostInterface   = null,
+            bool                noClient        = false,
+            bool                noReset         = false,
+            ContainerLimits     limits          = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image), nameof(image));
 
@@ -175,7 +180,8 @@ namespace Neon.Xunit.Cadence
                         keepRunning:     keepRunning, 
                         hostInterface:   hostInterface,
                         noClient:        noClient, 
-                        noReset:         noReset);
+                        noReset:         noReset,
+                        limits:          limits);
                 });
         }
 
@@ -212,6 +218,10 @@ namespace Neon.Xunit.Cadence
         /// put the Cadence client library into its initial state before the fixture starts as well
         /// as when the fixture itself is reset.
         /// </param>
+        /// <param name="limits">
+        /// Optionally specifies the Docker container limits to use for hosting Couchbase.  Note that
+        /// this method will use reasonably small default limits when this is <c>null</c>.
+        /// </param>
         /// <remarks>
         /// <note>
         /// A fresh Cadence client <see cref="Client"/> will be established every time this
@@ -220,17 +230,18 @@ namespace Neon.Xunit.Cadence
         /// </note>
         /// </remarks>
         public void StartAsComposed(
-            CadenceSettings     settings      = null,
-            string              image         = "nkubeio/cadence-dev:latest",
-            string              name          = "cadence-dev",
-            string[]            env           = null,
-            string              defaultDomain = DefaultDomain,
-            LogLevel            logLevel      = LogLevel.None,
-            bool                reconnect     = false,
-            bool                keepRunning   = false,
-            string              hostInterface = null,
-            bool                noClient      = false,
-            bool                noReset       = false)
+            CadenceSettings     settings        = null,
+            string              image           = "nkubeio/cadence-dev:latest",
+            string              name            = "cadence-dev",
+            string[]            env             = null,
+            string              defaultDomain   = DefaultDomain,
+            LogLevel            logLevel        = LogLevel.None,
+            bool                reconnect       = false,
+            bool                keepRunning     = false,
+            string              hostInterface   = null,
+            bool                noClient        = false,
+            bool                noReset         = false,
+            ContainerLimits     limits          = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image), nameof(image));
 
@@ -256,14 +267,12 @@ namespace Neon.Xunit.Cadence
                     CadenceClient.Reset();
                 }
 
-                // [TemporalFixture] deploys a compose application that exposes some of 
-                // the same ports as [CadenceFixture], so we're going ensure that any 
-                // running [TemporalFixture] application is stopped first.
-                //
-                // Most users won't run into this because Cadence eventually will be
-                // depreciated but neonKUBE unit tests will require this.
+                // Use reasonable default limits.
 
-                DockerComposeFixture.StopApplication("temporal-dev");
+                limits = limits ?? new ContainerLimits()
+                {
+                    Memory = "1 GiB"
+                };
 
                 // Start the Cadence container.
 
@@ -275,6 +284,7 @@ namespace Neon.Xunit.Cadence
                         "-p", $"{GetHostInterface(hostInterface)}:8088:8088"
                     },
                     env: env,
+                    limits: limits,
                     keepOpen: keepRunning);
 
                 Thread.Sleep(warmupDelay);

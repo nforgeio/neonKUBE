@@ -183,7 +183,7 @@ namespace Neon.Xunit
         /// Optionally indicates that the container should continue to run after the fixture is disposed.  
         /// This implies <see cref="noRemove"/><c>=true</c> and defaults to <c>false</c>.
         /// </param>
-        /// <param name="limits">Optionally specifies Docker container resource limits.</param>
+        /// <param name="limits">Optionally specifies the Docker container resource limits.</param>
         /// <returns>
         /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
         /// this method call started it or <see cref="TestFixtureStatus.AlreadyRunning"/> if the 
