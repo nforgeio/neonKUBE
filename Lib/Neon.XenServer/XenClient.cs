@@ -123,10 +123,6 @@ namespace Neon.XenServer
             SshProxy.Metadata = this;
             runOptions        = RunOptions.IgnoreRemotePath;
 
-            // We need to disable SUDO password prompting
-
-            SshProxy.DisableSudoPrompt(password);
-
             // Initialize the operation classes.
 
             Repository = new RepositoryOperations(this);

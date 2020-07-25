@@ -638,7 +638,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Prevents <b>sudo</b> from prompting for passwords.
+        /// Prevents <b>sudo</b> from prompting for passwords and also ensures that
+        /// the <b>/home/root</b> directory exists and has the appropriate permissions.
         /// </para>
         /// <note>
         /// The connected user must already be a member of the <b>root</b> group.
@@ -651,7 +652,7 @@ namespace Neon.Kube
         /// <param name="password">The current user's password.</param>
         /// <remarks>
         /// <para>
-        /// This method uses the existance of a <b>/etc/sshproxy-init</b> file to
+        /// This method uses the existance of a <b>/etc/neon-sshproxy-init</b> file to
         /// ensure that it only executes once per machine.  This file will be
         /// created the first time this method is called on the machine.
         /// </para>
@@ -660,15 +661,15 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(password != null, nameof(password));
 
-            const string sshProxyInitPath = "/etc/sshproxy-init";
-
+            const string sshProxyInitPath = "/etc/neon-sshproxy-init";
+            
             var connectionInfo = GetConnectionInfo();
 
             if (!FileExists(sshProxyInitPath))
             {
-                using (var sshClient = new SshClient(connectionInfo))
+                using (var shellClient = new SshClient(connectionInfo))
                 {
-                    sshClient.Connect();
+                    shellClient.Connect();
 
                     // We need to make sure [requiretty] is turned off and that [visiblepw] is allowed such
                     // that sudo can execute commands without a password.  We have to do this using a 
@@ -678,16 +679,30 @@ namespace Neon.Kube
                     //      https://github.com/nforgeio/neonKUBE/issues/926
                     //
                     // We're going to quickly do this here using a SSH.NET shell stream and then follow up
-                    // with a moe definitive config just below.
+                    // with a more definitive config just below.
+                    //
+                    // I'm not entirely sure why I need the sleep calls below, but it doesn't work
+                    // without them.  This delay happens only once, when the remote machine hasn't
+                    // been initialized yet.
 
-                    using (var sh = sshClient.CreateShellStream("terminal", 80, 40, 80, 40, 1024))
+                    using (var shell = shellClient.CreateShellStream("terminal", 80, 40, 80, 40, 1024))
                     {
-                        sh.WriteLine("echo 'Defaults !requiretty' > /etc/sudoers.d/notty");
-                        sh.WriteLine("echo 'Defaults visiblepw'  >> /etc/sudoers.d/notty");
-                        sh.Flush();
+                        // Disable SUDO password prompts
+
+                        shell.WriteLine("echo 'Defaults !requiretty' > /etc/sudoers.d/notty");
+                        shell.WriteLine("echo 'Defaults visiblepw'  >> /etc/sudoers.d/notty");
+                        shell.Flush();
                         Thread.Sleep(500);
-                        sh.WriteLine("echo '%sudo    ALL=NOPASSWD: ALL' >> /etc/sudoers.d/nopasswd");
-                        sh.Flush();
+                        shell.WriteLine("echo '%sudo    ALL=NOPASSWD: ALL' >> /etc/sudoers.d/nopasswd");
+                        shell.Flush();
+                        Thread.Sleep(500);
+
+                        // Ensure that the [/home/root] directory exists.
+
+                        shell.WriteLine("mkdir -p /home/root");
+                        shell.WriteLine("sudo chmod 751 /home");
+                        shell.WriteLine("sudo chmod 751 /home/root");
+                        shell.Flush();
                         Thread.Sleep(500);
                     }
 
@@ -728,15 +743,15 @@ rm {KubeHostFolders.Home(Username)}/askpass
                             stream.Position = 0;
 
                             scpClient.Upload(stream, $"{KubeHostFolders.Home(Username)}/sudo-disable");
-                            sshClient.RunCommand($"chmod 770 {KubeHostFolders.Home(Username)}/sudo-disable");
+                            shellClient.RunCommand($"chmod 770 {KubeHostFolders.Home(Username)}/sudo-disable");
                         }
 
-                        sshClient.RunCommand($"{KubeHostFolders.Home(Username)}/sudo-disable");
-                        sshClient.RunCommand($"rm {KubeHostFolders.Home(Username)}/sudo-disable");
+                        shellClient.RunCommand($"{KubeHostFolders.Home(Username)}/sudo-disable");
+                        shellClient.RunCommand($"rm {KubeHostFolders.Home(Username)}/sudo-disable");
 
                         // Indicate that we shouldn't perform these operations again on this machine.
 
-                        sshClient.RunCommand($"sudo touch {sshProxyInitPath}");
+                        shellClient.RunCommand($"sudo touch {sshProxyInitPath}");
                     }
                 }
             }
@@ -1438,7 +1453,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// as uploading and downloading files.
         /// </para>
         /// <para>
-        /// This method creates the <b>/etc/sshproxy-init</b> file such that these operations will only
+        /// This method creates the <b>/etc/neon-sshproxy-init</b> file such that these operations will only
         /// be performed once.
         /// </para>
         /// </summary>
