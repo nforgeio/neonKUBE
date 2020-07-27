@@ -2221,25 +2221,25 @@ namespace TestTemporal
         //---------------------------------------------------------------------
 
         [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
-        public interface IWorkflowFail : IWorkflow
+        public interface IWorkflowWithError : IWorkflow
         {
             [WorkflowMethod]
             Task RunAsync();
         }
 
         [Workflow(AutoRegister = true)]
-        public class WorkflowFail : WorkflowBase, IWorkflowFail
+        public class WorkflowWithError : WorkflowBase, IWorkflowWithError
         {
             public async Task RunAsync()
             {
                 await Task.CompletedTask;
-                throw new ArgumentException("forced-failure");
+                throw new ArgumentException("test-failure");
             }
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public async Task Workflow_Fail()
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_WithError()
         {
             await SyncContext.ClearAsync;
 
@@ -2250,21 +2250,21 @@ namespace TestTemporal
                 DecisionTaskTimeout = TimeSpan.FromSeconds(5)
             };
 
-            var stub = client.NewWorkflowStub<IWorkflowFail>(options);
+            var stub = client.NewWorkflowStub<IWorkflowWithError>(options);
 
             try
             {
                 await stub.RunAsync();
-                Assert.True(false, "TemporalGenericException expected");
+                Assert.True(false, $"[{nameof(TemporalCustomException)}] expected");
             }
-            catch (TemporalGenericException e)
+            catch (TemporalCustomException e)
             {
-                Assert.Contains("ArgumentException", e.Message);
-                Assert.Contains("forced-failure", e.Details);
+                Assert.Equal(typeof(ArgumentException).FullName, e.Reason);
+                Assert.Equal("test-failure", e.Message);
             }
-            catch
+            catch (Exception e)
             {
-                Assert.True(false, "TemporalGenericException expected");
+                Assert.True(false, $"Expected [{typeof(TemporalCustomException).FullName}] not [{e.GetType().FullName}]");
             }
         }
 
@@ -3421,7 +3421,7 @@ namespace TestTemporal
                 await stub.SignalAsync("signal", "test");
                 await future.GetAsync();
 
-                return WorkflowUntypedChildFuture.HasExecuted;
+                return WorkflowUntypedChildFuture.HasExecuted && ReceivedSignal == "test";
             }
 
             public async Task<bool> WithResult()
@@ -3440,7 +3440,7 @@ namespace TestTemporal
 
                 var result = await future.GetAsync();
 
-                return WorkflowUntypedChildFuture.HasExecuted && result == "Hello Jeff!";
+                return WorkflowUntypedChildFuture.HasExecuted && ReceivedSignal == "test" && result == "Hello Jeff!";
             }
 
             public async Task SignalAsync(string signal)
@@ -4136,6 +4136,36 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        public interface IActivityTimeout : IActivity
+        {
+            [ActivityMethod(Name = "sleep")]
+            Task SleepAsync(TimeSpan sleepTime);
+
+            [ActivityMethod(Name = "throw-transient")]
+            Task ThrowTransientAsync();
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ActivityTimeout : ActivityBase, IActivityTimeout
+        {
+            public async Task SleepAsync(TimeSpan sleepTime)
+            {
+                await Task.Delay(sleepTime);
+            }
+
+            public async Task ThrowTransientAsync()
+            {
+                // Throw a [TransientException] so the calling workflow can verify
+                // that the GOLANG error is generated properly and that it ends up
+                // being wrapped in a [CadenceGenericException] as expected.
+
+                await Task.CompletedTask;
+
+                throw new TransientException("This is a test!");
+            }
+        }
+
         [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
         public interface IWorkflowTimeout : IWorkflow
         {
@@ -4150,16 +4180,6 @@ namespace TestTemporal
 
             [WorkflowMethod(Name = "activity-dotnetexception")]
             Task<bool> ActivityDotNetException();
-        }
-
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
-        public interface IActivityTimeout : IActivity
-        {
-            [ActivityMethod(Name = "sleep")]
-            Task SleepAsync(TimeSpan sleepTime);
-
-            [ActivityMethod(Name = "throw-transient")]
-            Task ThrowTransientAsync();
         }
 
         [Workflow(AutoRegister = true)]
@@ -4177,7 +4197,7 @@ namespace TestTemporal
                 // detect that the heartbeat time was exceeded and
                 // throw an [ActivityHeartbeatTimeoutException].
                 //
-                // The method returns TRUE if we catch ther desired
+                // The method returns TRUE if we catch the desired
                 // exception.
 
                 var sleepTime   = TimeSpan.FromSeconds(5);
@@ -4245,7 +4265,7 @@ namespace TestTemporal
                         return false;
                     }
 
-                    if (e.Details != "This is a test!")
+                    if (e.Message != "This is a test!")
                     {
                         return false;
                     }
@@ -4254,26 +4274,6 @@ namespace TestTemporal
                 }
 
                 return false;
-            }
-        }
-
-        [Activity(AutoRegister = true)]
-        public class ActivityTimeout : ActivityBase, IActivityTimeout
-        {
-            public async Task SleepAsync(TimeSpan sleepTime)
-            {
-                await Task.Delay(sleepTime);
-            }
-
-            public async Task ThrowTransientAsync()
-            {
-                // Throw a [TransientException] so the calling workflow can verify
-                // that the GOLANG error is generated properly and that it ends up
-                // being wrapped in a [TemporalGenericException] as expected.
-
-                await Task.CompletedTask;
-
-                throw new TransientException("This is a test!");
             }
         }
 

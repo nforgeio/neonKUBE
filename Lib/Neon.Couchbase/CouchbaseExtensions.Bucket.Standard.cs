@@ -528,7 +528,7 @@ namespace Couchbase
         public static IOperationResult<T> Replace<T>(this IBucket bucket, T value, ulong cas, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
             where T : class, IPersistableType
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            Covenant.Requires<ArgumentNullException>(value != null, nameof(value));
             return bucket.Replace<T>(value.GetKey(), value, cas, replicateTo, persistTo, timeout);
         }
 

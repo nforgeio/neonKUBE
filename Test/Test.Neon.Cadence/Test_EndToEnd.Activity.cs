@@ -160,6 +160,132 @@ namespace TestCadence
 
         //---------------------------------------------------------------------
 
+        [ActivityInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IActivityWithError : IActivity
+        {
+            [ActivityMethod]
+            Task RunAsync();
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ActivityWithError : ActivityBase, IActivityWithError
+        {
+            public async Task RunAsync()
+            {
+                await Task.CompletedTask;
+
+                throw new TestException("activity failed");
+            }
+        }
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IActivityWorkflowWithError : IWorkflow
+        {
+            // These methods return NULL on success, otherwise the error reason.
+
+            [WorkflowMethod(Name = "normal-activity-error")]
+            Task<string> ActivityErrorAsync();
+
+            [WorkflowMethod(Name = "local-activity-error")]
+            Task<string> LocalActivityErrorAsync();
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class ActivityWorkflowWithError : WorkflowBase, IActivityWorkflowWithError
+        {
+            public async Task<string> ActivityErrorAsync()
+            {
+                var stub = Workflow.NewActivityStub<IActivityWithError>();
+
+                try
+                {
+                    await stub.RunAsync();
+
+                    return "Exception expected";
+                }
+                catch (CadenceCustomException e)
+                {
+                    if (e.Reason != typeof(TestException).FullName)
+                    {
+                        return $"Expected REASON=[{typeof(TestException).FullName}] ACTUAL=[{e.Reason}]";
+                    }
+                    else if (e.Message != "activity failed")
+                    {
+                        return $"Expected MESSAGE=[\"activity failed\"] ACTUAL=[{e.Message}]";
+                    }
+                    else
+                    {
+                        return null; // Exception is OK
+                    }
+                }
+                catch (Exception e)
+                {
+                    return $"Expected EXCEPTION={typeof(CadenceCustomException).FullName}] ACTUAL[{e.GetType().FullName}]";
+                }
+            }
+
+            public async Task<string> LocalActivityErrorAsync()
+            {
+                var stub = Workflow.NewLocalActivityStub<IActivityWithError, ActivityWithError>();
+
+                try
+                {
+                    await stub.RunAsync();
+
+                    return "Exception expected";
+                }
+                catch (CadenceCustomException e)
+                {
+                    if (e.Reason != typeof(TestException).FullName)
+                    {
+                        return $"Expected REASON=[{typeof(TestException).FullName}] ACTUAL=[{e.Reason}]";
+                    }
+                    else if (e.Message != "activity failed")
+                    {
+                        return $"Expected MESSAGE=[\"activity failed\"] ACTUAL=[{e.Message}]";
+                    }
+                    else
+                    {
+                        return null; // Exception is OK
+                    }
+                }
+                catch (Exception e)
+                {
+                    return $"Expected EXCEPTION={typeof(CadenceCustomException).FullName}] ACTUAL[{e.GetType().FullName}]";
+                }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_WithError()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that an exception thrown by an normal activity can be caught
+            // and verified by the parent workflow.
+
+            var stub = client.NewWorkflowStub<IActivityWorkflowWithError>();
+
+            Assert.Null(await stub.ActivityErrorAsync());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task ActivityLocal_WithError()
+        {
+            await SyncContext.ClearAsync;
+
+            // Verify that an exception thrown by an normal activity can be caught
+            // and verified by the parent workflow.
+
+            var stub = client.NewWorkflowStub<IActivityWorkflowWithError>();
+
+            Assert.Null(await stub.LocalActivityErrorAsync());
+        }
+
+        //---------------------------------------------------------------------
+
         [ActivityInterface()]
         public interface ILocalActivityWithResult : IActivity
         {
@@ -631,7 +757,7 @@ namespace TestCadence
                 {
                     case HeartbeatMode.SendHeartbeat:
 
-                        await Activity.SendHeartbeatAsync(new byte[] { 0, 1, 2, 3, 4 });
+                        await Activity.RecordHeartbeatAsync(new byte[] { 0, 1, 2, 3, 4 });
                         break;
 
                     case HeartbeatMode.HeartbeatWithDefaults:
@@ -733,7 +859,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Activity_SendHeartbeat()
+        public async Task Activity_Heartbeat()
         {
             await SyncContext.ClearAsync;
 
@@ -828,7 +954,7 @@ namespace TestCadence
                 }
                 catch (CadenceException e)
                 {
-                    return $"{e.Message}: {e.Details}";
+                    return $"{e.Reason}: {e.Message}";
                 }
             }
         }
@@ -960,6 +1086,12 @@ namespace TestCadence
         {
             [WorkflowMethod]
             Task<string> RunAsync();
+
+            [WorkflowMethod(Name = "activity-heartbeat-timeout")]
+            Task<bool> ActivityHeartbeatTimeoutAsync();
+
+            [WorkflowMethod(Name = "activity-with-heartbeats")]
+            Task<string> ActivityWithHeartbeats();
         }
 
         [Workflow(AutoRegister = true)]
@@ -971,11 +1103,51 @@ namespace TestCadence
 
                 return await stub.RunAsync();
             }
+
+            public async Task<bool> ActivityHeartbeatTimeoutAsync()
+            {
+                // We're going to start an activity that indicates that
+                // it will be completed externally but will not heartbeat
+                // externally so we should see an [ActivityHeartbeatTimeoutException].
+                //
+                // The method returns TRUE if we catch the desired
+                // exception.
+
+                var sleepTime   = TimeSpan.FromSeconds(5);
+                var timeoutTime = TimeSpan.FromTicks(sleepTime.Ticks / 2);
+                var stub        = Workflow.NewActivityStub<IActivityExternalCompletion>(new ActivityOptions() { HeartbeatTimeout = timeoutTime });
+
+                try
+                {
+                    await stub.RunAsync();
+                }
+                catch (ActivityHeartbeatTimeoutException)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
+            public async Task<string> ActivityWithHeartbeats()
+            {
+                // We're going to start an activity that indicates that
+                // it will be completed externally and expects external
+                // heartbeats at about 1/sec.
+                //
+                // The method returns the value returned by the activity.
+
+                var sleepTime   = TimeSpan.FromSeconds(5);
+                var timeoutTime = TimeSpan.FromTicks(sleepTime.Ticks / 2);
+                var stub        = Workflow.NewActivityStub<IActivityExternalCompletion>(new ActivityOptions() { HeartbeatTimeout = timeoutTime });
+
+                return await stub.RunAsync();
+            }
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Activity_ExternalCompleteByToken()
+        public async Task Activity_External_CompleteByToken()
         {
             await SyncContext.ClearAsync;
 
@@ -997,7 +1169,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Activity_ExternalCompleteById()
+        public async Task Activity_External_CompleteById()
         {
             await SyncContext.ClearAsync;
 
@@ -1019,7 +1191,7 @@ namespace TestCadence
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Activity_ExternalErrorByToken()
+        public async Task Activity_External_ErrorByToken()
         {
             await SyncContext.ClearAsync;
 
@@ -1032,28 +1204,27 @@ namespace TestCadence
             var task     = stub.RunAsync();
             var activity = ActivityExternalCompletion.WaitForActivity();
 
-            await client.ActivityErrorByTokenAsync(activity.Task.TaskToken, new Exception("external activity failed"));
+            await client.ActivityErrorByTokenAsync(activity.Task.TaskToken, new TestException("external activity failed"));
 
             try
             {
                 await task;
+                Assert.True(false, $"Expected [{nameof(CadenceCustomException)}]");
             }
             catch (CadenceCustomException e)
             {
+                Assert.Equal(typeof(TestException).FullName, e.Reason);
                 Assert.Equal("external activity failed", e.Message);
-                return;
             }
             catch (Exception e)
             {
                 Assert.True(false, $"Expected [{nameof(CadenceCustomException)}] not [{e.GetType().Name}]");
             }
-
-            Assert.True(false, $"Expected [{nameof(CadenceCustomException)}]");
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Activity_ExternalErrorById()
+        public async Task Activity_External_ErrorById()
         {
             await SyncContext.ClearAsync;
 
@@ -1066,14 +1237,16 @@ namespace TestCadence
             var task     = stub.RunAsync();
             var activity = ActivityExternalCompletion.WaitForActivity();
 
-            await client.ActivityErrorByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId, new Exception("external activity failed"));
+            await client.ActivityErrorByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId, new TestException("external activity failed"));
 
             try
             {
                 await task;
+                Assert.True(false, $"Expected [{nameof(CadenceCustomException)}]");
             }
             catch (CadenceCustomException e)
             {
+                Assert.Equal(typeof(TestException).FullName, e.Reason);
                 Assert.Equal("external activity failed", e.Message);
                 return;
             }
@@ -1081,52 +1254,88 @@ namespace TestCadence
             {
                 Assert.True(false, $"Expected [{nameof(CadenceCustomException)}] not [{e.GetType().Name}]");
             }
-
-            Assert.True(false, $"Expected [{nameof(CadenceCustomException)}]");
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Activity_ExternalCancelByToken()
+        public async Task Activity_External_HeartbeatTimeout()
         {
             await SyncContext.ClearAsync;
 
-            // Verify that we can externally cancel an activity
-            // using the activity token.
+            // Verify that externally completed activities will timeout when
+            // there are no recorded heartbeats.
 
             ActivityExternalCompletion.Reset();
 
-            var stub     = client.NewWorkflowStub<IWorkflowActivityExternalCompletion>();
-            var task     = stub.RunAsync();
-            var activity = ActivityExternalCompletion.WaitForActivity();
+            var stub = client.NewWorkflowStub<IWorkflowActivityExternalCompletion>();
 
-            await client.ActivityCancelByTokenAsync(activity.Task.TaskToken);
-
-            // $todo(jefflill): Need to work on exception mapping for this to work.
-
-            // await Assert.ThrowsAsync<CadenceCancelledException>(async () => await task);
+            Assert.True(await stub.ActivityHeartbeatTimeoutAsync());
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
-        public async Task Activity_ExternalCancelById()
+        public async Task Activity_External_HeartbeatWithDefaults_ById()
         {
-            await SyncContext.ClearAsync;
+            // Verifies that external heartbeats submitted by ID works.
 
-            // Verify that we can externally cancel an activity
-            // using the workflow execution and the activity ID.
+            await SyncContext.ClearAsync;
 
             ActivityExternalCompletion.Reset();
 
             var stub     = client.NewWorkflowStub<IWorkflowActivityExternalCompletion>();
-            var task     = stub.RunAsync();
+            var task     = stub.ActivityWithHeartbeats();
             var activity = ActivityExternalCompletion.WaitForActivity();
 
-            await client.ActivityCancelByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId);
+            // Submit several heartbeats externally at 1/sec and and then complete
+            // the activity externally to verify that the heartbeats are recorded
+            // properly and the the activity doesn't timeout.
 
-            // $todo(jefflill): Need to work on exception mapping for this to work.
+            var heartbeatInterval = TimeSpan.FromSeconds(1);
 
-            // await Assert.ThrowsAsync<CadenceCancelledException>(async () => await task);
+            for (int i = 0; i < 5; i++)
+            {
+                await Task.Delay(heartbeatInterval);
+                await client.ActivityHeartbeatByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId);
+            }
+
+            // Have the activity return a result and verify.
+
+            await client.ActivityCompleteByIdAsync(activity.Task.WorkflowExecution, activity.Task.ActivityId, "HELLO WORLD!");
+
+            Assert.Equal("HELLO WORLD!", await task);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_External_HeartbeatWithDefaults_ByToken()
+        {
+            // Verifies that external heartbeats submitted by token works.
+
+            await SyncContext.ClearAsync;
+
+            ActivityExternalCompletion.Reset();
+
+            var stub     = client.NewWorkflowStub<IWorkflowActivityExternalCompletion>();
+            var task     = stub.ActivityWithHeartbeats();
+            var activity = ActivityExternalCompletion.WaitForActivity();
+
+            // Submit several heartbeats externally at 1/sec and and then complete
+            // the activity externally to verify that the heartbeats are recorded
+            // properly and the the activity doesn't timeout.
+
+            var heartbeatInterval = TimeSpan.FromSeconds(1);
+
+            for (int i = 0; i < 5; i++)
+            {
+                await Task.Delay(heartbeatInterval);
+                await client.ActivityHeartbeatByTokenAsync(activity.Task.TaskToken);
+            }
+
+            // Have the activity return a result and verify.
+
+            await client.ActivityCompleteByTokenAsync(activity.Task.TaskToken, "HELLO WORLD!");
+
+            Assert.Equal("HELLO WORLD!", await task);
         }
 
         //---------------------------------------------------------------------

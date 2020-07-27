@@ -29,6 +29,7 @@ using Neon.Common;
 using Neon.Kube;
 using Neon.IO;
 using Neon.Net;
+using System.Runtime.InteropServices;
 
 namespace NeonCli
 {
@@ -141,12 +142,63 @@ namespace NeonCli
         /// <param name="preprocessReader">The reader.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="kubeSetupInfo">The Kubernetes setup details.</param>
-        /// <param name="nodeDefinition">The target node definition.</param>
-        private static void SetClusterVariables(PreprocessReader preprocessReader, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo, NodeDefinition nodeDefinition)
+        /// <param name="node">The target node.</param>
+        private static void SetClusterVariables(PreprocessReader preprocessReader, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo, SshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(preprocessReader != null, nameof(preprocessReader));
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentNullException>(kubeSetupInfo != null, nameof(kubeSetupInfo));
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+
+            var nodeDefinition = node.Metadata;
+
+            // Use the Linux [lsblk] command to discover the prefix for the node's
+            // harddrive block devices.  These are disks with at least one partition.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/916
+            //
+            // The command output will look something like this:
+            //
+            //      fd0   disk
+            //      loop0 loop
+            //      loop2 loop
+            //      loop3 loop
+            //      loop4 loop
+            //      loop5 loop
+            //      sda   disk
+            //      sda1  part
+            //      sda2  part
+            //      sr0   rom
+            //
+            // We're going to scan for the first disk line with a partition after it.
+
+            var result = node.RunCommand("lsblk --output NAME,TYPE --tree=SIZE --noheadings");
+
+            result.EnsureSuccess();
+
+            var devices = new List<Tuple<string, string>>();
+
+            foreach (var line in result.OutputText.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+            {
+                var columns = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                devices.Add(new Tuple<string, string>(columns[0].Trim(), columns[1].Trim()));
+            }
+
+            var drivePrefix = (string)null;
+
+            for (int i = 0; i < devices.Count - 2; i++)
+            {
+                if (devices[i].Item2 == "disk" && devices[i + 1].Item2 == "part")
+                {
+                    var name = devices[i].Item1;
+
+                    drivePrefix = name.Substring(0, name.Length - 1);
+                    break;
+                }
+            }
+
+            Covenant.Assert(!string.IsNullOrEmpty(drivePrefix), $"Cannot identify hard disk device prefix for node [{nodeDefinition.Name}].");
 
             // Generate the master node variables in sorted order.  The variable 
             // names will be formatted as:
@@ -279,11 +331,9 @@ namespace NeonCli
 
             SetBashVariable(preprocessReader, "cluster.provisioner", clusterDefinition.Provisioner);
 
-            SetBashVariable(preprocessReader, "node.driveprefix", clusterDefinition.DrivePrefix);
+            SetBashVariable(preprocessReader, "node.driveprefix", drivePrefix);
 
-            SetBashVariable(preprocessReader, "neon.folders.archive", KubeHostFolders.Archive(KubeConst.SysAdminUser));
             SetBashVariable(preprocessReader, "neon.folders.bin", KubeHostFolders.Bin);
-            SetBashVariable(preprocessReader, "neon.folders.exec", KubeHostFolders.Exec(KubeConst.SysAdminUser));
             SetBashVariable(preprocessReader, "neon.folders.config", KubeHostFolders.Config);
             SetBashVariable(preprocessReader, "neon.folders.setup", KubeHostFolders.Setup);
             SetBashVariable(preprocessReader, "neon.folders.state", KubeHostFolders.State);
@@ -391,7 +441,7 @@ namespace NeonCli
 
                             if (clusterDefinition != null)
                             {
-                                SetClusterVariables(preprocessReader, clusterDefinition, kubeSetupInfo, node.Metadata as NodeDefinition);
+                                SetClusterVariables(preprocessReader, clusterDefinition, kubeSetupInfo, node as SshProxy<NodeDefinition>);
                             }
 
                             foreach (var line in preprocessReader.Lines())

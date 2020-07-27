@@ -43,7 +43,7 @@ namespace NeonCli
 {
     /// <summary>
     /// This tool is used to configure the nodes of a cluster.
-    /// See <b>$/Doc/Ubuntu-18.04 cluster Deploy.docx</b> for more information.
+    /// See <b>$/Doc/Ubuntu-20.04 cluster Deploy.docx</b> for more information.
     /// </summary>
     public static class Program
     {
@@ -111,10 +111,8 @@ OPTIONS:
                                           configured in parallel [default=6]
 
     --machine-password=PASSWORD         - Overrides default initial machine
-                                          password: sysadmin0000
-
-    --machine-username=USERNAME         - Overrides default initial machine
-                                          username: sysadmin
+                                          password for the [sysadmin] account.
+                                          This defaults to: sysadmin0000
 
     -q, --quiet                         - Disables operation progress
 
@@ -186,9 +184,8 @@ You can disable the use of this encrypted folder by specifying
 
                 foreach (var cmdLine in new CommandLine[] { CommandLine, LeftCommandLine })
                 {
-                    cmdLine.DefineOption("--machine-username");
                     cmdLine.DefineOption("--machine-password");
-                    cmdLine.DefineOption("-os").Default = "Ubuntu-18.04";
+                    cmdLine.DefineOption("-os").Default = "Ubuntu-20.04";
                     cmdLine.DefineOption("-q", "--quiet");
                     cmdLine.DefineOption("-m", "--max-parallel").Default = "6";
                     cmdLine.DefineOption("-w", "--wait").Default = "60";
@@ -201,7 +198,6 @@ You can disable the use of this encrypted folder by specifying
                 validOptions.Add("--help");
                 validOptions.Add("--insecure");
                 validOptions.Add("--log-folder");
-                validOptions.Add("--machine-username");
                 validOptions.Add("--machine-password");
                 validOptions.Add("-m");
                 validOptions.Add("--max-parallel");
@@ -337,8 +333,8 @@ You can disable the use of this encrypted folder by specifying
 
                 // Load the user name and password from the command line options, if present.
 
-                MachineUsername = LeftCommandLine.GetOption("--machine-username", "sysadmin");
-                MachinePassword = LeftCommandLine.GetOption("--machine-password", "sysadmin0000");
+                MachineUsername = KubeConst.SysAdminUsername;
+                MachinePassword = LeftCommandLine.GetOption("--machine-password", KubeConst.VmTemplatePassword);
 
                 // Handle the other options.
 
@@ -353,10 +349,9 @@ You can disable the use of this encrypted folder by specifying
 
                 Program.MaxParallel = maxParallel;
 
-                var     waitSecondsOption = LeftCommandLine.GetOption("--wait");
-                double  waitSeconds;
+                var waitSecondsOption = LeftCommandLine.GetOption("--wait");
 
-                if (!double.TryParse(waitSecondsOption, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out waitSeconds) || waitSeconds < 0)
+                if (!double.TryParse(waitSecondsOption, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var waitSeconds) || waitSeconds < 0)
                 {
                     Console.Error.WriteLine($"*** ERROR: [--wait={waitSecondsOption}] option is not valid.");
                     Program.Exit(1);
@@ -404,15 +399,11 @@ You can disable the use of this encrypted folder by specifying
                     if (string.IsNullOrWhiteSpace(MachineUsername) || string.IsNullOrEmpty(MachinePassword))
                     {
                         Console.WriteLine();
-                        Console.WriteLine("    Enter cluster SSH credentials:");
-                        Console.WriteLine("    -------------------------------");
+                        Console.WriteLine("    Enter cluster SSH password for [sysadmin]:");
+                        Console.WriteLine("    ------------------------------------------");
                     }
 
-                    while (string.IsNullOrWhiteSpace(MachineUsername))
-                    {
-                        Console.Write("    username: ");
-                        MachineUsername = Console.ReadLine();
-                    }
+                    MachineUsername = KubeConst.SysAdminUsername;
 
                     while (string.IsNullOrEmpty(MachinePassword))
                     {
@@ -421,14 +412,7 @@ You can disable the use of this encrypted folder by specifying
                 }
                 else
                 {
-                    // $hack(jefflill):
-                    //
-                    // Only the [neon cluster prepare ...] command recognizes the [--machine-username] and
-                    // [--machine-password] options.  These can cause problems for other commands
-                    // so we're going to set both to NULL here.
-                    //
-                    // It would be cleaner to enable these only for the prepare command but the SSH proxy
-                    // authentication code is already a bit twisted and I don't want to mess with it.
+                    // Reset these for commands that don't need it.
 
                     MachineUsername = null;
                     MachinePassword = null;
@@ -469,7 +453,9 @@ You can disable the use of this encrypted folder by specifying
         /// <summary>
         /// Returns the Git source code branch.
         /// </summary>
+#pragma warning disable 0436
         public static string GitBranch => ThisAssembly.Git.Branch;
+#pragma warning restore 0436
 
         /// <summary>
         /// Path to the WinSCP program executable.
@@ -564,7 +550,9 @@ You can disable the use of this encrypted folder by specifying
         {
             get
             {
+#pragma warning disable 0436
                 var version = $"{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}";
+#pragma warning restore 0436
 
 #pragma warning disable 162 // Unreachable code
 
@@ -607,7 +595,9 @@ You can disable the use of this encrypted folder by specifying
         /// Returns <c>true</c> if the program was built from the production <b>PROD</b> 
         /// source code branch.
         /// </summary>
+#pragma warning disable 0436
         public static bool IsRelease => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase);
+#pragma warning restore 0436
 
         /// <summary>
         /// Returns the username used to secure the cluster nodes before they are setup.  This
@@ -721,7 +711,7 @@ You can disable the use of this encrypted folder by specifying
         /// <summary>
         /// Returns the folder holding the Linux resource files for the target operating system.
         /// </summary>
-        public static ResourceFiles.Folder LinuxFolder => ResourceFiles.Root.GetFolder("Ubuntu-18.04");
+        public static ResourceFiles.Folder LinuxFolder => ResourceFiles.Root.GetFolder("Ubuntu-20.04");
 
         /// <summary>
         /// Presents the user with a yes/no question and waits for a response.
@@ -1034,7 +1024,9 @@ You can disable the use of this encrypted folder by specifying
                 }
                 else
                 {
+#pragma warning disable 0436
                     return normalized.Replace(":latest", $":{ThisAssembly.Git.Branch.ToLowerInvariant()}-latest");
+#pragma warning restore 0436
                 }
             }
             else

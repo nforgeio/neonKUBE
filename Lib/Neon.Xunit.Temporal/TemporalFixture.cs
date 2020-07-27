@@ -67,6 +67,10 @@ services:
     image: cassandra:3.11
     ports:
       - ""9042:9042""
+    deploy:
+      resources:
+        limits:
+          memory: 1G
   temporal:
     image: temporalio/auto-setup:0.21.1
     ports:
@@ -283,10 +287,10 @@ services:
 
                 settings = settings ?? new TemporalSettings()
                 {
-                    HostPort         = $"127.0.0.1:{NetworkPorts.Temporal}",
-                    CreateNamespace  = true,
-                    Namespace = defaultNamespace,
-                    ProxyLogLevel         = logLevel
+                    HostPort        = $"127.0.0.1:{NetworkPorts.Temporal}",
+                    CreateNamespace = true,
+                    Namespace       = defaultNamespace,
+                    ProxyLogLevel   = logLevel
                 };
 
                 this.settings  = settings;

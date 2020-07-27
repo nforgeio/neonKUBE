@@ -1,0 +1,40 @@
+# HOME: tiny
+neon logout
+neon login rm --force root@home-tiny
+neon cluster prepare %NF_ROOT%/devops/jefflill/home/tiny.cluster.yaml --unredacted
+neon cluster setup --unredacted root@home-tiny
+
+# HOME: tiny-bare
+neon logout
+neon login rm --force root@home-tiny-bare
+neon cluster prepare %NF_ROOT%/devops/jefflill/home/tiny-bare.cluster.yaml --unredacted
+neon cluster setup --unredacted root@home-tiny-bare
+
+# HOME: small
+neon logout
+neon login rm --force root@home-small
+neon cluster prepare %NF_ROOT%/devops/jefflill/home/small.cluster.yaml --unredacted
+neon cluster setup --unredacted root@home-small
+
+# HOME: large
+neon logout
+neon login rm --force root@home-large
+neon cluster prepare %NF_ROOT%/devops/jefflill/home/large.cluster.yaml --unredacted
+neon cluster setup --unredacted root@home-large
+
+# HOME: tiny-xcp
+neon logout
+neon login rm --force root@tiny-xcp-home
+neon cluster prepare %NF_ROOT%/devops/jefflill/home/tiny-xcp.cluster.yaml --unredacted
+neon cluster setup --unredacted root@tiny-xcp-home
+
+# WRT
+neon logout
+neon cluster prepare %NF_ROOT%/devops/jefflill/wrt/jeff-small.cluster.yaml --unredacted
+neon cluster setup --unredacted root@wrt-jeff-small
+
+# Cadence Testing
+taskkill /f /FI "imagename eq cadence-proxy*"
+
+# Other
+neon prepare node-template --machine-password=sysadmin0000 --hyperv 10.0.0.114

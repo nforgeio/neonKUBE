@@ -178,9 +178,9 @@ namespace Neon.Temporal
         internal WorkflowStub(TemporalClient client, string workflowTypeName, WorkflowExecution execution, WorkflowOptions options)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName));
-            Covenant.Requires<ArgumentNullException>(execution != null);
-            Covenant.Requires<ArgumentNullException>(options != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
+            Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
 
             this.client           = client;
             this.WorkflowTypeName = workflowTypeName;
@@ -202,7 +202,7 @@ namespace Neon.Temporal
         internal WorkflowStub(TemporalClient client, WorkflowExecution execution, bool withinWorkflow = false)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
-            Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
 
             this.client         = client;
             this.Execution      = execution;

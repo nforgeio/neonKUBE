@@ -1395,16 +1395,12 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 	ctx, cancel := workflow.WithCancel(ctx)
 	childFuture := workflow.ExecuteChildWorkflow(ctx, workflowName, request.GetArgs())
 
-	// Send ACK: Commented out because its no longer needed.
-	// op := sendFutureACK(contextID, requestID, clientID)
-	// <-op.GetChannel()
-
-	// create the new ChildContext
+	// create the new Child
 	// add the ChildWorkflowFuture and the cancel func to the
-	// ChildContexts map in the parent workflow's entry
+	// Childs map in the parent workflow's entry
 	// in the WorkflowContexts map
-	cctx := proxyworkflow.NewChildContext(childFuture, cancel)
-	childID := wectx.AddChildContext(wectx.NextChildID(), cctx)
+	child := proxyworkflow.NewChild(childFuture, cancel)
+	childID := wectx.AddChild(wectx.NextChildID(), child)
 
 	// get the child workflow execution
 	childWE := new(workflow.Execution)
@@ -1438,8 +1434,8 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 		return reply
 	}
 
-	cctx := wectx.GetChildContext(childID)
-	if cctx == nil {
+	child := wectx.GetChild(childID)
+	if child == nil {
 		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
 		return reply
 	}
@@ -1450,7 +1446,7 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 
 	// wait on the child workflow
 	var result []byte
-	if err := cctx.GetFuture().Get(ctx, &result); err != nil {
+	if err := child.GetFuture().Get(ctx, &result); err != nil {
 		var cadenceError *proxyerror.CadenceError
 		if isCanceledErr(err) {
 			cadenceError = proxyerror.NewCadenceError(err, proxyerror.Cancelled)
@@ -1465,7 +1461,7 @@ func handleWorkflowWaitForChildRequest(requestCtx context.Context, request *mess
 
 	buildReply(reply, nil, result)
 
-	defer wectx.RemoveChildContext(childID)
+	defer wectx.RemoveChild(childID)
 
 	return reply
 }
@@ -1494,8 +1490,8 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 		return reply
 	}
 
-	cctx := wectx.GetChildContext(childID)
-	if cctx == nil {
+	child := wectx.GetChild(childID)
+	if child == nil {
 		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
 		return reply
 	}
@@ -1505,7 +1501,7 @@ func handleWorkflowSignalChildRequest(requestCtx context.Context, request *messa
 	setReplayStatus(ctx, reply)
 
 	// signal the child workflow
-	future := cctx.GetFuture().SignalChildWorkflow(
+	future := child.GetFuture().SignalChildWorkflow(
 		ctx,
 		signalName,
 		request.GetSignalArgs())
@@ -1546,8 +1542,8 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 		return reply
 	}
 
-	cctx := wectx.GetChildContext(childID)
-	if cctx == nil {
+	child := wectx.GetChild(childID)
+	if child == nil {
 		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
 		return reply
 	}
@@ -1557,7 +1553,7 @@ func handleWorkflowCancelChildRequest(requestCtx context.Context, request *messa
 
 	// get cancel function
 	// call the cancel function
-	cancel := cctx.GetCancelFunction()
+	cancel := child.GetCancelFunction()
 	cancel()
 
 	buildReply(reply, nil)
@@ -2196,16 +2192,17 @@ func handleActivityStartRequest(requestCtx context.Context, request *messages.Ac
 
 	// get the activity options, the context,
 	// and set the activity options on the context
+	// and set cancelation
+	var cancel workflow.CancelFunc
 	ctx := workflow.WithActivityOptions(wectx.GetContext(), opts)
 	ctx = workflow.WithWorkflowDomain(ctx, *request.GetDomain())
+	ctx, cancel = workflow.WithCancel(ctx)
+
+	//execute workflow
 	future := workflow.ExecuteActivity(ctx, activity, request.GetArgs())
 
-	// Send ACK: Commented out because its no longer needed.
-	// op := sendFutureACK(contextID, requestID, clientID)
-	// <-op.GetChannel()
-
 	// add to workflow context map
-	_ = wectx.AddActivityFuture(activityID, future)
+	_ = wectx.AddActivity(activityID, *proxyworkflow.NewActivity(future, cancel))
 
 	buildReply(reply, nil)
 
@@ -2234,16 +2231,16 @@ func handleActivityGetResultRequest(requestCtx context.Context, request *message
 		return reply
 	}
 
-	future := wectx.GetActivityFuture(activityID)
-	if future == nil {
+	activity := wectx.GetActivity(activityID)
+	if activity.GetFuture() == nil {
 		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
 		return reply
 	}
-	defer wectx.RemoveActivityFuture(activityID)
+	defer wectx.RemoveActivity(activityID)
 
 	// execute the activity
 	var result []byte
-	if err := future.Get(wectx.GetContext(), &result); err != nil {
+	if err := activity.GetFuture().Get(wectx.GetContext(), &result); err != nil {
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}
@@ -2335,8 +2332,17 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 				return reply
 			}
 
-			activity.RecordHeartbeat(ActivityContexts.Get(contextID).GetContext(), details)
-
+			// get the context, heartbeat and then check
+			// the context for any errors
+			activityContext := ActivityContexts.Get(contextID).GetContext()
+			activity.RecordHeartbeat(activityContext, details)
+			if heartbeatErr := activityContext.Err(); heartbeatErr != nil {
+				if heartbeatErr == context.Canceled {
+					err = cadence.NewCanceledError()
+				} else {
+					err = heartbeatErr
+				}
+			}
 		} else {
 			err = clientHelper.RecordActivityHeartbeatByID(
 				ctx,
@@ -2346,7 +2352,6 @@ func handleActivityRecordHeartbeatRequest(requestCtx context.Context, request *m
 				*request.GetActivityID(),
 				details)
 		}
-
 	} else {
 		err = clientHelper.RecordActivityHeartbeat(
 			ctx,
@@ -2674,15 +2679,14 @@ func handleActivityStartLocalRequest(requestCtx context.Context, request *messag
 
 	// set the activity options on the context
 	// execute local activity
+	var cancel workflow.CancelFunc
 	ctx := workflow.WithLocalActivityOptions(wectx.GetContext(), opts)
+	ctx, cancel = workflow.WithCancel(ctx)
 	future := workflow.ExecuteLocalActivity(ctx, localActivityFunc, request.GetArgs())
 
-	// Send ACK: Commented out because its no longer needed.
-	// op := sendFutureACK(contextID, requestID, clientID)
-	// <-op.GetChannel()
-
 	// add to workflow context map
-	_ = wectx.AddActivityFuture(activityID, future)
+	_ = wectx.AddActivity(activityID, *proxyworkflow.NewActivity(future, cancel))
+
 	buildReply(reply, nil)
 
 	return reply
@@ -2710,16 +2714,16 @@ func handleActivityGetLocalResultRequest(requestCtx context.Context, request *me
 		return reply
 	}
 
-	future := wectx.GetActivityFuture(activityID)
-	if future == nil {
+	activity := wectx.GetActivity(activityID)
+	if activity.GetFuture() == nil {
 		buildReply(reply, proxyerror.NewCadenceError(internal.ErrEntityNotExist))
 		return reply
 	}
 
-	defer wectx.RemoveActivityFuture(activityID)
+	defer wectx.RemoveActivity(activityID)
 
 	var result []byte
-	if err := future.Get(wectx.GetContext(), &result); err != nil {
+	if err := activity.GetFuture().Get(wectx.GetContext(), &result); err != nil {
 		buildReply(reply, proxyerror.NewCadenceError(err))
 		return reply
 	}

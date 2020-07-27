@@ -34,15 +34,13 @@ namespace Neon.Temporal
         public ActivityHeartbeatTimeoutException(string message = null, Exception innerException = null)
             : base(message, innerException)
         {
+            base.Reason = "cadenceInternal:Timeout HEARTBEAT";
         }
 
         /// <inheritdoc/>
-        internal override TemporalErrorTypes TemporalErrorType => TemporalErrorTypes.Timeout;
+        internal override TemporalErrorType TemporalErrorType => TemporalErrorType.Timeout;
 
         /// <inheritdoc/>
         internal override string TemporalError => "ActivityHeartbeatTimeoutError";
-
-        /// <inheritdoc/>
-        internal override string Reason => "cadenceInternal:Timeout HEARTBEAT";
     }
 }

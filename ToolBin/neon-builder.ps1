@@ -190,7 +190,7 @@ if ($tools)
     # Publish the WinDesktop binaries to the build folder.
 
      md -Force "$nfBuild\win-desktop"
-     cp -R "$nfRoot\Desktop\WinDesktop\bin\Release\*" "$nfBuild\win-desktop"
+     cp -R "$nfRoot\Desktop\WinDesktop\bin\Release\netcoreapp3.1\*" "$nfBuild\win-desktop"
  }
  
  # Build the installer if requested.
@@ -203,6 +203,15 @@ if ($installer)
     "**********************************************************"
     ""
 
+    # Generate a CMD file that will execute the neonDESKTOP for Windows.  This will be
+    # included in the PATH so users can easily start the desktop from the command line.
+
+    $cmdFile  = "@echo off`r`n"
+    $cmdFile += 'start "" "%~dp0\neon\neonDESKTOP.exe" %*' + "`r`n"
+    $cmdFile | Out-File -Encoding "ASCII" "$nfBuild\neonDESKTOP.cmd"
+
+    # Build the installer.
+
     & neon-build installer windows
 
     if (-not $?)
@@ -212,6 +221,10 @@ if ($installer)
         ""
         exit 1
     }
+
+    # We don't need this file any longer.
+
+    rm "$nfBuild\neonDESKTOP.cmd"
 
     ""
     "Generating windows installer SHA512..."

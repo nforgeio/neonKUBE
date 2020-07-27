@@ -535,7 +535,7 @@ namespace Neon.Cadence
             /// <param name="settings">The Cadence settings.</param>
             private void InitializeNetFramework(IPAddress address, CadenceSettings settings)
             {
-                var openPort         = NetHelper.GetUnusedTcpPort(address);
+                var openPort         = NetHelper.GetUnusedIpPort(address);
                 var listenerSettings = new WebListenerSettings();
 
                 ListenUri = new Uri($"http://{address}:{openPort}");
@@ -655,7 +655,7 @@ namespace Neon.Cadence
         /// <param name="folderPath">Path to the output folder.</param>
         public static void ExtractCadenceProxy(string folderPath)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folderPath));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(folderPath), nameof(folderPath));
 
             var resources = new string[]
             {
@@ -900,7 +900,7 @@ namespace Neon.Cadence
                 try
                 {
                     // We're going to wait up to 30 seconds for [cadence-proxy] to initialize
-                    // itself to be ready to receive requests.  We're going to ping the proxy's
+                    // itself to become ready to receive requests.  We're going to ping the proxy's
                     // HTTP endpoint with GET requests until we see an HTTP response.
                     //
                     // Note that [cadence-proxy] accepts only POST requests, so these GETs will
@@ -1461,7 +1461,7 @@ namespace Neon.Cadence
                     // Determine the port we'll have [cadence-proxy] listen on and then
                     // fire up the cadence-proxy process.
 
-                    proxyPort = !settings.DebugPrelaunched ? NetHelper.GetUnusedTcpPort(Address) : debugProxyPort;
+                    proxyPort = !settings.DebugPrelaunched ? NetHelper.GetUnusedIpPort(Address) : debugProxyPort;
 
                     if (!Settings.DebugPrelaunched && proxyProcess == null)
                     {

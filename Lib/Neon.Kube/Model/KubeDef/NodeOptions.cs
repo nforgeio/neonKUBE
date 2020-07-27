@@ -44,7 +44,6 @@ namespace Neon.Kube
     public class NodeOptions
     {
         private const OsUpgrade     defaultUpgrade                 = OsUpgrade.Full;
-        private const int           defaultPasswordLength          = 20;
         private const bool          defaultAllowPackageManagerIPv6 = false;
         private const int           defaultPackageManagerRetries   = 5;
 
@@ -57,15 +56,6 @@ namespace Neon.Kube
         [YamlMember(Alias = "upgrade", ApplyNamingConventions = false)]
         [DefaultValue(defaultUpgrade)]
         public OsUpgrade Upgrade { get; set; } = defaultUpgrade;
-
-        /// <summary>
-        /// cluster hosts are configured with a random root account password.
-        /// This defaults to <b>20</b> characters.  The minumum length is <b>8</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "PasswordLength", Required = Required.Default)]
-        [YamlMember(Alias = "passwordLength", ApplyNamingConventions = false)]
-        [DefaultValue(defaultPasswordLength)]
-        public int PasswordLength { get; set; } = defaultPasswordLength;
 
         /// <summary>
         /// Allow the Linux package manager to use IPv6 when communicating with
@@ -95,10 +85,6 @@ namespace Neon.Kube
         [Pure]
         public void Validate(ClusterDefinition clusterDefinition)
         {
-            if (PasswordLength < 8)
-            {
-                throw new ClusterDefinitionException($"[{nameof(NodeOptions)}.{nameof(PasswordLength)}={PasswordLength}] cannot be less than 8 characters.");
-            }
         }
     }
 }

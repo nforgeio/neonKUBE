@@ -45,6 +45,8 @@ namespace Neon.Kube
     /// <summary>
     /// Manages cluster provisioning on the Google Cloud Platform.
     /// </summary>
+    /// <remarks>
+    /// </remarks>
     [HostingProvider(HostingEnvironments.Azure)]
     public class AzureHostingManager : HostingManager
     {
@@ -63,21 +65,27 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy cluster;
+        private ClusterProxy    cluster;
+        private KubeSetupInfo   setupInfo;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="setupInfo">Specifies the cluster setup information.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public AzureHostingManager(ClusterProxy cluster, string logFolder = null)
+        public AzureHostingManager(ClusterProxy cluster, KubeSetupInfo setupInfo, string logFolder = null)
         {
+            Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
+            Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
+
             cluster.HostingManager = this;
 
-            this.cluster = cluster;
+            this.cluster   = cluster;
+            this.setupInfo = setupInfo;
         }
 
         /// <inheritdoc/>
@@ -95,8 +103,10 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override bool Provision(bool force)
+        public override bool Provision(bool force, string secureSshPassword, string orgSshPassword = null)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
+
             throw new NotImplementedException("$todo(jefflill): Implement this.");
         }
 
@@ -107,14 +117,6 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override void AddPostProvisionSteps(SetupController<NodeDefinition> controller)
-        {
-        }
-
-        /// <inheritdoc/>
-        public override string DrivePrefix
-        {
-            get { return "sd"; }
-        }
+        public override bool RequiresAdminPrivileges => true;
     }
 }

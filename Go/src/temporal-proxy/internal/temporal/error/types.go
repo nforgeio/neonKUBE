@@ -44,7 +44,7 @@ const (
 	Timeout TemporalErrorType = 5
 )
 
-func (t TemporalErrorType) String() string {
+func (t *TemporalErrorType) String() string {
 	return [...]string{
 		"cancelled",
 		"custom",
@@ -52,7 +52,7 @@ func (t TemporalErrorType) String() string {
 		"panic",
 		"terminated",
 		"timeout",
-	}[t]
+	}[*t]
 }
 
 // ToTemporalError takes a string value and converts it into the corresponding

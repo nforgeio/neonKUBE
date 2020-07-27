@@ -128,7 +128,7 @@ namespace Neon.Temporal.Internal
         /// <returns>The normalized type name.</returns>
         internal static string TypeNameToSource(string typeName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(typeName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(typeName), nameof(typeName));
 
             return typeName.Replace('+', '.');
         }
@@ -143,7 +143,7 @@ namespace Neon.Temporal.Internal
         /// <returns>The normalized fully qualified type name.</returns>
         internal static string TypeNameToSource(Type type)
         {
-            Covenant.Requires<ArgumentNullException>(type != null);
+            Covenant.Requires<ArgumentNullException>(type != null, nameof(type));
 
             return TypeNameToSource(TypeToCSharp(type));
         }
@@ -1064,7 +1064,7 @@ namespace Neon.Temporal.Internal
         /// </remarks>
         internal static (string ActivityTypeName, MethodInfo TargetMethod, ActivityMethodAttribute MethodAttribute) GetActivityTarget(Type activityInterface, string methodName = null)
         {
-            Covenant.Requires<ArgumentNullException>(activityInterface != null);
+            Covenant.Requires<ArgumentNullException>(activityInterface != null, nameof(activityInterface));
 
             TemporalHelper.ValidateActivityInterface(activityInterface);
 

@@ -45,9 +45,9 @@ namespace TestXunit
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public void Verify()
+        public void Basic()
         {
-            // All we need to do is verify that the container is running.
+            // Verify that we can start a simple container with defaults.
 
             var result = NeonHelper.ExecuteCapture(NeonHelper.DockerCli, "ps");
 

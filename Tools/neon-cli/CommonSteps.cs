@@ -43,14 +43,7 @@ namespace NeonCli
         /// <param name="stepDelay">Ignored.</param>
         public static void VerifyOS(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
-            node.Status = "check: OS";
-
-            // $todo(jefflill): We're currently hardcoded to Ubuntu 18.04.x
-
-            if (!node.OsName.Equals("Ubuntu", StringComparison.InvariantCultureIgnoreCase) || node.OsVersion < Version.Parse("20.04"))
-            {
-                node.Fault("Expected: Ubuntu 20.04+");
-            }
+            KubeHelper.VerifyNodeOs(node);
         }
 
         /// <summary>
@@ -64,11 +57,31 @@ namespace NeonCli
             // then disconnect and wait for the OpenSSH to restart.
 
             var openSshConfig =
-@"# Package generated configuration file
+@"# FILE:	       sshd_config
+# CONTRIBUTOR: Jeff Lill
+# COPYRIGHT:   Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the ""License"");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an ""AS IS"" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# This file is written to neonKUBE nodes during cluster preparation.
+#
 # See the sshd_config(5) manpage for details
 
+# Make it easy for operators to customize this config.
+Include /etc/ssh/sshd_config.d/*
+
 # What ports, IPs and protocols we listen for
-Port 22
+# Port 22
 # Use these options to restrict which interfaces/protocols sshd will bind to
 #ListenAddress ::
 #ListenAddress 0.0.0.0
@@ -91,7 +104,7 @@ LogLevel INFO
 
 # Authentication:
 LoginGraceTime 120
-PermitRootLogin prohibit-password
+PermitRootLogin no
 StrictModes yes
 
 RSAAuthentication yes
@@ -130,9 +143,11 @@ ChallengeResponseAuthentication no
 AllowTcpForwarding no
 X11Forwarding no
 X11DisplayOffset 10
+PermitTunnel no
 PrintMotd no
 PrintLastLog yes
 TCPKeepAlive yes
+UsePrivilegeSeparation yes
 #UseLogin no
 
 #MaxStartups 10:30:60
@@ -247,10 +262,8 @@ TCPKeepAlive yes
                 sb.AppendLine($"NEON_NODE_HDD={node.Metadata.Labels.StorageHDD.ToString().ToLowerInvariant()}");
             }
 
-            sb.AppendLine($"NEON_ARCHIVE_FOLDER={KubeHostFolders.Archive(KubeConst.SysAdminUser)}");
             sb.AppendLine($"NEON_BIN_FOLDER={KubeHostFolders.Bin}");
             sb.AppendLine($"NEON_CONFIG_FOLDER={KubeHostFolders.Config}");
-            sb.AppendLine($"NEON_EXEC_FOLDER={KubeHostFolders.Exec(KubeConst.SysAdminUser)}");
             sb.AppendLine($"NEON_SETUP_FOLDER={KubeHostFolders.Setup}");
             sb.AppendLine($"NEON_STATE_FOLDER={KubeHostFolders.State}");
             sb.AppendLine($"NEON_TMPFS_FOLDER={KubeHostFolders.Tmpfs}");
@@ -287,12 +300,9 @@ TCPKeepAlive yes
             }
 
             //-----------------------------------------------------------------
-            // Ensure that the cluster host folders exist.
-
-            node.CreateHostFolders();
-
-            //-----------------------------------------------------------------
             // Package manager configuration.
+
+            node.Status = "configure: [apt] package manager";
 
             if (!clusterDefinition.NodeOptions.AllowPackageManagerIPv6)
             {
@@ -309,11 +319,73 @@ TCPKeepAlive yes
             node.SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-retries");
 
             //-----------------------------------------------------------------
+            // We're going to stop and mask the [snapd.service] if it's running
+            // because we don't want it to randomlly update apps on cluster nodes.
+
+            node.Status = "disable: [snapd.service]";
+
+            var disableSnapScript =
+@"
+# Stop and mask [snapd.service] when it's not already masked.
+
+systemctl status --no-pager snapd.service
+
+if [ $? ]; then
+    systemctl stop snapd.service
+    systemctl mask snapd.service
+fi
+";
+            node.SudoCommand(CommandBundle.FromScript(disableSnapScript), RunOptions.FaultOnError);
+
+            //-----------------------------------------------------------------
+            // Create the standard neonKUBE host folders.
+
+            node.Status = "prepare: neonKUBE host folders";
+
+            node.SudoCommand($"mkdir -p {KubeHostFolders.Bin}", RunOptions.LogOnErrorOnly);
+            node.SudoCommand($"chmod 750 {KubeHostFolders.Bin}", RunOptions.LogOnErrorOnly);
+
+            node.SudoCommand($"mkdir -p {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
+            node.SudoCommand($"chmod 750 {KubeHostFolders.Config}", RunOptions.LogOnErrorOnly);
+
+            node.SudoCommand($"mkdir -p {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
+            node.SudoCommand($"chmod 750 {KubeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
+
+            node.SudoCommand($"mkdir -p {KubeHostFolders.State}", RunOptions.LogOnErrorOnly);
+            node.SudoCommand($"chmod 750 {KubeHostFolders.State}", RunOptions.LogOnErrorOnly);
+
+            node.SudoCommand($"mkdir -p {KubeHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
+            node.SudoCommand($"chmod 750 {KubeHostFolders.State}/setup", RunOptions.LogOnErrorOnly);
+
+            //-----------------------------------------------------------------
             // Other configuration.
 
+            node.Status = "configure: journald filters";
+
+            var filterScript =
+@"
+# neonKUBE: 
+#
+# Filter [rsyslog.service] log events we don't care about.
+
+cat <<EOF > /etc/rsyslog.d/60-filter.conf
+if $programname == ""systemd"" and ($msg startswith ""Created slice "" or $msg startswith ""Removed slice "") then stop
+EOF
+
+systemctl restart rsyslog.service
+";
+            node.SudoCommand(CommandBundle.FromScript(filterScript), RunOptions.FaultOnError);
+
+            node.Status = "configure: openssh";
+
             ConfigureOpenSSH(node, TimeSpan.Zero);
+
+            node.Status = "upload: prepare files";
+
             node.UploadConfigFiles(clusterDefinition, kubeSetupInfo);
             node.UploadResources(clusterDefinition, kubeSetupInfo);
+
+            node.Status = "configure: environment vars";
 
             if (clusterDefinition != null)
             {
@@ -325,7 +397,7 @@ TCPKeepAlive yes
             node.InvokeIdempotentAction("setup/prep-node",
                 () =>
                 {
-                    node.Status = "preparing";
+                    node.Status = "prepare: node";
                     node.SudoCommand("setup-prep.sh");
                     node.Reboot(wait: true);
                 });
@@ -338,8 +410,6 @@ TCPKeepAlive yes
             // We may need an option that allows an operator to pre-build a hardware
             // based drive array or something.  I'm going to defer this to later and
             // concentrate on commodity hardware and cloud deployments for now. 
-
-            CommonSteps.ConfigureEnvironmentVariables(node, clusterDefinition);
 
             node.Status = "setup: disk";
             node.SudoCommand("setup-disk.sh");

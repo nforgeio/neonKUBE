@@ -99,7 +99,7 @@ namespace NATS.Client
             this.subject = msg.Subject;
             this.reply   = msg.Reply;
             this.data    = RoundtripDataFactory.CreateFrom<TMessage>(msg.Data);
-            this.sub     = msg.ArrivalSubcription;
+            this.sub     = msg.ArrivalSubscription;
             this.cached  = msg;
         }
 

@@ -34,6 +34,7 @@ using Newtonsoft.Json.Linq;
 using Neon.Common;
 using Neon.Data;
 using Neon.Kube;
+using Couchbase.N1QL;
 
 namespace NeonCli
 {
@@ -159,7 +160,8 @@ command line, as a text file, or as text passed on STDIN.
                     query = File.ReadAllText(query.Substring(1));
                 }
 
-                var queryResults = bucket.Query<JToken>(query);
+                var queryRequest = new QueryRequest(query).ScanConsistency(ScanConsistency.RequestPlus);
+                var queryResults = bucket.Query<JToken>(queryRequest);
 
                 Console.WriteLine(JsonConvert.SerializeObject(queryResults, Formatting.Indented));
             }

@@ -49,7 +49,7 @@ namespace Neon.Temporal
             Covenant.Requires<ArgumentNullException>(parent != null, nameof(parent));
 
             this.parent = parent;
-            this.Logger = LogManager.Default.GetLogger(sourceModule: Client.Settings.ClientIdentity, contextId: parent.ActivityTask?.WorkflowExecution?.RunId);
+            this.Logger = LogManager.Default.GetLogger(module: Client.Settings.ClientIdentity, contextId: parent.ActivityTask?.WorkflowExecution?.RunId);
         }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace Neon.Temporal
         /// <para>
         /// We recommend that all non-local activities that execute for relatively long periods,
         /// monitor <see cref="CancellationToken"/> for activity cancellation so that they
-        /// can gracefully terminate including potentially calling <see cref="SendHeartbeatAsync(byte[])"/>
+        /// can gracefully terminate including potentially calling <see cref="RecordHeartbeatAsync(byte[])"/>
         /// to checkpoint the current activity state.
         /// </para>
         /// <para>
@@ -95,7 +95,7 @@ namespace Neon.Temporal
 
         /// <summary>
         /// <para>
-        /// Sends a heartbeat with optional details to Temporal.
+        /// Records a heartbeat with optional details to Temporal.
         /// </para>
         /// <note>
         /// <b>IMPORTANT:</b> Heartbeats are not supported for local activities.
@@ -118,7 +118,7 @@ namespace Neon.Temporal
         /// also possible to enable automatic heartbeats sent by the Temporal client.
         /// </note>
         /// </remarks>
-        public async Task SendHeartbeatAsync(byte[] details = null)
+        public async Task RecordHeartbeatAsync(byte[] details = null)
         {
             await SyncContext.ClearAsync;
             Client.EnsureNotDisposed();
@@ -245,7 +245,7 @@ namespace Neon.Temporal
             {
                 var details = detailsFunc != null ? detailsFunc() : null;
 
-                await SendHeartbeatAsync(details);
+                await RecordHeartbeatAsync(details);
 
                 nextHeartbeatUtc = DateTime.UtcNow + nextInterval;
 

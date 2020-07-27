@@ -528,7 +528,7 @@ namespace Neon.Cadence
         public async Task<WorkflowDescription> DescribeWorkflowExecutionAsync(string workflowId, string runid = null, string domain = null)
         {
             await SyncContext.ClearAsync;
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
             EnsureNotDisposed();
 
             domain = ResolveDomain(domain);
@@ -564,7 +564,7 @@ namespace Neon.Cadence
         /// </remarks>
         public async Task WaitForWorkflowStartAsync(WorkflowExecution execution, string domain = null, TimeSpan? maxWait = null)
         {
-            Covenant.Requires<ArgumentNullException>(execution != null);
+            Covenant.Requires<ArgumentNullException>(execution != null, nameof(execution));
 
             maxWait = maxWait ?? Settings.MaxWorkflowWaitUntilRunning;
 

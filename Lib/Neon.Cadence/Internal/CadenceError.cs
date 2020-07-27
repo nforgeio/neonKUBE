@@ -44,7 +44,7 @@ namespace Neon.Cadence.Internal
         /// </summary>
         static CadenceError()
         {
-            // Initialize a dictionary that maps GOLANG error strings to CadenceError
+            // Initialize a dictionary that maps GOLANG error strings to CadenceExcep[tion
             // derived exception constructors.  These constructors must have signatures
             // like:
             //
@@ -93,6 +93,50 @@ namespace Neon.Cadence.Internal
             }
         }
 
+        /// <summary>
+        /// Converts an error type string into an <see cref="CadenceErrorType"/>.
+        /// </summary>
+        /// <param name="typeString">The error string to be converted.</param>
+        /// <returns>The converted error type.</returns>
+        internal static CadenceErrorType StringToErrorType(string typeString)
+        {
+            switch (typeString)
+            {
+                case "cancelled":   return CadenceErrorType.Cancelled;
+                case "custom":      return CadenceErrorType.Custom;
+                case "generic":     return CadenceErrorType.Generic;
+                case "panic":       return CadenceErrorType.Panic;
+                case "terminated":  return CadenceErrorType.Terminated;
+                case "timeout":     return CadenceErrorType.Timeout;
+
+                default:
+
+                    throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Converts an <see cref="CadenceErrorType"/> into a error string.
+        /// </summary>
+        /// <param name="type">the error type.</param>
+        /// <returns>The error string.</returns>
+        internal static string ErrorTypeToString(CadenceErrorType type)
+        {
+            switch (type)
+            {
+                case CadenceErrorType.Cancelled:   return "cancelled";
+                case CadenceErrorType.Custom:      return "custom";
+                case CadenceErrorType.Generic:     return "generic";
+                case CadenceErrorType.Panic:       return "panic";
+                case CadenceErrorType.Terminated:  return "terminated";
+                case CadenceErrorType.Timeout:     return "timeout";
+
+                default:
+
+                    throw new NotImplementedException();
+            }
+        }
+
         //---------------------------------------------------------------------
         // Instance members
 
@@ -107,8 +151,8 @@ namespace Neon.Cadence.Internal
         /// Constructs an error from parameters.
         /// </summary>
         /// <param name="error">The GOLANG error string.</param>
-        /// <param name="type">Optionally specifies the error type.</param>
-        public CadenceError(string error, CadenceErrorTypes type = CadenceErrorTypes.Custom)
+        /// <param name="type">Optionally specifies the error type.  This defaults to <see cref="CadenceErrorType.Custom"/>.</param>
+        public CadenceError(string error, CadenceErrorType type = CadenceErrorType.Custom)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(error), nameof(error));
 
@@ -125,7 +169,17 @@ namespace Neon.Cadence.Internal
             Covenant.Requires<ArgumentNullException>(e != null, nameof(e));
 
             this.String = $"{e.GetType().FullName}{{{e.Message}}}";
-            this.Type   = "custom";
+
+            var cadenceException = e as CadenceException;
+
+            if (cadenceException != null)
+            {
+                this.Type = ErrorTypeToString(cadenceException.CadenceErrorType);
+            }
+            else
+            {
+                this.Type = "custom";
+            }
         }
 
         /// <summary>
@@ -143,42 +197,18 @@ namespace Neon.Cadence.Internal
         /// <summary>
         /// Returns the error type.
         /// </summary>
-        internal CadenceErrorTypes GetErrorType()
+        internal CadenceErrorType GetErrorType()
         {
-            switch (Type)
-            {
-                case "cancelled":   return CadenceErrorTypes.Cancelled;
-                case "custom":      return CadenceErrorTypes.Custom;
-                case "generic":     return CadenceErrorTypes.Generic;
-                case "panic":       return CadenceErrorTypes.Panic;
-                case "terminated":  return CadenceErrorTypes.Terminated;
-                case "timeout":     return CadenceErrorTypes.Timeout;
-
-                default:
-
-                    throw new NotImplementedException();
-            }
+            return StringToErrorType(Type);
         }
 
         /// <summary>
         /// Sets the error type.
         /// </summary>
         /// <param name="type">The new type.</param>
-        internal void SetErrorType(CadenceErrorTypes type)
+        internal void SetErrorType(CadenceErrorType type)
         {
-            switch (type)
-            {
-                case CadenceErrorTypes.Cancelled:   Type = "cancelled";   break;
-                case CadenceErrorTypes.Custom:      Type = "custom";      break;
-                case CadenceErrorTypes.Generic:     Type = "generic";     break;
-                case CadenceErrorTypes.Panic:       Type = "panic";       break;
-                case CadenceErrorTypes.Terminated:  Type = "terminated";  break;
-                case CadenceErrorTypes.Timeout:     Type = "timeout";     break;
-
-                default:
-
-                    throw new NotImplementedException();
-            }
+            Type = ErrorTypeToString(type);
         }
 
         /// <summary>
@@ -191,17 +221,17 @@ namespace Neon.Cadence.Internal
             //
             // We're depending on cadence error strings looking like this:
             //
-            //      ERROR{MESSAGE}
+            //      REASON{MESSAGE}
             //
             // where:
             //
-            //      ERROR       - identifies the error
+            //      REASON      - identifies the error
             //      MESSAGE     - describes the error in more detail
             //
             // For robustness, we'll also handle the situation where there
-            // is no {MESSAGE} part.
+            // is no {message} part.
 
-            string error;
+            string reason;
             string message;
 
             var startingBracePos = String.IndexOf('{');
@@ -209,33 +239,27 @@ namespace Neon.Cadence.Internal
 
             if (startingBracePos != -1 && endingBracePos != 1)
             {
-                error   = String.Substring(0, startingBracePos);
+                reason  = String.Substring(0, startingBracePos);
                 message = String.Substring(startingBracePos + 1, endingBracePos - (startingBracePos + 1));
             }
             else
             {
-                error   = String;
+                reason  = String;
                 message = string.Empty;
             }
 
-            // We're going to save the error in the exception [Message] property and
-            // save the message to the [Reasons] property and then  we'll encode the
-            // error as the exception message.  This seems a bit confusing but that's
-            // the way we're doing it.
-
-            var details = message;
-
-            message = error;
-
-            // First, we're going to try mapping the error identifier to one of the
+            // We're going to save the details as the exception [Message] property and
+            // save the error to the [Reason] property.
+            //
+            // First, we're going to try mapping the error reason to one of the
             // predefined Cadence exceptions and if that doesn't work, we'll generate
             // a more generic exception.
 
-            if (goErrorToConstructor.TryGetValue(error, out var constructor))
+            if (goErrorToConstructor.TryGetValue(reason, out var constructor))
             {
-                var e = (CadenceException)constructor.Invoke(new object[] { error, null });
+                var e = (CadenceException)constructor.Invoke(new object[] { message, null });
 
-                e.Details = details;
+                e.Reason = reason;
 
                 return e;
             }
@@ -244,31 +268,31 @@ namespace Neon.Cadence.Internal
 
             switch (errorType)
             {
-                case CadenceErrorTypes.Cancelled:
+                case CadenceErrorType.Cancelled:
 
-                    return new CancelledException(message) { Details = details };
+                    return new CancelledException(message) { Reason = reason };
 
-                case CadenceErrorTypes.Custom:
+                case CadenceErrorType.Custom:
 
-                    return new CadenceCustomException(message) { Details = details };
+                    return new CadenceCustomException(message) { Reason = reason };
 
-                case CadenceErrorTypes.Generic:
+                case CadenceErrorType.Generic:
 
-                    return new CadenceGenericException(message) { Details = details };
+                    return new CadenceGenericException(message) { Reason = reason };
 
-                case CadenceErrorTypes.Panic:
+                case CadenceErrorType.Panic:
 
-                    return new CadencePanicException(message) { Details = details };
+                    return new CadencePanicException(message) { Reason = reason };
 
-                case CadenceErrorTypes.Terminated:
+                case CadenceErrorType.Terminated:
 
-                    return new TerminatedException(message) { Details = details };
+                    return new TerminatedException(message) { Reason = reason };
 
-                case CadenceErrorTypes.Timeout:
+                case CadenceErrorType.Timeout:
 
-                    // Special case some timeout exceptions.
+                    // Special case timeout exceptions.
 
-                    switch (message)
+                    switch (reason)
                     {
                         case "TimeoutType: START_TO_CLOSE":
 

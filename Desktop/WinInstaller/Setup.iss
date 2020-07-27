@@ -10,7 +10,7 @@ AppName=neonKUBE
 AppVersion={#GetEnv("NF_PRODUCT_VERSION")}
 DefaultDirName={pf}\neonKUBE
 DefaultGroupName=neonKUBE
-; UninstallDisplayIcon={app}\neonKUBE.Windows\neonKUBE-win.exe
+; UninstallDisplayIcon={app}\neonKUBE.Windows\neonDESKTOPwin.exe
 MinVersion=10.0.16299
 Compression=lzma2
 SolidCompression=no
@@ -34,26 +34,25 @@ PrivilegesRequired=admin
 Source: {#GetEnv("NF_CACHE")}\windows\kubectl\{#GetEnv("NF_KUBE_VERSION")}\kubectl.exe; DestDir: {app}; Flags: recursesubdirs replacesameversion
 Source: {#GetEnv("NF_CACHE")}\windows\powershell\*.*; DestDir: {app}\powershell; Flags: recursesubdirs replacesameversion
 
-; WinDesktop
-Source: {#GetEnv("NF_BUILD")}\win-desktop\*.*; DestDir: {app}\win-desktop; Flags: recursesubdirs replacesameversion
-
-; neon-cli
-Source: {#GetEnv("NF_BUILD")}\neon.cmd; DestDir: {app}; Flags: recursesubdirs replacesameversion
+; neon-cli & WinDesktop
+Source: {#GetEnv("NF_BUILD")}\neon.cmd; DestDir: {app}; Flags: replacesameversion
 Source: {#GetEnv("NF_BUILD")}\neon\*.*; DestDir: {app}\neon; Flags: recursesubdirs replacesameversion
+Source: {#GetEnv("NF_BUILD")}\neonDESKTOP.cmd; DestDir: {app}; Flags: replacesameversion
+Source: {#GetEnv("NF_BUILD")}\win-desktop\*.*; DestDir: {app}\neon; Flags: recursesubdirs replacesameversion
 
 [Icons]
-Name: "{group}\neonKUBE Desktop"; Filename: "{app}\win-desktop\neonKUBE-win.exe"
+Name: "{group}\neonKUBE Desktop"; Filename: "{app}\neon\neonDESKTOP.exe"
 
 [Registry]
-Root: HKCU; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "neonKUBE Desktop"; ValueData: "{app}\win-desktop\neonKUBE-win.exe"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "neonKUBE Desktop"; ValueData: "{app}\neon\neonDESKTOPexe"; Flags: uninsdeletevalue
 Root: HKCU; Subkey: "Environment"; ValueType: string; ValueName: "NEONKUBE_PROGRAM_FOLDER"; ValueData: "{app}"; Flags: uninsdeletevalue
 
 [Run]
-Filename: "{app}\win-desktop\neonKUBE-win.exe"; Description: "neonKUBE Desktop"; Flags: postinstall nowait
+Filename: "{app}\neon\neonDESKTOP.exe"; Description: "neonKUBE Desktop"; Flags: postinstall nowait
 
 [UninstallRun]
 ; Kill the neonKUBE Desktop app if it is running.
-Filename: "{cmd}"; Parameters: "/C ""taskkill /im neonKUBE-win.exe /f /t"
+Filename: "{cmd}"; Parameters: "/C ""taskkill /im neonDESKTOP.exe /f /t"
 
 [Code]
 

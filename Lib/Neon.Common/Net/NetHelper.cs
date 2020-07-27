@@ -839,12 +839,12 @@ namespace Neon.Net
         }
 
         /// <summary>
-        /// Returns a free TCP port for a local IP address.
+        /// Returns a free TCP/UDP port for a local IP address.
         /// </summary>
         /// <param name="address">The IP address.</param>
         /// <returns>The free port number.</returns>
         /// <exception cref="NetworkException">Thrown when there are no available ports.</exception>
-        public static int GetUnusedTcpPort(IPAddress address)
+        public static int GetUnusedIpPort(IPAddress address)
         {
             Covenant.Requires<ArgumentNullException>(address != null, nameof(address));
 
@@ -873,9 +873,9 @@ namespace Neon.Net
         /// <remarks>
         /// <para>
         /// This works via a somewhat fragile heuristic.  We list all network interfaces,
-        /// filter out those that are loopback, TAP interfaces, as well as any that aren't 
-        /// up and then return the highest speed interface from any conforming interfaces 
-        /// remaining.
+        /// filter out those that are loopback, TAP interfaces, Hyper-V switches as well as 
+        /// any that aren't up and then return the highest speed interface from any remaining
+        /// interfaces.
         /// </para>
         /// <para>
         /// This may not work as expected for machines with multiple active connections
@@ -896,6 +896,7 @@ namespace Neon.Net
 
                         if (netInterface.NetworkInterfaceType == NetworkInterfaceType.Loopback || 
                             netInterface.Description.StartsWith("TAP-") ||
+                            netInterface.Description == "Hyper-V Virtual Ethernet Adapter" ||
                             netInterface.OperationalStatus != OperationalStatus.Up)
                         {
                             return false;

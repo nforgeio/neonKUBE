@@ -270,12 +270,12 @@ namespace Neon.Kube
         /// to be inserted into the step list.
         /// </param>
         public void AddWaitUntilOnlineStep(
-            string                              stepLabel = "connect", 
-            string                              status = null, 
+            string                              stepLabel     = "connect", 
+            string                              status        = null, 
             Func<SshProxy<NodeMetadata>, bool>  nodePredicate = null, 
-            bool                                quiet = false, 
-            TimeSpan?                           timeout = null, 
-            int                                 position = -1)
+            bool                                quiet         = false, 
+            TimeSpan?                           timeout       = null, 
+            int                                 position      = -1)
         {
             if (timeout == null)
             {

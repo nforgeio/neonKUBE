@@ -557,7 +557,9 @@ namespace TestCommon
             Assert.Equal("127.0.0.1", endpoint.Address.ToString());
             Assert.Equal(80, endpoint.Port);
 
+            Assert.False(NetHelper.TryParseIPv4Endpoint("127.0.0.256:80", out endpoint));
             Assert.False(NetHelper.TryParseIPv4Endpoint("127.0.0.1100000000:80", out endpoint));
+            Assert.False(NetHelper.TryParseIPv4Endpoint("127.0.0.1:65536", out endpoint));
             Assert.False(NetHelper.TryParseIPv4Endpoint("127.0.0.1:1000000", out endpoint));
             Assert.False(NetHelper.TryParseIPv4Endpoint("127.0.0.1", out endpoint));
             Assert.False(NetHelper.TryParseIPv4Endpoint("", out endpoint));
@@ -570,7 +572,9 @@ namespace TestCommon
         {
             Assert.Equal(new IPEndPoint(IPAddress.Loopback, 80), NetHelper.ParseIPv4Endpoint("127.0.0.1:80"));
 
+            Assert.Throws<FormatException>(() => NetHelper.ParseIPv4Endpoint("127.0.0.256:80"));
             Assert.Throws<FormatException>(() => NetHelper.ParseIPv4Endpoint("127.0.0.1100000000:80"));
+            Assert.Throws<FormatException>(() => NetHelper.ParseIPv4Endpoint("127.0.0.1:65536"));
             Assert.Throws<FormatException>(() => NetHelper.ParseIPv4Endpoint("127.0.0.1:1000000"));
             Assert.Throws<FormatException>(() => NetHelper.ParseIPv4Endpoint("127.0.0.1"));
             Assert.Throws<FormatException>(() => NetHelper.ParseIPv4Endpoint(""));
@@ -579,7 +583,7 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public void GetUnusedTcpPort()
+        public void GetUnusedIpPort()
         {
             // Verify that we can obtain 100 unique ports on [127.0.0.1].
             // Note that this is a tiny bit fragile because it's possible,
@@ -592,7 +596,7 @@ namespace TestCommon
 
             for (int i = 0; i < 100; i++)
             {
-                var port = NetHelper.GetUnusedTcpPort(address);
+                var port = NetHelper.GetUnusedIpPort(address);
 
                 Assert.DoesNotContain(ports, p => p == port);
 

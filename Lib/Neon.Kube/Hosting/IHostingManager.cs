@@ -66,8 +66,17 @@ namespace Neon.Kube
         /// are to be replaced or overwritten during privisioning.  The actual interpretation
         /// of this parameter is specific to each hosting manager implementation.
         /// </param>
-        /// <returns><c>true</c> if the operation was successful.</returns>
-        bool Provision(bool force);
+        /// <param name="secureSshPassword">
+        /// The secure SSH password to be set for all node VMs. This is required.
+        /// </param>
+        /// <param name="orgSshPassword">
+        /// The starting SSH password for the VMs.  This may be passed as <c>null</c> when
+        /// the provisioning manager is able to configure the passwords when the VMs are
+        /// born, such as in the cloud or when hosted via on-premise hypervisors.  This
+        /// is currently used only by the bare metal hosting manager which will need to
+        /// be able to log into existing nodes provisioned manually by the cluster operator.
+        /// </param>
+        bool Provision(bool force, string secureSshPassword, string orgSshPassword = null);
 
         /// <summary>
         /// Returns the FQDN or IP address (as a string) and the port to use
@@ -90,22 +99,7 @@ namespace Neon.Kube
         void AddPostProvisionSteps(SetupController<NodeDefinition> controller);
 
         /// <summary>
-        /// <para>
-        /// Returns the prefix for block devices that will be attached to
-        /// the host machines.  For many hosting environments this will be
-        /// <b>sd</b>, indicating that drives will be attached like: 
-        /// <b>/dev/sda</b>, <b>/dev/sdb</b>, <b>/dev/sdc</b>...
-        /// </para>
-        /// <para>
-        /// This may be different though for some hosting environment.
-        /// XenServer for example, uses the <b>xvd</b> prefix and attaches
-        /// drives as <b>/dev/sda</b>, <b>/dev/sdb</b>, <b>/dev/sdc</b>...
-        /// </para>
-        /// </summary>
-        string DrivePrefix { get; }
-
-        /// <summary>
-        /// Returns <c>true</c> if provisoning requires that the user has
+        /// Returns <c>true</c> if provisoning requires that the user have
         /// administrator privileges.
         /// </summary>
         bool RequiresAdminPrivileges { get; }

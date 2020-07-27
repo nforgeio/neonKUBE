@@ -63,7 +63,7 @@ namespace Neon.Xunit
         /// </summary>
         public static void StopApplication(string name)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
             // We're going to list any existing compose containers and look for any
             // with names like:

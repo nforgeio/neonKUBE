@@ -67,16 +67,6 @@ namespace Neon.Kube
         public abstract void Dispose(bool disposing);
 
         /// <summary>
-        /// The initial host username to use when creating and/or configuring cluster nodes.
-        /// </summary>
-        public string HostUsername { get; set; }
-
-        /// <summary>
-        /// The initial host password to use when creating and/or configuring cluster nodes.
-        /// </summary>
-        public string HostPassword { get; set; }
-
-        /// <summary>
         /// Specifies whether the class should print setup status to the console.
         /// This defaults to <c>false</c>.
         /// </summary>
@@ -104,21 +94,17 @@ namespace Neon.Kube
         public abstract void Validate(ClusterDefinition clusterDefinition);
 
         /// <inheritdoc/>
-        public abstract bool Provision(bool force);
+        public abstract bool Provision(bool force, string secureSshPassword, string orgSshPassword = null);
 
         /// <inheritdoc/>
         public abstract (string Address, int Port) GetSshEndpoint(string nodeName);
 
         /// <inheritdoc/>
-        public abstract void AddPostProvisionSteps(SetupController<NodeDefinition> controller);
-
-        /// <inheritdoc/>
-        public abstract string DrivePrefix { get; }
-
-        /// <inheritdoc/>
-        public virtual bool RequiresAdminPrivileges
+        public virtual void AddPostProvisionSteps(SetupController<NodeDefinition> controller)
         {
-            get { return false; }
         }
+
+        /// <inheritdoc/>
+        public abstract bool RequiresAdminPrivileges { get; }
     }
 }

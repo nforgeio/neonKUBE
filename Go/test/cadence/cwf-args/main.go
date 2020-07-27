@@ -14,7 +14,7 @@ import (
 
 func main() {
 
-	test := true
+	test := false
 
 	// Parse the -config=<path> option.  This option is required.
 

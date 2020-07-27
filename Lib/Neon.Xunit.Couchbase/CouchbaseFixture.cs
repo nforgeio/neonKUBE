@@ -93,7 +93,7 @@ namespace Neon.Xunit.Couchbase
         /// to call this in your test class constructor instead of <see cref="ITestFixture.Start(Action)"/>.
         /// </para>
         /// <note>
-        /// You'll need to call <see cref="StartAsComposed(CouchbaseSettings, string, string, string[], string, string, bool, string)"/>
+        /// You'll need to call <see cref="StartAsComposed(CouchbaseSettings, string, string, string[], string, string, bool, string, ContainerLimits)"/>
         /// instead when this fixture is being added to a <see cref="ComposedFixture"/>.
         /// </note>
         /// </summary>
@@ -112,6 +112,10 @@ namespace Neon.Xunit.Couchbase
         /// Optionally specifies the host interface where the container public ports will be
         /// published.  This defaults to <see cref="ContainerFixture.DefaultHostInterface"/>
         /// but may be customized.  This needs to be an IPv4 address.
+        /// </param>
+        /// <param name="limits">
+        /// Optionally specifies the Docker container limits to use for hosting Couchbase.  Note that
+        /// this method will use reasonable default limits when this is <c>null</c>.
         /// </param>
         /// <returns>
         /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
@@ -176,12 +180,13 @@ namespace Neon.Xunit.Couchbase
             string              username      = "Administrator",
             string              password      = "password",
             bool                noPrimary     = false,
-            string              hostInterface = null)
+            string              hostInterface = null,
+            ContainerLimits     limits        = null)
         {
             return base.Start(
                 () =>
                 {
-                    StartAsComposed(settings, image, name, env, username, password, noPrimary);
+                    StartAsComposed(settings, image, name, env, username, password, noPrimary, hostInterface, limits);
                 });
         }
 
@@ -204,6 +209,10 @@ namespace Neon.Xunit.Couchbase
         /// published.  This defaults to <see cref="ContainerFixture.DefaultHostInterface"/>
         /// but may be customized.  This needs to be an IPv4 address.
         /// </param>
+        /// <param name="limits">
+        /// Optionally specifies the Docker container limits to use for hosting Couchbase.  Note that
+        /// this method will use reasonably small default limits when this is <c>null</c>.
+        /// </param>
         public void StartAsComposed(
             CouchbaseSettings   settings      = null,
             string              image         = null,
@@ -212,7 +221,8 @@ namespace Neon.Xunit.Couchbase
             string              username      = "Administrator",
             string              password      = "password",
             bool                noPrimary     = false,
-            string              hostInterface = null)
+            string              hostInterface = null,
+            ContainerLimits     limits        = null)
         {
             image = image ?? $"{KubeConst.NeonBranchRegistry}/couchbase-dev:latest";
 
@@ -222,7 +232,14 @@ namespace Neon.Xunit.Couchbase
 
             if (!IsRunning)
             {
-                StartAsComposed(name, image,
+                // Use reasonable default limits.
+
+                limits = limits ?? new ContainerLimits()
+                {
+                    Memory = "1 GiB"
+                };
+
+                base.StartAsComposed(name, image,
                     new string[]
                     {
                         "--detach",
@@ -237,7 +254,8 @@ namespace Neon.Xunit.Couchbase
                         "-p", $"{GetHostInterface(hostInterface)}:18091-18096:18091-18096",
                         "-p", $"{GetHostInterface(hostInterface)}:21100-21299:21100-21299"
                     },
-                    env: env);
+                    env: env,
+                    limits: limits);
 
                 Thread.Sleep(warmupDelay);
 

@@ -70,20 +70,6 @@ namespace Neon.Kube
         public static readonly TimeSpan MaxJitter = TimeSpan.FromMilliseconds(250);
 
         /// <summary>
-        /// The root account username baked into the Hyper-V and XenServer cluster
-        /// host node virtual machine templates.  This is also used as the username
-        /// for hosts provisioned to clouds like Azure, Aws, and Google Cloud. 
-        /// </summary>
-        public const string DefaulVmTemplateUsername = "sysadmin";
-
-        /// <summary>
-        /// The root account password baked into the Hyper-V and XenServer cluster
-        /// host node virtual machine templates.  Note that this will not be
-        /// used for hosts provisioned on public clouds for security reasons.
-        /// </summary>
-        public const string DefaulVmTemplatePassword = "sysadmin0000";
-
-        /// <summary>
         /// The maximum number of cluster master nodes.
         /// </summary>
         public const int MaxMasters = 5;
@@ -191,7 +177,7 @@ namespace Neon.Kube
         /// <summary>
         /// The default host machine sysadmin username.
         /// </summary>
-        public const string SysAdminUser = "sysadmin";
+        public const string SysAdminUsername = "sysadmin";
 
         /// <summary>
         /// The default host machine sysadmin user ID.
@@ -209,9 +195,16 @@ namespace Neon.Kube
         public const int SysAdminGID = 1234;
 
         /// <summary>
+        /// The root account password baked into the Hyper-V and XenServer cluster
+        /// host node virtual machine templates.  Note that this will not be
+        /// used for hosts provisioned on public clouds for security reasons.
+        /// </summary>
+        public const string VmTemplatePassword = "sysadmin0000";
+
+        /// <summary>
         /// The default host machine container username.
         /// </summary>
-        public const string ContainerUser = "container";
+        public const string ContainerUsername = "container";
 
         /// <summary>
         /// <para>

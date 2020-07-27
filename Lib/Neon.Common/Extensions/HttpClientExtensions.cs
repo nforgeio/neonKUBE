@@ -37,7 +37,7 @@ namespace System.Net.Http
     /// <see cref="HttpClient"/> extension methods, mostly related to supporting <see cref="LogActivity"/> 
     /// related headers.
     /// </summary>
-    public static class HttpClientExtensions
+    public static partial class HttpClientExtensions
     {
         private static HttpMethod deleteMethod  = new HttpMethod("DELETE");
         private static HttpMethod headMethod    = new HttpMethod("HEAD");

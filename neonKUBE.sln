@@ -6,7 +6,6 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doc", "Doc", "{2CFE7466-98C4-490A-9519-4702DF7A4E15}"
 	ProjectSection(SolutionItems) = preProject
 		Doc\CADENCE.md = Doc\CADENCE.md
-		Doc\Cheats.txt = Doc\Cheats.txt
 		Doc\CODEDOC.md = Doc\CODEDOC.md
 		Doc\DEVELOPER.md = Doc\DEVELOPER.md
 		Doc\MAINTAIN.md = Doc\MAINTAIN.md
@@ -23,6 +22,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{4442F1
 	ProjectSection(SolutionItems) = preProject
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
+		.password-name = .password-name
 		buildenv.cmd = buildenv.cmd
 		kube-version.txt = kube-version.txt
 		LICENSE = LICENSE
@@ -81,7 +81,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "External", "External", "{1A
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "User", "User", "{DB3EE5E6-94C8-4298-AABB-FB46E820C00F}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "jeff.lill", "jeff.lill", "{A0DF3DBA-C31E-43F9-99EB-DEECB7793539}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "jefflill", "jefflill", "{A0DF3DBA-C31E-43F9-99EB-DEECB7793539}"
+	ProjectSection(SolutionItems) = preProject
+		User\jefflill\Cheats.txt = User\jefflill\Cheats.txt
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Couchbase", "Lib\Neon.Couchbase\Neon.Couchbase.csproj", "{7AB3C81C-8F25-4F42-B992-947ACDF34056}"
 EndProject
@@ -138,15 +141,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.XenServer", "Lib\Neon.
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home", "home", "{E4CB108C-A8C4-4B30-A07E-44D56027B98B}"
 	ProjectSection(SolutionItems) = preProject
-		Devops\home\large.cluster.yaml = Devops\home\large.cluster.yaml
-		Devops\home\small.cluster.yaml = Devops\home\small.cluster.yaml
-		Devops\home\tiny-xcp.cluster.yaml = Devops\home\tiny-xcp.cluster.yaml
-		Devops\home\tiny.cluster.yaml = Devops\home\tiny.cluster.yaml
+		Devops\jefflill\home\large.cluster.yaml = Devops\jefflill\home\large.cluster.yaml
+		Devops\jefflill\home\small.cluster.yaml = Devops\jefflill\home\small.cluster.yaml
+		Devops\jefflill\home\tiny-bare.cluster.yaml = Devops\jefflill\home\tiny-bare.cluster.yaml
+		Devops\jefflill\home\tiny-xcp.cluster.yaml = Devops\jefflill\home\tiny-xcp.cluster.yaml
+		Devops\jefflill\home\tiny.cluster.yaml = Devops\jefflill\home\tiny.cluster.yaml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "wrt", "wrt", "{68D2B92F-A5C0-4E29-9E53-64F600400568}"
 	ProjectSection(SolutionItems) = preProject
-		Devops\wrt\jeff-small.cluster.yaml = Devops\wrt\jeff-small.cluster.yaml
+		Devops\jefflill\wrt\jeff-small.cluster.yaml = Devops\jefflill\wrt\jeff-small.cluster.yaml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Kube", "Test\Test.Neon.Kube\Test.Neon.Kube.csproj", "{41302EE4-1607-4BE1-A2C6-C881C3D05740}"
@@ -167,21 +171,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OpenSSL", "OpenSSL", "{23E8
 		External\OpenSSL\ssleay32.dll = External\OpenSSL\ssleay32.dll
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "office", "office", "{19BEBB72-3462-40E0-BC93-983D10652E54}"
-	ProjectSection(SolutionItems) = preProject
-		Devops\office\large.cluster.yaml = Devops\office\large.cluster.yaml
-		Devops\office\small.cluster.yaml = Devops\office\small.cluster.yaml
-		Devops\office\tiny.cluster.yaml = Devops\office\tiny.cluster.yaml
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinInstaller", "Desktop\WinInstaller\WinInstaller.csproj", "{8570DE4C-67AC-4E08-90C4-BB56D644FEA6}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-build", "Tools\neon-build\neon-build.csproj", "{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}"
 	ProjectSection(ProjectDependencies) = postProject
 		{756FB86B-29BC-4C6B-A19B-A624A9E9D367} = {756FB86B-29BC-4C6B-A19B-A624A9E9D367}
 	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinDesktop", "Desktop\WinDesktop\WinDesktop.csproj", "{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DEVELOPER", "DEVELOPER", "{C825B67A-D3D3-4404-83E2-A8CED1C595E2}"
 	ProjectSection(SolutionItems) = preProject
@@ -350,6 +345,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Neon.Temporal.net", "Test\Test.Neon.Temporal.net\Test.Neon.Temporal.net.csproj", "{3F538D6C-2477-4969-A8C4-EB8E1588BB9C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "test-temporal", "Services\test-temporal\test-temporal.csproj", "{5B0F0129-3826-49C4-885E-25738DE9980B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinDesktop", "Desktop\WinDesktop\WinDesktop.csproj", "{7E0BF309-37A1-40D6-B567-704AEDC45E39}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "jefflill", "jefflill", "{0FD74500-BEFF-476A-99D5-9C7949069E67}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -867,23 +866,6 @@ Global
 		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Release|x64.Build.0 = Release|Any CPU
 		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Release|x86.ActiveCfg = Release|Any CPU
 		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89}.Release|x86.Build.0 = Release|Any CPU
-		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.CodeDoc|Any CPU.ActiveCfg = CodeDoc|Any CPU
-		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.CodeDoc|x64.ActiveCfg = CodeDoc|Any CPU
-		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.CodeDoc|x64.Build.0 = CodeDoc|Any CPU
-		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.CodeDoc|x86.ActiveCfg = CodeDoc|Any CPU
-		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.CodeDoc|x86.Build.0 = CodeDoc|Any CPU
-		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Debug|x64.Build.0 = Debug|Any CPU
-		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Debug|x86.Build.0 = Debug|Any CPU
-		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Release|x64.ActiveCfg = Release|Any CPU
-		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Release|x64.Build.0 = Release|Any CPU
-		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Release|x86.ActiveCfg = Release|Any CPU
-		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E}.Release|x86.Build.0 = Release|Any CPU
 		{407E3C67-F529-4D4A-811D-6D448A8B1311}.CodeDoc|Any CPU.ActiveCfg = CodeDoc|Any CPU
 		{407E3C67-F529-4D4A-811D-6D448A8B1311}.CodeDoc|Any CPU.Build.0 = CodeDoc|Any CPU
 		{407E3C67-F529-4D4A-811D-6D448A8B1311}.CodeDoc|x64.ActiveCfg = CodeDoc|Any CPU
@@ -1512,6 +1494,24 @@ Global
 		{5B0F0129-3826-49C4-885E-25738DE9980B}.Release|x64.Build.0 = Release|Any CPU
 		{5B0F0129-3826-49C4-885E-25738DE9980B}.Release|x86.ActiveCfg = Release|Any CPU
 		{5B0F0129-3826-49C4-885E-25738DE9980B}.Release|x86.Build.0 = Release|Any CPU
+		{7E0BF309-37A1-40D6-B567-704AEDC45E39}.CodeDoc|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E0BF309-37A1-40D6-B567-704AEDC45E39}.CodeDoc|Any CPU.Build.0 = Debug|Any CPU
+		{7E0BF309-37A1-40D6-B567-704AEDC45E39}.CodeDoc|x64.ActiveCfg = Debug|Any CPU
+		{7E0BF309-37A1-40D6-B567-704AEDC45E39}.CodeDoc|x64.Build.0 = Debug|Any CPU
+		{7E0BF309-37A1-40D6-B567-704AEDC45E39}.CodeDoc|x86.ActiveCfg = Debug|Any CPU
+		{7E0BF309-37A1-40D6-B567-704AEDC45E39}.CodeDoc|x86.Build.0 = Debug|Any CPU
+		{7E0BF309-37A1-40D6-B567-704AEDC45E39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E0BF309-37A1-40D6-B567-704AEDC45E39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E0BF309-37A1-40D6-B567-704AEDC45E39}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7E0BF309-37A1-40D6-B567-704AEDC45E39}.Debug|x64.Build.0 = Debug|Any CPU
+		{7E0BF309-37A1-40D6-B567-704AEDC45E39}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7E0BF309-37A1-40D6-B567-704AEDC45E39}.Debug|x86.Build.0 = Debug|Any CPU
+		{7E0BF309-37A1-40D6-B567-704AEDC45E39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E0BF309-37A1-40D6-B567-704AEDC45E39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E0BF309-37A1-40D6-B567-704AEDC45E39}.Release|x64.ActiveCfg = Release|Any CPU
+		{7E0BF309-37A1-40D6-B567-704AEDC45E39}.Release|x64.Build.0 = Release|Any CPU
+		{7E0BF309-37A1-40D6-B567-704AEDC45E39}.Release|x86.ActiveCfg = Release|Any CPU
+		{7E0BF309-37A1-40D6-B567-704AEDC45E39}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1543,15 +1543,13 @@ Global
 		{08B7000C-F261-4543-B611-5710D12263DB} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{2E9E803A-1422-42E7-8472-4E15EDFC7002} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{1A6C061D-83FD-4B53-8E96-80A1546C8F4B} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
-		{E4CB108C-A8C4-4B30-A07E-44D56027B98B} = {E853860E-86DE-407E-95BB-4C5E1CEAFC39}
-		{68D2B92F-A5C0-4E29-9E53-64F600400568} = {E853860E-86DE-407E-95BB-4C5E1CEAFC39}
+		{E4CB108C-A8C4-4B30-A07E-44D56027B98B} = {0FD74500-BEFF-476A-99D5-9C7949069E67}
+		{68D2B92F-A5C0-4E29-9E53-64F600400568} = {0FD74500-BEFF-476A-99D5-9C7949069E67}
 		{41302EE4-1607-4BE1-A2C6-C881C3D05740} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
 		{E77C7D25-275F-4DD6-B572-7317FED20393} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{23E8D775-B5CA-440B-ACF2-1F7C212FE5C3} = {1A3C35E5-1C30-44F2-AB46-F5E7F99E524C}
-		{19BEBB72-3462-40E0-BC93-983D10652E54} = {E853860E-86DE-407E-95BB-4C5E1CEAFC39}
 		{8570DE4C-67AC-4E08-90C4-BB56D644FEA6} = {33866B5A-71FB-4430-9C0B-019B20644653}
 		{E8F07DAB-0ED0-4A2F-9DD3-DE8D73D72B89} = {FE7764F7-F5B5-4A92-9BE2-F51690EDF870}
-		{81D4C74B-3F7B-499F-8DEF-DA2CB600DE0E} = {33866B5A-71FB-4430-9C0B-019B20644653}
 		{9C2A58E3-0686-4E98-80EB-30981CA48359} = {2CFE7466-98C4-490A-9519-4702DF7A4E15}
 		{407E3C67-F529-4D4A-811D-6D448A8B1311} = {FE7764F7-F5B5-4A92-9BE2-F51690EDF870}
 		{A26FC706-862F-4690-A626-B83A988A9411} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
@@ -1596,6 +1594,8 @@ Global
 		{FCA5010A-0CC8-4C22-8284-F63C592E94FD} = {5641C82B-E8E5-49AD-8DEE-E574D0D77460}
 		{3F538D6C-2477-4969-A8C4-EB8E1588BB9C} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
 		{5B0F0129-3826-49C4-885E-25738DE9980B} = {9BF7513A-5219-4862-A290-7D2A00589312}
+		{7E0BF309-37A1-40D6-B567-704AEDC45E39} = {33866B5A-71FB-4430-9C0B-019B20644653}
+		{0FD74500-BEFF-476A-99D5-9C7949069E67} = {E853860E-86DE-407E-95BB-4C5E1CEAFC39}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}

@@ -435,7 +435,7 @@ namespace Neon.Cadence
         /// <returns>The <see cref="SyncSignalStatus"/> for the signal.</returns>
         internal static SyncSignalStatus GetSignalStatus(long contextId, string signalId)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(signalId), nameof(signalId));
 
             // Lookup the workflow.
 

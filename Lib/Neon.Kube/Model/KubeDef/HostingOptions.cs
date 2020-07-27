@@ -392,6 +392,8 @@ namespace Neon.Kube
                     throw new NotImplementedException();
             }
 
+            // Validate the VM name prefix.
+
             if (!string.IsNullOrWhiteSpace(VmNamePrefix))
             {
                 if (!ClusterDefinition.IsValidName(VmNamePrefix))

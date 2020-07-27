@@ -50,8 +50,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NATS.Client" Version="0.10.0" />
-    <PackageReference Include="STAN.Client" Version="0.2.0" />
+    <PackageReference Include="NATS.Client" Version="0.10.1" />
+    <PackageReference Include="STAN.Client" Version="0.2.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -59,8 +59,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\nuget-icon.png" Pack="true" PackagePath=""/>
-    <None Include="..\..\LICENSE" Pack="True" PackagePath=""/>
+    <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+    <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
   </ItemGroup>
 
 </Project>

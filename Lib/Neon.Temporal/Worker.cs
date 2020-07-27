@@ -56,10 +56,10 @@ namespace Neon.Temporal
         /// <param name="options">Specifies the worker options or <c>null</c>.</param>
         internal Worker(TemporalClient client, long workerId, WorkerOptions options)
         {
-            Covenant.Requires<ArgumentNullException>(client != null);
-            Covenant.Requires<ArgumentNullException>(options != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(options.Namespace));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(options.TaskList));
+            Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
+            Covenant.Requires<ArgumentNullException>(options != null, nameof(options));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(options.Namespace), nameof(options.Namespace));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(options.TaskList), nameof(options.TaskList));
 
             this.Client   = client;
             this.WorkerId = workerId;

@@ -3253,6 +3253,18 @@
             </summary>
             <returns>The list of converters.</returns>
         </member>
+        <member name="P:Neon.Common.NeonHelper.DockerCli">
+            <summary>
+            Returns the name of the Docker CLI execuable for the current platform.  This will
+            be <b>docker.exe</b> on Windows and just <b>docker</b> on Linux and OS/x.
+            </summary>
+        </member>
+        <member name="P:Neon.Common.NeonHelper.DockerComposeCli">
+            <summary>
+            Returns the name of the Docker Compose CLI execuable for the current platform.  This will
+            be <b>docker-compose.exe</b> on Windows and just <b>docker-compose</b> on Linux and OS/x.
+            </summary>
+        </member>
         <member name="M:Neon.Common.NeonHelper.DetectOS">
             <summary>
             Detects the current operating system.
@@ -3386,7 +3398,7 @@
         </member>
         <member name="M:Neon.Common.NeonHelper.ExecuteAsync(System.String,System.Object[],System.Nullable{System.TimeSpan},System.Diagnostics.Process)">
             <summary>
-            Asyncrhonously starts a process to run an executable file with an array of
+            Asynchronously starts a process to run an executable file with an array of
             arguments and then and waits for the process to terminate.
             </summary>
             <param name="path">Path to the executable file.</param>
@@ -3411,7 +3423,7 @@
         </member>
         <member name="M:Neon.Common.NeonHelper.ExecuteAsync(System.String,System.String,System.Nullable{System.TimeSpan},System.Diagnostics.Process)">
             <summary>
-            Asyncrhonously starts a process to run an executable file and then waits for the process to terminate.
+            Asynchronously starts a process to run an executable file and then waits for the process to terminate.
             </summary>
             <param name="path">Path to the executable file.</param>
             <param name="args">Command line arguments (or <c>null</c>).</param>
@@ -7120,6 +7132,9 @@
             Returns the file name only.
             </summary>
         </member>
+        <member name="M:Neon.IO.TempFile.ToString">
+            <inheritdoc/>
+        </member>
         <member name="T:Neon.IO.TempFolder">
             <summary>
             Manages a temporary file system folder to be used for the duration of a unit test.
@@ -7132,10 +7147,11 @@
             when this is <c>null</c> or empty.
             </summary>
         </member>
-        <member name="M:Neon.IO.TempFolder.#ctor">
+        <member name="M:Neon.IO.TempFolder.#ctor(System.String)">
             <summary>
             Creates a temporary folder.
             </summary>
+            <param name="folder">Optionally overrides <see cref="P:Neon.IO.TempFolder.Root"/> as the parent folder for this instance.</param>
         </member>
         <member name="P:Neon.IO.TempFolder.Path">
             <summary>
@@ -7146,6 +7162,9 @@
             <summary>
             Deletes the temporary folder and all of its contents.
             </summary>
+        </member>
+        <member name="M:Neon.IO.TempFolder.ToString">
+            <inheritdoc/>
         </member>
         <member name="T:Neon.ModelGen.ActionResult`1">
             <summary>
@@ -8800,6 +8819,18 @@
             Returns a routable (non-loopback) IPv4 address for the current machine.
             </summary>
             <returns>The IP address or <c>null</c> if there doesn't appear to be a connected network interface.</returns>
+            <remarks>
+            <para>
+            This works via a somewhat fragile heuristic.  We list all network interfaces,
+            filter out those that are loopback, TAP interfaces, Hyper-V switches as well as 
+            any that aren't up and then return the highest speed interface from any remaining
+            interfaces.
+            </para>
+            <para>
+            This may not work as expected for machines with multiple active connections
+            to different networks.
+            </para>
+            </remarks>
         </member>
         <member name="T:Neon.Net.NetworkCidr">
             <summary>

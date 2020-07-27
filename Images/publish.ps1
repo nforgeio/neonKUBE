@@ -23,15 +23,15 @@
 
 param 
 (
-	[switch]$all         = $false,        # Rebuild all images
-	[switch]$base        = $false,        # Rebuild base images
-	[switch]$dotnetBase  = $false,        # Rebuild base .NET images
-	[switch]$dotnet      = $false,        # Rebuild .NET based images
-	[switch]$other       = $false,        # Rebuild all other images (usually script based)
-	[switch]$services    = $false,        # Rebuild all service images
+    [switch]$all         = $false,        # Rebuild all images
+    [switch]$base        = $false,        # Rebuild base images
+    [switch]$dotnetBase  = $false,        # Rebuild base .NET images
+    [switch]$dotnet      = $false,        # Rebuild .NET based images
+    [switch]$other       = $false,        # Rebuild all other images (usually script based)
+    [switch]$services    = $false,        # Rebuild all service images
     [switch]$nopush      = $false,        # Don't push to the registry
     [switch]$noprune     = $false,        # Don't prune the local Docker state
-	[switch]$allVersions = $false         # Rebuild all image versions
+    [switch]$allVersions = $false         # Rebuild all image versions
 )
 
 #----------------------------------------------------------
@@ -51,50 +51,50 @@ function Publish
         [string]$Path
     )
 
-	cd "$Path"
+    cd "$Path"
 
-	if ($allVersions)
-	{
-		if ($nopush)
-		{
-			./publish.ps1 -all -nopush
-		}
-		else
-		{
-			./publish.ps1 -all
-		}
-	}
-	else
-	{
-		if ($nopush)
-		{
-			./publish.ps1 -nopush
-		}
-		else
-		{
-			./publish.ps1
-		}
-	}
+    if ($allVersions)
+    {
+        if ($nopush)
+        {
+            ./publish.ps1 -all -nopush
+        }
+        else
+        {
+            ./publish.ps1 -all
+        }
+    }
+    else
+    {
+        if ($nopush)
+        {
+            ./publish.ps1 -nopush
+        }
+        else
+        {
+            ./publish.ps1
+        }
+    }
 }
 
 # Handle the command line arguments.
 
 if ($all)
 {
-	$base       = $true
-	$dotnetBase = $true
-	$dotnet     = $true
-	$other      = $true
-	$services   = $true
+    $base       = $true
+    $dotnetBase = $true
+    $dotnet     = $true
+    $other      = $true
+    $services   = $true
 }
 elseif ((-not $base) -and (-not $dotnet) -and (-not $other))
 {
-	# Build .NET and other images, but not base images, 
-	# by default.
+    # Build .NET and other images, but not base images, 
+    # by default.
 
-	$dotnet = $true
-	$other  = $true
-	$services   = $true
+    $dotnet = $true
+    $other  = $true
+    $services   = $true
 }
 
 # Purge any local Docker images as well as the image build cache.
@@ -103,7 +103,7 @@ elseif ((-not $base) -and (-not $dotnet) -and (-not $other))
 
 if (-not $noprune)
 {
-	docker system prune -af
+    docker system prune -af
 }
 
 # NOTE: 
@@ -113,39 +113,37 @@ if (-not $noprune)
 
 if ($base)
 {
-	$dotnetBase = $true
+    $dotnetBase = $true
 
-	# Base OS images:
+    # Base OS images:
 
-	Publish "$image_root\\alpine"
-	Publish "$image_root\\ubuntu-16.04"
+    Publish "$image_root\\alpine"
 
-	# Other base images:
+    # Other base images:
 
-	Publish "$image_root\\haproxy"
+    Publish "$image_root\\haproxy"
 }
 
 if ($dotnetBase)
 {
-	Publish "$image_root\\dotnet"
-	Publish "$image_root\\aspnet"
-	Publish "$image_root\\ubuntu-16.04-dotnet"
-	Publish "$image_root\\ubuntu-16.04-aspnet"
+    Publish "$image_root\\dotnet"
+    Publish "$image_root\\aspnet"
 }
 
 if ($other)
 {
     Publish "$image_root\\nats"
     Publish "$image_root\\nats-streaming"
-	Publish "$image_root\\cadence-dev"
-	Publish "$image_root\\temporal-dev"
-	Publish "$image_root\\couchbase-dev"
-	Publish "$image_root\\test"
+    Publish "$image_root\\cadence-dev"
+    Publish "$image_root\\couchbase-dev"
+    Publish "$image_root\\test"
 }
 
 if ($services)
 {
-	Publish "$image_root\\cluster-manager"
-	Publish "$image_root\\test-cadence"
-	Publish "$image_root\\test-temporal"
+    Publish "$image_root\\cluster-manager"
+    Publish "$image_root\\test-cadence"
+    Publish "$image_root\\test-temporal"
+    Publish "$image_root\\neon-log-collector"
+    Publish "$image_root\\neon-log-host"
 }

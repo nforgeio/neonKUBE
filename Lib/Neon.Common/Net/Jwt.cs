@@ -79,7 +79,7 @@ namespace Neon.Net
         /// <exception cref="FormatException">Thrown if the JWT format is invalid.</exception>
         private Jwt(string jwtString)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jwtString));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jwtString), nameof(jwtString));
 
             this.jwtString = jwtString;
 

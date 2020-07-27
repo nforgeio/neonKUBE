@@ -23,12 +23,14 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using Neon.Common;
+using YamlDotNet.Serialization;
 
 // $todo(jefflill):
 //
@@ -58,7 +60,8 @@ using Neon.Common;
 namespace Neon.Diagnostics
 {
     /// <summary>
-    /// Global class used to manage application logging.
+    /// A reasonable default implementation of an application log manager.  See
+    /// <see cref="ILogManager"/> for a description of how log managers work.
     /// </summary>
     public class LogManager : ILogManager
     {
@@ -110,16 +113,18 @@ namespace Neon.Diagnostics
         //---------------------------------------------------------------------
         // Instance members
 
-        private Dictionary<string, INeonLogger> nameToLogger = new Dictionary<string, INeonLogger>();
-        private LogLevel                        logLevel     = LogLevel.Info;
-        private TextWriter                      writer       = null;
+        private object                          syncRoot       = new object();
+        private Dictionary<string, INeonLogger> moduleToLogger = new Dictionary<string, INeonLogger>();
+        private LogLevel                        logLevel       = LogLevel.Info;
+        private TextWriter                      writer         = null;
+        private long                            emitCount;
+        private LoggerCreatorDelegate           loggerCreator;
 
-        // $todo(jefflill)
+        // $todo(jefflill):
         //
-        // Using [nameToLogger] to implement thread safety via a [Monitor] may introduce
+        // Using [syncRoot] to implement thread safety via a [Monitor] may introduce
         // some performance overhead for ASP.NET sites with lots of traffic.  It
-        // may be worth investigating whether a [SpinLock] might be better or perhaps
-        // even reimplementing this using a concurrent collection.
+        // may be worth investigating whether a [SpinLock] might be better.
 
         /// <summary>
         /// Default constructor.
@@ -134,33 +139,53 @@ namespace Neon.Diagnostics
             }
 
             this.writer = writer;
+
+            // $hack(jefflill):
+            //
+            // On Linux, we're going to initialize the [emitCount] to the index persisted to
+            // the [/dev/shm/log-index] file if this is present and parsable.  This will 
+            // align the .NET logging index with any event written via startup scripts.
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/578
+
+            emitCount = 0;
+
+            if (NeonHelper.IsLinux)
+            {
+                try
+                {
+                    emitCount = long.Parse(File.ReadAllText("/dev/shm/log-index").Trim());
+                }
+                catch
+                {
+                    // Ignore any exceptions; we'll just start the index at 0.
+                }
+            }
         }
 
-        /// <summary>
-        /// Specifies the level of events to be actually recorded.  This defaults to
-        /// <see cref="LogLevel.Info"/>.
-        /// </summary>
+        /// <inheritdoc/>
+        public void Reset()
+        {
+            lock (syncRoot)
+            {
+                LoggerCreator = null;
+                LogLevel      = LogLevel.Info;
+                EmitIndex     = true;
+                emitCount     = 0;
+
+                moduleToLogger.Clear();
+                TestLogger.ClearEvents();
+            }
+        }
+
+        /// <inheritdoc/>
         public LogLevel LogLevel
         {
             get => this.logLevel;
             set => this.logLevel = value;
         }
 
-        /// <summary>
-        /// Sets the log level by safely parsing a string.
-        /// </summary>
-        /// <param name="level">The level string or <c>null</c>.</param>
-        /// <remarks>
-        /// <para>
-        /// This method recognizes the following case insensitive values: <b>CRITICAL</b>,
-        /// <b>SERROR</b>, <b>ERROR</b>, <b>WARN</b>, <b>WARNING</b>, <b>INFO</b>, <b>SINFO</b>,
-        /// <b>INFORMATION</b>, <b>DEBUG</b>, or <b>NONE</b>.
-        /// </para>
-        /// <note>
-        /// <b>INFO</b> will be assumed if the parameter doesn't match any of the
-        /// values listed above.
-        /// </note>
-        /// </remarks>
+        /// <inheritdoc/>
         public void SetLogLevel(string level)
         {
             level = level ?? "INFO";
@@ -212,24 +237,50 @@ namespace Neon.Diagnostics
             }
         }
 
-        /// <summary>
-        /// Controls whether timestamps are emitted.  This defaults to <c>true</c>.
-        /// </summary>
+        /// <inheritdoc/>
         public bool EmitTimestamp { get; set; } = true;
 
-        /// <summary>
-        /// Controls whether the <b>index</b> field is emitted.  This is a counter start
-        /// starts at zero for each application instance and is incremented for each event 
-        /// emitted to help reconstruct exactly what happened when the system time resolution
-        /// isn't fine enough.  This defaults to <c>true</c>.
-        /// </summary>
+        /// <inheritdoc/>
         public bool EmitIndex { get; set; } = true;
 
+        /// <inheritdoc/>
+        public long GetNextEventIndex()
+        {
+            if (EmitIndex)
+            {
+                return Interlocked.Increment(ref emitCount);
+            }
+            else
+            {
+                return -1;
+            }
+        }
+
+        /// <inheritdoc/>
+        public LoggerCreatorDelegate LoggerCreator
+        {
+            get => this.loggerCreator;
+
+            set
+            {
+                // We're going to clear any cached loggers so they will be recreated
+                // using the new create function as necessary.
+
+                lock (syncRoot)
+                {
+                    moduleToLogger.Clear();
+
+                    this.loggerCreator = value;
+                }
+            }
+        }
+
         /// <summary>
-        /// Returns the logger for the existing name.
+        /// Uses the <see cref="LoggerCreator"/> function to construct a logger for a specific 
+        /// source module..
         /// </summary>
-        /// <param name="name">The case sensitive logger name.</param>
-        /// <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="Console.Error"/>.</param>
+        /// <param name="module">The case sensitive logger event source module (defaults to <c>null</c>).</param>
+        /// <param name="writer">Optionally specifies a target <see cref="TextWriter"/>.</param>
         /// <param name="contextId">
         /// Optionally specifies additional information that can be used to identify
         /// context for logged events.  For example, the Neon.Cadence client uses this 
@@ -241,16 +292,30 @@ namespace Neon.Diagnostics
         /// which will always log events.
         /// </param>
         /// <returns>The <see cref="INeonLogger"/> instance.</returns>
-        private INeonLogger InternalGetLogger(string name, TextWriter writer = null, string contextId = null, Func<bool> isLogEnabledFunc = null)
+        private INeonLogger CreateLogger(string module, TextWriter writer, string contextId, Func<bool> isLogEnabledFunc)
         {
-            name = name ?? string.Empty;
-
-            lock (nameToLogger)
+            if (LoggerCreator == null)
             {
-                if (!nameToLogger.TryGetValue(name, out var logger))
+                return new TextLogger(this, module, writer: writer, contextId: contextId, isLogEnabledFunc: isLogEnabledFunc);
+            }
+            else
+            {
+                return loggerCreator(this, module, writer: writer, contextId: contextId, isLogEnabledFunc: isLogEnabledFunc);
+            }
+        }
+
+        /// <inheritdoc/>
+        private INeonLogger InternalGetLogger(string module, TextWriter writer = null, string contextId = null, Func<bool> isLogEnabledFunc = null)
+        {
+            var moduleKey = module ?? string.Empty;
+
+            lock (syncRoot)
+            {
+                if (!moduleToLogger.TryGetValue(moduleKey, out var logger))
                 {
-                    logger = new NeonLogger(this, name, writer: writer, contextId: contextId, isLogEnabledFunc: isLogEnabledFunc);
-                    nameToLogger.Add(name, logger);
+                    logger = CreateLogger(module, writer: writer, contextId: contextId, isLogEnabledFunc: isLogEnabledFunc);
+
+                    moduleToLogger.Add(moduleKey, logger);
                 }
 
                 return logger;
@@ -258,9 +323,9 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public INeonLogger GetLogger(string sourceModule = null, string contextId = null, Func<bool> isLogEnabledFunc = null)
+        public INeonLogger GetLogger(string module = null, string contextId = null, Func<bool> isLogEnabledFunc = null)
         {
-            return InternalGetLogger(sourceModule, writer, contextId, isLogEnabledFunc);
+            return InternalGetLogger(module, writer, contextId, isLogEnabledFunc);
         }
 
         /// <inheritdoc/>

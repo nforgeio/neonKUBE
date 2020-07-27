@@ -106,8 +106,18 @@ namespace Neon.Common
                         //
                         //      https://github.com/aaubry/YamlDotNet/issues/251
                         //      https://github.com/aaubry/YamlDotNet/issues/298
+                        //
+                        // $todo(jefflill):
+                        //
+                        // This may have been fixed because @aaubry has refactored how this
+                        // all works:
+                        //
+                        //      https://github.com/aaubry/YamlDotNet/issues/427
+                        //
+                        // We should look into this in the future.  I think we can live with
+                        // the current implementation for the time being.
 
-                        .EmitDefaults()
+                        .ConfigureDefaultValuesHandling(DefaultValuesHandling.Preserve)
 
                         // We also need a custom type converter that honors [EnumMember]
                         // attributes on enumeration values.
@@ -186,30 +196,21 @@ namespace Neon.Common
             {
                 // The default parsing exceptions thrown by YamlDotNet aren't super 
                 // helpful because the actual error is reported by the inner exception.
-                // We're going to try to throw a new exception, with a nicer message.
+                // We're going to throw a new exception using the inner message,
+                // if any.
 
                 string message;
 
-                if (e.InnerException == null)
-                {
-                    // Try to extract the part of the message after
-                    // the error markers.
-
-                    message = e.Message;
-
-                    var pos = message.IndexOf("):");
-
-                    if (pos != -1)
-                    {
-                        message = message.Substring(pos + 2).Trim();
-                    }
-                }
-                else
+                if (e.InnerException != null)
                 {
                     message = e.InnerException.Message;
                 }
+                else
+                {
+                    message = e.Message;
+                }
 
-                throw new YamlException($"(line: {e.Start.Line}): {message}", e.InnerException);
+                throw new YamlException(e.Start, e.End, message ?? e.Message, e.InnerException);
             }
         }
 

@@ -37,9 +37,6 @@ namespace Neon.Temporal
         }
 
         /// <inheritdoc/>
-        internal override TemporalErrorTypes TemporalErrorType => TemporalErrorTypes.Generic;
-
-        /// <inheritdoc/>
-        internal override string Reason => "cadenceInternal:Generic";
+        internal override TemporalErrorType TemporalErrorType => TemporalErrorType.Generic;
     }
 }

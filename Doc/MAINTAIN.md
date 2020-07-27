@@ -66,7 +66,7 @@ apt-cache madison kubelet
 
 # Hyper-V and XenServer OS Images
 
-**Ubuntu 18.04:** [releases](http://releases.ubuntu.com/18.04/) - current **18.04.1**
+**Ubuntu 20.04:** [releases](http://releases.ubuntu.com/20.04/) - current **20.04.0**
 
 Follow the Hyper-V and XenServer template instructions in the `$/Doc` folder.
 
@@ -94,9 +94,9 @@ Follow the Hyper-V and XenServer template instructions in the `$/Doc` folder.
 
   **NOTE:** Download the ZIP archive and replace the **$/External/Powershell-win-x86.zip** file.
 
-3. **Ubuntu Node Disk Templates:** - current **18.04.1**
+3. **Ubuntu Node Disk Templates:** - current **20.04.0**
 
-  Check for new Ubuntu 18.04 releases and build new templates
+  Check for new Ubuntu 20.04 releases and build new templates
 
 # Cadence
 

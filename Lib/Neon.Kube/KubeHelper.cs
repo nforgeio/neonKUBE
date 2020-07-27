@@ -1559,11 +1559,13 @@ public class ISOFile
 
         /// <summary>
         /// Creates an ISO file containing the <b>neon-node-prep.sh</b> script that 
-        /// will provide the information to <b>cloud-init</b> when cluster nodes
-        /// are prepared on non-cloud virtualization hosts like Hyper-V and XenServer.
+        /// will be used for confguring the node on first boot.  This includes disabling
+        /// the APT package update services, setting a secure password for the [sysadmin]
+        /// account, and configuring the network interface with the configured static IP.
         /// </summary>
-        /// <param name="clusterDefinition"></param>
-        /// <param name="nodeDefinition"></param>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="nodeDefinition">The node definition.</param>
+        /// <param name="securePassword">The new secure SSH password.</param>
         /// <returns>A <see cref="TempFile"/> that references the generated ISO file.</returns>
         /// <remarks>
         /// <para>
@@ -1571,9 +1573,7 @@ public class ISOFile
         /// insert the ISO into the node VM's DVD/CD drive before booting the node
         /// for the first time.  The <b>neon-node-prep</b> service configured on
         /// the corresponding node templates will look for this DVD and script and
-        /// execute it early during the node boot process, before <b>cloud-init</b>
-        /// runs.  When <b>cloud-init</b> runs, it will complete the basic node
-        /// preparation.
+        /// execute it early during the node boot process.
         /// </para>
         /// <para>
         /// The ISO file reference is returned as a <see cref="TempFile"/>.  The
@@ -1583,8 +1583,13 @@ public class ISOFile
         /// </remarks>
         public static TempFile CreateNodePrepIso(
             ClusterDefinition       clusterDefinition,
-            NodeDefinition          nodeDefinition)
+            NodeDefinition          nodeDefinition,
+            string                  securePassword)
         {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<ArgumentNullException>(nodeDefinition != null, nameof(nodeDefinition));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(securePassword), nameof(securePassword));
+
             var address       = nodeDefinition.PrivateAddress;
             var gateway       = clusterDefinition.Network.Gateway;
             var premiseSubnet = NetworkCidr.Parse(clusterDefinition.Network.PremiseSubnet);
@@ -1600,12 +1605,50 @@ public class ISOFile
 
             var nodePrepScript =
 $@"# This script is called by the [neon-node-prep] service when the prep
-# floppy is inserted on first boot.  This script handles configuring the
+# DVD is inserted on first boot.  This script handles configuring the
 # network.
 #
-# The first parameter will be passed as the path where the floppy is mounted.
+# The first parameter will be passed as the path where the DVD is mounted.
 
-floppyFolder=${1}
+mountFolder=${{1}}
+
+#------------------------------------------------------------------------------
+# Disable the [apt-timer] and [apt-daily] services.  We're doing this 
+# for two reasons:
+#
+#   1. These services interfere with with [apt-get] usage during
+#      cluster setup and is also likely to interfere with end-user
+#      configuration activities as well.
+#
+#   2. Automatic updates for production and even test clusters is
+#      just not a great idea.  You just don't want a random update
+#      applied in the middle of the night that might cause trouble.
+#
+# We're going to implement our cluster updating machanism.
+
+systemctl stop apt-daily.timer
+systemctl mask apt-daily.timer
+
+systemctl stop apt-daily.service
+systemctl mask apt-daily.service
+
+# It may be possible for the auto updater to already be running so we'll
+# wait here for it to release any lock files it holds.
+
+while fuser /var/{{lib /{{dpkg,apt/lists}},cache/apt/archives}}/lock; do
+    sleep 1
+done
+
+#------------------------------------------------------------------------------
+# Change the [sysadmin] user password from the hardcoded [sysadmin0000] password
+# to something secure.  Doing this here before the network is configured means 
+# that there's no time when bad guys can SSH into the node using the insecure
+# password.
+
+echo 'sysadmin:{securePassword}' | chpasswd
+
+#------------------------------------------------------------------------------
+# Configure the network.
 
 echo ""Configure network: {address}""
 
@@ -1669,13 +1712,21 @@ exit 0
             }
         }
 
+#if NO_BUILD
+        // $note(jefflill):
+        //
+        // I'm commenting this out because we went with DVDs rather than floppy discs
+        // for first boot node node configuration on hypervisors but I want to keep
+        // this around in case we want to do something like this again in the future.
+
         /// <summary>
         /// Creates an floppy VFD file containing the <b>neon-node-prep.sh</b> script that 
         /// will provide the information to <b>cloud-init</b> when cluster nodes
         /// are prepared on non-cloud virtualization hosts like Hyper-V and XenServer.
         /// </summary>
-        /// <param name="clusterDefinition"></param>
-        /// <param name="nodeDefinition"></param>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="nodeDefinition">The node definition.</param>
+        /// <param name="nodePrepScript">The node preparation script.</param>
         /// <returns>A <see cref="TempFile"/> that references the generated VFD file.</returns>
         /// <remarks>
         /// <para>
@@ -1699,8 +1750,11 @@ exit 0
         /// </remarks>
         public static TempFile CreateNodePrepVfd(
             ClusterDefinition       clusterDefinition,
-            NodeDefinition          nodeDefinition)
+            NodeDefinition          nodeDefinition,
+            string                  nodePrepScript)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodePrepScript), nameof(nodePrepScript));
+
             // This is the special purpose VFD file contents compressed via GZIP.
 
             var vfdGzip = new byte[]
@@ -1793,48 +1847,6 @@ exit 0
                 sbNameservers.AppendWithSeparator(nameserver.ToString(), ",");
             }
 
-            var nodePrepScript =
-$@"# This script is called by the [neon-node-prep] service when the prep
-# floppy is inserted on first boot.  This script handles configuring the
-# network.
-#
-# The first parameter will be passed as the path where the floppy is mounted.
-
-floppyFolder=${1}
-
-echo ""Configure network: {address}""
-
-rm /etc/netplan/*
-
-cat <<EOF > /etc/netplan/static.yaml
-# Static network configuration initialized during first boot by the 
-# [neon-node-prep] service from a virtual floppy inserted during
-# cluster prepare.
-
-network:
-  version: 2
-  renderer: networkd
-  ethernets:
-    eth0:
-     dhcp4: no
-     addresses: [{address}/{premiseSubnet.PrefixLength}]
-     gateway4: {gateway}
-     nameservers:
-       addresses: [{sbNameservers}]
-EOF
-
-echo ""Restart network""
-
-netplan apply
-
-if [ ! $? ] ; then
-    echo ""ERROR: Network restart failed.""
-    exit 1
-fi
-
-echo ""Done""
-exit 0
-";
             nodePrepScript = nodePrepScript.Replace("\r\n", "\n");  // Linux line endings
 
             // This is the tricky part.  The floppy image contains only the [neon-node-prep.sh]
@@ -1946,6 +1958,258 @@ exit 0
             File.WriteAllBytes(vfdFile.Path, vfdBytes);
 
             return vfdFile;
+        }
+#endif // NO_BUILD
+
+        /// <summary>
+        /// Writes a message to a log writer action when it's not <c>null</c>.
+        /// </summary>
+        /// <param name="logWriter">The log writer action ot <c>null</c>.</param>
+        /// <param name="message">The message or <c>null</c> to wtite a blank line.</param>
+        private static void WriteLog(Action<string> logWriter, string message = null)
+        {
+            if (logWriter != null)
+            {
+                logWriter(message ?? string.Empty);
+            }
+        }
+
+        /// <summary>
+        /// Performs low-level initialization of a cluster node.  This is applied one time to
+        /// Hyper-V and XenServer/XCP-ng node templates when they are created and at cluster
+        /// creation time for cloud and bare metal based clusters.  The node must already
+        /// be booted and running.
+        /// </summary>
+        /// <param name="node">The node's SSH proxy.</param>
+        /// <param name="sshPassword">The current <b>sysadmin</b> password.</param>
+        /// <param name="updateDistribution">Optionally upgrade the node's Linux distribution.  This defaults to <c>false</c>.</param>
+        /// <param name="logWriter">Action that writes a line of text to the operation output log or console (or <c>null</c>).</param>
+        public static void InitializeNode(SshProxy<NodeDefinition> node, string sshPassword, bool updateDistribution = false, Action<string> logWriter = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sshPassword), nameof(sshPassword));
+
+            // $hack(jefflill):
+            //
+            // This method is going to be called for two different scenarios that will each
+            // call for different logging mechanisms.
+            //
+            //      1. For the [neon prepare node-termplate] command, we're simply going 
+            //         to write status to the console as lines via the [logWriter].
+            //
+            //      2. For node preparation for cloud and bare metal clusters, we're
+            //         going to set the node status and use the standard setup progress
+            //         mechanism to display the status.
+            //
+            // [logWriter] will be NULL for the second scenario so we'll call the log helper
+            // method above which won't do anything.
+            //
+            // For scenario #1, there is no setup display mechanism, so updating node status
+            // won't actually display anything, so we'll just set the status as well without
+            // harming anything.
+
+            // Wait for boot/connect.
+
+            WriteLog(logWriter, $"Login:    [{KubeConst.SysAdminUsername}]");
+            node.Status = $"login: [{KubeConst.SysAdminUsername}]";
+
+            node.WaitForBoot();
+
+            // Disable and mask the auto update services to avoid conflicts with
+            // our package operations.  We're going to implement our own cluster
+            // updating mechanism.
+
+            WriteLog(logWriter, $"Disable:  auto updates");
+            node.Status = "disable: auto updates";
+
+            node.SudoCommand("systemctl stop apt-daily.timer", RunOptions.None);
+            node.SudoCommand("systemctl mask apt-daily.timer", RunOptions.None);
+
+            node.SudoCommand("systemctl stop apt-daily.service", RunOptions.None);
+            node.SudoCommand("systemctl mask apt-daily.service", RunOptions.None);
+
+            // Wait for the apt-get lock to be released if somebody is holding it.
+
+            WriteLog(logWriter, $"Wait:     for pending updates");
+            node.Status = "wait: for pending updates";
+
+            while (node.SudoCommand("fuser /var/{lib/{dpkg,apt/lists},cache/apt/archives}/lock", RunOptions.None).ExitCode == 0)
+            {
+                Thread.Sleep(TimeSpan.FromSeconds(1));
+            }
+
+            // Disable sudo password prompts and reconnect.
+
+            WriteLog(logWriter, "Disable:  [sudo] password");
+            node.Status = "disable: sudo password";
+            node.DisableSudoPrompt(sshPassword);
+
+            WriteLog(logWriter, $"Login:    [{KubeConst.SysAdminUsername}]");
+            node.Status = "reconnecting...";
+            node.WaitForBoot();
+
+            // Install required packages and ugrade the distribution if requested.
+
+            WriteLog(logWriter, "Install:  packages");
+            node.Status = "install: packages";
+            node.SudoCommand("apt-get update", RunOptions.FaultOnError);
+            node.SudoCommand("apt-get install -yq --allow-downgrades zip secure-delete", RunOptions.FaultOnError);
+
+            if (updateDistribution)
+            {
+                WriteLog(logWriter, "Upgrade:  linux");
+                node.Status = "upgrade linux";
+                node.SudoCommand("apt-get dist-upgrade -yq");
+            }
+
+            // Disable SWAP by editing [/etc/fstab] to remove the [/swap.img] line.
+
+            WriteLog(logWriter, "Disable:  swap");
+            node.Status = "disable: swap";
+
+            var sbFsTab = new StringBuilder();
+
+            using (var reader = new StringReader(node.DownloadText("/etc/fstab")))
+            {
+                foreach (var line in reader.Lines())
+                {
+                    if (!line.Contains("/swap.img"))
+                    {
+                        sbFsTab.AppendLine(line);
+                    }
+                }
+            }
+
+            node.UploadText("/etc/fstab", sbFsTab, permissions: "644", owner: "root:root");
+
+            // We need to relocate the [sysadmin] UID/GID to 1234 so we
+            // can create the [container] user and group at 1000.  We'll
+            // need to create a temporary user with root permissions to
+            // delete and then recreate the [sysadmin] account.
+
+            WriteLog(logWriter, "Create:   [temp] user");
+            node.Status = "create: [temp] user";
+
+            var tempUserScript =
+$@"#!/bin/bash
+
+# Create the [temp] user.
+
+useradd --uid 5000 --create-home --groups root temp
+echo 'temp:{sshPassword}' | chpasswd
+chown temp:temp /home/temp
+
+# Add [temp] to the same groups that [sysadmin] belongs to
+# other than the [sysadmin] group.
+
+adduser temp adm
+adduser temp cdrom
+adduser temp sudo
+adduser temp dip
+adduser temp plugdev
+adduser temp lxd
+";
+            node.SudoCommand(CommandBundle.FromScript(tempUserScript), RunOptions.FaultOnError);
+
+            // Reconnect with the [temp] account so we can relocate the [sysadmin]
+            // user and its group ID to ID=1234.
+
+            WriteLog(logWriter, $"Login:    [temp]");
+            node.Status = "login: [temp]";
+
+            node.UpdateCredentials(SshCredentials.FromUserPassword("temp", sshPassword));
+            node.Connect();
+
+            // Beginning with Ubuntu 20.04 we're seeing [systemd/(sd-pam)] processes 
+            // hanging around for a while for the [sysadmin] user which prevents us 
+            // from deleting the [temp] user below.  We're going to handle this by
+            // killing any [temp] user processes first.
+
+            WriteLog(logWriter, "Kill:     [sysadmin] user processes");
+            node.Status = "kill: [sysadmin] processes";
+            node.SudoCommand("pkill -u sysadmin --signal 9");
+
+            // Relocate the [sysadmin] user to from [uid=1000:gid=1000} to [1234:1234]:
+
+            var sysadminUserScript =
+$@"#!/bin/bash
+
+# Update all file references from the old to new [sysadmin]
+# user and group IDs:
+
+find / -group 1000 -exec chgrp -h {KubeConst.SysAdminGroup} {{}} \;
+find / -user 1000 -exec chown -h {KubeConst.SysAdminUsername} {{}} \;
+
+# Relocate the [sysadmin] UID and GID:
+
+groupmod --gid {KubeConst.SysAdminGID} {KubeConst.SysAdminGroup}
+usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups root,sysadmin,sudo {KubeConst.SysAdminUsername}
+";
+            WriteLog(logWriter, "Relocate: [sysadmin] user/group IDs");
+            node.Status = "relocate: [sysadmin] user/group IDs";
+            node.SudoCommand(CommandBundle.FromScript(sysadminUserScript), RunOptions.FaultOnError);
+
+            WriteLog(logWriter, $"Logout");
+            node.Status = "logout";
+
+            // We need to reconnect again with [sysadmin] so we can remove
+            // the [temp] user, create the [container] user and then
+            // wrap things up.
+
+            node.SudoCommand(CommandBundle.FromScript(tempUserScript), RunOptions.FaultOnError);
+            WriteLog(logWriter, $"Login:    [{KubeConst.SysAdminUsername}]");
+            node.Status = $"login: [{KubeConst.SysAdminUsername}]";
+
+            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, sshPassword));
+            node.Connect();
+
+            // Beginning with Ubuntu 20.04 we're seeing [systemd/(sd-pam)] processes 
+            // hanging around for a while for the [temp] user which prevents us 
+            // from deleting the [temp] user below.  We're going to handle this by
+            // killing any [temp] user processes first.
+
+            WriteLog(logWriter, "Kill:     [temp] user processes");
+            node.Status = "kill: [temp] user processes";
+            node.SudoCommand("pkill -u temp");
+
+            // Remove the [temp] user.
+
+            WriteLog(logWriter, "Remove:   [temp] user");
+            node.Status = "remove: [temp] user";
+            node.SudoCommand($"rm -rf /home/temp", RunOptions.FaultOnError);
+
+            // Ensure that the owner and group for files in the [sysadmin]
+            // home folder are correct.
+
+            WriteLog(logWriter, "Set:      [sysadmin] home folder owner");
+            node.Status = "set: [sysadmin] home folder owner";
+            node.SudoCommand($"chown -R {KubeConst.SysAdminUsername}:{KubeConst.SysAdminGroup} .*", RunOptions.FaultOnError);
+
+            // Create the [container] user with no home directory.  This
+            // means that the [container] user will have no chance of
+            // logging into the machine.
+
+            WriteLog(logWriter, $"Create:   [{KubeConst.ContainerUsername}] user");
+            node.Status = $"create: [{KubeConst.ContainerUsername}] user";
+            node.SudoCommand($"useradd --uid {KubeConst.ContainerUID} --no-create-home {KubeConst.ContainerUsername}", RunOptions.FaultOnError);
+        }
+
+        /// <summary>
+        /// Ensures that the node operating system and version is supported for a neonKUBE
+        /// cluster.  This faults the nodeproxy on faliure.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        internal static void VerifyNodeOs(SshProxy<NodeDefinition> node)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+
+            node.Status = "check: OS";
+
+            // $todo(jefflill): We're currently hardcoded to Ubuntu 20.04.x
+
+            if (!node.OsName.Equals("Ubuntu", StringComparison.InvariantCultureIgnoreCase) || node.OsVersion < Version.Parse("20.04"))
+            {
+                node.Fault("Expected: Ubuntu 20.04+");
+            }
         }
     }
 }

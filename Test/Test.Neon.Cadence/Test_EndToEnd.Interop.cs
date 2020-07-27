@@ -299,9 +299,13 @@ namespace TestCadence
                 {
                     await stub.GetResultAsync();
                 }
+                catch (CadenceGenericException e)
+                {
+                    Assert.Equal("error message", e.Reason);
+                }
                 catch (Exception e)
                 {
-                    Assert.Equal("error message", e.Message);
+                    Assert.True(false, $"Expected [{typeof(CadenceGenericException).FullName}] not [{e.GetType().FullName}].");
                 }
 
                 //-----------------------------------------

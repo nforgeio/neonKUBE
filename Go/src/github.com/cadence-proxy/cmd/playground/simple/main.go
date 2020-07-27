@@ -59,6 +59,10 @@ func main() {
 		panic(err)
 	}
 
+	if err != nil {
+		h.Logger.Error("Activity Completion Error", zap.Error(err))
+	}
+
 	// log response
 	h.Logger.Debug("Resp", zap.Any("Execution Info", *resp))
 

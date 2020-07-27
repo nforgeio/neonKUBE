@@ -1,0 +1,31 @@
+name: home-small
+datacenter: sultan
+environment: development
+linuxDistribution: ubuntu
+linuxVersion: 20.04.latest
+timeSources:
+- pool.ntp.org
+allowUnitTesting: true
+kubernetes:
+  allowPodsOnMasters: true
+hosting:
+  environment: hyperv-local
+  vmDriveFolder: D:\\VM
+network:
+  premiseSubnet: 10.0.0.0/16
+  nodesSubnet: 10.0.0.0/16
+nodeOptions:
+  upgrade: none
+nodes:
+  master-0:
+    role: master
+    privateAddress: 10.0.1.30
+  worker-0:
+    role: worker
+    privateAddress: 10.0.1.40
+  worker-1:
+    role: worker
+    privateAddress: 10.0.1.41
+  worker-2:
+    role: worker
+    privateAddress: 10.0.1.42

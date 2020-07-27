@@ -65,25 +65,25 @@ namespace Neon.Diagnostics
         Warn = 400,
 
         /// <summary>
-        /// Describes a normal operation or condition.
-        /// </summary>
-        Info = 500,
-
-        /// <summary>
         /// Describes a non-error security operation or condition, such as a 
         /// a successful login or authentication.
         /// </summary>
-        SInfo = 600,
+        SInfo = 500,
 
         /// <summary>
-        /// Indicates a transient error, typically logged by <see cref="Neon.Retry.IRetryPolicy"/>
+        /// Describes a normal operation or condition.
+        /// </summary>
+        Info = 600,
+
+        /// <summary>
+        /// Indicates a transient error, typically logged by a <see cref="Neon.Retry.IRetryPolicy"/>
         /// implementations.
         /// </summary>
-        Transient = 650,
+        Transient = 700,
 
         /// <summary>
         /// Describes detailed debug or diagnostic information.
         /// </summary>
-        Debug = 700
+        Debug = 800
     }
 }
