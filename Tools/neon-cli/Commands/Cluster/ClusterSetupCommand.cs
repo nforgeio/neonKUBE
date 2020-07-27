@@ -845,14 +845,14 @@ defaults
     timeout check           5000
     timeout http-keep-alive 500
 
-frontend kubernetes-masters
+frontend kubernetes_masters
     bind                    *:6442
     mode                    tcp
     log                     global
     option                  tcplog
-    use_backend             kubernetes-masters
+    default_backend         kubernetes_masters_backend
 
-backend kubernetes-masters
+backend kubernetes_masters_backend
     mode                    tcp
     balance                 roundrobin");
 
@@ -860,7 +860,7 @@ backend kubernetes-masters
             {
                 sbHaProxy.Append(
 $@"
-server {master.Name}         {master.PrivateAddress}:6443");
+    server {master.Name}         {master.PrivateAddress}:6443");
             }
 
             foreach (var node in cluster.Nodes)
@@ -872,12 +872,13 @@ server {master.Name}         {master.PrivateAddress}:6443");
 
                         node.UploadText("/etc/neonkube/neon-proxy.cfg", sbHaProxy);
 
+
                         node.SudoCommand(@"docker run \
                                             --name neon-proxy \
                                             --detach \
                                             --restart=always \
                                             -v /etc/neonkube/neon-proxy.cfg:/etc/haproxy/haproxy.cfg \
-                                            --network host
+                                            --network host \
                                             --log-driver json-file \
                                             nkubeio/haproxy");
                     });
@@ -1273,16 +1274,23 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     var kubeConfigPath = KubeHelper.KubeConfigPath;
 
+                    // $todo(marcus.bowyer):
+                    // This is hard coding the kubeconfig to point to the first master.
+                    // Issue https://github.com/nforgeio/neonKUBE/issues/888 will fix this by adding a proxy to neon-desktop
+                    // and load balancing requests across the k8s api servers.
+                    var configText = kubeContextExtension.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text;
+                    configText = configText.Replace("kubernetes-masters", $"{cluster.Definition.Masters.FirstOrDefault().PrivateAddress}");
+
                     if (!File.Exists(kubeConfigPath))
                     {
-                        File.WriteAllText(kubeConfigPath, kubeContextExtension.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
+                        File.WriteAllText(kubeConfigPath, configText);
                     }
                     else
                     {
                         // The user already has an existing kubeconfig, so we need
                         // to merge in the new config.
 
-                        var newConfig = NeonHelper.YamlDeserialize<KubeConfig>(kubeContextExtension.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text);
+                        var newConfig = NeonHelper.YamlDeserialize<KubeConfig>(configText);
                         var existingConfig = KubeHelper.Config;
 
                         // Remove any existing user, context, and cluster with the same names.
@@ -1395,42 +1403,42 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     // Install the Helm/Tiller service.  This will install the latest stable version.
 
-                    firstMaster.InvokeIdempotentAction("setup/cluster-deploy-helm",
-                        () =>
-                        {
-                            firstMaster.Status = "deploy: helm/tiller";
+//                    firstMaster.InvokeIdempotentAction("setup/cluster-deploy-helm",
+//                        () =>
+//                        {
+//                            firstMaster.Status = "deploy: helm/tiller";
 
-                            firstMaster.KubectlApply(
-@"
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: tiller
-  namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: tiller
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: cluster-admin
-subjects:
-- kind: ServiceAccount
-  name: tiller
-  namespace: kube-system
-");
+//                            firstMaster.KubectlApply(
+//@"
+//apiVersion: v1
+//kind: ServiceAccount
+//metadata:
+//  name: tiller
+//  namespace: kube-system
+//---
+//apiVersion: rbac.authorization.k8s.io/v1
+//kind: ClusterRoleBinding
+//metadata:
+//  name: tiller
+//roleRef:
+//  apiGroup: rbac.authorization.k8s.io
+//  kind: ClusterRole
+//  name: cluster-admin
+//subjects:
+//- kind: ServiceAccount
+//  name: tiller
+//  namespace: kube-system
+//");
 
-                            // $hack(marcus.bowyer)
-                            // helm init doesn't work on k8s 1.16.0 yet.
-                            var script =
-$@"#!/bin/bash
+//                            // $hack(marcus.bowyer)
+//                            // helm init doesn't work on k8s 1.16.0 yet.
+//                            var script =
+//$@"#!/bin/bash
 
-helm init --service-account tiller --output yaml | sed 's@apiVersion: extensions/v1beta1@apiVersion: apps/v1@' | sed 's@  replicas: 1@  replicas: 1\n  selector: {{""matchLabels"": {{""app"": ""helm"", ""name"": ""tiller""}}}}@' | kubectl apply -f -
-";
-                            firstMaster.SudoCommand(CommandBundle.FromScript(script));
-                        });
+//helm init --service-account tiller --output yaml | sed 's@apiVersion: extensions/v1beta1@apiVersion: apps/v1@' | sed 's@  replicas: 1@  replicas: 1\n  selector: {{""matchLabels"": {{""app"": ""helm"", ""name"": ""tiller""}}}}@' | kubectl apply -f -
+//";
+//                            firstMaster.SudoCommand(CommandBundle.FromScript(script));
+//                        });
 
                     // Create the cluster's [root-user]:
 
@@ -1615,115 +1623,200 @@ rm /tmp/calico.yaml
 
             master.Status = "deploy: istio";
 
-//            var istioScript0 =
-//$@"#!/bin/bash
-
-//curl -sL https://istio.io/downloadIstioctl | sh -
-
-//export PATH=$PATH:$HOME/.istioctl/bin
-
-//istioctl operator init
-
-//kubectl create ns istio-system
-
-//cat <<EOF > istio-cni.yaml
-//apiVersion: install.istio.io/v1alpha1
-//kind: IstioOperator
-//spec:
-//  components:
-//    cni:
-//      enabled: true
-//    egressGateways:
-//      enabled: true
-//  values:
-//    cni:
-//      excludeNamespaces:
-//       - istio-system
-//       - kube-system
-//      logLevel: info
-//EOF
-
-//istioctl install -f istio-cni.yaml
-//";
-
-            var istioScript1 =
+            var istioScript0 =
 $@"#!/bin/bash
 
-# Enable sidecar injection.
+curl -sL https://istio.io/downloadIstioctl | sh -
 
-kubectl label namespace default istio-injection=enabled
+export PATH=$PATH:$HOME/.istioctl/bin
 
-# Create istio-system namespace:
+istioctl operator init
 
-kubectl create namespace istio-system
+kubectl create ns istio-system
 
-# Download and extract the Istio binaries:
+cat <<EOF > istio-cni.yaml
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  namespace: istio-system
+  name: istiocontrolplane
+spec:
+  hub: docker.io/istio
+  tag: 1.6.4
+  meshConfig:
+    rootNamespace: istio-system
+  components:
+    ingressGateways:
+    - name: istio-ingressgateway
+      enabled: true
+      k8s:
+        hpaSpec:
+          maxReplicas: 5
+          minReplicas: 1
+          scaleTargetRef:
+            apiVersion: apps/v1
+            kind: Deployment
+            name: istio-ingressgateway
+          metrics:
+            - type: Resource
+              resource:
+                name: cpu
+                targetAverageUtilization: 80
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 2000m
+            memory: 1024Mi
+        strategy:
+          rollingUpdate:
+            maxSurge: ""100%""
+            maxUnavailable: ""25%""
+    cni:
+      enabled: true
+      namespace: kube-system
+  values:
+    global:
+      istiod:
+        enabled: true
+      logging:
+        level: ""default:info""
+      logAsJson: true
+    meshConfig:
+      accessLogFile: ""/dev/stdout""
+      accessLogFormat: '{{   ""authority"": ""%REQ(:AUTHORITY)%"",   ""mode"": ""%PROTOCOL%"",   ""upstream_service_time"": ""%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%"",   ""upstream_local_address"": ""%UPSTREAM_LOCAL_ADDRESS%"",   ""duration"": ""%DURATION%"",   ""request_duration"": ""%REQUEST_DURATION%"",   ""response_duration"": ""%RESPONSE_DURATION%"",   ""response_tx_duration"": ""%RESPONSE_TX_DURATION%"",   ""downstream_local_address"": ""%DOWNSTREAM_LOCAL_ADDRESS%"",   ""upstream_transport_failure_reason"": ""%UPSTREAM_TRANSPORT_FAILURE_REASON%"",   ""route_name"": ""%ROUTE_NAME%"",   ""response_code"": ""%RESPONSE_CODE%"",   ""response_code_details"": ""%RESPONSE_CODE_DETAILS%"",   ""user_agent"": ""%REQ(USER-AGENT)%"",   ""response_flags"": ""%RESPONSE_FLAGS%"",   ""start_time"": ""%START_TIME(%s.%6f)%"",   ""method"": ""%REQ(:METHOD)%"",   ""host"": ""%REQ(:Host)%"",   ""referer"": ""%REQ(:Referer)%"",   ""request_id"": ""%REQ(X-REQUEST-ID)%"",   ""forwarded_host"": ""%REQ(X-FORWARDED-HOST)%"",   ""forwarded_proto"": ""%REQ(X-FORWARDED-PROTO)%"",   ""upstream_host"": ""%UPSTREAM_HOST%"",   ""downstream_local_uri_san"": ""%DOWNSTREAM_LOCAL_URI_SAN%"",   ""downstream_peer_uri_san"": ""%DOWNSTREAM_PEER_URI_SAN%"",   ""downstream_local_subject"": ""%DOWNSTREAM_LOCAL_SUBJECT%"",   ""downstream_peer_subject"": ""%DOWNSTREAM_PEER_SUBJECT%"",   ""downstream_peer_issuer"": ""%DOWNSTREAM_PEER_ISSUER%"",   ""downstream_tls_session_id"": ""%DOWNSTREAM_TLS_SESSION_ID%"",   ""downstream_tls_cipher"": ""%DOWNSTREAM_TLS_CIPHER%"",   ""downstream_tls_version"": ""%DOWNSTREAM_TLS_VERSION%"",   ""downstream_peer_serial"": ""%DOWNSTREAM_PEER_SERIAL%"",   ""downstream_peer_cert"": ""%DOWNSTREAM_PEER_CERT%"",   ""client_ip"": ""%REQ(X-FORWARDED-FOR)%"",   ""requested_server_name"": ""%REQUESTED_SERVER_NAME%"",   ""bytes_received"": ""%BYTES_RECEIVED%"",   ""bytes_sent"": ""%BYTES_SENT%"",   ""upstream_cluster"": ""%UPSTREAM_CLUSTER%"",   ""downstream_remote_address"": ""%DOWNSTREAM_REMOTE_ADDRESS%"",   ""path"": ""%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%"" }}'
+      accessLogEncoding: ""JSON""
+    gateways:
+      istio-ingressgateway:
+        type: NodePort
+        sds:
+          enabled: true
+        ports:
+        - port: 80
+          nodePort: 30080
+          name: http2
+        - port: 443
+          nodePort: 30443
+          name: https
+        - port: 15443
+          targetPort: 15443
+          name: tls
+    prometheus:
+      enabled: false
+    grafana:
+      enabled: false
+    istiocoredns:
+      enabled: true
+      coreDNSImage: coredns/coredns
+      coreDNSTag: 1.6.2
+      coreDNSPluginImage: istio/coredns-plugin:0.2-istio-1.1
+    kiali:
+      enabled: true
+      replicaCount: 1
+      hub: quay.io/kiali
+      tag: v1.9
+      contextPath: /kiali
+      nodeSelector: {{}}
+      podAntiAffinityLabelSelector: []
+      podAntiAffinityTermLabelSelector: []
+      dashboard:
+        secretName: kiali
+        usernameKey: username
+        passphraseKey: passphrase
+        viewOnlyMode: false
+        grafanaURL: http://grafana.monitoring
+      prometheusNamespace: monitoring
+      createDemoSecret: false
+    cni:
+      excludeNamespaces:
+       - istio-system
+       - kube-system
+       - jobs
+      logLevel: info
+EOF
 
-cd /tmp
-curl {Program.CurlOptions} {kubeSetupInfo.IstioLinuxUri} > istio.tar.gz
-tar xvf /tmp/istio.tar.gz
-mv istio-{kubeSetupInfo.Versions.Istio} istio
-cd istio
-
-# Copy the tools:
-
-chmod 330 bin/*
-cp bin/* /usr/local/bin
-
-# Install Istio's CRDs:
-
-helm template install/kubernetes/helm/istio-init --name istio-init --set certmanager.enabled=true --namespace istio-system | kubectl apply -f -
-
-# Verify that all 28 Istio CRDs were committed to the Kubernetes api-server
-
-until [ `kubectl get crds | grep 'istio.io\|certmanager.k8s.io' | wc -l` == ""28"" ]; do
-    sleep 1
-done
-
-# Install Istio:
-
-helm template install/kubernetes/helm/istio \
-    --name istio \
-    --namespace istio-system \
-    --set global.defaultNodeSelector.""neonkube\.io/istio""=true \
-    --set istio_cni.enabled=true \
-    --set global.proxy.accessLogFile=/dev/stdout \
-    --set kiali.enabled=false \
-    --set tracing.enabled=true \
-    --set grafana.enabled=false \
-    --set prometheus.enabled=false \
-    --set certmanager.enabled=true \
-    --set certmanager.email=mailbox@donotuseexample.com \
-	--set gateways.istio-egressgateway.enabled=true \
+istioctl install -f istio-cni.yaml
 ";
-            if (cluster.Definition.Network.Ingress.Count > 0)
-            {
-                istioScript1 +=
-$@" \
-    --set gateways.istio-ingressgateway.sds.enabled=true \
-    --set gateways.istio-ingressgateway.type=NodePort \
-";
-                for (var i = 0; i < cluster.Definition.Network.Ingress.Count; i++)
-                {
-                    istioScript1 +=
-$@" \
-    --set gateways.istio-ingressgateway.ports[{i}].targetPort={cluster.Definition.Network.Ingress[i].TargetPort} \
-    --set gateways.istio-ingressgateway.ports[{i}].port={cluster.Definition.Network.Ingress[i].Port} \
-    --set gateways.istio-ingressgateway.ports[{i}].name={cluster.Definition.Network.Ingress[i].Name} \
-    --set gateways.istio-ingressgateway.ports[{i}].nodePort={cluster.Definition.Network.Ingress[i].NodePort} \
-";
-                }
-            }
 
-            istioScript1 +=
-$@" \
-    | kubectl apply -f -
+//            var istioScript1 =
+//$@"#!/bin/bash
 
-until [ `kubectl get pods --namespace istio-system --field-selector=status.phase!=Succeeded,status.phase!=Running | wc -l` == ""0"" ]; do
-    sleep 1
-done
-";
-            master.SudoCommand(CommandBundle.FromScript(istioScript1));
+//# Enable sidecar injection.
+
+//kubectl label namespace default istio-injection=enabled
+
+//# Create istio-system namespace:
+
+//kubectl create namespace istio-system
+
+//# Download and extract the Istio binaries:
+
+//cd /tmp
+//curl {Program.CurlOptions} {kubeSetupInfo.IstioLinuxUri} > istio.tar.gz
+//tar xvf /tmp/istio.tar.gz
+//mv istio-{kubeSetupInfo.Versions.Istio} istio
+//cd istio
+
+//# Copy the tools:
+
+//chmod 330 bin/*
+//cp bin/* /usr/local/bin
+
+//# Install Istio's CRDs:
+
+//helm template install/kubernetes/helm/istio-init --name istio-init --set certmanager.enabled=true --namespace istio-system | kubectl apply -f -
+
+//# Verify that all 28 Istio CRDs were committed to the Kubernetes api-server
+
+//until [ `kubectl get crds | grep 'istio.io\|certmanager.k8s.io' | wc -l` == ""28"" ]; do
+//    sleep 1
+//done
+
+//# Install Istio:
+
+//helm template install/kubernetes/helm/istio \
+//    --name istio \
+//    --namespace istio-system \
+//    --set global.defaultNodeSelector.""neonkube\.io/istio""=true \
+//    --set istio_cni.enabled=true \
+//    --set global.proxy.accessLogFile=/dev/stdout \
+//    --set kiali.enabled=false \
+//    --set tracing.enabled=true \
+//    --set grafana.enabled=false \
+//    --set prometheus.enabled=false \
+//    --set certmanager.enabled=true \
+//    --set certmanager.email=mailbox@donotuseexample.com \
+//	--set gateways.istio-egressgateway.enabled=true \
+//";
+//            if (cluster.Definition.Network.Ingress.Count > 0)
+//            {
+//                istioScript1 +=
+//$@" \
+//    --set gateways.istio-ingressgateway.sds.enabled=true \
+//    --set gateways.istio-ingressgateway.type=NodePort \
+//";
+//                for (var i = 0; i < cluster.Definition.Network.Ingress.Count; i++)
+//                {
+//                    istioScript1 +=
+//$@" \
+//    --set gateways.istio-ingressgateway.ports[{i}].targetPort={cluster.Definition.Network.Ingress[i].TargetPort} \
+//    --set gateways.istio-ingressgateway.ports[{i}].port={cluster.Definition.Network.Ingress[i].Port} \
+//    --set gateways.istio-ingressgateway.ports[{i}].name={cluster.Definition.Network.Ingress[i].Name} \
+//    --set gateways.istio-ingressgateway.ports[{i}].nodePort={cluster.Definition.Network.Ingress[i].NodePort} \
+//";
+//                }
+//            }
+
+//            istioScript1 +=
+//$@" \
+//    | kubectl apply -f -
+
+//until [ `kubectl get pods --namespace istio-system --field-selector=status.phase!=Succeeded,status.phase!=Running | wc -l` == ""0"" ]; do
+//    sleep 1
+//done
+//";
+            master.SudoCommand(CommandBundle.FromScript(istioScript0));
         }
 
         /// <summary>
@@ -1749,15 +1842,9 @@ done
             //        InstallKubeStateMetrics(firstMaster).Wait();
             //    });
 
-            // Install an Kiali to the monitoring namespace
+            // Install metrics persistence if required.
 
-            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kiali",
-                () =>
-                {
-                    InstallKiali(firstMaster).Wait();
-                });
-
-            if (cluster.Definition.Mon.Prometheus.Persistence)
+            if (cluster.Definition.Mon.Prometheus.Persistence && cluster.Definition.Nodes.Any(n => n.Labels.M3DB == true))
             {
                 // Install an Etcd cluster to the monitoring namespace
 
@@ -1786,7 +1873,6 @@ done
                 });
 
             // Install Grafana to the monitoring namespace
-
             firstMaster.InvokeIdempotentAction("setup/cluster-deploy-grafana",
                 () =>
                 {
@@ -1795,11 +1881,14 @@ done
 
             // Install Elasticsearch.
 
-            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-elasticsearch",
+            if (cluster.Definition.Nodes.Any(n => n.Labels.Elasticsearch == true))
+            {
+                firstMaster.InvokeIdempotentAction("setup/cluster-deploy-elasticsearch",
                 () =>
                 {
                     InstallElasticSearch(firstMaster);
                 });
+            }
 
             // Setup Fluentd.
 
@@ -1825,16 +1914,6 @@ done
                     InstallKibana(firstMaster).Wait();
                 });
 
-
-            // Setup Metricbeat.
-
-            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-metricbeat",
-                () =>
-                {
-                    InstallMetricbeat(firstMaster).Wait();
-                });
-
-
             // Setup cluster-manager.
 
             firstMaster.InvokeIdempotentAction("setup/cluster-deploy-cluster-manager",
@@ -1857,11 +1936,17 @@ done
         private async Task InstallHelmChartAsync(
             SshProxy<NodeDefinition> master,
             string chartName,
+            string releaseName = null,
             string @namespace = "default",
             int timeout = 300,
             bool wait = true,
             List<KeyValuePair<string, object>> values = null)
         {
+            if (string.IsNullOrEmpty(releaseName))
+            {
+                releaseName = chartName;
+            }
+
             using (var client = new HeadendClient())
             {
                 var zip = await client.GetHelmChartZipAsync(chartName, branch);
@@ -1899,15 +1984,15 @@ done
 rm -rf {chartName}
 
 unzip {chartName}.zip -d {chartName}
-helm install --namespace {@namespace} --name {chartName} -f {chartName}/values.yaml {valueOverrides} ./{chartName} --timeout {timeout} {(wait ? "--wait" : "")}
+helm install --namespace {@namespace} --name {releaseName} -f {chartName}/values.yaml {valueOverrides} ./{chartName} --timeout {timeout} {(wait ? "--wait" : "")}
 
 START=`date +%s`
 DEPLOY_END=$((START+15))
 
-until [ `helm status {chartName} | grep ""STATUS: DEPLOYED"" | wc -l` -eq 1  ];
+until [ `helm status {releaseName} | grep ""STATUS: DEPLOYED"" | wc -l` -eq 1  ];
 do
   if [ $((`date +%s`)) -gt $DEPLOY_END ]; then
-    helm delete --purge {chartName} || true
+    helm delete --purge {releaseName} || true
     exit 1
   fi
    sleep 1
@@ -1918,6 +2003,7 @@ rm -rf {chartName}*
 
             var tries = 0;
             var success = false;
+            Exception exception = null;
             while (tries < 3 && !success)
             {
                 try
@@ -1926,10 +2012,16 @@ rm -rf {chartName}*
                     response.EnsureSuccess();
                     success = true;
                 }
-                catch
+                catch (Exception e)
                 {
                     tries++;
+                    exception = e;
                 }
+            }
+
+            if (!success && exception != null)
+            {
+                throw exception;
             }
         }
 
@@ -1974,14 +2066,6 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: etcd";
 
-            master.InvokeIdempotentAction("deploy/etcd-operator",
-                () =>
-                {
-                    InstallHelmChartAsync(master, "etcd-operator", @namespace: "monitoring", wait: true, timeout: 300).Wait();
-                });
-
-            NeonHelper.WaitFor(() => k8sClient.ListCustomResourceDefinitionAsync().Result.Items.Any(i => i.Spec.Names.Kind == "EtcdCluster"), TimeSpan.FromSeconds(5));
-
             master.Status = "setup: etcd-m3db-volumes";
 
             master.InvokeIdempotentAction("setup/etcd-m3db-volumes",
@@ -2005,9 +2089,9 @@ rm -rf {chartName}*
                             Spec = new V1PersistentVolumeSpec()
                             {
                                 Capacity = new Dictionary<string, ResourceQuantity>()
-                    {
-                        { "storage", cluster.Definition.Mon.Prometheus.M3DB.Etcd.DiskSize ?? new ResourceQuantity("1Gi") }
-                    },
+                                {
+                                    { "storage", cluster.Definition.Mon.Prometheus.M3DB.Etcd.DiskSize ?? new ResourceQuantity("1Gi") }
+                                },
                                 AccessModes = new List<string>() { "ReadWriteOnce" },
                                 PersistentVolumeReclaimPolicy = "Retain",
                                 StorageClassName = "local-storage",
@@ -2053,22 +2137,19 @@ rm -rf {chartName}*
                     var values = new List<KeyValuePair<string, object>>();
                     var i = 0;
 
-                    values.Add(new KeyValuePair<string, object>($"size", cluster.Definition.Nodes.Count(n => n.Labels.M3DB == true).ToString()));
-                    values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", "neonkube.io/m3"));
-                    values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", "NoSchedule"));
-                    values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                    values.Add(new KeyValuePair<string, object>($"replicas", cluster.Definition.Nodes.Count(n => n.Labels.M3DB == true).ToString()));
 
                     if (cluster.Definition.Mon.Prometheus.M3DB.Etcd.DiskSize != null)
                     {
-                        values.Add(new KeyValuePair<string, object>($"resources.requests.storage", cluster.Definition.Mon.Prometheus.M3DB.Etcd.DiskSize.ToString()));
+                        values.Add(new KeyValuePair<string, object>($"volumeClaimTemplate.resources.requests.storage", cluster.Definition.Mon.Prometheus.M3DB.Etcd.DiskSize.ToString()));
                     }
 
-                    InstallHelmChartAsync(master, "etcd-cluster", @namespace: "monitoring", values: values).Wait();
+                    InstallHelmChartAsync(master, "etcd-cluster", releaseName: "m3db-etcd", @namespace: "monitoring", values: values).Wait();
                 });
 
             
             // wait for cluster to be running before proceeding
-            while ((k8sClient.ListNamespacedPodAsync("monitoring", labelSelector: "etcd_cluster=etcd-m3db")).Result.Items.Where(p => p.Status.Phase == "Running").Count() != cluster.Definition.Nodes.Where(l => l.Labels.M3DB == true).Count())
+            while ((k8sClient.ListNamespacedPodAsync("monitoring", labelSelector: "release=m3db-etcd")).Result.Items.Where(p => p.Status.Phase == "Running").Count() != cluster.Definition.Nodes.Where(l => l.Labels.M3DB == true).Count())
             {
                 Thread.Sleep(1000);
             }
@@ -2211,7 +2292,7 @@ rm -rf {chartName}*
                         values.Add(new KeyValuePair<string, object>("persistence.enabled", "true"));
                     }
 
-                    InstallHelmChartAsync(master, "prometheus-operator", @namespace: "monitoring", values: values).Wait();
+                    InstallHelmChartAsync(master, "prometheus-operator", @namespace: "monitoring", values: values, timeout: 1200, wait: true).Wait();
                 });
 
             master.InvokeIdempotentAction("deploy/istio-prometheus",

@@ -52,12 +52,12 @@ namespace Neon.Kube
     /// </summary>
     public sealed class HeadendClient : IDisposable
     {
-        private const string defaultKubeVersion          = "1.16.0";
+        private const string defaultKubeVersion          = "1.18.6";
         private const string defaultKubeDashboardVersion = "1.10.1";
         private const string defaultDockerVersion        = "docker.ce-18.06.1";
-        private const string defaultHelmVersion          = "2.12.3";
-        private const string defaultCalicoVersion        = "3.8";
-        private const string defaultIstioVersion         = "1.3.1";
+        private const string defaultHelmVersion          = "3.2.4";
+        private const string defaultCalicoVersion        = "3.14";
+        private const string defaultIstioVersion         = "1.6.4";
 
         private string[] supportedDockerVersions
             = new string[]

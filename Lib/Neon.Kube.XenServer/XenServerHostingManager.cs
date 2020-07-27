@@ -408,8 +408,8 @@ namespace Neon.Kube
                         {
                             node.Status = $"resize: primary drive";
 
-                            nodeProxy.SudoCommand("growpart /dev/sda 2");
-                            nodeProxy.SudoCommand("resize2fs /dev/sda2");
+                            nodeProxy.SudoCommand("growpart /dev/xvda 2");
+                            nodeProxy.SudoCommand("resize2fs /dev/xvda2");
                         }
                     }
                 }
