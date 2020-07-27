@@ -50,6 +50,15 @@ namespace Neon.Kube
     [HostingProvider(HostingEnvironments.Azure)]
     public class AzureHostingManager : HostingManager
     {
+        // IMPLEMENTATION NOTE:
+        // --------------------
+        // Here's the original issue covering Azure provisioning and along with 
+        // some discussion about how neonKUBE thinks about cloud deployments:
+        // 
+        //      https://github.com/nforgeio/neonKUBE/issues/908
+        //
+        // 
+
         //---------------------------------------------------------------------
         // Static members
 
