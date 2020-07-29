@@ -125,6 +125,11 @@ namespace Neon.Kube
         /// </summary>
         public const string LabelRole = ClusterDefinition.ReservedLabelPrefix + "node.role";
 
+        /// <summary>
+        /// Reserved label name used to indicate that a node should route external traffic into the cluster.
+        /// </summary>
+        public const string LabelIngress = ClusterDefinition.ReservedLabelPrefix + "node.ingress";
+
         //---------------------------------------------------------------------
         // Azure hosting related labels.
 
@@ -501,6 +506,7 @@ namespace Neon.Kube
                 list.Add(new KeyValuePair<string, object>(LabelPublicAddress,           Node.PublicAddress));
                 list.Add(new KeyValuePair<string, object>(LabelPrivateAddress,          Node.PrivateAddress));
                 list.Add(new KeyValuePair<string, object>(LabelRole,                    Node.Role));
+                list.Add(new KeyValuePair<string, object>(LabelIngress,                 Node.Ingress));
 
                 if (Node.Azure != null)
                 {
@@ -591,6 +597,7 @@ namespace Neon.Kube
                     case LabelPublicAddress:                Node.PublicAddress = label.Value; break;
                     case LabelPrivateAddress:               Node.PrivateAddress = label.Value; break;
                     case LabelRole:                         Node.Role = label.Value; break;
+                    case LabelIngress:                      ParseCheck(label, () => { Node.Ingress = NeonHelper.ParseNullableBool(label.Value); }); break; 
 
                     case LabelAzureVmSize:
                     case LabelAzureStorageType:
