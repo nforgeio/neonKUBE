@@ -50,6 +50,15 @@ namespace Neon.Kube
     [HostingProvider(HostingEnvironments.Azure)]
     public class AzureHostingManager : HostingManager
     {
+        // IMPLEMENTATION NOTE:
+        // --------------------
+        // Here's the original issue covering Azure provisioning and along with 
+        // some discussion about how neonKUBE thinks about cloud deployments:
+        // 
+        //      https://github.com/nforgeio/neonKUBE/issues/908
+        //
+        // 
+
         //---------------------------------------------------------------------
         // Static members
 
@@ -59,7 +68,7 @@ namespace Neon.Kube
         public static void Load()
         {
             // We don't have to do anything here because the assembly is loaded
-            // as a byproduct of calling this.
+            // as a byproduct of calling this method.
         }
 
         //---------------------------------------------------------------------

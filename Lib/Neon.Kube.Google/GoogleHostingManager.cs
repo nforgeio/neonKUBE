@@ -57,7 +57,7 @@ namespace Neon.Kube
         public static void Load()
         {
             // We don't have to do anything here because the assembly is loaded
-            // as a byproduct of calling this.
+            // as a byproduct of calling this method.
         }
 
         //---------------------------------------------------------------------
