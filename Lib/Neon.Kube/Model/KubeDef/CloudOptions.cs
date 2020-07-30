@@ -104,7 +104,7 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"Invalid [{nameof(SshIngressStart)}={SshIngressStart}]-[{nameof(SshIngressEnd)}={SshIngressEnd}] range.  [{nameof(SshIngressStart)}] must be greater than [{nameof(SshIngressEnd)}].");
             }
 
-            if (SshIngressStart - SshIngressEnd < clusterDefinition.Nodes.Count())
+            if (SshIngressEnd - SshIngressStart < clusterDefinition.Nodes.Count())
             {
                 throw new ClusterDefinitionException($"[{nameof(SshIngressStart)}]-[{nameof(SshIngressEnd)}] range is not large enough to support the [{clusterDefinition.Nodes.Count()}] cluster nodes.");
             }
