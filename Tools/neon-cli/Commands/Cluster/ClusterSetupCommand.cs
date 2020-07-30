@@ -2185,6 +2185,7 @@ istioctl install -f istio-cni.yaml
         private async Task InstallHelmChartAsync(
             SshProxy<NodeDefinition>            master,
             string                              chartName,
+            string                              releaseName = null,
             string                              @namespace = "default",
             int                                 timeout    = 300,
             bool                                wait       = true,
