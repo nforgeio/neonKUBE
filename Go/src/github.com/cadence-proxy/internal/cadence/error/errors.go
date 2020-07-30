@@ -136,3 +136,129 @@ func (c *CadenceError) GetType() CadenceErrorType {
 		panic(err)
 	}
 }
+
+// IsCustomError determines if an error
+// is a CadenceError of type Custom.
+//
+// param err error -> the error to evaluate.
+//
+// returns bool -> error is a CadenceError of type
+// Custom or not.
+func IsCustomError(err error) bool {
+	if err != nil && !reflect.ValueOf(err).IsNil() {
+		if v, ok := err.(*CadenceError); ok {
+			if v.GetType() == Custom {
+				return true
+			}
+		} else {
+			return cadence.IsCustomError(err)
+		}
+	}
+
+	return false
+}
+
+// IsCancelledError determines if an error
+// is a CadenceError of type Cancelled.
+//
+// param err error -> the error to evaluate.
+//
+// returns bool -> error is a CadenceError of type
+// Cancelled or not.
+func IsCancelledError(err error) bool {
+	if err != nil && !reflect.ValueOf(err).IsNil() {
+		if v, ok := err.(*CadenceError); ok {
+			if v.GetType() == Cancelled {
+				return true
+			}
+		} else {
+			return cadence.IsCanceledError(err)
+		}
+	}
+
+	return false
+}
+
+// IsGenericError determines if an error
+// is a CadenceError of type Generic.
+//
+// param err error -> the error to evaluate.
+//
+// returns bool -> error is a CadenceError of type
+// Generic or not.
+func IsGenericError(err error) bool {
+	if err != nil && !reflect.ValueOf(err).IsNil() {
+		if v, ok := err.(*CadenceError); ok {
+			if v.GetType() == Generic {
+				return true
+			}
+		} else {
+			return cadence.IsGenericError(err)
+		}
+	}
+
+	return false
+}
+
+// IsPanicError determines if an error
+// is a CadenceError of type Panic.
+//
+// param err error -> the error to evaluate.
+//
+// returns bool -> error is a CadenceError of type
+// Panic or not.
+func IsPanicError(err error) bool {
+	if err != nil && !reflect.ValueOf(err).IsNil() {
+		if v, ok := err.(*CadenceError); ok {
+			if v.GetType() == Panic {
+				return true
+			}
+		} else {
+			return cadence.IsPanicError(err)
+		}
+	}
+
+	return false
+}
+
+// IsTerminatedError determines if an error
+// is a CadenceError of type Terminated.
+//
+// param err error -> the error to evaluate.
+//
+// returns bool -> error is a CadenceError of type
+// Terminated or not.
+func IsTerminatedError(err error) bool {
+	if err != nil && !reflect.ValueOf(err).IsNil() {
+		if v, ok := err.(*CadenceError); ok {
+			if v.GetType() == Terminated {
+				return true
+			}
+		} else {
+			return cadence.IsTerminatedError(err)
+		}
+	}
+
+	return false
+}
+
+// IsTimeoutError determines if an error
+// is a CadenceError of type Timeout.
+//
+// param err error -> the error to evaluate.
+//
+// returns bool -> error is a CadenceError of type
+// Timeout or not.
+func IsTimeoutError(err error) bool {
+	if err != nil && !reflect.ValueOf(err).IsNil() {
+		if v, ok := err.(*CadenceError); ok {
+			if v.GetType() == Timeout {
+				return true
+			}
+		} else {
+			return cadence.IsTimeoutError(err)
+		}
+	}
+
+	return false
+}
