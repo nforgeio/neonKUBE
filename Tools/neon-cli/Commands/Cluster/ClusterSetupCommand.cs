@@ -908,7 +908,7 @@ tar xvf helm.tar.gz
 cp linux-amd64/helm /usr/local/bin
 chmod 770 /usr/local/bin/helm
 rm -f helm.tar.gz
-rm -rf helm
+rm -rf linux-amd64
 ";
                             node.SudoCommand(CommandBundle.FromScript(helmInstallScript));
                         });
@@ -1947,15 +1947,15 @@ done
 rm -rf {chartName}
 
 unzip {chartName}.zip -d {chartName}
-helm install --namespace {@namespace} --name {releaseName} -f {chartName}/values.yaml {valueOverrides} ./{chartName} --timeout {timeout} {(wait ? "--wait" : "")}
+helm install {releaseName} {chartName} --namespace {@namespace} -f {chartName}/values.yaml {valueOverrides} --timeout {timeout}s {(wait ? "--wait" : "")}
 
 START=`date +%s`
 DEPLOY_END=$((START+15))
 
-until [ `helm status {releaseName} | grep ""STATUS: DEPLOYED"" | wc -l` -eq 1  ];
+until [ `helm status {releaseName} --namespace {@namespace} | grep ""STATUS: deployed"" | wc -l` -eq 1  ];
 do
   if [ $((`date +%s`)) -gt $DEPLOY_END ]; then
-    helm delete --purge {releaseName} || true
+    helm delete {releaseName} || true
     exit 1
   fi
    sleep 1

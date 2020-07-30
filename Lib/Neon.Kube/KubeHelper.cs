@@ -1281,7 +1281,7 @@ namespace Neon.Kube
 
                         // $hack(jefflill): Simple client version extraction
 
-                        var pattern  = "SemVer:\"v";
+                        var pattern  = "Version:\"v";
                         var response = NeonHelper.ExecuteCapture(targetPath, "version");
                         var pStart   = response.OutputText.IndexOf(pattern);
                         var error    = "Cannot identify existing [helm] version.";

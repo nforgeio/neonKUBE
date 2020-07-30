@@ -77,7 +77,11 @@ namespace Neon.Kube
 
                 case "1.16.0":
 
-                    return (Version: "2.0.0-rc2", ConfigYaml: DashboardYaml_2_0_0_rc2);
+                    return (Version: "2.0.0-rc2", ConfigYaml: DashboardYaml_2_0_3);
+
+                case "1.18.6":
+
+                    return (Version: "2.0.0-rc2", ConfigYaml: DashboardYaml_2_0_3);
 
                 default:
 

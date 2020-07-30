@@ -136,7 +136,8 @@ namespace Neon.Kube
                 { "1.14.1", "1.14.1-00" },
                 { "1.15.0", "1.15.0-00" },
                 { "1.15.4", "1.15.4-00" },
-                { "1.16.0", "1.16.0-00" }
+                { "1.16.0", "1.16.0-00" },
+                { "1.18.6", "1.18.6-00" }
             };
 
             ubuntuKubeCtlPackages = new Dictionary<string, string>()
@@ -148,7 +149,8 @@ namespace Neon.Kube
                 { "1.14.1", "1.14.1-00" },
                 { "1.15.0", "1.15.0-00" },
                 { "1.15.4", "1.15.4-00" },
-                { "1.16.0", "1.16.0-00" }
+                { "1.16.0", "1.16.0-00" },
+                { "1.18.6", "1.18.6-00" }
             };
 
             ubuntuKubeletPackages = new Dictionary<string, string>
@@ -160,7 +162,8 @@ namespace Neon.Kube
                 { "1.14.1", "1.14.1-00" },
                 { "1.15.0", "1.15.0-00" },
                 { "1.15.4", "1.15.4-00" },
-                { "1.16.0", "1.16.0-00" }
+                { "1.16.0", "1.16.0-00" },
+                { "1.18.6", "1.18.6-00" }
             };
         }
 
@@ -329,9 +332,9 @@ namespace Neon.Kube
                 KubeCtlPackageUbuntuVersion = ubuntuKubeCtlPackages[kubeVersion.ToString()],
                 KubeletPackageUbuntuVersion = ubuntuKubeletPackages[kubeVersion.ToString()],
 
-                HelmLinuxUri                = $"https://storage.googleapis.com/kubernetes-helm/helm-v{helmVersion}-linux-amd64.tar.gz",
-                HelmOsxUri                  = $"https://storage.googleapis.com/kubernetes-helm/helm-v{helmVersion}-darwin-amd64.tar.gz",
-                HelmWindowsUri              = $"https://storage.googleapis.com/kubernetes-helm/helm-v{helmVersion}-windows-amd64.zip",
+                HelmLinuxUri                = $"https://get.helm.sh/helm-v{helmVersion}-linux-amd64.tar.gz",
+                HelmOsxUri                  = $"https://get.helm.sh/helm-v{helmVersion}-darwin-amd64.tar.gz",
+                HelmWindowsUri              = $"https://get.helm.sh/helm-v{helmVersion}-windows-amd64.zip",
 
                 // $todo(jefflill):
                 //
