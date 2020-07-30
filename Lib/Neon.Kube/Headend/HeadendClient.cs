@@ -53,42 +53,8 @@ namespace Neon.Kube
     /// </summary>
     public sealed class HeadendClient : IDisposable
     {
-        private const string defaultKubeVersion          = "1.18.6";
-        private const string defaultKubeDashboardVersion = "1.10.1";
-        private const string defaultDockerVersion        = "docker.ce-18.06.1";
-        private const string defaultHelmVersion          = "3.2.4";
-        private const string defaultCalicoVersion        = "3.14";
-        private const string defaultIstioVersion         = "1.6.4";
-
-        private string[] supportedDockerVersions
-            = new string[]
-            {
-                defaultDockerVersion
-            };
-
-        private string[] supportedHelmVersions
-            = new string[]
-            {
-                defaultHelmVersion
-            };
-
-        private string[] supportedCalicoVersions
-            = new string[]
-            {
-                defaultCalicoVersion
-            };
-
-        private static string[] supportedIstioVersions
-            = new string[]
-            {
-                defaultIstioVersion
-            };
-
-        private JsonClient                      jsonClient;
-        private JsonClient                      gitHubClient;
-        private Dictionary<string, string>      ubuntuKubeAdmPackages;
-        private Dictionary<string, string>      ubuntuKubeCtlPackages;
-        private Dictionary<string, string>      ubuntuKubeletPackages;
+        private JsonClient      jsonClient;
+        private JsonClient      gitHubClient;
 
         /// <summary>
         /// Constructor.
@@ -101,70 +67,6 @@ namespace Neon.Kube
             gitHubClient = new JsonClient();
             gitHubClient.BaseAddress = new Uri("https://raw.githubusercontent.com");
             gitHubClient.DefaultRequestHeaders.UserAgent.ParseAdd("HttpClient");
-            
-            // $hack(jefflill):
-            //
-            // We need to manually maintain the Kubernetes version to the
-            // corresponding [kubectl], [kubeadm], and [kubelet] package
-            // versions so we'll be able to install the correct versions.
-            //
-            // These versions were obtained by starting an Ubuntu server
-            // and running these commands:
-            //
-            //      apt-get update && apt-get install -yq --allow-downgrades apt-transport-https curl
-            //      curl - s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-            //      echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" > /etc/apt/sources.list.d/kubernetes.list
-            //
-            //      apt-cache madison kubeadm
-            //      apt-cache madison kubectl
-            //      apt-cache madison kubelet
-            //
-            // The [apt-cache madison *] commands will list the package versions in the
-            // second output table column.  You'll need to ensure that each supported
-            // Kubernetes version has a package version defined for each component.
-            //
-            // NOTE: You may see more than one package version for a component,
-            //       like [1.13.0-00] and [1.13.0-01].  You should choose the
-            //       greatest one.
-
-            ubuntuKubeAdmPackages = new Dictionary<string, string>()
-            {
-                { "1.13.0", "1.13.0-00" },
-                { "1.13.1", "1.13.1-00" },
-                { "1.13.2", "1.13.2-00" },
-                { "1.13.3", "1.13.3-00" },
-                { "1.14.1", "1.14.1-00" },
-                { "1.15.0", "1.15.0-00" },
-                { "1.15.4", "1.15.4-00" },
-                { "1.16.0", "1.16.0-00" },
-                { "1.18.6", "1.18.6-00" }
-            };
-
-            ubuntuKubeCtlPackages = new Dictionary<string, string>()
-            {
-                { "1.13.0", "1.13.0-00" },
-                { "1.13.1", "1.13.1-00" },
-                { "1.13.2", "1.13.2-00" },
-                { "1.13.3", "1.13.3-00" },
-                { "1.14.1", "1.14.1-00" },
-                { "1.15.0", "1.15.0-00" },
-                { "1.15.4", "1.15.4-00" },
-                { "1.16.0", "1.16.0-00" },
-                { "1.18.6", "1.18.6-00" }
-            };
-
-            ubuntuKubeletPackages = new Dictionary<string, string>
-            {
-                { "1.13.0", "1.13.0-00" },
-                { "1.13.1", "1.13.1-00" },
-                { "1.13.2", "1.13.2-00" },
-                { "1.13.3", "1.13.3-00" },
-                { "1.14.1", "1.14.1-00" },
-                { "1.15.0", "1.15.0-00" },
-                { "1.15.4", "1.15.4-00" },
-                { "1.16.0", "1.16.0-00" },
-                { "1.18.6", "1.18.6-00" }
-            };
         }
 
         /// <summary>
@@ -223,7 +125,7 @@ namespace Neon.Kube
                         // $todo(jefflill): 
                         //
                         // XenServer/XCP-ng doesn't support HTTPS!  This seems super odd.  Perhaps they
-                        // don't want to update public certificates or something.
+                        // don't want to update public root certificates or something.
 
                         linuxTemplateUri = $"http://s3-us-west-2.amazonaws.com/neonforge/kube/xenserver-{clusterDefinition.LinuxDistribution}-{clusterDefinition.LinuxVersion}.xva";
                     }
@@ -234,133 +136,29 @@ namespace Neon.Kube
                     throw new NotImplementedException($"Hosting environment [{clusterDefinition.Hosting.Environment}] is not implemented.");
             }
 
-            var kubeVersion = Version.Parse(defaultKubeVersion);
-
-            if (!clusterDefinition.Kubernetes.Version.Equals("default", StringComparison.InvariantCultureIgnoreCase))
-            {
-                kubeVersion = Version.Parse(clusterDefinition.Kubernetes.Version);
-            }
-
-            var kubeDashboardVersion = Version.Parse(defaultKubeDashboardVersion);
-
-            if (!clusterDefinition.Kubernetes.DashboardVersion.Equals("default", StringComparison.InvariantCultureIgnoreCase))
-            {
-                kubeDashboardVersion = Version.Parse(clusterDefinition.Kubernetes.DashboardVersion);
-            }
-
-            // Ensure that the we have package versions defined for the selected Kubernetes version.
-
-            Covenant.Assert(ubuntuKubeAdmPackages.ContainsKey(kubeVersion.ToString()));
-            Covenant.Assert(ubuntuKubeCtlPackages.ContainsKey(kubeVersion.ToString()));
-            Covenant.Assert(ubuntuKubeletPackages.ContainsKey(kubeVersion.ToString()));
-
-            // $todo(jefflill): Hardcoded
-            // $todo(jefflill): Verify Docker/Kubernetes version compatibility.
-
-            var dockerVersion = clusterDefinition.Docker.Version;
-
-            if (dockerVersion == "default")
-            {
-                dockerVersion = defaultDockerVersion;
-            }
-
-            if (supportedDockerVersions.SingleOrDefault(v => v == dockerVersion) == null)
-            {
-                throw new KubeException($"[{dockerVersion}] is not a supported Docker version.");
-            }
-
-            var helmVersion = clusterDefinition.Kubernetes.HelmVersion;
-
-            if (helmVersion == "default")
-            {
-                helmVersion = defaultHelmVersion;
-            }
-
-            if (supportedHelmVersions.SingleOrDefault(v => v == helmVersion) == null)
-            {
-                throw new KubeException($"[{helmVersion}] is not a supported Helm version.");
-            }
-
-            // $todo(jefflill):
-            //
-            // The code below supports only the Calico CNI for now.  This will probably be
-            // replaced by the integrated Istio CNI soon.
-
-            if (clusterDefinition.Network.Cni != NetworkCni.Calico)
-            {
-                throw new NotImplementedException($"The [{clusterDefinition.Network.Cni}] CNI is not currently supported.");
-            }
-
-            var calicoVersion = clusterDefinition.Network.CniVersion;
-
-            if (calicoVersion == "default")
-            {
-                calicoVersion = defaultCalicoVersion;
-            }
-
-            if (clusterDefinition.Network.Cni == NetworkCni.Calico && supportedCalicoVersions.SingleOrDefault(v => v == calicoVersion) == null)
-            {
-                throw new KubeException($"[{calicoVersion}] is not a supported Calico version.");
-            }
-
-            var istioVersion = clusterDefinition.Network.IstioVersion;
-
-            if (istioVersion == "default")
-            {
-                istioVersion = defaultIstioVersion;
-            }
-
-            if (supportedIstioVersions.SingleOrDefault(v => v == istioVersion) == null)
-            {
-                throw new KubeException($"[{istioVersion}] is not a supported Istio version.");
-            }
-
             var setupInfo = new KubeSetupInfo()
             {
-                LinuxTemplateUri            = linuxTemplateUri,
+                LinuxTemplateUri   = linuxTemplateUri,
 
-                KubeAdmLinuxUri             = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/linux/amd64/kubeadm",
-                KubeCtlLinuxUri             = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/linux/amd64/kubectl",
-                KubeletLinuxUri             = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/linux/amd64/kubelet",
+                KubeAdmLinuxUri    = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.KubernetesVersion}/linux/amd64/kubeadm",
+                KubeCtlLinuxUri    = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.KubernetesVersion}/linux/amd64/kubectl",
+                KubeletLinuxUri    = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.KubernetesVersion}/linux/amd64/kubelet",
 
-                KubeCtlOsxUri               = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/bin/darwin/amd64/kubectl",
+                KubeCtlOsxUri      = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.KubernetesVersion}/bin/darwin/amd64/kubectl",
                     
-                KubeCtlWindowsUri           = $"https://storage.googleapis.com/kubernetes-release/release/v{kubeVersion}/bin/windows/amd64/kubectl.exe",
+                KubeCtlWindowsUri  = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.KubernetesVersion}/bin/windows/amd64/kubectl.exe",
 
-                DockerPackageUbuntuUri      = $"https://s3-us-west-2.amazonaws.com/neonforge/kube/{dockerVersion}-ubuntu-bionic-stable-amd64.deb",
-                KubeAdmPackageUbuntuVersion = ubuntuKubeAdmPackages[kubeVersion.ToString()],
-                KubeCtlPackageUbuntuVersion = ubuntuKubeCtlPackages[kubeVersion.ToString()],
-                KubeletPackageUbuntuVersion = ubuntuKubeletPackages[kubeVersion.ToString()],
+                DockerPackageUri   = $"https://s3-us-west-2.amazonaws.com/neonforge/kube/{KubeVersions.DockerVersion}-ubuntu-bionic-stable-amd64.deb",
 
-                HelmLinuxUri                = $"https://get.helm.sh/helm-v{helmVersion}-linux-amd64.tar.gz",
-                HelmOsxUri                  = $"https://get.helm.sh/helm-v{helmVersion}-darwin-amd64.tar.gz",
-                HelmWindowsUri              = $"https://get.helm.sh/helm-v{helmVersion}-windows-amd64.zip",
+                HelmLinuxUri                = $"https://get.helm.sh/helm-v{KubeVersions.HelmVersion}-linux-amd64.tar.gz",
+                HelmOsxUri                  = $"https://get.helm.sh/helm-v{KubeVersions.HelmVersion}-darwin-amd64.tar.gz",
+                HelmWindowsUri              = $"https://get.helm.sh/helm-v{KubeVersions.HelmVersion}-windows-amd64.zip",
 
-                // $todo(jefflill):
-                //
-                // I'm a little worried about where the "1.7" in the [CalicoSetupUri] came from.  I suspect that
-                // this will vary too.  Once the Istio CNI is stable, we'll probably delete this anyway but if 
-                // we do decide to allow for custom CNIs, we'll need to figure this out.
+                CalicoRbacYamlUri  = $"https://docs.projectcalico.org/v{KubeVersions.CalicoVersion}/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml",
+                CalicoSetupYamlUri = $"https://docs.projectcalico.org/v{KubeVersions.CalicoVersion}/manifests/calico.yaml",
 
-                CalicoRbacYamlUri           = $"https://docs.projectcalico.org/v{calicoVersion}/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml",
-                CalicoSetupYamlUri          = $"https://docs.projectcalico.org/v{calicoVersion}/manifests/calico.yaml",
-
-                IstioLinuxUri               = $"https://github.com/istio/istio/releases/download/{istioVersion}/istio-{istioVersion}-linux.tar.gz"
+                IstioLinuxUri      = $"https://github.com/istio/istio/releases/download/{KubeVersions.IstioVersion}/istio-{KubeVersions.IstioVersion}-linux.tar.gz"
             };
-
-            var kubeVersionString                  = kubeVersion.ToString();
-
-            setupInfo.Versions.Kubernetes          = kubeVersionString;
-
-            var kubeDashboardConfig                = KubeDashboardConfig.GetDashboardConfigFor(kubeVersion.ToString());
-
-            setupInfo.KubeDashboardYaml            = kubeDashboardConfig.ConfigYaml;
-            setupInfo.Versions.KubernetesDashboard = kubeDashboardConfig.Version;
-
-            setupInfo.Versions.Docker              = dockerVersion;
-            setupInfo.Versions.Helm                = helmVersion;
-            setupInfo.Versions.Calico              = calicoVersion;
-            setupInfo.Versions.Istio               = istioVersion;
 
             await Task.CompletedTask;
 
@@ -400,10 +198,10 @@ namespace Neon.Kube
             {
                 using (var zip = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
                 {
-                    using (StreamReader reader = new StreamReader(
-                        await (await gitHubClient.HttpClient.GetAsync($"nforgeio/neonKUBE/{branch}/Charts/tree.txt")).Content.ReadAsStreamAsync()))
+                    using (StreamReader reader = new StreamReader(await (await gitHubClient.HttpClient.GetAsync($"nforgeio/neonKUBE/{branch}/Charts/tree.txt")).Content.ReadAsStreamAsync()))
                     {
                         var tree = reader.ReadToEnd();
+
                         foreach (var line in tree.Split('\n'))
                         {
                             if (line.Split('/')[0] == chartName)
@@ -412,17 +210,20 @@ namespace Neon.Kube
                                 {
                                     continue;
                                 }
+
                                 var fileBytes = zip.CreateEntry(line.Replace($"{chartName}/", ""));
 
                                 using (var entryStream = fileBytes.Open())
                                 {
-                                    var f = line.Trim();
-                                    await entryStream.WriteAsync(await gitHubClient.HttpClient.GetByteArrayAsync($"nforgeio/neonKUBE/{branch}/Charts/{f}"));
+                                    var name = line.Trim();
+
+                                    await entryStream.WriteAsync(await gitHubClient.HttpClient.GetByteArrayAsync($"nforgeio/neonKUBE/{branch}/Charts/{name}"));
                                 }
                             }
                         }
                     }
                 }
+
                 return memoryStream.ToArray();
             }
         }
