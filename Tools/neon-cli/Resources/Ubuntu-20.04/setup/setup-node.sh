@@ -409,7 +409,7 @@ EOF
 # Databases are generally not compatible with transparent huge pages.  It appears
 # that the best way to disable this is with a simple service.
 
-cat <<EOF > /lib/systemd/system/neonkube-disable-thp.service
+cat <<EOF > /lib/systemd/system/neon-disable-thp.service
 # Disables transparent home pages.
 
 [Unit]
@@ -423,9 +423,9 @@ ExecStart=/bin/sh -c "echo 'never' > /sys/kernel/mm/transparent_hugepage/enabled
 WantedBy=multi-user.target
 EOF
 
-systemctl enable neonkube-disable-thp
+systemctl enable neon-disable-thp
 systemctl daemon-reload
-systemctl restart neonkube-disable-thp
+systemctl restart neon-disable-thp
 
 #------------------------------------------------------------------------------
 # Configure the systemd journal to perist the journal to the file system at
@@ -501,16 +501,16 @@ EOF
 
 # $todo(jefflill):
 #
-# The [SshProxy] cleaner assumes that nobody is going to have SshProxy commands
-# that run for more than one day (which is pretty likely).  A better approach
+# The [SshProxy] neon-cleaner assumes that nobody is going to have SshProxy 
+# commands that run for more than one day (which is pretty likely).  A better approach
 # would be to look for temporary command folders THAT HAVE COMPLETED (e.g. HAVE
 # an [exit] code file) and are older than one day (or perhaps even older than an
 # hour or two) and then purge those.  Not a high priority.
 
-cat <<EOF > ${NEON_BIN_FOLDER}/neonkube-cleaner
+cat <<EOF > ${NEON_BIN_FOLDER}/neon-cleaner
 #!/bin/bash
 #------------------------------------------------------------------------------
-# FILE:         neonkube-cleaner
+# FILE:         neon-cleaner
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 #
@@ -592,22 +592,22 @@ do
 done
 EOF
 
-chmod 700 ${NEON_BIN_FOLDER}/neonkube-cleaner
+chmod 700 ${NEON_BIN_FOLDER}/neon-cleaner
 
-# Generate the [neonkube-cleaner] systemd unit.
+# Generate the [neon-cleaner] systemd unit.
 
-cat <<EOF > /lib/systemd/system/neonkube-cleaner.service
+cat <<EOF > /lib/systemd/system/neon-cleaner.service
 # A service that periodically shreds the root's Bash history
 # as a security measure.
 
 [Unit]
-Description=neonkube-cleaner
+Description=neon-cleaner
 Documentation=
 After=local-fs.target
 Requires=local-fs.target
 
 [Service]
-ExecStart=${NEON_BIN_FOLDER}/neonkube-cleaner
+ExecStart=${NEON_BIN_FOLDER}/neon-cleaner
 ExecReload=/bin/kill -s HUP \$MAINPID
 Restart=always
 
@@ -615,9 +615,9 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-systemctl enable neonkube-cleaner
+systemctl enable neon-cleaner
 systemctl daemon-reload
-systemctl restart neonkube-cleaner
+systemctl restart neon-cleaner
 
 # Indicate that the script has completed.
 

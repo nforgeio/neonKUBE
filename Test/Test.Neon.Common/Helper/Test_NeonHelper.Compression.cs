@@ -32,7 +32,7 @@ namespace TestCommon
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public void Deflate_Compression()
+        public void Compression_Deflate()
         {
             var sb = new StringBuilder();
 
@@ -82,7 +82,7 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public void Gzip_Compression()
+        public void Compression_Gzip()
         {
             var sb = new StringBuilder();
 

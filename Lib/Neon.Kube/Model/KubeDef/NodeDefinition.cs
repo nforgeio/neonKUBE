@@ -159,6 +159,39 @@ namespace Neon.Kube
         public string Role { get; set; } = NodeRole.Worker;
 
         /// <summary>
+        /// <para>
+        /// Indicates whether this node should be configured to accept external network traffic
+        /// on node ports and route that into the cluster.  This has a tri-state value.
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><c><c>false</c></c></term>
+        ///     <description>
+        ///     The node <b>will not</b> be configured to route external traffic.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     The node <b>will</b> be configured to route external traffic.
+        ///     <description>
+        ///     The node <b>will</b> be configured to route external traffic.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><c>null</c></term>
+        ///     <description>
+        ///     This is the default value.  When <b>all nodes</b> have this set to <c>null</c>,
+        ///     cluster setup will configure this automatically based on the number and types
+        ///     of nodes in the cluster.  If the cluster has at least 2 worker nodes then just
+        ///     the worker nodes will be configured to route traffic (the idea being to limit 
+        ///     load on the managers).  If there are fewer than 2 workers, then all cluster
+        ///     nodes will be configured for routing.
+        ///     </description>
+        /// </item>
+        /// </list>
+        /// </summary>
+        public bool? Ingress { get; set; } = null;
+
+        /// <summary>
         /// Specifies the labels to be assigned to the host node.  These can provide
         /// detailed information such as the host CPU, RAM, storage, etc.  <see cref="NodeLabels"/>
         /// for more information.

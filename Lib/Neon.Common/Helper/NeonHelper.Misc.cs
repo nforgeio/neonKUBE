@@ -1414,7 +1414,7 @@ namespace Neon.Common
         /// <summary>
         /// Attempts to parse a boolean from common literals.
         /// </summary>
-        /// <param name="input">The input literal.</param>
+        /// <param name="input">The input string being parsed.</param>
         /// <param name="value">Returns as the parsed value on success.</param>
         /// <returns><c>true</c> on success.</returns>
         /// <remarks>
@@ -1482,7 +1482,7 @@ namespace Neon.Common
         /// <summary>
         /// Parses common boolean literals.
         /// </summary>
-        /// <param name="input">The input literal.</param>
+        /// <param name="input">The input string being parsed.</param>
         /// <returns>The parsed output.</returns>
         /// <exception cref="FormatException">Thrown if the value is not valid.</exception>
         /// <remarks>
@@ -1524,6 +1524,56 @@ namespace Neon.Common
             {
                 throw new FormatException($"[{input}] is not a valid boolean literal (1/0, on/off, yes/no, true/false, enabled/disabled).");
             }
+        }
+
+        /// <summary>
+        /// Parses a nullable <see cref="bool"/>.
+        /// </summary>
+        /// <param name="input">
+        /// The input string being parsed.  <c>null</c>, empty or <paramref name="input"/> == <b>"null"</b> 
+        /// will return <c>null</c>.  Otherwise we'll expect either <b>"true"</b> or <b>"false"</b> or
+        /// one of the other literals supported by <see cref="ParseBool(string)"/>.
+        /// </param>
+        /// <note>
+        /// This method is case insensitive.
+        /// </note>
+        /// <returns><c>true</c>, <c>false</c>, or <c>null</c>.</returns>
+        /// <exception cref="FormatException">Thrown for invalid input strings.</exception>
+        public static bool? ParseNullableBool(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                return null;
+            }
+
+            return ParseBool(input);
+        }
+
+        /// <summary>
+        /// Attempts to parse a nullable <see cref="bool"/>.  <c>null</c>, empty or <paramref name="input"/> == <b>"null"</b> 
+        /// will return <c>null</c>.  Otherwise we'll expect either <b>"true"</b> or <b>"false"</b> or
+        /// one of the other literals supported by <see cref="ParseBool(string)"/>.
+        /// </summary>
+        /// <param name="input">The input string being parsed.</param>
+        /// <param name="value">Returns as the parsed value.</param>
+        /// <returns><c>true</c> if the input was parsed successfully.</returns>
+        public static bool TryParseNullableBool(string input, out bool? value)
+        {
+            value = null;
+
+            if (string.IsNullOrEmpty(input))
+            {
+                return true;
+            }
+
+            if (TryParseBool(input, out var v))
+            {
+                value = v;
+
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
