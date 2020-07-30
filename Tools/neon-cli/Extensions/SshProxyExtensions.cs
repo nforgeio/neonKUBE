@@ -347,11 +347,11 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "ntp.master.sources", masterTimeSources);
             NewMethod(preprocessReader, workerTimeSources);
 
-            SetBashVariable(preprocessReader, "docker.packageuri", kubeSetupInfo.DockerPackageUbuntuUri);
+            SetBashVariable(preprocessReader, "docker.packageuri", kubeSetupInfo.DockerPackageUri);
 
-            SetBashVariable(preprocessReader, "neon.kube.kubeadm.package_version", kubeSetupInfo.KubeAdmPackageUbuntuVersion);
-            SetBashVariable(preprocessReader, "neon.kube.kubectl.package_version", kubeSetupInfo.KubeCtlPackageUbuntuVersion);
-            SetBashVariable(preprocessReader, "neon.kube.kubelet.package_version", kubeSetupInfo.KubeletPackageUbuntuVersion);
+            SetBashVariable(preprocessReader, "neon.kube.kubeadm.package_version", KubeVersions.KubeAdminPackageVersion);
+            SetBashVariable(preprocessReader, "neon.kube.kubectl.package_version", KubeVersions.KubeCtlPackageVersion);
+            SetBashVariable(preprocessReader, "neon.kube.kubelet.package_version", KubeVersions.KubeletPackageVersion);
 
             //-----------------------------------------------------------------
             // Configure the variables for the [setup-disk.sh] script.

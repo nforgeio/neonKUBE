@@ -415,8 +415,8 @@ OPTIONS:
         {
             var firstMaster       = cluster.FirstMaster;
             var hostPlatform      = KubeHelper.HostPlatform;
-            var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", kubeSetupInfo.Versions.Kubernetes);
-            var cachedHelmPath    = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", kubeSetupInfo.Versions.Helm);
+            var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", KubeVersions.KubernetesVersion);
+            var cachedHelmPath    = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", KubeVersions.HelmVersion);
 
             string kubeCtlUri;
             string helmUri;
@@ -809,13 +809,13 @@ safe-apt-get update
                     node.SudoCommand(bundle);
 
                     node.Status = "install: kubeadm";
-                    node.SudoCommand($"safe-apt-get install -yq --allow-downgrades kubeadm={kubeSetupInfo.KubeAdmPackageUbuntuVersion}");
+                    node.SudoCommand($"safe-apt-get install -yq --allow-downgrades kubeadm={KubeVersions.KubeAdminPackageVersion}");
 
                     node.Status = "install: kubectl";
-                    node.SudoCommand($"safe-apt-get install -yq --allow-downgrades kubectl={kubeSetupInfo.KubeCtlPackageUbuntuVersion}");
+                    node.SudoCommand($"safe-apt-get install -yq --allow-downgrades kubectl={KubeVersions.KubeCtlPackageVersion}");
 
                     node.Status = "install: kubelet";
-                    node.SudoCommand($"safe-apt-get install -yq --allow-downgrades kubelet={kubeSetupInfo.KubeletPackageUbuntuVersion}");
+                    node.SudoCommand($"safe-apt-get install -yq --allow-downgrades kubelet={KubeVersions.KubeletPackageVersion}");
 
                     node.Status = "hold: kubernetes packages";
                     node.SudoCommand("apt-mark hold kubeadm kubectl kubelet");
@@ -914,7 +914,7 @@ $@"
 apiVersion: kubeadm.k8s.io/v1beta1
 kind: ClusterConfiguration
 clusterName: {cluster.Name}
-kubernetesVersion: ""v{kubeSetupInfo.Versions.Kubernetes}""
+kubernetesVersion: ""v{KubeVersions.KubernetesVersion}""
 apiServer:
   certSANs:
 {sbCertSANs}
@@ -1239,18 +1239,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                     // Install the network CNI.
 
-                    switch (cluster.Definition.Network.Cni)
-                    {
-                        case NetworkCni.Calico:
-
-                            DeployCalicoCni(firstMaster);
-                            break;
-
-                        case NetworkCni.Istio:
-                        default:
-
-                            throw new NotImplementedException($"The [{cluster.Definition.Network.Cni}] CNI support is not implemented.");
-                    }
+                    DeployCalicoCni(firstMaster);
 
                     // Allow pods to be scheduled on master nodes if enabled.
 
@@ -1406,7 +1395,304 @@ subjects:
 
                             firstMaster.Status = "deploy: kubernetes dashboard";
 
-                            var dashboardYaml = kubeContextExtension.SetupDetails.SetupInfo.KubeDashboardYaml;
+                            var dashboardYaml =
+$@"# Copyright 2017 The Kubernetes Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the """"License"""");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an """"AS IS"""" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kubernetes-dashboard
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    k8s-app: kubernetes-dashboard
+  name: kubernetes-dashboard
+  namespace: kubernetes-dashboard
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    k8s-app: kubernetes-dashboard
+  name: kubernetes-dashboard
+  namespace: kubernetes-dashboard
+spec:
+  type: NodePort
+  ports:
+  - port: 443
+    targetPort: 8443
+    nodePort: {KubeHostPorts.KubeDashboard}
+  selector:
+    k8s-app: kubernetes-dashboard
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    k8s-app: kubernetes-dashboard
+  name: kubernetes-dashboard-certs
+  namespace: kubernetes-dashboard
+type: Opaque
+data:
+  cert.pem: $<CERTIFICATE>
+  key.pem: $<PRIVATEKEY>
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    k8s-app: kubernetes-dashboard
+  name: kubernetes-dashboard-csrf
+  namespace: kubernetes-dashboard
+type: Opaque
+data:
+  csrf: """"
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    k8s-app: kubernetes-dashboard
+  name: kubernetes-dashboard-key-holder
+  namespace: kubernetes-dashboard
+type: Opaque
+
+---
+
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  labels:
+    k8s-app: kubernetes-dashboard
+  name: kubernetes-dashboard-settings
+  namespace: kubernetes-dashboard
+
+---
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  labels:
+    k8s-app: kubernetes-dashboard
+  name: kubernetes-dashboard
+  namespace: kubernetes-dashboard
+rules:
+  # Allow Dashboard to get, update and delete Dashboard exclusive secrets.
+  - apiGroups: [""""]
+    resources: [""secrets""]
+    resourceNames: [""kubernetes-dashboard-key-holder"", ""kubernetes-dashboard-certs"", ""kubernetes-dashboard-csrf""]
+    verbs: [""get"", ""update"", ""delete""]
+    # Allow Dashboard to get and update 'kubernetes-dashboard-settings' config map.
+  - apiGroups: [""""]
+    resources: [""configmaps""]
+    resourceNames: [""kubernetes-dashboard-settings""]
+    verbs: [""get"", ""update""]
+    # Allow Dashboard to get metrics.
+  - apiGroups: [""""]
+    resources: [""services""]
+    resourceNames: [""heapster"", ""dashboard-metrics-scraper""]
+    verbs: [""proxy""]
+  - apiGroups: [""""]
+    resources: [""services/proxy""]
+    resourceNames: [""heapster"", ""http:heapster:"", ""https:heapster:"", ""dashboard-metrics-scraper"", ""http:dashboard-metrics-scraper""]
+    verbs: [""get""]
+
+---
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  labels:
+    k8s-app: kubernetes-dashboard
+  name: kubernetes-dashboard
+rules:
+  # Allow Metrics Scraper to get metrics from the Metrics server
+  - apiGroups: [""metrics.k8s.io""]
+    resources: [""pods"", ""nodes""]
+    verbs: [""get"", ""list"", ""watch""]
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    k8s-app: kubernetes-dashboard
+  name: kubernetes-dashboard
+  namespace: kubernetes-dashboard
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kubernetes-dashboard
+subjects:
+  - kind: ServiceAccount
+    name: kubernetes-dashboard
+    namespace: kubernetes-dashboard
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kubernetes-dashboard
+  namespace: kubernetes-dashboard
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kubernetes-dashboard
+subjects:
+  - kind: ServiceAccount
+    name: kubernetes-dashboard
+    namespace: kubernetes-dashboard
+
+---
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  labels:
+    k8s-app: kubernetes-dashboard
+  name: kubernetes-dashboard
+  namespace: kubernetes-dashboard
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      k8s-app: kubernetes-dashboard
+  template:
+    metadata:
+      labels:
+        k8s-app: kubernetes-dashboard
+    spec:
+      containers:
+        - name: kubernetes-dashboard
+          image: kubernetesui/dashboard:v2.0.0-rc2
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8443
+              protocol: TCP
+          args:
+            - --auto-generate-certificates=false
+            - --tls-cert-file=cert.pem
+            - --tls-key-file=key.pem
+            - --namespace=kubernetes-dashboard
+# Uncomment the following line to manually specify Kubernetes API server Host
+# If not specified, Dashboard will attempt to auto discover the API server and connect
+# to it. Uncomment only if the default does not work.
+# - --apiserver-host=http://my-address:port
+          volumeMounts:
+            - name: kubernetes-dashboard-certs
+              mountPath: /certs
+              # Create on-disk volume to store exec logs
+            - mountPath: /tmp
+              name: tmp-volume
+          livenessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /
+              port: 8443
+            initialDelaySeconds: 30
+            timeoutSeconds: 30
+      volumes:
+        - name: kubernetes-dashboard-certs
+          secret:
+            secretName: kubernetes-dashboard-certs
+        - name: tmp-volume
+          emptyDir: {{}}
+      serviceAccountName: kubernetes-dashboard
+# Comment the following tolerations if Dashboard must not be deployed on master
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    k8s-app: dashboard-metrics-scraper
+  name: dashboard-metrics-scraper
+  namespace: kubernetes-dashboard
+spec:
+  ports:
+    - port: 8000
+      targetPort: 8000
+  selector:
+    k8s-app: dashboard-metrics-scraper
+
+---
+
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  labels:
+    k8s-app: dashboard-metrics-scraper
+  name: dashboard-metrics-scraper
+  namespace: kubernetes-dashboard
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      k8s-app: dashboard-metrics-scraper
+  template:
+    metadata:
+      labels:
+        k8s-app: dashboard-metrics-scraper
+    spec:
+      containers:
+        - name: dashboard-metrics-scraper
+          image: kubernetesui/metrics-scraper:v1.0.1
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              scheme: HTTP
+              path: /
+              port: 8000
+            initialDelaySeconds: 30
+            timeoutSeconds: 30
+          volumeMounts:
+          - mountPath: /tmp
+            name: tmp-volume
+      serviceAccountName: kubernetes-dashboard
+# Comment the following tolerations if Dashboard must not be deployed on master
+      tolerations:
+        - key: node-role.kubernetes.io/master
+          effect: NoSchedule
+      volumes:
+        - name: tmp-volume
+          emptyDir: {{}}
+";
+
                             var dashboardCert = TlsCertificate.Parse(kubeContextExtension.KubernetesDashboardCertificate);
                             var variables     = new Dictionary<string, string>();
 
@@ -1533,7 +1819,7 @@ kubectl create namespace istio-system
 cd /tmp
 curl {Program.CurlOptions} {kubeSetupInfo.IstioLinuxUri} > istio.tar.gz
 tar xvf /tmp/istio.tar.gz
-mv istio-{kubeSetupInfo.Versions.Istio} istio
+mv istio-{KubeVersions.IstioVersion} istio
 cd istio
 
 # Copy the tools:
@@ -1567,21 +1853,21 @@ helm template install/kubernetes/helm/istio \
     --set certmanager.email=mailbox@donotuseexample.com \
 	--set gateways.istio-egressgateway.enabled=true \
 ";
-            if (cluster.Definition.Network.Ingress.Count > 0)
+            if (cluster.Definition.Network.IngressRoutes.Count > 0)
             {
                 istioScript1 +=
 $@" \
     --set gateways.istio-ingressgateway.sds.enabled=true \
     --set gateways.istio-ingressgateway.type=NodePort \
 ";
-                for (var i = 0; i < cluster.Definition.Network.Ingress.Count; i++)
+                for (var i = 0; i < cluster.Definition.Network.IngressRoutes.Count; i++)
                 {
                     istioScript1 +=
 $@" \
-    --set gateways.istio-ingressgateway.ports[{i}].targetPort={cluster.Definition.Network.Ingress[i].TargetPort} \
-    --set gateways.istio-ingressgateway.ports[{i}].port={cluster.Definition.Network.Ingress[i].Port} \
-    --set gateways.istio-ingressgateway.ports[{i}].name={cluster.Definition.Network.Ingress[i].Name} \
-    --set gateways.istio-ingressgateway.ports[{i}].nodePort={cluster.Definition.Network.Ingress[i].NodePort} \
+    --set gateways.istio-ingressgateway.ports[{i}].targetPort={cluster.Definition.Network.IngressRoutes[i].TargetPort} \
+    --set gateways.istio-ingressgateway.ports[{i}].port={cluster.Definition.Network.IngressRoutes[i].Port} \
+    --set gateways.istio-ingressgateway.ports[{i}].name={cluster.Definition.Network.IngressRoutes[i].Name} \
+    --set gateways.istio-ingressgateway.ports[{i}].nodePort={cluster.Definition.Network.IngressRoutes[i].NodePort} \
 ";
                 }
             }
@@ -1726,16 +2012,17 @@ done
         /// <param name="values">Optional values to override Helm chart values.</param>
         /// <returns></returns>
         private async Task InstallHelmChartAsync(
-            SshProxy<NodeDefinition> master,
-            string chartName,
-            string @namespace = "default",
-            int timeout = 300,
-            bool wait = true,
-            List<KeyValuePair<string, object>> values = null)
+            SshProxy<NodeDefinition>            master,
+            string                              chartName,
+            string                              @namespace = "default",
+            int                                 timeout    = 300,
+            bool                                wait       = true,
+            List<KeyValuePair<string, object>>  values     = null)
         {
             using (var client = new HeadendClient())
             {
                 var zip = await client.GetHelmChartZipAsync(chartName, branch);
+
                 master.UploadBytes($"/tmp/charts/{chartName}.zip", zip);
             }
 
@@ -1748,9 +2035,12 @@ done
                     switch (value.Value.GetType().Name)
                     {
                         case nameof(String):
+
                             valueOverrides += $"--set-string {value.Key}={value.Value} \\\n";
                             break;
+
                         case nameof(Int32):
+
                             valueOverrides += $"--set {value.Key}={value.Value} \\\n";
                             break;
                     }

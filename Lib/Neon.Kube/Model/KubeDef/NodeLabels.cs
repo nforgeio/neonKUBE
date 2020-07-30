@@ -497,7 +497,7 @@ namespace Neon.Kube
             {
                 // WARNING: 
                 //
-                // This method will need to be updated whenever new standard labels are added or changed.
+                // This method will need to be updated whenever standard labels are added or changed.
 
                 var list = new List<KeyValuePair<string, object>>(50);
 

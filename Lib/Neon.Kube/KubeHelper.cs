@@ -1126,7 +1126,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
 
             var hostPlatform      = KubeHelper.HostPlatform;
-            var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", setupInfo.Versions.Kubernetes);
+            var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", KubeVersions.KubeletPackageVersion);
             var targetPath        = Path.Combine(KubeHelper.ProgramFolder);
 
             switch (hostPlatform)
@@ -1217,7 +1217,7 @@ namespace Neon.Kube
                             throw new KubeException(error);
                         }
 
-                        if (Version.Parse(setupInfo.Versions.Kubernetes) > currentVersion)
+                        if (Version.Parse(KubeVersions.KubernetesVersion) > currentVersion)
                         {
                             // We need to copy the latest version.
 
@@ -1260,7 +1260,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
 
             var hostPlatform    = KubeHelper.HostPlatform;
-            var cachedHelmPath  = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", setupInfo.Versions.Helm);
+            var cachedHelmPath  = KubeHelper.GetCachedComponentPath(hostPlatform, "helm", KubeVersions.HelmVersion);
             var targetPath      = Path.Combine(KubeHelper.ProgramFolder);
 
             switch (hostPlatform)
@@ -1307,7 +1307,7 @@ namespace Neon.Kube
                             throw new KubeException(error);
                         }
 
-                        if (Version.Parse(setupInfo.Versions.Helm) > currentVersion)
+                        if (Version.Parse(KubeVersions.HelmVersion) > currentVersion)
                         {
                             // We need to copy the latest version.
 

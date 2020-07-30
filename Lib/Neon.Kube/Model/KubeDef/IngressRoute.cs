@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IngressOptions.cs
+// FILE:	    IngressRoute.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -41,7 +41,7 @@ namespace Neon.Kube
     /// <summary>
     /// Specifies the ingress rules for the cluster.
     /// </summary>
-    public class IngressOptions
+    public class IngressRoute
     {
         /// <summary>
         /// The name of the ingress rule.
@@ -85,22 +85,22 @@ namespace Neon.Kube
         {
             if (string.IsNullOrEmpty(Name))
             {
-                throw new ClusterDefinitionException($"[{nameof(IngressOptions)}.{nameof(Name)}] is required when specifying an ingress rule.");
+                throw new ClusterDefinitionException($"[{nameof(IngressRoute)}.{nameof(Name)}] is required when specifying an ingress rule.");
             }
 
             if (Port == null)
             {
-                throw new ClusterDefinitionException($"[{nameof(IngressOptions)}.{nameof(Port)}] is required when specifying an ingress rule.");
+                throw new ClusterDefinitionException($"[{nameof(IngressRoute)}.{nameof(Port)}] is required when specifying an ingress rule.");
             }
 
             if (TargetPort == null)
             {
-                throw new ClusterDefinitionException($"[{nameof(IngressOptions)}.{nameof(TargetPort)}] is required when specifying an ingress rule.");
+                throw new ClusterDefinitionException($"[{nameof(IngressRoute)}.{nameof(TargetPort)}] is required when specifying an ingress rule.");
             }
 
             if (NodePort == null)
             {
-                throw new ClusterDefinitionException($"[{nameof(IngressOptions)}.{nameof(NodePort)}] is required when specifying an ingress rule.");
+                throw new ClusterDefinitionException($"[{nameof(IngressRoute)}.{nameof(NodePort)}] is required when specifying an ingress rule.");
             }
         }
     }

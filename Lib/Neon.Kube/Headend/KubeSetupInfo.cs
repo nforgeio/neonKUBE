@@ -67,17 +67,6 @@ namespace Neon.Kube
         public string LinuxTemplateUri { get; set; } = null;
 
         //---------------------------------------------------------------------
-        // Component versions.
-
-        /// <summary>
-        /// Lists the installed component versions.
-        /// </summary>
-        [JsonProperty(PropertyName = "Versions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "versions", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public KubeSetupVersions Versions { get; set; } = new KubeSetupVersions();
-
-        //---------------------------------------------------------------------
         // kubectl:
 
         /// <summary>
@@ -124,33 +113,6 @@ namespace Neon.Kube
         public string KubeletLinuxUri { get; set; }
 
         //---------------------------------------------------------------------
-        // Ubuntu Kubernetes component package versions:
-
-        /// <summary>
-        /// The Ubuntu package version for <b>kubeadm</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "KubeAdmPackageUbuntuVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "kubeAdmPackageUbuntuVersion", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string KubeAdmPackageUbuntuVersion { get; set; }
-
-        /// <summary>
-        /// The Ubuntu package version for <b>kubectl</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "KubeCtlPackageUbuntuVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "kubeCtlPackageUbuntuVersion", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string KubeCtlPackageUbuntuVersion { get; set; }
-
-        /// <summary>
-        /// The Ubuntu package version for <b>kubelet</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "KubeletPackageUbuntuVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "kubeletPackageUbuntuVersion", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string KubeletPackageUbuntuVersion { get; set; }
-
-        //---------------------------------------------------------------------
         // Docker:
 
         /// <summary>
@@ -159,7 +121,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "DockerPackageUbuntuUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "dockerPackageUbuntuUri", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string DockerPackageUbuntuUri { get; set; }
+        public string DockerPackageUri { get; set; }
 
         //---------------------------------------------------------------------
         // Helm:
@@ -217,27 +179,5 @@ namespace Neon.Kube
         [YamlMember(Alias = "istioLinuxUri", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string IstioLinuxUri { get; set; }
-
-        //---------------------------------------------------------------------
-        // Kubernetes Dashboard:
-
-        /// <summary>
-        /// <para>
-        /// The Kubernetes Dashboard configuration YAML.
-        /// </para>
-        /// <note>
-        /// See the remarks for information on embedded variables.
-        /// </note>
-        /// </summary>
-        /// <remarks>
-        /// The YAML returned includes two variables <b>$&lt;CERTIFICATE&gt;</b> and <b>$&lt;PRIVATEKEY&gt;</b> that 
-        /// need to be replaced with the custom certificate and private key the dashboard will use to
-        /// secure the site.  These must be passed as the PEM encoded certificate and key converted into
-        /// a single line of base-64 text.
-        /// </remarks>
-        [JsonProperty(PropertyName = "KubeDashboardYaml", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "KubeDashboardYaml", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string KubeDashboardYaml { get; set; }
     }
 }
