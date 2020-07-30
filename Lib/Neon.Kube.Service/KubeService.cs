@@ -976,7 +976,7 @@ namespace Neon.Kube.Service
         /// <param name="logicalPath">The logical file path (typically expressed as a Linux path).</param>
         /// <param name="contents">The content string.</param>
         /// <param name="linuxLineEndings">
-        /// Optionally convert any Windows style Lline endings (CRLF) into Linux 
+        /// Optionally convert any Windows style line endings (CRLF) into Linux 
         /// style endings (LF).  This defaults to <c>false</c>.
         /// </param>
         public void SetConfigFile(string logicalPath, string contents, bool linuxLineEndings = false)
@@ -1014,7 +1014,7 @@ namespace Neon.Kube.Service
         /// files for unit testing.
         /// </summary>
         /// <param name="logicalPath">The logical file path (typically expressed as a Linux path).</param>
-        /// <param name="contents">The contebnt bytes.</param>
+        /// <param name="contents">The content bytes.</param>
         public void SetConfigFile(string logicalPath, byte[] contents)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(logicalPath), nameof(logicalPath));
