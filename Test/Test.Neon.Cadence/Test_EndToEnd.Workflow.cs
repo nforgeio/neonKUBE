@@ -4248,7 +4248,7 @@ namespace TestCadence
             public async Task<bool> ActivityDotNetException()
             {
                 // Call an activity that throws a [TransientException] and
-                // verify that we see a [CadenceGenericException] formatted
+                // verify that we see a [CadenceCustomException] formatted
                 // with the exception information.
                 //
                 // The method returns TRUE when the exception looks good.
@@ -4259,7 +4259,7 @@ namespace TestCadence
                 {
                     await stub.ThrowTransientAsync();
                 }
-                catch (CadenceGenericException e)
+                catch (CadenceCustomException e)
                 {
                     if (e.Reason != typeof(TransientException).FullName)
                     {
