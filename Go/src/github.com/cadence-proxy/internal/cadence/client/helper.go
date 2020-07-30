@@ -24,7 +24,6 @@ import (
 	"sync"
 	"time"
 
-	"go.uber.org/cadence"
 	"go.uber.org/cadence/.gen/go/cadence/workflowserviceclient"
 	cadenceshared "go.uber.org/cadence/.gen/go/shared"
 	"go.uber.org/cadence/client"
@@ -778,14 +777,7 @@ func (helper *ClientHelper) CompleteActivity(
 ) error {
 	if completionErr != nil && !reflect.ValueOf(completionErr).IsNil() {
 		if v, ok := completionErr.(*proxyerror.CadenceError); ok {
-			errType := v.GetType()
-			switch errType {
-			case proxyerror.Custom:
-				completionErr = cadence.NewCustomError(completionErr.Error())
-				break
-			case proxyerror.Cancelled:
-				completionErr = cadence.NewCanceledError(completionErr.Error())
-			}
+			completionErr = v.ToError()
 		}
 	} else {
 		completionErr = nil
@@ -828,14 +820,7 @@ func (helper *ClientHelper) CompleteActivityByID(
 ) error {
 	if completionErr != nil && !reflect.ValueOf(completionErr).IsNil() {
 		if v, ok := completionErr.(*proxyerror.CadenceError); ok {
-			errType := v.GetType()
-			switch errType {
-			case proxyerror.Custom:
-				completionErr = cadence.NewCustomError(completionErr.Error())
-				break
-			case proxyerror.Cancelled:
-				completionErr = cadence.NewCanceledError(completionErr.Error())
-			}
+			completionErr = v.ToError()
 		}
 	} else {
 		completionErr = nil

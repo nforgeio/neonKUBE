@@ -18,8 +18,8 @@
 package messages
 
 import (
-	"github.com/cadence-proxy/internal/cadence/error"
 	internal "github.com/cadence-proxy/internal"
+	"github.com/cadence-proxy/internal/cadence/error"
 )
 
 type (
@@ -90,14 +90,18 @@ func (request *ActivityCompleteRequest) SetResult(value []byte) {
 // complete call.
 //
 // returns *proxyerror.CadenceError -> *proxyerror.CadenceError to set in activity complete
-func (request *ActivityCompleteRequest) GetError() *proxyerror.CadenceError {
-	cadenceError := proxyerror.NewCadenceErrorEmpty()
-	err := request.GetJSONProperty("Error", cadenceError)
+func (request *ActivityCompleteRequest) GetError() error {
+	var cadenceError proxyerror.CadenceError
+	err := request.GetJSONProperty("Error", &cadenceError)
 	if err != nil {
 		return nil
 	}
 
-	return cadenceError
+	if &cadenceError != nil {
+		err = cadenceError.ToError()
+	}
+
+	return err
 }
 
 // SetError sets an ActivityCompleteRequest's Error field
@@ -105,8 +109,8 @@ func (request *ActivityCompleteRequest) GetError() *proxyerror.CadenceError {
 // complete call.
 //
 // param value *proxyerror.CadenceError -> *proxyerror.CadenceError value to set in activity complete
-func (request *ActivityCompleteRequest) SetError(value *proxyerror.CadenceError) {
-	request.SetJSONProperty("Error", value)
+func (request *ActivityCompleteRequest) SetError(value error) {
+	request.SetJSONProperty("Error", proxyerror.NewCadenceError(value))
 }
 
 // GetDomain gets a ActivityCompleteRequest's Domain field

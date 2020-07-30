@@ -158,30 +158,6 @@ func sendMessage(message messages.IProxyMessage) {
 	}()
 }
 
-// sendFutureACK sends an acknowledgement of a workflow future being created
-// to the .NET client.
-// func sendFutureACK(contextID, operationID, clientID int64) *Operation {
-
-// 	// create the WorkflowFutureReadyRequest
-// 	requestID := NextRequestID()
-// 	workflowFutureReadyRequest := messages.NewWorkflowFutureReadyRequest()
-// 	workflowFutureReadyRequest.SetRequestID(requestID)
-// 	workflowFutureReadyRequest.SetContextID(contextID)
-// 	workflowFutureReadyRequest.SetFutureOperationID(operationID)
-// 	workflowFutureReadyRequest.SetClientID(clientID)
-
-// 	// create the Operation for this request and add it to the operations map
-// 	op := NewOperation(requestID, workflowFutureReadyRequest)
-// 	op.SetChannel(make(chan interface{}))
-// 	op.SetContextID(contextID)
-// 	Operations.Add(requestID, op)
-
-// 	// send the request
-// 	go sendMessage(workflowFutureReadyRequest)
-
-// 	return op
-// }
-
 // isCanceledError checks a golang error or a
 // CadenceError to see if it is a canceledError.
 func isCanceledErr(err error) bool {

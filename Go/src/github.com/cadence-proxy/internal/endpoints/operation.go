@@ -18,10 +18,10 @@
 package endpoints
 
 import (
+	"reflect"
 	"sync"
 
 	"github.com/cadence-proxy/internal"
-	proxyerror "github.com/cadence-proxy/internal/cadence/error"
 	"github.com/cadence-proxy/internal/messages"
 )
 
@@ -142,15 +142,15 @@ func (op *Operation) SetChannel(value chan interface{}) {
 
 // SendChannel sends an interface{} value over the
 // Operation's channel
-func (op *Operation) SendChannel(result interface{}, cadenceError *proxyerror.CadenceError) error {
+func (op *Operation) SendChannel(result interface{}, err error) error {
 	if op.channel == nil {
 		return internal.ErrArgumentNil
 	}
 
 	defer close(op.channel)
 
-	if cadenceError != nil {
-		op.channel <- cadenceError
+	if err != nil && !reflect.ValueOf(err).IsNil() {
+		op.channel <- err
 	} else {
 		op.channel <- result
 	}

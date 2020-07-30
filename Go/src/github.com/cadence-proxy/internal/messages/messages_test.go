@@ -7564,8 +7564,8 @@ func (s *UnitTestSuite) TestProxyMessage() {
 		s.Equal("c29tZSBkYXRhIHdpdGggACBhbmQg77u/", *v.Properties["Bytes"])
 		s.Equal(int64(666), v.GetClientID())
 
-		cadenceError := proxyerror.NewCadenceErrorEmpty()
-		v.GetJSONProperty("Error", cadenceError)
+		var cadenceError proxyerror.CadenceError
+		v.GetJSONProperty("Error", &cadenceError)
 		s.Equal("foo", *cadenceError.String)
 		s.Equal(proxyerror.Custom, cadenceError.GetType())
 
@@ -7887,15 +7887,15 @@ func (s *UnitTestSuite) TestPropertyHelpers() {
 	s.Equal(time.Second*123, message.GetTimeSpanProperty("foo"))
 
 	jsonStr := "{\"String\":\"john\",\"Details\":\"22\",\"Type\":\"mca\"}"
-	cadenceError := proxyerror.NewCadenceErrorEmpty()
-	cadenceErrorCheck := proxyerror.NewCadenceErrorEmpty()
-	err := json.Unmarshal([]byte(jsonStr), cadenceError)
+	var cadenceError proxyerror.CadenceError
+	var cadenceErrorCheck proxyerror.CadenceError
+	err := json.Unmarshal([]byte(jsonStr), &cadenceError)
 	if err != nil {
 		panic(err)
 	}
 
-	message.SetJSONProperty("foo", cadenceError)
-	message.GetJSONProperty("foo", cadenceErrorCheck)
+	message.SetJSONProperty("foo", &cadenceError)
+	message.GetJSONProperty("foo", &cadenceErrorCheck)
 	s.Equal(cadenceError, cadenceErrorCheck)
 
 	b, err := base64.StdEncoding.DecodeString("c29tZSBkYXRhIHdpdGggACBhbmQg77u/")

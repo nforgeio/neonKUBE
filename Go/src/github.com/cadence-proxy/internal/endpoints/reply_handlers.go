@@ -22,6 +22,7 @@ import (
 	"os"
 	"time"
 
+	"go.uber.org/cadence"
 	"go.uber.org/cadence/activity"
 	"go.uber.org/cadence/workflow"
 	"go.uber.org/zap"
@@ -97,18 +98,20 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *Operatio
 		return op.SendChannel(continueError, nil)
 	}
 
-	// special errors
+	// get result
 	var result interface{} = reply.GetResult()
-	var cadenceError *proxyerror.CadenceError = reply.GetError()
-	if cadenceError != nil {
-		if isCanceledErr(cadenceError) {
-			result = workflow.ErrCanceled
-			cadenceError = nil
-		}
+
+	// get error values
+	err := reply.GetError()
+
+	// canceled error case
+	if cadence.IsCanceledError(err) {
+		result = workflow.ErrCanceled
+		err = nil
 	}
 
 	// set the reply
-	return op.SendChannel(result, cadenceError)
+	return op.SendChannel(result, err)
 }
 
 func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply, op *Operation) error {
@@ -179,17 +182,22 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply, op *Operatio
 		return internal.ErrEntityNotExist
 	}
 
+	// get error values
+	err := reply.GetError()
+
 	// check if the activity is to be
 	// completed externally
 	var result interface{}
 	if reply.GetPending() {
 		result = activity.ErrResultPending
+		err = nil
 	} else {
 		result = reply.GetResult()
 	}
 
 	// set the reply
-	return op.SendChannel(result, reply.GetError())
+
+	return op.SendChannel(result, err)
 }
 
 func handleActivityStoppingReply(reply *messages.ActivityStoppingReply, op *Operation) error {
