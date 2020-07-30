@@ -19,7 +19,6 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
-	proxyerror "temporal-proxy/internal/temporal/error"
 
 	"go.temporal.io/temporal-proto/workflowservice"
 )
@@ -75,7 +74,7 @@ func (reply *DescribeTaskListReply) SetResult(value *workflowservice.DescribeTas
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Build inherits docs from ProxyReply.Build()
-func (reply *DescribeTaskListReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+func (reply *DescribeTaskListReply) Build(e error, result ...interface{}) {
 	reply.ProxyReply.Build(e)
 	if len(result) > 0 {
 		if v, ok := result[0].(*workflowservice.DescribeTaskListResponse); ok {

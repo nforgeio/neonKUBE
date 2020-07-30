@@ -2710,7 +2710,6 @@ func handleActivityGetLocalResultRequest(requestCtx context.Context, request *me
 		buildReply(reply, internal.ErrEntityNotExist)
 		return reply
 	}
-
 	defer wectx.RemoveActivity(activityID)
 
 	var result []byte

@@ -21,7 +21,6 @@ import (
 	"go.temporal.io/temporal/workflow"
 
 	internal "temporal-proxy/internal"
-	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 type (
@@ -76,7 +75,7 @@ func (reply *WorkflowExecuteReply) SetExecution(value *workflow.Execution) {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Build inherits docs from WorkflowReply.Build()
-func (reply *WorkflowExecuteReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+func (reply *WorkflowExecuteReply) Build(e error, result ...interface{}) {
 	reply.WorkflowReply.Build(e)
 	if len(result) > 0 {
 		if v, ok := result[0].(*workflow.Execution); ok {

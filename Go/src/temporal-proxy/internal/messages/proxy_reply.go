@@ -19,7 +19,6 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
-	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 type (
@@ -37,9 +36,9 @@ type (
 	// allow message types that implement it to get and set their nested ProxyReply
 	IProxyReply interface {
 		IProxyMessage
-		GetError() *proxyerror.TemporalError
-		SetError(value *proxyerror.TemporalError)
-		Build(e *proxyerror.TemporalError, content ...interface{})
+		GetError() error
+		SetError(value error)
+		Build(e error, content ...interface{})
 	}
 )
 
@@ -62,33 +61,37 @@ func NewProxyReply() *ProxyReply {
 // GetError gets the TemporalError encoded as a JSON string in a ProxyReply's
 // Properties map
 //
-// returns proxyerror.TemporalError -> a TemporalError struct encoded with the
+// returns error -> an error encoded with the
 // JSON property values at a ProxyReply's Error property
-func (reply *ProxyReply) GetError() *proxyerror.TemporalError {
-	temporalError := proxyerror.NewTemporalErrorEmpty()
-	err := reply.GetJSONProperty("Error", temporalError)
+func (reply *ProxyReply) GetError() error {
+	var temporalError internal.TemporalError
+	err := reply.GetJSONProperty("Error", &temporalError)
 	if err != nil {
 		return nil
 	}
 
-	return temporalError
+	if &temporalError != nil {
+		err = temporalError.ToError()
+	}
+
+	return err
 }
 
 // SetError sets a TemporalError as a JSON string in a ProxyReply's
 // properties map at the Error Property
 //
-// param proxyerror.TemporalError -> the TemporalError to marshal into a
+// param value error -> the error to marshal into a
 // JSON string and set at a ProxyReply's Error property
-func (reply *ProxyReply) SetError(value *proxyerror.TemporalError) {
-	reply.SetJSONProperty("Error", value)
+func (reply *ProxyReply) SetError(value error) {
+	reply.SetJSONProperty("Error", internal.NewTemporalError(value))
 }
 
 // Build build the IProxyReply given specified results.
 //
 // params:
-// 	- e *proxyerror.TemporalError -> the TemporalError to set in the reply.
+// 	- e error -> the error to set in the reply.
 //  - ...interface{} result -> optional results to set in the reply.
-func (reply *ProxyReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+func (reply *ProxyReply) Build(e error, result ...interface{}) {
 	reply.SetError(e)
 }
 

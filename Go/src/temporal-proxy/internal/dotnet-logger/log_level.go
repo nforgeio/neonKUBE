@@ -32,30 +32,30 @@ import (
 type LogLevel int32
 
 const (
-	// Logging is disabled.
+	// None - Logging is disabled.
 	None LogLevel = 0
 
-	// Describes detailed debug or diagnostic information.
+	// Debug - Describes detailed debug or diagnostic information.
 	Debug LogLevel = 1
 
-	// Describes a non-error security operation or condition, such as a
+	// SInfo - Describes a non-error security operation or condition, such as a
 	// a successful login or authentication.
 	SInfo LogLevel = 2
 
-	// Describes a normal operation or condition.
+	// Info -Describes a normal operation or condition.
 	Info LogLevel = 3
 
-	// An unusual condition has been detected that may ultimately lead to an error.
+	// Warn - An unusual condition has been detected that may ultimately lead to an error.
 	Warn LogLevel = 4
 
-	// An error has been detected.
+	// Error - An error has been detected.
 	Error LogLevel = 5
 
-	// A security related error has occurred.  Errors indicate a problem that may be
+	// SError - A security related error has occurred.  Errors indicate a problem that may be
 	// transient, be recovered from, or are perhaps more serious.
 	SError LogLevel = 6
 
-	// A critical or fatal error has been detected.  These errors indicate that
+	// Critical - A critical or fatal error has been detected.  These errors indicate that
 	// a very serious failure has occurred that may have crashed the program or
 	// at least seriousoly impacts its functioning.
 	Critical LogLevel = 7

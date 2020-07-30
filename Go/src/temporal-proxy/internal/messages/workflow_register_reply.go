@@ -19,7 +19,6 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
-	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 type (
@@ -49,7 +48,7 @@ func NewWorkflowRegisterReply() *WorkflowRegisterReply {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Build inherits docs from WorkflowReply.Build()
-func (reply *WorkflowRegisterReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+func (reply *WorkflowRegisterReply) Build(e error, result ...interface{}) {
 	reply.WorkflowReply.Build(e)
 }
 

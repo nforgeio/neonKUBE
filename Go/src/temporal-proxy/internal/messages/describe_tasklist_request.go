@@ -18,9 +18,12 @@
 package messages
 
 import (
-	tasklist "go.temporal.io/temporal-proto/tasklist"
+	"fmt"
+	"strings"
+
 	internal "temporal-proxy/internal"
-	proxyclient "temporal-proxy/internal/temporal/client"
+
+	tasklist "go.temporal.io/temporal-proto/tasklist"
 )
 
 type (
@@ -95,7 +98,7 @@ func (request *DescribeTaskListRequest) GetTaskListType() tasklist.TaskListType 
 		return tasklist.TaskListType_Decision
 	}
 
-	return proxyclient.StringToTaskListType(*taskListTypePtr)
+	return StringToTaskListType(*taskListTypePtr)
 }
 
 // SetTaskListType sets the TaskListType property in the DescribeTaskListRequest's
@@ -127,5 +130,36 @@ func (request *DescribeTaskListRequest) CopyTo(target IProxyMessage) {
 		v.SetName(request.GetName())
 		v.SetNamespace(request.GetNamespace())
 		v.SetTaskListType(request.GetTaskListType())
+	}
+}
+
+// -------------------------------------------------------------------------
+// Helper methods
+
+// StringToTaskListType takes a valid TaskListType
+// as a string and converts it into a TaskListType
+func StringToTaskListType(value string) tasklist.TaskListType {
+	value = strings.ToUpper(value)
+	switch value {
+	case "DECISION":
+		return tasklist.TaskListType_Decision
+	case "ACTIVITY":
+		return tasklist.TaskListType_Activity
+	default:
+		panic(fmt.Errorf("Invalid Tasklist Type string: %s", value))
+	}
+}
+
+// StringToTaskListKind takes a valid TaskListKind
+// as a string and converts it into a TaskListKind
+func StringToTaskListKind(value string) tasklist.TaskListKind {
+	value = strings.ToUpper(value)
+	switch value {
+	case "NORMAL":
+		return tasklist.TaskListKind_Normal
+	case "STICKY":
+		return tasklist.TaskListKind_Sticky
+	default:
+		panic(fmt.Errorf("Invalid Tasklist Kind string: %s", value))
 	}
 }

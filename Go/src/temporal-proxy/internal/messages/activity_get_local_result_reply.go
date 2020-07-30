@@ -20,7 +20,6 @@ package messages
 import (
 	internal "temporal-proxy/internal"
 	proxytemporal "temporal-proxy/internal/temporal"
-	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 type (
@@ -91,7 +90,7 @@ func (reply *ActivityGetLocalResultReply) SetReplayStatus(value proxytemporal.Re
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Build inherits docs from ActivityReply.Build()
-func (reply *ActivityGetLocalResultReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+func (reply *ActivityGetLocalResultReply) Build(e error, result ...interface{}) {
 	reply.ActivityReply.Build(e)
 	if len(result) > 0 {
 		if v, ok := result[0].([]interface{}); ok {

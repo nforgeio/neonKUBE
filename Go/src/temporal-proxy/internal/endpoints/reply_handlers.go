@@ -28,7 +28,6 @@ import (
 
 	"temporal-proxy/internal"
 	"temporal-proxy/internal/messages"
-	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 // -------------------------------------------------------------------------
@@ -64,7 +63,7 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *Operatio
 
 	// check for ForceReplay
 	if reply.GetForceReplay() {
-		return op.SendChannel(nil, proxyerror.NewTemporalError(errors.New("force-replay")))
+		return op.SendChannel(nil, internal.NewTemporalError(errors.New("force-replay")))
 	}
 
 	// check for ContinueAsNew
@@ -97,18 +96,20 @@ func handleWorkflowInvokeReply(reply *messages.WorkflowInvokeReply, op *Operatio
 		return op.SendChannel(continueError, nil)
 	}
 
-	// special errors
+	// get result
 	var result interface{} = reply.GetResult()
-	var temporalError *proxyerror.TemporalError = reply.GetError()
-	if temporalError != nil {
-		if isCanceledErr(temporalError) {
-			result = workflow.ErrCanceled
-			temporalError = nil
-		}
+
+	// get error values
+	err := reply.GetError()
+
+	// canceled error case
+	if internal.IsCancelledError(err) {
+		result = workflow.ErrCanceled
+		err = nil
 	}
 
 	// set the reply
-	return op.SendChannel(result, temporalError)
+	return op.SendChannel(result, err)
 }
 
 func handleWorkflowSignalInvokeReply(reply *messages.WorkflowSignalInvokeReply, op *Operation) error {
@@ -179,17 +180,21 @@ func handleActivityInvokeReply(reply *messages.ActivityInvokeReply, op *Operatio
 		return internal.ErrEntityNotExist
 	}
 
+	// get error values
+	err := reply.GetError()
+
 	// check if the activity is to be
 	// completed externally
 	var result interface{}
 	if reply.GetPending() {
 		result = activity.ErrResultPending
+		err = nil
 	} else {
 		result = reply.GetResult()
 	}
 
 	// set the reply
-	return op.SendChannel(result, reply.GetError())
+	return op.SendChannel(result, err)
 }
 
 func handleActivityStoppingReply(reply *messages.ActivityStoppingReply, op *Operation) error {

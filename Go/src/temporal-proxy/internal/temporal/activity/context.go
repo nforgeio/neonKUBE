@@ -26,7 +26,7 @@ var (
 	mu sync.RWMutex
 
 	// contextID is incremented (protected by a mutex) every time
-	// a new temporal context.Context is created
+	// a new cadence context.Context is created
 	contextID int64
 )
 
@@ -39,13 +39,12 @@ type (
 		contexts map[int64]*Context
 	}
 
-	// Context holds a Temporal activity
-	// context, the registered activity function, and a context cancel function.
+	// Context holds a Cadence activity
+	// context, the registered activity function.
 	// This struct is used as an intermediate for storing worklfow information
-	// and state while registering and executing temporal activitys
+	// and state while registering and executing cadence activitys
 	Context struct {
 		ctx          context.Context
-		cancelFunc   context.CancelFunc
 		activityName *string
 	}
 )
@@ -86,45 +85,31 @@ func NewActivityContext(ctx context.Context) *Context {
 
 // GetContext gets a ActivityContext's context.Context
 //
-// returns context.Context -> a temporal context context
+// returns context.Context -> a cadence context context
 func (actx *Context) GetContext() context.Context {
 	return actx.ctx
 }
 
 // SetContext sets a ActivityContext's context.Context
 //
-// param value context.Context -> a temporal activity context to be
-// set as a ActivityContext's temporal context.Context
+// param value context.Context -> a cadence activity context to be
+// set as a ActivityContext's cadence context.Context
 func (actx *Context) SetContext(value context.Context) {
 	actx.ctx = value
 }
 
 // GetActivityName gets a ActivityContext's activity function name
 //
-// returns *string -> a temporal activity function name
+// returns *string -> a cadence activity function name
 func (actx *Context) GetActivityName() *string {
 	return actx.activityName
 }
 
 // SetActivityName sets a ActivityContext's activity function name
 //
-// param value *string -> a temporal activity function name
+// param value *string -> a cadence activity function name
 func (actx *Context) SetActivityName(value *string) {
 	actx.activityName = value
-}
-
-// GetCancelFunction gets a ActivityContext's context cancel function
-//
-// returns context.CancelFunc -> a temporal activity context cancel function
-func (actx *Context) GetCancelFunction() context.CancelFunc {
-	return actx.cancelFunc
-}
-
-// SetCancelFunction sets a ActivityContext's cancel function
-//
-// param value context.CancelFunc -> a temporal activity context cancel function
-func (actx *Context) SetCancelFunction(value context.CancelFunc) {
-	actx.cancelFunc = value
 }
 
 //----------------------------------------------------------------------------
@@ -137,7 +122,7 @@ func NewActivityContextsMap() *ContextsMap {
 	return o
 }
 
-// Add adds a new temporal context and its corresponding ContextId into
+// Add adds a new cadence context and its corresponding ContextId into
 // the ActivityContextsMap map.  This method is thread-safe.
 //
 // param contextID int64 -> the long contextID of activity.
@@ -146,7 +131,7 @@ func NewActivityContextsMap() *ContextsMap {
 // param actx *ActivityContext -> pointer to the new ActivityContex used to
 // execute activity functions. This will be the mapped value
 //
-// returns int64 -> long contextID of the new temporal ActivityContext added to the map
+// returns int64 -> long contextID of the new cadence ActivityContext added to the map
 func (a *ContextsMap) Add(contextID int64, actx *Context) int64 {
 	a.Lock()
 	defer a.Unlock()

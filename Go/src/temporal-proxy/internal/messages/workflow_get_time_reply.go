@@ -21,7 +21,6 @@ import (
 	"time"
 
 	internal "temporal-proxy/internal"
-	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 type (
@@ -71,7 +70,7 @@ func (reply *WorkflowGetTimeReply) SetTime(value time.Time) {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Build inherits docs from WorkflowReply.Build()
-func (reply *WorkflowGetTimeReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+func (reply *WorkflowGetTimeReply) Build(e error, result ...interface{}) {
 	reply.WorkflowReply.Build(e)
 	if len(result) > 0 {
 		if v, ok := result[0].(time.Time); ok {

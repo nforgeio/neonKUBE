@@ -19,7 +19,7 @@ package proxyclient
 
 import (
 	"context"
-	"errors"
+	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -35,7 +35,6 @@ import (
 	"go.uber.org/zap"
 
 	"temporal-proxy/internal"
-	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 const (
@@ -742,7 +741,7 @@ func (helper *ClientHelper) QueryWorkflow(
 // 	a []byte.
 // 	- namespace string -> the namespace the workflow is executing on.
 // 	- result interface{} -> the result to complete the activity with.
-// 	pararm temporalError *proxyerror.TemporalError -> error to complete the activity with.
+// 	pararm completionError error -> error to complete the activity with.
 //
 // returns error -> error upon failure to complete the activity, nil upon success.
 func (helper *ClientHelper) CompleteActivity(
@@ -750,26 +749,29 @@ func (helper *ClientHelper) CompleteActivity(
 	taskToken []byte,
 	namespace string,
 	result interface{},
-	temporalError *proxyerror.TemporalError,
+	completionErr error,
 ) error {
 	client, err := helper.GetOrCreateWorkflowClient(namespace)
 	if err != nil {
 		return err
 	}
 
-	var e error
-	if temporalError != nil {
-		e = errors.New(temporalError.ToString())
+	if completionErr != nil && !reflect.ValueOf(completionErr).IsNil() {
+		if v, ok := completionErr.(*internal.TemporalError); ok {
+			completionErr = v.ToError()
+		}
+	} else {
+		completionErr = nil
 	}
 
-	err = client.CompleteActivity(ctx, taskToken, result, e)
+	err = client.CompleteActivity(ctx, taskToken, result, completionErr)
 	if err != nil {
 		return err
 	}
 
 	helper.Logger.Info("Successfully Completed Activity",
 		zap.Any("Result", result),
-		zap.Error(e))
+		zap.Error(completionErr))
 
 	return nil
 }
@@ -794,16 +796,19 @@ func (helper *ClientHelper) CompleteActivityByID(
 	runID string,
 	activityID string,
 	result interface{},
-	temporalError *proxyerror.TemporalError,
+	completionErr error,
 ) error {
 	client, err := helper.GetOrCreateWorkflowClient(namespace)
 	if err != nil {
 		return err
 	}
 
-	var e error
-	if temporalError != nil {
-		e = errors.New(temporalError.ToString())
+	if completionErr != nil && !reflect.ValueOf(completionErr).IsNil() {
+		if v, ok := completionErr.(*internal.TemporalError); ok {
+			completionErr = v.ToError()
+		}
+	} else {
+		completionErr = nil
 	}
 
 	err = client.CompleteActivityByID(
@@ -813,7 +818,7 @@ func (helper *ClientHelper) CompleteActivityByID(
 		runID,
 		activityID,
 		result,
-		e)
+		completionErr)
 	if err != nil {
 		return err
 	}
@@ -821,7 +826,7 @@ func (helper *ClientHelper) CompleteActivityByID(
 	helper.Logger.Info("Successfully Completed Activity",
 		zap.String("ActivityId", activityID),
 		zap.Any("Result", result),
-		zap.Error(e))
+		zap.Error(completionErr))
 
 	return nil
 }
