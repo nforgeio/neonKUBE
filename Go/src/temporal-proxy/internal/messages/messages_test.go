@@ -566,7 +566,7 @@ func (s *UnitTestSuite) TestNamespaceDescribeReply() {
 		s.Nil(v.GetNamespaceInfoName())
 		s.Nil(v.GetNamespaceInfoDescription())
 		s.Nil(v.GetNamespaceInfoOwnerEmail())
-		s.Equal(int32(0), v.GetNamespaceInfoStatus())
+		s.Equal(namespace.NamespaceStatus_Registered, v.GetNamespaceInfoStatus())
 
 		// Round-trip
 
@@ -1600,7 +1600,7 @@ func (s *UnitTestSuite) TestNewWorkerRequest() {
 		opts := worker.Options{WorkerActivitiesPerSecond: 2, MaxConcurrentActivityExecutionSize: 1234}
 		v.SetOptions(&opts)
 		s.Equal(1234, v.GetOptions().MaxConcurrentActivityExecutionSize)
-		s.Equal(2, v.GetOptions().WorkerActivitiesPerSecond)
+		s.Equal(float64(2), v.GetOptions().WorkerActivitiesPerSecond)
 	}
 
 	proxyMessage = message.GetProxyMessage()
@@ -1616,7 +1616,7 @@ func (s *UnitTestSuite) TestNewWorkerRequest() {
 		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal("my-tasks", *v.GetTaskList())
 		s.Equal(1234, v.GetOptions().MaxConcurrentActivityExecutionSize)
-		s.Equal(2, v.GetOptions().WorkerActivitiesPerSecond)
+		s.Equal(float64(2), v.GetOptions().WorkerActivitiesPerSecond)
 	}
 
 	message, err = s.echoToConnection(message)
@@ -1628,7 +1628,7 @@ func (s *UnitTestSuite) TestNewWorkerRequest() {
 		s.Equal("my-namespace", *v.GetNamespace())
 		s.Equal("my-tasks", *v.GetTaskList())
 		s.Equal(1234, v.GetOptions().MaxConcurrentActivityExecutionSize)
-		s.Equal(2, v.GetOptions().WorkerActivitiesPerSecond)
+		s.Equal(float64(2), v.GetOptions().WorkerActivitiesPerSecond)
 	}
 }
 
@@ -7892,8 +7892,8 @@ func (s *UnitTestSuite) TestPropertyHelpers() {
 		panic(err)
 	}
 
-	message.SetJSONProperty("foo", temporalError)
-	message.GetJSONProperty("foo", temporalErrorCheck)
+	message.SetJSONProperty("foo", &temporalError)
+	message.GetJSONProperty("foo", &temporalErrorCheck)
 	s.Equal(temporalError, temporalErrorCheck)
 
 	b, err := base64.StdEncoding.DecodeString("c29tZSBkYXRhIHdpdGggACBhbmQg77u/")
