@@ -15,7 +15,7 @@
     <LangVersion>latest</LangVersion>
     <IsPackable>true</IsPackable>
     <PackageLicenseUrl></PackageLicenseUrl>
-    <PackageProjectUrl>https://doc.neonkube.com/Neon.Kube.Service-Overview.htm</PackageProjectUrl>
+    <PackageProjectUrl>https://doc.neonkube.com/Neon.Service-Overview.htm</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/nforgeio/neonKUBE</RepositoryUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
@@ -30,15 +30,15 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <WarningsAsErrors></WarningsAsErrors>
     <NoWarn>NU1605</NoWarn>
-    <DocumentationFile>bin\Debug\Neon.Kube.Service.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\Neon.Service.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>bin\Release\Neon.Kube.Service.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\Neon.Service.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CodeDoc|AnyCPU'">
-    <DocumentationFile>bin\Release\Neon.Kube.Service.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\Neon.Service.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

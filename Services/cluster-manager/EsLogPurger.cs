@@ -17,7 +17,6 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
-using Neon.Kube.Service;
 using Neon.Net;
 using Neon.Service;
 using Neon.Tasks;
@@ -31,7 +30,7 @@ using k8s;
 
 namespace ClusterManager
 {
-    public partial class ClusterManager : KubeService
+    public partial class ClusterManager : NeonService
     {
         /// <summary>
         /// Handles purging of old <b>logstash</b> and <b>metricbeat</b> Elasticsearch indexes.

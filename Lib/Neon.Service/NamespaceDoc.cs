@@ -23,13 +23,12 @@ using System.Reflection;
 
 using Neon.Common;
 
-namespace Neon.Kube.Service
+namespace Neon.Service
 {
     /// <summary>
     /// This namespace includes types that implement much of the boilerplate code for a service 
     /// application suitable for deploying as a Docker container, a Kubernetes pod, or just a 
-    /// stand alone service.  This namespace is probably misnamed because it can be used completely 
-    /// independently from the <b>Neon.Kube</b> package.
+    /// stand alone service.
     /// </summary>
     [System.Runtime.CompilerServices.CompilerGenerated]
     class NamespaceDoc

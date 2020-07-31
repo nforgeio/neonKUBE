@@ -29,7 +29,7 @@ using Neon.Common;
 using Neon.Diagnostics;
 using Neon.Tasks;
 
-namespace Neon.Kube.Service
+namespace Neon.Service
 {
     /// <summary>
     /// Gracefully handles SIGTERM signals sent to a process to terminate itself.

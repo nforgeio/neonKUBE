@@ -35,14 +35,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Neon.Common;
 using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.Service;
 using Neon.Service;
 using Neon.Xunit;
-using Neon.Xunit.Kube;
 
 using Xunit;
 
-namespace TestKubeService
+namespace TestNeonService
 {
     /// <summary>
     /// Startup class for <see cref="RelayService"/>.
@@ -79,7 +77,7 @@ namespace TestKubeService
     /// the service named <b>web-service</b> whose description will be in
     /// the <see cref="ServiceMap"/> passed to the service.
     /// </summary>
-    public class RelayService : KubeService
+    public class RelayService : NeonService
     {
         private IWebHost        webHost;
         private HttpClient      httpClient;

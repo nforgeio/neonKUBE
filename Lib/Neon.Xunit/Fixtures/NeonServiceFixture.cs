@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeServiceFixture.cs
+// FILE:	    NeonServiceFixture.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,19 +25,16 @@ using System.Net.Http;
 using System.Threading.Tasks;
 
 using Neon.Common;
-using Neon.Data;
-using Neon.Diagnostics;
-using Neon.Kube.Service;
 using Neon.Net;
 using Neon.Service;
 
 namespace Neon.Xunit
 {
     /// <summary>
-    /// Fixture for testing a <see cref="KubeService"/>.
+    /// Fixture for testing a <see cref="NeonService"/>.
     /// </summary>
-    public class KubeServiceFixture<TService> : TestFixture
-        where TService : KubeService
+    public class NeonServiceFixture<TService> : TestFixture
+        where TService : NeonService
     {
         //---------------------------------------------------------------------
         // Static members
@@ -55,7 +52,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Constructs the fixture.
         /// </summary>
-        public KubeServiceFixture()
+        public NeonServiceFixture()
         {
             httpClientCache = new Dictionary<string, HttpClient>();
             jsonClientCache = new Dictionary<string, JsonClient>();
@@ -64,7 +61,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Finalizer.
         /// </summary>
-        ~KubeServiceFixture()
+        ~NeonServiceFixture()
         {
             Dispose(false);
         }
@@ -95,7 +92,7 @@ namespace Neon.Xunit
         /// <param name="serviceCreator">Callback that creates and returns the new service instance.</param>
         /// <param name="runningTimeout">
         /// Optionally specifies the maximum time the fixture should wait for the service to transition
-        /// to the <see cref="KubeServiceStatus.Running"/> state.  This defaults to <b>30 seconds</b>.
+        /// to the <see cref="NeonServiceStatus.Running"/> state.  This defaults to <b>30 seconds</b>.
         /// </param>
         /// <returns>
         /// <see cref="TestFixtureStatus.Started"/> if the fixture wasn't previously started and
@@ -132,7 +129,7 @@ namespace Neon.Xunit
         /// <param name="serviceCreator">Callback that creates and returns the new service instance.</param>
         /// <param name="runningTimeout">
         /// Optionally specifies the maximum time the fixture should wait for the service to transition
-        /// to the <see cref="KubeServiceStatus.Running"/> state.  This defaults to <b>30 seconds</b>.
+        /// to the <see cref="NeonServiceStatus.Running"/> state.  This defaults to <b>30 seconds</b>.
         /// </param>
         /// <exception cref="TimeoutException">
         /// Thrown if the service didn't transition to the running (or terminated) state
@@ -163,7 +160,7 @@ namespace Neon.Xunit
 
             try
             {
-                NeonHelper.WaitFor(() => Service.Status == KubeServiceStatus.Running || Service.Status == KubeServiceStatus.Terminated, runningTimeout);
+                NeonHelper.WaitFor(() => Service.Status == NeonServiceStatus.Running || Service.Status == NeonServiceStatus.Terminated, runningTimeout);
 
                 if (Service.ExitException != null)
                 {
@@ -174,10 +171,10 @@ namespace Neon.Xunit
             {
                 // Throw a nicer exception that explains what's happened in more detail.
 
-                throw new TimeoutException($"Service [{Service.Name}]'s [{typeof(TService).Name}.OnRunAsync()] method did not call [{nameof(KubeService.SetRunningAsync)}()] within [{runningTimeout}] indicating that the service is ready.  Ensure that [{nameof(KubeService.SetRunningAsync)}()] is being called or increase the timeout.");
+                throw new TimeoutException($"Service [{Service.Name}]'s [{typeof(TService).Name}.OnRunAsync()] method did not call [{nameof(NeonService.SetRunningAsync)}()] within [{runningTimeout}] indicating that the service is ready.  Ensure that [{nameof(NeonService.SetRunningAsync)}()] is being called or increase the timeout.");
             }
 
-            IsRunning = Service.Status == KubeServiceStatus.Running;
+            IsRunning = Service.Status == NeonServiceStatus.Running;
         }
 
         /// <inheritdoc/>
@@ -247,7 +244,7 @@ namespace Neon.Xunit
         /// <param name="serviceCreator">Callback that creates and returns the new service instance.</param>
         /// <param name="runningTimeout">
         /// Optionally specifies the maximum time the fixture should wait for the service to transition
-        /// to the <see cref="KubeServiceStatus.Running"/> state.  This defaults to <b>30 seconds</b>.
+        /// to the <see cref="NeonServiceStatus.Running"/> state.  This defaults to <b>30 seconds</b>.
         /// </param>
         /// <exception cref="TimeoutException">
         /// Thrown if the service didn't transition to the running (or terminated) state
@@ -281,16 +278,16 @@ namespace Neon.Xunit
 
             try
             {
-                NeonHelper.WaitFor(() => Service.Status == KubeServiceStatus.Running || Service.Status == KubeServiceStatus.Terminated, runningTimeout);
+                NeonHelper.WaitFor(() => Service.Status == NeonServiceStatus.Running || Service.Status == NeonServiceStatus.Terminated, runningTimeout);
             }
             catch (TimeoutException)
             {
                 // Throw a nicer exception that explains what's happened in more detail.
 
-                throw new TimeoutException($"Service [{Service.Name}]'s [{typeof(TService).Name}.OnRunAsync()] method did not call [{nameof(KubeService.SetRunningAsync)}()] within [{runningTimeout}] indicating that the service is ready.  Ensure that [{nameof(KubeService.SetRunningAsync)}()] is being called or increase the timeout.");
+                throw new TimeoutException($"Service [{Service.Name}]'s [{typeof(TService).Name}.OnRunAsync()] method did not call [{nameof(NeonService.SetRunningAsync)}()] within [{runningTimeout}] indicating that the service is ready.  Ensure that [{nameof(NeonService.SetRunningAsync)}()] is being called or increase the timeout.");
             }
 
-            IsRunning = Service.Status == KubeServiceStatus.Running;
+            IsRunning = Service.Status == NeonServiceStatus.Running;
         }
 
         /// <summary>

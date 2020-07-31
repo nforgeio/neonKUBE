@@ -34,7 +34,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Neon.Common;
 using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.Service;
 using Neon.Service;
 using Neon.Xunit;
 using Neon.Xunit.Kube;

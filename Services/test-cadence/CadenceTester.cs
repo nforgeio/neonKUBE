@@ -14,12 +14,11 @@ using System.Threading.Tasks;
 using Neon.Cadence;
 using Neon.Common;
 using Neon.Diagnostics;
-using Neon.Kube.Service;
 using Neon.Service;
 
 namespace CadenceService
 {
-    public partial class CadenceTester : KubeService
+    public partial class CadenceTester : NeonService
     {
         /// <summary>
         /// Constructor.

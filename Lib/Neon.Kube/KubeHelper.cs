@@ -82,7 +82,7 @@ namespace Neon.Kube
         {
             // Check if we need to run in test mode.
 
-            var folder = Environment.GetEnvironmentVariable(KubeConst.TestModeFolderVar);
+            var folder = Environment.GetEnvironmentVariable(NeonHelper.TestModeFolderVar);
 
             if (!string.IsNullOrEmpty(folder))
             {

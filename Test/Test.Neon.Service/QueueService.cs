@@ -34,16 +34,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Neon.Common;
 using Neon.IO;
 using Neon.Kube;
-using Neon.Kube.Service;
 using Neon.Service;
 using Neon.Xunit;
-using Neon.Xunit.Kube;
 
 using NATS.Client;
 
 using Xunit;
 
-namespace TestKubeService
+namespace TestNeonService
 {
     /// <summary>
     /// <para>
@@ -65,7 +63,7 @@ namespace TestKubeService
     /// </item>
     /// </list>
     /// </summary>
-    public class QueueService : KubeService
+    public class QueueService : NeonService
     {
         private string      natsServerUri;
         private string      natsQueue;

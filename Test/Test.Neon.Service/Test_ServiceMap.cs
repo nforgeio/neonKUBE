@@ -31,11 +31,10 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Service;
 using Neon.Xunit;
-using Neon.Xunit.Kube;
 
 using Xunit;
 
-namespace TestKubeService
+namespace TestNeonService
 {
     /// <summary>
     /// Demonstrates how two services can be deployed such that one service
@@ -46,8 +45,8 @@ namespace TestKubeService
     {
         private ServiceMap                          serviceMap;
         private ComposedFixture                     composedFixture;
-        private KubeServiceFixture<WebService>      webServiceFixture;
-        private KubeServiceFixture<RelayService>    relayServiceFixture;
+        private NeonServiceFixture<WebService>      webServiceFixture;
+        private NeonServiceFixture<RelayService>    relayServiceFixture;
 
         public Test_ServiceMap(ComposedFixture fixture)
         {
@@ -57,12 +56,12 @@ namespace TestKubeService
             composedFixture.Start(
                 () =>
                 {
-                    composedFixture.AddServiceFixture<WebService>("web-service", new KubeServiceFixture<WebService>(), () => CreateWebService());
-                    composedFixture.AddServiceFixture<RelayService>("relay-service", new KubeServiceFixture<RelayService>(), () => CreateRelayService());
+                    composedFixture.AddServiceFixture<WebService>("web-service", new NeonServiceFixture<WebService>(), () => CreateWebService());
+                    composedFixture.AddServiceFixture<RelayService>("relay-service", new NeonServiceFixture<RelayService>(), () => CreateRelayService());
                 });
 
-            this.webServiceFixture   = (KubeServiceFixture<WebService>)composedFixture["web-service"];
-            this.relayServiceFixture = (KubeServiceFixture<RelayService>)composedFixture["relay-service"];
+            this.webServiceFixture   = (NeonServiceFixture<WebService>)composedFixture["web-service"];
+            this.relayServiceFixture = (NeonServiceFixture<RelayService>)composedFixture["relay-service"];
 
             Assert.True(webServiceFixture.IsRunning);
             Assert.True(relayServiceFixture.IsRunning);

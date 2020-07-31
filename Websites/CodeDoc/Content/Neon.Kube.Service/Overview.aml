@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!-- topic-filename="Neon.Kube.Service-Overview" -->
+<!-- topic-filename="Neon.Service-Overview" -->
 <topic id="7bc8021c-493a-4512-8532-b8969edf82c8" revisionNumber="1">
   <developerConceptualDocument
     xmlns="http://ddue.schemas.microsoft.com/authoring/2003/5"
@@ -17,18 +17,18 @@
           provide a nice way to unit test your services.
         </para>
         <para>
-          <codeEntityReference qualifyHint="false">T:Neon.Kube.Service.KubeService</codeEntityReference> can be
+          <codeEntityReference qualifyHint="false">T:Neon.Service.KubeService</codeEntityReference> can be
           used as the base class for your service.
         </para>
         <para>
-          <codeEntityReference qualifyHint="false">T:Neon.Kube.Service.ProcessTerminator</codeEntityReference>
+          <codeEntityReference qualifyHint="false">T:Neon.Service.ProcessTerminator</codeEntityReference>
           is a lower-level class that receives and handle Linux and OS/X termination signals.
         </para>
       </content>
     </section>
 
     <relatedTopics>
-      <codeEntityReference qualifyHint="false">N:Neon.Kube.Service</codeEntityReference>
+      <codeEntityReference qualifyHint="false">N:Neon.Service</codeEntityReference>
     </relatedTopics>
   </developerConceptualDocument>
 </topic>

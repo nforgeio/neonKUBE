@@ -22,7 +22,7 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 
 using Neon.Common;
-using Neon.Kube.Service;
+using Neon.Service;
 
 namespace Neon.Xunit
 {
@@ -85,8 +85,8 @@ namespace Neon.Xunit
         /// <param name="action">The optional <see cref="Action"/> to be called when the fixture is initialized.</param>
         /// <remarks>
         /// <note>
-        /// This method doesn't work for <see cref="KubeServiceFixture{TService}"/> based fixtures.  Use
-        /// <see cref="AddServiceFixture{TService}(string, KubeServiceFixture{TService}, Func{TService})"/> instead.
+        /// This method doesn't work for <see cref="NeonServiceFixture{TService}"/> based fixtures.  Use
+        /// <see cref="AddServiceFixture{TService}(string, NeonServiceFixture{TService}, Func{TService})"/> instead.
         /// </note>
         /// </remarks>
         public void AddFixture<TFixture>(string name, TFixture subFixture, Action<TFixture> action = null)
@@ -98,9 +98,9 @@ namespace Neon.Xunit
 
             var fixtureType = typeof(TFixture);
 
-            if (fixtureType.IsGenericType && fixtureType.Name == typeof(KubeServiceFixture<KubeService>).Name)
+            if (fixtureType.IsGenericType && fixtureType.Name == typeof(NeonServiceFixture<NeonService>).Name)
             {
-                throw new InvalidOperationException($"This method doesn't work for [{nameof(KubeServiceFixture<KubeService>)}] fixtures.  Use [AddServiceFixture<TService>()] instead.");
+                throw new InvalidOperationException($"This method doesn't work for [{nameof(NeonServiceFixture<NeonService>)}] fixtures.  Use [AddServiceFixture<TService>()] instead.");
             }
 
             CheckDisposed();
@@ -112,14 +112,14 @@ namespace Neon.Xunit
         }
 
         /// <summary>
-        /// Adds a named <see cref="KubeServiceFixture{TService}"/> fixture.
+        /// Adds a named <see cref="NeonServiceFixture{TService}"/> fixture.
         /// </summary>
-        /// <typeparam name="TService">The service type (derived from <see cref="KubeService"/>.</typeparam>
+        /// <typeparam name="TService">The service type (derived from <see cref="NeonService"/>.</typeparam>
         /// <param name="name">The fixture name (case insenstitive).</param>
         /// <param name="subFixture">The subfixture being added.</param>
         /// <param name="serviceCreator">Callback that creates and returns the new service instance.</param>
-        public void AddServiceFixture<TService>(string name, KubeServiceFixture<TService> subFixture, Func<TService> serviceCreator)
-            where TService : KubeService
+        public void AddServiceFixture<TService>(string name, NeonServiceFixture<TService> subFixture, Func<TService> serviceCreator)
+            where TService : NeonService
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(subFixture != null, nameof(subFixture));

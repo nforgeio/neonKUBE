@@ -114,14 +114,6 @@ namespace Neon.Kube
         /// </summary>
         public const string RootUser = "root";
 
-        /// <summary>
-        /// The environment variable used for unit testing that indicates
-        /// that <see cref="KubeHelper"/> should run in test mode.  The
-        /// value will be set to the path of the temporary directory where
-        /// the Kubernetes and neonKUBE files will be located.
-        /// </summary>
-        public const string TestModeFolderVar = "NF_TESTMODE_FOLDER";
-
         //---------------------------------------------------------------------
         // The following constants define the default network endpoints exposed
         // by the neonKUBE Desktop application.  These can be customized by

@@ -27,7 +27,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Diagnostics;
 using Neon.IO;
-using Neon.Kube.Service;
+using Neon.Service;
 using Neon.Xunit;
 
 using Xunit;
@@ -441,9 +441,9 @@ namespace Neon.Xunit
         /// </param>
         /// <remarks>
         /// <para>
-        /// This is often used to run a <see cref="KubeService"/> using <see cref="KubeServiceFixture{TService}"/>
-        /// or a collection of <see cref="KubeService"/> instances for debugging purposes using a combination
-        /// of a <see cref="ComposedFixture"/> with <see cref="KubeServiceFixture{TService}"/> sub-fixtures.
+        /// This is often used to run a <see cref="NeonService"/> using <see cref="NeonServiceFixture{TService}"/>
+        /// or a collection of <see cref="NeonService"/> instances for debugging purposes using a combination
+        /// of a <see cref="ComposedFixture"/> with <see cref="NeonServiceFixture{TService}"/> sub-fixtures.
         /// But, this can also be used for any <see cref="ITestFixture"/> implementation.
         /// </para>
         /// <para>
@@ -461,7 +461,7 @@ namespace Neon.Xunit
         /// {
         ///     private ComposedFixture                     composedFixture;
         ///     private NatsFixture                         natsFixture;
-        ///     private KubeServiceFixture&lt;QueueService&gt;    queueServiceFixture;
+        ///     private NeonServiceFixture&lt;QueueService&gt;    queueServiceFixture;
         /// 
         ///     public MyTestRunner(ComposedFixture fixture)
         ///     {
@@ -476,11 +476,11 @@ namespace Neon.Xunit
         ///                        natsFixture.StartAsComposed();
         ///                     });
         /// 
-        ///                 composedFixture.AddServiceFixture("queue-service", new KubeServiceFixture&lt;QueueService&gt;(), () => CreateQueueService());
+        ///                 composedFixture.AddServiceFixture("queue-service", new NeonServiceFixture&lt;QueueService&gt;(), () => CreateQueueService());
         ///             });
         /// 
         ///         this.natsFixture         = (NatsFixture)composedFixture["nats"];
-        ///         this.queueServiceFixture = (KubeServiceFixture&lt;QueueService&gt;)composedFixture["queue-service"];
+        ///         this.queueServiceFixture = (NeonServiceFixture&lt;QueueService&gt;)composedFixture["queue-service"];
         ///     }
         ///     
         ///     public void Run()

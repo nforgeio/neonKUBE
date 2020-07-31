@@ -67,7 +67,7 @@ SetVersion Neon.Kube.Hosting
 SetVersion Neon.Kube.HyperV
 SetVersion Neon.Kube.HyperVLocal
 SetVersion Neon.Kube.Machine
-SetVersion Neon.Kube.Service
+SetVersion Neon.Service
 SetVersion Neon.Kube.XenServer
 SetVersion Neon.ModelGen
 SetVersion Neon.Nats
@@ -97,7 +97,7 @@ Publish Neon.Kube.Hosting
 Publish Neon.Kube.HyperV
 Publish Neon.Kube.HyperVLocal
 Publish Neon.Kube.Machine
-Publish Neon.Kube.Service
+Publish Neon.Service
 Publish Neon.Kube.XenServer
 Publish Neon.ModelGen
 Publish Neon.Nats

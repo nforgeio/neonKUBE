@@ -17,7 +17,6 @@ using System.Net.Sockets;
 
 using Neon.Common;
 using Neon.Diagnostics;
-using Neon.Kube.Service;
 using Neon.Service;
 using Neon.Data;
 using Neon.Net;
@@ -34,7 +33,7 @@ using Couchbase.Linq;
 
 namespace ClusterManager
 {
-    public partial class ClusterManager : KubeService
+    public partial class ClusterManager : NeonService
     {
         private static TimeSpan logPurgerInterval;
 

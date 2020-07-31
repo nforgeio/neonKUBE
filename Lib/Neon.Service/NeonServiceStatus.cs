@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeServiceStatus.cs
+// FILE:	    NeonServiceStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -32,12 +32,12 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Service;
 
-namespace Neon.Kube.Service
+namespace Neon.Service
 {
     /// <summary>
-    /// Enumerates the possible <see cref="KubeService"/> running states.
+    /// Enumerates the possible <see cref="NeonService"/> running states.
     /// </summary>
-    public enum KubeServiceStatus
+    public enum NeonServiceStatus
     {
         /// <summary>
         /// The service has not been started.

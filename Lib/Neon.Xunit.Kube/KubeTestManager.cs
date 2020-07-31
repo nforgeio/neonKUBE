@@ -74,11 +74,11 @@ namespace Neon.Xunit.Kube
                     Current    = this;
 
                     KubeHelper.SetTestMode(tempFolder.Path);
-                    Environment.SetEnvironmentVariable(KubeConst.TestModeFolderVar, tempFolder.Path);
+                    Environment.SetEnvironmentVariable(NeonHelper.TestModeFolderVar, tempFolder.Path);
                 }
                 catch
                 {
-                    Environment.SetEnvironmentVariable(KubeConst.TestModeFolderVar, null);
+                    Environment.SetEnvironmentVariable(NeonHelper.TestModeFolderVar, null);
                     Current = null;
                     throw;
                 }
