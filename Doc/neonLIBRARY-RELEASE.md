@@ -9,7 +9,7 @@
 1. Select the new release branch and merge from **MASTER**.
 
 2. Update `$/product-version.txt` (or `GitHub/product-version.txt` in the solution) with the 
-   new package version as required.
+   new release version as required.
 
 3. Run all unit tests on Windows in **RELEASE** mode.
 
@@ -20,9 +20,8 @@
    neon-nuget-local
    ```
 
-6. Build and publish the Docker images, the nuget packages, code documentation, as well as the full RELEASE build:
+6. Build and publish the nuget packages and code documentation:
    ```
-   neon-publish-images -all
    neon-nuget-public
    neon-builder -all
    neon-release -codedoc
@@ -32,26 +31,9 @@
    a. Update the **cadence-samples** solution to reference the new packages and verify that the samples work.
    b. Update the **temporal-samples** solution to reference the new packages and verify that the samples work.
 
-8. Verify that the new release installer works.
+8. Push the `release-neonLIBRARY-VERSION` branch to GitHub with a comment like: **RELEASE: neonLIBRARY-v1.0.0**
 
-9. Push the `release-VERSION` branch to GitHub with a comment like: **RELEASE: v1.0.0**
-
-10. GitHub Release: [link](https://help.github.com/articles/creating-releases/)
-
-  a. Create the release if it doesn't already exist
-  b. Set **Tag** to the version with a leading "v" (like **v1.0.0**)
-  c. Set **Target** to the `release-VERSION` branch
-  e: Check **This is a pre-release** as required
-  f. Add the release setup binary named like: **neonKUBE-setup-1.0.0.exe**
-  g. Add the OS/X neon-cli binary from **osx** folder as: **neon-osx** 
-  h. Add **neon.chm**
-  i. Edit the release notes including adding the SHA512s for:
-  ```
-  %NF_BUILD%\neonKUBE-setup.sha512.txt
-  %NF_BUILD%\osx\neon-1.0.0.sha512.txt
-  %NF_BUILD%\neon.chm.sha512.txtl
-  ```
-  j. Publish the release
+9. Publish the release.
 
 ## Post Release
 
@@ -59,11 +41,14 @@
 
 2. Merge **MASTER** into the **JEFF** and/or any other development branches, as required.
 
-3. Create the next release branch and push it.
+3. Create the next release branch and push it. This should be named like: **release-neonLIBRARY-v1.0.0**
 
-4. Create a draft for the next GitHub release from: `$/Doc/RELEASE-TEMPLATE.md`
-
-   **NOTE:** Be sure to set the branch as the new release.
+4. Create the next draft release on GitHub:
+  a. Copy `$/doc/neonLIBRARY-RELEASE-TEMPLATE.md` as the initial release text
+  b. Set **Tag** to the version with a leading "v" (like **neonLIBRARY-v1.0.0**)
+  c. Set **Target** to the `release-neonLIBRARY-VERSION` branch
+  d. Set **Title** like: **neonLIBRARY-v1.0.0**
+  e. Check **This is a pre-release** as required
 
 5. Archive the source code:
 
@@ -71,7 +56,7 @@
   2. Run `neon-archive.cmd` in a command window.
   3. Archive `C:\neonKUBE.zip` to AWS S3 and the local disk.
 
- # Release Version Conventions
+## Release Version Conventions
 
 * Use semantic versioning.
 * The MAJOR, MINOR, and PATCH versions work as defined: [here](https://semver.org/)
