@@ -41,7 +41,7 @@ namespace Neon
         /// <summary>
         /// The product name.
         /// </summary>
-        public const string ProductName = "neon";
+        public const string ProductName = "neonLIBRARY";
 
         /// <summary>
         /// The released library/package version.
@@ -51,7 +51,12 @@ namespace Neon
         /// <summary>
         /// The released neonKUBE version.
         /// </summary>
-        public const string NeonKubeVersion = "2.1.0";
+        public const string NeonDesktopVersion = "2.2.0-alpha";
+
+        /// <summary>
+        /// The released neonKUBE cluster version.
+        /// </summary>
+        public const string NeonKubeVersion = "0.1.0-alpha";
 
         /// <summary>
         /// The product license.

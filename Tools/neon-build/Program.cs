@@ -50,8 +50,8 @@ Removes cached components:
 --------------------------
 neon-build clear PLATFORM
 
-neon-build download PLATFORM [--kube-version=VERSION]
------------------------------------------------------
+neon-build download PLATFORM [--kubernetes-version=VERSION]
+-----------------------------------------------------------
 Downloads KUBE PLATFORM components (if not already present):
 
 ARGUMENTS:
@@ -62,9 +62,9 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --kube-version  - optionally specifies the Kubernetes version
-                      to be installed.  This defaults to the version
-                      read from [$/kube-version.txt].
+    --kubernetes-version    - optionally specifies the Kubernetes version
+                              to be installed.  This defaults to the version
+                              read from [$/kubernetes-version.txt].
 
 neon-build gzip SOURCE TARGET
 -----------------------------
@@ -159,7 +159,7 @@ OPTIONS:
                     Program.Exit(1);
                 }
 
-                Program.DefaultKubernetesVersion = File.ReadAllText(Path.Combine(Program.RepoRootFolder, "kube-version.txt")).Trim();
+                Program.DefaultKubernetesVersion = File.ReadAllText(Path.Combine(Program.RepoRootFolder, "kubernetes-version.txt")).Trim();
 
                 // Handle the commands.
 

@@ -15,35 +15,40 @@
 
 4. Close Visual Studio.  It seems to be locking some `obj` directories which prevents the **Snippits** project from building below.
 
-5. Publish the nuget packages locally and then manually verify that they pass on OS/X:
+5. Update the version files:
+   ```
+   $\neonLIBRARY-version.txt   - Specify the neonLIBRARY release version 
+   ```
+
+6. Publish the nuget packages locally and then manually verify that they pass on OS/X:
    ```
    neon-nuget-local
    ```
 
-6. Build and publish the nuget packages and code documentation:
+7. Build and publish the nuget packages and code documentation:
    ```
    neon-nuget-public
    neon-builder -all
    neon-release -codedoc
    ```
 
-7. Update sample repos:
+8. Update sample repos:
    a. Update the **cadence-samples** solution to reference the new packages and verify that the samples work.
    b. Update the **temporal-samples** solution to reference the new packages and verify that the samples work.
 
-8. Push the `release-neonLIBRARY-VERSION` branch to GitHub with a comment like: **RELEASE: neonLIBRARY-v1.0.0**
+9. Push the `release-neonLIBRARY-VERSION` branch to GitHub with a comment like: **RELEASE: neonLIBRARY-v1.0.0**
 
-8. Add the neonDESKTOP artifacts to the release:
-  ```
-  %NF_BUILD%\neon.chm
-  ```
+10. Add the neonDESKTOP artifacts to the release:
+    ```
+    %NF_BUILD%\neon.chm
+    ```
 
-9. Edit the release notes including adding the SHA512s for:
+11. Edit the release notes including adding the SHA512s for:
   ```
   %NF_BUILD%\neon.chm.sha512.txt
   ```
 
-10. Publish the release.
+12. Publish the release.
 
 ## Post Release
 
@@ -54,17 +59,17 @@
 3. Create the next release branch and push it. This should be named like: **release-neonLIBRARY-v1.0.0**
 
 4. Create the next draft release on GitHub:
-  a. Copy `$/doc/neonLIBRARY-RELEASE-TEMPLATE.md` as the initial release text
-  b. Set **Tag** to the version with a leading "v" (like **neonLIBRARY-v1.0.0**)
-  c. Set **Target** to the `release-neonLIBRARY-VERSION` branch
-  d. Set **Title** like: **neonLIBRARY-v1.0.0**
-  e. Check **This is a pre-release** as required
+   a. Copy `$/doc/neonLIBRARY-RELEASE-TEMPLATE.md` as the initial release text
+   b. Set **Tag** to the version with a leading "v" (like **neonLIBRARY-v1.0.0**)
+   c. Set **Target** to the `release-neonLIBRARY-VERSION` branch
+   d. Set **Title** like: **neonLIBRARY-v1.0.0**
+   e. Check **This is a pre-release** as required
 
 5. Archive the source code:
 
-  1. Close all Visual Studio windows.
-  2. Run `neon-archive.cmd` in a command window.
-  3. Archive `C:\neonKUBE.zip` to AWS S3 and the local disk.
+   1. Close all Visual Studio windows.
+   2. Run `neon-archive.cmd` in a command window.
+   3. Archive `C:\neonKUBE.zip` to AWS S3 and the local disk.
 
 ## Release Version Conventions
 

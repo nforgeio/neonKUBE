@@ -29,9 +29,14 @@
             The released library/package version.
             </summary>
         </member>
-        <member name="F:Neon.Build.NeonKubeVersion">
+        <member name="F:Neon.Build.NeonDesktopVersion">
             <summary>
             The released neonKUBE version.
+            </summary>
+        </member>
+        <member name="F:Neon.Build.NeonKubeVersion">
+            <summary>
+            The released neonKUBE cluster version.
             </summary>
         </member>
         <member name="F:Neon.Build.ProductLicense">

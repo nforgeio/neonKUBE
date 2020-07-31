@@ -45,7 +45,7 @@ $nfCodeDoc        = "$nfRoot\..\nforgeio.github.io"
 $nfCadenceSamples = "$nfRoot\..\cadence-samples"
 $env:PATH        += ";$nfBuild"
 $libraryVersion   = Get-Content "$nfRoot\neonLIBRARY-version.txt" -First 1
-$kubeVersion      = Get-Content "$nfRoot\neonKUBE-version.txt" -First 1
+$desktopVersion   = Get-Content "$nfRoot\neonDESKTOP-version.txt" -First 1
 $originalDir      = $pwd
 
 # Publish the code documentation.

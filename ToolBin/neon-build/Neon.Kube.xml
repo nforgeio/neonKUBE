@@ -8,7 +8,7 @@
             <summary>
             <para>
             Implements an HTTP client that will be used by the <b>neon-cli</b>
-            tool for communicating with the neonKUBE Desktop application running
+            tool for communicating with the neonDESKTOP application running
             on the same machine.
             </para>
             <note>
@@ -129,7 +129,7 @@
         </member>
         <member name="P:Neon.Kube.KubeClientConfig.DesktopServicePort">
             <summary>
-            The local network port where the neonKUBE desktop application exposes
+            The local network port where the neonDESKTOP application exposes
             the desktop service providing integration for the <b>neon-cli</b>
             command line tool.  This defaults to <see cref="F:Neon.Kube.KubeConst.DesktopServicePort"/>.
             </summary>
@@ -885,9 +885,9 @@
         </member>
         <member name="F:Neon.Kube.KubeConst.DesktopServicePort">
             <summary>
-            The default local network port for the neonKUBE desktop API
+            The default local network port for the neonDESKTOP API
             used by the <b>neon-cli</b> tool for communicating with
-            the neonKUBE desktop.
+            the neonDESKTOP.
             </summary>
         </member>
         <member name="F:Neon.Kube.KubeConst.KubectlProxyPort">
@@ -1060,7 +1060,7 @@
         <member name="P:Neon.Kube.KubeHelper.Desktop">
             <summary>
             Returns the <see cref="T:Neon.Kube.DesktopClient"/> suitable for communicating
-            with the neonKUBE desktop application.
+            with the neonDESKTOP application.
             </summary>
         </member>
         <member name="M:Neon.Kube.KubeHelper.ReadFileTextWithRetry(System.String)">
@@ -1071,7 +1071,7 @@
             <returns>The file text.</returns>
             <remarks>
             It's possible for the configuration file to be temporarily opened
-            by another process (e.g. the neonKUBE Desktop application or a 
+            by another process (e.g. the neonDESKTOP application or a 
             command line tool).  Rather than throw an exception, we're going
             to retry the operation a few times.
             </remarks>
@@ -1084,14 +1084,14 @@
             <param name="text">The text to be written.</param>
             <remarks>
             It's possible for the configuration file to be temporarily opened
-            by another process (e.g. the neonKUBE Desktop application or a 
+            by another process (e.g. the neonDESKTOP application or a 
             command line tool).  Rather than throw an exception, we're going
             to retry the operation a few times.
             </remarks>
         </member>
         <member name="P:Neon.Kube.KubeHelper.ClientConfig">
             <summary>
-            Accesses the neonKUBE desktop client configuration.
+            Accesses the neonDESKTOP client configuration.
             </summary>
         </member>
         <member name="M:Neon.Kube.KubeHelper.LoadClientConfig">
@@ -1212,7 +1212,7 @@
         </member>
         <member name="P:Neon.Kube.KubeHelper.DesktopFolder">
             <summary>
-            Returns path to the neonKUBE desktop application state folder.
+            Returns path to the neonDESKTOP application state folder.
             </summary>
             <returns>The folder path.</returns>
         </member>
@@ -7314,20 +7314,23 @@
         <member name="F:ThisAssembly.Git.IsDirtyString">
             <summary>IsDirtyString: true</summary>
         </member>
+        <member name="F:ThisAssembly.Git.RepositoryUrl">
+            <summary>Repository URL: https://github.com/nforgeio/neonKUBE</summary>
+        </member>
         <member name="F:ThisAssembly.Git.Branch">
-            <summary>Branch: jeff</summary>
+            <summary>Branch: master</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: ff4332b8a</summary>
+            <summary>Commit: 3ec2e3996</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: ff4332b8a8a6571266e18134038aee17cc50e0bc</summary>
+            <summary>Sha: 3ec2e39967030f6c5c88e98ee3c96e6e48ca3c8e</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 6179</summary>
+            <summary>Commits on top of base version: 6183</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: c2.1.0-281-gff4332b8a</summary>
+            <summary>Tag: c2.1.0-285-g3ec2e3996</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
             <summary>Base tag: c2.1.0</summary>
@@ -7354,7 +7357,7 @@
             <summary>Minor: 0</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 6179</summary>
+            <summary>Patch: 6183</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: </summary>

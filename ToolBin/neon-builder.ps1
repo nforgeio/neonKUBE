@@ -53,7 +53,7 @@ $nfRoot         = "$env:NF_ROOT"
 $nfSolution     = "$nfRoot\neonKUBE.sln"
 $nfBuild        = "$env:NF_BUILD"
 $nfTools        = "$nfRoot\Tools"
-$kubeVersion    = Get-Content "$env:NF_ROOT\neonKUBE-version.txt" -First 1
+$desktopVersion = Get-Content "$env:NF_ROOT\neonDESKTOP-version.txt" -First 1
 $libraryVersion = Get-Content "$env:NF_ROOT\neonLIBRARY-version.txt" -First 1
 $config         = "Release"
 $buildConfig    = "-p:Configuration=Release"

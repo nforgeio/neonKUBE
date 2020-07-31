@@ -3,11 +3,11 @@
 ;   NF_BUILD            - The build output folder
 ;   NF_CACHE            - The build cache folder
 ;   NF_KUBE_VERSION     - The Kubernetes version
-;   NF_PRODUCT_VERSION  - The neonKUBE product version
+;   NF_DESKTOP_VERSION  - The neonKUBE product version
 
 [Setup]
 AppName=neonKUBE
-AppVersion={#GetEnv("NF_PRODUCT_VERSION")}
+AppVersion={#GetEnv("NF_DESKTOP_VERSION")}
 DefaultDirName={pf}\neonKUBE
 DefaultGroupName=neonKUBE
 ; UninstallDisplayIcon={app}\neonKUBE.Windows\neonDESKTOPwin.exe
