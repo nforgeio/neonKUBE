@@ -116,7 +116,7 @@ namespace Neon.Kube
 
         //---------------------------------------------------------------------
         // The following constants define the default network endpoints exposed
-        // by the neonKUBE Desktop application.  These can be customized by
+        // by the neonDESKTOP application.  These can be customized by
         // editing the [KubeClientConfig] file persisted on the client
         // workstation.  I tried to select ports that would be unlikely
         // to conflict with important registrations:
@@ -124,9 +124,9 @@ namespace Neon.Kube
         //      https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers
 
         /// <summary>
-        /// The default local network port for the neonKUBE desktop API
+        /// The default local network port for the neonDESKTOP API
         /// used by the <b>neon-cli</b> tool for communicating with
-        /// the neonKUBE desktop.
+        /// the neonDESKTOP.
         /// </summary>
         public const int DesktopServicePort = 1058;
 

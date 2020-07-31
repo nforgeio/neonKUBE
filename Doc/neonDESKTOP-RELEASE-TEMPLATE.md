@@ -1,4 +1,4 @@
-This is a full neonKUBE release intended for internal testing.  We're activily working towards getting ready for a preview release.
+This is a full neonDESKTOP release intended for internal testing.  We're actively working towards getting ready for a preview release.
 
 ## Highlights:
 
@@ -12,9 +12,9 @@ Neon related production images are hosted on DockerHub: [here](https://hub.docke
 
 **Changes:** No significant changes for this release.
 
-### <img src="https://doc.neonkube.com/media/alpha.png"/> neonKUBE Desktop
+### <img src="https://doc.neonkube.com/media/alpha.png"/> neonDESKTOP
 
-We're working on yet another Kubernetes distribution but this is still very much a work in progress.  Although we include the install binaries for this, we recommend that you folks avoid these until we're further along.
+We're working on yet another Kubernetes distribution and this is still very much a work in progress.  Although we include the install binaries for this, we recommend that you folks avoid these until we're further along.
 
 <table>
   <tr>
@@ -23,11 +23,11 @@ We're working on yet another Kubernetes distribution but this is still very much
   </tr>
   <tr>
     <td><img src="https://doc.neonkube.com/media/alpha.png"/></td>
-    <td><b>neonKUBE-setup-#.#.#.exe:</b> installs the neonKUBE Desktop as well as the <b>neon-cli</b> command line tool.</td>
+    <td><b>neonDESKTOP-setup-#.#.#.exe:</b> installs the neonDESKTOP as well as the <b>neon-cli</b> command line tool.</td>
   </tr>
 </table>
 
-For Windows, you simply need to download and run **neonKUBE-setup-#.#.#.exe** to install or upgrade **neonKUBE Desktop** and the **neon-cli** command line tool. 
+For Windows, you simply need to download and run **neonDESKTOP-setup-#.#.#.exe** to install or upgrade **neonDESKTOP** and the **neon-cli** command line tool. 
 
 We don't have an OS/X version of the desktop yet, but you can manually install **neon-cli** via:
 1. Download the **neon-osx** file below.  This will appear in Safari downloads as **neon-osx.dms**.
@@ -43,6 +43,8 @@ We don't have an OS/X version of the desktop yet, but you can manually install *
     ```
 
 **Changes:** No significant changes for this release.
+
+### Semantic Versioning
 
 Neon components are released using versions compatible with [Semantic Versioning 2.0](https://semver.org/).  All packages and binaries are unit tested together before being published and you should upgrade all Neon nuget packages together so that all have the same version number.  Note that some packages may have pre-release identifier, indicating that component is still a work in progress or that a package is only for use by other Neon components.
 
@@ -61,17 +63,18 @@ Neon components are released using versions compatible with [Semantic Versioning
   </tr>
   <tr>
     <td><img src="https://doc.neonkube.com/media/internal.png"/></td>
-    <td>Indicates that the released binary is not intended for general consumption. These are typically referenced by other neonKUBE libraries and tools. </td>
+    <td>Indicates that the released binary is not intended for general consumption. These are typically referenced by other Neon libraries and tools.</td>
   </tr>
 </table>
 
-### Binary SHA512 signatures:
+### Build Artifacts and Binary SHA512 signatures:
 
-**neonKUBE-setup-1.0.0.exe:**
-`FILL THIS IN`
+This is the neonDESKTOP installer for Windows. 
 
-**neon.chm:**
-`FILL THIS IN`
+> **neonDESKTOP-setup-1.0.0.exe:**
+> `FILL THIS IN`
 
-**neon-osx:**
-`FILL THIS IN`
+This is the **neon-cli** command line tool.  You'll need to follow the instructions above to set it up.  We hope to begin work on neonDESKTOP and an installer for OS/X soon.
+
+> **neon-osx:**
+> `FILL THIS IN`

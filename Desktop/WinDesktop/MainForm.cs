@@ -146,8 +146,8 @@ namespace WinDesktop
             }
             catch
             {
-                MessageBox.Show($"Another neonKUBE Desktop instance is already running or another application is already listening on [127.0.0.1:{KubeHelper.ClientConfig.DesktopServicePort}].",
-                    "neonKUBE Desktop", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Another neonDESKTOP instance is already running or another application is already listening on [127.0.0.1:{KubeHelper.ClientConfig.DesktopServicePort}].",
+                    "neonDESKTOP", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                 Environment.Exit(1);
             }

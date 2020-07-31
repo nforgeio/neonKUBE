@@ -20,16 +20,21 @@
 
 5. Verify that the new release installer works.
 
-6. Push the `release-neonKUBE-VERSION` branch to GitHub with a comment like: **RELEASE: neonKUBE-v1.0.0**
+6. Push the `release-neonDESKTOP-VERSION` branch to GitHub with a comment like: **RELEASE: neonDESKTOP-v1.0.0**
 
-7. Edit the release notes including adding the SHA512s for:
+7. Add the neonDESKTOP artifacts to the release:
   ```
-  %NF_BUILD%\neonKUBE-setup.sha512.txt
-  %NF_BUILD%\osx\neon-1.0.0.sha512.txt
-  %NF_BUILD%\neon.chm.sha512.txtl
+  %NF_BUILD%\neonDESKTOP-setup-#.#.#.exe
+  %NF_BUILD%\osx\neon-osx
   ```
 
-11. Publish the release
+8. Edit the release notes including adding the SHA512s for:
+  ```
+  %NF_BUILD%\neonDESKTOP-setup-#.#.#.sha512.txt
+  %NF_BUILD%\osx\neon-#.#.#.sha512.txt
+  ```
+
+9. Publish the release
 
 ## Post Release
 
@@ -37,20 +42,20 @@
 
 2. Merge **MASTER** into the **JEFF** and/or any other development branches, as required.
 
-3. Create the next release branch and push it. This should be named like: **release-neonKUBE-v1.0.0**
+3. Create the next release branch and push it. This should be named like: **release-neonDESKTOP-v1.0.0**
 
 4. Create the next draft release on GitHub:
-  a. Copy `$/doc/neonKUBE-RELEASE-TEMPLATE.md` as the initial release text
-  b. Set **Tag** to the version with a leading "v" (like **neonKUBE-v1.0.0**)
-  c. Set **Target** to the `release-neonKUBE-VERSION` branch
-  d. Set **Title** like: **neonKUBE-v1.0.0**
+  a. Copy `$/doc/neonDESKTOP-RELEASE-TEMPLATE.md` as the initial release text
+  b. Set **Tag** to the version with a leading "v" (like **neonDESKTOP-v1.0.0**)
+  c. Set **Target** to the `release-neonDESKTOP-VERSION` branch
+  d. Set **Title** like: **neonDESKTOP-v1.0.0**
   e. Check **This is a pre-release** as required
-  f. Add the release setup binary named like: **neonKUBE-setup-1.0.0.exe**
+  f. Add the release setup binary named like: **neonDESKTOP-setup-1.0.0.exe**
   g. Add the OS/X neon-cli binary from **osx** folder as: **neon-osx** 
   h. Add **neon.chm**
   i. Edit the release notes including adding the SHA512s for:
   ```
-  %NF_BUILD%\neonKUBE-setup.sha512.txt
+  %NF_BUILD%\neonDESKTOP-setup.sha512.txt
   %NF_BUILD%\osx\neon-1.0.0.sha512.txt
   %NF_BUILD%\neon.chm.sha512.txtl
   ```

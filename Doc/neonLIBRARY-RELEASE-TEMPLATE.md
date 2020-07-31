@@ -140,3 +140,37 @@ This package is currently used internally for neonKUBE related unit testing.
 This package includes a fixture for running Temporal locally as a Docker container during for unit tests.
 
 **Changes:** No significant changes for this release.
+
+### Semantic Versioning
+
+Neon components are released using versions compatible with [Semantic Versioning 2.0](https://semver.org/).  All packages and binaries are unit tested together before being published and you should upgrade all Neon nuget packages together so that all have the same version number.  Note that some packages may have pre-release identifier, indicating that component is still a work in progress or that a package is only for use by other Neon components.
+
+<table>
+  <tr>
+    <td width="85px" align="center"><img src="https://doc.neonkube.com/media/release.png"/></td>
+    <td>Indicates that the release is expected suitable for production use. Released binary versions follow the semantic version 2.0 specification and don't include a pre-release identifier.</td>
+  </tr>
+  <tr>
+    <td><img src="https://doc.neonkube.com/media/preview.png"/></td>
+    <td>Indicates that the released binary still has some work in progress but is relatively stable and also that we expect that we we'll try to avoid making significant breaking changes to the API surface area. This may be suitable for production but you should take care.</td>
+  </tr>
+  <tr>
+    <td><img src="https://doc.neonkube.com/media/alpha.png"/></td>
+    <td>Indicates that the released binary is not ready for general production use. There are likely to be serious bugs and implementation gaps and it is also very likely that the API may still see very significant changes. We do early alpha releases to give interested parties a chance to review what we're doing and also so that we and close partners can give these a spin in test and sometimes production.</td>
+  </tr>
+  <tr>
+    <td><img src="https://doc.neonkube.com/media/internal.png"/></td>
+    <td>Indicates that the released binary is not intended for general consumption. These are typically referenced by other Neon libraries and tools.</td>
+  </tr>
+</table>
+
+### Build Artifacts and Binary SHA512 signatures:
+
+The neonLIBRARY package binaries are published to https://nuget.org.  You can download or reference these from your projects there.
+
+**neon.chm** is a Windows help file describing the various neonLIBRARY APIs as well as some of the tools built from the <a href="https://github.com/nforgeio/neonKUBE">nforgeio/neonKUBE</a> repository.  You may find it more convienent to download and reference this instead using the website.
+
+You may need to **unblock this file** to open it.  Simply **right-click** on it, **select Properties** and then press **Unblock**.
+
+> **neon.chm:**
+> `FILL THIS IN`

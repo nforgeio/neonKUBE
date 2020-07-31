@@ -44,7 +44,7 @@ namespace Neon.Kube
     /// <summary>
     /// <para>
     /// Implements an HTTP client that will be used by the <b>neon-cli</b>
-    /// tool for communicating with the neonKUBE Desktop application running
+    /// tool for communicating with the neonDESKTOP application running
     /// on the same machine.
     /// </para>
     /// <note>

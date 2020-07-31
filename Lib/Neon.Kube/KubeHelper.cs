@@ -177,7 +177,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Returns the <see cref="DesktopClient"/> suitable for communicating
-        /// with the neonKUBE desktop application.
+        /// with the neonDESKTOP application.
         /// </summary>
         public static DesktopClient Desktop
         {
@@ -199,7 +199,7 @@ namespace Neon.Kube
         /// <returns>The file text.</returns>
         /// <remarks>
         /// It's possible for the configuration file to be temporarily opened
-        /// by another process (e.g. the neonKUBE Desktop application or a 
+        /// by another process (e.g. the neonDESKTOP application or a 
         /// command line tool).  Rather than throw an exception, we're going
         /// to retry the operation a few times.
         /// </remarks>
@@ -227,7 +227,7 @@ namespace Neon.Kube
         /// <param name="text">The text to be written.</param>
         /// <remarks>
         /// It's possible for the configuration file to be temporarily opened
-        /// by another process (e.g. the neonKUBE Desktop application or a 
+        /// by another process (e.g. the neonDESKTOP application or a 
         /// command line tool).  Rather than throw an exception, we're going
         /// to retry the operation a few times.
         /// </remarks>
@@ -248,7 +248,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Accesses the neonKUBE desktop client configuration.
+        /// Accesses the neonDESKTOP client configuration.
         /// </summary>
         public static KubeClientConfig ClientConfig
         {
@@ -651,7 +651,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns path to the neonKUBE desktop application state folder.
+        /// Returns path to the neonDESKTOP application state folder.
         /// </summary>
         /// <returns>The folder path.</returns>
         public static string DesktopFolder

@@ -33,7 +33,17 @@
 
 8. Push the `release-neonLIBRARY-VERSION` branch to GitHub with a comment like: **RELEASE: neonLIBRARY-v1.0.0**
 
-9. Publish the release.
+8. Add the neonDESKTOP artifacts to the release:
+  ```
+  %NF_BUILD%\neon.chm
+  ```
+
+9. Edit the release notes including adding the SHA512s for:
+  ```
+  %NF_BUILD%\neon.chm.sha512.txt
+  ```
+
+10. Publish the release.
 
 ## Post Release
 
