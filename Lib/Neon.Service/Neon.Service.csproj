@@ -42,7 +42,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GitInfo" Version="2.0.26">
+    <PackageReference Include="GitInfo" Version="2.0.30">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -56,8 +56,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\nuget-icon.png" Pack="true" PackagePath=""/>
-    <None Include="..\..\LICENSE" Pack="True" PackagePath=""/>
+    <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+    <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
   </ItemGroup>
 
 </Project>
