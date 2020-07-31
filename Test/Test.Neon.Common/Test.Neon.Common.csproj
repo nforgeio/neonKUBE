@@ -49,8 +49,4 @@
     <ProjectReference Include="..\..\Lib\Neon.Xunit\Neon.Xunit.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Misc\" />
-  </ItemGroup>
-
 </Project>

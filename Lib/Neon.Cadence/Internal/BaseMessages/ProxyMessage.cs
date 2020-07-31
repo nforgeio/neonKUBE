@@ -633,7 +633,7 @@ namespace Neon.Cadence.Internal
         /// <param name="def">The default value to be returned if the named property doesn't exist.</param>
         /// <returns>The long value.</returns>
         internal TEnum GetEnumProperty<TEnum>(PropertyNameUtf8 key, TEnum def = default(TEnum))
-            where TEnum : struct
+            where TEnum : struct, Enum
         {
             if (Properties.TryGetValue(key, out var value))
             {
@@ -832,7 +832,7 @@ namespace Neon.Cadence.Internal
         /// <param name="key">The property key.</param>
         /// <param name="value">The property value.</param>
         internal void SetEnumProperty<TEnum>(PropertyNameUtf8 key, TEnum value)
-            where TEnum : struct
+            where TEnum : Enum
         {
             Properties[key] = NeonHelper.EnumToString(value);
         }

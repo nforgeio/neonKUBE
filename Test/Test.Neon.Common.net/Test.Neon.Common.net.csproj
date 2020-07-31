@@ -363,6 +363,9 @@
     <Compile Include="..\Test.Neon.Common\Misc\Test_ByteUnits.cs">
       <Link>Misc\Test_ByteUnits.cs</Link>
     </Compile>
+    <Compile Include="..\Test.Neon.Common\Misc\Test_IntegerEnumConverter.cs">
+      <Link>Misc\Test_IntegerEnumConverter.cs</Link>
+    </Compile>
     <Compile Include="..\Test.Neon.Common\Net\Test_JsonClient.cs">
       <Link>Net\Test_JsonClient.cs</Link>
     </Compile>
