@@ -87,15 +87,16 @@ ARGUMENTS:
 
 neon-build build-version
 ----------------------------------------------
-Used to insert the first line of the [$/product-version] text file
-into the `[$/Lib/Neon.Common/Build.cs`] file, replacing the value of the
-[ProductVersion] constant.
+Used to insert the first line of the [$/neonKUBE-version.txt] and
+[$/neonLIBRARY-version.txt] text files into the [$/Lib/Neon.Common/Build.cs] 
+file, replacing the value of the [neonKubeVersion] and [neonLibraryVersion]
+properties.
 
 neon-build pack-version VERSION-FILE CSPROJ-FILE
 ------------------------------------------------
 Updates the specified library CSPROJ file version to a combination of
-the global VERSION-FILE (typically [$/product-version.txt] and an optional
-project local [prerelease.txt] file as specified here:
+the global VERSION-FILE (typically [$/neonLIBRARY-version.txt] and an
+optional project local [prerelease.txt] file as specified here:
 
     https://github.com/nforgeio/neonKUBE/issues/715
 

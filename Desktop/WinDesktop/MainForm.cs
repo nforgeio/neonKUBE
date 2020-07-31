@@ -156,7 +156,7 @@ namespace WinDesktop
             // this because the form should remain hidden but we'll put something
             // here just in case.
 
-            productNameLabel.Text  = $"{Build.ProductName}  v{Build.ProductVersion}";
+            productNameLabel.Text  = $"{Build.ProductName}  v{Build.NeonKubeVersion}";
             copyrightLabel.Text    = Build.Copyright;
             licenseLinkLabel.Text  = Build.ProductLicense;
 

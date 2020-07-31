@@ -41,12 +41,17 @@ namespace Neon
         /// <summary>
         /// The product name.
         /// </summary>
-        public const string ProductName = "neonKUBE";
+        public const string ProductName = "neon";
 
         /// <summary>
-        /// The released product version.
+        /// The released library/package version.
         /// </summary>
-        public const string ProductVersion = "2.1.0";
+        public const string NeonLibraryVersion = "2.1.0";
+
+        /// <summary>
+        /// The released neonKUBE version.
+        /// </summary>
+        public const string NeonKubeVersion = "2.1.0";
 
         /// <summary>
         /// The product license.

@@ -15,6 +15,18 @@
           "neon-build.dll": {}
         }
       },
+      "AutoMapper/9.0.0": {
+        "dependencies": {
+          "Microsoft.CSharp": "4.7.0",
+          "System.Reflection.Emit": "4.7.0"
+        },
+        "runtime": {
+          "lib/netstandard2.0/AutoMapper.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.0.0"
+          }
+        }
+      },
       "Castle.Core/4.3.1": {
         "dependencies": {
           "System.Collections.Specialized": "4.3.0",
@@ -34,7 +46,7 @@
           }
         }
       },
-      "CouchbaseNetClient/2.7.15": {
+      "CouchbaseNetClient/2.7.18": {
         "dependencies": {
           "Microsoft.Extensions.Logging": "1.1.0",
           "Newtonsoft.Json": "12.0.3",
@@ -52,42 +64,55 @@
         },
         "runtime": {
           "lib/netstandard2.0/Couchbase.NetClient.dll": {
-            "assemblyVersion": "2.7.15.0",
-            "fileVersion": "2.7.15.0"
+            "assemblyVersion": "2.7.18.0",
+            "fileVersion": "2.7.18.0"
           }
         }
       },
-      "DNS/5.0.0": {
+      "DNS/6.0.0": {
         "dependencies": {
           "System.Reflection.TypeExtensions": "4.3.0"
         },
         "runtime": {
           "lib/netstandard2.0/DNS.dll": {
-            "assemblyVersion": "2.0.0.0",
-            "fileVersion": "2.0.0.0"
+            "assemblyVersion": "6.0.0.0",
+            "fileVersion": "6.0.0.0"
           }
         }
       },
-      "KubernetesClient/1.6.8": {
+      "Fractions/4.0.1": {
         "dependencies": {
+          "System.ComponentModel.TypeConverter": "4.3.0",
+          "System.Runtime.Numerics": "4.3.0"
+        },
+        "runtime": {
+          "lib/netstandard1.1/Fractions.dll": {
+            "assemblyVersion": "4.0.1.0",
+            "fileVersion": "4.0.1.0"
+          }
+        }
+      },
+      "KubernetesClient/2.0.26": {
+        "dependencies": {
+          "AutoMapper": "9.0.0",
+          "Fractions": "4.0.1",
           "Microsoft.AspNetCore.JsonPatch": "3.0.0",
-          "Microsoft.AspNetCore.WebUtilities": "1.1.2",
           "Microsoft.Rest.ClientRuntime": "2.3.10",
           "Newtonsoft.Json": "12.0.3",
           "Portable.BouncyCastle": "1.8.1.3",
-          "YamlDotNet": "6.1.2"
+          "YamlDotNet": "8.1.2"
         },
         "runtime": {
           "lib/netcoreapp2.1/KubernetesClient.dll": {
-            "assemblyVersion": "1.6.0.0",
-            "fileVersion": "1.6.8.18691"
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.0.26.62901"
           }
         }
       },
       "Linq2Couchbase/1.4.2": {
         "dependencies": {
           "Castle.Core": "4.3.1",
-          "CouchbaseNetClient": "2.7.15",
+          "CouchbaseNetClient": "2.7.18",
           "Newtonsoft.Json": "12.0.3",
           "Remotion.Linq": "2.2.0",
           "System.ComponentModel.Annotations": "4.3.0",
@@ -112,44 +137,30 @@
           }
         }
       },
-      "Microsoft.AspNetCore.WebUtilities/1.1.2": {
-        "dependencies": {
-          "Microsoft.Extensions.Primitives": "1.1.1",
-          "Microsoft.Net.Http.Headers": "1.1.2",
-          "System.Buffers": "4.3.0",
-          "System.Text.Encodings.Web": "4.3.1"
-        },
-        "runtime": {
-          "lib/netstandard1.3/Microsoft.AspNetCore.WebUtilities.dll": {
-            "assemblyVersion": "1.1.2.0",
-            "fileVersion": "1.1.2.30427"
-          }
-        }
-      },
       "Microsoft.CSharp/4.7.0": {},
-      "Microsoft.Extensions.DependencyInjection/3.1.0": {
+      "Microsoft.Extensions.DependencyInjection/3.1.6": {
         "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "3.1.0"
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "3.1.6"
         },
         "runtime": {
           "lib/netcoreapp3.1/Microsoft.Extensions.DependencyInjection.dll": {
-            "assemblyVersion": "3.1.0.0",
-            "fileVersion": "3.100.19.56504"
+            "assemblyVersion": "3.1.6.0",
+            "fileVersion": "3.100.620.31605"
           }
         }
       },
-      "Microsoft.Extensions.DependencyInjection.Abstractions/3.1.0": {
+      "Microsoft.Extensions.DependencyInjection.Abstractions/3.1.6": {
         "runtime": {
           "lib/netstandard2.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
-            "assemblyVersion": "3.1.0.0",
-            "fileVersion": "3.100.19.56504"
+            "assemblyVersion": "3.1.6.0",
+            "fileVersion": "3.100.620.31605"
           }
         }
       },
       "Microsoft.Extensions.Logging/1.1.0": {
         "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "3.1.0",
-          "Microsoft.Extensions.Logging.Abstractions": "3.1.0"
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "3.1.6",
+          "Microsoft.Extensions.Logging.Abstractions": "3.1.6"
         },
         "runtime": {
           "lib/netstandard1.1/Microsoft.Extensions.Logging.dll": {
@@ -158,11 +169,11 @@
           }
         }
       },
-      "Microsoft.Extensions.Logging.Abstractions/3.1.0": {
+      "Microsoft.Extensions.Logging.Abstractions/3.1.6": {
         "runtime": {
           "lib/netstandard2.0/Microsoft.Extensions.Logging.Abstractions.dll": {
-            "assemblyVersion": "3.1.0.0",
-            "fileVersion": "3.100.19.56504"
+            "assemblyVersion": "3.1.6.0",
+            "fileVersion": "3.100.620.31605"
           }
         }
       },
@@ -177,22 +188,9 @@
           }
         }
       },
-      "Microsoft.Net.Http.Headers/1.1.2": {
-        "dependencies": {
-          "Microsoft.Extensions.Primitives": "1.1.1",
-          "System.Buffers": "4.3.0",
-          "System.Diagnostics.Contracts": "4.3.0"
-        },
-        "runtime": {
-          "lib/netstandard1.1/Microsoft.Net.Http.Headers.dll": {
-            "assemblyVersion": "1.1.2.0",
-            "fileVersion": "1.1.2.30427"
-          }
-        }
-      },
       "Microsoft.Net.Http.Server/1.1.4": {
         "dependencies": {
-          "Microsoft.Extensions.Logging.Abstractions": "3.1.0",
+          "Microsoft.Extensions.Logging.Abstractions": "3.1.6",
           "Microsoft.Extensions.Primitives": "1.1.1",
           "System.Diagnostics.Contracts": "4.3.0",
           "System.Net.WebSockets": "4.3.0",
@@ -209,11 +207,11 @@
       },
       "Microsoft.NETCore.Platforms/3.1.0": {},
       "Microsoft.NETCore.Targets/1.1.3": {},
-      "Microsoft.OpenApi/1.1.4": {
+      "Microsoft.OpenApi/1.2.2": {
         "runtime": {
           "lib/netstandard2.0/Microsoft.OpenApi.dll": {
-            "assemblyVersion": "1.1.4.0",
-            "fileVersion": "1.1.4.0"
+            "assemblyVersion": "1.2.2.0",
+            "fileVersion": "1.2.2.0"
           }
         }
       },
@@ -1743,17 +1741,6 @@
           "System.Text.Encoding": "4.3.0"
         }
       },
-      "System.Text.Encodings.Web/4.3.1": {
-        "dependencies": {
-          "System.Diagnostics.Debug": "4.3.0",
-          "System.IO": "4.3.0",
-          "System.Reflection": "4.3.0",
-          "System.Resources.ResourceManager": "4.3.0",
-          "System.Runtime": "4.3.1",
-          "System.Runtime.Extensions": "4.3.0",
-          "System.Threading": "4.3.0"
-        }
-      },
       "System.Text.RegularExpressions/4.3.0": {
         "dependencies": {
           "System.Runtime": "4.3.1"
@@ -1883,18 +1870,18 @@
           "System.Xml.ReaderWriter": "4.3.0"
         }
       },
-      "YamlDotNet/6.1.2": {
+      "YamlDotNet/8.1.2": {
         "runtime": {
-          "lib/netstandard1.3/YamlDotNet.dll": {
-            "assemblyVersion": "6.0.0.0",
-            "fileVersion": "6.1.2.0"
+          "lib/netstandard2.1/YamlDotNet.dll": {
+            "assemblyVersion": "8.0.0.0",
+            "fileVersion": "8.1.2.0"
           }
         }
       },
       "Neon.Common/2.1.0": {
         "dependencies": {
-          "Microsoft.Extensions.DependencyInjection": "3.1.0",
-          "Microsoft.Extensions.Logging.Abstractions": "3.1.0",
+          "Microsoft.Extensions.DependencyInjection": "3.1.6",
+          "Microsoft.Extensions.Logging.Abstractions": "3.1.6",
           "Newtonsoft.Json": "12.0.3",
           "SharpZipLib.NETStandard": "1.0.7",
           "System.Diagnostics.Contracts": "4.3.0",
@@ -1904,7 +1891,7 @@
           "System.Runtime.Serialization.Primitives": "4.3.0",
           "System.Threading.Thread": "4.3.0",
           "System.ValueTuple": "4.5.0",
-          "YamlDotNet": "6.1.2"
+          "YamlDotNet": "8.1.2"
         },
         "runtime": {
           "Neon.Common.dll": {}
@@ -1912,10 +1899,10 @@
       },
       "Neon.Couchbase/2.1.0": {
         "dependencies": {
-          "CouchbaseNetClient": "2.7.15",
+          "CouchbaseNetClient": "2.7.18",
           "Linq2Couchbase": "1.4.2",
           "Microsoft.CSharp": "4.7.0",
-          "Microsoft.Extensions.Logging.Abstractions": "3.1.0",
+          "Microsoft.Extensions.Logging.Abstractions": "3.1.6",
           "Neon.Common": "2.1.0"
         },
         "runtime": {
@@ -1934,11 +1921,11 @@
       },
       "Neon.Kube/2.1.0": {
         "dependencies": {
-          "DNS": "5.0.0",
-          "KubernetesClient": "1.6.8",
-          "Microsoft.Extensions.Logging.Abstractions": "3.1.0",
+          "DNS": "6.0.0",
+          "KubernetesClient": "2.0.26",
+          "Microsoft.Extensions.Logging.Abstractions": "3.1.6",
           "Microsoft.Net.Http.Server": "1.1.4",
-          "Microsoft.OpenApi": "1.1.4",
+          "Microsoft.OpenApi": "1.2.2",
           "Microsoft.Windows.Compatibility": "3.1.0",
           "Neon.Common": "2.1.0",
           "Neon.Couchbase": "2.1.0",
@@ -1952,7 +1939,7 @@
           "System.Net.Ping": "4.3.0",
           "System.Security.Cryptography.Algorithms": "4.3.1",
           "System.Threading.Tasks.Parallel": "4.3.0",
-          "YamlDotNet": "6.1.2"
+          "YamlDotNet": "8.1.2"
         },
         "runtime": {
           "Neon.Kube.dll": {}
@@ -1971,6 +1958,13 @@
       "serviceable": false,
       "sha512": ""
     },
+    "AutoMapper/9.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-xCqvoxT4HIrNY/xlXG9W+BA/awdrhWvMTKTK/igkGSRbhOhpl3Q8O8Gxlhzjc9JsYqE7sS6AxgyuUUvZ6R5/Bw==",
+      "path": "automapper/9.0.0",
+      "hashPath": "automapper.9.0.0.nupkg.sha512"
+    },
     "Castle.Core/4.3.1": {
       "type": "package",
       "serviceable": true,
@@ -1978,26 +1972,33 @@
       "path": "castle.core/4.3.1",
       "hashPath": "castle.core.4.3.1.nupkg.sha512"
     },
-    "CouchbaseNetClient/2.7.15": {
+    "CouchbaseNetClient/2.7.18": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-SlbCAQGt8CjDJCIl5tlvFMpfECuS1+H7UkJWwpVIiNyhkHek5K7y7xhTtFyrLE4z32sLG0PcfHrSajpFRha4xg==",
-      "path": "couchbasenetclient/2.7.15",
-      "hashPath": "couchbasenetclient.2.7.15.nupkg.sha512"
+      "sha512": "sha512-VB2gEj7AfTFe0rI0mCvpYW3lwB/TWu5Yvs4MIzXwjv4gywuiMf1FlyCO+wZERURU0Xx479OirnirlYxXA2hWnQ==",
+      "path": "couchbasenetclient/2.7.18",
+      "hashPath": "couchbasenetclient.2.7.18.nupkg.sha512"
     },
-    "DNS/5.0.0": {
+    "DNS/6.0.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-V5OJQ/hserjjUh1CyWwBRoBCbZFDK6W7qL4AhpaVccmYXuPxUZvV4Ow+R6xTB5XxPIlCNUo+wgry3vJ0Bgy10g==",
-      "path": "dns/5.0.0",
-      "hashPath": "dns.5.0.0.nupkg.sha512"
+      "sha512": "sha512-Tpqz784vUVtJOlQmYA6S9fPrHrLIgYme/+cwImONkOhRBY99xpBz06KNBEzSetejvcP60WhzovJwEpuCVEZK/A==",
+      "path": "dns/6.0.0",
+      "hashPath": "dns.6.0.0.nupkg.sha512"
     },
-    "KubernetesClient/1.6.8": {
+    "Fractions/4.0.1": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-5tWoAz7PZcrIkzX6MQ0n+Gywq7MJ05CCPgEF7SGW19J9VkzgUK8bZKX47dPVVfLzqH9UNaTWtthQ4EaW/gQ/hQ==",
-      "path": "kubernetesclient/1.6.8",
-      "hashPath": "kubernetesclient.1.6.8.nupkg.sha512"
+      "sha512": "sha512-mpBozAyb/coTe/A8ggYBvH2W9oW1AN1YoBMT+KMFbDZCi57MfubiCkt/dFIsaAPB/e5zTLPAMmxszEaHzFUcxw==",
+      "path": "fractions/4.0.1",
+      "hashPath": "fractions.4.0.1.nupkg.sha512"
+    },
+    "KubernetesClient/2.0.26": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-UqmWj1vN2+BI59Mh/DHkVcgh5ynF3oMsZJqXbdsxKqJEiXBtyT+AR5TNwAKP8yWV58d5ze8FZbUxllD/fNlZzA==",
+      "path": "kubernetesclient/2.0.26",
+      "hashPath": "kubernetesclient.2.0.26.nupkg.sha512"
     },
     "Linq2Couchbase/1.4.2": {
       "type": "package",
@@ -2013,13 +2014,6 @@
       "path": "microsoft.aspnetcore.jsonpatch/3.0.0",
       "hashPath": "microsoft.aspnetcore.jsonpatch.3.0.0.nupkg.sha512"
     },
-    "Microsoft.AspNetCore.WebUtilities/1.1.2": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-8j+1rkTQ47lzUKpH3O2Odt3f6YdYcfnY8hpVG14riZaqEfuO+n+CjZPTYh/3mbQ0+ZhT/3JqUD9gHP3gIGZ0PQ==",
-      "path": "microsoft.aspnetcore.webutilities/1.1.2",
-      "hashPath": "microsoft.aspnetcore.webutilities.1.1.2.nupkg.sha512"
-    },
     "Microsoft.CSharp/4.7.0": {
       "type": "package",
       "serviceable": true,
@@ -2027,19 +2021,19 @@
       "path": "microsoft.csharp/4.7.0",
       "hashPath": "microsoft.csharp.4.7.0.nupkg.sha512"
     },
-    "Microsoft.Extensions.DependencyInjection/3.1.0": {
+    "Microsoft.Extensions.DependencyInjection/3.1.6": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-KVkv3aF2MQpmGFRh4xRx2CNbc2sjDFk+lH4ySrjWSOS+XoY1Xc+sJphw3N0iYOpoeCCq8976ceVYDH8sdx2qIQ==",
-      "path": "microsoft.extensions.dependencyinjection/3.1.0",
-      "hashPath": "microsoft.extensions.dependencyinjection.3.1.0.nupkg.sha512"
+      "sha512": "sha512-YMJWflBmBc0PbqYvt3m4ueSCgV51JLfqHhyunoVq0rBs9V4sVQw5JsPTB17bIrlHFJs2pt2olgfavOOvuGwoRg==",
+      "path": "microsoft.extensions.dependencyinjection/3.1.6",
+      "hashPath": "microsoft.extensions.dependencyinjection.3.1.6.nupkg.sha512"
     },
-    "Microsoft.Extensions.DependencyInjection.Abstractions/3.1.0": {
+    "Microsoft.Extensions.DependencyInjection.Abstractions/3.1.6": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-44rDtOf1JXXAFpNT2EXMExaDm/4OJ2RXOL9i9lE4bK427nzC7Exphv+beB6IgluyE2GIoo8zezTStMXI7MQ8WA==",
-      "path": "microsoft.extensions.dependencyinjection.abstractions/3.1.0",
-      "hashPath": "microsoft.extensions.dependencyinjection.abstractions.3.1.0.nupkg.sha512"
+      "sha512": "sha512-JVlypPjlPqOEyAhET6pA7TqrK+Ya8TrYe2vvqsp62TYKS87oNuReoS7XpDFW0rrOsQo66G1yYf3K0E+lJHFHuw==",
+      "path": "microsoft.extensions.dependencyinjection.abstractions/3.1.6",
+      "hashPath": "microsoft.extensions.dependencyinjection.abstractions.3.1.6.nupkg.sha512"
     },
     "Microsoft.Extensions.Logging/1.1.0": {
       "type": "package",
@@ -2048,12 +2042,12 @@
       "path": "microsoft.extensions.logging/1.1.0",
       "hashPath": "microsoft.extensions.logging.1.1.0.nupkg.sha512"
     },
-    "Microsoft.Extensions.Logging.Abstractions/3.1.0": {
+    "Microsoft.Extensions.Logging.Abstractions/3.1.6": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-jjo4YXRx6MIpv6DiRxJjSpl+sPP0+5VW0clMEdLyIAz44PPwrDTFrd5PZckIxIXl1kKZ2KK6IL2nkt0+ug2MQg==",
-      "path": "microsoft.extensions.logging.abstractions/3.1.0",
-      "hashPath": "microsoft.extensions.logging.abstractions.3.1.0.nupkg.sha512"
+      "sha512": "sha512-o2XYIjF9UugupEPvFsc9N8SjevixoRznS0V6EtjUZcGV4EjXXWKUXlKKsIWmD3i4dSiGo82aNcyqfQTsF/8h8g==",
+      "path": "microsoft.extensions.logging.abstractions/3.1.6",
+      "hashPath": "microsoft.extensions.logging.abstractions.3.1.6.nupkg.sha512"
     },
     "Microsoft.Extensions.Primitives/1.1.1": {
       "type": "package",
@@ -2061,13 +2055,6 @@
       "sha512": "sha512-MrsHOyFpwT+LBzGWp/Oq3pV1Vku8FYE6hgO+2XR0WBRtoI9EaJcpRbtBabS7pXYrkIN1/LOXACpZ9Stqmbrs6A==",
       "path": "microsoft.extensions.primitives/1.1.1",
       "hashPath": "microsoft.extensions.primitives.1.1.1.nupkg.sha512"
-    },
-    "Microsoft.Net.Http.Headers/1.1.2": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-DWJdBZ40yFaDvpIcTzEARzybWyuUB2V9CbrNpIq0GaD0Tx9EHXx2rZcpG034PbAZXBp//CR+cmftwGOkZieP0g==",
-      "path": "microsoft.net.http.headers/1.1.2",
-      "hashPath": "microsoft.net.http.headers.1.1.2.nupkg.sha512"
     },
     "Microsoft.Net.Http.Server/1.1.4": {
       "type": "package",
@@ -2090,12 +2077,12 @@
       "path": "microsoft.netcore.targets/1.1.3",
       "hashPath": "microsoft.netcore.targets.1.1.3.nupkg.sha512"
     },
-    "Microsoft.OpenApi/1.1.4": {
+    "Microsoft.OpenApi/1.2.2": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-6SW0tpbJslc8LAY1XniRfLVcJa7bJUbbwvo2/ZRqfkMbJrsqIj9045vg3STtZhDhYRKhpYgjqGU11eeW4Pzyrg==",
-      "path": "microsoft.openapi/1.1.4",
-      "hashPath": "microsoft.openapi.1.1.4.nupkg.sha512"
+      "sha512": "sha512-+diTWkzj9OSDKhZj56sUKu0F4N4yAu5j1pRSn3/2D8sD2gQcUyEncbDbqhe6SfRlZut2QytyH8zoaexrd1fKYw==",
+      "path": "microsoft.openapi/1.2.2",
+      "hashPath": "microsoft.openapi.1.2.2.nupkg.sha512"
     },
     "Microsoft.Rest.ClientRuntime/2.3.10": {
       "type": "package",
@@ -3042,13 +3029,6 @@
       "path": "system.text.encoding.extensions/4.3.0",
       "hashPath": "system.text.encoding.extensions.4.3.0.nupkg.sha512"
     },
-    "System.Text.Encodings.Web/4.3.1": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-tcfPv+q/nK+5EsAxCLauIOd0kL+lZsXQ4lPKRnh8ex6O1Rm8WAN3LtF2GDFHyD0glSmUpIrgTnLhHCkMAKo3Ug==",
-      "path": "system.text.encodings.web/4.3.1",
-      "hashPath": "system.text.encodings.web.4.3.1.nupkg.sha512"
-    },
     "System.Text.RegularExpressions/4.3.0": {
       "type": "package",
       "serviceable": true,
@@ -3140,12 +3120,12 @@
       "path": "system.xml.xmldocument/4.3.0",
       "hashPath": "system.xml.xmldocument.4.3.0.nupkg.sha512"
     },
-    "YamlDotNet/6.1.2": {
+    "YamlDotNet/8.1.2": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-ADQQokM9Zq0Ad+GOFeOzeR2rW+DrZNGQEVLrf10hI+xoxjYhPK01j/KgNZ/APngalhiroVzsohuZGfWiewRvaQ==",
-      "path": "yamldotnet/6.1.2",
-      "hashPath": "yamldotnet.6.1.2.nupkg.sha512"
+      "sha512": "sha512-GlPKbb4l+91dyYVKV7UnJlr2CWooNNM1ayZWC90QAmlFPgbwSkfhgId7dGjTAHqkB84BZqjMSy5PlAYf1iejVA==",
+      "path": "yamldotnet/8.1.2",
+      "hashPath": "yamldotnet.8.1.2.nupkg.sha512"
     },
     "Neon.Common/2.1.0": {
       "type": "project",

@@ -8,7 +8,7 @@
 
 1. Select the new release branch and merge from **MASTER**.
 
-2. Update `$/product-version.txt` (or `GitHub/product-version.txt` in the solution) with the 
+2. Update `$/neonLIBRARY-version.txt` (or `GitHub/neonLIBRARY-version.txt` in the solution) with the 
    new release version as required.
 
 3. Run all unit tests on Windows in **RELEASE** mode.

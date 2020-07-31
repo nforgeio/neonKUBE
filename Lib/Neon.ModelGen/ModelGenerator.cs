@@ -2452,7 +2452,7 @@ namespace Neon.ModelGen
             writer.WriteLine($"    public partial class {clientTypeName} : IDisposable, IGeneratedServiceClient");
             writer.WriteLine($"    {{");
             writer.WriteLine($"        /// <inheritdoc/>");
-            writer.WriteLine($"        public string GeneratorVersion => \"{Build.ProductVersion}:1\";");
+            writer.WriteLine($"        public string GeneratorVersion => \"{Build.NeonLibraryVersion}:1\";");
             writer.WriteLine();
 
             if (hasNonRootClientGroups)
@@ -2475,7 +2475,7 @@ namespace Neon.ModelGen
                     writer.WriteLine($"            }}");
                     writer.WriteLine();
                     writer.WriteLine($"            /// <inheritdoc/>");
-                    writer.WriteLine($"            public string GeneratorVersion => \"{Build.ProductVersion}:1\";");
+                    writer.WriteLine($"            public string GeneratorVersion => \"{Build.NeonLibraryVersion}:1\";");
 
                     foreach (var serviceMethod in clientGroup.Value.Methods)
                     {

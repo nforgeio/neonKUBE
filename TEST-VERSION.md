@@ -9,7 +9,7 @@ Here's (clunky) way to use this to run tests on OS/X against unpublished nuget p
 **Windows:**
 
 1. Increment the test version above.
-2. Edit **product-version.txt** by changing setting the version you just incremented.
+2. Edit **neonLIBRARY-version.txt** by changing setting the version you just incremented.
 3. Run: `neon-nuget-local`
 4. Copy the packages from `$/Build/nuget` to a USB drive.
 
@@ -25,7 +25,7 @@ Here's (clunky) way to use this to run tests on OS/X against unpublished nuget p
 
 Before commiting any changes on Windows, be sure to:
 
-1. Undo changes to: **product-version.txt**
+1. Undo changes to: **neonLIBRARY-version.txt**
 2. Undo any changes to: **ALL PROJECT FILES**
 
 The last step is very important because the `neon-nuget-local.ps1` script updates the package version for all published projects.

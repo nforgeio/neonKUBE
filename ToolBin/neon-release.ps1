@@ -44,7 +44,8 @@ $nfTools          = "$nfRoot\Tools"
 $nfCodeDoc        = "$nfRoot\..\nforgeio.github.io"
 $nfCadenceSamples = "$nfRoot\..\cadence-samples"
 $env:PATH        += ";$nfBuild"
-$version          = Get-Content "$nfRoot\product-version.txt" -First 1
+$libraryVersion   = Get-Content "$nfRoot\neonLIBRARY-version.txt" -First 1
+$kubeVersion      = Get-Content "$nfRoot\neonKUBE-version.txt" -First 1
 $originalDir      = $pwd
 
 # Publish the code documentation.
@@ -140,7 +141,7 @@ if ($codedoc)
 
     "Commiting local changes..."
     git add --all
-    git commit -m "RELEASE: $version"
+    git commit -m "RELEASE: $libraryVersion"
 
     "Pushing to origin..."
     git push

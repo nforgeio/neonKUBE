@@ -67,16 +67,16 @@ namespace Test.NeonCli
             {
                 var result = runner.Execute(Program.Main, "version");
                 Assert.Equal(0, result.ExitCode);
-                Assert.Equal(Build.ProductVersion, result.OutputText.Trim());
+                Assert.Equal(Build.NeonKubeVersion, result.OutputText.Trim());
 
                 result = runner.Execute(Program.Main, "version", "-n");
                 Assert.Equal(0, result.ExitCode);
-                Assert.Equal(Build.ProductVersion, result.OutputText.Trim());
+                Assert.Equal(Build.NeonKubeVersion, result.OutputText.Trim());
                 Assert.DoesNotContain('\n', result.OutputText);
 
                 result = runner.Execute(Program.Main, "version", "-n", "--git");
                 Assert.Equal(0, result.ExitCode);
-                Assert.Equal($"{Build.ProductVersion}/{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}", result.OutputText.Trim());
+                Assert.Equal($"{Build.NeonKubeVersion}/{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}", result.OutputText.Trim());
                 Assert.DoesNotContain('\n', result.OutputText);
 
                 result = runner.Execute(Program.Main, "version", $"--minimum={Program.Version}");

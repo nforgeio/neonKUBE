@@ -475,30 +475,6 @@
             to this to get the URI for a specific template.
             </summary>
         </member>
-        <member name="T:Neon.Kube.KubeDashboardConfig">
-            <summary>
-            Manages the Kubernetes dashboard YAML configurations.
-            </summary>
-        </member>
-        <member name="M:Neon.Kube.KubeDashboardConfig.GetDashboardConfigFor(System.String)">
-            <summary>
-            Returns the dashboard configuration to be used for the specified version
-            of Kubernetes.
-            </summary>
-            <param name="kubernetesVersion">The target Kubernetes version.</param>
-            <returns>The dashboard version and its YAML configuration file.</returns>
-            <exception cref="T:System.NotSupportedException">Thrown if there isn't a known compatble dashboard.</exception>
-        </member>
-        <member name="F:Neon.Kube.KubeDashboardConfig.DashboardYaml_1_10_1">
-            <summary>
-            Modified YAML for Dashboard 1.10.1
-            </summary>
-        </member>
-        <member name="F:Neon.Kube.KubeDashboardConfig.DashboardYaml_2_0_0_rc2">
-            <summary>
-            Modified YAML for Dashboard 2.0.0-rc4
-            </summary>
-        </member>
         <member name="T:Neon.Kube.KubeSetupInfo">
             <summary>
             Describes the details required to setup a Kubernetes cluster.
@@ -514,11 +490,6 @@
             Returns the URI for the Linux node template for the specified hosting enviroment 
             and Linux distribution and version.  This may be null for some hosting environments
             like bare metal and clouds.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.KubeSetupInfo.Versions">
-            <summary>
-            Lists the installed component versions.
             </summary>
         </member>
         <member name="P:Neon.Kube.KubeSetupInfo.KubeCtlLinuxUri">
@@ -546,22 +517,7 @@
             The <b>kubelet</b> binary download URI for Linux.
             </summary>
         </member>
-        <member name="P:Neon.Kube.KubeSetupInfo.KubeAdmPackageUbuntuVersion">
-            <summary>
-            The Ubuntu package version for <b>kubeadm</b>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.KubeSetupInfo.KubeCtlPackageUbuntuVersion">
-            <summary>
-            The Ubuntu package version for <b>kubectl</b>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.KubeSetupInfo.KubeletPackageUbuntuVersion">
-            <summary>
-            The Ubuntu package version for <b>kubelet</b>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.KubeSetupInfo.DockerPackageUbuntuUri">
+        <member name="P:Neon.Kube.KubeSetupInfo.DockerPackageUri">
             <summary>
             The Docker package for Ubuntu.
             </summary>
@@ -596,62 +552,6 @@
             The Istio binary URL for Linux.
             </summary>
         </member>
-        <member name="P:Neon.Kube.KubeSetupInfo.KubeDashboardYaml">
-            <summary>
-            <para>
-            The Kubernetes Dashboard configuration YAML.
-            </para>
-            <note>
-            See the remarks for information on embedded variables.
-            </note>
-            </summary>
-            <remarks>
-            The YAML returned includes two variables <b>$&lt;CERTIFICATE&gt;</b> and <b>$&lt;PRIVATEKEY&gt;</b> that 
-            need to be replaced with the custom certificate and private key the dashboard will use to
-            secure the site.  These must be passed as the PEM encoded certificate and key converted into
-            a single line of base-64 text.
-            </remarks>
-        </member>
-        <member name="T:Neon.Kube.KubeSetupVersions">
-            <summary>
-            Indicates the versions for the installed components.
-            </summary>
-        </member>
-        <member name="M:Neon.Kube.KubeSetupVersions.#ctor">
-            <summary>
-            Default constructor.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.KubeSetupVersions.Kubernetes">
-            <summary>
-            The Kubernetes version.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.KubeSetupVersions.KubernetesDashboard">
-            <summary>
-            The Kubernetes dashboard version;
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.KubeSetupVersions.Docker">
-            <summary>
-            The Docker version.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.KubeSetupVersions.Helm">
-            <summary>
-            The Helm version.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.KubeSetupVersions.Calico">
-            <summary>
-            The Calico version.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.KubeSetupVersions.Istio">
-            <summary>
-            The Istio version.
-            </summary>
-        </member>
         <member name="T:Neon.Kube.HostingManager">
             <summary>
             Base class for environment specific hosting managers. 
@@ -672,16 +572,6 @@
             Releases any important resources associated with the instance.
             </summary>
             <param name="disposing">Pass <c>true</c> if the instance is being disposed as opposed to being finalized.</param>
-        </member>
-        <member name="P:Neon.Kube.HostingManager.HostUsername">
-            <summary>
-            The initial host username to use when creating and/or configuring cluster nodes.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.HostingManager.HostPassword">
-            <summary>
-            The initial host password to use when creating and/or configuring cluster nodes.
-            </summary>
         </member>
         <member name="P:Neon.Kube.HostingManager.ShowStatus">
             <summary>
@@ -707,16 +597,13 @@
         <member name="M:Neon.Kube.HostingManager.Validate(Neon.Kube.ClusterDefinition)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Kube.HostingManager.Provision(System.Boolean)">
+        <member name="M:Neon.Kube.HostingManager.Provision(System.Boolean,System.String,System.String)">
             <inheritdoc/>
         </member>
         <member name="M:Neon.Kube.HostingManager.GetSshEndpoint(System.String)">
             <inheritdoc/>
         </member>
         <member name="M:Neon.Kube.HostingManager.AddPostProvisionSteps(Neon.Kube.SetupController{Neon.Kube.NodeDefinition})">
-            <inheritdoc/>
-        </member>
-        <member name="P:Neon.Kube.HostingManager.DrivePrefix">
             <inheritdoc/>
         </member>
         <member name="P:Neon.Kube.HostingManager.RequiresAdminPrivileges">
@@ -827,7 +714,7 @@
             <param name="clusterDefinition">The cluster definition.</param>
             <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if any problems were detected.</exception>
         </member>
-        <member name="M:Neon.Kube.IHostingManager.Provision(System.Boolean)">
+        <member name="M:Neon.Kube.IHostingManager.Provision(System.Boolean,System.String,System.String)">
             <summary>
             Creates and initializes the cluster resources such as the virtual machines,
             networks, load balancers, network security groups, public IP addresses etc.
@@ -837,7 +724,16 @@
             are to be replaced or overwritten during privisioning.  The actual interpretation
             of this parameter is specific to each hosting manager implementation.
             </param>
-            <returns><c>true</c> if the operation was successful.</returns>
+            <param name="secureSshPassword">
+            The secure SSH password to be set for all node VMs. This is required.
+            </param>
+            <param name="orgSshPassword">
+            The starting SSH password for the VMs.  This may be passed as <c>null</c> when
+            the provisioning manager is able to configure the passwords when the VMs are
+            born, such as in the cloud or when hosted via on-premise hypervisors.  This
+            is currently used only by the bare metal hosting manager which will need to
+            be able to log into existing nodes provisioned manually by the cluster operator.
+            </param>
         </member>
         <member name="M:Neon.Kube.IHostingManager.GetSshEndpoint(System.String)">
             <summary>
@@ -859,24 +755,9 @@
             </summary>
             <param name="controller">The target setup controller.</param>
         </member>
-        <member name="P:Neon.Kube.IHostingManager.DrivePrefix">
-            <summary>
-            <para>
-            Returns the prefix for block devices that will be attached to
-            the host machines.  For many hosting environments this will be
-            <b>sd</b>, indicating that drives will be attached like: 
-            <b>/dev/sda</b>, <b>/dev/sdb</b>, <b>/dev/sdc</b>...
-            </para>
-            <para>
-            This may be different though for some hosting environment.
-            XenServer for example, uses the <b>xvd</b> prefix and attaches
-            drives as <b>/dev/sda</b>, <b>/dev/sdb</b>, <b>/dev/sdc</b>...
-            </para>
-            </summary>
-        </member>
         <member name="P:Neon.Kube.IHostingManager.RequiresAdminPrivileges">
             <summary>
-            Returns <c>true</c> if provisoning requires that the user has
+            Returns <c>true</c> if provisoning requires that the user have
             administrator privileges.
             </summary>
         </member>
@@ -893,8 +774,13 @@
             <param name="cluster">The cluster being managed.</param>
             <param name="setupInfo">Specifies the cluster setup information.</param>
             <param name="logFolder">
+            <para>
             The folder where log files are to be written, otherwise or <c>null</c> or 
             empty if logging is disabled.
+            </para>
+            <note>
+            Specific hosting managers may choose to ignore this when it doesn't make sense.
+            </note>
             </param>
             <returns>
             The <see cref="T:Neon.Kube.HostingManager"/> or <c>null</c> if no hosting manager
@@ -952,20 +838,6 @@
             to obtain a random delay timespan.
             </summary>
         </member>
-        <member name="F:Neon.Kube.KubeConst.DefaulVmTemplateUsername">
-            <summary>
-            The root account username baked into the Hyper-V and XenServer cluster
-            host node virtual machine templates.  This is also used as the username
-            for hosts provisioned to clouds like Azure, Aws, and Google Cloud. 
-            </summary>
-        </member>
-        <member name="F:Neon.Kube.KubeConst.DefaulVmTemplatePassword">
-            <summary>
-            The root account password baked into the Hyper-V and XenServer cluster
-            host node virtual machine templates.  Note that this will not be
-            used for hosts provisioned on public clouds for security reasons.
-            </summary>
-        </member>
         <member name="F:Neon.Kube.KubeConst.MaxMasters">
             <summary>
             The maximum number of cluster master nodes.
@@ -1011,14 +883,6 @@
             The root Kubernetes context username for provisioned clusters. 
             </summary>
         </member>
-        <member name="F:Neon.Kube.KubeConst.TestModeFolderVar">
-            <summary>
-            The environment variable used for unit testing that indicates
-            that <see cref="T:Neon.Kube.KubeHelper"/> should run in test mode.  The
-            value will be set to the path of the temporary directory where
-            the Kubernetes and neonKUBE files will be located.
-            </summary>
-        </member>
         <member name="F:Neon.Kube.KubeConst.DesktopServicePort">
             <summary>
             The default local network port for the neonKUBE desktop API
@@ -1062,7 +926,7 @@
             the Grafana dashboard for the current cluster.
             </summary>
         </member>
-        <member name="F:Neon.Kube.KubeConst.SysAdminUser">
+        <member name="F:Neon.Kube.KubeConst.SysAdminUsername">
             <summary>
             The default host machine sysadmin username.
             </summary>
@@ -1082,7 +946,14 @@
             The default host machine sysadmin group ID.
             </summary>
         </member>
-        <member name="F:Neon.Kube.KubeConst.ContainerUser">
+        <member name="F:Neon.Kube.KubeConst.VmTemplatePassword">
+            <summary>
+            The root account password baked into the Hyper-V and XenServer cluster
+            host node virtual machine templates.  Note that this will not be
+            used for hosts provisioned on public clouds for security reasons.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeConst.ContainerUsername">
             <summary>
             The default host machine container username.
             </summary>
@@ -1572,14 +1443,16 @@
             <param name="label">Optionally specifies a volume label.</param>
             <exception cref="T:Neon.Common.ExecuteException">Thrown if the operation failed.</exception>
         </member>
-        <member name="M:Neon.Kube.KubeHelper.CreateNodePrepIso(Neon.Kube.ClusterDefinition,Neon.Kube.NodeDefinition)">
+        <member name="M:Neon.Kube.KubeHelper.CreateNodePrepIso(Neon.Kube.ClusterDefinition,Neon.Kube.NodeDefinition,System.String)">
             <summary>
             Creates an ISO file containing the <b>neon-node-prep.sh</b> script that 
-            will provide the information to <b>cloud-init</b> when cluster nodes
-            are prepared on non-cloud virtualization hosts like Hyper-V and XenServer.
+            will be used for confguring the node on first boot.  This includes disabling
+            the APT package update services, setting a secure password for the [sysadmin]
+            account, and configuring the network interface with the configured static IP.
             </summary>
-            <param name="clusterDefinition"></param>
-            <param name="nodeDefinition"></param>
+            <param name="clusterDefinition">The cluster definition.</param>
+            <param name="nodeDefinition">The node definition.</param>
+            <param name="securePassword">The new secure SSH password.</param>
             <returns>A <see cref="T:Neon.IO.TempFile"/> that references the generated ISO file.</returns>
             <remarks>
             <para>
@@ -1587,9 +1460,7 @@
             insert the ISO into the node VM's DVD/CD drive before booting the node
             for the first time.  The <b>neon-node-prep</b> service configured on
             the corresponding node templates will look for this DVD and script and
-            execute it early during the node boot process, before <b>cloud-init</b>
-            runs.  When <b>cloud-init</b> runs, it will complete the basic node
-            preparation.
+            execute it early during the node boot process.
             </para>
             <para>
             The ISO file reference is returned as a <see cref="T:Neon.IO.TempFile"/>.  The
@@ -1598,36 +1469,31 @@
             </para>
             </remarks>
         </member>
-        <member name="M:Neon.Kube.KubeHelper.CreateNodePrepVfd(Neon.Kube.ClusterDefinition,Neon.Kube.NodeDefinition,System.String)">
+        <member name="M:Neon.Kube.KubeHelper.WriteLog(System.Action{System.String},System.String)">
             <summary>
-            Creates an floppy VFD file containing the <b>neon-node-prep.sh</b> script that 
-            will provide the information to <b>cloud-init</b> when cluster nodes
-            are prepared on non-cloud virtualization hosts like Hyper-V and XenServer.
+            Writes a message to a log writer action when it's not <c>null</c>.
             </summary>
-            <param name="clusterDefinition">The cluster definition.</param>
-            <param name="nodeDefinition">The node definition.</param>
-            <param name="nodePrepScript">The node preparation script.</param>
-            <returns>A <see cref="T:Neon.IO.TempFile"/> that references the generated VFD file.</returns>
-            <remarks>
-            <para>
-            The hosting manager will call this for each node being prepared and then
-            insert the ISO into the node VM's floppy drive before booting the node
-            for the first time.  The <b>neon-node-prep</b> service configured on
-            the corresponding node templates will look for this DVD and script and
-            execute it early during the node boot process, before <b>cloud-init</b>
-            runs.  When <b>cloud-init</b> runs, it will complete the basic node
-            preparation.
-            </para>
-            <para>
-            The VFD file reference is returned as a <see cref="T:Neon.IO.TempFile"/>.  The
-            caller should call <see cref="M:Neon.IO.TempFile.Dispose"/> when it's done
-            with the file to ensure that it is deleted.
-            </para>
-            <note>
-            This method uses a special purpose floppy drive image generated via the
-            <b>neon generate init-floppy</b> command.
-            </note>
-            </remarks>
+            <param name="logWriter">The log writer action ot <c>null</c>.</param>
+            <param name="message">The message or <c>null</c> to wtite a blank line.</param>
+        </member>
+        <member name="M:Neon.Kube.KubeHelper.InitializeNode(Neon.Kube.SshProxy{Neon.Kube.NodeDefinition},System.String,System.Boolean,System.Action{System.String})">
+            <summary>
+            Performs low-level initialization of a cluster node.  This is applied one time to
+            Hyper-V and XenServer/XCP-ng node templates when they are created and at cluster
+            creation time for cloud and bare metal based clusters.  The node must already
+            be booted and running.
+            </summary>
+            <param name="node">The node's SSH proxy.</param>
+            <param name="sshPassword">The current <b>sysadmin</b> password.</param>
+            <param name="updateDistribution">Optionally upgrade the node's Linux distribution.  This defaults to <c>false</c>.</param>
+            <param name="logWriter">Action that writes a line of text to the operation output log or console (or <c>null</c>).</param>
+        </member>
+        <member name="M:Neon.Kube.KubeHelper.VerifyNodeOs(Neon.Kube.SshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Ensures that the node operating system and version is supported for a neonKUBE
+            cluster.  This faults the nodeproxy on faliure.
+            </summary>
+            <param name="node">The target node.</param>
         </member>
         <member name="T:Neon.Kube.KubeHostFolders">
             <summary>
@@ -1683,6 +1549,13 @@
         <member name="M:Neon.Kube.KubeHostFolders.Home(System.String)">
             <summary>
             Path to a user archive directory.
+            </summary>
+            <param name="username">The username.</param>
+            <returns>The directory path.</returns>
+        </member>
+        <member name="M:Neon.Kube.KubeHostFolders.NeonKubeHome(System.String)">
+            <summary>
+            Path to a user <b>.neonkube</b> home directory.
             </summary>
             <param name="username">The username.</param>
             <returns>The directory path.</returns>
@@ -1758,6 +1631,57 @@
         <member name="F:Neon.Kube.KubeHostPorts.KubeDashboard">
             <summary>
             The node port exposed by the Kubernetes dashboard service.
+            </summary>
+        </member>
+        <member name="T:Neon.Kube.KubeVersions">
+            <summary>
+            Specifies deployment related component versions for the current
+            neonKUBE release.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.KubernetesVersion">
+            <summary>
+            The version of Kubernetes to be installed.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.KubernetesDashboardVersion">
+            <summary>
+            The version of the Kubernetes dashboard to be installed.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.KubeAdminPackageVersion">
+            <summary>
+            The package version for Kubernetes admin service.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.KubeCtlPackageVersion">
+            <summary>
+            The package version for the Kubernetes cli.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.KubeletPackageVersion">
+            <summary>
+            The package version for the Kubelet service.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.DockerVersion">
+            <summary>
+            The version of Docker to be installed.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.CalicoVersion">
+            <summary>
+            The version of Calico to install.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.IstioVersion">
+            <summary>
+            The version of Istio to install.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeVersions.HelmVersion">
+            <summary>
+            The version of Helm to be installed.
             </summary>
         </member>
         <member name="T:Neon.Kube.KubeConfig">
@@ -2348,17 +2272,6 @@
             <summary>
             Indicates whether provisioning is complete but setup is still
             pending for this cluster
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.KubeSetupDetails.SshStrongPassword">
-            <summary>
-            Temporarily holds the strong password during cluster setup.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.KubeSetupDetails.HasStrongSshPassword">
-            <summary>
-            Indicates whether a strong host SSH password was generated for the cluster.
-            This defaults to <c>false</c>.
             </summary>
         </member>
         <member name="P:Neon.Kube.KubeSetupDetails.ClusterJoinCommand">
@@ -2986,6 +2899,55 @@
             Enumerates the possible Azure VM sizes.
             </summary>
         </member>
+        <member name="T:Neon.Kube.CloudOptions">
+            <summary>
+            Describes cloud related cluster settings.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.CloudOptions.SshIngressStart">
+            <summary>
+            <para>
+            Specifies the start of a range of ingress load balancer ports reserved by
+            neonKUBE for temporarily exposing SSH from individual cluster nodes to the
+            Internet during cluster setup as well as afterwards so that a cluster node
+            can be accessed remotely by a cluster operator.
+            </para>
+            <note>
+            The number ports between <see cref="P:Neon.Kube.CloudOptions.SshIngressStart"/> and <see cref="P:Neon.Kube.CloudOptions.SshIngressEnd"/>
+            must include at least as many ports as there will be nodes deployed to the cluster.
+            This range defaults to <b>64000-64999</b> which will support a cluster with up to
+            1,000 nodes, which is a big number.  This default range is unlikely to conflict with 
+            ports a cluster may need to expliitly expose to the Internet like HTTP/HTTPS (80/443).
+            You can change this range for your cluster to resolve any conflicts when necessary.
+            </note>
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.CloudOptions.SshIngressEnd">
+            <summary>
+            <para>
+            Specifies the end of a range of ingress load balancer ports reserved by
+            neonKUBE for temporarily exposing SSH from individual cluster nodes to the
+            Internet during cluster setup as well as afterwards so that a cluster node
+            can be accessed remotely by a cluster operator.
+            </para>
+            <note>
+            The number ports between <see cref="P:Neon.Kube.CloudOptions.SshIngressStart"/> and <see cref="P:Neon.Kube.CloudOptions.SshIngressEnd"/>
+            must include at least as many ports as there will be nodes deployed to the cluster.
+            This range defaults to <b>64000-64999</b> which will support a cluster with up to
+            1,000 nodes, which is a big number.  This default range is unlikely to conflict with 
+            ports a cluster may need to expliitly expose to the Internet like HTTP/HTTPS (80/443).
+            You can change this range for your cluster to resolve any conflicts when necessary.
+            </note>
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.CloudOptions.Validate(Neon.Kube.ClusterDefinition)">
+            <summary>
+            Validates the options and also ensures that all <c>null</c> properties are
+            initialized to their default values.
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
+            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        </member>
         <member name="T:Neon.Kube.ClusterDefinition">
             <summary>
             Describes a Kubernetes cluster.
@@ -3081,6 +3043,11 @@
             </note>
             </summary>
         </member>
+        <member name="P:Neon.Kube.ClusterDefinition.Security">
+            <summary>
+            Specifies cluster security options.
+            </summary>
+        </member>
         <member name="P:Neon.Kube.ClusterDefinition.Provisioner">
             <summary>
             Identifies the tool/version used to provision the cluster.
@@ -3107,24 +3074,6 @@
             <summary>
             Returns the options to be used for configuring the cluster integrated
             Elasticsearch/Fluentd/Kibana (Mon) logging stack.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.DrivePrefix">
-            <summary>
-            <para>
-            Returns the prefix for block devices that will be attached to
-            the host machines.  For many hosting environments this will be
-            <b>sd</b>, indicating that drives will be attached like: 
-            <b>/dev/sda</b>, <b>/dev/sdb</b>, <b>/dev/sdc</b>...
-            </para>
-            <para>
-            This may be different though for some hosting environments.
-            XenServer for example, uses the <b>xvd</b> prefix and attaches
-            drives as <b>/dev/sda</b>, <b>/dev/sdb</b>, <b>/dev/sdc</b>...
-            </para>
-            <note>
-            This property is set automatically during cluster provisioning.
-            </note>
             </summary>
         </member>
         <member name="P:Neon.Kube.ClusterDefinition.AllowUnitTesting">
@@ -3245,6 +3194,11 @@
             Specifies host node options.
             </summary>
         </member>
+        <member name="P:Neon.Kube.ClusterDefinition.Cloud">
+            <summary>
+            Specifies cloud related options for clusters to be deployed to the cloud.
+            </summary>
+        </member>
         <member name="P:Neon.Kube.ClusterDefinition.NodeDefinitions">
             <summary>
             Describes the host nodes in the cluster.
@@ -3309,19 +3263,6 @@
             <note>
             <b>WARNING:</b> In general, you should not customize any debugging options for
             production clusters.
-            </note>
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.DebugOptions.InsecureNodeCredentials">
-            <summary>
-            <para>
-            Indicates that the cluster node credentials should remain as the insecure
-            <b>sysadmin/sysadmin0000</b> to make it easier for neonKUBE developers to
-            inspect nodes while debugging cluster setup.  Normally, a secure password
-            will be generated and set while nodes are being prepared before cluster setup.
-            </para>
-            <note>
-            <b>WARNING:</b> You should <b>never set this to true for production clusters!</b>
             </note>
             </summary>
         </member>
@@ -3467,6 +3408,127 @@
             </summary>
             <param name="clusterDefinition">The cluster definition.</param>
             <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        </member>
+        <member name="T:Neon.Kube.HostedEndpoint">
+            <summary>
+            Describes a network endpoint to be exposed by a neonKUBE cluster deployed to
+            hosting providers such as AWS, Azure, or Google by platform load platform
+            load balancers.
+            </summary>
+            <remarks>
+            <note>
+            <para>
+            The <a href="https://istio.io">Istio</a> service mesh component used by
+            neonKUBE clusters to route network traffic in/out of the cluster as well
+            as between internal services and pods doesn't currently support UDP traffic,
+            do UDP endpoints are not useful now.  UDP support is on their radar though
+            and the underlying Envoy project has been making progress with UDP as well,
+            so perhaps we'll be able to enable this scenario in the future.  Here's
+            the tracking issue:
+            </para>
+            <para>
+            <a href="https://github.com/istio/istio/issues/1430">https://github.com/istio/istio/issues/1430</a>
+            </para>
+            </note>
+            <para>
+            Most clusters will generally sit behind a load balancer or router that forwards
+            external network traffic into the cluster based on the endpoints found in 
+            the cluster definition.  The endpoints specify the network protocol (TCP/UDP),
+            the external load balancer port the traffic is received on and the cluster node 
+            port where the traffic will be forwarded.
+            </para>
+            <para>
+            The load balancer will balance traffic against one or more cluster nodes.  These
+            nodes will have their <c>node.ingress=true</c> label set.  Cluster setup will 
+            use this to deploy Istio on these nodes and will also configure the load balancer
+            (when posible) to load balance external traffic across these nodes.  Istio will
+            then handle routing traffic to the cluster services and pods.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Neon.Kube.HostedEndpoint.#ctor">
+            <summary>
+            Default constructor.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.HostedEndpoint.#ctor(Neon.Kube.HostedEndpointProtocol,System.Int32,System.Int32)">
+            <summary>
+            Parametized constructor.
+            </summary>
+            <param name="protocol">Specifies the protocol.</param>
+            <param name="externalPort">Specifies the external network port.</param>
+            <param name="internalPort">Specifies the internal cluster network port.</param>
+        </member>
+        <member name="P:Neon.Kube.HostedEndpoint.Protocol">
+            <summary>
+            Specifies the network protocol to be supported.  This defaults to <see cref="F:Neon.Kube.HostedEndpointProtocol.Tcp"/>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.HostedEndpoint.FrontendPort">
+            <summary>
+            Specifies the external network port from which traffic is to be routed into the cluster.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.HostedEndpoint.BackendPort">
+            <summary>
+            Specifies the internal cluster port where the traffic is to be routed.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.HostedEndpoint.IdleTimeoutMinutes">
+            <summary>
+            Maximum time an external connection to this endpoint will remain open
+            while idle.  This defaults to <b>5</b> minutes.
+            </summary>
+            <remarks>
+            <note>
+            <para>
+            Cloud providers support various ranges:
+            </para>
+            <list type="table">
+            <item>
+                <term><b>AWS</b></term>
+                <description>
+                $todo(jeff.lill): Figure this out.
+                </description>
+            </item>
+            <item>
+                <term><b>Azure</b></term>
+                <description>
+                Between 4 and 30 minutes.
+                </description>
+            </item>
+            <item>
+                <term><b>Google</b></term>
+                <description>
+                $todo(jeff.lill): Figure this out.
+                </description>
+            </item>
+            </list>
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.Kube.HostedEndpoint.Validate(Neon.Kube.ClusterDefinition)">
+            <summary>
+            Validates the options and also ensures that all <c>null</c> properties are
+            initialized to their default values.
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
+            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        </member>
+        <member name="T:Neon.Kube.HostedEndpointProtocol">
+            <summary>
+            Enumerates the possible <see cref="T:Neon.Kube.HostedEndpoint"/> protocols.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.HostedEndpointProtocol.Tcp">
+            <summary>
+            TCP protocol.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.HostedEndpointProtocol.Udp">
+            <summary>
+            UDP protocol.
+            </summary>
         </member>
         <member name="T:Neon.Kube.HostingEnvironments">
             <summary>
@@ -3744,32 +3806,32 @@
             <param name="clusterDefinition">The cluster definition.</param>
             <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         </member>
-        <member name="T:Neon.Kube.IngressOptions">
+        <member name="T:Neon.Kube.IngressRoute">
             <summary>
             Specifies the ingress rules for the cluster.
             </summary>
         </member>
-        <member name="P:Neon.Kube.IngressOptions.Name">
+        <member name="P:Neon.Kube.IngressRoute.Name">
             <summary>
             The name of the ingress rule.
             </summary>
         </member>
-        <member name="P:Neon.Kube.IngressOptions.Port">
+        <member name="P:Neon.Kube.IngressRoute.Port">
             <summary>
             The ingress port.
             </summary>
         </member>
-        <member name="P:Neon.Kube.IngressOptions.TargetPort">
+        <member name="P:Neon.Kube.IngressRoute.TargetPort">
             <summary>
             The target port for the ingress rule.
             </summary>
         </member>
-        <member name="P:Neon.Kube.IngressOptions.NodePort">
+        <member name="P:Neon.Kube.IngressRoute.NodePort">
             <summary>
             The Kubernetes NodePort. This is where the ingress gateway will listen.
             </summary>
         </member>
-        <member name="M:Neon.Kube.IngressOptions.Validate(Neon.Kube.ClusterDefinition)">
+        <member name="M:Neon.Kube.IngressRoute.Validate(Neon.Kube.ClusterDefinition)">
             <summary>
             Validates the options.
             </summary>
@@ -4045,38 +4107,23 @@
             environments.
             </summary>
         </member>
-        <member name="P:Neon.Kube.NetworkOptions.Cni">
-            <summary>
-            Specifies the cluster network provider.  This currently defaults to <see cref="F:Neon.Kube.NetworkCni.Calico"/>
-            but this will change to the <see cref="F:Neon.Kube.NetworkCni.Istio"/> integrated provider once that stablizes.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.NetworkOptions.CniVersion">
-            <summary>
-            <para>
-            Specifies the cluster network provider version.  This defaults to <b>default</b> which will install
-            a reasonable supported version.
-            </para>
-            <note>
-            This is ignored for the <see cref="F:Neon.Kube.NetworkCni.Istio"/> integrated provider.
-            </note>
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.NetworkOptions.IstioVersion">
-            <summary>
-            Specifies the version  of Istio to be installed.  This defaults to <b>default</b> which
-            will install a reasonable supported version.
-            </summary>
-        </member>
         <member name="P:Neon.Kube.NetworkOptions.MutualPodTLS">
             <summary>
             Optionally enable Istio mutual TLS support for cross pod communication.
             This defaults to <c>false</c>.
             </summary>
         </member>
-        <member name="P:Neon.Kube.NetworkOptions.Ingress">
+        <member name="P:Neon.Kube.NetworkOptions.IngressNodeSelector">
             <summary>
-            Optionally sets the ingress ports.
+            
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.NetworkOptions.IngressRoutes">
+            <summary>
+            Optionally sets the ingress routing rules external traffic received by nodes
+            with <see cref="P:Neon.Kube.NodeDefinition.Ingress"/> enabled into one or more Istio ingress
+            gateway services which are then responsible for routing to the target Kubernetes 
+            services.
             </summary>
         </member>
         <member name="T:Neon.Kube.NetworkOptions.SubnetDefinition">
@@ -4175,6 +4222,39 @@
         <member name="P:Neon.Kube.NodeDefinition.Role">
             <summary>
             Returns the node's <see cref="T:Neon.Kube.NodeRole"/>.  This defaults to <see cref="F:Neon.Kube.NodeRole.Worker"/>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.NodeDefinition.Ingress">
+            <summary>
+            <para>
+            Indicates whether this node should be configured to accept external network traffic
+            on node ports and route that into the cluster.  This has a tri-state value.
+            </para>
+            <list type="table">
+            <item>
+                <term><c><c>false</c></c></term>
+                <description>
+                The node <b>will not</b> be configured to route external traffic.
+                </description>
+            </item>
+            <item>
+                The node <b>will</b> be configured to route external traffic.
+                <description>
+                The node <b>will</b> be configured to route external traffic.
+                </description>
+            </item>
+            <item>
+                <term><c>null</c></term>
+                <description>
+                This is the default value.  When <b>all nodes</b> have this set to <c>null</c>,
+                cluster setup will configure this automatically based on the number and types
+                of nodes in the cluster.  If the cluster has at least 2 worker nodes then just
+                the worker nodes will be configured to route traffic (the idea being to limit 
+                load on the managers).  If there are fewer than 2 workers, then all cluster
+                nodes will be configured for routing.
+                </description>
+            </item>
+            </list>
             </summary>
         </member>
         <member name="P:Neon.Kube.NodeDefinition.Labels">
@@ -4332,6 +4412,11 @@
         <member name="F:Neon.Kube.NodeLabels.LabelRole">
             <summary>
             Reserved label name that identifies the node role.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.NodeLabels.LabelIngress">
+            <summary>
+            Reserved label name used to indicate that a node should route external traffic into the cluster.
             </summary>
         </member>
         <member name="F:Neon.Kube.NodeLabels.LabelAzureVmSize">
@@ -4659,12 +4744,6 @@
             to pick up most criticial updates.
             </summary>
         </member>
-        <member name="P:Neon.Kube.NodeOptions.PasswordLength">
-            <summary>
-            cluster hosts are configured with a random root account password.
-            This defaults to <b>20</b> characters.  The minumum length is <b>8</b>.
-            </summary>
-        </member>
         <member name="P:Neon.Kube.NodeOptions.AllowPackageManagerIPv6">
             <summary>
             Allow the Linux package manager to use IPv6 when communicating with
@@ -4753,6 +4832,59 @@
             <summary>
             Validates the options and also ensures that all <c>null</c> properties are
             initialized to their default values.
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
+            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        </member>
+        <member name="T:Neon.Kube.SecurityOptions">
+            <summary>
+            Specifies cluster security options.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.SecurityOptions.PasswordLength">
+            <summary>
+            cluster hosts are configured with a random root account password.
+            This defaults to <b>20</b> characters.  The minumum length is <b>8</b>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.SecurityOptions.KeepNodePassword">
+            <summary>
+            <para>
+            Normally cluster nodes are configured such that the <b>sysadmin</b> user account 
+            password is set to cryptographically random password with <see cref="P:Neon.Kube.SecurityOptions.PasswordLength"/>
+            characters.  This happens during cluster provisioning.
+            </para>
+            <para>
+            You can disable these secure passwords by setting <see cref="P:Neon.Kube.SecurityOptions.KeepNodePassword"/> to 
+            <c>true</c>.  In general, this means that the <b>sysadmin</b> password will generally
+            remain as the insecure <b>sysadmin0000</b> password.
+            </para>
+            <note>
+            <b>WARNING:</b> Be very careful about enabling this for production clusters!
+            </note>
+            </summary>
+            <remarks>
+            <para>
+            There are really only two scnerios where you'd want to enable this:
+            </para>
+            <list type="number">
+            <item>
+            <b>Cluster development and debugging:</b> Sometimes neonKUBE developers may wish to enable
+            this while developing and debugging cluster deployment and other operations to make it easy
+            to SSH into cluster nodes to poke around.
+            </item>
+            <item>
+            <b>Bare metal (machine) deployments:</b> Cluster operators may wish to configure a secure
+            <b>sysadmin</b> password when they manually configure the target node machines and/or 
+            virtual machines.  Setting this to <c>true</c> will have the <see cref="F:Neon.Kube.HostingEnvironments.Machine"/>
+            cluster provisioner to retain this secure password rather than setting a new one. 
+            </item>
+            </list>
+            </remarks>
+        </member>
+        <member name="M:Neon.Kube.SecurityOptions.Validate(Neon.Kube.ClusterDefinition)">
+            <summary>
+            Validates the options.
             </summary>
             <param name="clusterDefinition">The cluster definition.</param>
             <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
@@ -5528,7 +5660,7 @@
             <note>
             This is class is <b>not intended</b> to be a <b>general purpose SSH wrapper</b> 
             at this time.  It currently assumes that the remote side is running some variant
-            of Linux and it makes some globale changes including overwriting the 
+            of Linux and it makes some global changes including overwriting the 
             <b>/etc/sudoers.d/nopasswd</b> file to disable password prompts for all
             users and creating some global directories.
             </note>
@@ -5744,7 +5876,7 @@
             <para>
             This property is intended to be used by management tools to indicate the state
             of the server for UX purposes.  This property will be set by some methods such
-            as <see cref="M:Neon.Kube.SshProxy`1.WaitForBoot(System.Nullable{System.TimeSpan},System.Boolean)"/> but can also be set explicitly by tools when they
+            as <see cref="M:Neon.Kube.SshProxy`1.WaitForBoot(System.Nullable{System.TimeSpan})"/> but can also be set explicitly by tools when they
             have an operation in progress on the server.
             </para>
             <note>
@@ -5776,17 +5908,25 @@
         <member name="M:Neon.Kube.SshProxy`1.DisableSudoPrompt(System.String)">
             <summary>
             <para>
-            Prevents <b>sudo</b> from prompting for passwords.
+            Prevents <b>sudo</b> from prompting for passwords and also ensures that
+            the <b>/home/root</b> directory exists and has the appropriate permissions.
             </para>
             <note>
             The connected user must already be a member of the <b>root</b> group.
             </note>
             <note>
-            You do not need to call <see cref="M:Neon.Kube.SshProxy`1.Connect(System.TimeSpan)"/> or <see cref="M:Neon.Kube.SshProxy`1.WaitForBoot(System.Nullable{System.TimeSpan},System.Boolean)"/>
+            You do not need to call <see cref="M:Neon.Kube.SshProxy`1.Connect(System.TimeSpan)"/> or <see cref="M:Neon.Kube.SshProxy`1.WaitForBoot(System.Nullable{System.TimeSpan})"/>
             before calling this method (in fact, calling those methods will probably fail).
             </note>
             </summary>
             <param name="password">The current user's password.</param>
+            <remarks>
+            <para>
+            This method uses the existance of a <b>/etc/neon-sshproxy-init</b> file to
+            ensure that it only executes once per machine.  This file will be
+            created the first time this method is called on the machine.
+            </para>
+            </remarks>
         </member>
         <member name="M:Neon.Kube.SshProxy`1.Shutdown">
             <summary>
@@ -5843,18 +5983,37 @@
         </member>
         <member name="M:Neon.Kube.SshProxy`1.Connect(System.TimeSpan)">
             <summary>
-            Establishes a connection to the server.
+            Establishes a connection to the server, disconnecting first if the proxy is already connected.
             </summary>
             <param name="timeout">Maximum amount of time to wait for a connection (defaults to <see cref="P:Neon.Kube.SshProxy`1.ConnectTimeout"/>).</param>
+            <exception cref="T:Neon.Kube.SshProxyException">
+            Thrown if the host hasn't been prepared yet and the SSH connection credentials are not username/password
+            or if there's problem with low-level host configuration.
+            </exception>
+            <remarks>
+            <note>
+            The first time a connection is established is called on a particular host, password credentials 
+            must be used so that low-level <b>sudo</b> configuration cxan be performed.  Subsequent connections
+            can use TLS certificates.
+            </note>
+            </remarks>
         </member>
-        <member name="M:Neon.Kube.SshProxy`1.WaitForBoot(System.Nullable{System.TimeSpan},System.Boolean)">
+        <member name="M:Neon.Kube.SshProxy`1.WaitForBoot(System.Nullable{System.TimeSpan})">
             <summary>
             Waits for the server to boot by continuously attempting to establish an SSH session.
             </summary>
             <param name="timeout">The operation timeout (defaults to <b>10 minutes</b>).</param>
-            <param name="createHomeFolders">Optionally ensure that the required HOME folders for the user account exist.</param>
             <returns>The tracking <see cref="T:System.Threading.Tasks.Task"/>.</returns>
+            <exception cref="T:Neon.Kube.SshProxyException">
+            Thrown if the host hasn't been prepared yet and the SSH connection credentials are not username/password
+            or if there's problem with low-level host configuration.
+            </exception>
             <remarks>
+            <note>
+            The first time a connection is established is called on a particular host, password credentials 
+            must be used so that low-level <b>sudo</b> configuration cxan be performed.  Subsequent connections
+            can use TLS certificates.
+            </note>
             <para>
             The method will attempt to connect to the server every 10 seconds up to the specified
             timeout.  If it is unable to connect during this time, the exception thrown by the
@@ -5893,24 +6052,14 @@
             Returns the path to the user's home folder on the server.
             </summary>
         </member>
-        <member name="P:Neon.Kube.SshProxy`1.UploadFolderPath">
-            <summary>
-            Returns the path to the user's upload folder on the server.
-            </summary>
-        </member>
-        <member name="M:Neon.Kube.SshProxy`1.EnsureUploadFolder">
-            <summary>
-            Ensures that the [~/.upload] folder exists on the server.
-            </summary>
-        </member>
         <member name="P:Neon.Kube.SshProxy`1.DownloadFolderPath">
             <summary>
             Returns the path to the user's download folder on the server.
             </summary>
         </member>
-        <member name="M:Neon.Kube.SshProxy`1.EnsureDownloadFolder">
+        <member name="P:Neon.Kube.SshProxy`1.UploadFolderPath">
             <summary>
-            Ensures that the [~/.download] folder exists on the server.
+            Returns the path to the user's upload folder on the server.
             </summary>
         </member>
         <member name="M:Neon.Kube.SshProxy`1.CloneSshClient">
@@ -5939,11 +6088,30 @@
             <returns>The cloned client.</returns>
             <exception cref="T:Renci.SshNet.Common.SshConnectionException">Thrown if a connection could not be established.</exception>
         </member>
-        <member name="M:Neon.Kube.SshProxy`1.CreateHostFolders">
+        <member name="M:Neon.Kube.SshProxy`1.PrepareHostAndUser">
             <summary>
-            Ensures that the configuration and setup folders required for a Neon host
-            node exist and have the appropriate permissions.
+            <para>
+            Ensures that the node is configured such that <see cref="T:Neon.Kube.SshProxy`1"/> can function properly.
+            This includes disabling <b>requiretty</b> as well as restricting <b>sudo</b> from requiring passwords
+            as well as creating the minimum user home folders required by the proxy for executing scripts as well
+            as uploading and downloading files.
+            </para>
+            <para>
+            This method creates the <b>/etc/neon-sshproxy-init</b> file such that these operations will only
+            be performed once.
+            </para>
             </summary>
+            <exception cref="T:Neon.Kube.SshProxyException">
+            Thrown if the host hasn't been prepared yet and the SSH connection credentials are not username/password
+            or if there's problem with low-level host configuration.
+            </exception>
+            <remarks>
+            <note>
+            The first time this method is called on a particular host, password credentials must be used so
+            that low-level <b>sudo</b> configuration can be performed.  Subsequent connections can use
+            TLS certificates.
+            </note>
+            </remarks>
         </member>
         <member name="M:Neon.Kube.SshProxy`1.RemoveFile(System.String)">
             <summary>
@@ -5972,12 +6140,11 @@
             <param name="source">The source path of the file on the Linux server.</param>
             <returns>The file contents as UTF8 text.</returns>
         </member>
-        <member name="M:Neon.Kube.SshProxy`1.DirectoryExists(System.String,Neon.Kube.RunOptions)">
+        <member name="M:Neon.Kube.SshProxy`1.DirectoryExists(System.String)">
             <summary>
             Determines whether a directory exists on the remote server.
             </summary>
             <param name="path">The directory path.</param>
-            <param name="runOptions">Optional command execution options.</param>
             <returns><c>true</c> if the directory exists.</returns>
         </member>
         <member name="M:Neon.Kube.SshProxy`1.FileExists(System.String)">
@@ -5995,7 +6162,10 @@
             <param name="input">The input stream.</param>
             <param name="permissions">Optionally specifies the file permissions (must be <c>chmod</c> compatible).</param>
             <param name="owner">Optionally specifies the file owner (must be <c>chown</c> compatible).</param>
-            <param name="userPermissions">Optionally indicates that the operation should be performed with user-level permissions.</param>
+            <param name="userPermissions">
+            Optionally indicates that the operation should be performed with user-level permissions
+            rather than <b>sudo</b>, which is the default.
+            </param>
             <remarks>
             <note>
             <para>
@@ -6136,14 +6306,13 @@
             form.
             </remarks>
         </member>
-        <member name="M:Neon.Kube.SshProxy`1.UploadBundle(Neon.Kube.CommandBundle,Neon.Kube.RunOptions,System.Boolean)">
+        <member name="M:Neon.Kube.SshProxy`1.UploadBundle(Neon.Kube.CommandBundle,Neon.Kube.RunOptions)">
             <summary>
             Uploads a command bundle to the server and unpacks it to a temporary folder
             in the user's home folder.
             </summary>
             <param name="bundle">The bundle.</param>
             <param name="runOptions">The command execution options.</param>
-            <param name="userPermissions">Indicates whether the upload should be performed with user or root permissions.</param>
             <returns>The path to the folder where the bundle was unpacked.</returns>
         </member>
         <member name="M:Neon.Kube.SshProxy`1.RunCommand(System.String,System.Object[])">
@@ -6506,7 +6675,7 @@
             </summary>
             <param name="address">The target IP address.</param>
             <returns>The network interface name.</returns>
-            <exception cref="T:Neon.Kube.KubeException">Thrown if the interface was not found.</exception>
+            <exception cref="T:Neon.Kube.SshProxyException">Thrown if the interface was not found.</exception>
             <remarks>
             <para>
             In the olden days, network devices were assigned names like <b>eth0</b>,
@@ -6550,6 +6719,18 @@
         </member>
         <member name="M:Neon.Kube.SshProxy`1.ToString">
             <inheritdoc/>
+        </member>
+        <member name="T:Neon.Kube.SshProxyException">
+            <summary>
+            Thrown for <see cref="T:Neon.Kube.SshProxy`1"/> errors.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.SshProxyException.#ctor(System.String,System.Exception)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="message"></param>
+            <param name="innerException"></param>
         </member>
         <member name="T:Neon.Kube.ActionStep">
             <summary>
@@ -7137,16 +7318,16 @@
             <summary>Branch: jeff</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: e7cd0e53a</summary>
+            <summary>Commit: ff4332b8a</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: e7cd0e53a1241b487d9977259692d7a5c0d918fa</summary>
+            <summary>Sha: ff4332b8a8a6571266e18134038aee17cc50e0bc</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 6048</summary>
+            <summary>Commits on top of base version: 6179</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: c2.1.0-150-ge7cd0e53a</summary>
+            <summary>Tag: c2.1.0-281-gff4332b8a</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
             <summary>Base tag: c2.1.0</summary>
@@ -7173,7 +7354,7 @@
             <summary>Minor: 0</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 6048</summary>
+            <summary>Patch: 6179</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
             <summary>Label: </summary>

@@ -34,7 +34,7 @@ function SetVersion
     )
 
     "$project"
-	neon-build pack-version "$env:NF_ROOT\product-version.txt" "$env:NF_ROOT\Lib\$project\$project.csproj"
+	neon-build pack-version "$env:NF_ROOT\neonLIBRARY-version.txt" "$env:NF_ROOT\Lib\$project\$project.csproj"
 }
 
 function Publish
@@ -47,7 +47,7 @@ function Publish
 
 	dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Release -o "$env:NF_BUILD\nuget"
 
-	$version = Get-Content "$env:NF_ROOT\product-version.txt" -First 1
+	$libraryVersion = Get-Content "$env:NF_ROOT\neonLIBRARY-version.txt" -First 1
 
     if (Test-Path "$env:NF_ROOT\Lib\$project\prerelease.txt")
     {
@@ -64,7 +64,7 @@ function Publish
         $prerelease = ""
     }
 
-	nuget push -Source nuget.org "$env:NF_BUILD\nuget\$project.$version$prerelease.nupkg"
+	nuget push -Source nuget.org "$env:NF_BUILD\nuget\$project.$libraryVersion$prerelease.nupkg"
 }
 
 # Copy the version from [$/product-version] into [$/Lib/Neon/Common/Build.cs]
@@ -79,16 +79,7 @@ SetVersion Neon.Couchbase
 SetVersion Neon.Cryptography
 SetVersion Neon.Docker
 SetVersion Neon.HyperV
-SetVersion Neon.Kube
-SetVersion Neon.Kube.Aws
-SetVersion Neon.Kube.Azure
-SetVersion Neon.Kube.Google
-SetVersion Neon.Kube.Hosting
-SetVersion Neon.Kube.HyperV
-SetVersion Neon.Kube.HyperVLocal
-SetVersion Neon.Kube.Machine
 SetVersion Neon.Service
-SetVersion Neon.Kube.XenServer
 SetVersion Neon.ModelGen
 SetVersion Neon.Nats
 SetVersion Neon.SSH.NET
@@ -109,16 +100,7 @@ Publish Neon.Couchbase
 Publish Neon.Cryptography
 Publish Neon.Docker
 Publish Neon.HyperV
-Publish Neon.Kube
-Publish Neon.Kube.Aws
-Publish Neon.Kube.Azure
-Publish Neon.Kube.Google
-Publish Neon.Kube.Hosting
-Publish Neon.Kube.HyperV
-Publish Neon.Kube.HyperVLocal
-Publish Neon.Kube.Machine
 Publish Neon.Service
-Publish Neon.Kube.XenServer
 Publish Neon.ModelGen
 Publish Neon.Nats
 Publish Neon.SSH.NET

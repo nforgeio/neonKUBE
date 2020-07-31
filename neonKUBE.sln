@@ -28,8 +28,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{4442F1
 		buildenv.cmd = buildenv.cmd
 		kube-version.txt = kube-version.txt
 		LICENSE = LICENSE
+		neonKUBE-version.txt = neonKUBE-version.txt
+		neonLIBRARY-version.txt = neonLIBRARY-version.txt
 		passwords.zip = passwords.zip
-		product-version.txt = product-version.txt
 		README.md = README.md
 		TEST-VERSION.md = TEST-VERSION.md
 	EndProjectSection

@@ -6,7 +6,7 @@ This is a full neonKUBE release intended for internal testing.  We're activily w
 
 ### Docker Images
 
-neonKUBE production Docker images can be found [here](https://hub.docker.com/orgs/nkubeio/repositories)
+neonKUBE production Docker images can be found: [here](https://hub.docker.com/orgs/nkubeio/repositories)
 
 Neon related production images are hosted on DockerHub: [here](https://hub.docker.com/orgs/nkubeio/repositories)
 

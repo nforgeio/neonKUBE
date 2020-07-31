@@ -24,9 +24,14 @@
             The product name.
             </summary>
         </member>
-        <member name="F:Neon.Build.ProductVersion">
+        <member name="F:Neon.Build.NeonLibraryVersion">
             <summary>
-            The released product version.
+            The released library/package version.
+            </summary>
+        </member>
+        <member name="F:Neon.Build.NeonKubeVersion">
+            <summary>
+            The released neonKUBE version.
             </summary>
         </member>
         <member name="F:Neon.Build.ProductLicense">
@@ -1709,6 +1714,28 @@
             Include the byte offset of the first byte of each line.
             </summary>
         </member>
+        <member name="T:Neon.Common.ILabeled">
+            <summary>
+            Used by <see cref="T:Neon.Common.LabelSelector`1"/> to retrieve the label dictionary for
+            a specific item.  Labels are simply key/value pairs assigned to an object and
+            <see cref="T:Neon.Common.LabelSelector`1"/> can be used to select items based on their
+            assigned labels.
+            </summary>
+        </member>
+        <member name="M:Neon.Common.ILabeled.GetLabels">
+            <summary>
+            Returns the label dictionary for the instance.  These are simply key/value
+            pairs where the key is the label name.  You may return <c>null</c> to indicate
+            that there are not labels.
+            </summary>
+            <returns>The label dictionary or <c>null</c>.</returns>
+            <remarks>
+            Label names may be treated as case sensitive or insentive based on how the underlying
+            dictionary returned was constructed.  Generally though, labels are considered to be
+            case insensitive so you should probably use <see cref="F:System.StringComparison.InvariantCultureIgnoreCase"/>
+            when constructing your dictionaries.
+            </remarks>
+        </member>
         <member name="T:Neon.Common.IServiceContainer">
             <summary>
             <para>
@@ -1722,6 +1749,470 @@
             </note>
             </summary>
             <threadsafety instance="true"/>
+        </member>
+        <member name="T:Neon.Common.LabelSelectorOptions">
+            <summary>
+            <see cref="T:Neon.Common.LabelSelector`1"/> related options.
+            </summary>
+        </member>
+        <member name="F:Neon.Common.LabelSelectorOptions.None">
+            <summary>
+            No options are selected.
+            </summary>
+        </member>
+        <member name="F:Neon.Common.LabelSelectorOptions.CaseInsensitiveValues">
+            <summary>
+            <para>
+            Normally <see cref="T:Neon.Common.LabelSelector`1"/> matches label values using
+            case sensitive comparisons.  Use this to make the comparisons case
+            insensitive.
+            </para>
+            <note>
+            Label name case sensitivity is determined by the the dictionaries returned
+            by the item <see cref="M:Neon.Common.ILabeled.GetLabels"/> method.
+            </note>
+            </summary>
+        </member>
+        <member name="F:Neon.Common.LabelSelectorOptions.UnConstraintedLabels">
+            <summary>
+            <see cref="T:Neon.Common.LabelSelector`1"/> defaults to parsing label names
+            and values to ensure that they are Kubernetes compliant.  Use this 
+            to disable this so you can use arbitrary labels.
+            </summary>
+        </member>
+        <member name="T:Neon.Common.LabelSelector`1">
+            <summary>
+            Implements a Kubernetes compatible general purpose label based selector mechanism that 
+            can select a set of items from a collection based on the set of labels assigned to each 
+            item.  This class supports some simple fixed query methods as well as a simple text 
+            query language.
+            </summary>
+            <typeparam name="TItem">The underlying item type.</typeparam>
+            <remarks>
+            <para>
+            This class supports Kubernetes style label selectors:
+            </para>
+            <para>
+            <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/">Kubernetes: Labels and Selectors</a>
+            </para>
+            <para>
+            For this to work, your <typeparamref name="TItem"/> type will need to implement
+            the <see cref="T:Neon.Common.ILabeled"/> interface and its <see cref="M:Neon.Common.ILabeled.GetLabels"/>
+            which returns a string/string dictionary holding that items labels.  Then you can
+            construct a selector instance via <see cref="T:Neon.Common.LabelSelector`1"/>,
+            passing your set of labeled items.  Then you can call <see cref="M:Neon.Common.LabelSelector`1.GetItemsWith(System.String)"/>,
+            <see cref="M:Neon.Common.LabelSelector`1.GetItemsWithout(System.String)"/>, and <see cref="M:Neon.Common.LabelSelector`1.Select(System.String)"/>
+            to select items based on their labels and one ore more label conditions to be
+            satisified.
+            </para>
+            <note>
+            <para>
+            Kubernetes labels are key/value pairs. Valid label keys have two segments: an optional prefix and name, separated by a slash <c>(/)</c>. 
+            The name segment is required and must be 63 characters or less, beginning and ending with an alphanumeric character <c>([a-z0-9A-Z])</c> 
+            with dashes <c>(-)</c>, underscores <c>(_)</c>, dots <c>(.)</c>, and alphanumerics between. The prefix is optional. If specified, 
+            the prefix must be a DNS subdomain: a series of DNS labels separated by dots <b>(.)</b>, not longer than 253 characters in total,
+            followed by a slash <c>(/)</c>.
+            </para>
+            <para>
+            If the prefix is omitted, the label Key is presumed to be private to the user. Automated system components (e.g. kube-scheduler,
+            kube-controller-manager, kube-apiserver, kubectl, or other third-party automation) which add labels to end-user objects must specify
+            a prefix.
+            </para>
+            <para>
+            The <c>kubernetes.io/</c> and <c>k8s.io/</c> prefixes are reserved for Kubernetes core components.
+            </para>
+            <para>
+            Valid label values must be 63 characters or less and must be empty or begin and end with an alphanumeric character <c>([a-z0-9A-Z])</c> 
+            with dashes <c>(-)</c>, underscores <c>(_)</c>, dots <c>(.)</c>, and alphanumerics between.
+            </para>
+            <para>
+            </para>
+            <para>
+            <b>Label Names:</b> must conform to the Kubernetes standard and will be treated as case sensitive 
+            or insensitive based on how the underlying dictionary returned was constructed.  Generally
+            though, labels are considered to be case insensitive so you should probably use 
+            <see cref="F:System.StringComparison.InvariantCultureIgnoreCase"/> when constructing the dictionaries
+            returned by your item's <see cref="M:Neon.Common.ILabeled.GetLabels"/> method.
+            </para>
+            <para>
+            Label names must conform to the Kubernetes conventions by default but this can be
+            relaxed by passing an option to the constructor.
+            </para>
+            </note>
+            <note>
+            <b>Label Values:</b> are considered to be case senstive by default but this can be customized
+            via the constructor.
+            </note>
+            <note>
+            See <see cref="M:Neon.Common.LabelSelector`1.Select(System.String)"/> for a description of the label selector language.
+            </note>
+            <note>
+            You may use the <c>static</c> <see cref="M:Neon.Common.LabelSelector.ValidateLabelKey(System.String)"/> and 
+            <see cref="M:Neon.Common.LabelSelector.ValidateLabelValue(System.String)"/> methods to explicity confirm that 
+            label keys and values satisfy the Kubernetes conventions.
+            </note>
+            </remarks>
+        </member>
+        <member name="T:Neon.Common.LabelSelector`1.ConditionType">
+            <summary>
+            Enumerates the condition types.
+            </summary>
+        </member>
+        <member name="T:Neon.Common.LabelSelector`1.LabelCondition">
+            <summary>
+            Implements label conditions.
+            </summary>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.LabelCondition.Equal(System.String,System.String,Neon.Common.LabelSelectorOptions)">
+            <summary>
+            Constructs a <see cref="F:Neon.Common.LabelSelector`1.ConditionType.Equal"/> condition.
+            </summary>
+            <param name="labelKey">The target label key.</param>
+            <param name="value">The value.</param>
+            <param name="options">The selector options.</param>
+            <returns>The <see cref="T:Neon.Common.LabelSelector`1.LabelCondition"/>.</returns>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.LabelCondition.NotEqual(System.String,System.String,Neon.Common.LabelSelectorOptions)">
+            <summary>
+            Constructs a <see cref="F:Neon.Common.LabelSelector`1.ConditionType.NotEqual"/> condition.
+            </summary>
+            <param name="labelKey">The target label key.</param>
+            <param name="value">The value.</param>
+            <param name="options">The selector options.</param>
+            <returns>The <see cref="T:Neon.Common.LabelSelector`1.LabelCondition"/>.</returns>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.LabelCondition.In(System.String,System.Collections.Generic.IEnumerable{System.String},Neon.Common.LabelSelectorOptions)">
+            <summary>
+            Constructs a <see cref="F:Neon.Common.LabelSelector`1.ConditionType.In"/> condition.
+            </summary>
+            <param name="labelKey">The target label key.</param>
+            <param name="values">The values.</param>
+            <param name="options">The selector options.</param>
+            <returns>The <see cref="T:Neon.Common.LabelSelector`1.LabelCondition"/>.</returns>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.LabelCondition.NotIn(System.String,System.Collections.Generic.IEnumerable{System.String},Neon.Common.LabelSelectorOptions)">
+            <summary>
+            Constructs a <see cref="F:Neon.Common.LabelSelector`1.ConditionType.NotIn"/> condition.
+            </summary>
+            <param name="labelKey">The target label key.</param>
+            <param name="values">The values.</param>
+            <param name="options">The selector options.</param>
+            <returns>The <see cref="T:Neon.Common.LabelSelector`1.LabelCondition"/>.</returns>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.LabelCondition.Has(System.String,Neon.Common.LabelSelectorOptions)">
+            <summary>
+            Constructs a <see cref="F:Neon.Common.LabelSelector`1.ConditionType.Has"/> condition.
+            </summary>
+            <param name="labelKey">The target label kewy.</param>
+            <param name="options">The selector options.</param>
+            <returns>The <see cref="T:Neon.Common.LabelSelector`1.LabelCondition"/>.</returns>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.LabelCondition.NotHas(System.String,Neon.Common.LabelSelectorOptions)">
+            <summary>
+            Constructs a <see cref="F:Neon.Common.LabelSelector`1.ConditionType.NotHas"/> condition.
+            </summary>
+            <param name="labelKey">The target label key</param>
+            <param name="options">The selector options.</param>
+            <returns>The <see cref="T:Neon.Common.LabelSelector`1.LabelCondition"/>.</returns>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.LabelCondition.ValidateLabelKey(System.String,Neon.Common.LabelSelectorOptions)">
+            <summary>
+            Validates a label key.
+            </summary>
+            <param name="labelKey">The label key.</param>
+            <param name="options">The selector options.</param>
+            <exception cref="T:System.FormatException">Thrown if the key is not valid.</exception>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.LabelCondition.ValidateLabelValue(System.String,Neon.Common.LabelSelectorOptions)">
+            <summary>
+            Validates a label value.
+            </summary>
+            <param name="labelValue">The label value.</param>
+            <param name="options">The selector options.</param>
+            <exception cref="T:System.FormatException">Thrown if the key is not valid.</exception>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.LabelCondition.#ctor">
+            <summary>
+            Private constructor.
+            </summary>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.LabelCondition.Execute(`0,System.StringComparison)">
+            <summary>
+            Detects whether an item satisfies a label condition.
+            </summary>
+            <param name="item">The input item.</param>
+            <param name="valueComparison">Specifies how label value comparisons are to be performed.</param>
+            <returns><c>true</c> if the label selector was satisfied.</returns>
+        </member>
+        <member name="T:Neon.Common.LabelSelector`1.TokenType">
+            <summary>
+            Enumerates the possible label selector token types.
+            </summary>
+        </member>
+        <member name="F:Neon.Common.LabelSelector`1.TokenType.Eof">
+            <summary>
+            Indicates the end of input.
+            </summary>
+        </member>
+        <member name="F:Neon.Common.LabelSelector`1.TokenType.String">
+            <summary>
+            A label name, value or a text operator like <b>in</b> or <b>notin</b>.
+            </summary>
+        </member>
+        <member name="F:Neon.Common.LabelSelector`1.TokenType.Not">
+            <summary>
+            A <b>'!'</b> operator.
+            </summary>
+        </member>
+        <member name="F:Neon.Common.LabelSelector`1.TokenType.LParen">
+            <summary>
+            A left parentheses <b>'('</b>
+            </summary>
+        </member>
+        <member name="F:Neon.Common.LabelSelector`1.TokenType.RParen">
+            <summary>
+            A right parentheses <b>'>'</b>
+            </summary>
+        </member>
+        <member name="F:Neon.Common.LabelSelector`1.TokenType.Comma">
+            <summary>
+            A comma <b>','</b>
+            </summary>
+        </member>
+        <member name="F:Neon.Common.LabelSelector`1.TokenType.Equal">
+            <summary>
+            A <b>=</b> or <b>==</b>
+            </summary>
+        </member>
+        <member name="F:Neon.Common.LabelSelector`1.TokenType.NotEqual">
+            <summary>
+            A <b>!=</b>
+            </summary>
+        </member>
+        <member name="T:Neon.Common.LabelSelector`1.Token">
+            <summary>
+            Holds a token extracted by the <see cref="T:Neon.Common.LabelSelector`1.Lexer"/>.
+            </summary>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.Token.Eof">
+            <summary>
+            Returns <see cref="F:Neon.Common.LabelSelector`1.TokenType.Eof"/> token.
+            </summary>
+            <returns>The token.</returns>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.Token.String(System.String)">
+            <summary>
+            Returns <see cref="F:Neon.Common.LabelSelector`1.TokenType.String"/> token.
+            </summary>
+            <param name="value">The string value.</param>
+            <returns>The token.</returns>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.Token.Not">
+            <summary>
+            Returns <see cref="F:Neon.Common.LabelSelector`1.TokenType.Not"/> token.
+            </summary>
+            <returns>The token.</returns>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.Token.LParen">
+            <summary>
+            Returns <see cref="F:Neon.Common.LabelSelector`1.TokenType.LParen"/> token.
+            </summary>
+            <returns>The token.</returns>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.Token.RParen">
+            <summary>
+            Returns <see cref="F:Neon.Common.LabelSelector`1.TokenType.RParen"/> token.
+            </summary>
+            <returns>The token.</returns>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.Token.Comma">
+            <summary>
+            Returns <see cref="F:Neon.Common.LabelSelector`1.TokenType.Comma"/> token.
+            </summary>
+            <returns>The token.</returns>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.Token.Equal">
+            <summary>
+            Returns <see cref="F:Neon.Common.LabelSelector`1.TokenType.Equal"/> token.
+            </summary>
+            <returns>The token.</returns>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.Token.NotEqual">
+            <summary>
+            Returns <see cref="F:Neon.Common.LabelSelector`1.TokenType.NotEqual"/> token.
+            </summary>
+            <returns>The token.</returns>
+        </member>
+        <member name="F:Neon.Common.LabelSelector`1.Token.Type">
+            <summary>
+            Identifies the token type.
+            </summary>
+        </member>
+        <member name="F:Neon.Common.LabelSelector`1.Token.Value">
+            <summary>
+            Returns the value for <see cref="F:Neon.Common.LabelSelector`1.TokenType.String"/> tokens.
+            </summary>
+        </member>
+        <member name="T:Neon.Common.LabelSelector`1.Lexer">
+            <summary>
+            Implements a simple lexical analyzer.  This is probably a bit of an overkill
+            for the current implementation but may come in handy if we ever extend the
+            selector language to include nested subexpressions, etc.
+            </summary>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.Lexer.#ctor(System.String)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="labelSelector">The label selector being parsed.</param>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.Lexer.Next">
+            <summary>
+            Returns the next token from the input, optionally verifying that the token
+            found was expected.
+            </summary>
+            <returns>The next <see cref="T:Neon.Common.LabelSelector`1.Token"/>.</returns>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.Lexer.Next(Neon.Common.LabelSelector{`0}.TokenType[])">
+            <summary>
+            Returns the next token from the input, optionally verifying that the token
+            found was expected.
+            </summary>
+            <param name="expectedTypes">Specifies the expected token types.</param>
+            <returns>The next <see cref="T:Neon.Common.LabelSelector`1.Token"/>.</returns>
+            <exception cref="T:System.FormatException">Thrown when the next token doesn't match <paramref name="expectedTypes"/>.</exception>
+        </member>
+        <member name="P:Neon.Common.LabelSelector`1.Lexer.Eof">
+            <summary>
+            Returns <c>true</c> when the lexer has reached the end of the input.
+            </summary>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.#ctor(System.Collections.Generic.IEnumerable{`0},Neon.Common.LabelSelectorOptions)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="items">The set of items to be queries.  <c>null</c> will treated as an empty set.</param>
+            <param name="options">Optionally customize selector case sensitivity and other behaviors.</param>
+        </member>
+        <member name="P:Neon.Common.LabelSelector`1.CaseInsensitive">
+            <summary>
+            Indicates that we're doing case insensitive label value comparisons.
+            </summary>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.GetItemsWith(System.String)">
+            <summary>
+            Returns the set of items including a specific label.
+            </summary>
+            <param name="labelKey">The desired label key.</param>
+            <returns>The set of items with the label.</returns>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.GetItemsWithout(System.String)">
+            <summary>
+            Returns the set of items that do not include the label.
+            </summary>
+            <param name="labelKey">The undesired label key.</param>
+            <returns>The set of items without the label.</returns>
+        </member>
+        <member name="M:Neon.Common.LabelSelector`1.Select(System.String)">
+            <summary>
+            Returns the set of items that satisfy a label selector.
+            </summary>
+            <param name="labelSelector">The label selector condistions(s).</param>
+            <returns>The set of items whose meet the query requirements.</returns>
+            <exception cref="T:System.FormatException">Thrown when the label selector is not valid.</exception>
+            <remarks>
+            <para>
+            This class supports Kubernetes style label selectors:
+            </para>
+            <para>
+            <a href="https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/">Kubernetes: Labels and Selectors</a>
+            </para>
+            <para>
+            Label selectors must include zero or more label conditions separated by commas. All label 
+            conditions must be satisfied for an item to be selected. The conditions are essentially AND-ed together.
+            We'll support two basic types of label conditions: equality/inequality and set based.
+            </para>
+            <note>
+            A <c>null</c> or empty <paramref name="labelSelector"/> simply returns all items.
+            </note>
+            <para><b>equality/inequality conditions:</b></para>
+            <code language="none">
+            [label] = [value]
+            [label] == [value]
+            [label] != [value]      
+            </code>
+            <para>
+            The first two examples two compare label value equality and the last compares for inequality. 
+            Note that it is not currently possible to compare an empty or null string.
+            </para>
+            <para><b>set conditions:</b></para>
+            <code language="none">
+            [label] in ([value1], [value2],,...)
+            notin([value1], [value2],...)
+            [label]
+            ![label]
+            </code>
+            <para>
+            The first example selects items if they have a label with any of the values listed and the second 
+            selects items that have the label that doesn't have any of the values. The last two examples select 
+            items when they have or don't have a label, regardless of its value.
+            </para>
+            <note>
+            The <b>in</b> and <b>notin</b> operators both require that the item have the target label for a match.
+            </note>
+            <note>
+            <b>Case Sensitivity:</b> Label name lookups are actually determined by the dictionary returned
+            by each item.  .NET string dictionaries are typically case sensitive by default but you can
+            change this behavior by having your item implementations construct case insenstive dictionaries.
+            By default, this class performs case insensitive comparisions for label values.  You can override
+            this by passing <see cref="F:Neon.Common.LabelSelectorOptions.CaseInsensitiveValues"/> to the
+            <see cref="M:Neon.Common.LabelSelector`1.#ctor(System.Collections.Generic.IEnumerable{`0},Neon.Common.LabelSelectorOptions)"/> constructor.
+            </note>
+            <note>
+            <para>
+            <b>Label Name Constraints:</b> Label keys are checked to ensure that they match Kubernetes conventions
+            by default.  You can override this by passing <see cref="F:Neon.Common.LabelSelectorOptions.UnConstraintedLabels"/> to the
+            <see cref="M:Neon.Common.LabelSelector`1.#ctor(System.Collections.Generic.IEnumerable{`0},Neon.Common.LabelSelectorOptions)"/> constructor.
+            </para>
+            <para>
+            <b>Label Value Constraints:</b> Label values are also checked to ensure that they match Kubernetes conventions
+            by default.  This behavior can also be overriden by passing to the constructor.
+            </para>
+            </note>
+            </remarks>
+        </member>
+        <member name="T:Neon.Common.LabelSelector">
+            <summary>
+            Implements label related utilities.
+            </summary>
+        </member>
+        <member name="M:Neon.Common.LabelSelector.IsAlphaNum(System.Char)">
+            <summary>
+            Determines whether a character is [a-z0-9A-Z].
+            </summary>
+            <param name="ch">The test character.</param>
+            <returns><c>true</c> for valid.</returns>
+        </member>
+        <member name="M:Neon.Common.LabelSelector.IsValidPunctuation(System.Char)">
+            <summary>
+            Determines whether a character is a valid label punctuation character.
+            </summary>
+            <param name="ch">The test character.</param>
+            <returns><c>true</c> for valid.</returns>
+        </member>
+        <member name="M:Neon.Common.LabelSelector.ValidateLabelKey(System.String)">
+            <summary>
+            Validates a label key.
+            </summary>
+            <param name="labelKey">The label key.</param>
+            <exception cref="T:System.FormatException">Thrown if the key is not valid.</exception>
+        </member>
+        <member name="M:Neon.Common.LabelSelector.ValidateLabelValue(System.String)">
+            <summary>
+            Validates a label value.
+            </summary>
+            <param name="labelValue">The label value.</param>
+            <exception cref="T:System.FormatException">Thrown if the key is not valid.</exception>
         </member>
         <member name="T:Neon.Common.NotReadyException">
             <summary>
@@ -2716,6 +3207,14 @@
             Maps enum ordinal values to their [EnumMember] string.
             </summary>
         </member>
+        <member name="F:Neon.Common.NeonHelper.TestModeFolderVar">
+            <summary>
+            The environment variable used for unit testing that indicates
+            that <c>Neon.Service.NeonService</c> and <c>Neon.Kube.HubeHelper</c>
+            should run in test mode and locate user test files in in the
+            folder specified by this variable when set.
+            </summary>
+        </member>
         <member name="M:Neon.Common.NeonHelper.IsOdd(System.Int32)">
             <summary>
             Determines whether an integer is odd.
@@ -3080,7 +3579,7 @@
             <summary>
             Attempts to parse a boolean from common literals.
             </summary>
-            <param name="input">The input literal.</param>
+            <param name="input">The input string being parsed.</param>
             <param name="value">Returns as the parsed value on success.</param>
             <returns><c>true</c> on success.</returns>
             <remarks>
@@ -3115,7 +3614,7 @@
             <summary>
             Parses common boolean literals.
             </summary>
-            <param name="input">The input literal.</param>
+            <param name="input">The input string being parsed.</param>
             <returns>The parsed output.</returns>
             <exception cref="T:System.FormatException">Thrown if the value is not valid.</exception>
             <remarks>
@@ -3145,6 +3644,31 @@
             </item>
             </list>
             </remarks>
+        </member>
+        <member name="M:Neon.Common.NeonHelper.ParseNullableBool(System.String)">
+            <summary>
+            Parses a nullable <see cref="T:System.Boolean"/>.
+            </summary>
+            <param name="input">
+            The input string being parsed.  <c>null</c>, empty or <paramref name="input"/> == <b>"null"</b> 
+            will return <c>null</c>.  Otherwise we'll expect either <b>"true"</b> or <b>"false"</b> or
+            one of the other literals supported by <see cref="M:Neon.Common.NeonHelper.ParseBool(System.String)"/>.
+            </param>
+            <note>
+            This method is case insensitive.
+            </note>
+            <returns><c>true</c>, <c>false</c>, or <c>null</c>.</returns>
+            <exception cref="T:System.FormatException">Thrown for invalid input strings.</exception>
+        </member>
+        <member name="M:Neon.Common.NeonHelper.TryParseNullableBool(System.String,System.Nullable{System.Boolean}@)">
+            <summary>
+            Attempts to parse a nullable <see cref="T:System.Boolean"/>.  <c>null</c>, empty or <paramref name="input"/> == <b>"null"</b> 
+            will return <c>null</c>.  Otherwise we'll expect either <b>"true"</b> or <b>"false"</b> or
+            one of the other literals supported by <see cref="M:Neon.Common.NeonHelper.ParseBool(System.String)"/>.
+            </summary>
+            <param name="input">The input string being parsed.</param>
+            <param name="value">Returns as the parsed value.</param>
+            <returns><c>true</c> if the input was parsed successfully.</returns>
         </member>
         <member name="M:Neon.Common.NeonHelper.StripAnsibleWarnings(System.String)">
             <summary>
@@ -3870,51 +4394,51 @@
             </para>
             <list type="table">
             <item>
-                <term><b>K</b></term>
+                <term><b>K</b> or <b>KB</b></term>
                 <description>1,000</description>
             </item>
             <item>
-                <term><b>Ki</b></term>
+                <term><b>Ki</b> or <b>kiB</b></term>
                 <description>1,024</description>
             </item>
             <item>
-                <term><b>M</b></term>
+                <term><b>M</b> or <b>MB</b></term>
                 <description>1000000</description>
             </item>
             <item>
-                <term><b>Mi</b></term>
+                <term><b>Mi</b> or <b>MiB</b></term>
                 <description>1,048,576</description>
             </item>
             <item>
-                <term><b>G</b></term>
+                <term><b>G</b> or <b>GB</b></term>
                 <description>1,000,000,000</description>
             </item>
             <item>
-                <term><b>Gi</b></term>
+                <term><b>Gi</b> or <b>GiB</b></term>
                 <description>1,073,741,824</description>
             </item>
             <item>
-                <term><b>T</b></term>
+                <term><b>T</b> or <b>TB</b></term>
                 <description>1,000,000,000,000</description>
             </item>
             <item>
-                <term><b>Ti</b></term>
+                <term><b>Ti</b> or <b>TiB</b></term>
                 <description>1,099,511,627,776</description>
             </item>
             <item>
-                <term><b>P</b></term>
+                <term><b>P</b> or <b>PB</b></term>
                 <description>1,000,000,000,000,000</description>
             </item>
             <item>
-                <term><b>Pi</b></term>
+                <term><b>Pi</b> or <b>PiB</b></term>
                 <description>1,125,899,906,842,624</description>
             </item>
             <item>
-                <term><b>Ei</b></term>
+                <term><b>E</b> or <b>EB</b></term>
                 <description>1,000,000,000,000,000,000‬</description>
             </item>
             <item>
-                <term><b>Ei</b></term>
+                <term><b>Ei</b> or <b>EiB</b></term>
                 <description>1,152,921,504,606,846,976‬</description>
             </item>
             </list>
@@ -5058,9 +5582,70 @@
             <param name="message">The custom message.</param>
             <param name="innerException">Optional inner exception.</param>
         </member>
+        <member name="T:Neon.Diagnostics.LoggerCreatorDelegate">
+            <summary>
+            Defines the <see cref="P:Neon.Diagnostics.ILogManager.LoggerCreator"/> function used to return custom
+            logger implementations.
+            </summary>
+            <param name="logManager">The parent log manager.</param>
+            <param name="module">The case sensitive logger event source module (defaults to <c>null</c>).</param>
+            <param name="writer">
+            Optionally specifies a target <see cref="T:System.IO.TextWriter"/>.  This can be useful for 
+            redirecting the ourput of a text logger to a file or somewhere else.  This parameter
+            may be ignored for non-text based loggers or for other logger specific reasons.
+            </param>
+            <param name="contextId">
+            Optionally specifies additional information that can be used to identify
+            context for logged events.  For example, the Neon.Cadence client uses this 
+             to record the ID of the workflow recording events.
+            </param>
+            <param name="isLogEnabledFunc">
+            Optionally specifies a function that will be called at runtime to
+            determine whether to actually log an event.  This defaults to <c>null</c>
+            which will always log events.
+            </param>
+            <returns>The <see cref="T:Neon.Diagnostics.INeonLogger"/> instance.</returns>
+        </member>
         <member name="T:Neon.Diagnostics.ILogManager">
             <summary>
-            Describes Log Manager implementations.
+            Describes an application log manager implementation.  <see cref="T:Neon.Diagnostics.LogManager"/> is a reasonable
+            implementation for many situations but it's possible for developers to implement custom solutions.
+            </summary>
+            <remarks>
+            <para>
+            Neon log managers are used to manage one or more <see cref="T:Neon.Diagnostics.INeonLogger"/> instances that handle
+            logging for parts of your application, we refer to as <b>modules</b>.  By convention, a module 
+            is often the fully qualified name of the .NET type doing the logging but this is just a string
+            and can be set to anything.  Log managers are responsible for mapping modules to loggers, potentially
+            caching these loggers for performance, and then submitting events to these loggers to be recorded.
+            </para>
+            <para>
+            Log managers also maintain a <c>long</c> count of the events emitted by the application.  This counter 
+            is used to record the index of the event in the stream of application events.  This index is typically
+            one-based and is useful for knowing the strict order that events were actually recorded.  Event
+            timestamps often don't have enough resolution accomplish this.
+            </para>
+            <para>
+            Log managers provide the <see cref="P:Neon.Diagnostics.ILogManager.LogLevel"/> property which can be used to control which events
+            are actually recorded.  <see cref="T:Neon.Diagnostics.LogLevel"/> for information about the relative 
+            lof levels.
+            </para>
+            <para>
+            Log managers typically provide a default <see cref="T:Neon.Diagnostics.INeonLogger"/> implementation.  <see cref="T:Neon.Diagnostics.LogManager"/>
+            defaults to logging events to STDERR as text via <see cref="T:Neon.Diagnostics.TextLogger"/> which is suitable for
+            many server applications, espectially for those deployed as containers where this is standard
+            behavior.  <see cref="T:Neon.Diagnostics.LogManager"/> also implements the <see cref="P:Neon.Diagnostics.ILogManager.LoggerCreator"/> delegate 
+            as an easy way to support custom loggers in your application without having to implement a custom
+            <see cref="T:Neon.Diagnostics.ILogManager"/> as well.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Neon.Diagnostics.ILogManager.Reset">
+            <summary>
+            Intended to reset the log manager to its default condition.  Implementations may cxustomize
+            what this actually does but the default <see cref="T:Neon.Diagnostics.LogManager"/> implementation resets its
+            emitted event counter to zewro, clears and cached loggers, and resets the <see cref="P:Neon.Diagnostics.ILogManager.LoggerCreator"/>
+            delegate.
             </summary>
         </member>
         <member name="P:Neon.Diagnostics.ILogManager.LogLevel">
@@ -5077,7 +5662,7 @@
             <para>
             This method recognizes the following case insensitive values: <b>CRITICAL</b>,
             <b>SERROR</b>, <b>ERROR</b>, <b>WARN</b>, <b>WARNING</b>, <b>INFO</b>, <b>SINFO</b>,
-            <b>INFORMATION</b>, <b>DEBUG</b>, or <b>NONE</b>.
+            <b>INFORMATION</b>, <b>TRANSIENT</b>, <b>DEBUG</b>, or <b>NONE</b>.
             </para>
             <note>
             <b>INFO</b> will be assumed if the parameter doesn't match any of the
@@ -5098,11 +5683,33 @@
             isn't fine enough.  This defaults to <c>true</c>.
             </summary>
         </member>
+        <member name="M:Neon.Diagnostics.ILogManager.GetNextEventIndex">
+            <summary>
+            Returns the next event index.
+            </summary>
+            <returns>The event index or -1 if <see cref="P:Neon.Diagnostics.ILogManager.EmitIndex"/><c> = false</c>.</returns>
+        </member>
+        <member name="P:Neon.Diagnostics.ILogManager.LoggerCreator">
+            <summary>
+            Used to customize what type of <see cref="T:Neon.Diagnostics.INeonLogger"/> will be returned by the 
+            various <see cref="M:Neon.Diagnostics.ILogManager.GetLogger(System.String,System.String,System.Func{System.Boolean})"/> methods.  This defaults
+            to creating <see cref="T:Neon.Diagnostics.TextLogger"/> instances.
+            </summary>
+            <remarks>
+            <para>
+            <see cref="T:Neon.Diagnostics.ILogManager"/> implementations can choose to ignore this delegate when
+            creating loggers.  The default <see cref="T:Neon.Diagnostics.LogManager"/> implementation does honor
+            this as an easy for applications to change the loggers without having to go to
+            the trouble of implementing and registering an new <see cref="T:Neon.Diagnostics.ILogManager"/>
+            implementation.
+            </para>
+            </remarks>
+        </member>
         <member name="M:Neon.Diagnostics.ILogManager.GetLogger(System.String,System.String,System.Func{System.Boolean})">
             <summary>
             Returns a named logger.
             </summary>
-            <param name="sourceModule">The case sensitive logger event source module (defaults to <c>null</c>).</param>
+            <param name="module">The case sensitive logger event source module (defaults to <c>null</c>).</param>
             <param name="contextId">
             Optionally specifies additional information that can be used to identify
             context for logged events.  For example, the Neon.Cadence client uses this 
@@ -5451,6 +6058,68 @@
             <param name="message">The object that will be serialized into the message.</param>
             <param name="e">The exception.</param>
         </member>
+        <member name="T:Neon.Diagnostics.LogEvent">
+            <summary>
+            Used by or capturing logged events in memory.
+            </summary>
+        </member>
+        <member name="M:Neon.Diagnostics.LogEvent.#ctor(System.String,System.String,System.Int64,System.DateTime,Neon.Diagnostics.LogLevel,System.String,System.String,System.Exception)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="module">Optionally identifies the source module.</param>
+            <param name="contextId">Optionaly specifies additional event context information.</param>
+            <param name="index">
+            Specifies the one-based position of the event in the stream of events
+            logged by the log manager.
+            </param>
+            <param name="timeUtc">Time (UTC) when the event was logged.</param>
+            <param name="logLevel">The event log level.</param>
+            <param name="message">Optionally specifies the event message.</param>
+            <param name="activityId">Optionally specifies the event activity ID.</param>
+            <param name="e"></param>
+        </member>
+        <member name="P:Neon.Diagnostics.LogEvent.Module">
+            <summary>
+            Optionally identifies the source module.
+            </summary>
+        </member>
+        <member name="P:Neon.Diagnostics.LogEvent.ContextId">
+            <summary>
+            Optionaly specifies additional event context information.
+            </summary>
+        </member>
+        <member name="P:Neon.Diagnostics.LogEvent.Index">
+            <summary>
+            Specifies the one-based position of the event in the stream of events
+            logged by the log manager.
+            </summary>
+        </member>
+        <member name="P:Neon.Diagnostics.LogEvent.TimeUtc">
+            <summary>
+            Time (UTC) when the event was logged.
+            </summary>
+        </member>
+        <member name="P:Neon.Diagnostics.LogEvent.LogLevel">
+            <summary>
+            The event log level.
+            </summary>
+        </member>
+        <member name="P:Neon.Diagnostics.LogEvent.Message">
+            <summary>
+            The event message.
+            </summary>
+        </member>
+        <member name="P:Neon.Diagnostics.LogEvent.ActivityId">
+            <summary>
+            Optionally specifies the event activity ID.
+            </summary>
+        </member>
+        <member name="P:Neon.Diagnostics.LogEvent.Exception">
+            <summary>
+            Optionally specifies the event exception.
+            </summary>
+        </member>
         <member name="T:Neon.Diagnostics.LogExtensions">
             <summary>
             Extends the <see cref="T:Neon.Diagnostics.INeonLogger"/> types.
@@ -5596,20 +6265,20 @@
             An unusual condition has been detected that may ultimately lead to an error.
             </summary>
         </member>
-        <member name="F:Neon.Diagnostics.LogLevel.Info">
-            <summary>
-            Describes a normal operation or condition.
-            </summary>
-        </member>
         <member name="F:Neon.Diagnostics.LogLevel.SInfo">
             <summary>
             Describes a non-error security operation or condition, such as a 
             a successful login or authentication.
             </summary>
         </member>
+        <member name="F:Neon.Diagnostics.LogLevel.Info">
+            <summary>
+            Describes a normal operation or condition.
+            </summary>
+        </member>
         <member name="F:Neon.Diagnostics.LogLevel.Transient">
             <summary>
-            Indicates a transient error, typically logged by <see cref="T:Neon.Retry.IRetryPolicy"/>
+            Indicates a transient error, typically logged by a <see cref="T:Neon.Retry.IRetryPolicy"/>
             implementations.
             </summary>
         </member>
@@ -5620,7 +6289,8 @@
         </member>
         <member name="T:Neon.Diagnostics.LogManager">
             <summary>
-            Global class used to manage application logging.
+            A reasonable default implementation of an application log manager.  See
+            <see cref="T:Neon.Diagnostics.ILogManager"/> for a description of how log managers work.
             </summary>
         </member>
         <member name="P:Neon.Diagnostics.LogManager.Default">
@@ -5653,48 +6323,34 @@
             <param name="parseLogLevel">Indicates that the <b>LOG-LEVEL</b> environment variable should be parsed (defaults to <c>true</c>).</param>
             <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="P:System.Console.Error"/>.</param>
         </member>
+        <member name="M:Neon.Diagnostics.LogManager.Reset">
+            <inheritdoc/>
+        </member>
         <member name="P:Neon.Diagnostics.LogManager.LogLevel">
-            <summary>
-            Specifies the level of events to be actually recorded.  This defaults to
-            <see cref="F:Neon.Diagnostics.LogLevel.Info"/>.
-            </summary>
+            <inheritdoc/>
         </member>
         <member name="M:Neon.Diagnostics.LogManager.SetLogLevel(System.String)">
-            <summary>
-            Sets the log level by safely parsing a string.
-            </summary>
-            <param name="level">The level string or <c>null</c>.</param>
-            <remarks>
-            <para>
-            This method recognizes the following case insensitive values: <b>CRITICAL</b>,
-            <b>SERROR</b>, <b>ERROR</b>, <b>WARN</b>, <b>WARNING</b>, <b>INFO</b>, <b>SINFO</b>,
-            <b>INFORMATION</b>, <b>DEBUG</b>, or <b>NONE</b>.
-            </para>
-            <note>
-            <b>INFO</b> will be assumed if the parameter doesn't match any of the
-            values listed above.
-            </note>
-            </remarks>
+            <inheritdoc/>
         </member>
         <member name="P:Neon.Diagnostics.LogManager.EmitTimestamp">
-            <summary>
-            Controls whether timestamps are emitted.  This defaults to <c>true</c>.
-            </summary>
+            <inheritdoc/>
         </member>
         <member name="P:Neon.Diagnostics.LogManager.EmitIndex">
-            <summary>
-            Controls whether the <b>index</b> field is emitted.  This is a counter start
-            starts at zero for each application instance and is incremented for each event 
-            emitted to help reconstruct exactly what happened when the system time resolution
-            isn't fine enough.  This defaults to <c>true</c>.
-            </summary>
+            <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.LogManager.InternalGetLogger(System.String,System.IO.TextWriter,System.String,System.Func{System.Boolean})">
+        <member name="M:Neon.Diagnostics.LogManager.GetNextEventIndex">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Diagnostics.LogManager.LoggerCreator">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.LogManager.CreateLogger(System.String,System.IO.TextWriter,System.String,System.Func{System.Boolean})">
             <summary>
-            Returns the logger for the existing name.
+            Uses the <see cref="P:Neon.Diagnostics.LogManager.LoggerCreator"/> function to construct a logger for a specific 
+            source module..
             </summary>
-            <param name="name">The case sensitive logger name.</param>
-            <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="P:System.Console.Error"/>.</param>
+            <param name="module">The case sensitive logger event source module (defaults to <c>null</c>).</param>
+            <param name="writer">Optionally specifies a target <see cref="T:System.IO.TextWriter"/>.</param>
             <param name="contextId">
             Optionally specifies additional information that can be used to identify
             context for logged events.  For example, the Neon.Cadence client uses this 
@@ -5706,6 +6362,9 @@
             which will always log events.
             </param>
             <returns>The <see cref="T:Neon.Diagnostics.INeonLogger"/> instance.</returns>
+        </member>
+        <member name="M:Neon.Diagnostics.LogManager.InternalGetLogger(System.String,System.IO.TextWriter,System.String,System.Func{System.Boolean})">
+            <inheritdoc/>
         </member>
         <member name="M:Neon.Diagnostics.LogManager.GetLogger(System.String,System.String,System.Func{System.Boolean})">
             <inheritdoc/>
@@ -5732,167 +6391,213 @@
             <param name="sourceModule">Identifies the source module.</param>
             <returns>The created <see cref="T:Microsoft.Extensions.Logging.ILogger"/>.</returns>
         </member>
-        <member name="T:Neon.Diagnostics.LogRecorder">
-            <summary>
-            Simple class that can be used to capture log entries while also passing them
-            through to a base <see cref="T:Neon.Diagnostics.INeonLogger"/> implementation.
-            </summary>
-            <remarks>
-            <para>
-            Instantiate by passing a base <see cref="T:Neon.Diagnostics.INeonLogger"/> implementation to the constructor.
-            All of the logging properties and methods calls to this class will pass through
-            to the base implementation and enabled log methods will also be collected by the
-            instance.  Use <see cref="M:Neon.Diagnostics.LogRecorder.ToString"/> to return the captured text and <see cref="M:Neon.Diagnostics.LogRecorder.Clear"/>
-            to clear it.
-            </para>
-            </remarks>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.#ctor(Neon.Diagnostics.INeonLogger)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="log">The inderlying <see cref="T:Neon.Diagnostics.INeonLogger"/> implementation.</param>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.Clear">
-            <summary>
-            Clears the captured text.
-            </summary>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.ToString">
-            <summary>
-            Returns the captured log text.
-            </summary>
-            <returns>The text.</returns>
-        </member>
-        <member name="P:Neon.Diagnostics.LogRecorder.ContextId">
-            <inheritdoc/>
-        </member>
-        <member name="P:Neon.Diagnostics.LogRecorder.IsLogDebugEnabled">
-            <inheritdoc/>
-        </member>
-        <member name="P:Neon.Diagnostics.LogRecorder.IsLogTransientEnabled">
-            <inheritdoc/>
-        </member>
-        <member name="P:Neon.Diagnostics.LogRecorder.IsLogSInfoEnabled">
-            <inheritdoc/>
-        </member>
-        <member name="P:Neon.Diagnostics.LogRecorder.IsLogInfoEnabled">
-            <inheritdoc/>
-        </member>
-        <member name="P:Neon.Diagnostics.LogRecorder.IsLogWarnEnabled">
-            <inheritdoc/>
-        </member>
-        <member name="P:Neon.Diagnostics.LogRecorder.IsLogErrorEnabled">
-            <inheritdoc/>
-        </member>
-        <member name="P:Neon.Diagnostics.LogRecorder.IsLogSErrorEnabled">
-            <inheritdoc/>
-        </member>
-        <member name="P:Neon.Diagnostics.LogRecorder.IsLogCriticalEnabled">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.IsLogLevelEnabled(Neon.Diagnostics.LogLevel)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.LogDebug(System.Object,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.LogTransient(System.Object,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.LogSInfo(System.Object,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.LogInfo(System.Object,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.LogWarn(System.Object,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.LogError(System.Object,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.LogSError(System.Object,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.LogCritical(System.Object,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.LogDebug(System.Object,System.Exception,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.LogTransient(System.Object,System.Exception,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.LogSInfo(System.Object,System.Exception,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.LogInfo(System.Object,System.Exception,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.LogWarn(System.Object,System.Exception,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.LogError(System.Object,System.Exception,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.LogSError(System.Object,System.Exception,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.LogCritical(System.Object,System.Exception,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.LogRecorder.Record(System.String)">
-            <summary>
-            Logs a line of text directly to the log recorder without also logging it to
-            to the underlying <see cref="T:Neon.Diagnostics.INeonLogger"/> implementation.
-            </summary>
-            <param name="message">The optional message to be recorded.</param>
-        </member>
         <member name="T:Neon.Diagnostics.NamespaceDoc">
             <summary>
             This namespace includes the common logging code used throughout Neon applications and libraries.
             </summary>
         </member>
-        <member name="T:Neon.Diagnostics.NeonLogger">
+        <member name="T:Neon.Diagnostics.NullLogger">
             <summary>
-            A general purpose implementation of <see cref="T:Neon.Diagnostics.INeonLogger"/> and <see cref="T:Microsoft.Extensions.Logging.ILogger"/>.
+            Implements an <see cref="T:Neon.Diagnostics.INeonLogger"/> that simply drops all logged events.
             </summary>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLogger.ContextId">
+        <member name="P:Neon.Diagnostics.NullLogger.ContextId">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLogger.IsLogDebugEnabled">
+        <member name="P:Neon.Diagnostics.NullLogger.IsLogDebugEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLogger.IsLogTransientEnabled">
+        <member name="P:Neon.Diagnostics.NullLogger.IsLogTransientEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLogger.IsLogErrorEnabled">
+        <member name="P:Neon.Diagnostics.NullLogger.IsLogErrorEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLogger.IsLogSErrorEnabled">
+        <member name="P:Neon.Diagnostics.NullLogger.IsLogSErrorEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLogger.IsLogCriticalEnabled">
+        <member name="P:Neon.Diagnostics.NullLogger.IsLogCriticalEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLogger.IsLogInfoEnabled">
+        <member name="P:Neon.Diagnostics.NullLogger.IsLogInfoEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLogger.IsLogSInfoEnabled">
+        <member name="P:Neon.Diagnostics.NullLogger.IsLogSInfoEnabled">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Diagnostics.NeonLogger.IsLogWarnEnabled">
+        <member name="P:Neon.Diagnostics.NullLogger.IsLogWarnEnabled">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.#ctor(Neon.Diagnostics.ILogManager,System.String,System.Boolean,System.IO.TextWriter,System.String,System.Func{System.Boolean})">
+        <member name="M:Neon.Diagnostics.NullLogger.#ctor(Neon.Diagnostics.ILogManager,System.String,System.String)">
             <summary>
-            Constructs a named instance.
+            Constructor.
             </summary>
             <param name="logManager">The parent log manager or <c>null</c>.</param>
             <param name="sourceModule">Optionally identifies the event source module or <c>null</c>.</param>
-            <param name="noisyAspNet">Optionally enables normal (noisy) logging of ASP.NET <b>INFO</b> events (see note in remarks).</param>
+            <param name="contextId">
+            Optionally specifies additional information that can be used to identify
+            context for logged events.  For example, the Neon.Cadence client uses this 
+             to record the ID of the workflow recording events.
+            </param>
+            <remarks>
+            <para>
+            The instances returned will log nothing if <paramref name="logManager"/>
+            is passed as <c>null</c>.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.IsLogLevelEnabled(Neon.Diagnostics.LogLevel)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.Log(Neon.Diagnostics.LogLevel,System.String,System.String)">
+            <summary>
+            Logs an event.
+            </summary>
+            <param name="logLevel">The event level.</param>
+            <param name="message">The event message.</param>
+            <param name="activityId">The optional activity ID.</param>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.LogDebug(System.Object,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.LogDebug(System.Object,System.Exception,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.LogTransient(System.Object,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.LogTransient(System.Object,System.Exception,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.LogError(System.Object,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.LogError(System.Object,System.Exception,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.LogSError(System.Object,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.LogSError(System.Object,System.Exception,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.LogCritical(System.Object,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.LogCritical(System.Object,System.Exception,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.LogInfo(System.Object,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.LogInfo(System.Object,System.Exception,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.LogSInfo(System.Object,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.LogSInfo(System.Object,System.Exception,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.LogWarn(System.Object,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.LogWarn(System.Object,System.Exception,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Neon.Diagnostics.NullLogger.Scope">
+            <summary>
+            Do-nothing disposable returned by <see cref="M:Neon.Diagnostics.NullLogger.BeginScope``1(``0)"/>.
+            </summary>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.Scope.#ctor">
+            <summary>
+            Internal connstructor.
+            </summary>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.Scope.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.ToNeonLevel(Microsoft.Extensions.Logging.LogLevel)">
+            <summary>
+            Converts a Microsoft log level into the corresponding Neon level.
+            </summary>
+            <param name="logLevel">The Microsoft log level.</param>
+            <returns>The Neon <see cref="T:Neon.Diagnostics.LogLevel"/>.</returns>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.Log``1(Microsoft.Extensions.Logging.LogLevel,Microsoft.Extensions.Logging.EventId,``0,System.Exception,System.Func{``0,System.Exception,System.String})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.IsEnabled(Microsoft.Extensions.Logging.LogLevel)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.NullLogger.BeginScope``1(``0)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Neon.Diagnostics.TestLogger">
+            <summary>
+            Implements an <see cref="T:Neon.Diagnostics.INeonLogger"/> intended for non-production use in unit tests
+            that need to inspect generated logs by recoding events to memory and then providing
+            a way to inspect these events.
+            </summary>
+            <remarks>
+            <para>
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.ClearEvents">
+            <summary>
+            Clears any events recorded by all <see cref="T:Neon.Diagnostics.TestLogger"/> instances that
+            recorded anything in the current process.
+            </summary>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.GetEvents">
+            <summary>
+            <para>
+            Returns the events logged by any <see cref="T:Neon.Diagnostics.TestLogger"/> instances that
+            recorded anything in the current process.  The events will be returned in
+            the order they were logged.
+            </para>
+            <note>
+            This method returns <b>a copy</b> of all of the events, so this isn't 
+            really suitable for production.
+            </note>
+            </summary>
+            <returns>An array with copies of the recorded events.</returns>
+        </member>
+        <member name="P:Neon.Diagnostics.TestLogger.ContextId">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Diagnostics.TestLogger.IsLogDebugEnabled">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Diagnostics.TestLogger.IsLogTransientEnabled">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Diagnostics.TestLogger.IsLogErrorEnabled">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Diagnostics.TestLogger.IsLogSErrorEnabled">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Diagnostics.TestLogger.IsLogCriticalEnabled">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Diagnostics.TestLogger.IsLogInfoEnabled">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Diagnostics.TestLogger.IsLogSInfoEnabled">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Diagnostics.TestLogger.IsLogWarnEnabled">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.#ctor(Neon.Diagnostics.ILogManager,System.String,System.IO.TextWriter,System.String,System.Func{System.Boolean})">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="logManager">The parent log manager or <c>null</c>.</param>
+            <param name="module">Optionally identifies the event source module or <c>null</c>.</param>
             <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="P:System.Console.Error"/>.</param>
             <param name="contextId">
             Optionally specifies additional information that can be used to identify
@@ -5915,18 +6620,13 @@
             doesn't appear to an easy way to change this behavior, I'd really like to recategorize
             these as <b>DEBUG</b> to reduce pressure on the logs.
             </para>
-            <para>
-            We accomplish this by default when <paramref name="noisyAspNet"/> is passed as
-            <c>false</c>.  This is used to signal that the instance should perform special 
-            ASP.NET level filtering.
-            </para>
             </note>
             </remarks>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.IsLogLevelEnabled(Neon.Diagnostics.LogLevel)">
+        <member name="M:Neon.Diagnostics.TestLogger.IsLogLevelEnabled(Neon.Diagnostics.LogLevel)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.Normalize(System.String)">
+        <member name="M:Neon.Diagnostics.TestLogger.Normalize(System.String)">
             <summary>
             Normalizes a log message by escaping any backslashes and replacing any line
             endings with "\n".  This converts multi-line message to a single line.
@@ -5934,7 +6634,169 @@
             <param name="message">The message.</param>
             <returns>The normalized message.</returns>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.Log(Neon.Diagnostics.LogLevel,System.String,System.String)">
+        <member name="M:Neon.Diagnostics.TestLogger.Log(Neon.Diagnostics.LogLevel,System.String,System.String,System.Exception)">
+            <summary>
+            Logs an event.
+            </summary>
+            <param name="logLevel">The event level.</param>
+            <param name="message">The event message.</param>
+            <param name="activityId">The optional activity ID.</param>
+            <param name="e">The optional event exception.</param>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.LogDebug(System.Object,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.LogDebug(System.Object,System.Exception,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.LogTransient(System.Object,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.LogTransient(System.Object,System.Exception,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.LogError(System.Object,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.LogError(System.Object,System.Exception,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.LogSError(System.Object,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.LogSError(System.Object,System.Exception,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.LogCritical(System.Object,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.LogCritical(System.Object,System.Exception,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.LogInfo(System.Object,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.LogInfo(System.Object,System.Exception,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.LogSInfo(System.Object,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.LogSInfo(System.Object,System.Exception,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.LogWarn(System.Object,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.LogWarn(System.Object,System.Exception,System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Neon.Diagnostics.TestLogger.Scope">
+            <summary>
+            Do-nothing disposable returned by <see cref="M:Neon.Diagnostics.TestLogger.BeginScope``1(``0)"/>.
+            </summary>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.Scope.#ctor">
+            <summary>
+            Internal connstructor.
+            </summary>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.Scope.Dispose">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.ToNeonLevel(Microsoft.Extensions.Logging.LogLevel)">
+            <summary>
+            Converts a Microsoft log level into the corresponding Neon level.
+            </summary>
+            <param name="logLevel">The Microsoft log level.</param>
+            <returns>The Neon <see cref="T:Neon.Diagnostics.LogLevel"/>.</returns>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.Log``1(Microsoft.Extensions.Logging.LogLevel,Microsoft.Extensions.Logging.EventId,``0,System.Exception,System.Func{``0,System.Exception,System.String})">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.IsEnabled(Microsoft.Extensions.Logging.LogLevel)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.TestLogger.BeginScope``1(``0)">
+            <inheritdoc/>
+        </member>
+        <member name="T:Neon.Diagnostics.TextLogger">
+            <summary>
+            A general purpose implementation of <see cref="T:Neon.Diagnostics.INeonLogger"/> and <see cref="T:Microsoft.Extensions.Logging.ILogger"/> that
+            logs to STDERR by default, which is typical for container and Kubernetes applications.  The
+            output can also be directed to a <see cref="T:System.IO.TextWriter"/>.
+            </summary>
+        </member>
+        <member name="P:Neon.Diagnostics.TextLogger.ContextId">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Diagnostics.TextLogger.IsLogDebugEnabled">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Diagnostics.TextLogger.IsLogTransientEnabled">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Diagnostics.TextLogger.IsLogErrorEnabled">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Diagnostics.TextLogger.IsLogSErrorEnabled">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Diagnostics.TextLogger.IsLogCriticalEnabled">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Diagnostics.TextLogger.IsLogInfoEnabled">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Diagnostics.TextLogger.IsLogSInfoEnabled">
+            <inheritdoc/>
+        </member>
+        <member name="P:Neon.Diagnostics.TextLogger.IsLogWarnEnabled">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.TextLogger.#ctor(Neon.Diagnostics.ILogManager,System.String,System.IO.TextWriter,System.String,System.Func{System.Boolean})">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="logManager">The parent log manager or <c>null</c>.</param>
+            <param name="module">Optionally identifies the event source module or <c>null</c>.</param>
+            <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="P:System.Console.Error"/>.</param>
+            <param name="contextId">
+            Optionally specifies additional information that can be used to identify context
+            for logged events.  For example, the <c>Neon.Cadence</c> and <c>Neon.Temporal</c>
+            clients use this to record the ID of the workflow recording events.
+            </param>
+            <param name="isLogEnabledFunc">
+            Optionally specifies a function that will be called at runtime to
+            determine whether to actually log an event.  This defaults to <c>null</c>
+            which will always log events.
+            </param>
+            <remarks>
+            <para>
+            The instances returned will log nothing if <paramref name="logManager"/>
+            is passed as <c>null</c>.
+            </para>
+            <note>
+            <para>
+            ASP.NET is super noisy, logging three or four <b>INFO</b> events per request.  There
+            doesn't appear to an easy way to change this behavior, I'd really like to recategorize
+            these as <b>DEBUG</b> to reduce pressure on the logs.
+            </para>
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.Diagnostics.TextLogger.IsLogLevelEnabled(Neon.Diagnostics.LogLevel)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Diagnostics.TextLogger.Normalize(System.String)">
+            <summary>
+            Normalizes a log message by escaping any backslashes and replacing any line
+            endings with "\n".  This converts multi-line message to a single line.
+            </summary>
+            <param name="message">The message.</param>
+            <returns>The normalized message.</returns>
+        </member>
+        <member name="M:Neon.Diagnostics.TextLogger.Log(Neon.Diagnostics.LogLevel,System.String,System.String)">
             <summary>
             Logs an event.
             </summary>
@@ -5942,208 +6804,81 @@
             <param name="message">The event message.</param>
             <param name="activityId">The optional activity ID.</param>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.LogDebug(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogDebug(System.Object,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.LogDebug(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogDebug(System.Object,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.LogTransient(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogTransient(System.Object,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.LogTransient(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogTransient(System.Object,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.LogError(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogError(System.Object,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.LogError(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogError(System.Object,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.LogSError(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogSError(System.Object,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.LogSError(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogSError(System.Object,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.LogCritical(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogCritical(System.Object,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.LogCritical(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogCritical(System.Object,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.LogInfo(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogInfo(System.Object,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.LogInfo(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogInfo(System.Object,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.LogSInfo(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogSInfo(System.Object,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.LogSInfo(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogSInfo(System.Object,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.LogWarn(System.Object,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogWarn(System.Object,System.String)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.LogWarn(System.Object,System.Exception,System.String)">
+        <member name="M:Neon.Diagnostics.TextLogger.LogWarn(System.Object,System.Exception,System.String)">
             <inheritdoc/>
         </member>
-        <member name="T:Neon.Diagnostics.NeonLogger.Scope">
+        <member name="T:Neon.Diagnostics.TextLogger.Scope">
             <summary>
-            Do-nothing disposable returned by <see cref="M:Neon.Diagnostics.NeonLogger.BeginScope``1(``0)"/>.
+            Do-nothing disposable returned by <see cref="M:Neon.Diagnostics.TextLogger.BeginScope``1(``0)"/>.
             </summary>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.Scope.#ctor">
+        <member name="M:Neon.Diagnostics.TextLogger.Scope.#ctor">
             <summary>
             Internal connstructor.
             </summary>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.Scope.Dispose">
+        <member name="M:Neon.Diagnostics.TextLogger.Scope.Dispose">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.ToNeonLevel(Microsoft.Extensions.Logging.LogLevel)">
+        <member name="M:Neon.Diagnostics.TextLogger.ToNeonLevel(Microsoft.Extensions.Logging.LogLevel)">
             <summary>
             Converts a Microsoft log level into the corresponding Neon level.
             </summary>
             <param name="logLevel">The Microsoft log level.</param>
             <returns>The Neon <see cref="T:Neon.Diagnostics.LogLevel"/>.</returns>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.Log``1(Microsoft.Extensions.Logging.LogLevel,Microsoft.Extensions.Logging.EventId,``0,System.Exception,System.Func{``0,System.Exception,System.String})">
+        <member name="M:Neon.Diagnostics.TextLogger.Log``1(Microsoft.Extensions.Logging.LogLevel,Microsoft.Extensions.Logging.EventId,``0,System.Exception,System.Func{``0,System.Exception,System.String})">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.IsEnabled(Microsoft.Extensions.Logging.LogLevel)">
+        <member name="M:Neon.Diagnostics.TextLogger.IsEnabled(Microsoft.Extensions.Logging.LogLevel)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Diagnostics.NeonLogger.BeginScope``1(``0)">
-            <inheritdoc/>
-        </member>
-        <member name="T:Neon.Diagnostics.NeonLoggerShim">
-            <summary>
-            Wraps a standard <see cref="T:Microsoft.Extensions.Logging.ILogger"/> adding <see cref="T:Neon.Diagnostics.INeonLogger"/> capabilities.
-            </summary>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.WrapLogger(Microsoft.Extensions.Logging.ILogger,System.IO.TextWriter)">
-            <summary>
-            Converts an <see cref="T:Microsoft.Extensions.Logging.ILogger"/> into an instance that implements <see cref="T:Neon.Diagnostics.INeonLogger"/>,
-            wrapping the instance passed with a <see cref="T:Neon.Diagnostics.NeonLoggerShim"/> if required.
-            </summary>
-            <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> to be converted.</param>
-            <param name="writer">Optionally specifies the output writer.  This defaults to <see cref="P:System.Console.Error"/>.</param>
-            <returns>The <see cref="T:Neon.Diagnostics.INeonLogger"/>.</returns>
-            <remarks>
-            This method will return a <b>log-nothing</b> instance is <paramref name="logger"/> is <c>null</c>.
-            </remarks>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.#ctor(Microsoft.Extensions.Logging.ILogger)">
-            <summary>
-            Constructor.
-            </summary>
-            <param name="logger">The <see cref="T:Microsoft.Extensions.Logging.ILogger"/> being wrapped.</param>
-        </member>
-        <member name="P:Neon.Diagnostics.NeonLoggerShim.ContextId">
-            <inheritdoc/>
-        </member>
-        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsLogDebugEnabled">
-            <inheritdoc/>
-        </member>
-        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsLogTransientEnabled">
-            <inheritdoc/>
-        </member>
-        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsLogErrorEnabled">
-            <inheritdoc/>
-        </member>
-        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsLogSErrorEnabled">
-            <inheritdoc/>
-        </member>
-        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsLogCriticalEnabled">
-            <inheritdoc/>
-        </member>
-        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsLogInfoEnabled">
-            <inheritdoc/>
-        </member>
-        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsLogSInfoEnabled">
-            <inheritdoc/>
-        </member>
-        <member name="P:Neon.Diagnostics.NeonLoggerShim.IsLogWarnEnabled">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.IsEnabled(Microsoft.Extensions.Logging.LogLevel)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.IsLogLevelEnabled(Neon.Diagnostics.LogLevel)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.Normalize(System.String)">
-            <summary>
-            Normalizes a log message by escaping any backslashes and replacing any line
-            endings with "\n".  This converts multi-line message to a single line.
-            </summary>
-            <param name="text">The message text.</param>
-            <returns>The normalized message.</returns>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.FormatMessage(Neon.Diagnostics.INeonLogger,System.Object,System.String)">
-            <summary>
-            Formats the log message.
-            </summary>
-            <param name="neonLogger">The <see cref="T:Neon.Diagnostics.INeonLogger"/> implementation or <c>null</c>.</param>
-            <param name="message">The message object.</param>
-            <param name="activityId">The optional activiity ID.</param>
-            <returns>The formatted log event.</returns>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.LogDebug(System.Object,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.LogTransient(System.Object,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.LogSInfo(System.Object,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.LogInfo(System.Object,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.LogWarn(System.Object,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.LogSError(System.Object,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.LogError(System.Object,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.LogCritical(System.Object,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.LogDebug(System.Object,System.Exception,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.LogTransient(System.Object,System.Exception,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.LogSInfo(System.Object,System.Exception,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.LogInfo(System.Object,System.Exception,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.LogWarn(System.Object,System.Exception,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.LogError(System.Object,System.Exception,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.LogSError(System.Object,System.Exception,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.LogCritical(System.Object,System.Exception,System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.Log``1(Microsoft.Extensions.Logging.LogLevel,Microsoft.Extensions.Logging.EventId,``0,System.Exception,System.Func{``0,System.Exception,System.String})">
-            <inheritdoc/>
-        </member>
-        <member name="M:Neon.Diagnostics.NeonLoggerShim.BeginScope``1(``0)">
+        <member name="M:Neon.Diagnostics.TextLogger.BeginScope``1(``0)">
             <inheritdoc/>
         </member>
         <member name="T:Neon.IO.BlockStream">
@@ -8806,9 +9541,9 @@
             <returns>The parsed <see cref="T:System.Net.IPEndPoint"/>.</returns>
             <exception cref="T:System.FormatException">Thrown if the input is not valid.</exception>
         </member>
-        <member name="M:Neon.Net.NetHelper.GetUnusedTcpPort(System.Net.IPAddress)">
+        <member name="M:Neon.Net.NetHelper.GetUnusedIpPort(System.Net.IPAddress)">
             <summary>
-            Returns a free TCP port for a local IP address.
+            Returns a free TCP/UDP port for a local IP address.
             </summary>
             <param name="address">The IP address.</param>
             <returns>The free port number.</returns>
@@ -12296,6 +13031,10 @@
             <see cref="T:System.Net.Http.HttpClient"/> extension methods, mostly related to supporting <see cref="T:Neon.Diagnostics.LogActivity"/> 
             related headers.
             </summary>
+            <summary>
+            <see cref="T:System.Net.Http.HttpClient"/> extension methods, mostly related to supporting <see cref="T:Neon.Diagnostics.LogActivity"/> 
+            related headers.
+            </summary>
         </member>
         <member name="M:System.Net.Http.HttpClientExtensions.GetAsync(System.Net.Http.HttpClient,System.Uri,Neon.Collections.ArgDictionary,System.Net.Http.HttpCompletionOption,System.Threading.CancellationToken,Neon.Diagnostics.LogActivity)">
             <summary>
@@ -12615,6 +13354,375 @@
             <returns>The response.</returns>
             <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
             <exception cref="T:System.InvalidOperationException">Thrown when the request has already been sent by the <see cref="T:System.Net.Http.HttpClient"/> class.</exception>
+        </member>
+        <member name="M:System.Net.Http.HttpClientExtensions.EnsureSuccess(System.Net.Http.HttpResponseMessage)">
+            <summary>
+            Ensures that an HTTP operation succedded but thrown an exception if it didn't.
+            </summary>
+            <param name="response">The response to be checked.</param>
+            <returns>The <paramref name="response"/> on success.</returns>
+            <exception cref="T:Neon.Net.HttpException">Thrown for failures.</exception>
+        </member>
+        <member name="M:System.Net.Http.HttpClientExtensions.GetSafeAsync(System.Net.Http.HttpClient,System.Uri,Neon.Collections.ArgDictionary,System.Net.Http.HttpCompletionOption,System.Threading.CancellationToken,Neon.Diagnostics.LogActivity)">
+            <summary>
+            Sends a GET request to the specified string URI ensuring that the operation succeeded.
+            </summary>
+            <param name="client">The client.</param>
+            <param name="requestUri">The request URI.</param>
+            <param name="headers">Optional request headers.</param>
+            <param name="completionOption">
+            Optionally specifies when the operation should complete (as soon as a response is available or after
+            reading the whole response content).
+            </param>
+            <param name="cancellationToken">The cancellation token.</param>
+            <param name="activity">Optional <see cref="T:Neon.Diagnostics.LogActivity"/> whose ID is to be included in the request.</param>
+            <returns>The response.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+            <exception cref="T:System.Net.Sockets.SocketException">Thrown for network connectivity issues.</exception>
+            <exception cref="T:Neon.Net.HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        </member>
+        <member name="M:System.Net.Http.HttpClientExtensions.GetSafeAsync(System.Net.Http.HttpClient,System.String,Neon.Collections.ArgDictionary,System.Net.Http.HttpCompletionOption,System.Threading.CancellationToken,Neon.Diagnostics.LogActivity)">
+            <summary>
+            Sends a GET request to a specified <see cref="T:System.Uri"/> ensuring that the operation succeeded.
+            </summary>
+            <param name="client">The client.</param>
+            <param name="requestUri">The request URI.</param>
+            <param name="headers">Optional request headers.</param>
+            <param name="completionOption">
+            Optionally specifies when the operation should complete (as soon as a response is available or after
+            reading the whole response content).
+            </param>
+            <param name="cancellationToken">The cancellation token.</param>
+            <param name="activity">Optional <see cref="T:Neon.Diagnostics.LogActivity"/> whose ID is to be included in the request.</param>
+            <returns>The response.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+            <exception cref="T:System.Net.Sockets.SocketException">Thrown for network connectivity issues.</exception>
+            <exception cref="T:Neon.Net.HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        </member>
+        <member name="M:System.Net.Http.HttpClientExtensions.GetByteArraySafeAsync(System.Net.Http.HttpClient,System.String,Neon.Collections.ArgDictionary,Neon.Diagnostics.LogActivity)">
+            <summary>
+            Sends a GET to a specified string URI and returns the response body as a byte array ensuring that the operation succeeded.
+            </summary>
+            <param name="client">The client.</param>
+            <param name="requestUri">The request URI.</param>
+            <param name="headers">Optional request headers.</param>
+            <param name="activity">Optional <see cref="T:Neon.Diagnostics.LogActivity"/> whose ID is to be included in the request.</param>
+            <returns>The response byte array.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+            <exception cref="T:System.Net.Sockets.SocketException">Thrown for network connectivity issues.</exception>
+            <exception cref="T:Neon.Net.HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        </member>
+        <member name="M:System.Net.Http.HttpClientExtensions.GetByteArraySafeAsync(System.Net.Http.HttpClient,System.Uri,Neon.Collections.ArgDictionary,Neon.Diagnostics.LogActivity)">
+            <summary>
+            Sends a GET to a specified <see cref="T:System.Uri"/> and returns the response body as a byte array ensuring that the operation succeeded.
+            </summary>
+            <param name="client">The client.</param>
+            <param name="requestUri">The request URI.</param>
+            <param name="headers">Optional request headers.</param>
+            <param name="activity">Optional <see cref="T:Neon.Diagnostics.LogActivity"/> whose ID is to be included in the request.</param>
+            <returns>The response byte array.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+            <exception cref="T:System.Net.Sockets.SocketException">Thrown for network connectivity issues.</exception>
+            <exception cref="T:Neon.Net.HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        </member>
+        <member name="M:System.Net.Http.HttpClientExtensions.GetStreamSafeAsync(System.Net.Http.HttpClient,System.String,Neon.Collections.ArgDictionary,Neon.Diagnostics.LogActivity)">
+            <summary>
+            Sends a GET to a specified string URI and returns the response body as a <see cref="T:System.IO.Stream"/> ensuring that the operation succeeded.
+            </summary>
+            <param name="client">The client.</param>
+            <param name="requestUri">The request URI.</param>
+            <param name="headers">Optional request headers.</param>
+            <param name="activity">Optional <see cref="T:Neon.Diagnostics.LogActivity"/> whose ID is to be included in the request.</param>
+            <returns>The response stream.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+            <exception cref="T:System.Net.Sockets.SocketException">Thrown for network connectivity issues.</exception>
+            <exception cref="T:Neon.Net.HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        </member>
+        <member name="M:System.Net.Http.HttpClientExtensions.GetStreamSafeAsync(System.Net.Http.HttpClient,System.Uri,Neon.Collections.ArgDictionary,Neon.Diagnostics.LogActivity)">
+            <summary>
+            Sends a GET to a specified <see cref="T:System.Uri"/> and returns the response body as a <see cref="T:System.IO.Stream"/> ensuring that the operation succeeded.
+            </summary>
+            <param name="client">The client.</param>
+            <param name="requestUri">The request URI.</param>
+            <param name="headers">Optional request headers.</param>
+            <param name="activity">Optional <see cref="T:Neon.Diagnostics.LogActivity"/> whose ID is to be included in the request.</param>
+            <returns>The response stream.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+            <exception cref="T:System.Net.Sockets.SocketException">Thrown for network connectivity issues.</exception>
+            <exception cref="T:Neon.Net.HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        </member>
+        <member name="M:System.Net.Http.HttpClientExtensions.GetStringSafeAsync(System.Net.Http.HttpClient,System.String,Neon.Collections.ArgDictionary,Neon.Diagnostics.LogActivity)">
+            <summary>
+            Sends a GET request to a string URI and returns the response as a string ensuring that the operation succeeded.
+            </summary>
+            <param name="client">The client.</param>
+            <param name="requestUri">The request URI.</param>
+            <param name="headers">Optional request headers.</param>
+            <param name="activity">Optional <see cref="T:Neon.Diagnostics.LogActivity"/> whose ID is to be included in the request.</param>
+            <returns>The response string.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+            <exception cref="T:System.Net.Sockets.SocketException">Thrown for network connectivity issues.</exception>
+            <exception cref="T:Neon.Net.HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        </member>
+        <member name="M:System.Net.Http.HttpClientExtensions.GetStringSafeAsync(System.Net.Http.HttpClient,System.Uri,Neon.Collections.ArgDictionary,Neon.Diagnostics.LogActivity)">
+            <summary>
+            Sends a GET request to a <see cref="T:System.Uri"/> and returns the response as a string ensuring that the operation succeeded.
+            </summary>
+            <param name="client">The client.</param>
+            <param name="requestUri">The request URI.</param>
+            <param name="headers">Optional request headers.</param>
+            <param name="activity">Optional <see cref="T:Neon.Diagnostics.LogActivity"/> whose ID is to be included in the request.</param>
+            <returns>The response string.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+            <exception cref="T:System.Net.Sockets.SocketException">Thrown for network connectivity issues.</exception>
+            <exception cref="T:Neon.Net.HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        </member>
+        <member name="M:System.Net.Http.HttpClientExtensions.PostSafeAsync(System.Net.Http.HttpClient,System.String,System.Net.Http.HttpContent,Neon.Collections.ArgDictionary,System.Net.Http.HttpCompletionOption,System.Threading.CancellationToken,Neon.Diagnostics.LogActivity)">
+            <summary>
+            Sends a POST request to a string URI ensuring that the operation succeeded.
+            </summary>
+            <param name="client">The client.</param>
+            <param name="requestUri">The request URI.</param>
+            <param name="content">The content to be sent to the server.</param>
+            <param name="headers">Optional request headers.</param>
+            <param name="completionOption">
+            Optionally specifies when the operation should complete (as soon as a response is available or after
+            reading the whole response content).
+            </param>
+            <param name="cancellationToken">The cancellation token.</param>
+            <param name="activity">Optional <see cref="T:Neon.Diagnostics.LogActivity"/> whose ID is to be included in the request.</param>
+            <returns>The response.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+            <exception cref="T:System.Net.Sockets.SocketException">Thrown for network connectivity issues.</exception>
+            <exception cref="T:Neon.Net.HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        </member>
+        <member name="M:System.Net.Http.HttpClientExtensions.PostSafeAsync(System.Net.Http.HttpClient,System.Uri,System.Net.Http.HttpContent,Neon.Collections.ArgDictionary,System.Net.Http.HttpCompletionOption,System.Threading.CancellationToken,Neon.Diagnostics.LogActivity)">
+            <summary>
+            Sends a POST request to a <see cref="T:System.Uri"/> ensuring that the operation succeeded.
+            </summary>
+            <param name="client">The client.</param>
+            <param name="requestUri">The request URI.</param>
+            <param name="content">The content to be sent to the server.</param>
+            <param name="headers">Optional request headers.</param>
+            <param name="completionOption">
+            Optionally specifies when the operation should complete (as soon as a response is available or after
+            reading the whole response content).
+            </param>
+            <param name="cancellationToken">The cancellation token.</param>
+            <param name="activity">Optional <see cref="T:Neon.Diagnostics.LogActivity"/> whose ID is to be included in the request.</param>
+            <returns>The response.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+            <exception cref="T:System.Net.Sockets.SocketException">Thrown for network connectivity issues.</exception>
+            <exception cref="T:Neon.Net.HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        </member>
+        <member name="M:System.Net.Http.HttpClientExtensions.PutSafeAsync(System.Net.Http.HttpClient,System.String,System.Net.Http.HttpContent,Neon.Collections.ArgDictionary,System.Net.Http.HttpCompletionOption,System.Threading.CancellationToken,Neon.Diagnostics.LogActivity)">
+            <summary>
+            Sends a PUT request to a string URI ensuring that the operation succeeded.
+            </summary>
+            <param name="client">The client.</param>
+            <param name="requestUri">The request URI.</param>
+            <param name="content">The content to be sent to the server.</param>
+            <param name="headers">Optional request headers.</param>
+            <param name="completionOption">
+            Optionally specifies when the operation should complete (as soon as a response is available or after
+            reading the whole response content).
+            </param>
+            <param name="cancellationToken">The cancellation token.</param>
+            <param name="activity">Optional <see cref="T:Neon.Diagnostics.LogActivity"/> whose ID is to be included in the request.</param>
+            <returns>The response.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+            <exception cref="T:System.Net.Sockets.SocketException">Thrown for network connectivity issues.</exception>
+            <exception cref="T:Neon.Net.HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        </member>
+        <member name="M:System.Net.Http.HttpClientExtensions.PutSafeAsync(System.Net.Http.HttpClient,System.Uri,System.Net.Http.HttpContent,Neon.Collections.ArgDictionary,System.Net.Http.HttpCompletionOption,System.Threading.CancellationToken,Neon.Diagnostics.LogActivity)">
+            <summary>
+            Sends a PUT request to a <see cref="T:System.Uri"/> ensuring that the operation succeeded.
+            </summary>
+            <param name="client">The client.</param>
+            <param name="requestUri">The request URI.</param>
+            <param name="content">The content to be sent to the server.</param>
+            <param name="headers">Optional request headers.</param>
+            <param name="completionOption">
+            Optionally specifies when the operation should complete (as soon as a response is available or after
+            reading the whole response content).
+            </param>
+            <param name="cancellationToken">The cancellation token.</param>
+            <param name="activity">Optional <see cref="T:Neon.Diagnostics.LogActivity"/> whose ID is to be included in the request.</param>
+            <returns>The response.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+            <exception cref="T:System.Net.Sockets.SocketException">Thrown for network connectivity issues.</exception>
+            <exception cref="T:Neon.Net.HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        </member>
+        <member name="M:System.Net.Http.HttpClientExtensions.DeleteSafeAsync(System.Net.Http.HttpClient,System.String,System.Net.Http.HttpContent,Neon.Collections.ArgDictionary,System.Net.Http.HttpCompletionOption,System.Threading.CancellationToken,Neon.Diagnostics.LogActivity)">
+            <summary>
+            Sends a DELETE request to a string URI ensuring that the operation succeeded.
+            </summary>
+            <param name="client">The client.</param>
+            <param name="requestUri">The request URI.</param>
+            <param name="content">The content to be sent to the server.</param>
+            <param name="headers">Optional request headers.</param>
+            <param name="completionOption">
+            Optionally specifies when the operation should complete (as soon as a response is available or after
+            reading the whole response content).
+            </param>
+            <param name="cancellationToken">The cancellation token.</param>
+            <param name="activity">Optional <see cref="T:Neon.Diagnostics.LogActivity"/> whose ID is to be included in the request.</param>
+            <returns>The response.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+            <exception cref="T:System.Net.Sockets.SocketException">Thrown for network connectivity issues.</exception>
+            <exception cref="T:Neon.Net.HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        </member>
+        <member name="M:System.Net.Http.HttpClientExtensions.DeleteSafeAsync(System.Net.Http.HttpClient,System.Uri,System.Net.Http.HttpContent,Neon.Collections.ArgDictionary,System.Net.Http.HttpCompletionOption,System.Threading.CancellationToken,Neon.Diagnostics.LogActivity)">
+            <summary>
+            Sends a DELETE request to a <see cref="T:System.Uri"/> ensuring that the operation succeeded.
+            </summary>
+            <param name="client">The client.</param>
+            <param name="requestUri">The request URI.</param>
+            <param name="content">The content to be sent to the server.</param>
+            <param name="headers">Optional request headers.</param>
+            <param name="completionOption">
+            Optionally specifies when the operation should complete (as soon as a response is available or after
+            reading the whole response content).
+            </param>
+            <param name="cancellationToken">The cancellation token.</param>
+            <param name="activity">Optional <see cref="T:Neon.Diagnostics.LogActivity"/> whose ID is to be included in the request.</param>
+            <returns>The response.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+            <exception cref="T:System.Net.Sockets.SocketException">Thrown for network connectivity issues.</exception>
+            <exception cref="T:Neon.Net.HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        </member>
+        <member name="M:System.Net.Http.HttpClientExtensions.PatchSafeAsync(System.Net.Http.HttpClient,System.String,System.Net.Http.HttpContent,Neon.Collections.ArgDictionary,System.Net.Http.HttpCompletionOption,System.Threading.CancellationToken,Neon.Diagnostics.LogActivity)">
+            <summary>
+            Sends a PATCH request to a string URI ensuring that the operation succeeded.
+            </summary>
+            <param name="client">The client.</param>
+            <param name="requestUri">The request URI.</param>
+            <param name="content">The content to be sent to the server.</param>
+            <param name="headers">Optional request headers.</param>
+            <param name="completionOption">
+            Optionally specifies when the operation should complete (as soon as a response is available or after
+            reading the whole response content).
+            </param>
+            <param name="cancellationToken">The cancellation token.</param>
+            <param name="activity">Optional <see cref="T:Neon.Diagnostics.LogActivity"/> whose ID is to be included in the request.</param>
+            <returns>The response.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+            <exception cref="T:System.Net.Sockets.SocketException">Thrown for network connectivity issues.</exception>
+            <exception cref="T:Neon.Net.HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        </member>
+        <member name="M:System.Net.Http.HttpClientExtensions.PatchSafeAsync(System.Net.Http.HttpClient,System.Uri,System.Net.Http.HttpContent,Neon.Collections.ArgDictionary,System.Net.Http.HttpCompletionOption,System.Threading.CancellationToken,Neon.Diagnostics.LogActivity)">
+            <summary>
+            Sends a PATCH request to a <see cref="T:System.Uri"/> ensuring that the operation succeeded.
+            </summary>
+            <param name="client">The client.</param>
+            <param name="requestUri">The request URI.</param>
+            <param name="content">The content to be sent to the server.</param>
+            <param name="headers">Optional request headers.</param>
+            <param name="completionOption">
+            Optionally specifies when the operation should complete (as soon as a response is available or after
+            reading the whole response content).
+            </param>
+            <param name="cancellationToken">The cancellation token.</param>
+            <param name="activity">Optional <see cref="T:Neon.Diagnostics.LogActivity"/> whose ID is to be included in the request.</param>
+            <returns>The response.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+            <exception cref="T:System.Net.Sockets.SocketException">Thrown for network connectivity issues.</exception>
+            <exception cref="T:Neon.Net.HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        </member>
+        <member name="M:System.Net.Http.HttpClientExtensions.OptionsSafeAsync(System.Net.Http.HttpClient,System.String,System.Net.Http.HttpContent,Neon.Collections.ArgDictionary,System.Net.Http.HttpCompletionOption,System.Threading.CancellationToken,Neon.Diagnostics.LogActivity)">
+            <summary>
+            Sends a OPTIONS request to a string URI ensuring that the operation succeeded.
+            </summary>
+            <param name="client">The client.</param>
+            <param name="requestUri">The request URI.</param>
+            <param name="content">The content to be sent to the server.</param>
+            <param name="headers">Optional request headers.</param>
+            <param name="completionOption">
+            Optionally specifies when the operation should complete (as soon as a response is available or after
+            reading the whole response content).
+            </param>
+            <param name="cancellationToken">The cancellation token.</param>
+            <param name="activity">Optional <see cref="T:Neon.Diagnostics.LogActivity"/> whose ID is to be included in the request.</param>
+            <returns>The response.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+            <exception cref="T:System.Net.Sockets.SocketException">Thrown for network connectivity issues.</exception>
+            <exception cref="T:Neon.Net.HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        </member>
+        <member name="M:System.Net.Http.HttpClientExtensions.OptionsSafeAsync(System.Net.Http.HttpClient,System.Uri,System.Net.Http.HttpContent,Neon.Collections.ArgDictionary,System.Net.Http.HttpCompletionOption,System.Threading.CancellationToken,Neon.Diagnostics.LogActivity)">
+            <summary>
+            Sends a OPTIONS request to a <see cref="T:System.Uri"/> ensuring that the operation succeeded.
+            </summary>
+            <param name="client">The client.</param>
+            <param name="requestUri">The request URI.</param>
+            <param name="content">The content to be sent to the server.</param>
+            <param name="headers">Optional request headers.</param>
+            <param name="completionOption">
+            Optionally specifies when the operation should complete (as soon as a response is available or after
+            reading the whole response content).
+            </param>
+            <param name="cancellationToken">The cancellation token.</param>
+            <param name="activity">Optional <see cref="T:Neon.Diagnostics.LogActivity"/> whose ID is to be included in the request.</param>
+            <returns>The response.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+            <exception cref="T:System.Net.Sockets.SocketException">Thrown for network connectivity issues.</exception>
+            <exception cref="T:Neon.Net.HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        </member>
+        <member name="M:System.Net.Http.HttpClientExtensions.HeadSafeAsync(System.Net.Http.HttpClient,System.String,System.Net.Http.HttpContent,Neon.Collections.ArgDictionary,System.Net.Http.HttpCompletionOption,System.Threading.CancellationToken,Neon.Diagnostics.LogActivity)">
+            <summary>
+            Sends a HEAD request to a string URI ensuring that the operation succeeded.
+            </summary>
+            <param name="client">The client.</param>
+            <param name="requestUri">The request URI.</param>
+            <param name="content">The content to be sent to the server.</param>
+            <param name="headers">Optional request headers.</param>
+            <param name="completionOption">
+            Optionally specifies when the operation should complete (as soon as a response is available or after
+            reading the whole response content).
+            </param>
+            <param name="cancellationToken">The cancellation token.</param>
+            <param name="activity">Optional <see cref="T:Neon.Diagnostics.LogActivity"/> whose ID is to be included in the request.</param>
+            <returns>The response.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+            <exception cref="T:System.Net.Sockets.SocketException">Thrown for network connectivity issues.</exception>
+            <exception cref="T:Neon.Net.HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        </member>
+        <member name="M:System.Net.Http.HttpClientExtensions.HeadSafeAsync(System.Net.Http.HttpClient,System.Uri,System.Net.Http.HttpContent,Neon.Collections.ArgDictionary,System.Net.Http.HttpCompletionOption,System.Threading.CancellationToken,Neon.Diagnostics.LogActivity)">
+            <summary>
+            Sends a HEAD request to a <see cref="T:System.Uri"/> ensuring that the operation succeeded.
+            </summary>
+            <param name="client">The client.</param>
+            <param name="requestUri">The request URI.</param>
+            <param name="content">The content to be sent to the server.</param>
+            <param name="headers">Optional request headers.</param>
+            <param name="completionOption">
+            Optionally specifies when the operation should complete (as soon as a response is available or after
+            reading the whole response content).
+            </param>
+            <param name="cancellationToken">The cancellation token.</param>
+            <param name="activity">Optional <see cref="T:Neon.Diagnostics.LogActivity"/> whose ID is to be included in the request.</param>
+            <returns>The response.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+            <exception cref="T:System.Net.Sockets.SocketException">Thrown for network connectivity issues.</exception>
+            <exception cref="T:Neon.Net.HttpException">Thrown when the server responds with an HTTP error status code.</exception>
+        </member>
+        <member name="M:System.Net.Http.HttpClientExtensions.SendSafeAsync(System.Net.Http.HttpClient,System.Net.Http.HttpRequestMessage,Neon.Collections.ArgDictionary,System.Net.Http.HttpCompletionOption,System.Threading.CancellationToken,Neon.Diagnostics.LogActivity)">
+            <summary>
+            Sends an <see cref="T:System.Net.Http.HttpRequestMessage"/> ensuring that the operation succeeded.
+            </summary>
+            <param name="client">The client.</param>
+            <param name="request">The request.</param>
+            <param name="headers">Optional request headers.</param>
+            <param name="completionOption">
+            Optionally specifies when the operation should complete (as soon as a response is available or after
+            reading the whole response content).
+            </param>
+            <param name="cancellationToken">The cancellation token.</param>
+            <param name="activity">Optional <see cref="T:Neon.Diagnostics.LogActivity"/> whose ID is to be included in the request.</param>
+            <returns>The response.</returns>
+            <exception cref="T:System.ArgumentNullException">Thrown when a required argument is <c>null</c>.</exception>
+            <exception cref="T:System.InvalidOperationException">Thrown when the request has already been sent by the <see cref="T:System.Net.Http.HttpClient"/> class.</exception>
+            <exception cref="T:System.Net.Sockets.SocketException">Thrown for network connectivity issues.</exception>
+            <exception cref="T:Neon.Net.HttpException">Thrown when the server responds with an HTTP error status code.</exception>
         </member>
         <member name="T:System.Collections.Generic.IEnumerableExtensions">
             <summary>
