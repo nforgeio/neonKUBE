@@ -57,7 +57,69 @@ namespace Neon.Kube
         // 
         //      https://github.com/nforgeio/neonKUBE/issues/908
         //
+        // The remainder of this note will outline how Azure provisioning works.
+        //
+        // A neonKUBE Azure cluster will require provisioning these things:
+        //
+        //      * VNET
+        //      * VMs & Drives
+        //      * Load balancer with public IP
+        //
+        // In the future, we'll relax the public load balancer requirement so
+        // that virtual air-gapped clusters can be supported (more on that below).
+        //
+        // The VNET will be configured using the cluster definitions's [NetworkOptions]
+        // and the node IP addresses will be automatically assigned by default
+        // but this can be customized via the cluster definition when necessary.
+        // The load balancer will be created using a public IP address with
+        // NAT rules forwarding network traffic into the cluster.  These rules
+        // are controlled by [NetworkOptions.IngressRoutes] in the cluster
+        // definition.  The target nodes in the cluster are indicated by the
+        // presence of a [neonkube.io/node.ingress=true] label which can be
+        // set explicitly for each node or assigned via a [NetworkOptions.IngressNodeSelector]
+        // label selector.  neonKUBE will use reasonable defaults when necessary.
+        //
+        // VMs are currently based on the Ubuntu-20.04 Server image provided by 
+        // published to the marketplace by Canonical.  They publish Gen1 and Gen2
+        // images.  I believe Gen2 images will work on Azure Gen1 & Gen2 instances
+        // so our images will be Gen2 based as well.
+        //
+        // This hosting manager will support creating VMs from the base Canonical
+        // image as well as from custom images published to the marketplace by
+        // neonFORGE.  The custom images will be preprovisioned with all of the
+        // software required, making cluster setup much faster and reliable.  The
+        // Canonical based images will need lots of configuration before they can
+        // be added to a cluster.  Note that the neonFORGE images are actually
+        // created by starting with a Canonical image and doing most of a cluster
+        // setup on that image, so we'll continue supporting the raw Canonical
+        // images.
+        //
+        // We're also going to be supporting two different was of managing the
+        // cluster deployment process.  The first approach will be to continue
+        // controlling the process from a client application: [neon-cli] or
+        // neonDESKTOP using SSH to connect to the nodes via temporary NAT
+        // routes through the public load balancer.  neonKUBE clusters reserve
+        // 1000 inbound ports (the actual range is configurable in the cluster
+        // definition [CloudOptions]) and we'll automatically create NAT rule
+        // for each node that routes external SSH traffic to the node.
+        //
+        // The second approach is to handle cluster setup from within the cloud
+        // itself.  We're probably going to defer doing until after we go public
+        // with neonCLOUD.  There's two ways of accomplising this: one is to
+        // deploy a very small temporary VM within the customer's Azure subscription
+        // that lives within the cluster VNET and coordinates things from there.
+        // The other way is to is to manage VM setup from a neonCLOUD service,
+        // probably using temporary load balancer SSH routes to access specific
+        // nodes.  Note that this neonCLOUD service could run anywhere; it is
+        // not restricted to running withing the same region as the customer
+        // cluster.
         // 
+        // Node instance and disk types and sizes are specified by the 
+        // [NodeDefinition.Azure] property.  Instance types are specified
+        // using standard Azure names, disk type is an enum and disk sizes
+        // are specified via strings including optional [ByteUnits].  Provisioning
+        // will need to verify that the requested instance and drive types are
+        // actually available in the target Azure region.
 
         //---------------------------------------------------------------------
         // Static members
