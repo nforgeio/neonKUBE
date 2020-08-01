@@ -119,7 +119,36 @@ namespace Neon.Kube
         // using standard Azure names, disk type is an enum and disk sizes
         // are specified via strings including optional [ByteUnits].  Provisioning
         // will need to verify that the requested instance and drive types are
-        // actually available in the target Azure region.
+        // actually available in the target Azure region and will also need
+        // to map the disk size specified by the user to the closest matching
+        // Azure disk size.
+        //
+        // neonKUBE will allow zero or more Azure drives to be attached to
+        // a cluster node.  Nodes with zero attached drives will be created
+        // will have only a limited amount of disk space available.  The OS
+        // drive in this case will actually be backed implicitly by an Azure
+        // drive so data there will remain after any VM maintence operations
+        // performed by Azure.
+        //
+        // Azure VMs are also provided with ephemeral disk space local to the VM 
+        // itself.  On neonKUBE cluster Linux VMs, the ephemeral block device will
+        // be [/dev/sdb] but we don't currently do anything with this (like
+        // create and mount a file system).
+        //
+        // More than one Azure drive can be mounted to a VM and the drives will
+        // implicitly have the same size.  neonKUBE will configure these drives
+        // as a large RAID0 striped array favoring capacity and performance over
+        // reliability.  Azure says that the chance of a drive failure is between
+        // 0.1-0.2% per year so for a node with 4 RAID0 drives, there's may be
+        // a 1/125 chance per year of losing a one of the drives in the VM 
+        // resulting in complete data loss which isn't too bad, especially for
+        // situations where a redundant data store is deployed across multiple
+        // nodes in the cluster.
+        //
+        // neonKUBE may support combining multiple Azure drives in to a redundant
+        // RAID5 configuration in the future to dramatically lower the possible
+        // failure risk.  This happens after provisioning so we'll be able to
+        // support this for all clouds.
 
         //---------------------------------------------------------------------
         // Static members
