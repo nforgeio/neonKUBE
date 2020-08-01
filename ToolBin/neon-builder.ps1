@@ -48,15 +48,16 @@ if ($installer)
     $tools = $true
 }
 
-$msbuild     = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
-$nfRoot      = "$env:NF_ROOT"
-$nfSolution  = "$nfRoot\neonKUBE.sln"
-$nfBuild     = "$env:NF_BUILD"
-$nfTools     = "$nfRoot\Tools"
-$version     = Get-Content "$env:NF_ROOT\product-version.txt" -First 1
-$config      = "Release"
-$buildConfig = "-p:Configuration=Release"
-$env:PATH   += ";$nfBuild"
+$msbuild        = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\amd64\MSBuild.exe"
+$nfRoot         = "$env:NF_ROOT"
+$nfSolution     = "$nfRoot\neonKUBE.sln"
+$nfBuild        = "$env:NF_BUILD"
+$nfTools        = "$nfRoot\Tools"
+$desktopVersion = Get-Content "$env:NF_ROOT\neonDESKTOP-version.txt" -First 1
+$libraryVersion = Get-Content "$env:NF_ROOT\neonLIBRARY-version.txt" -First 1
+$config         = "Release"
+$buildConfig    = "-p:Configuration=Release"
+$env:PATH      += ";$nfBuild"
 
 function PublishCore
 {
@@ -177,7 +178,7 @@ if ($tools)
     "Generating OS/X neon-cli SHA512..."
     ""
 
-    & cat "$nfBuild\osx\neon-osx" | openssl dgst -sha512 -hex > "$nfBuild\osx\neon-osx-$version.sha512.txt"
+    & cat "$nfBuild\osx\neon-osx" | openssl dgst -sha512 -hex > "$nfBuild\osx\neon-osx-$kubeVersion.sha512.txt"
 
     if (-not $?)
     {
@@ -230,7 +231,7 @@ if ($installer)
     "Generating windows installer SHA512..."
 	""
 	
-    & cat "$nfBuild\neonKUBE-setup-$version.exe" | openssl dgst -sha512 -hex > "$nfBuild\neonKUBE-setup-$version.sha512.txt"
+    & cat "$nfBuild\neonKUBE-setup-$kubeVersion.exe" | openssl dgst -sha512 -hex > "$nfBuild\neonKUBE-setup-$kubeVersion.sha512.txt"
 
     if (-not $?)
     {

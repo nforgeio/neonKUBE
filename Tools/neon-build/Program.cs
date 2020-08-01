@@ -50,8 +50,8 @@ Removes cached components:
 --------------------------
 neon-build clear PLATFORM
 
-neon-build download PLATFORM [--kube-version=VERSION]
------------------------------------------------------
+neon-build download PLATFORM [--kubernetes-version=VERSION]
+-----------------------------------------------------------
 Downloads KUBE PLATFORM components (if not already present):
 
 ARGUMENTS:
@@ -62,9 +62,9 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --kube-version  - optionally specifies the Kubernetes version
-                      to be installed.  This defaults to the version
-                      read from [$/kube-version.txt].
+    --kubernetes-version    - optionally specifies the Kubernetes version
+                              to be installed.  This defaults to the version
+                              read from [$/kubernetes-version.txt].
 
 neon-build gzip SOURCE TARGET
 -----------------------------
@@ -87,15 +87,16 @@ ARGUMENTS:
 
 neon-build build-version
 ----------------------------------------------
-Used to insert the first line of the [$/product-version] text file
-into the `[$/Lib/Neon.Common/Build.cs`] file, replacing the value of the
-[ProductVersion] constant.
+Used to insert the first line of the [$/neonKUBE-version.txt] and
+[$/neonLIBRARY-version.txt] text files into the [$/Lib/Neon.Common/Build.cs] 
+file, replacing the value of the [neonKubeVersion] and [neonLibraryVersion]
+properties.
 
 neon-build pack-version VERSION-FILE CSPROJ-FILE
 ------------------------------------------------
 Updates the specified library CSPROJ file version to a combination of
-the global VERSION-FILE (typically [$/product-version.txt] and an optional
-project local [prerelease.txt] file as specified here:
+the global VERSION-FILE (typically [$/neonLIBRARY-version.txt] and an
+optional project local [prerelease.txt] file as specified here:
 
     https://github.com/nforgeio/neonKUBE/issues/715
 
@@ -158,7 +159,7 @@ OPTIONS:
                     Program.Exit(1);
                 }
 
-                Program.DefaultKubernetesVersion = File.ReadAllText(Path.Combine(Program.RepoRootFolder, "kube-version.txt")).Trim();
+                Program.DefaultKubernetesVersion = File.ReadAllText(Path.Combine(Program.RepoRootFolder, "kubernetes-version.txt")).Trim();
 
                 // Handle the commands.
 

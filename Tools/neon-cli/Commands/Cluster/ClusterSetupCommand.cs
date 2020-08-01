@@ -2388,7 +2388,6 @@ rm -rf {chartName}*
                 () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
-                    var i = 0;
 
                     values.Add(new KeyValuePair<string, object>($"replicas", cluster.Definition.Nodes.Count(n => n.Labels.M3DB == true).ToString()));
 

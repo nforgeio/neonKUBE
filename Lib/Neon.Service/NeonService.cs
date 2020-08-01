@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeService.cs
+// FILE:	    NeonService.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -28,11 +28,10 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
-using Neon.Net;
 using Neon.Retry;
-using Neon.Service;
+using Neon.Windows;
 
-namespace Neon.Kube.Service
+namespace Neon.Service
 {
     /// <summary>
     /// Base class for Kubernetes services that wish to use the neonKUBE unit testing conventions.
@@ -46,7 +45,7 @@ namespace Neon.Kube.Service
     /// to handle termination signals from Kubernetes.
     /// </para>
     /// <para>
-    /// This class is pretty easy to use.  Simply derive your service class from <see cref="KubeService"/>
+    /// This class is pretty easy to use.  Simply derive your service class from <see cref="NeonService"/>
     /// and implement the <see cref="OnRunAsync"/> method.  <see cref="OnRunAsync"/> will be called when 
     /// your service is started.  This is where you'll implement your service.  You should perform any
     /// initialization and then call <see cref="SetRunningAsync"/> to indicate that the service is ready for
@@ -54,7 +53,7 @@ namespace Neon.Kube.Service
     /// </para>
     /// <note>
     /// Note that calling <see cref="SetRunningAsync()"/> after your service has initialized is very important
-    /// because the <b>KubeServiceFixture</b> requires won't allow tests to proceed until the service
+    /// because the <b>NeonServiceFixture</b> requires won't allow tests to proceed until the service
     /// indicates that it's ready.  This is necessary to avoid unit test race conditions.
     /// </note>
     /// <para>
@@ -151,7 +150,7 @@ namespace Neon.Kube.Service
     /// }
     /// </code>
     /// <para>
-    /// The <b>disposing</b> parameter is passed as <c>true</c> when the base <see cref="KubeService.Dispose()"/>
+    /// The <b>disposing</b> parameter is passed as <c>true</c> when the base <see cref="NeonService.Dispose()"/>
     /// method was called or <c>false</c> if the garbage collector is finalizing the instance
     /// before discarding it.  The difference is subtle and most services can safely ignore
     /// this parameter (other than passing it through to the base <see cref="Dispose(bool)"/>
@@ -181,7 +180,7 @@ namespace Neon.Kube.Service
     /// </note>
     /// <para><b>LOGGING</b></para>
     /// <para>
-    /// Each <see cref="KubeService"/> instance maintains its own <see cref="LogManager"/>
+    /// Each <see cref="NeonService"/> instance maintains its own <see cref="LogManager"/>
     /// instance with the a default logger created at <see cref="Log"/>.  The log manager
     /// is initialized using the <b>LOG_LEVEL</b> environment variable value which defaults
     /// to <b>info</b> when not present.  <see cref="LogLevel"/> for the possible values.
@@ -220,14 +219,14 @@ namespace Neon.Kube.Service
     /// with the script return code indicating the service instance health.
     /// </para>
     /// <para>
-    /// The <see cref="Neon.Kube.Service.KubeService"/> class supports this by optionally
+    /// The <see cref="Neon.Service.NeonService"/> class supports this by optionally
     /// writing a text file with various strings indicating the health status.  This file
     /// will consist of a single line of text <b>without line ending characters</b>.  You'll
     /// need to specify the fully qualified path to this file as an optional parameter to the 
-    /// <see cref="KubeService"/> constructor.
+    /// <see cref="NeonService"/> constructor.
     /// </para>
     /// </remarks>
-    public abstract class KubeService : IDisposable
+    public abstract class NeonService : IDisposable
     {
         //---------------------------------------------------------------------
         // Private types
@@ -269,12 +268,151 @@ namespace Neon.Kube.Service
         // Static members
 
         /// <summary>
-        /// This controls whether any <see cref="KubeService"/> instances will use the global
+        /// This controls whether any <see cref="NeonService"/> instances will use the global
         /// <see cref="LogManager.Default"/> log manager for logging or maintain its own
         /// log manager.  This defaults to <c>true</c> which will be appropriate for most
         /// production situations.  It may be useful to disable this for some unit tests.
         /// </summary>
         public static bool GlobalLogging = true;
+
+        // WARNING:
+        //
+        // The code below should be manually synchronized with similar code in [KubeHelper]
+        // if neonKUBE related folder names ever change in the future.
+
+        private static string testFolder;
+        private static string cachedNeonKubeUserFolder;
+        private static string cachedPasswordsFolder;
+
+        /// <summary>
+        /// Returns <c>true</c> if the class is running in test mode.
+        /// </summary>
+        private static bool IsTestMode
+        {
+            get
+            {
+                if (testFolder != null)
+                {
+                    return true;
+                }
+
+                testFolder = Environment.GetEnvironmentVariable(NeonHelper.TestModeFolderVar);
+
+                return testFolder != null;
+            }
+        }
+
+        /// <summary>
+        /// Returns the path the folder holding the user specific Kubernetes files.
+        /// </summary>
+        /// <returns>The folder path.</returns>
+        private static string GetNeonKubeUserFolder()
+        {
+            if (cachedNeonKubeUserFolder != null)
+            {
+                return cachedNeonKubeUserFolder;
+            }
+
+            if (IsTestMode)
+            {
+                cachedNeonKubeUserFolder = Path.Combine(testFolder, ".neonkube");
+
+                Directory.CreateDirectory(cachedNeonKubeUserFolder);
+
+                return cachedNeonKubeUserFolder;
+            }
+
+            if (NeonHelper.IsWindows)
+            {
+                var path = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".neonkube");
+
+                Directory.CreateDirectory(path);
+
+                try
+                {
+                    EncryptFile(path);
+                }
+                catch
+                {
+                    // Encryption is not available on all platforms (e.g. Windows Home, or non-NTFS
+                    // file systems).  The secrets won't be encrypted for these situations.
+                }
+
+                return cachedNeonKubeUserFolder = path;
+            }
+            else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
+            {
+                var path = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".neonkube");
+
+                Directory.CreateDirectory(path);
+
+                return cachedNeonKubeUserFolder = path;
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Returns path to the folder holding the encryption passwords.
+        /// </summary>
+        /// <returns>The folder path.</returns>
+        private static string PasswordsFolder
+        {
+            get
+            {
+                if (cachedPasswordsFolder != null)
+                {
+                    return cachedPasswordsFolder;
+                }
+
+                var path = Path.Combine(GetNeonKubeUserFolder(), "passwords");
+
+                Directory.CreateDirectory(path);
+
+                return cachedPasswordsFolder = path;
+            }
+        }
+
+        /// <summary>
+        /// Encrypts a file or directory when supported by the underlying operating system
+        /// and file system.  Currently, this only works on non-HOME versions of Windows
+        /// and NTFS file systems.  This fails silently.
+        /// </summary>
+        /// <param name="path">The file or directory path.</param>
+        /// <returns><c>true</c> if the operation was successful.</returns>
+        private static bool EncryptFile(string path)
+        {
+            try
+            {
+                return Win32.EncryptFile(path);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Looks up a password given its name.
+        /// </summary>
+        /// <param name="passwordName">The password name.</param>
+        /// <returns>The password value.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown if the password doesn't exist.</exception>
+        private static string LookupPassword(string passwordName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(passwordName), nameof(passwordName));
+
+            var path = Path.Combine(PasswordsFolder, passwordName);
+
+            if (!File.Exists(path))
+            {
+                throw new KeyNotFoundException(passwordName);
+            }
+
+            return File.ReadAllText(path).Trim();
+        }
 
         //---------------------------------------------------------------------
         // Instance members
@@ -297,7 +435,7 @@ namespace Neon.Kube.Service
         /// <param name="isDirty">Optionally specifies whether there are uncommit changes to the branch.</param>
         /// <param name="statusFilePath">
         /// Optionally specifies the path where the service will update its status (for external health probes).
-        /// See the class documentation for more information <see cref="Neon.Kube.Service"/>.
+        /// See the class documentation for more information <see cref="Neon.Service"/>.
         /// </param>
         /// <exception cref="KeyNotFoundException">
         /// Thrown if there is no service description for <paramref name="name"/>
@@ -316,7 +454,7 @@ namespace Neon.Kube.Service
         /// <paramref name="branch"/>, or simply ignore these parameters.
         /// </para>
         /// </remarks>
-        public KubeService(
+        public NeonService(
             ServiceMap  serviceMap, 
             string      name, 
             string      branch         = null, 
@@ -368,7 +506,7 @@ namespace Neon.Kube.Service
         /// <summary>
         /// Finalizer.
         /// </summary>
-        ~KubeService()
+        ~NeonService()
         {
             Dispose(false);
         }
@@ -510,16 +648,16 @@ namespace Neon.Kube.Service
         /// <summary>
         /// Returns the service current running status.
         /// </summary>
-        public KubeServiceStatus Status { get; private set; }
+        public NeonServiceStatus Status { get; private set; }
 
         /// <summary>
         /// Updates the service status.  This is typically called internally by this
-        /// class but service code may set this to <see cref="KubeServiceStatus.Unhealthy"/>
-        /// when there's a problem and back to <see cref="KubeServiceStatus.Running"/>
+        /// class but service code may set this to <see cref="NeonServiceStatus.Unhealthy"/>
+        /// when there's a problem and back to <see cref="NeonServiceStatus.Running"/>
         /// when the service is healthy again.
         /// </summary>
         /// <param name="status">The new status.</param>
-        public async Task SetStatusAsync(KubeServiceStatus status)
+        public async Task SetStatusAsync(NeonServiceStatus status)
         {
             this.Status = status;
 
@@ -571,11 +709,11 @@ namespace Neon.Kube.Service
         /// <summary>
         /// Called by <see cref="OnRunAsync"/> implementation after they've completed any
         /// initialization and are ready for traffic.  This sets <see cref="Status"/> to
-        /// <see cref="KubeServiceStatus.Running"/>.
+        /// <see cref="NeonServiceStatus.Running"/>.
         /// </summary>
         public async Task SetRunningAsync()
         {
-            await SetStatusAsync(KubeServiceStatus.Running);
+            await SetStatusAsync(NeonServiceStatus.Running);
         }
 
         /// <summary>
@@ -703,7 +841,7 @@ namespace Neon.Kube.Service
             Log.LogInfo(() => $"Exiting [{Name}] with [exitcode={ExitCode}].");
             Terminator.ReadyToExit();
 
-            await SetStatusAsync(KubeServiceStatus.Terminated);
+            await SetStatusAsync(NeonServiceStatus.Terminated);
 
             return ExitCode;
         }
@@ -797,7 +935,7 @@ namespace Neon.Kube.Service
         /// <remarks>
         /// <para>
         /// Services should perform any required initialization and then must call <see cref="SetRunningAsync()"/>
-        /// to indicate that the service should transition into the <see cref="KubeServiceStatus.Running"/>
+        /// to indicate that the service should transition into the <see cref="NeonServiceStatus.Running"/>
         /// state.  This is very important because the service test fixture requires the service to be
         /// in the running state before it allows tests to proceed.  This is necessary to avoid unit test 
         /// race conditions.
@@ -822,14 +960,25 @@ namespace Neon.Kube.Service
         /// <param name="passwordProvider">
         /// Optionally specifies the password provider function to be used to locate the
         /// password required to decrypt the source file when necessary.  The password will 
-        /// use the <see cref="KubeHelper.LookupPassword(string)"/> method when 
-        /// <paramref name="passwordProvider"/> is <c>null</c>.
+        /// use a default password provider <paramref name="passwordProvider"/> is <c>null</c>.
+        /// See the remarks below.
         /// </param>
         /// <exception cref="FileNotFoundException">Thrown if the file doesn't exist.</exception>
         /// <exception cref="FormatException">Thrown for file formatting problems.</exception>
+        /// <remarks>
+        /// <para>
+        /// The default password provider assumes that you have neonDESKTOP installed and may be
+        /// specifying passwords in the `~/.neonkube/passwords` folder (relative to the current
+        /// user's home directory).  This will be harmless if you don't have neonDESKTOP installed;
+        /// it just probably won't find any passwords.
+        /// </para>
+        /// <para>
+        /// Implement a custom password provider function if you need something different.
+        /// </para>
+        /// </remarks>
         public void LoadEnvironmentVariables(string path, Func<string, string> passwordProvider = null)
         {
-            passwordProvider = passwordProvider ?? KubeHelper.LookupPassword;
+            passwordProvider = passwordProvider ?? LookupPassword;
 
             if (!File.Exists(path))
             {
@@ -946,10 +1095,21 @@ namespace Neon.Kube.Service
         /// <param name="passwordProvider">
         /// Optionally specifies the password provider function to be used to locate the
         /// password required to decrypt the source file when necessary.  The password will 
-        /// use the <see cref="KubeHelper.LookupPassword(string)"/> method when 
-        /// <paramref name="passwordProvider"/> is <c>null</c>.
+        /// use a default password provider <paramref name="passwordProvider"/> is <c>null</c>.
+        /// See the remarks below.
         /// </param>
         /// <exception cref="FileNotFoundException">Thrown if there's no file at <paramref name="physicalPath"/>.</exception>
+        /// <remarks>
+        /// <para>
+        /// The default password provider assumes that you have neonDESKTOP installed and may be
+        /// specifying passwords in the `~/.neonkube/passwords` folder (relative to the current
+        /// user's home directory).  This will be harmless if you don't have neonDESKTOP installed;
+        /// it just probably won't find any passwords.
+        /// </para>
+        /// <para>
+        /// Implement a custom password provider function if you need something different.
+        /// </para>
+        /// </remarks>
         public void SetConfigFilePath(string logicalPath, string physicalPath, Func<string, string> passwordProvider = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(logicalPath), nameof(logicalPath));
@@ -960,7 +1120,7 @@ namespace Neon.Kube.Service
                 throw new FileNotFoundException($"Physical configuration file [{physicalPath}] does not exist.");
             }
 
-            passwordProvider = passwordProvider ?? KubeHelper.LookupPassword;
+            passwordProvider = passwordProvider ?? LookupPassword;
 
             var vault = new NeonVault(passwordProvider);
             var bytes = vault.Decrypt(physicalPath);

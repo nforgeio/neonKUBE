@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 using Neon.Cadence;
 using Neon.Common;
 using Neon.Diagnostics;
-using Neon.Kube.Service;
 using Neon.Service;
 
 using Test.Neon.Models.Cadence;

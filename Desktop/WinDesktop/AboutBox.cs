@@ -43,7 +43,7 @@ namespace WinDesktop
             InitializeComponent();
 
             this.productNameLabel.Text = Build.ProductName;
-            this.versionLabel.Text     = Build.ProductVersion;
+            this.versionLabel.Text     = Build.NeonDesktopVersion;
             this.copyrightLabel.Text   = Build.Copyright;
             this.licenseLink.Text      = "Apache License, Version 2.0";
             this.descriptionBox.Text   = "Kubernetes the easy way!";

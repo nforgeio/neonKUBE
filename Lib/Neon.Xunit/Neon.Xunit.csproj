@@ -65,7 +65,7 @@
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
     <ProjectReference Include="..\Neon.Cryptography\Neon.Cryptography.csproj" />
     <ProjectReference Include="..\Neon.Docker\Neon.Docker.csproj" />
-    <ProjectReference Include="..\Neon.Kube.Service\Neon.Kube.Service.csproj" />
+    <ProjectReference Include="..\Neon.Service\Neon.Service.csproj" />
     <ProjectReference Include="..\Neon.Kube\Neon.Kube.csproj" />
   </ItemGroup>
 

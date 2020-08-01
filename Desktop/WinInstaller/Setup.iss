@@ -3,11 +3,11 @@
 ;   NF_BUILD            - The build output folder
 ;   NF_CACHE            - The build cache folder
 ;   NF_KUBE_VERSION     - The Kubernetes version
-;   NF_PRODUCT_VERSION  - The neonKUBE product version
+;   NF_DESKTOP_VERSION  - The neonKUBE product version
 
 [Setup]
 AppName=neonKUBE
-AppVersion={#GetEnv("NF_PRODUCT_VERSION")}
+AppVersion={#GetEnv("NF_DESKTOP_VERSION")}
 DefaultDirName={pf}\neonKUBE
 DefaultGroupName=neonKUBE
 ; UninstallDisplayIcon={app}\neonKUBE.Windows\neonDESKTOPwin.exe
@@ -41,17 +41,17 @@ Source: {#GetEnv("NF_BUILD")}\neonDESKTOP.cmd; DestDir: {app}; Flags: replacesam
 Source: {#GetEnv("NF_BUILD")}\win-desktop\*.*; DestDir: {app}\neon; Flags: recursesubdirs replacesameversion
 
 [Icons]
-Name: "{group}\neonKUBE Desktop"; Filename: "{app}\neon\neonDESKTOP.exe"
+Name: "{group}\neonDESKTOP"; Filename: "{app}\neon\neonDESKTOP.exe"
 
 [Registry]
-Root: HKCU; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "neonKUBE Desktop"; ValueData: "{app}\neon\neonDESKTOPexe"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "neonDESKTOP"; ValueData: "{app}\neon\neonDESKTOPexe"; Flags: uninsdeletevalue
 Root: HKCU; Subkey: "Environment"; ValueType: string; ValueName: "NEONKUBE_PROGRAM_FOLDER"; ValueData: "{app}"; Flags: uninsdeletevalue
 
 [Run]
-Filename: "{app}\neon\neonDESKTOP.exe"; Description: "neonKUBE Desktop"; Flags: postinstall nowait
+Filename: "{app}\neon\neonDESKTOP.exe"; Description: "neonDESKTOP"; Flags: postinstall nowait
 
 [UninstallRun]
-; Kill the neonKUBE Desktop app if it is running.
+; Kill the neonDESKTOP app if it is running.
 Filename: "{cmd}"; Parameters: "/C ""taskkill /im neonDESKTOP.exe /f /t"
 
 [Code]

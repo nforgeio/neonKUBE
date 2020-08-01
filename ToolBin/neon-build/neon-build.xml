@@ -286,6 +286,15 @@
             </summary>
             <param name="commandLine">The command line.</param>
         </member>
+        <member name="M:NeonBuild.Program.MungeBuildCs(System.String,System.String,System.String)">
+            <summary>
+            Munges the solution's <b>Build.cs</b> source file to update one of the named
+            version constants.
+            </summary>
+            <param name="buildCsPath">Path to the <b>Build.cs</b> file.</param>
+            <param name="versionName">Name of the target version constant.</param>
+            <param name="version">The new version.</param>
+        </member>
         <member name="M:NeonBuild.Program.Main(System.String[])">
             <summary>
             This is the program entrypoint.

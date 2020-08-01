@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <PackageReference Include="Helm" Version="0.1.35" />
-    <PackageReference Include="GitInfo" Version="2.0.26">
+    <PackageReference Include="GitInfo" Version="2.0.30">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Kube.Service\Neon.Kube.Service.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Service\Neon.Service.csproj" />
   </ItemGroup>
 
 </Project>

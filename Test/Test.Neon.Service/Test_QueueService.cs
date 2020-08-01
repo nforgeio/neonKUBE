@@ -30,11 +30,10 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Service;
 using Neon.Xunit;
-using Neon.Xunit.Kube;
 
 using Xunit;
 
-namespace TestKubeService
+namespace TestNeonService
 {
     /// <summary>
     /// Demonstrates how to test the <see cref="QueueService"/> that has a single
@@ -45,7 +44,7 @@ namespace TestKubeService
     {
         private ComposedFixture                     composedFixture;
         private NatsFixture                         natsFixture;
-        private KubeServiceFixture<QueueService>    queueServiceFixture;
+        private NeonServiceFixture<QueueService>    queueServiceFixture;
 
         public Test_QueueService(ComposedFixture fixture)
         {
@@ -60,11 +59,11 @@ namespace TestKubeService
                             natsFixture.StartAsComposed();
                         });
 
-                    composedFixture.AddServiceFixture("queue-service", new KubeServiceFixture<QueueService>(), () => CreateQueueService());
+                    composedFixture.AddServiceFixture("queue-service", new NeonServiceFixture<QueueService>(), () => CreateQueueService());
                 });
 
             this.natsFixture         = (NatsFixture)composedFixture["nats"];
-            this.queueServiceFixture = (KubeServiceFixture<QueueService>)composedFixture["queue-service"];
+            this.queueServiceFixture = (NeonServiceFixture<QueueService>)composedFixture["queue-service"];
         }
 
         /// <summary>

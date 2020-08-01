@@ -78,7 +78,7 @@ namespace Neon.Kube
         public int StatusPollSeconds { get; set; } = 1;
 
         /// <summary>
-        /// The local network port where the neonKUBE desktop application exposes
+        /// The local network port where the neonDESKTOP application exposes
         /// the desktop service providing integration for the <b>neon-cli</b>
         /// command line tool.  This defaults to <see cref="KubeConst.DesktopServicePort"/>.
         /// </summary>

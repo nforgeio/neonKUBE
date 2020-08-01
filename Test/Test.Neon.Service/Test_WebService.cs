@@ -30,22 +30,21 @@ using Neon.IO;
 using Neon.Kube;
 using Neon.Service;
 using Neon.Xunit;
-using Neon.Xunit.Kube;
 
 using Xunit;
 
-namespace TestKubeService
+namespace TestNeonService
 {
     /// <summary>
     /// Demonstrates how to test the <see cref="WebService"/> that has a single
     /// HTTP endpoint and that also exercises environment variable and file based 
     /// configuration.
     /// </summary>
-    public class Test_WebService : IClassFixture<KubeServiceFixture<WebService>>
+    public class Test_WebService : IClassFixture<NeonServiceFixture<WebService>>
     {
-        private KubeServiceFixture<WebService>   fixture;
+        private NeonServiceFixture<WebService>   fixture;
 
-        public Test_WebService(KubeServiceFixture<WebService> fixture)
+        public Test_WebService(NeonServiceFixture<WebService> fixture)
         {
             fixture.Start(() => CreateService());
 

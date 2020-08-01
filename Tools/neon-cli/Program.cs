@@ -42,15 +42,14 @@ using Neon.Xunit.Kube;
 namespace NeonCli
 {
     /// <summary>
-    /// This tool is used to configure the nodes of a cluster.
-    /// See <b>$/Doc/Ubuntu-20.04 cluster Deploy.docx</b> for more information.
+    /// This tool is used to configure and manage the nodes of a neonKUBE cluster.
     /// </summary>
     public static class Program
     {
         /// <summary>
         /// The program version.
         /// </summary>
-        public const string Version = Build.ProductVersion;
+        public const string Version = Build.NeonDesktopVersion;
     
         /// <summary>
         /// CURL command common options.

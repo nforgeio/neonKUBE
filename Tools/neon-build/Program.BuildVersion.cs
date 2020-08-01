@@ -32,37 +32,78 @@ namespace NeonBuild
         /// <param name="commandLine">The command line.</param>
         private static void BuildVersion(CommandLine commandLine)
         {
-            var productVersionPath = Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "product-version.txt");
-            var buildCsPath        = Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "Lib", "Neon.Common", "Build.cs");
-            var version            = File.ReadLines(productVersionPath, Encoding.UTF8).First();
+            var neonDesktopVersionPath = Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "neonDESKTOP-version.txt");
+            var neonLibraryVersionPath = Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "neonLIBRARY-version.txt");
+            var neonKubeVersionPath    = Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "neonKUBE-version.txt");
+            var neonDesktopVersion     = File.ReadLines(neonDesktopVersionPath, Encoding.UTF8).First();
+            var neonLibraryVersion     = File.ReadLines(neonLibraryVersionPath, Encoding.UTF8).First();
+            var neonKubeVersion        = File.ReadLines(neonKubeVersionPath, Encoding.UTF8).First();
+            var buildCsPath            = Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "Lib", "Neon.Common", "Build.cs");
 
-            if (string.IsNullOrEmpty(version))
+            if (string.IsNullOrEmpty(neonDesktopVersionPath))
             {
-                Console.Error.WriteLine($"[{productVersionPath}] specifies an empty version.");
+                Console.Error.WriteLine($"[{neonDesktopVersionPath}] specifies no version.");
                 Program.Exit(1);
             }
 
-            version = version.Trim();
-
-            if (!SemanticVersion.TryParse(version, out var v))
+            if (string.IsNullOrEmpty(neonLibraryVersion))
             {
-                Console.Error.WriteLine($"[{productVersionPath}] specifies an invalid semantic version: [{version}].");
+                Console.Error.WriteLine($"[{neonLibraryVersionPath}] specifies no version.");
                 Program.Exit(1);
             }
 
-            // Process the lines from the [$/Lib/Neon/Common/Build.cs] file, looking for the one
-            // with the [ProductVersion] constant definition.  We're going to replace the string
-            // with the product version we retrieved above and the rewrite the source file.
-            //
-            // Note that this is somewhat fragile because we're depending on the constant definition
-            // being on a single line (which is has been for at least 14 years).
+            if (string.IsNullOrEmpty(neonKubeVersionPath))
+            {
+                Console.Error.WriteLine($"[{neonKubeVersionPath}] specifies no version.");
+                Program.Exit(1);
+            }
 
+            neonDesktopVersion = neonDesktopVersion.Trim();
+
+            if (!SemanticVersion.TryParse(neonDesktopVersion, out var v))
+            {
+                Console.Error.WriteLine($"[{neonDesktopVersionPath}] specifies an invalid semantic version: [{neonDesktopVersion}].");
+                Program.Exit(1);
+            }
+
+            neonLibraryVersion = neonLibraryVersion.Trim();
+
+            if (!SemanticVersion.TryParse(neonLibraryVersion, out v))
+            {
+                Console.Error.WriteLine($"[{neonLibraryVersionPath}] specifies an invalid semantic version: [{neonLibraryVersion}].");
+                Program.Exit(1);
+            }
+
+            neonKubeVersion = neonKubeVersion.Trim();
+
+            if (!SemanticVersion.TryParse(neonKubeVersion, out v))
+            {
+                Console.Error.WriteLine($"[{neonKubeVersionPath}] specifies an invalid semantic version: [{neonKubeVersion}].");
+                Program.Exit(1);
+            }
+
+            // Update the [$/Lib/Neon/Common/Build.cs] file with the current build versions.
+
+            MungeBuildCs(buildCsPath, "NeonLibraryVersion", neonLibraryVersion);
+            MungeBuildCs(buildCsPath, "NeonDesktopVersion", neonDesktopVersion);
+            MungeBuildCs(buildCsPath, "NeonKubeVersion", neonKubeVersion);
+        }
+
+        /// <summary>
+        /// Munges the solution's <b>Build.cs</b> source file to update one of the named
+        /// version constants.
+        /// </summary>
+        /// <param name="buildCsPath">Path to the <b>Build.cs</b> file.</param>
+        /// <param name="versionName">Name of the target version constant.</param>
+        /// <param name="version">The new version.</param>
+        private static void MungeBuildCs(string buildCsPath, string versionName, string version)
+        {
             var buildCsLines = File.ReadAllLines(buildCsPath);
             var sbOutput     = new StringBuilder();
 
             foreach (var line in buildCsLines)
             {
-                if (!line.Contains("public const string ProductVersion"))
+                if (!line.Contains($"public const string {versionName}"))
                 {
                     sbOutput.AppendLine(line);
                     continue;
@@ -75,7 +116,7 @@ namespace NeonBuild
 
                 if (pStartQuote == -1)
                 {
-                    Console.Error.WriteLine($"[{buildCsPath}] unexpected [ProductVersion] definition format.");
+                    Console.Error.WriteLine($"[{buildCsPath}] unexpected [{versionName}] definition format.");
                     Program.Exit(1);
                 }
 
@@ -83,7 +124,7 @@ namespace NeonBuild
 
                 if (pStartQuote == -1)
                 {
-                    Console.Error.WriteLine($"[{buildCsPath}] unexpected [ProductVersion] definition format.");
+                    Console.Error.WriteLine($"[{buildCsPath}] unexpected [{versionName}] definition format.");
                     Program.Exit(1);
                 }
 

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GitInfo" Version="2.0.26">
+    <PackageReference Include="GitInfo" Version="2.0.30">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\..\Lib\Neon.Kube.Service\Neon.Kube.Service.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Service\Neon.Service.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Temporal\Neon.Temporal.csproj" />
     <ProjectReference Include="..\..\Test\Test.Neon.Models.Temporal\Test.Neon.Models.Temporal.csproj" />
   </ItemGroup>

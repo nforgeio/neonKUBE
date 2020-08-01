@@ -74,12 +74,12 @@ namespace NeonBuild
             // The Inno Setup script expects these environment variables:
             //
             //      NF_KUBE_VERSION     - The Kubernetes version
-            //      NF_PRODUCT_VERSION  - The neonKUBE product version
+            //      NF_DESKTOP_VERSION  - The neonKUBE product version
 
-            var productVersion = File.ReadLines(Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "product-version.txt")).First().Trim();
+            var desktopVersion = File.ReadLines(Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "neonKUBE-version.txt")).First().Trim();
 
             Environment.SetEnvironmentVariable("NF_KUBE_VERSION", Helper.KubeVersion);
-            Environment.SetEnvironmentVariable("NF_PRODUCT_VERSION", productVersion);
+            Environment.SetEnvironmentVariable("NF_DESKTOP_VERSION", desktopVersion);
 
             // Run the Inno Setup compiler.  Note that we're assuming that it's installed
             // to the default folder.

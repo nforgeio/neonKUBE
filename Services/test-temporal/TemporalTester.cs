@@ -13,13 +13,12 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.Diagnostics;
-using Neon.Kube.Service;
 using Neon.Service;
 using Neon.Temporal;
 
 namespace TemporalService
 {
-    public partial class TemporalTester : KubeService
+    public partial class TemporalTester : NeonService
     {
         /// <summary>
         /// Constructor.

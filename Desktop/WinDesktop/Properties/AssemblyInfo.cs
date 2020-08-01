@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("neonKUBE Desktop")]
+[assembly: AssemblyTitle("neonDESKTOP")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("neonKUBE Desktop")]
+[assembly: AssemblyProduct("neonDESKTOP")]
 [assembly: AssemblyCopyright("Copyright © 2019-2020 by neonFORGE LLC.  All rights reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
