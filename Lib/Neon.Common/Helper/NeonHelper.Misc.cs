@@ -914,7 +914,7 @@ namespace Neon.Common
         /// </summary>
         /// <typeparam name="TEnum">The enumeration type.</typeparam>
         private static EnumMemberSerializationInfo GetEnumMembers<TEnum>()
-            where TEnum : struct
+            where TEnum : Enum
         {
             return GetEnumMembers(typeof(TEnum));
         }
@@ -981,7 +981,7 @@ namespace Neon.Common
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="input"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="input"/> is not valid.</exception>
         public static TEnum ParseEnum<TEnum>(string input, TEnum? defaultValue = null)
-            where TEnum : struct
+            where TEnum : struct, Enum
         {
             if (defaultValue.HasValue && string.IsNullOrEmpty(input))
             {
@@ -1025,7 +1025,7 @@ namespace Neon.Common
         /// <param name="output">Returns as the parsed value.</param>
         /// <returns><c>true</c> if the value was parsed.</returns>
         public static bool TryParse<TEnum>(string input, out TEnum output)
-            where TEnum : struct
+            where TEnum : struct, Enum
         {
             var info = GetEnumMembers<TEnum>();
 
@@ -1089,7 +1089,7 @@ namespace Neon.Common
         /// <param name="input">The input value.</param>
         /// <returns>The deserialized value.</returns>
         public static string EnumToString<TEnum>(TEnum input)
-            where TEnum : struct
+            where TEnum : Enum
         {
             var info = GetEnumMembers<TEnum>();
 
