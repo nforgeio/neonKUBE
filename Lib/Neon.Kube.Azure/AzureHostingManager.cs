@@ -30,6 +30,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Azure.Management.Compute.Fluent;
+using Microsoft.Azure.Management.Compute.Fluent.Models;
+using Microsoft.Azure.Management.Fluent;
+using Microsoft.Azure.Management.Network.Fluent;
+using Microsoft.Azure.Management.Network.Fluent.LoadBalancer.Definition;
+using Microsoft.Azure.Management.Network.Fluent.Models;
+using Microsoft.Azure.Management.ResourceManager.Fluent.Authentication;
+
 using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
