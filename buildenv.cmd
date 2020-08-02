@@ -23,13 +23,11 @@ goto done
 
 :goodPath 
 
-pushd "%NF_ROOT%\.."
-set NF_REPOS=%cd%
-popd
-
 REM Set NF_REPOS to the parent directory holding the neonFORGE repositories.
 
-pushd 
+pushd "%NF_ROOT%\.."
+set NF_REPOS=%cd%
+popd 
 
 REM Configure the environment variables.
 
@@ -74,7 +72,7 @@ REM Configure the PATH.
 REM
 REM Note that some tools like PuTTY and 7-Zip may be installed as
 REM x86 or x64 to different directories.  We'll include commands that
-REM attempt to add both locations to the path and the [pathtool] is
+REM attempt to add both locations to the path and [pathtool] is
 REM smart enough to only add directories that actually exist.
 
 %NF_TOOLBIN%\pathtool -dedup -system -add "%NF_BUILD%"

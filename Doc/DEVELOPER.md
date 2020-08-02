@@ -98,14 +98,11 @@ Follow the steps below to configure a development or test workstation:
 13. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
 
     * Create an individual GitHub account [here](https://github.com/join?source=header-home) if you don't already have one
-    * Have one of the neonKUBE repository administrators **grant you access** to the repository
     * Go to [GitHub](http://github.com) and log into your account
     * Go to the neonKUBE [repository](https://github.com/nforgeio/neonKUBE).
-    * Click the *green* **Clone or download** button and select **Open in Visual Studio**
+    * Click the *green* **Code** button and select **Open in Visual Studio**
     * A *Launch Application* dialog will appear.  Select **Microsoft Visual Studio Protocol Handler Selector** and click **Open Link**
     * Choose or enter the directory where the repository will be cloned.  This defaults to a user-specific folder.  I typically change this to a global folder to keep the file paths short.
-    
-      ![Video Studio Clone](Images/DEVELOPER/VisualStudioClone.png?raw=true)
     * Click **Clone**
 
 14. **Close** any running instances of **Visual Studio**
@@ -130,7 +127,7 @@ Follow the steps below to configure a development or test workstation:
     * Open **File Explorer**
     * Navigate to the directory holding the cloned repository
     * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
-    * Close the CMD window when the script is finished
+    * Press ENTER to close the CMD window when the script is finished
   
 20. Install the latest release build of neonKUBE from [here](https://github.com/nforgeio/neonKUBE/releases)
 
