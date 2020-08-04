@@ -62,7 +62,7 @@ namespace Neon.Kube
         {
             switch (storageType)
             {
-                case AzureStorageTypes.StandardHDD_LRS:
+                case AzureStorageTypes.StandardHDD:
 
                     // Azure currently standard HDD sizes: 32GiB, 64GiB, 128GiB, 512GiB, 1TiB, 2TiB, 4TiB, 8TiB, 16TiB or 32TiB.
 
@@ -103,7 +103,7 @@ namespace Neon.Kube
                         return 32628;
                     }
 
-                case AzureStorageTypes.StandardSSD_LRS:
+                case AzureStorageTypes.StandardSSD:
 
                     // Azure currently standard SSD sizes: 128GB, 512GB, 1TB, 2TB, 4TB, 8TB, 16TB or 32TB.
 
@@ -136,7 +136,7 @@ namespace Neon.Kube
                         return 32628;
                     }
 
-                case AzureStorageTypes.PremiumSSD_LRS:
+                case AzureStorageTypes.PremiumSSD:
 
                     // Azure currently premium disks sizes: 32GB, 64GB, 128GB, 512GB, 1TB, 2TB, 4TB, 8TB, 16TB or 32TB.
 

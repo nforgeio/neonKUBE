@@ -43,7 +43,7 @@ namespace Neon.Kube
     public class AzureNodeOptions
     {
         private const AzureVmSizes          defaultVmSize      = AzureVmSizes.Standard_DS3_v2;
-        private const AzureStorageTypes     defaultStorageType = AzureStorageTypes.StandardHDD_LRS;
+        private const AzureStorageTypes     defaultStorageType = AzureStorageTypes.StandardHDD;
 
         /// <summary>
         /// Specifies the Azure virtual machine size.  This defaults to <see cref="AzureVmSizes.Standard_DS3_v2"/>.
@@ -55,7 +55,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Specifies the storage type to use for any mounted drives.  This defaults to <see cref="AzureStorageTypes.StandardHDD_LRS"/>
+        /// Specifies the storage type to use for any mounted drives.  This defaults to <see cref="AzureStorageTypes.StandardHDD"/>
         /// as the lowest cost option.
         /// </para>
         /// <note>
@@ -64,14 +64,14 @@ namespace Neon.Kube
         /// </summary>
         /// <remarks>
         /// <note>
-        /// All virtual machine sizes support <see cref="AzureStorageTypes.StandardHDD_LRS"/> which is why that
+        /// All virtual machine sizes support <see cref="AzureStorageTypes.StandardHDD"/> which is why that
         /// is the default value.  Consult the consult the Azure documentation to virtual machine size specified 
-        /// by <see cref="VmSize"/> can support <see cref="AzureStorageTypes.PremiumSSD_LRS"/>.
+        /// by <see cref="VmSize"/> can support <see cref="AzureStorageTypes.PremiumSSD"/>.
         /// </note>
         /// <para>
-        /// <see cref="AzureStorageTypes.StandardHDD_LRS"/> specifies relatively slow rotating hard drives,
-        /// <see cref="AzureStorageTypes.StandardSSD_LRS"/> specifies standard SSD based drives,
-        /// <see cref="AzureStorageTypes.PremiumSSD_LRS"/> specifies fast SSD based drives.  Azure recommends that
+        /// <see cref="AzureStorageTypes.StandardHDD"/> specifies relatively slow rotating hard drives,
+        /// <see cref="AzureStorageTypes.StandardSSD"/> specifies standard SSD based drives,
+        /// <see cref="AzureStorageTypes.PremiumSSD"/> specifies fast SSD based drives.  Azure recommends that
         /// most production applications deploy with SSDs.
         /// </para>
         /// </remarks>
@@ -115,17 +115,17 @@ namespace Neon.Kube
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Azure <see cref="AzureStorageTypes.StandardHDD_LRS"/> based drives may be provisioned
+        /// Azure <see cref="AzureStorageTypes.StandardHDD"/> based drives may be provisioned
         /// with one of these sizes: <b>32 GiB</b>, <b>64 GiB</b>, <b>128 GiB</b>, <b>256 GiB</b>,
         /// <b>512 GiB</b>, <b>1TiB</b>, <b>2TiB</b>, <b>4TiB</b> or <b>8TiB</b>.
         /// </para>
         /// <para>
-        /// Azure <see cref="AzureStorageTypes.StandardSSD_LRS"/> based drives may be provisioned
+        /// Azure <see cref="AzureStorageTypes.StandardSSD"/> based drives may be provisioned
         /// with one of these sizes: <b>32 GiB</b>, <b>64 GiB</b>, <b>128 GiB</b>, <b>256 GiB</b>,
         /// <b>512 GiB</b>, <b>1TiB</b>, <b>2TiB</b>, <b>4TiB</b>, <b>8TiB</b>, <b>16TiB</b> or <b>32TiB</b>.
         /// </para>
         /// <para>
-        /// Azure <see cref="AzureStorageTypes.PremiumSSD_LRS"/> based drives may be provisioned
+        /// Azure <see cref="AzureStorageTypes.PremiumSSD"/> based drives may be provisioned
         /// with sizes: <b>32GiB</b>, <b>64GiB</b>, <b>128GiB</b>, <b>256GiB</b>, <b>512GiB</b>,
         /// <b>1TiB</b>, <b>2TiB</b>, <b>4TiB</b> or <b>8TiB</b>.
         /// </para>

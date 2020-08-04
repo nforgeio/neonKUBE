@@ -45,6 +45,8 @@
 *.jmconfig
 *.suo
 **/launchSettings.json
+**/.vs/**
+**/.vscode/**
 
 # Nuget Packages
 *.nupkg
@@ -71,9 +73,6 @@ wwwroot/
 ################################################################################
 # Custom rules added for this repository.
 ################################################################################
-
-**/.vs/**
-**/.vscode/**
 
 # Build artifacts: 
 #

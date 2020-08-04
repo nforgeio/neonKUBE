@@ -41,6 +41,11 @@ $nfRoot = "$env:NF_ROOT"
 "ARCHIVE: Removing binaries"
 neon-build clean --all
 
+# Remove the contents of [$/packages].
+
+"ARCHIVE: Removing packages"
+Remove-Item "$nfRoot\packages\*" -Recurse -ErrorAction Ignore
+
 # Remove GOLANG related files that don't need to be archived.
 
 "ARCHIVE: Removing GOLANG files"

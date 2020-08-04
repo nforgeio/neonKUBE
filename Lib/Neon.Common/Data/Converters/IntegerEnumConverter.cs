@@ -95,7 +95,7 @@ namespace Neon.Data
             }
             else if (type == typeof(TEnum))
             {
-                writer.WriteValue(NeonHelper.EnumToString<TEnum>((TEnum)value));
+                writer.WriteValue(Convert.ToInt64(value));
             }
             else
             {

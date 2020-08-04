@@ -56,7 +56,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Standard-A
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A1, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A1, AzureStorageTypes.StandardHDD)
             {
                 IsDeprecated = true,
                 CoreCount = 1,
@@ -68,7 +68,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A2, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A2, AzureStorageTypes.StandardHDD)
             {
                 IsDeprecated = true,
                 CoreCount = 2,
@@ -80,7 +80,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A3, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A3, AzureStorageTypes.StandardHDD)
             {
                 IsDeprecated = true,
                 CoreCount = 4,
@@ -92,7 +92,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A4, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A4, AzureStorageTypes.StandardHDD)
             {
                 IsDeprecated = true,
                 CoreCount = 8,
@@ -104,7 +104,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A5, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A5, AzureStorageTypes.StandardHDD)
             {
                 IsDeprecated = true,
                 CoreCount = 1,
@@ -116,7 +116,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A6, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A6, AzureStorageTypes.StandardHDD)
             {
                 IsDeprecated = true,
                 CoreCount = 4,
@@ -128,7 +128,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A7, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A7, AzureStorageTypes.StandardHDD)
             {
                 IsDeprecated = true,
                 CoreCount = 8,
@@ -143,7 +143,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Standard-A-V2
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A1_v2, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A1_v2, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 1,
                 RamMiB = 2000,
@@ -155,7 +155,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A2_v2, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A2_v2, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 2,
                 RamMiB = 4000,
@@ -167,7 +167,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A4_v2, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A4_v2, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 1,
                 RamMiB = 8000,
@@ -179,7 +179,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A8_v2, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A8_v2, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 8,
                 RamMiB = 16000,
@@ -191,7 +191,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A2M_v2, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A2M_v2, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 2,
                 RamMiB = 16000,
@@ -203,7 +203,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A4M_v2, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A4M_v2, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 4,
                 RamMiB = 32000,
@@ -215,7 +215,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A8M_v2, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_A8M_v2, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 81,
                 RamMiB = 64000,
@@ -230,7 +230,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Standard-B
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_B1S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_B1S, AzureStorageTypes.StandardHDD, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 1,
                 RamMiB = 1000,
@@ -242,7 +242,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_B1MS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_B1MS, AzureStorageTypes.StandardHDD, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 1,
                 RamMiB = 2000,
@@ -254,7 +254,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_B2S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_B2S, AzureStorageTypes.StandardHDD, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 2,
                 RamMiB = 4000,
@@ -266,7 +266,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_B2MS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_B2MS, AzureStorageTypes.StandardHDD, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 2,
                 RamMiB = 8000,
@@ -278,7 +278,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_B4MS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_B4MS, AzureStorageTypes.StandardHDD, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 4,
                 RamMiB = 16000,
@@ -290,7 +290,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_B8MS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_B8MS, AzureStorageTypes.StandardHDD, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 8,
                 RamMiB = 32000,
@@ -303,7 +303,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Standard-DC
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DC2S, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DC2S, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 2,
                 RamMiB = 8000,
@@ -315,7 +315,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DC4S, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DC4S, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 4,
                 RamMiB = 16000,
@@ -330,7 +330,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Standard-D-V2
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D1_v2, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D1_v2, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 1,
                 RamMiB = 3500,
@@ -342,7 +342,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D2_v2, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D2_v2, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 2,
                 RamMiB = 7000,
@@ -354,7 +354,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D3_v2, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D3_v2, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 4,
                 RamMiB = 14000,
@@ -366,7 +366,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D4_v2, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D4_v2, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 8,
                 RamMiB = 28000,
@@ -378,7 +378,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D5_v2, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D5_v2, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 16,
                 RamMiB = 56000,
@@ -390,7 +390,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D11_v2, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D11_v2, AzureStorageTypes.StandardHDD)
             {
                 IsDeprecated = true,
                 CoreCount = 2,
@@ -403,7 +403,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D12_v2, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D12_v2, AzureStorageTypes.StandardHDD)
             {
                 IsDeprecated = true,
                 CoreCount = 4,
@@ -416,7 +416,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D13_v2, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D13_v2, AzureStorageTypes.StandardHDD)
             {
                 IsDeprecated = true,
                 CoreCount = 8,
@@ -429,7 +429,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D14_v2, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D14_v2, AzureStorageTypes.StandardHDD)
             {
                 IsDeprecated = true,
                 CoreCount = 16,
@@ -442,7 +442,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D15_v2, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D15_v2, AzureStorageTypes.StandardHDD)
             {
                 IsDeprecated = true,
                 CoreCount = 20,
@@ -458,7 +458,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Standard-DS-V2
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS1_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS1_v2, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 1,
                 RamMiB = 3500,
@@ -470,7 +470,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS2_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS2_v2, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 2,
                 RamMiB = 7000,
@@ -482,7 +482,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS3_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS3_v2, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 4,
                 RamMiB = 14000,
@@ -494,7 +494,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS4_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS4_v2, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 8,
                 RamMiB = 28000,
@@ -506,7 +506,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS5_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS5_v2, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 16,
                 RamMiB = 56000,
@@ -518,7 +518,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS11_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS11_v2, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 IsDeprecated = true,
                 CoreCount = 2,
@@ -531,7 +531,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS12_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS12_v2, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 IsDeprecated = true,
                 CoreCount = 4,
@@ -544,7 +544,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS13_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS13_v2, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 IsDeprecated = true,
                 CoreCount = 8,
@@ -557,7 +557,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS14_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS14_v2, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 IsDeprecated = true,
                 CoreCount = 16,
@@ -570,7 +570,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS15_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_DS15_v2, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 IsDeprecated = true,
                 CoreCount = 20,
@@ -586,7 +586,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Standard-DS-V3
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D2S_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D2S_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 2,
                 RamMiB = 8000,
@@ -598,7 +598,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D4S_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D4S_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 4,
                 RamMiB = 16000,
@@ -610,7 +610,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D8s_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D8s_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 8,
                 RamMiB = 32000,
@@ -622,7 +622,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D16S_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D16S_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 16,
                 RamMiB = 64000,
@@ -634,7 +634,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D32S_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D32S_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 32,
                 RamMiB = 128000,
@@ -646,7 +646,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D64S_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_D64S_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 64,
                 RamMiB = 512000,
@@ -661,7 +661,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Standard-F
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F1, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F1, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 1,
                 RamMiB = 2000,
@@ -673,7 +673,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F2, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F2, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 2,
                 RamMiB = 4000,
@@ -685,7 +685,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F4, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F4, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 4,
                 RamMiB = 8000,
@@ -697,7 +697,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F8, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F8, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 8,
                 RamMiB = 16000,
@@ -709,7 +709,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F16, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F16, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 16,
                 RamMiB = 32000,
@@ -724,7 +724,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Standard-FS
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F1S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F1S, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 1,
                 RamMiB = 2000,
@@ -736,7 +736,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F2S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F2S, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 2,
                 RamMiB = 4000,
@@ -748,7 +748,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F4S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F4S, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 4,
                 RamMiB = 8000,
@@ -760,7 +760,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F8S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F8S, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 8,
                 RamMiB = 16000,
@@ -772,7 +772,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F16S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F16S, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 16,
                 RamMiB = 32000,
@@ -787,7 +787,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Standard-E-V3
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E2_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E2_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 2,
                 RamMiB = 16,
@@ -799,7 +799,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E4_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E4_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 4,
                 RamMiB = 32,
@@ -811,7 +811,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E8_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E8_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 8,
                 RamMiB = 64,
@@ -823,7 +823,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E16_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E16_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 16,
                 RamMiB = 128,
@@ -835,7 +835,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E20_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E20_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 20,
                 RamMiB = 160,
@@ -847,7 +847,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E32_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E32_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 32,
                 RamMiB = 256,
@@ -859,7 +859,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E64_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E64_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 64,
                 RamMiB = 432,
@@ -871,7 +871,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E64I_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_E64I_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 64,
                 RamMiB = 432,
@@ -886,7 +886,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Standard-ES-V3
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES2_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES2_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 2,
                 RamMiB = 16,
@@ -898,7 +898,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES4_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES4_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 4,
                 RamMiB = 32,
@@ -910,7 +910,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES8_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES8_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 8,
                 RamMiB = 64,
@@ -922,7 +922,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES16_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES16_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 16,
                 RamMiB = 128,
@@ -934,7 +934,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES20_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES20_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 20,
                 RamMiB = 160,
@@ -946,7 +946,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES32_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES32_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 32,
                 RamMiB = 256,
@@ -958,7 +958,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES64_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES64_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 64,
                 RamMiB = 432,
@@ -970,7 +970,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES64I_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ES64I_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 64,
                 RamMiB = 432,
@@ -985,7 +985,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Standard-FS-V2
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F2S_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F2S_v2, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 2,
                 RamMiB = 4000,
@@ -997,7 +997,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F4S_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F4S_v2, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 4,
                 RamMiB = 8000,
@@ -1009,7 +1009,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F8S_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F8S_v2, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 8,
                 RamMiB = 16000,
@@ -1021,7 +1021,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F16S_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F16S_v2, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 16,
                 RamMiB = 32,
@@ -1033,7 +1033,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F32S_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F32S_v2, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 32,
                 RamMiB = 64,
@@ -1045,7 +1045,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F64S_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F64S_v2, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 64,
                 RamMiB = 128,
@@ -1057,7 +1057,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F72S_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_F72S_v2, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 72,
                 RamMiB = 144,
@@ -1072,7 +1072,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Standard-G
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_G1, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_G1, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 2,
                 RamMiB = 28000,
@@ -1084,7 +1084,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_G2, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_G2, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 4,
                 RamMiB = 56000,
@@ -1096,7 +1096,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_G3, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_G3, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 8,
                 RamMiB = 112000,
@@ -1108,7 +1108,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_G4, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_G4, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 16,
                 RamMiB = 224000,
@@ -1120,7 +1120,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_G5, AzureStorageTypes.StandardHDD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_G5, AzureStorageTypes.StandardHDD)
             {
                 CoreCount = 32,
                 RamMiB = 448000,
@@ -1135,7 +1135,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Standard-GS
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_GS1, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_GS1, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 2,
                 RamMiB = 28000,
@@ -1147,7 +1147,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_GS2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_GS2, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 4,
                 RamMiB = 56000,
@@ -1159,7 +1159,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_GS3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_GS3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 8,
                 RamMiB = 112000,
@@ -1171,7 +1171,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_GS4, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_GS4, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 16,
                 RamMiB = 224000,
@@ -1183,7 +1183,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_GS5, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_GS5, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 32,
                 RamMiB = 448000,
@@ -1198,7 +1198,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Standard-LS-V2
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_L4S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_L4S, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 4,
                 RamMiB = 32,
@@ -1210,7 +1210,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_L8S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_L8S, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 8,
                 RamMiB = 64,
@@ -1222,7 +1222,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_L16S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_L16S, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 16,
                 RamMiB = 128,
@@ -1234,7 +1234,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_L32S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_L32S, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 32,
                 RamMiB = 256,
@@ -1249,7 +1249,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Standard-H
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_H8, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_H8, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 8,
                 RamMiB = 56,
@@ -1261,7 +1261,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_H8M, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_H8M, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 8,
                 RamMiB = 112,
@@ -1273,7 +1273,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_H16, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_H16, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 16,
                 RamMiB = 112,
@@ -1285,7 +1285,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_H16M, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_H16M, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 16,
                 RamMiB = 224,
@@ -1297,7 +1297,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_H16MR, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_H16MR, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 16,
                 RamMiB = 224,
@@ -1309,7 +1309,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_H16R, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_H16R, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 16,
                 RamMiB = 112,
@@ -1324,7 +1324,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Standard-M
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M8MS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M8MS, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 8,
                 RamMiB = 218750,
@@ -1336,7 +1336,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M16MS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M16MS, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 16,
                 RamMiB = 437500,
@@ -1348,7 +1348,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M32TS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M32TS, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 32,
                 RamMiB = 192000,
@@ -1360,7 +1360,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M32LS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M32LS, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 64,
                 RamMiB = 256000,
@@ -1372,7 +1372,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M32MS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M32MS, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 64,
                 RamMiB = 875000,
@@ -1384,7 +1384,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M64, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M64, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 64,
                 RamMiB = 1024000,
@@ -1396,7 +1396,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M64MS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M64MS, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 64,
                 RamMiB = 1792000,
@@ -1408,7 +1408,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M64M, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M64M, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 64,
                 RamMiB = 1792000,
@@ -1420,7 +1420,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M64S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M64S, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 64,
                 RamMiB = 1024000,
@@ -1432,7 +1432,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M64LS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M64LS, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 64,
                 RamMiB = 512000,
@@ -1444,7 +1444,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M128, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M128, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 128,
                 RamMiB = 2048000,
@@ -1456,7 +1456,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M128M, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M128M, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 128,
                 RamMiB = 3892000,
@@ -1468,7 +1468,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M128MS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M128MS, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 128,
                 RamMiB = 3892000,
@@ -1480,7 +1480,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M128S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_M128S, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 128,
                 RamMiB = 2048,
@@ -1495,7 +1495,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Standard-NC
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC6, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC6, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 6,
                 RamMiB = 56,
@@ -1509,7 +1509,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC12, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC12, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 12,
                 RamMiB = 112,
@@ -1523,7 +1523,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC24, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC24, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 24,
                 RamMiB = 224,
@@ -1537,7 +1537,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC24R, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC24R, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 24,
                 RamMiB = 224,
@@ -1554,7 +1554,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Standard-NC-V2
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC6S_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC6S_v2, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 6,
                 RamMiB = 112,
@@ -1568,7 +1568,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC12S_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC12S_v2, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 12,
                 RamMiB = 224,
@@ -1582,7 +1582,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC24S_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC24S_v2, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 24,
                 RamMiB = 448,
@@ -1596,7 +1596,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC24RS_v2, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC24RS_v2, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 24,
                 RamMiB = 448,
@@ -1613,7 +1613,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Standard-NC-V3
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC6S_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC6S_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 6,
                 RamMiB = 112,
@@ -1627,7 +1627,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC12S_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC12S_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 12,
                 RamMiB = 224,
@@ -1641,7 +1641,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC24S_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC24S_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 24,
                 RamMiB = 448,
@@ -1655,7 +1655,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC24RS_v3, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NC24RS_v3, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 24,
                 RamMiB = 448,
@@ -1672,7 +1672,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Standard-ND
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ND6S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ND6S, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 6,
                 RamMiB = 112,
@@ -1686,7 +1686,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ND12S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ND12S, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 12,
                 RamMiB = 224,
@@ -1700,7 +1700,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ND24S, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ND24S, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 24,
                 RamMiB = 448,
@@ -1714,7 +1714,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ND24RS, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_ND24RS, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 24,
                 RamMiB = 448,
@@ -1731,7 +1731,7 @@ namespace Neon.Kube
             //-----------------------------------------------------------------
             // Standard-NV
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NV6, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NV6, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 6,
                 RamMiB = 56,
@@ -1745,7 +1745,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NV12, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NV12, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 12,
                 RamMiB = 112,
@@ -1759,7 +1759,7 @@ namespace Neon.Kube
 
             vmSizeToCapabilities.Add(caps.VmSize, caps);
 
-            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NV24, AzureStorageTypes.StandardHDD_LRS, AzureStorageTypes.PremiumSSD_LRS)
+            caps = new AzureVmCapabilities(AzureVmSizes.Standard_NV24, AzureStorageTypes.StandardHDD, AzureStorageTypes.PremiumSSD)
             {
                 CoreCount = 24,
                 RamMiB = 224,
@@ -1872,9 +1872,9 @@ namespace Neon.Kube
             // Note that all Azure VMs can support standard SSDs so we'll
             // add that here if it's not already specified.
 
-            if (!this.SupportedDataStorageTypes.Contains(AzureStorageTypes.StandardSSD_LRS))
+            if (!this.SupportedDataStorageTypes.Contains(AzureStorageTypes.StandardSSD))
             {
-                this.SupportedDataStorageTypes.Add(AzureStorageTypes.StandardSSD_LRS);
+                this.SupportedDataStorageTypes.Add(AzureStorageTypes.StandardSSD);
             }
         }
 
