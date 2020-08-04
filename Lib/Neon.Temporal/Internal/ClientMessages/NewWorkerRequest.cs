@@ -52,6 +52,31 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
+        /// Optionally specifies the Temporal namespace for the worker.  This defaults to
+        /// <see cref="TemporalSettings.Namespace"/>.
+        /// </summary>
+        public string Namespace 
+        {
+            get => GetStringProperty(PropertyNames.Namespace);
+            set => SetStringProperty(PropertyNames.Namespace, value); 
+        }
+
+        /// <summary>
+        /// <para>
+        /// Optionally specifies the Temporal task list for the worker.  This defaults to
+        /// <see cref="TemporalSettings.DefaultTaskList"/>.
+        /// </para>
+        /// <note>
+        /// You must ensure that this is not <c>null</c> or empty.
+        /// </note>
+        /// </summary>
+        public string TaskList 
+        {
+            get => GetStringProperty(PropertyNames.TaskList);
+            set => SetStringProperty(PropertyNames.TaskList, value); 
+        }
+
+        /// <summary>
         /// The worker options.
         /// </summary>
         public WorkerOptions Options
@@ -77,8 +102,10 @@ namespace Neon.Temporal.Internal
 
             var typedTarget = (NewWorkerRequest)target;
 
-            typedTarget.Name    = this.Name;
-            typedTarget.Options = this.Options;
+            typedTarget.Name      = this.Name;
+            typedTarget.Namespace = this.Namespace;
+            typedTarget.TaskList  = this.TaskList;
+            typedTarget.Options   = this.Options;
         }
     }
 }

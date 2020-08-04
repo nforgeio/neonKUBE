@@ -183,9 +183,9 @@ namespace Neon.Temporal
         internal bool DisableStickyExecution { get; set; }
 
         /// <summary>
-        /// Optionally sets the sticky schedule to start timeout.  Defaults to <b>5 seconds</b>.
+        /// Optionally sets the sticky schedule to start timeout.  Defaults to <b>5 seconds (represented in Nanoseconds)</b>.
         /// </summary>
-        public TimeSpan StickyScheduleToStartTimeout { get; set; } = TimeSpan.FromSeconds(5);
+        public long StickyScheduleToStartTimeout { get; set; } = 5000000000;
 
         /// <summary>
         /// Optionally sets how decision workers deals with non-deterministic history events,
@@ -196,8 +196,8 @@ namespace Neon.Temporal
         public NonDeterministicPolicy NonDeterministicWorkflowPolicy { get; set; } = NonDeterministicPolicy.BlockWorkflow;
 
         /// <summary>
-        /// Optionally sets the graceful shutdown timeout.  Defaults to <see cref="TimeSpan.Zero"/>.
+        /// Optionally sets the graceful shutdown timeout.  Defaults to zero.  Time is represented in nanoseconds.
         /// </summary>
-        public TimeSpan WorkerStopTimeout { get; set; } = TimeSpan.Zero;
+        public long WorkerStopTimeout { get; set; } = 0;
     }
 }
