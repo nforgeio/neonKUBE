@@ -24,6 +24,7 @@ using System.Reflection;
 using Newtonsoft.Json;
 
 using Neon.Common;
+using Neon.Data;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
 
@@ -249,6 +250,7 @@ namespace Neon.Temporal
         /// the workflow entry point method or <see cref="TemporalSettings.WorkflowIdReusePolicy"/>
         /// (which also defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicate"/>.
         /// </summary>
+        [JsonConverter(typeof(IntegerEnumConverter<WorkflowIdReusePolicy>))]
         public WorkflowIdReusePolicy WorkflowIdReusePolicy { get; set; } = Temporal.WorkflowIdReusePolicy.UseDefault;
         
         /// <summary>
