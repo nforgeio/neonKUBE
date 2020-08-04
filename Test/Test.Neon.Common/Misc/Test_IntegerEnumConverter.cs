@@ -133,7 +133,7 @@ namespace TestCommon
 
             var json = sb.ToString();
 
-            Assert.Equal("{\"Value\":\"Two\"}", json);
+            Assert.Equal("{\"Value\":2}", json);
         }
 
         private JsonReader CreateReader(string json)
