@@ -26,6 +26,8 @@ using Neon.Retry;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
 
+using Newtonsoft.Json;
+
 namespace Neon.Temporal
 {
     /// <summary>
@@ -83,6 +85,7 @@ namespace Neon.Temporal
         /// Specifies the backoff interval for the first retry.  If coefficient is 1.0 then
         /// it is used for all retries.  Required, no default value.
         /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
         public TimeSpan InitialInterval { get; set; }
 
         /// <summary>
@@ -98,12 +101,14 @@ namespace Neon.Temporal
         /// interval reaches or exceeds <see cref="MaximumInterval"/>, at which point point each
         /// retry will use <see cref="MaximumInterval"/> for all subsequent attempts.
         /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
         public TimeSpan MaximumInterval { get; set; }
 
         /// <summary>
         /// Maximum time to retry.  Either <see cref="ExpirationInterval"/> or <see cref="MaximumAttempts"/> is 
         /// required.  Retries will stop when this is exceeded even if maximum retries is not been reached.
         /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
         public TimeSpan ExpirationInterval { get; set; }
 
         /// <summary>
