@@ -91,13 +91,13 @@ func (request *NewWorkerRequest) SetTaskList(value *string) {
 // returns *worker.WorkerOptions -> pointer to a temporal worker struct that contains the
 // options for creating a new worker
 func (request *NewWorkerRequest) GetOptions() *worker.Options {
-	opts := new(worker.Options)
-	err := request.GetJSONProperty("Options", opts)
+	var opts worker.Options
+	err := request.GetJSONProperty("Options", &opts)
 	if err != nil {
 		return nil
 	}
 
-	return opts
+	return &opts
 }
 
 // SetOptions sets a NewWorkerRequest's start options

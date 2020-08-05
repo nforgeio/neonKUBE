@@ -21,7 +21,7 @@ import (
 	"time"
 
 	internal "temporal-proxy/internal"
-	dotnetlogger "temporal-proxy/internal/dotnet-logger"
+	dotnetlogger "temporal-proxy/internal/dotnet/logger"
 )
 
 type (

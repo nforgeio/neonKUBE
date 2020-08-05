@@ -49,7 +49,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"temporal-proxy/internal"
-	dotnetlogger "temporal-proxy/internal/dotnet-logger"
+	dotnetlogger "temporal-proxy/internal/dotnet/logger"
 	"temporal-proxy/internal/endpoints"
 	"temporal-proxy/internal/messages"
 	"temporal-proxy/internal/server"

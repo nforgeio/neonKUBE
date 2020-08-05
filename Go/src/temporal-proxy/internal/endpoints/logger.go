@@ -26,7 +26,7 @@ import (
 	"go.uber.org/zap/zapcore"
 
 	"temporal-proxy/internal"
-	dotnetlogger "temporal-proxy/internal/dotnet-logger"
+	dotnetlogger "temporal-proxy/internal/dotnet/logger"
 	"temporal-proxy/internal/messages"
 )
 
