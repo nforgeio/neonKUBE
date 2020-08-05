@@ -322,7 +322,7 @@ namespace Neon.Time
         /// <exception cref="ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="GoTimeSpan"/>.</exception>
         public static GoTimeSpan FromMicroseconds(double milliseconds)
         {
-            return new GoTimeSpan(ToTicks(milliseconds * TicksPerMicrosecond));
+            return new GoTimeSpan(ToTicks((decimal) milliseconds * TicksPerMicrosecond));
         }
 
         /// <summary>
@@ -333,7 +333,7 @@ namespace Neon.Time
         /// <exception cref="ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="GoTimeSpan"/>.</exception>
         public static GoTimeSpan FromMilliseconds(double milliseconds)
         {
-            return new GoTimeSpan(ToTicks(milliseconds * TicksPerMillisecond));
+            return new GoTimeSpan(ToTicks((decimal) milliseconds * TicksPerMillisecond));
         }
 
         /// <summary>
@@ -344,7 +344,7 @@ namespace Neon.Time
         /// <exception cref="ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="GoTimeSpan"/>.</exception>
         public static GoTimeSpan FromSeconds(double seconds)
         {
-            return new GoTimeSpan(ToTicks(seconds * TicksPerSecond));
+            return new GoTimeSpan(ToTicks((decimal) seconds * TicksPerSecond));
         }
 
         /// <summary>
@@ -355,7 +355,7 @@ namespace Neon.Time
         /// <exception cref="ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="GoTimeSpan"/>.</exception>
         public static GoTimeSpan FromMinutes(double minutes)
         {
-            return new GoTimeSpan(ToTicks(minutes * TicksPerMinute));
+            return new GoTimeSpan(ToTicks((decimal) minutes * TicksPerMinute));
         }
 
         /// <summary>
@@ -366,7 +366,7 @@ namespace Neon.Time
         /// <exception cref="ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="GoTimeSpan"/>.</exception>
         public static GoTimeSpan FromHours(double hours)
         {
-            return new GoTimeSpan(ToTicks(hours * TicksPerHour));
+            return new GoTimeSpan(ToTicks((decimal) hours * TicksPerHour));
         }
 
         /// <summary>
@@ -376,7 +376,7 @@ namespace Neon.Time
         /// <param name="nanoseconds">The input <c>douuble</c>.</param>
         /// <returns>The output <c>long</c>.</returns>
         /// <exception cref="ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="GoTimeSpan"/>.</exception>
-        private static long ToTicks(double nanoseconds)
+        private static long ToTicks(decimal nanoseconds)
         {
             if (long.MinValue <= nanoseconds && nanoseconds <= long.MaxValue)
             {
@@ -405,7 +405,7 @@ namespace Neon.Time
         /// <exception cref="ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="GoTimeSpan"/>.</exception>
         public GoTimeSpan(TimeSpan timespan)
         {
-            this.Ticks = ToTicks(timespan.Ticks * 100.0);
+            this.Ticks = ToTicks(timespan.Ticks * 100.0m);
         }
 
         /// <summary>
