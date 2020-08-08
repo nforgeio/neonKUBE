@@ -65,24 +65,24 @@ namespace Neon.Kube
         public string TenantId { get; set; }
 
         /// <summary>
-        /// Application ID generated when creating the neon tool's Azure service principal. 
+        /// Application ID for the application created to manage Azure access to neonKUBE provisioning and management tools.. 
         /// </summary>
-        [JsonProperty(PropertyName = "ApplicationId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "applicationId", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "AppId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "appId", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string ApplicationId { get; set; }
+        public string AppId { get; set; }
 
         /// <summary>
         /// Password generated when creating the neon tool's Azure service principal.
         /// </summary>
-        [JsonProperty(PropertyName = "Password", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "password", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "AppPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "appPassword", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string Password { get; set; }
+        public string AppPassword { get; set; }
 
         /// <summary>
-        /// Azure resource group where all clusterv components are to be provisioned.  This defaults
-        /// to the clusterv name but can be customized as required.
+        /// Azure resource group where all cluster components are to be provisioned.  This defaults
+        /// to "neon-" plus the cluster name but can be customized as required.
         /// </summary>
         [JsonProperty(PropertyName = "ResourceGroup", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "resourceGroup", ApplyNamingConventions = false)]
@@ -143,58 +143,10 @@ namespace Neon.Kube
         /// referenced via a DNS CNAME record and the address may change from time-to-time.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "StaticClusterAddress", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "staticClusterAddress", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "StaticAddress", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "staticAddress", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool StaticClusterAddress { get; set; } = false;
-
-        /// <summary>
-        /// <note>
-        /// <b>IMPORTANT:</b> assigning public IP addresses to cluster nodes is not currently
-        /// implemented.
-        /// </note>
-        /// <para>
-        /// Specifies whether the cluster nodes should be provisioned with public IP addresses
-        /// in addition to the cluster wide public IP addresses assigned to the traffic manager.
-        /// This defaults to <c>false</c>.
-        /// </para>
-        /// <note>
-        /// You will incur additional recuring costs for each public IP address.
-        /// </note>
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// There are two main reasons for enabling this.
-        /// </para>
-        /// <list type="number">
-        /// <item>
-        /// Outbound SNAT port exhaustion: This can occur when cluster nodes behind a load
-        /// balancer have a high rate of outbound requests to the Internet.  The essential
-        /// issue is that the traffic manager can NAT a maximum of 64K outbound connections
-        /// for the entire cluster.  This is described in detail 
-        /// <a href="https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-outbound-connections#load-balanced-vm-with-no-instance-level-public-ip-address">here</a>.
-        /// Assigning a public IP address to each node removes this cluster level restriction
-        /// such that each node can have up to 64K outbound connections.
-        /// </item>
-        /// <item>
-        /// Occasionally, it's important to be able to reach specific cluster nodes directly
-        /// from the Internet.
-        /// </item>
-        /// </list>
-        /// <para>
-        /// Enabling this directs the <b>neon-cli</b> to create a dynamic instance level IP
-        /// address for each cluster node and add a public network interface to each cluster 
-        /// virtual machine.
-        /// </para>
-        /// <note>
-        /// The public network interface will be protected by a public security group that
-        /// denies all inbound traffic and allows all outbound traffic by default.
-        /// </note>
-        /// </remarks>
-        [JsonProperty(PropertyName = "PublicNodeAddresses", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "publicNodeAddresses", ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public bool PublicNodeAddresses { get; set; } = false;
+        public bool StaticAddress { get; set; } = false;
 
         /// <summary>
         /// Specifies the target Azure environment.  This defaults to the 
@@ -207,34 +159,65 @@ namespace Neon.Kube
         public AzureCloudEnvironment Environment { get; set; } = null;
 
         /// <summary>
+        /// <para>
         /// Specifies the number of Azure fault domains the cluster nodes should be
-        /// distributed across.  This defaults to <b>2</b> which should not be increased
+        /// distributed across.  This defaults to <b>3</b> which should not be increased
         /// without making sure that your subscription supports the increase (most won't).
+        /// </para>
+        /// <note>
+        /// It is not possible to assign nodes to specific fault domains but neonKUBE provisions
+        /// manager and worker nodes in separate Azure availability zones.  This means that clusters
+        /// with up to 5 manager nodes will have their managers distributed across fault domains 
+        /// such that a quorum will always be present for any single fault domain failure.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "FaultDomains", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "faultDomains", ApplyNamingConventions = false)]
-        [DefaultValue(2)]
-        public int FaultDomains { get; set; } = 2;
+        [DefaultValue(3)]
+        public int FaultDomains { get; set; } = 3;
 
         /// <summary>
         /// <para>
         /// Specifies the number of Azure update domains the cluster nodes will 
-        /// distributed across.  This defaults to <b>5</b>  You may customize this
+        /// distributed across.  This defaults to <b>20</b>  You may customize this
         /// with a value in the range of <b>2</b>...<b>20</b>.
         /// </para>
+        /// <para>
+        /// Azure automatically distributes VMs across the specified number of update
+        /// domains and when it's necessary to perform planned maintenance on the underlying
+        /// hardware or to relocate a VM to another host, Azure gaurantees that it will
+        /// reboot hosts in only one update domain at a time and then wait 30 minutes between
+        /// update domains to give the application a chance to stablize.
+        /// </para>
+        /// <para>
+        /// A value of <b>2</b> indicates that one half of the cluster servers may be rebooted
+        /// at the same time during an update domain upgrade.  A value of <b>20</b> indicates 
+        /// that one twentieth of your VMs may be rebooted at a time.
+        /// </para>
         /// <note>
-        /// Larger clusters should increase this value to avoid losing significant capacity
-        /// as Azure updates its underlying infrastructure in an update domain requiring
-        /// VM shutdown and restarts.  A value of <b>2</b> indicates that one half of the
-        /// cluster servers may be restarted during an update domain upgrade.  A value
-        /// of <b>20</b> indicates that one twentieth of your VMs may be recycled at a
-        /// time.
+        /// <para>
+        /// There's no way to specifically assign cluster nodes to specific update domains
+        /// in Azure.  This would have been nice for a cluster hosting replicated database
+        /// nodes where we'd like to assign replica nodes to different update domains such
+        /// that all data would still be available while an update domain was being rebooted.
+        /// </para>
+        /// <para>
+        /// I imagine Azure doesn't allow this due to the difficuilty of ensuring these
+        /// constraints across a very large number of customer deployments.  Azure also
+        /// mentions that the disruption of a VM for planned maintenance can be slight
+        /// because VMs can be relocated from one host to another while still running.
+        /// </para>
+        /// </note>
+        /// <note>
+        /// neonKUBE deploys manager and worker nodes in separate Azure availability zones.
+        /// This means that there will always be a quorum of managers available as any one
+        /// update zone is rebooted.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "UpdateDomains", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "updateDomains", ApplyNamingConventions = false)]
-        [DefaultValue(5)]
-        public int UpdateDomains { get; set; } = 5;
+        [DefaultValue(20)]
+        public int UpdateDomains { get; set; } = 20;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -267,14 +250,14 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"Azure hosting [{nameof(TenantId)}] property cannot be empty.");
             }
 
-            if (string.IsNullOrEmpty(ApplicationId))
+            if (string.IsNullOrEmpty(AppId))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(ApplicationId)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(AppId)}] property cannot be empty.");
             }
 
-            if (string.IsNullOrEmpty(Password))
+            if (string.IsNullOrEmpty(AppPassword))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(Password)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(AppPassword)}] property cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(Region))
