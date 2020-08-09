@@ -73,8 +73,20 @@ namespace Neon.Kube
         //      * VMs & Drives
         //      * Load balancer with public IP
         //
-        // In the future, we'll relax the public load balancer requirement so
+        // In the future, we may relax the public load balancer requirement so
         // that virtual air-gapped clusters can be supported (more on that below).
+        //
+        // Nodes will be deployed in two Azure availability sets, one set for the
+        // masters and the other one for the workers.  We're doing this to ensure
+        // that there will always be a quorum of masters available during planned
+        // Azure maintenance.
+        //
+        // By default, we're also going to create an Azure proximity placement group
+        // for the cluster and then add both the master and worker availability sets
+        // to the proximity group.  This ensures the shortest possible network latency
+        // between all of the cluster nodes but with the increased chance that Azure
+        // won't be able to satisfy the deployment constraints.  The user can disable
+        // this placement groups via [AzureOptions.DisableProximityPlacement].
         //
         // The VNET will be configured using the cluster definitions's [NetworkOptions]
         // and the node IP addresses will be automatically assigned by default
@@ -86,6 +98,14 @@ namespace Neon.Kube
         // presence of a [neonkube.io/node.ingress=true] label which can be
         // set explicitly for each node or assigned via a [NetworkOptions.IngressNodeSelector]
         // label selector.  neonKUBE will use reasonable defaults when necessary.
+        //
+        // Azure load balancers will be configured with two security rules:
+        // [public] and [private].  By default, these rules will allow traffic
+        // from any IP address with the [public] rule being applied to all
+        // of the ingress routes and the [private] rules being applied to
+        // temporary node-specific SSH rules used for cluster setup and maintainence.
+        // You may wish to constrain these to specific IP addresses or subnets
+        // for better security.
         //
         // VMs are currently based on the Ubuntu-20.04 Server image provided by 
         // published to the marketplace by Canonical.  They publish Gen1 and Gen2
@@ -102,7 +122,7 @@ namespace Neon.Kube
         // setup on that image, so we'll continue supporting the raw Canonical
         // images.
         //
-        // We're also going to be supporting two different was of managing the
+        // We're also going to be supporting two different ways of managing the
         // cluster deployment process.  The first approach will be to continue
         // controlling the process from a client application: [neon-cli] or
         // neonDESKTOP using SSH to connect to the nodes via temporary NAT
@@ -159,6 +179,102 @@ namespace Neon.Kube
         // support this for all clouds.
 
         //---------------------------------------------------------------------
+        // Private types
+
+        /// <summary>
+        /// Relates hive node information with Azure VM information.
+        /// </summary>
+        private class AzureNode
+        {
+            private AzureHostingManager hostingManager;
+
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="node">The associated node proxy.</param>
+            /// <param name="hostingManager">The parent hosting manager.</param>
+            public AzureNode(SshProxy<NodeDefinition> node, AzureHostingManager hostingManager)
+            {
+                Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
+
+                this.Node           = node;
+                this.hostingManager = hostingManager;
+            }
+
+            /// <summary>
+            /// Returns the associated node proxy.
+            /// </summary>
+            public SshProxy<NodeDefinition> Node { get; private set; }
+
+            /// <summary>
+            /// Returns the node name.
+            /// </summary>
+            public string Name => hostingManager.namePrefix + Node.Name;
+
+            /// <summary>
+            /// The associated Azure VM.
+            /// </summary>
+            public IVirtualMachine Vm { get; set; }
+
+            /// <summary>
+            /// The node's network interface within the <b>nodes</b> subnet.
+            /// </summary>
+            public INetworkInterface NodesNic { get; set; }
+
+            /// <summary>
+            /// The node's network interface within the <b>vpn</b> subnet (managers only).
+            /// </summary>
+            public INetworkInterface VpnNic { get; set; }
+
+            /// <summary>
+            /// The node's Azure public IP address or FQDN (or <c>null</c>).
+            /// </summary>
+            public IPublicIPAddress PublicAddress { get; set; }
+
+            /// <summary>
+            /// The public FQDN or IP address (as a string) to be used to connect to the
+            /// node via SSH while provisioning the hive.  This will be set to the
+            /// FQDN of <see cref="PublicAddress"/> if the hive nodes are being
+            /// provisioned with addresses or else the FQDN address of the hive 
+            /// manager or worker/pet load balancer.
+            /// </summary>
+            public string PublicSshAddress { get; set; }
+
+            /// <summary>
+            /// The SSH port to be used to connect to the node via SSH while provisioning
+            /// the hive.  This will be the standard <see cref="NetworkPorts.SSH"/> if the 
+            /// hive nodes are being provisioned with addresses or else a temporary NAT port
+            /// configured on the appropriate load balancer.
+            /// </summary>
+            public int PublicSshPort { get; set; } = NetworkPorts.SSH;
+
+            /// <summary>
+            /// Returns the Azure name for the temporary NAT rule mapping a 
+            /// frontend load balancer port to the SSH port for this node.
+            /// </summary>
+            public string SshNatRuleName
+            {
+                get { return $"neon-ssh-tcp-{Node.Name}"; }
+            }
+
+            /// <summary>
+            /// Returns <c>true</c> if the node is a manager.
+            /// </summary>
+            public bool IsManager
+            {
+                get { return Node.Metadata.Role == NodeRole.Master; }
+            }
+
+            /// <summary>
+            /// Returns <c>true</c> if the node is a worker.
+            /// </summary>
+            public bool IsWorker
+            {
+                get { return Node.Metadata.Role == NodeRole.Worker; }
+            }
+        }
+
+        //---------------------------------------------------------------------
         // Static members
 
         /// <summary>
@@ -173,8 +289,52 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy    cluster;
-        private KubeSetupInfo   setupInfo;
+        private ClusterProxy                    cluster;
+        private string                          clusterName;
+        private string                          resourceGroup;
+        private KubeSetupInfo                   setupInfo;
+        private HostingOptions                  hostingOptions;
+        private AzureOptions                    azureOptions;
+        private NetworkOptions                  networkOptions;
+        private Dictionary<string, AzureNode>   nodeDictionary;
+
+        // Azure requires that the various components that need to be provisioned
+        // for the cluster have names.  We're going to generate these in the constructor.
+        // Top level component names will be prefixed by
+        //
+        //      neon-<cluster-name>-
+        //
+        // to avoid conflicts with other clusters or things deployed to the same resource
+        // group.  For example if there's already a cluster in the same resource group,
+        // we wouldn't want to node names like "manager-0" to conflict across multiple 
+        // clusters.
+
+        private string                      namePrefix;
+        private string                      publicIpName;
+        private string                      vnetName;
+        private string                      subnetName;
+        private string                      masterAvailabilitySetName;
+        private string                      workerAvailabilitySetName;
+        private string                      proximityPlacementGroupName;
+        private string                      loadbalancerName;
+        private string                      loadbalancerFrontendName;
+        private string                      loadbalancerBackendName;
+        private string                      loadbalancerProbeName;
+        private string                      publicNetworkSecurityGroupName;
+        private string                      privateNetworkSecurityGroupName;
+        private string                      outboudNetworkSecurityGroupName;
+
+        // These fields hold various Azure components while provisioning is in progress.
+
+        private IAzure                      azure;
+        private IPublicIPAddress            publicIp;
+        private INetwork                    vnet;
+        private ILoadBalancer               loadBalancer;
+        private IAvailabilitySet            masterAvailabilitySet;
+        private IAvailabilitySet            workerAvailabilitySet;
+        private INetworkSecurityGroup       publicNetworkSecurityGroup;
+        private INetworkSecurityGroup       privateNetworkSecurityGroup;
+        private INetworkSecurityGroup       outboundNetworkSecurityGroup;
 
         /// <summary>
         /// Constructor.
@@ -192,8 +352,55 @@ namespace Neon.Kube
 
             cluster.HostingManager = this;
 
-            this.cluster   = cluster;
-            this.setupInfo = setupInfo;
+            this.cluster                         = cluster;
+            this.clusterName                     = cluster.Name;
+            this.resourceGroup                   = cluster.Definition.Hosting.Azure.ResourceGroup ?? $"neon-{clusterName}";
+            this.setupInfo                       = setupInfo;
+            this.hostingOptions                  = cluster.Definition.Hosting;
+            this.azureOptions                    = cluster.Definition.Hosting.Azure;
+            this.networkOptions                  = cluster.Definition.Network;
+
+            // Initialize the component names as they will be deployed to Azure.
+
+            this.namePrefix                      = $"neon-{clusterName}-";
+            this.publicIpName                    = namePrefix + "public-ip";
+            this.vnetName                        = namePrefix + "vnet";
+            this.masterAvailabilitySetName       = namePrefix + "master-availability-set";
+            this.workerAvailabilitySetName       = namePrefix + "worker-availability-set";
+            this.proximityPlacementGroupName     = namePrefix + "proxmity-group";
+            this.loadbalancerName                = namePrefix + "load-balancer";
+
+            // These names are relative to another component, so they don't require a prefix.
+
+            this.loadbalancerFrontendName        = "frontend";
+            this.loadbalancerBackendName         = "backend;";
+            this.loadbalancerProbeName           = "probe";
+            this.publicNetworkSecurityGroupName  = "neon-public";
+            this.privateNetworkSecurityGroupName = "neon-private";
+            this.outboudNetworkSecurityGroupName = "neon-outbound";
+
+            // Initialize the node mapping dictionary and also ensure
+            // that each node has Azure reasonable Azure node options.
+
+            this.nodeDictionary = new Dictionary<string, AzureNode>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var node in cluster.Nodes)
+            {
+                nodeDictionary.Add(node.Name, new AzureNode(node, this));
+
+                if (node.Metadata.Azure == null)
+                {
+                    // Initialize reasonable defaults.
+
+                    node.Metadata.Azure = new AzureNodeOptions();
+                }
+            }
+
+            // This identifies the cluster manager instance with the cluster proxy
+            // so that the proxy can have the hosting manager perform some operations
+            // like managing the SSH port mappings on the load balancer.
+
+            cluster.HostingManager = this;
         }
 
         /// <inheritdoc/>
@@ -225,6 +432,6 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override bool RequiresAdminPrivileges => true;
+        public override bool RequiresAdminPrivileges => false;
     }
 }

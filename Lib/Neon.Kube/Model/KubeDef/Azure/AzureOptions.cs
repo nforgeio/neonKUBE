@@ -98,6 +98,43 @@ namespace Neon.Kube
         public string Region { get; set; }
 
         /// <summary>
+        /// <para>
+        /// neonKUBE cluster VMs are all deployed within the same Azure <a href="https://azure.microsoft.com/en-us/blog/introducing-proximity-placement-groups/">placement group</a>
+        /// by default.  This ensures the smallest possible network latency between the cluster VMs.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// Proximity placement groups have one downside: they make it more likely that Azure
+        /// may not be able to find enough unused VMs to satisfy the proximity constraints.  This
+        /// can happen when you first provision a cluster or later on when you try to scale one.
+        /// </para>
+        /// <para>
+        /// For neonKUBE clusters the additional risk of an Azure provisioning failure is going
+        /// to be very low due to how we use availablity sets, which is as similar deployment
+        /// constraint: master nodes are deployed to one availability set and workers to another.
+        /// Without a proximity placement group, Azure could deploy the masters to one datacenter
+        /// and the workers to another.  This wasn't that likely in the past but as Azure has
+        /// added more datacenters, the chance of this happening has increased.
+        /// </para>
+        /// <para>
+        /// Adding the proximity placement constrain, requires that Azure deploy both the masters
+        /// and workers in the same datacenter.  So say your cluster has 3 masters and 50 workers.
+        /// With proximity placement enabled, the Azure region will need to have a datacenter with
+        /// 53 VMs available with the specified sizes.  With proximity placement disabled, Azure
+        /// could deploy the 3 masters in one datacenter and the 50 workers in another.
+        /// </para>
+        /// </note>
+        /// <para>
+        /// This property defaults to <c>false</c>.  You can disable the proximity placement
+        /// constraint by setting this to <c>true</c>.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "DisableProximityPlacement", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "disableProximityPlacement", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool DisableProximityPlacement { get; set; } = false;
+
+        /// <summary>
         /// The DNS domain prefix for the public IP address to be assigned to the cluster.
         /// </summary>
         /// <remarks>
@@ -160,15 +197,13 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Specifies the number of Azure fault domains the cluster nodes should be
+        /// Specifies the number of Azure fault domains the worker nodes should be
         /// distributed across.  This defaults to <b>3</b> which should not be increased
         /// without making sure that your subscription supports the increase (most won't).
         /// </para>
         /// <note>
-        /// It is not possible to assign nodes to specific fault domains but neonKUBE provisions
-        /// manager and worker nodes in separate Azure availability zones.  This means that clusters
-        /// with up to 5 manager nodes will have their managers distributed across fault domains 
-        /// such that a quorum will always be present for any single fault domain failure.
+        /// Manager nodes will always be provisioned in three fault domains to ensure
+        /// that there will always be a quorum after any single fault domain failure.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "FaultDomains", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -178,7 +213,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Specifies the number of Azure update domains the cluster nodes will 
+        /// Specifies the number of Azure update domains the cluster workers will 
         /// distributed across.  This defaults to <b>20</b>  You may customize this
         /// with a value in the range of <b>2</b>...<b>20</b>.
         /// </para>
@@ -207,6 +242,14 @@ namespace Neon.Kube
         /// mentions that the disruption of a VM for planned maintenance can be slight
         /// because VMs can be relocated from one host to another while still running.
         /// </para>
+        /// </note>
+        /// <note>
+        /// Manager nodes are always deployed with 20 update domains and since no cluster
+        /// should ever need anywhere close this number of managers, we'll be ensured
+        /// that only a single manager will be rebooted together during planned Azure
+        /// maintenance and the 30 minutes Azure waits after rebooting an update domain
+        /// gives the rebooted manager a chance to rejoin the other managers and catch
+        /// up on any changes that happened while it was offline.
         /// </note>
         /// <note>
         /// neonKUBE deploys manager and worker nodes in separate Azure availability zones.
