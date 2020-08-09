@@ -47,40 +47,44 @@ namespace Neon.Kube
     public enum AzureStorageTypes
     {
         /// <summary>
+        /// Indicates that the default Azure storage type will be provisioned.
+        /// When <see cref="AzureNodeOptions.StorageType"/>=<see cref="Default"/>
+        /// then <see cref="AzureOptions.DefaultStorageType"/> will be provisioned.
+        /// If <see cref="AzureOptions.DefaultStorageType"/>=<see cref="Default"/>
+        /// then <see cref="StandardSSD"/> will be provisioned.
+        /// </summary>
+        Default = 0,
+
+        /// <summary>
         /// Standard managed spinning drives are quite slow but are
         /// also very inexpensive.  These may be suited for test or latency
-        /// insensitive clusters.  These are available in sizes up to 2GiB
-        /// and are limited to 500 IOPS/sec.
+        /// insensitive clusters.  These are available in sizes up to 32TiB.
         /// </summary>
         StandardHDD,
 
         /// <summary>
         /// Managed SSD based drives  are a cost effect option that offers
         /// better latancy and reliability than <see cref="StandardHDD"/>.
-        /// These are available in sizes up to 256GiB and have the same low
-        /// IOPS limit as <see cref="StandardHDD"/> at 500/sec.
+        /// These are available in sizes up to 32TiB.
         /// </summary>
         StandardSSD,
 
         /// <summary>
         /// Premium managed SSD drives deliver high througput and low latency and
-        /// are suitable for I/O intensive workloads.  These are available up to
-        /// 256GiB and the largest drives are provisioned with higher IOPS and
-        /// throughput.  IOPS range is 120-1100/sec and throughput range is
-        /// 25MiB-125MiB/sec guaranteed.  Premium drives can also temporarily
-        /// burst to 3500 IOPS/sec and 170MiB/sec for up to 30 minutes.
+        /// are suitable for I/O intensive workloads.  These are available in sizes
+        /// up to 32TiB.
         /// </summary>
         PremiumSSD,
 
         /// <summary>
         /// <para>
         /// Ultra managed SSD drives are intended for the most demanding I/O
-        /// workloads.  These range in size up to 64TiB and can support thoughput
-        /// up to 2GiB/sec and IPOS up to 160000/sec.
+        /// workloads.  These range in size up to 64TiB.
         /// </para>
         /// <note>
         /// These are still relatively new and your region may not be able to
-        /// attach ultra drives to all VM instance types.
+        /// attach ultra drives to all VM instance types.  See this <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/windows/disks-enable-ultra-ssd">note</a>
+        /// for more information.
         /// </note>
         /// </summary>
         UltraSSD,

@@ -366,7 +366,7 @@ namespace NeonCli
 
                     // The primary Azure data drive is [/dev/sdb] so any mounted drive will be [/dev/sdc].
 
-                    if (nodeDefinition.Azure.HardDriveCount == 0)
+                    if (nodeDefinition.Azure.DriveCount == 0)
                     {
                         SetBashVariable(preprocessReader, "data.disk", "PRIMARY");
                     }

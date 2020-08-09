@@ -217,40 +217,20 @@ namespace Neon.Kube
             public IVirtualMachine Vm { get; set; }
 
             /// <summary>
-            /// The node's network interface within the <b>nodes</b> subnet.
+            /// The node's network interface.
             /// </summary>
-            public INetworkInterface NodesNic { get; set; }
-
-            /// <summary>
-            /// The node's network interface within the <b>vpn</b> subnet (managers only).
-            /// </summary>
-            public INetworkInterface VpnNic { get; set; }
-
-            /// <summary>
-            /// The node's Azure public IP address or FQDN (or <c>null</c>).
-            /// </summary>
-            public IPublicIPAddress PublicAddress { get; set; }
-
-            /// <summary>
-            /// The public FQDN or IP address (as a string) to be used to connect to the
-            /// node via SSH while provisioning the hive.  This will be set to the
-            /// FQDN of <see cref="PublicAddress"/> if the hive nodes are being
-            /// provisioned with addresses or else the FQDN address of the hive 
-            /// manager or worker/pet load balancer.
-            /// </summary>
-            public string PublicSshAddress { get; set; }
+            public INetworkInterface Nic { get; set; }
 
             /// <summary>
             /// The SSH port to be used to connect to the node via SSH while provisioning
-            /// the hive.  This will be the standard <see cref="NetworkPorts.SSH"/> if the 
-            /// hive nodes are being provisioned with addresses or else a temporary NAT port
-            /// configured on the appropriate load balancer.
+            /// or managing the cluster.
             /// </summary>
             public int PublicSshPort { get; set; } = NetworkPorts.SSH;
 
             /// <summary>
-            /// Returns the Azure name for the temporary NAT rule mapping a 
-            /// frontend load balancer port to the SSH port for this node.
+            /// Returns the Azure name for the temporary NAT rule mapping the
+            /// cluster's frontend load balancer port to the SSH port for this 
+            /// node.
             /// </summary>
             public string SshNatRuleName
             {
@@ -258,9 +238,9 @@ namespace Neon.Kube
             }
 
             /// <summary>
-            /// Returns <c>true</c> if the node is a manager.
+            /// Returns <c>true</c> if the node is a master.
             /// </summary>
-            public bool IsManager
+            public bool IsMaster
             {
                 get { return Node.Metadata.Role == NodeRole.Master; }
             }
@@ -306,35 +286,35 @@ namespace Neon.Kube
         //
         // to avoid conflicts with other clusters or things deployed to the same resource
         // group.  For example if there's already a cluster in the same resource group,
-        // we wouldn't want to node names like "manager-0" to conflict across multiple 
+        // we wouldn't want to node names like "master-0" to conflict across multiple 
         // clusters.
 
-        private string                      namePrefix;
-        private string                      publicIpName;
-        private string                      vnetName;
-        private string                      subnetName;
-        private string                      masterAvailabilitySetName;
-        private string                      workerAvailabilitySetName;
-        private string                      proximityPlacementGroupName;
-        private string                      loadbalancerName;
-        private string                      loadbalancerFrontendName;
-        private string                      loadbalancerBackendName;
-        private string                      loadbalancerProbeName;
-        private string                      publicNetworkSecurityGroupName;
-        private string                      privateNetworkSecurityGroupName;
-        private string                      outboudNetworkSecurityGroupName;
+        private string                          namePrefix;
+        private string                          publicIpName;
+        private string                          vnetName;
+        private string                          subnetName;
+        private string                          masterAvailabilitySetName;
+        private string                          workerAvailabilitySetName;
+        private string                          proximityPlacementGroupName;
+        private string                          loadbalancerName;
+        private string                          loadbalancerFrontendName;
+        private string                          loadbalancerBackendName;
+        private string                          loadbalancerProbeName;
+        private string                          publicNetworkSecurityGroupName;
+        private string                          privateNetworkSecurityGroupName;
+        private string                          outboudNetworkSecurityGroupName;
 
         // These fields hold various Azure components while provisioning is in progress.
 
-        private IAzure                      azure;
-        private IPublicIPAddress            publicIp;
-        private INetwork                    vnet;
-        private ILoadBalancer               loadBalancer;
-        private IAvailabilitySet            masterAvailabilitySet;
-        private IAvailabilitySet            workerAvailabilitySet;
-        private INetworkSecurityGroup       publicNetworkSecurityGroup;
-        private INetworkSecurityGroup       privateNetworkSecurityGroup;
-        private INetworkSecurityGroup       outboundNetworkSecurityGroup;
+        private IAzure                          azure;
+        private IPublicIPAddress                publicIp;
+        private INetwork                        vnet;
+        private ILoadBalancer                   loadBalancer;
+        private IAvailabilitySet                masterAvailabilitySet;
+        private IAvailabilitySet                workerAvailabilitySet;
+        private INetworkSecurityGroup           publicNetworkSecurityGroup;
+        private INetworkSecurityGroup           privateNetworkSecurityGroup;
+        private INetworkSecurityGroup           outboundNetworkSecurityGroup;
 
         /// <summary>
         /// Constructor.

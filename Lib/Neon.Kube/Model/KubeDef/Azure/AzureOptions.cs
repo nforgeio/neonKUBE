@@ -41,6 +41,9 @@ namespace Neon.Kube
     /// </summary>
     public class AzureOptions
     {
+        private const string defaultVmSize    = "Standard_B2S";
+        private const string defaultDriveSize = "128 GiB";
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -263,6 +266,68 @@ namespace Neon.Kube
         public int UpdateDomains { get; set; } = 20;
 
         /// <summary>
+        /// <para>
+        /// Specifies the default Azure virtual machine size.  You the available VM sizes are listed 
+        /// <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-general">here</a>.
+        /// Cluster node VMs will be provisioned with this size unless overridden by <see cref="AzureNodeOptions"/>
+        /// for specific nodes.
+        /// </para>
+        /// <note>
+        /// This defaults to <b>Standard_B2S</b> which should be suitable for testing purposes
+        /// as well as relatively idle clusters.  Each <b>Standard_B2S</b> VM includes 2 virtual
+        /// cores and 4 GiB RAM.  At the time this was written, the pay-as-you-go cost for this
+        /// VM is listed at $0.0416/hour or about $30/month in a USA datacenter.  <b>Bs-series</b>
+        /// VMs are available in almost all Azure datacenters.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "DefaultVmSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultVmSize", ApplyNamingConventions = false)]
+        [DefaultValue(defaultVmSize)]
+        public string DefaultVmSize { get; set; } = defaultVmSize;
+
+        /// <summary>
+        /// Specifies the default Azure storage type to be used when creating a
+        /// node that does not specify the storage type in its <see cref="NodeOptions"/>.
+        /// This defaults to <see cref="AzureStorageTypes.StandardSSD"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "DefaultStorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultStorageType", ApplyNamingConventions = false)]
+        [DefaultValue(AzureStorageTypes.StandardSSD)]
+        public AzureStorageTypes DefaultStorageType { get; set; } = AzureStorageTypes.StandardSSD;
+
+        /// <summary>
+        /// Specifies the default Azure drive size to be used when creating a
+        /// node that does not specify a drive size in its <see cref="NodeOptions"/>.
+        /// This defaults to <b>64 GiB</b>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <see cref="AzureStorageTypes.StandardHDD"/>, <see cref="AzureStorageTypes.StandardSSD"/>, and
+        /// <see cref="AzureStorageTypes.PremiumSSD"/> drives may be provisioned in these
+        /// sizes: <b>4GiB</b>, <b>8GiB</b>, <b>16GiB</b>, <b>32GiB</b>, <b>64GiB</b>, <b>128GiB</b>, <b>256GiB</b>, <b>512GiB</b>,
+        /// <b>1TiB</b>, <b>2TiB</b>, <b>4TiB</b>, <b>8TiB</b>, <b>16TiB</b>, or <b>32TiB</b>.
+        /// </para>
+        /// <para>
+        /// <see cref="AzureStorageTypes.UltraSSD"/> based drives can be provisioned in these sizes:
+        /// <b>4 GiB</b>,<b>8 GiB</b>,<b> GiB</b>,<b>16 GiB</b>,<b>32 GiB</b>,<b>64 GiB</b>,<b>128 GiB</b>,<b>256 GiB</b>,<b>512 GiB</b>,
+        /// or from <b>1 TiB</b> to <b>64TiB</b> in increments of <b>1 TiB</b>.
+        /// </para>
+        /// <note>
+        /// This size will be rounded up to the next valid drive size for the given storage type
+        /// and set to the maximum allowed size, when necessary.
+        /// </note>
+        /// <note>
+        /// The Azure drive sizes listed above may become out-of-date as Azure enhances their
+        /// services.  Review the Azure documentation for more information about what is
+        /// currently supported.
+        /// </note>
+        /// </remarks>
+        [JsonProperty(PropertyName = "DefaultDriveSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultDriveSize", ApplyNamingConventions = false)]
+        [DefaultValue(defaultDriveSize)]
+        public string DefaultDriveSize { get; set; } = defaultDriveSize;
+
+        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
@@ -285,32 +350,32 @@ namespace Neon.Kube
 
             if (string.IsNullOrEmpty(SubscriptionId))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(SubscriptionId)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(SubscriptionId)}] cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(TenantId))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(TenantId)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(TenantId)}] cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(AppId))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(AppId)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(AppId)}] cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(AppPassword))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(AppPassword)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(AppPassword)}] cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(Region))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(Region)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(Region)}] cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(DomainLabel))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(DomainLabel)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(DomainLabel)}] cannot be empty.");
             }
 
             // Verify [ResourceGroup].
@@ -322,24 +387,24 @@ namespace Neon.Kube
 
             if (ResourceGroup.Length > 64)
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property cannot be longer than 64 characters.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}={ResourceGroup}] is longer than 64 characters.");
             }
 
             if (!char.IsLetter(ResourceGroup.First()))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must begin with a letter.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}={ResourceGroup}] does not begin with a letter.");
             }
 
             if (ResourceGroup.Last() == '_' || ResourceGroup.Last() == '-')
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must not end with a dash or underscore.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}={ResourceGroup}] ends with a dash or underscore.");
             }
 
             foreach (var ch in ResourceGroup)
             {
                 if (!(char.IsLetterOrDigit(ch) || ch == '_' || ch == '-'))
                 {
-                    throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must include only letters, digits, dashes or underscores.");
+                    throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}={ResourceGroup}] includes characters other than letters, digits, dashes and underscores.");
                 }
             }
 
@@ -348,6 +413,25 @@ namespace Neon.Kube
             if (Environment != null)
             {
                 Environment.Validate(clusterDefinition);
+            }
+
+            // Verify [DefaultVmSize]
+
+            if (string.IsNullOrEmpty(DefaultVmSize))
+            {
+                DefaultVmSize = defaultVmSize;
+            }
+
+            // Verify [DefaultDriveSize].
+
+            if (string.IsNullOrEmpty(DefaultDriveSize))
+            {
+                DefaultDriveSize = defaultDriveSize;
+            }
+
+            if (!ByteUnits.TryParse(DefaultDriveSize, out var defaultNodeSize) || defaultNodeSize <= 0)
+            {
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(DefaultDriveSize)}={DefaultDriveSize}] is not valid.");
             }
 
             // Check Azure cluster limits.
