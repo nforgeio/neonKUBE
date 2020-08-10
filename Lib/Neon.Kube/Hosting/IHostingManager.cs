@@ -76,6 +76,7 @@ namespace Neon.Kube
         /// is currently used only by the bare metal hosting manager which will need to
         /// be able to log into existing nodes provisioned manually by the cluster operator.
         /// </param>
+        /// <returns><c>true</c> on success.</returns>
         bool Provision(bool force, string secureSshPassword, string orgSshPassword = null);
 
         /// <summary>

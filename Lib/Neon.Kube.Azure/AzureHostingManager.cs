@@ -36,6 +36,7 @@ using Microsoft.Azure.Management.Fluent;
 using Microsoft.Azure.Management.Network.Fluent;
 using Microsoft.Azure.Management.Network.Fluent.LoadBalancer.Definition;
 using Microsoft.Azure.Management.Network.Fluent.Models;
+using Microsoft.Azure.Management.ResourceManager.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Authentication;
 
 using Newtonsoft;
@@ -271,6 +272,8 @@ namespace Neon.Kube
 
         private ClusterProxy                    cluster;
         private string                          clusterName;
+        private AzureCredentials                azureCredentials;
+        private IAzure                          azure;
         private string                          resourceGroup;
         private KubeSetupInfo                   setupInfo;
         private HostingOptions                  hostingOptions;
@@ -306,7 +309,6 @@ namespace Neon.Kube
 
         // These fields hold various Azure components while provisioning is in progress.
 
-        private IAzure                          azure;
         private IPublicIPAddress                publicIp;
         private INetwork                        vnet;
         private ILoadBalancer                   loadBalancer;
@@ -386,6 +388,9 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Dispose(bool disposing)
         {
+            // The Azure connection class doesn't implement [IDispose]
+            // so we don't have much to do here.
+
             if (disposing)
             {
                 GC.SuppressFinalize(this);
@@ -402,7 +407,11 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
 
-            throw new NotImplementedException("$todo(jefflill): Implement this.");
+            // Connect to Azure.
+
+            AzureConnect();
+
+            return true;
         }
 
         /// <inheritdoc/>
@@ -413,5 +422,73 @@ namespace Neon.Kube
 
         /// <inheritdoc/>
         public override bool RequiresAdminPrivileges => false;
+
+        /// <summary>
+        /// Connects to Azure if we're not already connected.
+        /// </summary>
+        private void AzureConnect()
+        {
+            if (azure != null)
+            {
+                return; // Already connected.
+            }
+
+            var environment = AzureEnvironment.AzureGlobalCloud;
+
+            if (azureOptions.Environment != null)
+            {
+                switch (azureOptions.Environment.Name)
+                {
+                    case AzureCloudEnvironments.GlobalCloud:
+
+                        environment = AzureEnvironment.AzureGlobalCloud;
+                        break;
+
+                    case AzureCloudEnvironments.ChinaCloud:
+
+                        environment = AzureEnvironment.AzureChinaCloud;
+                        break;
+
+                    case AzureCloudEnvironments.GermanCloud:
+
+                        environment = AzureEnvironment.AzureGermanCloud;
+                        break;
+
+                    case AzureCloudEnvironments.USGovernment:
+
+                        environment = AzureEnvironment.AzureUSGovernment;
+                        break;
+
+                    case AzureCloudEnvironments.Custom:
+
+                        environment = new AzureEnvironment()
+                        {
+                            AuthenticationEndpoint  = azureOptions.Environment.AuthenticationEndpoint,
+                            GraphEndpoint           = azureOptions.Environment.GraphEndpoint,
+                            ManagementEndpoint      = azureOptions.Environment.ManagementEnpoint,
+                            ResourceManagerEndpoint = azureOptions.Environment.ResourceManagerEndpoint
+                        };
+                        break;
+
+                    default:
+
+                        throw new NotImplementedException($"Azure environment [{azureOptions.Environment.Name}] is not currently supported.");
+                }
+            }
+
+            azureCredentials =
+                new AzureCredentials(
+                    new ServicePrincipalLoginInformation()
+                    {
+                        ClientId     = azureOptions.AppId,
+                        ClientSecret = azureOptions.AppPassword
+                    },
+                azureOptions.TenantId,
+                environment);
+
+            azure = Azure.Configure()
+                .Authenticate(azureCredentials)
+                .WithSubscription(azureOptions.SubscriptionId);
+        }
     }
 }

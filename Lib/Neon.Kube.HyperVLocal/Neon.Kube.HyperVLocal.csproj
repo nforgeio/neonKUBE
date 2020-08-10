@@ -20,6 +20,7 @@
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageTags>kubernetes</PackageTags>
+    <RootNamespace>Neon.Kube</RootNamespace>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -51,8 +52,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\nuget-icon.png" Pack="true" PackagePath=""/>
-    <None Include="..\..\LICENSE" Pack="True" PackagePath=""/>
+    <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+    <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
   </ItemGroup>
 
 </Project>
