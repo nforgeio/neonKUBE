@@ -125,7 +125,7 @@ namespace Neon.Kube
         /// environments.
         /// </summary>
         [JsonProperty(PropertyName = "Gateway", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "gGateway", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "gateway", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Gateway { get; set; } = null;
 
