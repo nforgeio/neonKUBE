@@ -129,35 +129,6 @@ namespace Neon.Kube
         public string DriveSize { get; set; } = null;
 
         /// <summary>
-        /// <para>
-        /// Specifies the number of managed Azure data drives to attach to the node's virtual machine.
-        /// This defaults to <b>1</b>.
-        /// </para>
-        /// <note>
-        /// Currently only values of <b>0..1</b> are supported.  In the future we may allow multiple
-        /// data disks to be mounted and combined into a RAID0 array.
-        /// </note>
-        /// </summary>
-        /// <remarks>
-        /// <note>
-        /// Before setting this, consult the Azure documentation to see how many drives the
-        /// virtual machine size specified by <see cref="VmSize"/> can support.
-        /// </note>
-        /// <para>
-        /// This may be set to <b>0</b> which specifies that the node will store its data on 
-        /// the local ephemeral (temporary) drive belonging to the Azure virtual machine.
-        /// This is not recommended for cluster nodes.
-        /// </para>
-        /// <para>
-        /// For most clusters, you'll wish to provision one or more drives per node.
-        /// </para>
-        /// </remarks>
-        [JsonProperty(PropertyName = "DriveCount", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "driveCount", ApplyNamingConventions = false)]
-        [DefaultValue(1)]
-        public int DriveCount { get; set; } = 1;
-
-        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>

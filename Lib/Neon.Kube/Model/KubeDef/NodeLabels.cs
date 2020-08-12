@@ -144,11 +144,6 @@ namespace Neon.Kube
         public const string LabelAzureStorageType = ClusterDefinition.ReservedLabelPrefix + "azure.storage_type";
 
         /// <summary>
-        /// Reserved label name that identifies the node's Azure attached drive count.
-        /// </summary>
-        public const string LabelAzureDriveCount = ClusterDefinition.ReservedLabelPrefix + "azure.drive_count";
-
-        /// <summary>
         /// Reserved label name that identifies the node's Azure attached drive size.
         /// </summary>
         public const string LabelAzureDriveSize = ClusterDefinition.ReservedLabelPrefix + "azure.drive_size";
@@ -512,7 +507,6 @@ namespace Neon.Kube
                 {
                     list.Add(new KeyValuePair<string, object>(LabelAzureVmSize,         Node.Azure.VmSize));
                     list.Add(new KeyValuePair<string, object>(LabelAzureStorageType,    Node.Azure.StorageType));
-                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveCount,     Node.Azure.DriveCount));
                     list.Add(new KeyValuePair<string, object>(LabelAzureDriveSize,      Node.Azure.DriveSize));
                 }
 
@@ -601,7 +595,6 @@ namespace Neon.Kube
 
                     case LabelAzureVmSize:
                     case LabelAzureStorageType:
-                    case LabelAzureDriveCount:
                     case LabelAzureDriveSize:
 
                         if (Node.Azure == null)
@@ -613,7 +606,6 @@ namespace Neon.Kube
                         {
                             case LabelAzureVmSize:          Node.Azure.VmSize = label.Value; break;
                             case LabelAzureStorageType:     ParseCheck(label, () => { Node.Azure.StorageType = NeonHelper.ParseEnum<AzureStorageTypes>(label.Value); }); break;
-                            case LabelAzureDriveCount:      ParseCheck(label, () => { Node.Azure.DriveCount = int.Parse(label.Value); }); break;
                             case LabelAzureDriveSize:       Node.Azure.DriveSize = label.Value; break;
                         }
                         break;
