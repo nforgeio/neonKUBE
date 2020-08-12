@@ -44,14 +44,13 @@ namespace Neon.Kube
     /// line options.
     /// </summary>
     /// <param name="name">The node name.</param>
-    /// <param name="publicAddress">The node's public IP address or FQDN.</param>
-    /// <param name="privateAddress">The node's private IP address.</param>
+    /// <param name="address">The node's private IP address.</param>
     /// <param name="appendToLog">
     /// Pass <c>true</c> to append to an existing log file (or create one if necessary)
     /// or <c>false</c> to replace any existing log file with a new one.
     /// </param>
     /// <returns>The <see cref="SshProxy{TMetadata}"/>.</returns>
-    public delegate SshProxy<NodeDefinition> NodeProxyCreator(string name, string publicAddress, IPAddress privateAddress, bool appendToLog);
+    public delegate SshProxy<NodeDefinition> NodeProxyCreator(string name, IPAddress address, bool appendToLog);
 
     /// <summary>
     /// Used to remotely manage a cluster via SSH/SCP.
@@ -130,13 +129,13 @@ namespace Neon.Kube
             if (nodeProxyCreator == null)
             {
                 nodeProxyCreator =
-                    (name, publicAddress, privateAddress, append) =>
+                    (name, address, append) =>
                     {
                         var context = KubeHelper.CurrentContext;
 
                         if (context != null && context.Extension != null)
                         {
-                            return new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, context.Extension.SshCredentials);
+                            return new SshProxy<NodeDefinition>(name, address, context.Extension.SshCredentials);
                         }
                         else
                         {
@@ -145,7 +144,7 @@ namespace Neon.Kube
                             // we need a cluster proxy for global things (like managing a hosting
                             // environment) where we won't need access to specific cluster nodes.
 
-                            return new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, SshCredentials.None);
+                            return new SshProxy<NodeDefinition>(name, address, SshCredentials.None);
                         }
                     };
             }
@@ -247,7 +246,7 @@ namespace Neon.Kube
 
             foreach (var nodeDefinition in Definition.SortedNodes)
             {
-                var node = nodeProxyCreator(nodeDefinition.Name, nodeDefinition.PublicAddress, IPAddress.Parse(nodeDefinition.PrivateAddress ?? "0.0.0.0"), appendLog);
+                var node = nodeProxyCreator(nodeDefinition.Name, IPAddress.Parse(nodeDefinition.Address ?? "0.0.0.0"), appendLog);
 
                 node.Cluster           = this;
                 node.DefaultRunOptions = defaultRunOptions;
@@ -300,7 +299,7 @@ namespace Neon.Kube
         {
             var masterAddresses = Nodes
                 .Where(n => n.Metadata.IsMaster)
-                .Select(n => n.PrivateAddress.ToString())
+                .Select(n => n.Address.ToString())
                 .ToList();
 
             var reachableHost = NetHelper.GetReachableHost(masterAddresses, failureMode);
@@ -312,7 +311,7 @@ namespace Neon.Kube
 
             // Return the node that is assigned the reachable address.
 
-            return Nodes.Where(n => n.PrivateAddress.ToString() == reachableHost.Host).First();
+            return Nodes.Where(n => n.Address.ToString() == reachableHost.Host).First();
         }
 
         /// <summary>
@@ -330,7 +329,7 @@ namespace Neon.Kube
         {
             var nodeAddresses = Nodes
                 .Where(predicate)
-                .Select(n => n.PrivateAddress.ToString())
+                .Select(n => n.Address.ToString())
                 .ToList();
 
             var reachableHost = NetHelper.GetReachableHost(nodeAddresses, failureMode);
@@ -342,7 +341,7 @@ namespace Neon.Kube
 
             // Return the node that is assigned the reachable address.
 
-            return Nodes.Where(n => n.PrivateAddress.ToString() == reachableHost.Host).First();
+            return Nodes.Where(n => n.Address.ToString() == reachableHost.Host).First();
         }
 
         /// <summary>

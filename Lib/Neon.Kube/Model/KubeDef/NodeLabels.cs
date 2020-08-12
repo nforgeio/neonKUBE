@@ -111,14 +111,9 @@ namespace Neon.Kube
         public const string LabelEnvironment = ClusterDefinition.ReservedLabelPrefix + "cluster.environment";
 
         /// <summary>
-        /// Reserved label name that identifies the node's public IP address or FQDN.
-        /// </summary>
-        public const string LabelPublicAddress = ClusterDefinition.ReservedLabelPrefix + "node.public_address";
-
-        /// <summary>
         /// Reserved label name that identifies the node's private IP address.
         /// </summary>
-        public const string LabelPrivateAddress = ClusterDefinition.ReservedLabelPrefix + "node.private_address";
+        public const string LabelAddress = ClusterDefinition.ReservedLabelPrefix + "node.private_address";
 
         /// <summary>
         /// Reserved label name that identifies the node role.
@@ -498,8 +493,7 @@ namespace Neon.Kube
 
                 // Standard labels from the parent node definition.
 
-                list.Add(new KeyValuePair<string, object>(LabelPublicAddress,           Node.PublicAddress));
-                list.Add(new KeyValuePair<string, object>(LabelPrivateAddress,          Node.PrivateAddress));
+                list.Add(new KeyValuePair<string, object>(LabelAddress,          Node.Address));
                 list.Add(new KeyValuePair<string, object>(LabelRole,                    Node.Role));
                 list.Add(new KeyValuePair<string, object>(LabelIngress,                 Node.Ingress));
 
@@ -588,8 +582,7 @@ namespace Neon.Kube
             {
                 switch (label.Key)
                 {
-                    case LabelPublicAddress:                Node.PublicAddress = label.Value; break;
-                    case LabelPrivateAddress:               Node.PrivateAddress = label.Value; break;
+                    case LabelAddress:                      Node.Address = label.Value; break;
                     case LabelRole:                         Node.Role = label.Value; break;
                     case LabelIngress:                      ParseCheck(label, () => { Node.Ingress = NeonHelper.ParseNullableBool(label.Value); }); break; 
 

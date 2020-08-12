@@ -48,6 +48,8 @@ using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
 using Neon.Time;
+using Microsoft.Azure.Management.Monitor.Fluent.Models;
+using Microsoft.Azure.Management.ContainerService.Fluent.Models;
 
 namespace Neon.Kube
 {
@@ -400,6 +402,126 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
+            // Ensure that any explicit node IP address assignments are located
+            // within the nodes subnet and do not conflict with any of the addresses
+            // reserved by the cloud provider or neonKUBE.  We're also going to 
+            // require that the nodes subnet have at least 256 addresses.
+
+            var nodeSubnet = NetworkCidr.Parse(clusterDefinition.Network.NodeSubnet);
+
+            if (nodeSubnet.AddressCount < 256)
+            {
+                throw new ClusterDefinitionException($"[{nameof(clusterDefinition.Network.NodeSubnet)}={clusterDefinition.Network.NodeSubnet}] is too small.  Cloud subnets must include at least 256 addresses (at least a /24 network).");
+            }
+
+            const int reservedCount = KubeConst.CloudVNetStartReservedIPs + KubeConst.CloudVNetEndReservedIPs;
+
+            if (clusterDefinition.Nodes.Count() > nodeSubnet.AddressCount - reservedCount)
+            {
+                throw new ClusterDefinitionException($"The cluster includes [{clusterDefinition.Nodes.Count()}] which will not fit within the [{nameof(clusterDefinition.Network.NodeSubnet)}={clusterDefinition.Network.NodeSubnet}] after accounting for [{reservedCount}] reserved addresses.");
+            }
+
+            var firstValidAddressUint = NetHelper.AddressToUint(nodeSubnet.FirstAddress) + KubeConst.CloudVNetStartReservedIPs;
+            var firstValidAddress     = NetHelper.UintToAddress(firstValidAddressUint);
+            var lastValidAddressUint  = NetHelper.AddressToUint(nodeSubnet.LastAddress) - KubeConst.CloudVNetEndReservedIPs;
+            var lastValidAddress      = NetHelper.UintToAddress(lastValidAddressUint);
+
+            foreach (var node in clusterDefinition.SortedNodes.OrderBy(node => node.Name))
+            {
+                if (string.IsNullOrEmpty(node.Address))
+                {
+                    // Ignore nodes with unassigned addresses.
+
+                    continue;
+                }
+
+                var address = IPAddress.Parse(node.Address);
+
+                if (!nodeSubnet.Contains(address))
+                {
+                    throw new ClusterDefinitionException($"Node [{node.Name}] is assigned [{node.Address}={node.Address}] which is outside of [{nameof(clusterDefinition.Network.NodeSubnet)}={clusterDefinition.Network.NodeSubnet}].");
+                }
+
+                var addressUint = NetHelper.AddressToUint(address);
+
+                if (addressUint < firstValidAddressUint)
+                {
+                    throw new ClusterDefinitionException($"Node [{node.Name}] defines IP address [{node.Address}={node.Address}] which is reserved.  The first valid node address [{nameof(clusterDefinition.Network.NodeSubnet)}={clusterDefinition.Network.NodeSubnet}] is [{firstValidAddress}].");
+                }
+
+                if (addressUint > lastValidAddressUint)
+                {
+                    throw new ClusterDefinitionException($"Node [{node.Name}] defines IP address [{node.Address}={node.Address}] which is reserved.  The last valid node address [{nameof(clusterDefinition.Network.NodeSubnet)}={clusterDefinition.Network.NodeSubnet}] is [{lastValidAddress}].");
+                }
+            }
+
+            //-----------------------------------------------------------------
+            // Automatically assign IP unused IP addresses within the subnet to nodes that 
+            // were not explicitly assigned an address in the cluster definition.
+
+            // Add any explicitly assigned addresses to a HashSet so we won't reuse any.
+
+            var assignedAddresses = new HashSet<uint>();
+
+            foreach (var node in clusterDefinition.SortedNodes)
+            {
+                if (string.IsNullOrEmpty(node.Address))
+                {
+                    continue;
+                }
+
+                var address     = IPAddress.Parse(node.Address);
+                var addressUint = NetHelper.AddressToUint(address);
+
+                if (!assignedAddresses.Contains(addressUint))
+                {
+                    assignedAddresses.Add(addressUint);
+                }
+            }
+
+            // Assign master node addresses first so these will tend to appear first
+            // in the subnet.
+
+            foreach (var node in clusterDefinition.SortedNodes.Where(node => node.IsMaster))
+            {
+                if (!string.IsNullOrEmpty(node.Address))
+                {
+                    continue;
+                }
+
+                for (var addressUint = firstValidAddressUint; addressUint <= lastValidAddressUint; addressUint++)
+                {
+                    if (!assignedAddresses.Contains(addressUint))
+                    {
+                        node.Address = NetHelper.UintToAddress(addressUint).ToString();
+
+                        assignedAddresses.Add(addressUint);
+                        break;
+                    }
+                }
+            }
+
+            // Now assign the worker node addresses, so these will tend to appear
+            // after the masters in the subnet.
+
+            foreach (var node in clusterDefinition.SortedNodes.Where(node => node.IsWorker))
+            {
+                if (!string.IsNullOrEmpty(node.Address))
+                {
+                    continue;
+                }
+
+                for (var addressUint = firstValidAddressUint; addressUint <= lastValidAddressUint; addressUint++)
+                {
+                    if (!assignedAddresses.Contains(addressUint))
+                    {
+                        node.Address = NetHelper.UintToAddress(addressUint).ToString();
+
+                        assignedAddresses.Add(addressUint);
+                        break;
+                    }
+                }
+            }
         }
 
         /// <inheritdoc/>
@@ -417,7 +539,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override (string Address, int Port) GetSshEndpoint(string nodeName)
         {
-            return (Address: cluster.GetNode(nodeName).PrivateAddress.ToString(), Port: NetworkPorts.SSH);
+            return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
         }
 
         /// <inheritdoc/>

@@ -62,7 +62,7 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the node's private IP address within the Azure <b>VNET</b>.
         /// </summary>
-        public IPAddress PrivateAddress => Node.PrivateAddress;
+        public IPAddress PrivateAddress => Node.Address;
 
         /// <summary>
         /// Nodes may be accessed externally via SSH when a NAT rule is configured

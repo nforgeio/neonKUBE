@@ -133,7 +133,7 @@ ARGUMENTS:
                 Program.Exit(1);
             }
 
-            Process.Start(Program.PuttyPath, $"-l {extensions.SshUsername} -pw {extensions.SshPassword} {node.PrivateAddress}:22 -hostkey \"{fingerprint}\"");
+            Process.Start(Program.PuttyPath, $"-l {extensions.SshUsername} -pw {extensions.SshPassword} {node.Address}:22 -hostkey \"{fingerprint}\"");
         }
     }
 }

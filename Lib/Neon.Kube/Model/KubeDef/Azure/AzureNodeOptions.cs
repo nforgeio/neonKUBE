@@ -140,6 +140,16 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            if (StorageType == AzureStorageTypes.Default)
+            {
+                StorageType = clusterDefinition.Hosting.Azure.DefaultStorageType;
+
+                if (StorageType == AzureStorageTypes.Default)
+                {
+                    StorageType = AzureStorageTypes.StandardSSD;
+                }
+            }
+
             // Validate the VM size, setting the cluster default if necessary.
 
             var vmSize = this.VmSize;
@@ -153,21 +163,19 @@ namespace Neon.Kube
 
             // Validate the drive size, setting the cluster default if necessary.
 
-            var driveSize = this.DriveSize;
-
-            if (string.IsNullOrEmpty(driveSize))
+            if (string.IsNullOrEmpty(this.DriveSize))
             {
-                driveSize = clusterDefinition.Hosting.Azure.DefaultDriveSize;
+                this.DriveSize = clusterDefinition.Hosting.Azure.DefaultDriveSize;
             }
 
-            if (!ByteUnits.TryParse(DriveSize, out var driveSizeBytes) || driveSizeBytes <= 1)
+            if (!ByteUnits.TryParse(this.DriveSize, out var driveSizeBytes) || driveSizeBytes <= 1)
             {
                 throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(DriveSize)}={DriveSize}] which is not valid.");
             }
 
             var driveSizeGiB = AzureHelper.GetDiskSizeGiB(StorageType, driveSizeBytes);
 
-            this.DriveSize = $"{driveSizeGiB / ByteUnits.GibiBytes} GiB";
+            this.DriveSize = $"{driveSizeGiB} GiB";
         }
     }
 }

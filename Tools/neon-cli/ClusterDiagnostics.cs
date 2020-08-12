@@ -213,9 +213,9 @@ namespace NeonCli
                     // IP address lookup which will resolve into one of the DNS names defined
                     // in the local [/etc/hosts] file.
 
-                    if (!output.Contains(master.PrivateAddress.ToString()) && !output.Contains(master.Name.ToLower()))
+                    if (!output.Contains(master.Address.ToString()) && !output.Contains(master.Name.ToLower()))
                     {
-                        fault = $"NTP: Manager [{master.Name}/{master.PrivateAddress}] is not answering.";
+                        fault = $"NTP: Manager [{master.Name}/{master.Address}] is not answering.";
 
                         Thread.Sleep(retryDelay);
                         continue;

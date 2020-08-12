@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using k8s.Models;
 using Neon.Common;
 using Neon.Net;
 
@@ -254,5 +254,21 @@ namespace Neon.Kube
         /// The minimum supported XenServer/XCP-ng hypervisor host version.
         /// </summary>
         public static readonly SemanticVersion MinXenServerVersion = SemanticVersion.Parse("7.5.0");
+
+        /// <summary>
+        /// The number of IP addresses reserved by cloud deployments at the beginning of the 
+        /// nodes subnet by the cloud provider and also for future neonKUBE features.
+        /// This typically includes the cloud default gateway and DNS forwarding IPs as well
+        /// as potential future neonKUBE features such as an integrated VPN and perhaps 
+        /// management VMs.
+        /// </summary>
+        public const int CloudVNetStartReservedIPs = 10;
+
+        /// <summary>
+        /// The number of IP addresses reserved by cloud deployments at the end of the nodes
+        /// subnet by the cloud provider.  This typically includes the network UDP broadcast
+        /// address.
+        /// </summary>
+        public const int CloudVNetEndReservedIPs = 1;
     }
 }

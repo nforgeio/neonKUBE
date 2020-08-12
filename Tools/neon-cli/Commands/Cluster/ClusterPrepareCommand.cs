@@ -268,7 +268,7 @@ Server Requirements:
 
                                 for (int i = 0; i < pingAttempts; i++)
                                 {
-                                    var reply = pinger.SendPingAsync(node.PrivateAddress, (int)pingTimeout.TotalMilliseconds).Result;
+                                    var reply = pinger.SendPingAsync(node.Address, (int)pingTimeout.TotalMilliseconds).Result;
 
                                     if (reply.Status == IPStatus.Success)
                                     {
@@ -289,9 +289,9 @@ Server Requirements:
                         Console.Error.WriteLine($"***        machines conflict with the following cluster nodes:");
                         Console.Error.WriteLine();
 
-                        foreach (var node in pingConflicts.OrderBy(n => NetHelper.AddressToUint(IPAddress.Parse(n.PrivateAddress))))
+                        foreach (var node in pingConflicts.OrderBy(n => NetHelper.AddressToUint(IPAddress.Parse(n.Address))))
                         {
-                            Console.Error.WriteLine($"{node.PrivateAddress, 16}:    {node.Name}");
+                            Console.Error.WriteLine($"{node.Address, 16}:    {node.Name}");
                         }
 
                         Program.Exit(1);
@@ -344,17 +344,17 @@ Server Requirements:
                 {
                     SshProxy<NodeDefinition> duplicateServer;
 
-                    if (node.PrivateAddress == IPAddress.Any)
+                    if (node.Address == IPAddress.Any)
                     {
                         throw new ArgumentException($"Node [{node.Name}] has not been assigned an IP address.");
                     }
 
-                    if (ipAddressToServer.TryGetValue(node.PrivateAddress, out duplicateServer))
+                    if (ipAddressToServer.TryGetValue(node.Address, out duplicateServer))
                     {
-                        throw new ArgumentException($"Nodes [{duplicateServer.Name}] and [{node.Name}] have the same IP address [{node.Metadata.PrivateAddress}].");
+                        throw new ArgumentException($"Nodes [{duplicateServer.Name}] and [{node.Name}] have the same IP address [{node.Metadata.Address}].");
                     }
 
-                    ipAddressToServer.Add(node.PrivateAddress, node);
+                    ipAddressToServer.Add(node.Address, node);
                 }
 
                 // We're going to use the masters as package caches unless the user
@@ -373,7 +373,7 @@ Server Requirements:
 
                     foreach (var master in cluster.Masters)
                     {
-                        sbProxies.AppendWithSeparator($"{master.PrivateAddress}:{NetworkPorts.AppCacherNg}");
+                        sbProxies.AppendWithSeparator($"{master.Address}:{NetworkPorts.AppCacherNg}");
                     }
 
                     cluster.Definition.PackageProxy = sbProxies.ToString();

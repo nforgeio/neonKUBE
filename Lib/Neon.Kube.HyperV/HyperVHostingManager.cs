@@ -119,7 +119,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override (string Address, int Port) GetSshEndpoint(string nodeName)
         {
-            return (Address: cluster.GetNode(nodeName).PrivateAddress.ToString(), Port: NetworkPorts.SSH);
+            return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
         }
 
         /// <inheritdoc/>

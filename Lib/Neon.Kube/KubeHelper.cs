@@ -1590,7 +1590,7 @@ public class ISOFile
             Covenant.Requires<ArgumentNullException>(nodeDefinition != null, nameof(nodeDefinition));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(securePassword), nameof(securePassword));
 
-            var address       = nodeDefinition.PrivateAddress;
+            var address       = nodeDefinition.Address;
             var gateway       = clusterDefinition.Network.Gateway;
             var premiseSubnet = NetworkCidr.Parse(clusterDefinition.Network.PremiseSubnet);
             var nameservers   = clusterDefinition.Network.Nameservers;

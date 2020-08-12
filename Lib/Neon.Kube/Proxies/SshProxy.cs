@@ -199,21 +199,19 @@ namespace Neon.Kube
         /// Constructs a <see cref="SshProxy{TMetadata}"/>.
         /// </summary>
         /// <param name="name">The display name for the server.</param>
-        /// <param name="publicAddress">The public IP address or FQDN of the server or <c>null.</c></param>
-        /// <param name="privateAddress">The private cluster IP address for the server.</param>
+        /// <param name="address">The private cluster IP address for the server.</param>
         /// <param name="credentials">The credentials to be used for establishing SSH connections.</param>
         /// <param name="logWriter">The optional <see cref="TextWriter"/> where operation logs will be written.</param>
         /// <exception cref="ArgumentNullException">
         /// Thrown if <paramref name="name"/> or if <paramref name="credentials"/> is <c>null</c>.
         /// </exception>
-        public SshProxy(string name, string publicAddress, IPAddress privateAddress, SshCredentials credentials, TextWriter logWriter = null)
+        public SshProxy(string name, IPAddress address, SshCredentials credentials, TextWriter logWriter = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
             Covenant.Requires<ArgumentNullException>(credentials != null, nameof(credentials));
 
             this.Name           = name;
-            this.PublicAddress  = publicAddress;
-            this.PrivateAddress = privateAddress;
+            this.Address        = address;
             this.credentials    = credentials;
             this.logWriter      = logWriter;
 
@@ -294,7 +292,7 @@ namespace Neon.Kube
         /// <returns>The cloned <see cref="SshProxy{TMetadata}"/>.</returns>
         public SshProxy<TMetadata> Clone()
         {
-            var sshProxy = new SshProxy<TMetadata>(Name, PublicAddress, PrivateAddress, credentials)
+            var sshProxy = new SshProxy<TMetadata>(Name, Address, credentials)
             {
                 Metadata  = this.Metadata,
                 OsName    = this.OsName,
@@ -474,15 +472,9 @@ namespace Neon.Kube
         public string Name { get; private set; }
 
         /// <summary>
-        /// Returns the cluster public IP address, FQDN, or <c>null</c> for the
-        /// server.
-        /// </summary>
-        public string PublicAddress { get; private set; }
-
-        /// <summary>
         /// Returns the cluster private IP address to used for connecting to the server.
         /// </summary>
-        public IPAddress PrivateAddress { get; set; }
+        public IPAddress Address { get; private set; }
 
         /// <summary>
         /// The SSH port.  This defaults to <b>22</b>.
@@ -962,14 +954,9 @@ rm {KubeHostFolders.Home(Username)}/askpass
                 address = ep.Address;
                 port    = ep.Port;
             }
-            else if (Cluster != null && !string.IsNullOrEmpty(PublicAddress))
-            {
-                address   = PublicAddress;
-                isPrivate = false;
-            }
             else
             {
-                address = PrivateAddress.ToString();
+                address = Address.ToString();
             }
 
             if (string.IsNullOrEmpty(address))

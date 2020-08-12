@@ -720,7 +720,7 @@ namespace WinDesktop
                         new ReverseProxy(
                             localPort: KubeHelper.ClientConfig.KubeDashboardProxyPort,
                             remotePort: KubeHostPorts.KubeDashboard,
-                            remoteHost: cluster.GetReachableMaster().PrivateAddress.ToString(),
+                            remoteHost: cluster.GetReachableMaster().Address.ToString(),
                             validCertificate: dashboardCert,
                             requestHandler: kubernetesDashboardRequestHandler);
 

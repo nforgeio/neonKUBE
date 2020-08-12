@@ -773,7 +773,7 @@ echo ""vm.swappiness = 1"" >> /etc/sysctl.conf
 
             var sbHosts = new StringBuilder();
 
-            var nodeAddress = node.PrivateAddress.ToString();
+            var nodeAddress = node.Address.ToString();
             var separator   = new string(' ', Math.Max(16 - nodeAddress.Length, 1));
 
             sbHosts.Append(
@@ -823,7 +823,7 @@ backend kubernetes_masters_backend
             {
                 sbHaProxy.Append(
 $@"
-    server {master.Name}         {master.PrivateAddress}:6443");
+    server {master.Name}         {master.Address}:6443");
             }
 
             foreach (var node in cluster.Nodes)
@@ -968,7 +968,7 @@ rm -rf linux-amd64
 
                             foreach (var node in cluster.Masters)
                             {
-                                sbCertSANs.AppendLine($"  - \"{node.PrivateAddress}\"");
+                                sbCertSANs.AppendLine($"  - \"{node.Address}\"");
                             }
 
                             var clusterConfig =
@@ -1242,7 +1242,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     // Issue https://github.com/nforgeio/neonKUBE/issues/888 will fix this by adding a proxy to neon-desktop
                     // and load balancing requests across the k8s api servers.
                     var configText = kubeContextExtension.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text;
-                    configText = configText.Replace("kubernetes-masters", $"{cluster.Definition.Masters.FirstOrDefault().PrivateAddress}");
+                    configText = configText.Replace("kubernetes-masters", $"{cluster.Definition.Masters.FirstOrDefault().Address}");
 
                     if (!File.Exists(kubeConfigPath))
                     {
@@ -1443,7 +1443,7 @@ subjects:
 
                                 foreach (var master in cluster.Masters)
                                 {
-                                    managerAddresses.Add(master.PrivateAddress.ToString());
+                                    managerAddresses.Add(master.Address.ToString());
                                 }
 
                                 var utcNow     = DateTime.UtcNow;

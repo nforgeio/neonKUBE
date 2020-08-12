@@ -146,7 +146,7 @@ ARGUMENTS:
                 Program.Exit(1);
             }
 
-            Process.Start(Program.WinScpPath, $@"scp://{extensions.SshUsername}:{extensions.SshPassword}@{node.PrivateAddress}:22 /hostkey=""{fingerprint}"" /newinstance /rawsettings Shell=""sudo%20-s"" compression=1");
+            Process.Start(Program.WinScpPath, $@"scp://{extensions.SshUsername}:{extensions.SshPassword}@{node.Address}:22 /hostkey=""{fingerprint}"" /newinstance /rawsettings Shell=""sudo%20-s"" compression=1");
         }
     }
 }
