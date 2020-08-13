@@ -42,7 +42,7 @@ namespace Neon.Kube
     public class AzureOptions
     {
         private const string defaultVmSize    = "Standard_B2S";
-        private const string defaultDriveSize = "128 GiB";
+        private const string defaultDiskSize = "128 GiB";
 
         /// <summary>
         /// Constructor.
@@ -296,36 +296,36 @@ namespace Neon.Kube
         public AzureStorageTypes DefaultStorageType { get; set; } = AzureStorageTypes.StandardSSD;
 
         /// <summary>
-        /// Specifies the default Azure drive size to be used when creating a
-        /// node that does not specify a drive size in its <see cref="NodeOptions"/>.
+        /// Specifies the default Azure disk size to be used when creating a
+        /// node that does not specify a disk size in its <see cref="NodeOptions"/>.
         /// This defaults to <b>64 GiB</b>.
         /// </summary>
         /// <remarks>
         /// <para>
         /// <see cref="AzureStorageTypes.StandardHDD"/>, <see cref="AzureStorageTypes.StandardSSD"/>, and
-        /// <see cref="AzureStorageTypes.PremiumSSD"/> drives may be provisioned in these
+        /// <see cref="AzureStorageTypes.PremiumSSD"/> disks may be provisioned in these
         /// sizes: <b>4GiB</b>, <b>8GiB</b>, <b>16GiB</b>, <b>32GiB</b>, <b>64GiB</b>, <b>128GiB</b>, <b>256GiB</b>, <b>512GiB</b>,
         /// <b>1TiB</b>, <b>2TiB</b>, <b>4TiB</b>, <b>8TiB</b>, <b>16TiB</b>, or <b>32TiB</b>.
         /// </para>
         /// <para>
-        /// <see cref="AzureStorageTypes.UltraSSD"/> based drives can be provisioned in these sizes:
+        /// <see cref="AzureStorageTypes.UltraSSD"/> based disks can be provisioned in these sizes:
         /// <b>4 GiB</b>,<b>8 GiB</b>,<b> GiB</b>,<b>16 GiB</b>,<b>32 GiB</b>,<b>64 GiB</b>,<b>128 GiB</b>,<b>256 GiB</b>,<b>512 GiB</b>,
         /// or from <b>1 TiB</b> to <b>64TiB</b> in increments of <b>1 TiB</b>.
         /// </para>
         /// <note>
-        /// This size will be rounded up to the next valid drive size for the given storage type
+        /// This size will be rounded up to the next valid disk size for the given storage type
         /// and set to the maximum allowed size, when necessary.
         /// </note>
         /// <note>
-        /// The Azure drive sizes listed above may become out-of-date as Azure enhances their
+        /// The Azure disk sizes listed above may become out-of-date as Azure enhances their
         /// services.  Review the Azure documentation for more information about what is
         /// currently supported.
         /// </note>
         /// </remarks>
-        [JsonProperty(PropertyName = "DefaultDriveSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "defaultDriveSize", ApplyNamingConventions = false)]
-        [DefaultValue(defaultDriveSize)]
-        public string DefaultDriveSize { get; set; } = defaultDriveSize;
+        [JsonProperty(PropertyName = "DefaultDiskSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultDiskSize", ApplyNamingConventions = false)]
+        [DefaultValue(defaultDiskSize)]
+        public string DefaultDiskSize { get; set; } = defaultDiskSize;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -422,16 +422,16 @@ namespace Neon.Kube
                 DefaultVmSize = defaultVmSize;
             }
 
-            // Verify [DefaultDriveSize].
+            // Verify [DefaultDiskSize].
 
-            if (string.IsNullOrEmpty(DefaultDriveSize))
+            if (string.IsNullOrEmpty(DefaultDiskSize))
             {
-                DefaultDriveSize = defaultDriveSize;
+                DefaultDiskSize = AzureOptions.defaultDiskSize;
             }
 
-            if (!ByteUnits.TryParse(DefaultDriveSize, out var defaultNodeSize) || defaultNodeSize <= 0)
+            if (!ByteUnits.TryParse(DefaultDiskSize, out var defaultDiskSize) || defaultDiskSize <= 0)
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(DefaultDriveSize)}={DefaultDriveSize}] is not valid.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(DefaultDiskSize)}={DefaultDiskSize}] is not valid.");
             }
 
             // Check Azure cluster limits.

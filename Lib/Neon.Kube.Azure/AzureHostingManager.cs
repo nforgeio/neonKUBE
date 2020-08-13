@@ -50,6 +50,9 @@ using Neon.Net;
 using Neon.Time;
 using Microsoft.Azure.Management.Monitor.Fluent.Models;
 using Microsoft.Azure.Management.ContainerService.Fluent.Models;
+using Microsoft.Azure.Management.AppService.Fluent;
+using Microsoft.Azure.Management.CosmosDB.Fluent.Models;
+using Couchbase.Annotations;
 
 namespace Neon.Kube
 {
@@ -153,33 +156,6 @@ namespace Neon.Kube
         // actually available in the target Azure region and will also need
         // to map the disk size specified by the user to the closest matching
         // Azure disk size.
-        //
-        // neonKUBE will allow zero or more Azure drives to be attached to
-        // a cluster node.  Nodes with zero attached drives will be created
-        // will have only a limited amount of disk space available.  The OS
-        // drive in this case will actually be backed implicitly by an Azure
-        // drive so data there will remain after any VM maintence operations
-        // performed by Azure.
-        //
-        // Azure VMs are also provided with ephemeral disk space local to the VM 
-        // itself.  On neonKUBE cluster Linux VMs, the ephemeral block device will
-        // be [/dev/sdb] but we don't currently do anything with this (like
-        // create and mount a file system).
-        //
-        // More than one Azure drive can be mounted to a VM and the drives will
-        // implicitly have the same size.  neonKUBE will configure these drives
-        // as a large RAID0 striped array favoring capacity and performance over
-        // reliability.  Azure says that the chance of a drive failure is between
-        // 0.1-0.2% per year so for a node with 4 RAID0 drives, there's may be
-        // a 1/125 chance per year of losing a one of the drives in the VM 
-        // resulting in complete data loss which isn't too bad, especially for
-        // situations where a redundant data store is deployed across multiple
-        // nodes in the cluster.
-        //
-        // neonKUBE may support combining multiple Azure drives in to a redundant
-        // RAID5 configuration in the future to dramatically lower the possible
-        // failure risk.  This happens after provisioning so we'll be able to
-        // support this for all clouds.
 
         //---------------------------------------------------------------------
         // Private types
@@ -276,6 +252,7 @@ namespace Neon.Kube
         private string                          clusterName;
         private AzureCredentials                azureCredentials;
         private IAzure                          azure;
+        private string                          region;
         private string                          resourceGroup;
         private KubeSetupInfo                   setupInfo;
         private HostingOptions                  hostingOptions;
@@ -342,6 +319,7 @@ namespace Neon.Kube
             this.setupInfo                       = setupInfo;
             this.hostingOptions                  = cluster.Definition.Hosting;
             this.azureOptions                    = cluster.Definition.Hosting.Azure;
+            this.region                          = azureOptions.Region;
             this.networkOptions                  = cluster.Definition.Network;
 
             // Initialize the component names as they will be deployed to Azure.
@@ -529,9 +507,24 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
 
-            // Connect to Azure.
+            var operation  = $"Provisioning [{cluster.Definition.Name}] on Azure [{region}/{resourceGroup}]";
+            var controller = new SetupController<NodeDefinition>(operation, cluster.Nodes)
+            {
+                ShowStatus     = this.ShowStatus,
+                ShowNodeStatus = false,
+                MaxParallel    = this.MaxParallel
+            };
 
-            AzureConnect();
+            controller.AddGlobalStep("connecting Azure", () => AzureConnect());
+            controller.AddGlobalStep("region availablity", () => VerifyRegionAndVmSizes());
+            controller.AddGlobalStep("resource group", () => ResourceGroup());
+            controller.AddGlobalStep("availability sets", () => AvailabilitySets());
+
+            if (!controller.Run(leaveNodesConnected: false))
+            {
+                Console.WriteLine("*** One or more Azure provisioning steps failed.");
+                return false;
+            }
 
             return true;
         }
@@ -611,6 +604,168 @@ namespace Neon.Kube
             azure = Azure.Configure()
                 .Authenticate(azureCredentials)
                 .WithSubscription(azureOptions.SubscriptionId);
+        }
+
+        /// <summary>
+        /// Verify that the requested Azure region exists, supports the requested VM sizes,
+        /// and that VMs for nodes that specify UltraSSD actually support UltraSSD.  We'll also
+        /// verify that the requested VMs have the minimum required number or cores and RAM.
+        /// </summary>
+        private void VerifyRegionAndVmSizes()
+        {
+            var ultraSSD     = cluster.Nodes.Any(node => node.Metadata.Azure.StorageType == AzureStorageTypes.UltraSSD);
+            var region       = cluster.Definition.Hosting.Azure.Region;
+            var vmSizes      = azure.VirtualMachines.Sizes.ListByRegion(region);
+            var nameToVmSize = new Dictionary<string, IVirtualMachineSize>(StringComparer.InvariantCultureIgnoreCase);
+            var nameToVmSku  = new Dictionary<string, IComputeSku>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var vmSize in azure.VirtualMachines.Sizes.ListByRegion(region))
+            {
+                nameToVmSize[vmSize.Name] =  vmSize;
+            }
+
+            foreach (var vmSku in azure.ComputeSkus.ListByRegion(region))
+            {
+                nameToVmSku[vmSku.Name.Value] = vmSku;
+            }
+
+            foreach (var node in cluster.Nodes)
+            {
+                var vmSizeName = node.Metadata.Azure.VmSize;
+
+                if (!nameToVmSize.TryGetValue(vmSizeName, out var vmSize))
+                {
+                    throw new KubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSizeName}].  This is not available in the [{region}] Azure region.");
+                }
+
+                if (!nameToVmSku.TryGetValue(vmSizeName, out var vmSku))
+                {
+                    // This should never happen, right?
+
+                    throw new KubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSizeName}].  This is not available in the [{region}] Azure region.");
+                }
+
+                switch (node.Metadata.Role)
+                {
+                    case NodeRole.Master:
+
+                        if (vmSize.NumberOfCores < KubeConst.MinMasterCores)
+                        {
+                            throw new KubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSizeName}] with [Cores={vmSize.NumberOfCores} MiB] which is lower than the required [{KubeConst.MinMasterCores}] cores.]");
+                        }
+
+                        if (vmSize.MemoryInMB < KubeConst.MinMasterRamMiB)
+                        {
+                            throw new KubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSizeName}] with [RAM={vmSize.MemoryInMB} MiB] which is lower than the required [{KubeConst.MinMasterRamMiB} MiB].]");
+                        }
+
+                        if (vmSize.MaxDataDiskCount < 1)
+                        {
+                            throw new KubeException($"Master node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSizeName}] that supports up to [{vmSize.MaxDataDiskCount}] disks.  A minimum of [1] drive is required.");
+                        }
+                        break;
+
+                    case NodeRole.Worker:
+
+                        if (vmSize.NumberOfCores < KubeConst.MinWorkerCores)
+                        {
+                            throw new KubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSizeName}] with [Cores={vmSize.NumberOfCores} MiB] which is lower than the required [{KubeConst.MinWorkerCores}] cores.]");
+                        }
+
+                        if (vmSize.MemoryInMB < KubeConst.MinWorkerRamMiB)
+                        {
+                            throw new KubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSizeName}] with [RAM={vmSize.MemoryInMB} MiB] which is lower than the required [{KubeConst.MinWorkerRamMiB} MiB].]");
+                        }
+
+                        if (vmSize.MaxDataDiskCount < 1)
+                        {
+                            throw new KubeException($"Worker node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSizeName}] that supports up to [{vmSize.MaxDataDiskCount}] disks.  A minimum of [1] drive is required.");
+                        }
+                        break;
+
+                    default:
+
+                        throw new NotImplementedException();
+                }
+
+                if (node.Metadata.Azure.StorageType == AzureStorageTypes.UltraSSD)
+                {
+                    if (!vmSku.Capabilities.Any(Capability => Capability.Name == "UltraSSDAvailable" && Capability.Value == "False"))
+                    {
+                        throw new KubeException($"Node [{node.Name}] requests an UltraSSD disk.  This is not available in the [{region}] Azure region and/or the [{vmSize}] VM Size.");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates the cluster's resource group if it doesn't already exist.
+        /// </summary>
+        private void ResourceGroup()
+        {
+            if (azure.ResourceGroups.Contain(resourceGroup))
+            {
+                return;
+            }
+
+            azure.ResourceGroups
+                .Define(resourceGroup)
+                .WithRegion(region)
+                .Create();
+        }
+
+        /// <summary>
+        /// Creates an avilablity set for the master VMs an a separate one for the worker VMs.
+        /// </summary>
+        private void AvailabilitySets()
+        {
+            var existing = azure.AvailabilitySets.ListByResourceGroup(resourceGroup);
+
+            masterAvailabilitySet = existing.FirstOrDefault(aset => aset.Name == masterAvailabilitySetName);
+            workerAvailabilitySet = existing.FirstOrDefault(aset => aset.Name == workerAvailabilitySetName);
+
+            if (azureOptions.DisableProximityPlacement)
+            {
+                if (masterAvailabilitySet == null)
+                {
+                    masterAvailabilitySet = (IAvailabilitySet)azure.AvailabilitySets.Define(masterAvailabilitySetName)
+                        .WithRegion(region)
+                        .WithExistingResourceGroup(resourceGroup)
+                        .WithUpdateDomainCount(azureOptions.UpdateDomains)
+                        .WithFaultDomainCount(azureOptions.FaultDomains);
+                }
+
+                if (workerAvailabilitySet == null)
+                {
+                    workerAvailabilitySet = (IAvailabilitySet)azure.AvailabilitySets.Define(workerAvailabilitySetName)
+                        .WithRegion(region)
+                        .WithExistingResourceGroup(resourceGroup)
+                        .WithUpdateDomainCount(azureOptions.UpdateDomains)
+                        .WithFaultDomainCount(azureOptions.FaultDomains);
+                }
+            }
+            else
+            {
+                if (masterAvailabilitySet == null)
+                {
+                    masterAvailabilitySet = (IAvailabilitySet)azure.AvailabilitySets.Define(masterAvailabilitySetName)
+                        .WithRegion(region)
+                        .WithExistingResourceGroup(resourceGroup)
+                        .WithProximityPlacementGroup(proximityPlacementGroupName)
+                        .WithUpdateDomainCount(azureOptions.UpdateDomains)
+                        .WithFaultDomainCount(azureOptions.FaultDomains);
+                }
+
+                if (workerAvailabilitySet == null)
+                {
+                    workerAvailabilitySet = (IAvailabilitySet)azure.AvailabilitySets.Define(workerAvailabilitySetName)
+                        .WithRegion(region)
+                        .WithExistingResourceGroup(resourceGroup)
+                        .WithProximityPlacementGroup(proximityPlacementGroupName)
+                        .WithUpdateDomainCount(azureOptions.UpdateDomains)
+                        .WithFaultDomainCount(azureOptions.FaultDomains);
+                }
+            }
         }
     }
 }

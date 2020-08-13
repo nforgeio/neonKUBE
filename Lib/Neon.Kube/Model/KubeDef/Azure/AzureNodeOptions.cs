@@ -98,7 +98,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Optionally specifies the size of each of the mounted managed drives in gigabytes.  This
-        /// defaults to <c>null</c> which indicates that <see cref="AzureOptions.DefaultDriveSize"/>
+        /// defaults to <c>null</c> which indicates that <see cref="AzureOptions.DefaultDiskSize"/>
         /// will be used instead, and that defaults to <b>128 GiB</b>.
         /// </summary>
         /// <remarks>
@@ -118,7 +118,7 @@ namespace Neon.Kube
         /// and set to the maximum allowed size, when necessary.
         /// </note>
         /// <note>
-        /// The Azure drive sizes listed above may become out-of-date as Azure enhances their
+        /// The Azure disk sizes listed above may become out-of-date as Azure enhances their
         /// services.  Review the Azure documentation for more information about what is
         /// currently supported.
         /// </note>
@@ -165,7 +165,7 @@ namespace Neon.Kube
 
             if (string.IsNullOrEmpty(this.DriveSize))
             {
-                this.DriveSize = clusterDefinition.Hosting.Azure.DefaultDriveSize;
+                this.DriveSize = clusterDefinition.Hosting.Azure.DefaultDiskSize;
             }
 
             if (!ByteUnits.TryParse(this.DriveSize, out var driveSizeBytes) || driveSizeBytes <= 1)
