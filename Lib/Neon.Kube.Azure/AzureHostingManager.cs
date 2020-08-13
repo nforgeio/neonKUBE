@@ -52,7 +52,10 @@ using Microsoft.Azure.Management.Monitor.Fluent.Models;
 using Microsoft.Azure.Management.ContainerService.Fluent.Models;
 using Microsoft.Azure.Management.AppService.Fluent;
 using Microsoft.Azure.Management.CosmosDB.Fluent.Models;
-using Couchbase.Annotations;
+using Microsoft.Azure.Management.Network.Models;
+
+using SecurityRuleProtocol = Microsoft.Azure.Management.Network.Fluent.Models.SecurityRuleProtocol;
+using TransportProtocol    = Microsoft.Azure.Management.Network.Fluent.Models.TransportProtocol;
 
 namespace Neon.Kube
 {
@@ -250,15 +253,16 @@ namespace Neon.Kube
 
         private ClusterProxy                    cluster;
         private string                          clusterName;
-        private AzureCredentials                azureCredentials;
-        private IAzure                          azure;
+        private AzureOptions                    azureOptions;
         private string                          region;
+        private AzureCredentials                azureCredentials;
         private string                          resourceGroup;
         private KubeSetupInfo                   setupInfo;
         private HostingOptions                  hostingOptions;
-        private AzureOptions                    azureOptions;
+        private CloudOptions                    cloudOptions;
         private NetworkOptions                  networkOptions;
         private Dictionary<string, AzureNode>   nodeDictionary;
+        private IAzure                          azure;
 
         // Azure requires that the various components that need to be provisioned
         // for the cluster have names.  We're going to generate these in the constructor.
@@ -272,9 +276,8 @@ namespace Neon.Kube
         // clusters.
 
         private string                          namePrefix;
-        private string                          publicIpName;
+        private string                          publicAddressName;
         private string                          vnetName;
-        private string                          subnetName;
         private string                          masterAvailabilitySetName;
         private string                          workerAvailabilitySetName;
         private string                          proximityPlacementGroupName;
@@ -282,20 +285,20 @@ namespace Neon.Kube
         private string                          loadbalancerFrontendName;
         private string                          loadbalancerBackendName;
         private string                          loadbalancerProbeName;
-        private string                          publicNetworkSecurityGroupName;
-        private string                          privateNetworkSecurityGroupName;
-        private string                          outboudNetworkSecurityGroupName;
+        private string                          ingressNsgName;
+        private string                          egressNsgName;
+        private string                          manageNsgName;
 
         // These fields hold various Azure components while provisioning is in progress.
 
-        private IPublicIPAddress                publicIp;
+        private IPublicIPAddress                publicAddress;
         private INetwork                        vnet;
         private ILoadBalancer                   loadBalancer;
         private IAvailabilitySet                masterAvailabilitySet;
         private IAvailabilitySet                workerAvailabilitySet;
-        private INetworkSecurityGroup           publicNetworkSecurityGroup;
-        private INetworkSecurityGroup           privateNetworkSecurityGroup;
-        private INetworkSecurityGroup           outboundNetworkSecurityGroup;
+        private NetworkSecurityGroup            ingressNsg;
+        private NetworkSecurityGroup            egressNsg;
+        private NetworkSecurityGroup            manageNsg;
 
         /// <summary>
         /// Constructor.
@@ -315,31 +318,32 @@ namespace Neon.Kube
 
             this.cluster                         = cluster;
             this.clusterName                     = cluster.Name;
-            this.resourceGroup                   = cluster.Definition.Hosting.Azure.ResourceGroup ?? $"neon-{clusterName}";
-            this.setupInfo                       = setupInfo;
-            this.hostingOptions                  = cluster.Definition.Hosting;
             this.azureOptions                    = cluster.Definition.Hosting.Azure;
             this.region                          = azureOptions.Region;
+            this.resourceGroup                   = azureOptions.ResourceGroup ?? $"neon-{clusterName}";
+            this.setupInfo                       = setupInfo;
+            this.hostingOptions                  = cluster.Definition.Hosting;
             this.networkOptions                  = cluster.Definition.Network;
+            this.cloudOptions                    = cluster.Definition.Cloud;
 
             // Initialize the component names as they will be deployed to Azure.
 
             this.namePrefix                      = $"neon-{clusterName}-";
-            this.publicIpName                    = namePrefix + "public-ip";
+            this.publicAddressName               = namePrefix + "public-address";
             this.vnetName                        = namePrefix + "vnet";
             this.masterAvailabilitySetName       = namePrefix + "master-availability-set";
             this.workerAvailabilitySetName       = namePrefix + "worker-availability-set";
             this.proximityPlacementGroupName     = namePrefix + "proxmity-group";
             this.loadbalancerName                = namePrefix + "load-balancer";
+            this.ingressNsgName                  = namePrefix + "ingress";
+            this.egressNsgName                   = namePrefix + "egress";
+            this.manageNsgName                   = namePrefix + "manage";
 
             // These names are relative to another component, so they don't require a prefix.
 
             this.loadbalancerFrontendName        = "frontend";
             this.loadbalancerBackendName         = "backend;";
             this.loadbalancerProbeName           = "probe";
-            this.publicNetworkSecurityGroupName  = "neon-public";
-            this.privateNetworkSecurityGroupName = "neon-private";
-            this.outboudNetworkSecurityGroupName = "neon-outbound";
 
             // Initialize the node mapping dictionary and also ensure
             // that each node has Azure reasonable Azure node options.
@@ -385,18 +389,18 @@ namespace Neon.Kube
             // reserved by the cloud provider or neonKUBE.  We're also going to 
             // require that the nodes subnet have at least 256 addresses.
 
-            var nodeSubnet = NetworkCidr.Parse(clusterDefinition.Network.NodeSubnet);
+            var nodeSubnet = NetworkCidr.Parse(networkOptions.NodeSubnet);
 
             if (nodeSubnet.AddressCount < 256)
             {
-                throw new ClusterDefinitionException($"[{nameof(clusterDefinition.Network.NodeSubnet)}={clusterDefinition.Network.NodeSubnet}] is too small.  Cloud subnets must include at least 256 addresses (at least a /24 network).");
+                throw new ClusterDefinitionException($"[{nameof(networkOptions.NodeSubnet)}={networkOptions.NodeSubnet}] is too small.  Cloud subnets must include at least 256 addresses (at least a /24 network).");
             }
 
             const int reservedCount = KubeConst.CloudVNetStartReservedIPs + KubeConst.CloudVNetEndReservedIPs;
 
             if (clusterDefinition.Nodes.Count() > nodeSubnet.AddressCount - reservedCount)
             {
-                throw new ClusterDefinitionException($"The cluster includes [{clusterDefinition.Nodes.Count()}] which will not fit within the [{nameof(clusterDefinition.Network.NodeSubnet)}={clusterDefinition.Network.NodeSubnet}] after accounting for [{reservedCount}] reserved addresses.");
+                throw new ClusterDefinitionException($"The cluster includes [{clusterDefinition.Nodes.Count()}] which will not fit within the [{nameof(networkOptions.NodeSubnet)}={networkOptions.NodeSubnet}] after accounting for [{reservedCount}] reserved addresses.");
             }
 
             var firstValidAddressUint = NetHelper.AddressToUint(nodeSubnet.FirstAddress) + KubeConst.CloudVNetStartReservedIPs;
@@ -417,19 +421,19 @@ namespace Neon.Kube
 
                 if (!nodeSubnet.Contains(address))
                 {
-                    throw new ClusterDefinitionException($"Node [{node.Name}] is assigned [{node.Address}={node.Address}] which is outside of [{nameof(clusterDefinition.Network.NodeSubnet)}={clusterDefinition.Network.NodeSubnet}].");
+                    throw new ClusterDefinitionException($"Node [{node.Name}] is assigned [{node.Address}={node.Address}] which is outside of [{nameof(networkOptions.NodeSubnet)}={networkOptions.NodeSubnet}].");
                 }
 
                 var addressUint = NetHelper.AddressToUint(address);
 
                 if (addressUint < firstValidAddressUint)
                 {
-                    throw new ClusterDefinitionException($"Node [{node.Name}] defines IP address [{node.Address}={node.Address}] which is reserved.  The first valid node address [{nameof(clusterDefinition.Network.NodeSubnet)}={clusterDefinition.Network.NodeSubnet}] is [{firstValidAddress}].");
+                    throw new ClusterDefinitionException($"Node [{node.Name}] defines IP address [{node.Address}={node.Address}] which is reserved.  The first valid node address [{nameof(networkOptions.NodeSubnet)}={networkOptions.NodeSubnet}] is [{firstValidAddress}].");
                 }
 
                 if (addressUint > lastValidAddressUint)
                 {
-                    throw new ClusterDefinitionException($"Node [{node.Name}] defines IP address [{node.Address}={node.Address}] which is reserved.  The last valid node address [{nameof(clusterDefinition.Network.NodeSubnet)}={clusterDefinition.Network.NodeSubnet}] is [{lastValidAddress}].");
+                    throw new ClusterDefinitionException($"Node [{node.Name}] defines IP address [{node.Address}={node.Address}] which is reserved.  The last valid node address [{nameof(networkOptions.NodeSubnet)}={networkOptions.NodeSubnet}] is [{lastValidAddress}].");
                 }
             }
 
@@ -460,7 +464,7 @@ namespace Neon.Kube
             // Assign master node addresses first so these will tend to appear first
             // in the subnet.
 
-            foreach (var node in clusterDefinition.SortedNodes.Where(node => node.IsMaster))
+            foreach (var node in clusterDefinition.SortedMasters)
             {
                 if (!string.IsNullOrEmpty(node.Address))
                 {
@@ -482,7 +486,7 @@ namespace Neon.Kube
             // Now assign the worker node addresses, so these will tend to appear
             // after the masters in the subnet.
 
-            foreach (var node in clusterDefinition.SortedNodes.Where(node => node.IsWorker))
+            foreach (var node in clusterDefinition.SortedWorkers)
             {
                 if (!string.IsNullOrEmpty(node.Address))
                 {
@@ -517,8 +521,12 @@ namespace Neon.Kube
 
             controller.AddGlobalStep("connecting Azure", () => AzureConnect());
             controller.AddGlobalStep("region availablity", () => VerifyRegionAndVmSizes());
-            controller.AddGlobalStep("resource group", () => ResourceGroup());
-            controller.AddGlobalStep("availability sets", () => AvailabilitySets());
+            controller.AddGlobalStep("resource group", () => CreateResourceGroup());
+            controller.AddGlobalStep("availability sets", () => CreateAvailabilitySets());
+            controller.AddGlobalStep("virtual network", () => CreateVirtualNetwork());
+            controller.AddGlobalStep("network security groups", () => CreateNetworkSecurityGroups());
+            controller.AddGlobalStep("public address", () => CreatePublicAddress());
+            controller.AddGlobalStep("load balancer", () => CreateLoadBalancer());
 
             if (!controller.Run(leaveNodesConnected: false))
             {
@@ -607,9 +615,14 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// <para>
         /// Verify that the requested Azure region exists, supports the requested VM sizes,
         /// and that VMs for nodes that specify UltraSSD actually support UltraSSD.  We'll also
         /// verify that the requested VMs have the minimum required number or cores and RAM.
+        /// </para>
+        /// <para>
+        /// This also updates the node labels to match the capabilities of their VMs.
+        /// </para>
         /// </summary>
         private void VerifyRegionAndVmSizes()
         {
@@ -621,7 +634,7 @@ namespace Neon.Kube
 
             foreach (var vmSize in azure.VirtualMachines.Sizes.ListByRegion(region))
             {
-                nameToVmSize[vmSize.Name] =  vmSize;
+                nameToVmSize[vmSize.Name] = vmSize;
             }
 
             foreach (var vmSku in azure.ComputeSkus.ListByRegion(region))
@@ -695,13 +708,24 @@ namespace Neon.Kube
                         throw new KubeException($"Node [{node.Name}] requests an UltraSSD disk.  This is not available in the [{region}] Azure region and/or the [{vmSize}] VM Size.");
                     }
                 }
+
+                // Update the node labels to match the actual VM capabilities.
+
+                node.Metadata.Labels.ComputeCores     = vmSize.NumberOfCores;
+                node.Metadata.Labels.ComputeRam       = vmSize.MemoryInMB;
+
+                node.Metadata.Labels.StorageSize      = $"{AzureHelper.GetDiskSizeGiB(node.Metadata.Azure.StorageType, ByteUnits.Parse(node.Metadata.Azure.DriveSize))} GiB";
+                node.Metadata.Labels.StorageHDD       = node.Metadata.Azure.StorageType == AzureStorageTypes.StandardHDD;
+                node.Metadata.Labels.StorageEphemeral = false;
+                node.Metadata.Labels.StorageLocal     = false;
+                node.Metadata.Labels.StorageRedundant = true;
             }
         }
 
         /// <summary>
         /// Creates the cluster's resource group if it doesn't already exist.
         /// </summary>
-        private void ResourceGroup()
+        private void CreateResourceGroup()
         {
             if (azure.ResourceGroups.Contain(resourceGroup))
             {
@@ -715,20 +739,21 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates an avilablity set for the master VMs an a separate one for the worker VMs.
+        /// Creates an avilablity set for the master VMs and a separate one for the worker VMs.
         /// </summary>
-        private void AvailabilitySets()
+        private void CreateAvailabilitySets()
         {
             var existing = azure.AvailabilitySets.ListByResourceGroup(resourceGroup);
 
-            masterAvailabilitySet = existing.FirstOrDefault(aset => aset.Name == masterAvailabilitySetName);
-            workerAvailabilitySet = existing.FirstOrDefault(aset => aset.Name == workerAvailabilitySetName);
+            masterAvailabilitySet = existing.FirstOrDefault(aset => aset.Name.Equals(masterAvailabilitySetName, StringComparison.InvariantCultureIgnoreCase));
+            workerAvailabilitySet = existing.FirstOrDefault(aset => aset.Name.Equals(workerAvailabilitySetName, StringComparison.InvariantCultureIgnoreCase));
 
             if (azureOptions.DisableProximityPlacement)
             {
                 if (masterAvailabilitySet == null)
                 {
-                    masterAvailabilitySet = (IAvailabilitySet)azure.AvailabilitySets.Define(masterAvailabilitySetName)
+                    masterAvailabilitySet = (IAvailabilitySet)azure.AvailabilitySets
+                        .Define(masterAvailabilitySetName)
                         .WithRegion(region)
                         .WithExistingResourceGroup(resourceGroup)
                         .WithUpdateDomainCount(azureOptions.UpdateDomains)
@@ -737,7 +762,8 @@ namespace Neon.Kube
 
                 if (workerAvailabilitySet == null)
                 {
-                    workerAvailabilitySet = (IAvailabilitySet)azure.AvailabilitySets.Define(workerAvailabilitySetName)
+                    workerAvailabilitySet = (IAvailabilitySet)azure.AvailabilitySets
+                        .Define(workerAvailabilitySetName)
                         .WithRegion(region)
                         .WithExistingResourceGroup(resourceGroup)
                         .WithUpdateDomainCount(azureOptions.UpdateDomains)
@@ -748,7 +774,8 @@ namespace Neon.Kube
             {
                 if (masterAvailabilitySet == null)
                 {
-                    masterAvailabilitySet = (IAvailabilitySet)azure.AvailabilitySets.Define(masterAvailabilitySetName)
+                    masterAvailabilitySet = (IAvailabilitySet)azure.AvailabilitySets
+                        .Define(masterAvailabilitySetName)
                         .WithRegion(region)
                         .WithExistingResourceGroup(resourceGroup)
                         .WithProximityPlacementGroup(proximityPlacementGroupName)
@@ -758,7 +785,8 @@ namespace Neon.Kube
 
                 if (workerAvailabilitySet == null)
                 {
-                    workerAvailabilitySet = (IAvailabilitySet)azure.AvailabilitySets.Define(workerAvailabilitySetName)
+                    workerAvailabilitySet = (IAvailabilitySet)azure.AvailabilitySets
+                        .Define(workerAvailabilitySetName)
                         .WithRegion(region)
                         .WithExistingResourceGroup(resourceGroup)
                         .WithProximityPlacementGroup(proximityPlacementGroupName)
@@ -766,6 +794,155 @@ namespace Neon.Kube
                         .WithFaultDomainCount(azureOptions.FaultDomains);
                 }
             }
+        }
+
+        /// <summary>
+        /// Creates the cluster's virtual network if it doesn't already exist.
+        /// </summary>
+        private void CreateVirtualNetwork()
+        {
+            if (!azure.Networks.ListByResourceGroup(resourceGroup).Any(vnet => vnet.Name.Equals(vnetName, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                vnet = azure.Networks
+                    .Define(vnetName)
+                    .WithRegion(region)
+                    .WithExistingResourceGroup(resourceGroup)
+                    .WithAddressSpace(cluster.Definition.Network.NodeSubnet)
+                    .Create();
+            }
+        }
+
+        /// <summary>
+        /// Create or updates the network security groups.
+        /// </summary>
+        private void CreateNetworkSecurityGroups()
+        {
+            // Ingress: Honor the cluster definition ingress rules, if there are any.
+
+            var ingressNsgCreator = azure.NetworkSecurityGroups
+                .Define(ingressNsgName)
+                .WithRegion(region)
+                .WithExistingResourceGroup(resourceGroup);
+
+            var priority = 3000;
+
+            foreach (var rule in networkOptions.IngressRules)
+            {
+                var allowedInboundAddresses = rule.AllowedAddresses.ToArray();
+
+                if (allowedInboundAddresses.Length == 0)
+                {
+                    allowedInboundAddresses = new string[] { "0.0.0.0/0" };    // Allow traffic from everywhere
+                }
+
+                ingressNsgCreator
+                    .DefineRule($"{rule.Name}")
+                    .AllowInbound()
+                    .FromAddresses(allowedInboundAddresses)
+                    .FromAnyPort()
+                    .ToAnyAddress()
+                    .ToPort(rule.NodePort)
+                    .WithProtocol(SecurityRuleProtocol.Tcp)                     // Only TCP is supported now
+                    .WithPriority(priority++)
+                    .Attach();
+            }
+
+            ingressNsgCreator.Create();
+
+            // Egress:
+
+            priority = 3000;
+
+            var allowedOutboundAddresses = networkOptions.EgressAddresses.ToArray();
+
+            if (allowedOutboundAddresses.Length == 0)
+            {
+                allowedOutboundAddresses = new string[] { "0.0.0.0/0" };        // Allow traffic to everywhere
+            }
+
+            azure.NetworkSecurityGroups
+                .Define(egressNsgName)
+                .WithRegion(region)
+                .WithExistingResourceGroup(resourceGroup)
+                .DefineRule("outbound-allow-all")
+                    .AllowOutbound()
+                    .FromAnyAddress()
+                    .FromAnyPort()
+                    .ToAddresses(allowedOutboundAddresses)
+                    .ToAnyPort()
+                    .WithAnyProtocol()
+                    .WithPriority(priority++)
+                    .Attach()
+                .Create();
+
+            // Manage: Optionally create a security group that allows external management
+            //         traffic to any node and port.
+
+            // $todo(jefflill): Implement this!
+        }
+
+        /// <summary>
+        /// Creates the public IP address for the cluster's load balancer.
+        /// </summary>
+        private void CreatePublicAddress()
+        {
+            if (azureOptions.StaticAddress)
+            {
+                publicAddress = azure.PublicIPAddresses
+                    .Define(publicAddressName)
+                        .WithRegion(azureOptions.Region)
+                        .WithExistingResourceGroup(resourceGroup)
+                        .WithStaticIP()
+                        .WithLeafDomainLabel(azureOptions.DomainLabel)
+                        .Create();
+            }
+            else
+            {
+                publicAddress = azure.PublicIPAddresses
+                    .Define(publicAddressName)
+                        .WithRegion(azureOptions.Region)
+                        .WithExistingResourceGroup(resourceGroup)
+                        .WithDynamicIP()
+                        .WithLeafDomainLabel(azureOptions.DomainLabel)
+                        .Create();
+            }
+        }
+
+        /// <summary>
+        /// Creates the cluster's external load balancer.
+        /// </summary>
+        private void CreateLoadBalancer()
+        {
+            // Azure load balancers require at least one rule so we're going to create
+            // a do-nothing rule.
+
+            var loadbalancerCreator = azure.LoadBalancers
+                .Define(loadbalancerName)
+                .WithRegion(region)
+                .WithExistingResourceGroup(resourceGroup)
+                .DefineLoadBalancingRule($"neon-unused-tcp-0")
+                    .WithProtocol(TransportProtocol.Tcp)
+                    .FromFrontend(loadbalancerFrontendName)
+                    .FromFrontendPort(10000)
+                    .ToBackend(loadbalancerBackendName)
+                    .ToBackendPort(10000)
+                    .Attach();
+
+            foreach (var azureNode in nodeDictionary.Values
+                .Where(n => n.IsMaster)
+                .OrderBy(n => n.Name, StringComparer.InvariantCultureIgnoreCase))
+            {
+            }
+
+            foreach (var azureNode in nodeDictionary.Values
+                .Where(n => n.IsWorker)
+                .OrderBy(n => n.Name, StringComparer.InvariantCultureIgnoreCase))
+            {
+            }
+
+            loadbalancerCreator
+                .WithSku(LoadBalancerSkuType.Standard)
+                .Create();
         }
     }
 }

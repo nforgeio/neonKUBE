@@ -177,7 +177,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "StorageSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [YamlMember(Alias = "StorageSize", ApplyNamingConventions = false)]
-        [DefaultValue(0)]
+        [DefaultValue(null)]
         public string StorageSize { get; set; }
 
         /// <summary>
@@ -477,7 +477,7 @@ namespace Neon.Kube
         // Implementation
 
         /// <summary>
-        /// Enumerates the node labels.
+        /// Enumerates the standard neonKUBE node labels.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
@@ -493,7 +493,7 @@ namespace Neon.Kube
 
                 // Standard labels from the parent node definition.
 
-                list.Add(new KeyValuePair<string, object>(LabelAddress,          Node.Address));
+                list.Add(new KeyValuePair<string, object>(LabelAddress,                 Node.Address));
                 list.Add(new KeyValuePair<string, object>(LabelRole,                    Node.Role));
                 list.Add(new KeyValuePair<string, object>(LabelIngress,                 Node.Ingress));
 

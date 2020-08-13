@@ -35,7 +35,6 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
-using System.DirectoryServices.Protocols;
 
 namespace Neon.Kube
 {
@@ -44,6 +43,39 @@ namespace Neon.Kube
     /// </summary>
     public class NetworkOptions
     {
+        //---------------------------------------------------------------------
+        // Local types
+
+        /// <summary>
+        /// Used for checking subnet conflicts below.
+        /// </summary>
+        private class SubnetDefinition
+        {
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="name">Subnet name.</param>
+            /// <param name="cidr">Subnet CIDR.</param>
+            public SubnetDefinition(string name, NetworkCidr cidr)
+            {
+                this.Name = $"{nameof(NetworkOptions)}.{name}";
+                this.Cidr = cidr;
+            }
+
+            /// <summary>
+            /// Identifies the subnet.
+            /// </summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// The subnet CIDR.
+            /// </summary>
+            public NetworkCidr Cidr { get; set; }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         private const string defaultPodSubnet       = "10.254.0.0/16";
         private const string defaultServiceSubnet   = "10.253.0.0/16";
         private const string defaultCloudNodeSubnet = "10.100.0.0/16";
@@ -172,37 +204,20 @@ namespace Neon.Kube
         /// gateway services which are then responsible for routing to the target Kubernetes 
         /// services.
         /// </summary>
-        [JsonProperty(PropertyName = "IngressRoutes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "ingressRoutes", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "IngressRules", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ingressRules", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public List<IngressRoute> IngressRoutes { get; set; } = new List<IngressRoute>();
+        public List<IngressRule> IngressRules { get; set; } = new List<IngressRule>();
 
         /// <summary>
-        /// Used for checking subnet conflicts below.
+        /// Optionally specifies the whitelisted external addresses for outbound traffic.
+        /// This defaults to allowing outboud traffic to anywhere when the property is
+        /// <c>null</c> or empty.  Specify <b>0.0.0.0/32</b> to block all traffic.
         /// </summary>
-        private class SubnetDefinition
-        {
-            /// <summary>
-            /// Constructor.
-            /// </summary>
-            /// <param name="name">Subnet name.</param>
-            /// <param name="cidr">Subnet CIDR.</param>
-            public SubnetDefinition(string name, NetworkCidr cidr)
-            {
-                this.Name = $"{nameof(NetworkOptions)}.{name}";
-                this.Cidr = cidr;
-            }
-
-            /// <summary>
-            /// Identifies the subnet.
-            /// </summary>
-            public string Name { get; set; }
-
-            /// <summary>
-            /// The subnet CIDR.
-            /// </summary>
-            public NetworkCidr Cidr { get; set; }
-        }
+        [JsonProperty(PropertyName = "EgressAddresses", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "egressAddresses", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public List<string> EgressAddresses { get; set; } = new List<string>();
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -341,8 +356,29 @@ namespace Neon.Kube
 
                     if (subnet.Cidr.Overlaps(next.Cidr))
                     {
-                        throw new ClusterDefinitionException($"Subnet conflict: [{subnet.Name}={subnet.Cidr}] and [{next.Name}={next.Cidr}] overlap.");
+                        throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}]: Subnet conflict: [{subnet.Name}={subnet.Cidr}] and [{next.Name}={next.Cidr}] overlap.");
                     }
+                }
+            }
+
+            // Verify [IngressRules].
+
+            IngressRules = IngressRules ?? new List<IngressRule>();
+
+            foreach (var rule in IngressRules)
+            {
+                rule.Validate(clusterDefinition);
+            }
+
+            // Verify
+
+            EgressAddresses = EgressAddresses ?? new List<string>();
+
+            foreach (var address in EgressAddresses)
+            {
+                if (!NetworkCidr.TryParse(address, out var v1) && !IPAddress.TryParse(address, out var v2))
+                {
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}]: [{nameof(EgressAddresses)}] includes invalid IP address or subnet [{address}].");
                 }
             }
         }

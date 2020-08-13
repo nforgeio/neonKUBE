@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IngressRoute.cs
+// FILE:	    IngressRule.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -35,13 +35,14 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.IO;
+using Neon.Net;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Specifies the ingress rules for the cluster.
+    /// Specifies a network ingress rule for the cluster.
     /// </summary>
-    public class IngressRoute
+    public class IngressRule
     {
         /// <summary>
         /// The name of the ingress rule.
@@ -56,24 +57,34 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "Port", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "port", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public int? Port { get; set; }
+        [DefaultValue(0)]
+        public int Port { get; set; }
 
         /// <summary>
-        /// The target port for the ingress rule.
-        /// </summary>
-        [JsonProperty(PropertyName = "TargetPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "targetPort", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public int? TargetPort { get; set; }
-
-        /// <summary>
-        /// The Kubernetes NodePort. This is where the ingress gateway will listen.
+        /// The Kubernetes NodePort. This is where the ingress gateway is listening.
         /// </summary>
         [JsonProperty(PropertyName = "NodePort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "nodePort", ApplyNamingConventions = false)]
+        [DefaultValue(0)]
+        public int NodePort { get; set; }
+
+        /// <summary>
+        /// The target port within the cluster for the ingress rule.
+        /// </summary>
+        [JsonProperty(PropertyName = "TargetPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "targetPort", ApplyNamingConventions = false)]
+        [DefaultValue(0)]
+        public int TargetPort { get; set; }
+
+        /// <summary>
+        /// Optionally specifies the IP addresses and/or subnets where inbound traffic will be allowed.  
+        /// Traffic will be allowed from everywhere when this is <c>null</c> or empty.  Specify
+        /// <b>0.0.0.0/32</b> to block inbound traffic from everywhere.
+        /// </summary>
+        [JsonProperty(PropertyName = "AllowedAddresses", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "allowedAddresses", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public int? NodePort { get; set; }
+        public List<string> AllowedAddresses { get; set; } = new List<string>();
 
         /// <summary>
         /// Validates the options.
@@ -85,22 +96,33 @@ namespace Neon.Kube
         {
             if (string.IsNullOrEmpty(Name))
             {
-                throw new ClusterDefinitionException($"[{nameof(IngressRoute)}.{nameof(Name)}] is required when specifying an ingress rule.");
+                throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(Name)}] is required when specifying an ingress rule.");
             }
 
-            if (Port == null)
+            if (!NetHelper.IsValidPort(Port))
             {
-                throw new ClusterDefinitionException($"[{nameof(IngressRoute)}.{nameof(Port)}] is required when specifying an ingress rule.");
+                throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(Port)}={Port}] is not a valid TCP port.");
             }
 
-            if (TargetPort == null)
+            if (!NetHelper.IsValidPort(TargetPort))
             {
-                throw new ClusterDefinitionException($"[{nameof(IngressRoute)}.{nameof(TargetPort)}] is required when specifying an ingress rule.");
+                throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(TargetPort)}={TargetPort}] is not a valid TCP port.");
             }
 
-            if (NodePort == null)
+            if (!NetHelper.IsValidPort(NodePort))
             {
-                throw new ClusterDefinitionException($"[{nameof(IngressRoute)}.{nameof(NodePort)}] is required when specifying an ingress rule.");
+                throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(NodePort)}={NodePort}] is not a valid TCP port.");
+            }
+
+            if (AllowedAddresses != null)
+            {
+                foreach (var address in AllowedAddresses)
+                {
+                    if (!NetworkCidr.TryParse(address, out var v1) && !IPAddress.TryParse(address, out var v2))
+                    {
+                        throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(AllowedAddresses)}] includes invalid IP address or subnet [{address}].");
+                    }
+                }
             }
         }
     }
