@@ -56,6 +56,9 @@ func (request *ActivityGetResultRequest) GetActivityID() int64 {
 	return request.GetLongProperty("ActivityId")
 }
 
+// SetActivityID sets the unique Id used to identify the activity.
+//
+// param value int64 -> the long ActivityID
 func (request *ActivityGetResultRequest) SetActivityID(value int64) {
 	request.SetLongProperty("ActivityId", value)
 }

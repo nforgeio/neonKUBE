@@ -28,7 +28,6 @@ import (
 
 	"temporal-proxy/internal"
 	"temporal-proxy/internal/messages"
-	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 var (
@@ -151,7 +150,7 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 				request.GetClientID(),
 				string(debug.Stack()))
 
-			reply.Build(proxyerror.NewTemporalError(err))
+			reply.Build(internal.NewTemporalError(err))
 
 			Logger.Error("Panic", zap.Error(err))
 
@@ -174,7 +173,7 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 	// specified request type
 	if err = verifyClientHelper(request, Clients.Get(request.GetClientID())); err != nil {
 		reply = messages.CreateReplyMessage(request)
-		reply.Build(proxyerror.NewTemporalError(err))
+		reply.Build(internal.NewTemporalError(err))
 	} else {
 
 		// create a context for every request
@@ -511,7 +510,7 @@ func handleIProxyRequest(request messages.IProxyRequest) (err error) {
 			// set the reply
 			reply = messages.NewProxyReply()
 			reply.SetRequestID(request.GetRequestID())
-			reply.Build(proxyerror.NewTemporalError(e, proxyerror.Custom))
+			reply.Build(internal.NewTemporalError(e, internal.CustomError))
 		}
 	}
 

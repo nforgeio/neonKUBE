@@ -19,7 +19,6 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
-	proxyerror "temporal-proxy/internal/temporal/error"
 
 	"go.temporal.io/temporal-proto/workflowservice"
 )
@@ -97,7 +96,7 @@ func (reply *NamespaceListReply) SetNextPageToken(value []byte) {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Build inherits docs from ProxyReply.Build()
-func (reply *NamespaceListReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+func (reply *NamespaceListReply) Build(e error, result ...interface{}) {
 	reply.ProxyReply.Build(e)
 	if len(result) > 0 {
 		if v, ok := result[0].(*workflowservice.ListNamespacesResponse); ok {

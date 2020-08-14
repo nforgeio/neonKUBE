@@ -18,8 +18,6 @@
 package internal
 
 import (
-	"errors"
-
 	"go.uber.org/zap/zapcore"
 )
 
@@ -53,16 +51,4 @@ var (
 
 	// LogLevel specifies the global LogLevel for the temporal-proxy.
 	LogLevel zapcore.LevelEnabler
-
-	// ErrConnection is the custom error that is thrown when the temporal-proxy
-	// is not able to establish a connection with the temporal server
-	ErrConnection = errors.New("TemporalConnectionError{Message: Could not establish a connection with the temporal server.}")
-
-	// ErrEntityNotExist is the custom error that is thrown when a temporal
-	// entity cannot be found in the temporal server
-	ErrEntityNotExist = errors.New("EntityNotExistsError{Message: The entity you are looking for does not exist.}")
-
-	// ErrArgumentNil is the custom error that is thrown when trying to access a nil
-	// value
-	ErrArgumentNil = errors.New("ArgumentNilError{Message: failed to access nil value.}")
 )

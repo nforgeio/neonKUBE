@@ -19,7 +19,6 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
-	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 type (
@@ -70,7 +69,7 @@ func (reply *WorkflowHasLastResultReply) SetHasResult(value bool) {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Build inherits docs from WorkflowReply.Build()
-func (reply *WorkflowHasLastResultReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+func (reply *WorkflowHasLastResultReply) Build(e error, result ...interface{}) {
 	reply.WorkflowReply.Build(e)
 	if len(result) > 0 {
 		if v, ok := result[0].(bool); ok {

@@ -31,7 +31,6 @@ import (
 	"temporal-proxy/internal/messages"
 	proxytemporal "temporal-proxy/internal/temporal"
 	proxyclient "temporal-proxy/internal/temporal/client"
-	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 //----------------------------------------------------------------------------
@@ -159,16 +158,8 @@ func sendMessage(message messages.IProxyMessage) {
 
 // isCanceledError checks a golang error or a
 // TemporalError to see if it is a canceledError.
-func isCanceledErr(err interface{}) bool {
-	var errStr string
-	if v, ok := err.(*proxyerror.TemporalError); ok {
-		errStr = v.ToString()
-	}
-	if v, ok := err.(error); ok {
-		errStr = v.Error()
-	}
-
-	return strings.Contains(errStr, "CanceledError")
+func isCanceledErr(err error) bool {
+	return strings.Contains(err.Error(), "CanceledError")
 }
 
 // isForceReplayError checks if an error is

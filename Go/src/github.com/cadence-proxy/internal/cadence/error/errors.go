@@ -19,6 +19,7 @@ package proxyerror
 
 import (
 	"fmt"
+	"reflect"
 
 	"go.uber.org/cadence"
 )
@@ -34,14 +35,6 @@ type (
 	}
 )
 
-// NewCadenceErrorEmpty is the default constructor for a CadenceError.
-//
-// returns *CadenceError -> pointer to a newly initialized CadenceError
-// in memory.
-func NewCadenceErrorEmpty() *CadenceError {
-	return &CadenceError{}
-}
-
 // NewCadenceError is the constructor for a CadenceError
 // when supplied parameters.
 //
@@ -49,8 +42,12 @@ func NewCadenceErrorEmpty() *CadenceError {
 //
 // param errorType ...interface{} -> the cadence error type.
 func NewCadenceError(err error, errTypes ...CadenceErrorType) *CadenceError {
-	if err == nil {
+	if err == nil || reflect.ValueOf(err).IsNil() {
 		return nil
+	}
+
+	if v, ok := err.(*CadenceError); ok {
+		return v
 	}
 
 	var errType CadenceErrorType
@@ -88,6 +85,28 @@ func (c *CadenceError) Error() string {
 	return *c.String
 }
 
+// ToError returns an error interface from a CadenceError
+// instance.  If the CadenceError is of type Custom or
+// Canceled, the resulting Cadence client errors will
+// be returned.
+//
+// error -> the CadenceError as an error interface.
+func (c *CadenceError) ToError() error {
+	var err error
+	errType := c.GetType()
+	switch errType {
+	case Custom:
+		err = cadence.NewCustomError(c.Error())
+		break
+	case Cancelled:
+		err = cadence.NewCanceledError(c.Error())
+	default:
+		return c
+	}
+
+	return err
+}
+
 // GetType gets the CadenceErrorType from a CadenceError
 // instance.
 //
@@ -118,3 +137,128 @@ func (c *CadenceError) GetType() CadenceErrorType {
 	}
 }
 
+// IsCustomError determines if an error
+// is a CadenceError of type Custom.
+//
+// param err error -> the error to evaluate.
+//
+// returns bool -> error is a CadenceError of type
+// Custom or not.
+func IsCustomError(err error) bool {
+	if err != nil && !reflect.ValueOf(err).IsNil() {
+		if v, ok := err.(*CadenceError); ok {
+			if v.GetType() == Custom {
+				return true
+			}
+		} else {
+			return cadence.IsCustomError(err)
+		}
+	}
+
+	return false
+}
+
+// IsCancelledError determines if an error
+// is a CadenceError of type Cancelled.
+//
+// param err error -> the error to evaluate.
+//
+// returns bool -> error is a CadenceError of type
+// Cancelled or not.
+func IsCancelledError(err error) bool {
+	if err != nil && !reflect.ValueOf(err).IsNil() {
+		if v, ok := err.(*CadenceError); ok {
+			if v.GetType() == Cancelled {
+				return true
+			}
+		} else {
+			return cadence.IsCanceledError(err)
+		}
+	}
+
+	return false
+}
+
+// IsGenericError determines if an error
+// is a CadenceError of type Generic.
+//
+// param err error -> the error to evaluate.
+//
+// returns bool -> error is a CadenceError of type
+// Generic or not.
+func IsGenericError(err error) bool {
+	if err != nil && !reflect.ValueOf(err).IsNil() {
+		if v, ok := err.(*CadenceError); ok {
+			if v.GetType() == Generic {
+				return true
+			}
+		} else {
+			return cadence.IsGenericError(err)
+		}
+	}
+
+	return false
+}
+
+// IsPanicError determines if an error
+// is a CadenceError of type Panic.
+//
+// param err error -> the error to evaluate.
+//
+// returns bool -> error is a CadenceError of type
+// Panic or not.
+func IsPanicError(err error) bool {
+	if err != nil && !reflect.ValueOf(err).IsNil() {
+		if v, ok := err.(*CadenceError); ok {
+			if v.GetType() == Panic {
+				return true
+			}
+		} else {
+			return cadence.IsPanicError(err)
+		}
+	}
+
+	return false
+}
+
+// IsTerminatedError determines if an error
+// is a CadenceError of type Terminated.
+//
+// param err error -> the error to evaluate.
+//
+// returns bool -> error is a CadenceError of type
+// Terminated or not.
+func IsTerminatedError(err error) bool {
+	if err != nil && !reflect.ValueOf(err).IsNil() {
+		if v, ok := err.(*CadenceError); ok {
+			if v.GetType() == Terminated {
+				return true
+			}
+		} else {
+			return cadence.IsTerminatedError(err)
+		}
+	}
+
+	return false
+}
+
+// IsTimeoutError determines if an error
+// is a CadenceError of type Timeout.
+//
+// param err error -> the error to evaluate.
+//
+// returns bool -> error is a CadenceError of type
+// Timeout or not.
+func IsTimeoutError(err error) bool {
+	if err != nil && !reflect.ValueOf(err).IsNil() {
+		if v, ok := err.(*CadenceError); ok {
+			if v.GetType() == Timeout {
+				return true
+			}
+		} else {
+			return cadence.IsTimeoutError(err)
+		}
+	}
+
+	return false
+}

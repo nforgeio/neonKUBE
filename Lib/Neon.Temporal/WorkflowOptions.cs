@@ -24,6 +24,7 @@ using System.Reflection;
 using Newtonsoft.Json;
 
 using Neon.Common;
+using Neon.Data;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
 
@@ -219,6 +220,7 @@ namespace Neon.Temporal
         /// Optionally specifies the default maximum time a workflow can wait between being scheduled
         /// and actually begin executing.  This defaults to <c>24 hours</c>.
         /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
         public TimeSpan ScheduleToStartTimeout { get; set; }
 
         /// <summary>
@@ -232,6 +234,7 @@ namespace Neon.Temporal
         /// point method.
         /// </note>
         /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
         public TimeSpan StartToCloseTimeout { get; set; }
 
         /// <summary>
@@ -240,6 +243,7 @@ namespace Neon.Temporal
         /// as specified by the retry policy.   This defaults to <b>10 seconds</b> when not specified.
         /// The maximum timeout is <b>60 seconds</b>.
         /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
         public TimeSpan DecisionTaskTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
         /// <summary>
@@ -249,6 +253,7 @@ namespace Neon.Temporal
         /// the workflow entry point method or <see cref="TemporalSettings.WorkflowIdReusePolicy"/>
         /// (which also defaults to <see cref="WorkflowIdReusePolicy.AllowDuplicate"/>.
         /// </summary>
+        [JsonConverter(typeof(IntegerEnumConverter<WorkflowIdReusePolicy>))]
         public WorkflowIdReusePolicy WorkflowIdReusePolicy { get; set; } = Temporal.WorkflowIdReusePolicy.UseDefault;
         
         /// <summary>

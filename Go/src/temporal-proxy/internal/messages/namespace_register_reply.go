@@ -19,7 +19,6 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
-	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 type (
@@ -48,7 +47,7 @@ func NewNamespaceRegisterReply() *NamespaceRegisterReply {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Build inherits docs from ProxyReply.Build()
-func (reply *NamespaceRegisterReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+func (reply *NamespaceRegisterReply) Build(e error, result ...interface{}) {
 	reply.ProxyReply.Build(e)
 }
 

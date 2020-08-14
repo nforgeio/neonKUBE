@@ -20,7 +20,7 @@ package dotnetlogger_test
 import (
 	"testing"
 
-	dotnetlogger "temporal-proxy/internal/dotnet-logger"
+	dotnetlogger "temporal-proxy/internal/dotnet/logger"
 
 	"go.uber.org/goleak"
 	"go.uber.org/zap/zapcore"

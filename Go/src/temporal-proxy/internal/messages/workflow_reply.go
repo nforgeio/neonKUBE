@@ -20,7 +20,6 @@ package messages
 import (
 	internal "temporal-proxy/internal"
 	proxytemporal "temporal-proxy/internal/temporal"
-	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 type (
@@ -108,7 +107,7 @@ func (reply *WorkflowReply) SetReplayStatus(value proxytemporal.ReplayStatus) {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Build inherits docs from ProxyReply.Build()
-func (reply *WorkflowReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+func (reply *WorkflowReply) Build(e error, result ...interface{}) {
 	reply.ProxyReply.Build(e)
 }
 

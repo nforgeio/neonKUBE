@@ -19,7 +19,6 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
-	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 type (
@@ -86,27 +85,31 @@ func (request *ActivityCompleteRequest) SetResult(value []byte) {
 }
 
 // GetError gets a ActivityCompleteRequest's Error field
-// from its properties map. Error is the *proxyerror.TemporalError to set in the activity
+// from its properties map. Error is the error to set in the activity
 // complete call.
 //
-// returns *proxyerror.TemporalError -> *proxyerror.TemporalError to set in activity complete
-func (request *ActivityCompleteRequest) GetError() *proxyerror.TemporalError {
-	temporalError := proxyerror.NewTemporalErrorEmpty()
-	err := request.GetJSONProperty("Error", temporalError)
+// returns error -> error to set in activity complete
+func (request *ActivityCompleteRequest) GetError() error {
+	var temporalError internal.TemporalError
+	err := request.GetJSONProperty("Error", &temporalError)
 	if err != nil {
 		return nil
 	}
 
-	return temporalError
+	if &temporalError != nil {
+		err = temporalError.ToError()
+	}
+
+	return err
 }
 
 // SetError sets an ActivityCompleteRequest's Error field
-// from its properties map.  Error is the *proxyerror.TemporalError to set in the activity
+// from its properties map.  Error is the error to set in the activity
 // complete call.
 //
-// param value *proxyerror.TemporalError -> *proxyerror.TemporalError value to set in activity complete
-func (request *ActivityCompleteRequest) SetError(value *proxyerror.TemporalError) {
-	request.SetJSONProperty("Error", value)
+// param value error -> error value to set in activity complete
+func (request *ActivityCompleteRequest) SetError(value error) {
+	request.SetJSONProperty("Error", internal.NewTemporalError(value))
 }
 
 // GetNamespace gets a ActivityCompleteRequest's Namespace field

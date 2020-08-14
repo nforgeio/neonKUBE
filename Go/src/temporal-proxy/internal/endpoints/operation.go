@@ -18,12 +18,11 @@
 package endpoints
 
 import (
-	"errors"
+	"reflect"
 	"sync"
 
 	"temporal-proxy/internal"
 	"temporal-proxy/internal/messages"
-	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 var (
@@ -143,15 +142,15 @@ func (op *Operation) SetChannel(value chan interface{}) {
 
 // SendChannel sends an interface{} value over the
 // Operation's channel
-func (op *Operation) SendChannel(result interface{}, temporalError *proxyerror.TemporalError) error {
+func (op *Operation) SendChannel(result interface{}, err error) error {
 	if op.channel == nil {
 		return internal.ErrArgumentNil
 	}
 
 	defer close(op.channel)
 
-	if temporalError != nil {
-		op.channel <- errors.New(temporalError.ToString())
+	if err != nil && !reflect.ValueOf(err).IsNil() {
+		op.channel <- err
 	} else {
 		op.channel <- result
 	}

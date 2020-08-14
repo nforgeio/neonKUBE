@@ -19,7 +19,6 @@ package messages
 
 import (
 	internal "temporal-proxy/internal"
-	proxyerror "temporal-proxy/internal/temporal/error"
 )
 
 type (
@@ -88,7 +87,7 @@ func (reply *ActivityInvokeReply) SetPending(value bool) {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Build inherits docs from ActivityReply.Build()
-func (reply *ActivityInvokeReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+func (reply *ActivityInvokeReply) Build(e error, result ...interface{}) {
 	reply.ActivityReply.Build(e)
 }
 

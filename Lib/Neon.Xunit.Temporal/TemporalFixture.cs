@@ -290,7 +290,7 @@ services:
                     HostPort        = $"127.0.0.1:{NetworkPorts.Temporal}",
                     CreateNamespace = true,
                     Namespace       = defaultNamespace,
-                    ProxyLogLevel   = logLevel
+                    ProxyLogLevel   = logLevel,
                 };
 
                 this.settings  = settings;

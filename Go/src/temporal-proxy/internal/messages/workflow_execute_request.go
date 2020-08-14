@@ -114,13 +114,13 @@ func (request *WorkflowExecuteRequest) SetArgs(value []byte) {
 // returns client.StartWorkflowOptions -> a temporal client struct that contains the
 // options for executing a workflow
 func (request *WorkflowExecuteRequest) GetOptions() *client.StartWorkflowOptions {
-	opts := new(client.StartWorkflowOptions)
-	err := request.GetJSONProperty("Options", opts)
+	var opts client.StartWorkflowOptions
+	err := request.GetJSONProperty("Options", &opts)
 	if err != nil {
 		return nil
 	}
 
-	return opts
+	return &opts
 }
 
 // SetOptions sets a WorkflowExecutionRequest's start options

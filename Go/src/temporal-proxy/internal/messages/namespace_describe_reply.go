@@ -18,11 +18,11 @@
 package messages
 
 import (
+	"fmt"
+	"strings"
 	internal "temporal-proxy/internal"
-	proxyclient "temporal-proxy/internal/temporal/client"
-	proxyerror "temporal-proxy/internal/temporal/error"
 
-	namespace "go.temporal.io/temporal-proto/namespace"
+	"go.temporal.io/temporal-proto/namespace"
 	"go.temporal.io/temporal-proto/workflowservice"
 )
 
@@ -92,7 +92,7 @@ func (reply *NamespaceDescribeReply) GetNamespaceInfoStatus() namespace.Namespac
 		return namespace.NamespaceStatus_Registered
 	}
 
-	return proxyclient.StringToNamespaceStatus(*namespaceStatusPtr)
+	return StringToNamespaceStatus(*namespaceStatusPtr)
 }
 
 // SetNamespaceInfoStatus sets the NamespaceInfoStatus property as a string
@@ -161,7 +161,7 @@ func (reply *NamespaceDescribeReply) SetConfigurationEmitMetrics(value bool) {
 // IProxyMessage interface methods for implementing the IProxyMessage interface
 
 // Build inherits docs from ProxyReply.Build()
-func (reply *NamespaceDescribeReply) Build(e *proxyerror.TemporalError, result ...interface{}) {
+func (reply *NamespaceDescribeReply) Build(e error, result ...interface{}) {
 	reply.ProxyReply.Build(e)
 	if len(result) > 0 {
 		if v, ok := result[0].(*workflowservice.DescribeNamespaceResponse); ok {
@@ -194,5 +194,22 @@ func (reply *NamespaceDescribeReply) CopyTo(target IProxyMessage) {
 		v.SetNamespaceInfoDescription(reply.GetNamespaceInfoDescription())
 		v.SetNamespaceInfoStatus(reply.GetNamespaceInfoStatus())
 		v.SetNamespaceInfoOwnerEmail(reply.GetNamespaceInfoOwnerEmail())
+	}
+}
+
+// StringToNamespaceStatus takes a valid domain status
+// as a string and converts it into a domain status
+// if possible
+func StringToNamespaceStatus(value string) namespace.NamespaceStatus {
+	value = strings.ToUpper(value)
+	switch value {
+	case "REGISTERED":
+		return namespace.NamespaceStatus_Registered
+	case "DEPRECATED":
+		return namespace.NamespaceStatus_Deprecated
+	case "DELETED":
+		return namespace.NamespaceStatus_Deleted
+	default:
+		panic(fmt.Errorf("Invalid Namespace Status string: %s", value))
 	}
 }

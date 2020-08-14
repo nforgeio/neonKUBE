@@ -20,9 +20,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection.Metadata;
 using Neon.Common;
+using Neon.Data;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
 using Neon.Time;
+using Newtonsoft.Json;
 
 namespace Neon.Temporal
 {
@@ -185,6 +187,7 @@ namespace Neon.Temporal
         /// <summary>
         /// Optionally sets the sticky schedule to start timeout.  Defaults to <b>5 seconds</b>.
         /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
         public TimeSpan StickyScheduleToStartTimeout { get; set; } = TimeSpan.FromSeconds(5);
 
         /// <summary>
@@ -193,11 +196,13 @@ namespace Neon.Temporal
         /// This defaults to <see cref="NonDeterministicPolicy.BlockWorkflow"/> which 
         /// just logs error and does not fail the workflow.
         /// </summary>
+        [JsonConverter(typeof(IntegerEnumConverter<NonDeterministicPolicy>))]
         public NonDeterministicPolicy NonDeterministicWorkflowPolicy { get; set; } = NonDeterministicPolicy.BlockWorkflow;
 
         /// <summary>
-        /// Optionally sets the graceful shutdown timeout.  Defaults to <see cref="TimeSpan.Zero"/>.
+        /// Optionally sets the graceful shutdown timeout.  Defaults to zero.  Time is represented in nanoseconds.
         /// </summary>
+        [JsonConverter(typeof(GoTimeSpanJsonConverter))]
         public TimeSpan WorkerStopTimeout { get; set; } = TimeSpan.Zero;
     }
 }
