@@ -97,7 +97,7 @@ namespace Neon.Kube
         public AzureStorageTypes StorageType { get; set; } = AzureStorageTypes.Default;
 
         /// <summary>
-        /// Optionally specifies the size of each of the mounted managed drives in gigabytes.  This
+        /// Optionally specifies the size of the mounted managed Azure disk as <see cref="ByteUnits"/>.  This
         /// defaults to <c>null</c> which indicates that <see cref="AzureOptions.DefaultDiskSize"/>
         /// will be used instead, and that defaults to <b>128 GiB</b>.
         /// </summary>
@@ -123,10 +123,10 @@ namespace Neon.Kube
         /// currently supported.
         /// </note>
         /// </remarks>
-        [JsonProperty(PropertyName = "DriveSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "driveSize", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "DiskSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "diskSize", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string DriveSize { get; set; } = null;
+        public string DiskSize { get; set; } = null;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -163,19 +163,19 @@ namespace Neon.Kube
 
             // Validate the drive size, setting the cluster default if necessary.
 
-            if (string.IsNullOrEmpty(this.DriveSize))
+            if (string.IsNullOrEmpty(this.DiskSize))
             {
-                this.DriveSize = clusterDefinition.Hosting.Azure.DefaultDiskSize;
+                this.DiskSize = clusterDefinition.Hosting.Azure.DefaultDiskSize;
             }
 
-            if (!ByteUnits.TryParse(this.DriveSize, out var driveSizeBytes) || driveSizeBytes <= 1)
+            if (!ByteUnits.TryParse(this.DiskSize, out var driveSizeBytes) || driveSizeBytes <= 1)
             {
-                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(DriveSize)}={DriveSize}] which is not valid.");
+                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(DiskSize)}={DiskSize}] which is not valid.");
             }
 
             var driveSizeGiB = AzureHelper.GetDiskSizeGiB(StorageType, driveSizeBytes);
 
-            this.DriveSize = $"{driveSizeGiB} GiB";
+            this.DiskSize = $"{driveSizeGiB} GiB";
         }
     }
 }

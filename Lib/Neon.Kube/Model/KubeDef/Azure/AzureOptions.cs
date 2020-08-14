@@ -172,23 +172,6 @@ namespace Neon.Kube
         public string DomainLabel { get; set; }
 
         /// <summary>
-        /// <para>
-        /// Specifies whether a static external IP address will be created for the cluster.  A static
-        /// IP address will never change and may be referenced via a DNS A record.  Static addresses
-        /// may incur additional costs and Azure limits the number of static addresses that may be
-        /// provisioned for a subscription.  This defaults to <c>false</c>.
-        /// </para>
-        /// <para>
-        /// When this is <c>false</c>, a dynamic external address will be provisioned.  This may be
-        /// referenced via a DNS CNAME record and the address may change from time-to-time.
-        /// </para>
-        /// </summary>
-        [JsonProperty(PropertyName = "StaticAddress", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "staticAddress", ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public bool StaticAddress { get; set; } = false;
-
-        /// <summary>
         /// Specifies the target Azure environment.  This defaults to the 
         /// normal public Azure cloud.  See <see cref="AzureCloudEnvironment"/>
         /// for other possibilities.

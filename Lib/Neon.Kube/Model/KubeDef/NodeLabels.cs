@@ -501,7 +501,7 @@ namespace Neon.Kube
                 {
                     list.Add(new KeyValuePair<string, object>(LabelAzureVmSize,         Node.Azure.VmSize));
                     list.Add(new KeyValuePair<string, object>(LabelAzureStorageType,    Node.Azure.StorageType));
-                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveSize,      Node.Azure.DriveSize));
+                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveSize,      Node.Azure.DiskSize));
                 }
 
                 // Standard labels from this class.
@@ -599,7 +599,7 @@ namespace Neon.Kube
                         {
                             case LabelAzureVmSize:          Node.Azure.VmSize = label.Value; break;
                             case LabelAzureStorageType:     ParseCheck(label, () => { Node.Azure.StorageType = NeonHelper.ParseEnum<AzureStorageTypes>(label.Value); }); break;
-                            case LabelAzureDriveSize:       Node.Azure.DriveSize = label.Value; break;
+                            case LabelAzureDriveSize:       Node.Azure.DiskSize = label.Value; break;
                         }
                         break;
 
