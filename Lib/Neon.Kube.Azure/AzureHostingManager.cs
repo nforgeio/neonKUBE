@@ -34,7 +34,6 @@ using Microsoft.Azure.Management.Compute.Fluent;
 using Microsoft.Azure.Management.Compute.Fluent.Models;
 using Microsoft.Azure.Management.Fluent;
 using Microsoft.Azure.Management.Network.Fluent;
-using Microsoft.Azure.Management.Network.Fluent.LoadBalancer.Definition;
 using Microsoft.Azure.Management.Network.Fluent.Models;
 using Microsoft.Azure.Management.ResourceManager.Fluent;
 using Microsoft.Azure.Management.ResourceManager.Fluent.Authentication;
@@ -780,6 +779,8 @@ namespace Neon.Kube
         /// </summary>
         private void CreateAvailabilitySets()
         {
+            // Availability sets
+
             var existingAvailabilitySets = azure.AvailabilitySets.ListByResourceGroup(resourceGroup);
 
             masterAvailabilitySet = existingAvailabilitySets.FirstOrDefault(aset => aset.Name.Equals(masterAvailabilitySetName, StringComparison.InvariantCultureIgnoreCase));
@@ -793,6 +794,7 @@ namespace Neon.Kube
                         .Define(masterAvailabilitySetName)
                         .WithRegion(region)
                         .WithExistingResourceGroup(resourceGroup)
+                        .WithNewProximityPlacementGroup(proximityPlacementGroupName, ProximityPlacementGroupType.Standard)
                         .WithUpdateDomainCount(azureOptions.UpdateDomains)
                         .WithFaultDomainCount(azureOptions.FaultDomains)
                         .Create();
@@ -804,6 +806,7 @@ namespace Neon.Kube
                         .Define(workerAvailabilitySetName)
                         .WithRegion(region)
                         .WithExistingResourceGroup(resourceGroup)
+                        .WithNewProximityPlacementGroup(proximityPlacementGroupName, ProximityPlacementGroupType.Standard)
                         .WithUpdateDomainCount(azureOptions.UpdateDomains)
                         .WithFaultDomainCount(azureOptions.FaultDomains)
                         .Create();
