@@ -103,18 +103,18 @@ namespace Neon.Kube
         // but this can be customized via the cluster definition when necessary.
         // The load balancer will be created using a public IP address with
         // NAT rules forwarding network traffic into the cluster.  These rules
-        // are controlled by [NetworkOptions.IngressRoutes] in the cluster
+        // are controlled by [NetworkOptions.IngressRules] in the cluster
         // definition.  The target nodes in the cluster are indicated by the
         // presence of a [neonkube.io/node.ingress=true] label which can be
         // set explicitly for each node or assigned via a [NetworkOptions.IngressNodeSelector]
         // label selector.  neonKUBE will use reasonable defaults when necessary.
         //
-        // Azure load balancers will be configured with two security rules:
+        // Azure VM NICs will be configured with two network security groups:
         // [public] and [private].  By default, these rules will allow traffic
         // from any IP address with the [public] rule being applied to all
         // of the ingress routes and the [private] rules being applied to
         // temporary node-specific SSH rules used for cluster setup and maintainence.
-        // You may wish to constrain these to specific IP addresses or subnets
+        // You may wish to constrain these to to specific IP addresses or subnets
         // for better security.
         //
         // VMs are currently based on the Ubuntu-20.04 Server image provided by 
@@ -143,7 +143,7 @@ namespace Neon.Kube
         //
         // The second approach is to handle cluster setup from within the cloud
         // itself.  We're probably going to defer doing until after we go public
-        // with neonCLOUD.  There's two ways of accomplising this: one is to
+        // with neonCLOUD.  There's two ways of accomplishing this: one is to
         // deploy a very small temporary VM within the customer's Azure subscription
         // that lives within the cluster VNET and coordinates things from there.
         // The other way is to is to manage VM setup from a neonCLOUD service,
@@ -372,9 +372,9 @@ namespace Neon.Kube
             this.workerAvailabilitySetName   = GetResourceName("avail", "worker");
             this.proximityPlacementGroupName = GetResourceName("ppg", "cluster", true);
             this.loadbalancerName            = GetResourceName("lbe", "cluster", true);
-            this.ingressNsgName              = "nsg-ingress";
-            this.egressNsgName               = "nsg-egress";
-            this.manageNsgName               = "nsg-manage";
+            this.ingressNsgName              = GetResourceName("nsg", "ingress";
+            this.egressNsgName               = GetResourceName("nsg", "egress";
+            this.manageNsgName               = GetResourceName("nsg", "manage";
             this.loadbalancerFrontendName    = "frontend";
             this.loadbalancerBackendName     = "backend";
             this.loadbalancerProbeName       = "probe";
@@ -590,8 +590,8 @@ namespace Neon.Kube
             controller.AddGlobalStep("region check", () => VerifyRegionAndVmSizes());
             controller.AddGlobalStep("resource group", () => CreateResourceGroup());
             controller.AddGlobalStep("availability sets", () => CreateAvailabilitySets());
-            controller.AddGlobalStep("virtual network", () => CreateVirtualNetwork());
             controller.AddGlobalStep("network security groups", () => CreateNetworkSecurityGroups());
+            controller.AddGlobalStep("virtual network", () => CreateVirtualNetwork());
             controller.AddGlobalStep("public address", () => CreatePublicAddress());
             controller.AddGlobalStep("load balancer", () => CreateLoadBalancer());
             controller.AddStep("virtual machines", CreateVm);
@@ -871,6 +871,105 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Create or updates the network security groups if they don't already exist.
+        /// </summary>
+        private void CreateNetworkSecurityGroups()
+        {
+            const int priority = 2000;
+
+            var nsgList = azure.NetworkSecurityGroups.ListByResourceGroup(resourceGroup);
+
+            ingressNsg = nsgList.FirstOrDefault(nsg => nsg.Name.Equals(ingressNsgName, StringComparison.InvariantCultureIgnoreCase));
+            egressNsg  = nsgList.FirstOrDefault(nsg => nsg.Name.Equals(egressNsgName, StringComparison.InvariantCultureIgnoreCase));
+
+            if (ingressNsg == null)
+            {
+                // Ingress: Create the security group, remove any Azure default rules 
+                //          and then add rules defined by the cluster definition.
+
+                ingressNsg = azure.NetworkSecurityGroups
+                    .Define(ingressNsgName)
+                    .WithRegion(region)
+                    .WithExistingResourceGroup(resourceGroup)
+                    .Create();
+
+                // Delete all default Azure rules.
+
+                var ingressNsgUpdater = ingressNsg.Update();
+
+                foreach (var rule in ingressNsg.DefaultSecurityRules.Values)
+                {
+                    ingressNsgUpdater.WithoutRule(rule.Name);
+                }
+
+                // Add the ingress rules from the cluster definition.
+
+                foreach (var rule in networkOptions.IngressRules)
+                {
+                    var allowedInboundAddresses = rule.AllowedAddresses.ToArray();
+
+                    if (allowedInboundAddresses.Length == 0)
+                    {
+                        allowedInboundAddresses = new string[] { "0.0.0.0/0" };     // Allow traffic from everywhere
+                    }
+
+                    ingressNsgUpdater.DefineRule($"{rule.Name}")
+                        .AllowInbound()
+                        .FromAddresses(allowedInboundAddresses)
+                        .FromAnyPort()
+                        .ToAnyAddress()
+                        .ToPort(rule.NodePort)
+                        .WithProtocol(SecurityRuleProtocol.Tcp)                     // Only TCP is supported by Istio now
+                        .WithPriority(priority)
+                        .Attach();
+                }
+
+                ingressNsgUpdater.Apply();
+            }
+
+            // Egress:
+
+            if (egressNsg == null)
+            {
+                var allowedOutboundAddresses = networkOptions.EgressAddressRules.ToArray();
+
+                if (allowedOutboundAddresses.Length == 0)
+                {
+                    allowedOutboundAddresses = new string[] { "0.0.0.0/0" };        // Allow outbound traffic to everywhere
+                }
+
+                egressNsg = azure.NetworkSecurityGroups
+                    .Define(egressNsgName)
+                    .WithRegion(region)
+                    .WithExistingResourceGroup(resourceGroup)
+                    .DefineRule("outbound-allow-all")
+                        .AllowOutbound()
+                        .FromAnyAddress()
+                        .FromAnyPort()
+                        .ToAddresses(allowedOutboundAddresses)
+                        .ToAnyPort()
+                        .WithAnyProtocol()
+                        .WithPriority(priority)
+                        .Attach()
+                    .Create();
+
+                // Delete all default Azure rules.
+
+                var ruleUpdater = ingressNsg.Update();
+
+                foreach (var rule in ingressNsg.DefaultSecurityRules.Values)
+                {
+                    ruleUpdater.WithoutRule(rule.Name);
+                }
+
+                ruleUpdater.Apply();
+            }
+            // Manage:
+
+            // $todo(jefflill): Implement this!
+        }
+
+        /// <summary>
         /// Creates the cluster's virtual network if it doesn't already exist.
         /// </summary>
         private void CreateVirtualNetwork()
@@ -889,87 +988,10 @@ namespace Neon.Kube
                 .WithAddressSpace(networkOptions.NodeSubnet)
                 .DefineSubnet(subnetName)
                     .WithAddressPrefix(networkOptions.NodeSubnet)
+                    .WithExistingNetworkSecurityGroup(ingressNsg)
+                    .WithExistingNetworkSecurityGroup(egressNsg)
                     .Attach()
                 .Create();
-        }
-
-        /// <summary>
-        /// Create or updates the network security groups if they don't already exist.
-        /// </summary>
-        private void CreateNetworkSecurityGroups()
-        {
-            var nsgList = azure.NetworkSecurityGroups.ListByResourceGroup(resourceGroup);
-
-            ingressNsg = nsgList.FirstOrDefault(nsg => nsg.Name.Equals(ingressNsgName, StringComparison.InvariantCultureIgnoreCase));
-            egressNsg  = nsgList.FirstOrDefault(nsg => nsg.Name.Equals(egressNsgName, StringComparison.InvariantCultureIgnoreCase));
-
-            if (ingressNsg != null)
-            {
-                // Ingress: Honor the cluster definition ingress rules, if there are any.
-
-                var ingressNsgCreator = azure.NetworkSecurityGroups
-                    .Define(ingressNsgName)
-                    .WithRegion(region)
-                    .WithExistingResourceGroup(resourceGroup);
-
-                var priority = 3000;
-
-                foreach (var rule in networkOptions.IngressRules)
-                {
-                    var allowedInboundAddresses = rule.AllowedAddresses.ToArray();
-
-                    if (allowedInboundAddresses.Length == 0)
-                    {
-                        allowedInboundAddresses = new string[] { "0.0.0.0/0" };    // Allow traffic from everywhere
-                    }
-
-                    ingressNsgCreator
-                        .DefineRule($"{rule.Name}")
-                            .AllowInbound()
-                            .FromAddresses(allowedInboundAddresses)
-                            .FromAnyPort()
-                            .ToAnyAddress()
-                            .ToPort(rule.NodePort)
-                            .WithProtocol(SecurityRuleProtocol.Tcp)                     // Only TCP is supported now
-                            .WithPriority(priority++)
-                            .Attach();
-                }
-
-                ingressNsg = ingressNsgCreator.Create();
-            }
-
-            // Egress:
-
-            if (egressNsg != null)
-            {
-                var priority = 3000;
-
-                var allowedOutboundAddresses = networkOptions.EgressAddresses.ToArray();
-
-                if (allowedOutboundAddresses.Length == 0)
-                {
-                    allowedOutboundAddresses = new string[] { "0.0.0.0/0" };        // Allow outbound traffic to everywhere
-                }
-
-                egressNsg = azure.NetworkSecurityGroups
-                    .Define(egressNsgName)
-                    .WithRegion(region)
-                    .WithExistingResourceGroup(resourceGroup)
-                    .DefineRule("outbound-allow-all")
-                        .AllowOutbound()
-                        .FromAnyAddress()
-                        .FromAnyPort()
-                        .ToAddresses(allowedOutboundAddresses)
-                        .ToAnyPort()
-                        .WithAnyProtocol()
-                        .WithPriority(priority++)
-                        .Attach()
-                    .Create();
-            }
-
-            // Manage:
-
-            // $todo(jefflill): Implement this!
         }
 
         /// <summary>

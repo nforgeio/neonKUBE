@@ -77,14 +77,14 @@ namespace Neon.Kube
         public int TargetPort { get; set; }
 
         /// <summary>
-        /// Optionally specifies the IP addresses and/or subnets where inbound traffic will be allowed.  
-        /// Traffic will be allowed from everywhere when this is <c>null</c> or empty.  Specify
-        /// <b>0.0.0.0/32</b> to block inbound traffic from everywhere.
+        /// Optionally specifies whitelisted and/or blacklisted external addresses for
+        /// inbound traffic.  This defaults to allowing inbound traffic from anywhere 
+        /// when the property is <c>null</c> or empty.
         /// </summary>
-        [JsonProperty(PropertyName = "AllowedAddresses", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "allowedAddresses", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "AddressRules", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "addressRules", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public List<string> AllowedAddresses { get; set; } = new List<string>();
+        public List<AddressRule> AddressRules { get; set; } = new List<AddressRule>();
 
         /// <summary>
         /// Validates the options.
@@ -114,14 +114,11 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(NodePort)}={NodePort}] is not a valid TCP port.");
             }
 
-            if (AllowedAddresses != null)
+            if (AddressRules != null)
             {
-                foreach (var address in AllowedAddresses)
+                foreach (var rule in AddressRules)
                 {
-                    if (!NetworkCidr.TryParse(address, out var v1) && !IPAddress.TryParse(address, out var v2))
-                    {
-                        throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(AllowedAddresses)}] includes invalid IP address or subnet [{address}].");
-                    }
+                    rule.Validate(clusterDefinition, "ingress-rule-address");
                 }
             }
         }

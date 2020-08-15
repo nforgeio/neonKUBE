@@ -210,14 +210,19 @@ namespace Neon.Kube
         public List<IngressRule> IngressRules { get; set; } = new List<IngressRule>();
 
         /// <summary>
-        /// Optionally specifies the whitelisted external addresses for outbound traffic.
-        /// This defaults to allowing outboud traffic to anywhere when the property is
-        /// <c>null</c> or empty.  Specify <b>0.0.0.0/32</b> to block all traffic.
+        /// <para>
+        /// Optionally specifies whitelisted and/or blacklisted external addresses for
+        /// outbound traffic.  This defaults to allowing outbound traffic to anywhere 
+        /// when the property is <c>null</c> or empty.
+        /// </para>
+        /// <note>
+        /// This currently applies to all network ports.
+        /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "EgressAddresses", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "egressAddresses", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "EgressAddressRules", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "egressAddressRules", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public List<string> EgressAddresses { get; set; } = new List<string>();
+        public List<AddressRule> EgressAddressRules { get; set; } = new List<AddressRule>();
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -372,14 +377,11 @@ namespace Neon.Kube
 
             // Verify
 
-            EgressAddresses = EgressAddresses ?? new List<string>();
+            EgressAddressRules = EgressAddressRules ?? new List<AddressRule>();
 
-            foreach (var address in EgressAddresses)
+            foreach (var rule in EgressAddressRules)
             {
-                if (!NetworkCidr.TryParse(address, out var v1) && !IPAddress.TryParse(address, out var v2))
-                {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}]: [{nameof(EgressAddresses)}] includes invalid IP address or subnet [{address}].");
-                }
+                rule.Validate(clusterDefinition, "egress-address");
             }
         }
 
