@@ -103,6 +103,29 @@ namespace Neon.Kube
         public int FirstSshIngressPort => ReservedIngressStartPort + additionalReservedPorts;
 
         /// <summary>
+        /// Specifies that cloud resources created for the cluster have their names prefixed
+        /// by the cluster name.  This defaults to <c>false</c>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// neonKUBE cluster resources are deployed to a cluster specific resource group
+        /// by default.  This means that there's generally no reason to prefix the cluster
+        /// resource names because they are already scoped to the cluster's resource group.
+        /// </para>
+        /// <para>
+        /// It is possible though to deploy a cluster into an existing resource group, along
+        /// with other already existing resources (perhaps another neonKUBE cluster).  You'll need to
+        /// take care in this situation to avoid resource name conflicts.  To handle this,
+        /// set this property to <c>true</c> such that every cluster resource created will 
+        /// include the cluster name in the resource name prefix.
+        /// </para>
+        /// </remarks>
+        [JsonProperty(PropertyName = "PrefixResourceNames", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "prefixResourceNames", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool PrefixResourceNames { get; set; } = false;
+
+        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>

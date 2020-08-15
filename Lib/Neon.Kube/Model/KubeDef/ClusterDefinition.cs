@@ -437,14 +437,6 @@ namespace Neon.Kube
         public NodeOptions NodeOptions { get; set; } = new NodeOptions();
 
         /// <summary>
-        /// Specifies cloud related options for clusters to be deployed to the cloud.
-        /// </summary>
-        [JsonProperty(PropertyName = "Cloud", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "cloud", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public CloudOptions Cloud { get; set; } = new CloudOptions();
-
-        /// <summary>
         /// Describes the host nodes in the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "Nodes", Required = Required.Always)]
@@ -588,7 +580,6 @@ namespace Neon.Kube
             Setup       = Setup ?? new SetupOptions();
             Hosting     = Hosting ?? new HostingOptions();
             NodeOptions = NodeOptions ?? new NodeOptions();
-            Cloud       = Cloud ?? new CloudOptions();
             Network     = Network ?? new NetworkOptions();
 
             Debug.Validate(this);
@@ -601,7 +592,6 @@ namespace Neon.Kube
             Network.Validate(this);
             Hosting.Validate(this);
             NodeOptions.Validate(this);
-            Cloud.Validate(this);
             Network.Validate(this);
 
             new HostingManagerFactory().Validate(this);

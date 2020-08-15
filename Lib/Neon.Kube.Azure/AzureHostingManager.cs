@@ -56,6 +56,7 @@ using Microsoft.Azure.Management.Network.Models;
 using INetworkSecurityGroup = Microsoft.Azure.Management.Network.Fluent.INetworkSecurityGroup;
 using SecurityRuleProtocol  = Microsoft.Azure.Management.Network.Fluent.Models.SecurityRuleProtocol;
 using TransportProtocol     = Microsoft.Azure.Management.Network.Fluent.Models.TransportProtocol;
+using Microsoft.Azure.Management.ResourceManager.Fluent.Core;
 
 namespace Neon.Kube
 {
@@ -191,7 +192,7 @@ namespace Neon.Kube
             /// <summary>
             /// Returns the node name.
             /// </summary>
-            public string Name => hostingManager.namePrefix + Node.Name;
+            public string Name => hostingManager.GetResourceName("vm", Node.Name);
 
             /// <summary>
             /// The associated Azure VM.
@@ -306,7 +307,6 @@ namespace Neon.Kube
         // we wouldn't want to node names like "master-0" to conflict across multiple 
         // clusters.
 
-        private string                          namePrefix;
         private string                          publicAddressName;
         private string                          vnetName;
         private string                          subnetName;
@@ -326,7 +326,6 @@ namespace Neon.Kube
         private IPublicIPAddress                publicAddress;
         private INetwork                        vnet;
         private ILoadBalancer                   loadBalancer;
-        private IProximityPlacementGroup        proximityPlacementGroup;
         private IAvailabilitySet                masterAvailabilitySet;
         private IAvailabilitySet                workerAvailabilitySet;
         private INetworkSecurityGroup           ingressNsg;
@@ -356,25 +355,29 @@ namespace Neon.Kube
             this.resourceGroup               = azureOptions.ResourceGroup ?? $"neon-{clusterName}";
             this.setupInfo                   = setupInfo;
             this.hostingOptions              = cluster.Definition.Hosting;
+            this.cloudOptions                = hostingOptions.Cloud;
             this.networkOptions              = cluster.Definition.Network;
-            this.cloudOptions                = cluster.Definition.Cloud;
 
-            // Initialize the component names as they will be deployed to Azure.
+            // Initialize the component names as they will be deployed to Azure.  Note that we're
+            // going to prefix each name with the Azure item type convention described here:
+            //
+            //      https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/naming-and-tagging
+            //
+            // optionally combined with the cluster name.
 
-            this.namePrefix                  = $"neon-{clusterName}-";
-            this.publicAddressName           = namePrefix + "public-address";
-            this.vnetName                    = namePrefix + "vnet";
-            this.subnetName                  = namePrefix + "subnet";
-            this.masterAvailabilitySetName   = namePrefix + "master-availability-set";
-            this.workerAvailabilitySetName   = namePrefix + "worker-availability-set";
-            this.proximityPlacementGroupName = namePrefix + "proxmity-group";
-            this.loadbalancerName            = namePrefix + "load-balancer";
-            this.ingressNsgName              = namePrefix + "ingress";
-            this.egressNsgName               = namePrefix + "egress";
-            this.manageNsgName               = namePrefix + "manage";
-            this.loadbalancerFrontendName    = namePrefix + $"{loadbalancerName}-frontend";
-            this.loadbalancerBackendName     = namePrefix + $"{loadbalancerName}-backend";
-            this.loadbalancerProbeName       = namePrefix + $"{loadbalancerName}-probe";
+            this.publicAddressName           = GetResourceName("pip", "cluster", true);
+            this.vnetName                    = GetResourceName("vnet", "cluster", true);
+            this.subnetName                  = GetResourceName("snet", "cluster", true);
+            this.masterAvailabilitySetName   = GetResourceName("avail", "master");
+            this.workerAvailabilitySetName   = GetResourceName("avail", "worker");
+            this.proximityPlacementGroupName = GetResourceName("ppg", "cluster", true);
+            this.loadbalancerName            = GetResourceName("lbe", "cluster", true);
+            this.ingressNsgName              = "nsg-ingress";
+            this.egressNsgName               = "nsg-egress";
+            this.manageNsgName               = "nsg-manage";
+            this.loadbalancerFrontendName    = "frontend";
+            this.loadbalancerBackendName     = "backend";
+            this.loadbalancerProbeName       = "probe";
 
             // Initialize the node mapping dictionary and also ensure
             // that each node has Azure reasonable Azure node options.
@@ -409,6 +412,36 @@ namespace Neon.Kube
             if (disposing)
             {
                 GC.SuppressFinalize(this);
+            }
+        }
+
+        /// <summary>
+        /// Returns the name to use for a cluster related resource based on the standard Azure resource type
+        /// prefix, the cluster name (if enabled) and the base resource name.
+        /// </summary>
+        /// <param name="resourceTypePrefix">The Azure resource type prefix (like "pip" for public IP address).</param>
+        /// <param name="resourceName">The base resource name.</param>
+        /// <param name="omitResourceNameWhenPrefixed">Optionall omit <paramref name="resourceName"/> when resource names include the cluster name.</param>
+        /// <returns>The full resource name.</returns>
+        private string GetResourceName(string resourceTypePrefix, string resourceName, bool omitResourceNameWhenPrefixed = false)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(resourceTypePrefix), nameof(resourceTypePrefix));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(resourceName), nameof(resourceName));
+
+            if (cloudOptions.PrefixResourceNames)
+            {
+                if (omitResourceNameWhenPrefixed)
+                {
+                    return $"{resourceTypePrefix}-{clusterName}";
+                }
+                else
+                {
+                    return $"{resourceTypePrefix}-{clusterName}-{resourceName}";
+                }
+            }
+            else
+            {
+                return $"{resourceTypePrefix}-{resourceName}";
             }
         }
 
@@ -553,15 +586,15 @@ namespace Neon.Kube
                 MaxParallel    = int.MaxValue       // There's no reason to constrain this
             };
 
-            controller.AddGlobalStep("connecting Azure", () => AzureConnect());
-            controller.AddGlobalStep("region availablity", () => VerifyRegionAndVmSizes());
+            controller.AddGlobalStep("connecting Azure", () => ConnectAzure());
+            controller.AddGlobalStep("region check", () => VerifyRegionAndVmSizes());
             controller.AddGlobalStep("resource group", () => CreateResourceGroup());
             controller.AddGlobalStep("availability sets", () => CreateAvailabilitySets());
             controller.AddGlobalStep("virtual network", () => CreateVirtualNetwork());
             controller.AddGlobalStep("network security groups", () => CreateNetworkSecurityGroups());
             controller.AddGlobalStep("public address", () => CreatePublicAddress());
             controller.AddGlobalStep("load balancer", () => CreateLoadBalancer());
-            controller.AddStep("create virtual machines", CreateVm);
+            controller.AddStep("virtual machines", CreateVm);
 
             if (!controller.Run(leaveNodesConnected: false))
             {
@@ -584,7 +617,7 @@ namespace Neon.Kube
         /// <summary>
         /// Connects to Azure if we're not already connected.
         /// </summary>
-        private void AzureConnect()
+        private void ConnectAzure()
         {
             if (azure != null)
             {
@@ -661,7 +694,6 @@ namespace Neon.Kube
         /// </summary>
         private void VerifyRegionAndVmSizes()
         {
-            var ultraSSD     = cluster.Nodes.Any(node => node.Metadata.Azure.StorageType == AzureStorageTypes.UltraSSD);
             var region       = cluster.Definition.Hosting.Azure.Region;
             var vmSizes      = azure.VirtualMachines.Sizes.ListByRegion(region);
             var nameToVmSize = new Dictionary<string, IVirtualMachineSize>(StringComparer.InvariantCultureIgnoreCase);
@@ -794,7 +826,6 @@ namespace Neon.Kube
                         .Define(masterAvailabilitySetName)
                         .WithRegion(region)
                         .WithExistingResourceGroup(resourceGroup)
-                        .WithNewProximityPlacementGroup(proximityPlacementGroupName, ProximityPlacementGroupType.Standard)
                         .WithUpdateDomainCount(azureOptions.UpdateDomains)
                         .WithFaultDomainCount(azureOptions.FaultDomains)
                         .Create();
@@ -806,7 +837,6 @@ namespace Neon.Kube
                         .Define(workerAvailabilitySetName)
                         .WithRegion(region)
                         .WithExistingResourceGroup(resourceGroup)
-                        .WithNewProximityPlacementGroup(proximityPlacementGroupName, ProximityPlacementGroupType.Standard)
                         .WithUpdateDomainCount(azureOptions.UpdateDomains)
                         .WithFaultDomainCount(azureOptions.FaultDomains)
                         .Create();
@@ -820,7 +850,7 @@ namespace Neon.Kube
                         .Define(masterAvailabilitySetName)
                         .WithRegion(region)
                         .WithExistingResourceGroup(resourceGroup)
-                        .WithProximityPlacementGroup(proximityPlacementGroupName)
+                        .WithNewProximityPlacementGroup(proximityPlacementGroupName, ProximityPlacementGroupType.Standard)
                         .WithUpdateDomainCount(azureOptions.UpdateDomains)
                         .WithFaultDomainCount(azureOptions.FaultDomains)
                         .Create();
@@ -832,7 +862,7 @@ namespace Neon.Kube
                         .Define(workerAvailabilitySetName)
                         .WithRegion(region)
                         .WithExistingResourceGroup(resourceGroup)
-                        .WithProximityPlacementGroup(proximityPlacementGroupName)
+                        .WithNewProximityPlacementGroup(proximityPlacementGroupName, ProximityPlacementGroupType.Standard)
                         .WithUpdateDomainCount(azureOptions.UpdateDomains)
                         .WithFaultDomainCount(azureOptions.FaultDomains)
                         .Create();
@@ -1009,7 +1039,7 @@ namespace Neon.Kube
             node.Status = "create NIC";
 
             azureNode.Nic = azure.NetworkInterfaces
-                .Define($"{clusterName}-{azureNode.Node.Name}")
+                .Define(GetResourceName("nic",azureNode.Node.Name))
                 .WithRegion(azureOptions.Region)
                 .WithExistingResourceGroup(resourceGroup)
                 .WithExistingPrimaryNetwork(vnet)
@@ -1017,7 +1047,7 @@ namespace Neon.Kube
                 .WithPrimaryPrivateIPAddressStatic(azureNode.Node.Metadata.Address)
                 .Create();
 
-            node.Status = "create virtual machine";
+            node.Status = "creating...";
 
             var azureNodeOptions = azureNode.Node.Metadata.Azure;
             var azureStorageType = StorageAccountTypes.StandardSSDLRS;

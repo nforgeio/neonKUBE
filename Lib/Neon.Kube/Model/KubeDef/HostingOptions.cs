@@ -119,6 +119,14 @@ namespace Neon.Kube
         public MachineOptions Machine { get; set; } = null;
 
         /// <summary>
+        /// Specifies cloud related options for clusters to be deployed to one of the public cloud providers.
+        /// </summary>
+        [JsonProperty(PropertyName = "Cloud", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "cloud", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public CloudOptions Cloud { get; set; } = new CloudOptions();
+
+        /// <summary>
         /// Specifies the hosting settings when hosting on Citrix XenServer or the XCP-ng hypervisors.
         /// </summary>
         [JsonProperty(PropertyName = "XenServer", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -392,6 +400,10 @@ namespace Neon.Kube
                     throw new NotImplementedException();
             }
 
+            Cloud = Cloud ?? new CloudOptions();
+            
+            Cloud.Validate(clusterDefinition);
+
             // Validate the VM name prefix.
 
             if (!string.IsNullOrWhiteSpace(VmNamePrefix))
@@ -487,13 +499,13 @@ namespace Neon.Kube
         /// </summary>
         public void ClearSecrets()
         {
-            Aws         = null;
-            Azure       = null;
-            Google      = null;
-            HyperV      = null;
+            Aws       = null;
+            Azure     = null;
+            Google    = null;
+            HyperV    = null;
             HyperVDev = null;
-            Machine     = null;
-            XenServer   = null;
+            Machine   = null;
+            XenServer = null;
         }
     }
 }
