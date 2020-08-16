@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    IngressRule.cs
-// CONTRIBUTOR: Marcus Bowyer
+// CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -51,6 +51,14 @@ namespace Neon.Kube
         [YamlMember(Alias = "name", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Name { get; set; }
+
+        /// <summary>
+        /// Identifies the network protocol.  This defaults to <see cref="IngressProtocol.Tcp"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Protocol", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "protocol", ApplyNamingConventions = false)]
+        [DefaultValue(IngressProtocol.Tcp)]
+        public IngressProtocol Protocol { get; set; } = IngressProtocol.Tcp;
 
         /// <summary>
         /// The external ingress port.

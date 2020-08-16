@@ -341,6 +341,65 @@ namespace Neon.Kube
             return time.ToString("yyyyMMddhhmmss", CultureInfo.InvariantCulture);
         }
 
+        /// <summary>
+        /// Converts an <see cref="IngressProtocol"/> value into the string used
+        /// to annotate an ingress related resource name.
+        /// </summary>
+        /// <param name="protocol">The protocol.</param>
+        /// <returns>The string.</returns>
+        private static string IngressProtocolId(IngressProtocol protocol)
+        {
+            switch (protocol)
+            {
+                case IngressProtocol.Http:  return "http";
+                case IngressProtocol.Https: return "https";
+                case IngressProtocol.Tcp:   return "tcp";
+                default:                    throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Converts a <see cref="IngressProtocol"/> to the corresponding <see cref="SecurityRuleProtocol"/>.
+        /// </summary>
+        /// <param name="protocol">The input protocol.</param>
+        /// <returns>The output protocol.</returns>
+        private static SecurityRuleProtocol ToSecurityRuleProtocol(IngressProtocol protocol)
+        {
+            switch (protocol)
+            {
+                case IngressProtocol.Http: 
+                case IngressProtocol.Https:
+                case IngressProtocol.Tcp: 
+                    
+                    return SecurityRuleProtocol.Tcp;
+
+                default: 
+                    
+                    throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Converts a <see cref="IngressProtocol"/> to the corresponding <see cref="TransportProtocol"/>.
+        /// </summary>
+        /// <param name="protocol">The input protocol.</param>
+        /// <returns>The output protocol.</returns>
+        private static TransportProtocol ToSTransportProtocol(IngressProtocol protocol)
+        {
+            switch (protocol)
+            {
+                case IngressProtocol.Http:
+                case IngressProtocol.Https:
+                case IngressProtocol.Tcp:
+
+                    return TransportProtocol.Tcp;
+
+                default:
+
+                    throw new NotImplementedException();
+            }
+        }
+
         //---------------------------------------------------------------------
         // Instance members
 
@@ -1157,6 +1216,18 @@ namespace Neon.Kube
             // We also need to remove any existing load balancer ingress related health probes.  We'll 
             // recreate these as necessary below.
 
+            foreach (var probe in loadBalancer.HttpProbes.Values
+                .Where(p => p.Name.StartsWith("ingress-", StringComparison.InvariantCultureIgnoreCase) && HasTimestamp(p.Name)))
+            {
+                loadBalancerUpdater.WithoutProbe(probe.Name);
+            }
+
+            foreach (var probe in loadBalancer.HttpsProbes.Values
+                .Where(p => p.Name.StartsWith("ingress-", StringComparison.InvariantCultureIgnoreCase) && HasTimestamp(p.Name)))
+            {
+                loadBalancerUpdater.WithoutProbe(probe.Name);
+            }
+
             foreach (var probe in loadBalancer.TcpProbes.Values
                 .Where(p => p.Name.StartsWith("ingress-", StringComparison.InvariantCultureIgnoreCase) && HasTimestamp(p.Name)))
             {
@@ -1173,16 +1244,17 @@ namespace Neon.Kube
 
             foreach (var ingressRule in networkOptions.IngressRules)
             {
-                var probeName = $"ingress-{ingressRule.Name}-{ingressRule.ExternalPort}-tcp-{timestamp}";
+                var protocolId = IngressProtocolId(ingressRule.Protocol);
+                var probeName  = $"ingress-{ingressRule.Name}-{ingressRule.ExternalPort}-{protocolId}-{timestamp}";
 
                 loadBalancerUpdater.DefineTcpProbe(probeName)
                     .WithPort(ingressRule.NodePort)
                     .Attach();
 
-                var ruleName = $"ingress-{ingressRule.Name}-{ingressRule.ExternalPort}-tcp-{timestamp}";
+                var ruleName = $"ingress-{ingressRule.Name}-{ingressRule.ExternalPort}-{protocolId}-{timestamp}";
 
                 loadBalancerUpdater.DefineLoadBalancingRule(ruleName)
-                    .WithProtocol(TransportProtocol.Tcp)                            // Only TCP is supported by Istio now
+                    .WithProtocol(ToSTransportProtocol(ingressRule.Protocol))
                     .FromExistingPublicIPAddress(publicAddress)
                     .FromFrontendPort(ingressRule.ExternalPort)
                     .ToBackend(loadbalancerBackendName)
@@ -1209,7 +1281,8 @@ namespace Neon.Kube
             {
                 // Generate a suffix that will ensure that all rule names are unique.
 
-                var ruleName = $"ingress-{ingressRule.Name}-{ingressRule.ExternalPort}-tcp-{ruleCount}-{timestamp}";
+                var protocolId = IngressProtocolId(ingressRule.Protocol);
+                var ruleName   = $"ingress-{ingressRule.Name}-{ingressRule.ExternalPort}-{protocolId}-{ruleCount}-{timestamp}";
 
                 if (ingressRule.AddressRules == null || ingressRule.AddressRules.Count == 0)
                 {
