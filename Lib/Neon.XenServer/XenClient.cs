@@ -119,7 +119,7 @@ namespace Neon.XenServer
 
             Address           = addressOrFQDN;
             Name              = name;
-            SshProxy          = new SshProxy<XenClient>(addressOrFQDN, null, address, SshCredentials.FromUserPassword(username, password), logWriter);
+            SshProxy          = new SshProxy<XenClient>(addressOrFQDN, address, SshCredentials.FromUserPassword(username, password), logWriter);
             SshProxy.Metadata = this;
             runOptions        = RunOptions.IgnoreRemotePath;
 

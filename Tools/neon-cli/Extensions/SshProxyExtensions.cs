@@ -126,7 +126,7 @@ namespace NeonCli
         {
             const string ip4Max = "255.255.255.255";
 
-            var address = nodeDefinition.PrivateAddress.ToString();
+            var address = nodeDefinition.Address.ToString();
 
             if (address.Length < ip4Max.Length)
             {
@@ -230,16 +230,16 @@ namespace NeonCli
             foreach (var master in clusterDefinition.SortedMasters)
             {
                 sbMasters.Append($"declare -x -A NEON_MASTER_{index}\n");
-                sbMasters.Append($"NEON_MASTER_{index}=( [\"name\"]=\"{master.Name}\" [\"address\"]=\"{master.PrivateAddress}\" )\n");
+                sbMasters.Append($"NEON_MASTER_{index}=( [\"name\"]=\"{master.Name}\" [\"address\"]=\"{master.Address}\" )\n");
                 sbMasters.Append("\n");
                 index++;
 
                 sbMasterNamesArray.Append($" \"{master.Name}\"");
-                sbMasterAddressesArray.Append($" \"{master.PrivateAddress}\"");
+                sbMasterAddressesArray.Append($" \"{master.Address}\"");
 
                 if (master != nodeDefinition)
                 {
-                    sbPeerMasterAddressesArray.Append($" \"{master.PrivateAddress}\"");
+                    sbPeerMasterAddressesArray.Append($" \"{master.Address}\"");
                 }
 
                 masterNameWidth = Math.Max(master.Name.Length, masterNameWidth);
@@ -263,18 +263,18 @@ namespace NeonCli
 
                 if (sbMasterNodesSummary.Length == 0)
                 {
-                    sbMasterNodesSummary.Append($"    echo \"NEON_MASTER_NODES                 = {nameField}: {master.PrivateAddress}\" 1>&2\n");
+                    sbMasterNodesSummary.Append($"    echo \"NEON_MASTER_NODES                 = {nameField}: {master.Address}\" 1>&2\n");
                 }
                 else
                 {
-                    sbMasterNodesSummary.Append($"    echo \"                                     {nameField}: {master.PrivateAddress}\" 1>&2\n");
+                    sbMasterNodesSummary.Append($"    echo \"                                     {nameField}: {master.Address}\" 1>&2\n");
                 }
             }
 
             foreach (var master in clusterDefinition.SortedMasters)
             {
                 sbMasters.Append($"declare -x -A NEON_MASTER_{index}\n");
-                sbMasters.Append($"NEON_MASTER_{index}=( [\"name\"]=\"{master.Name}\" [\"address\"]=\"{master.PrivateAddress}\" )\n");
+                sbMasters.Append($"NEON_MASTER_{index}=( [\"name\"]=\"{master.Name}\" [\"address\"]=\"{master.Address}\" )\n");
                 index++;
             }
 
@@ -314,7 +314,7 @@ namespace NeonCli
                     workerTimeSources += " ";
                 }
 
-                workerTimeSources += $"\"{master.PrivateAddress}\"";
+                workerTimeSources += $"\"{master.Address}\"";
             }
 
             if (string.IsNullOrWhiteSpace(masterTimeSources))
@@ -366,14 +366,7 @@ namespace NeonCli
 
                     // The primary Azure data drive is [/dev/sdb] so any mounted drive will be [/dev/sdc].
 
-                    if (nodeDefinition.Azure.HardDriveCount == 0)
-                    {
-                        SetBashVariable(preprocessReader, "data.disk", "PRIMARY");
-                    }
-                    else
-                    {
-                        SetBashVariable(preprocessReader, "data.disk", "/dev/sdc");
-                    }
+                    SetBashVariable(preprocessReader, "data.disk", "/dev/sdc");
                     break;
 
                 case HostingEnvironments.Google:

@@ -194,17 +194,6 @@ namespace Neon.Kube
                 }
             }
 
-            // If a public address isn't explicitly specified, we'll assume that we're
-            // running inside the network and we can access the private address.
-
-            foreach (var node in cluster.Definition.Nodes)
-            {
-                if (string.IsNullOrEmpty(node.PublicAddress))
-                {
-                    node.PublicAddress = node.PrivateAddress;
-                }
-            }
-
             // Perform the provisioning operations.
 
             controller = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
@@ -229,7 +218,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override (string Address, int Port) GetSshEndpoint(string nodeName)
         {
-            return (Address: cluster.GetNode(nodeName).PrivateAddress.ToString(), Port: NetworkPorts.SSH);
+            return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
         }
 
         /// <inheritdoc/>

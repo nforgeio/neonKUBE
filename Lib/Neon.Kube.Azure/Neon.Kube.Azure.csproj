@@ -20,6 +20,7 @@
     <Configurations>Debug;Release;CodeDoc</Configurations>
     <PackageIcon>nuget-icon.png</PackageIcon>
     <PackageTags>kubernetes</PackageTags>
+    <RootNamespace>Neon.Kube</RootNamespace>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -45,6 +46,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.Management.Compute" Version="38.0.0" />
     <PackageReference Include="Microsoft.Azure.Management.Fluent" Version="1.34.0" />
     <PackageReference Include="Microsoft.Azure.Management.Network" Version="5.0.0" />
     <PackageReference Include="Microsoft.Azure.Management.ResourceManager" Version="1.6.0-preview" />

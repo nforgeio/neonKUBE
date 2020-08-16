@@ -437,14 +437,6 @@ namespace Neon.Kube
         public NodeOptions NodeOptions { get; set; } = new NodeOptions();
 
         /// <summary>
-        /// Specifies cloud related options for clusters to be deployed to the cloud.
-        /// </summary>
-        [JsonProperty(PropertyName = "Cloud", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "cloud", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public CloudOptions Cloud { get; set; } = new CloudOptions();
-
-        /// <summary>
         /// Describes the host nodes in the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "Nodes", Required = Required.Always)]
@@ -527,21 +519,21 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(ClusterDefinition.Network)}.{nameof(NetworkOptions.NodeSubnet)}] property is required.");
             }
 
-            if (!NetworkCidr.TryParse(Network.NodeSubnet, out var nodesSubnet))
+            if (!NetworkCidr.TryParse(Network.NodeSubnet, out var nodeSubnet))
             {
                 throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(ClusterDefinition.Network)}.{nameof(NetworkOptions.NodeSubnet)}={Network.NodeSubnet}] property is not valid.");
             }
 
             foreach (var node in SortedNodes.OrderBy(n => n.Name))
             {
-                if (string.IsNullOrEmpty(node.PrivateAddress))
+                if (string.IsNullOrEmpty(node.Address))
                 {
                     throw new ClusterDefinitionException($"Node [{node.Name}] has not been assigned a private IP address.");
                 }
 
-                if (!IPAddress.TryParse(node.PrivateAddress, out var address))
+                if (!IPAddress.TryParse(node.Address, out var address))
                 {
-                    throw new ClusterDefinitionException($"Node [{node.Name}] has invalid private IP address [{node.PrivateAddress}].");
+                    throw new ClusterDefinitionException($"Node [{node.Name}] has invalid private IP address [{node.Address}].");
                 }
 
                 if (address == IPAddress.Any)
@@ -588,7 +580,6 @@ namespace Neon.Kube
             Setup       = Setup ?? new SetupOptions();
             Hosting     = Hosting ?? new HostingOptions();
             NodeOptions = NodeOptions ?? new NodeOptions();
-            Cloud       = Cloud ?? new CloudOptions();
             Network     = Network ?? new NetworkOptions();
 
             Debug.Validate(this);
@@ -601,7 +592,6 @@ namespace Neon.Kube
             Network.Validate(this);
             Hosting.Validate(this);
             NodeOptions.Validate(this);
-            Cloud.Validate(this);
             Network.Validate(this);
 
             new HostingManagerFactory().Validate(this);
@@ -727,40 +717,40 @@ namespace Neon.Kube
 
             // Ensure that each node has a valid unique or NULL IP address.
 
-            NetworkCidr nodesSubnet = null;
+            NetworkCidr nodeSubnet = null;
 
             if (Network.NodeSubnet != null)
             {
-                nodesSubnet = NetworkCidr.Parse(Network.NodeSubnet);
+                nodeSubnet = NetworkCidr.Parse(Network.NodeSubnet);
             }
 
             var addressToNode = new Dictionary<string, NodeDefinition>();
 
             foreach (var node in SortedNodes)
             {
-                if (node.PrivateAddress != null)
+                if (node.Address != null)
                 {
                     NodeDefinition conflictNode;
 
-                    if (addressToNode.TryGetValue(node.PrivateAddress, out conflictNode))
+                    if (addressToNode.TryGetValue(node.Address, out conflictNode))
                     {
-                        throw new ClusterDefinitionException($"Node [name={node.Name}] has invalid private IP address [{node.PrivateAddress}] that conflicts with node [name={conflictNode.Name}].");
+                        throw new ClusterDefinitionException($"Node [name={node.Name}] has invalid private IP address [{node.Address}] that conflicts with node [name={conflictNode.Name}].");
                     }
                 }
             }
 
             foreach (var node in SortedNodes)
             {
-                if (node.PrivateAddress != null)
+                if (node.Address != null)
                 {
-                    if (!IPAddress.TryParse(node.PrivateAddress, out var address))
+                    if (!IPAddress.TryParse(node.Address, out var address))
                     {
-                        throw new ClusterDefinitionException($"Node [name={node.Name}] has invalid private IP address [{node.PrivateAddress}].");
+                        throw new ClusterDefinitionException($"Node [name={node.Name}] has invalid private IP address [{node.Address}].");
                     }
 
-                    if (nodesSubnet != null && !nodesSubnet.Contains(address))
+                    if (nodeSubnet != null && !nodeSubnet.Contains(address))
                     {
-                        throw new ClusterDefinitionException($"Node [name={node.Name}] has private IP address [{node.PrivateAddress}] that is not within the hosting [{nameof(Network.NodeSubnet)}={Network.NodeSubnet}].");
+                        throw new ClusterDefinitionException($"Node [name={node.Name}] has private IP address [{node.Address}] that is not within the hosting [{nameof(Network.NodeSubnet)}={Network.NodeSubnet}].");
                     }
                 }
                 else if (!Hosting.IsCloudProvider)

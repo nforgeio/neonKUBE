@@ -41,6 +41,9 @@ namespace Neon.Kube
     /// </summary>
     public class AzureOptions
     {
+        private const string defaultVmSize    = "Standard_B2S";
+        private const string defaultDiskSize = "128 GiB";
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -65,24 +68,24 @@ namespace Neon.Kube
         public string TenantId { get; set; }
 
         /// <summary>
-        /// Application ID generated when creating the neon tool's Azure service principal. 
+        /// Application ID for the application created to manage Azure access to neonKUBE provisioning and management tools.. 
         /// </summary>
-        [JsonProperty(PropertyName = "ApplicationId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "applicationId", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "AppId", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "appId", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string ApplicationId { get; set; }
+        public string AppId { get; set; }
 
         /// <summary>
         /// Password generated when creating the neon tool's Azure service principal.
         /// </summary>
-        [JsonProperty(PropertyName = "Password", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "password", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "AppPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "appPassword", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string Password { get; set; }
+        public string AppPassword { get; set; }
 
         /// <summary>
-        /// Azure resource group where all clusterv components are to be provisioned.  This defaults
-        /// to the clusterv name but can be customized as required.
+        /// Azure resource group where all cluster components are to be provisioned.  This defaults
+        /// to "neon-" plus the cluster name but can be customized as required.
         /// </summary>
         [JsonProperty(PropertyName = "ResourceGroup", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "resourceGroup", ApplyNamingConventions = false)]
@@ -96,6 +99,43 @@ namespace Neon.Kube
         [YamlMember(Alias = "region", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Region { get; set; }
+
+        /// <summary>
+        /// <para>
+        /// neonKUBE cluster VMs are all deployed within the same Azure <a href="https://azure.microsoft.com/en-us/blog/introducing-proximity-placement-groups/">placement group</a>
+        /// by default.  This ensures the smallest possible network latency between the cluster VMs.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// Proximity placement groups have one downside: they make it more likely that Azure
+        /// may not be able to find enough unused VMs to satisfy the proximity constraints.  This
+        /// can happen when you first provision a cluster or later on when you try to scale one.
+        /// </para>
+        /// <para>
+        /// For neonKUBE clusters the additional risk of an Azure provisioning failure is going
+        /// to be very low due to how we use availablity sets, which is as similar deployment
+        /// constraint: master nodes are deployed to one availability set and workers to another.
+        /// Without a proximity placement group, Azure could deploy the masters to one datacenter
+        /// and the workers to another.  This wasn't that likely in the past but as Azure has
+        /// added more datacenters, the chance of this happening has increased.
+        /// </para>
+        /// <para>
+        /// Adding the proximity placement constrain, requires that Azure deploy both the masters
+        /// and workers in the same datacenter.  So say your cluster has 3 masters and 50 workers.
+        /// With proximity placement enabled, the Azure region will need to have a datacenter with
+        /// 53 VMs available with the specified sizes.  With proximity placement disabled, Azure
+        /// could deploy the 3 masters in one datacenter and the 50 workers in another.
+        /// </para>
+        /// </note>
+        /// <para>
+        /// This property defaults to <c>false</c>.  You can disable the proximity placement
+        /// constraint by setting this to <c>true</c>.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "DisableProximityPlacement", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "disableProximityPlacement", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool DisableProximityPlacement { get; set; } = false;
 
         /// <summary>
         /// The DNS domain prefix for the public IP address to be assigned to the cluster.
@@ -132,71 +172,6 @@ namespace Neon.Kube
         public string DomainLabel { get; set; }
 
         /// <summary>
-        /// <para>
-        /// Specifies whether a static external IP address will be created for the cluster.  A static
-        /// IP address will never change and may be referenced via a DNS A record.  Static addresses
-        /// may incur additional costs and Azure limits the number of static addresses that may be
-        /// provisioned for a subscription.  This defaults to <c>false</c>.
-        /// </para>
-        /// <para>
-        /// When this is <c>false</c>, a dynamic external address will be provisioned.  This may be
-        /// referenced via a DNS CNAME record and the address may change from time-to-time.
-        /// </para>
-        /// </summary>
-        [JsonProperty(PropertyName = "StaticClusterAddress", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "staticClusterAddress", ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public bool StaticClusterAddress { get; set; } = false;
-
-        /// <summary>
-        /// <note>
-        /// <b>IMPORTANT:</b> assigning public IP addresses to cluster nodes is not currently
-        /// implemented.
-        /// </note>
-        /// <para>
-        /// Specifies whether the cluster nodes should be provisioned with public IP addresses
-        /// in addition to the cluster wide public IP addresses assigned to the traffic manager.
-        /// This defaults to <c>false</c>.
-        /// </para>
-        /// <note>
-        /// You will incur additional recuring costs for each public IP address.
-        /// </note>
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// There are two main reasons for enabling this.
-        /// </para>
-        /// <list type="number">
-        /// <item>
-        /// Outbound SNAT port exhaustion: This can occur when cluster nodes behind a load
-        /// balancer have a high rate of outbound requests to the Internet.  The essential
-        /// issue is that the traffic manager can NAT a maximum of 64K outbound connections
-        /// for the entire cluster.  This is described in detail 
-        /// <a href="https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-outbound-connections#load-balanced-vm-with-no-instance-level-public-ip-address">here</a>.
-        /// Assigning a public IP address to each node removes this cluster level restriction
-        /// such that each node can have up to 64K outbound connections.
-        /// </item>
-        /// <item>
-        /// Occasionally, it's important to be able to reach specific cluster nodes directly
-        /// from the Internet.
-        /// </item>
-        /// </list>
-        /// <para>
-        /// Enabling this directs the <b>neon-cli</b> to create a dynamic instance level IP
-        /// address for each cluster node and add a public network interface to each cluster 
-        /// virtual machine.
-        /// </para>
-        /// <note>
-        /// The public network interface will be protected by a public security group that
-        /// denies all inbound traffic and allows all outbound traffic by default.
-        /// </note>
-        /// </remarks>
-        [JsonProperty(PropertyName = "PublicNodeAddresses", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "publicNodeAddresses", ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public bool PublicNodeAddresses { get; set; } = false;
-
-        /// <summary>
         /// Specifies the target Azure environment.  This defaults to the 
         /// normal public Azure cloud.  See <see cref="AzureCloudEnvironment"/>
         /// for other possibilities.
@@ -207,34 +182,133 @@ namespace Neon.Kube
         public AzureCloudEnvironment Environment { get; set; } = null;
 
         /// <summary>
-        /// Specifies the number of Azure fault domains the cluster nodes should be
-        /// distributed across.  This defaults to <b>2</b> which should not be increased
+        /// <para>
+        /// Specifies the number of Azure fault domains the worker nodes should be
+        /// distributed across.  This defaults to <b>3</b> which should not be increased
         /// without making sure that your subscription supports the increase (most won't).
+        /// </para>
+        /// <note>
+        /// Manager nodes will always be provisioned in three fault domains to ensure
+        /// that there will always be a quorum after any single fault domain failure.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "FaultDomains", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "faultDomains", ApplyNamingConventions = false)]
-        [DefaultValue(2)]
-        public int FaultDomains { get; set; } = 2;
+        [DefaultValue(3)]
+        public int FaultDomains { get; set; } = 3;
 
         /// <summary>
         /// <para>
-        /// Specifies the number of Azure update domains the cluster nodes will 
-        /// distributed across.  This defaults to <b>5</b>  You may customize this
+        /// Specifies the number of Azure update domains the cluster workers will 
+        /// distributed across.  This defaults to <b>20</b>  You may customize this
         /// with a value in the range of <b>2</b>...<b>20</b>.
         /// </para>
+        /// <para>
+        /// Azure automatically distributes VMs across the specified number of update
+        /// domains and when it's necessary to perform planned maintenance on the underlying
+        /// hardware or to relocate a VM to another host, Azure gaurantees that it will
+        /// reboot hosts in only one update domain at a time and then wait 30 minutes between
+        /// update domains to give the application a chance to stablize.
+        /// </para>
+        /// <para>
+        /// A value of <b>2</b> indicates that one half of the cluster servers may be rebooted
+        /// at the same time during an update domain upgrade.  A value of <b>20</b> indicates 
+        /// that one twentieth of your VMs may be rebooted at a time.
+        /// </para>
         /// <note>
-        /// Larger clusters should increase this value to avoid losing significant capacity
-        /// as Azure updates its underlying infrastructure in an update domain requiring
-        /// VM shutdown and restarts.  A value of <b>2</b> indicates that one half of the
-        /// cluster servers may be restarted during an update domain upgrade.  A value
-        /// of <b>20</b> indicates that one twentieth of your VMs may be recycled at a
-        /// time.
+        /// <para>
+        /// There's no way to specifically assign cluster nodes to specific update domains
+        /// in Azure.  This would have been nice for a cluster hosting replicated database
+        /// nodes where we'd like to assign replica nodes to different update domains such
+        /// that all data would still be available while an update domain was being rebooted.
+        /// </para>
+        /// <para>
+        /// I imagine Azure doesn't allow this due to the difficuilty of ensuring these
+        /// constraints across a very large number of customer deployments.  Azure also
+        /// mentions that the disruption of a VM for planned maintenance can be slight
+        /// because VMs can be relocated from one host to another while still running.
+        /// </para>
+        /// </note>
+        /// <note>
+        /// Manager nodes are always deployed with 20 update domains and since no cluster
+        /// should ever need anywhere close this number of managers, we'll be ensured
+        /// that only a single manager will be rebooted together during planned Azure
+        /// maintenance and the 30 minutes Azure waits after rebooting an update domain
+        /// gives the rebooted manager a chance to rejoin the other managers and catch
+        /// up on any changes that happened while it was offline.
+        /// </note>
+        /// <note>
+        /// neonKUBE deploys manager and worker nodes in separate Azure availability zones.
+        /// This means that there will always be a quorum of managers available as any one
+        /// update zone is rebooted.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "UpdateDomains", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "updateDomains", ApplyNamingConventions = false)]
-        [DefaultValue(5)]
-        public int UpdateDomains { get; set; } = 5;
+        [DefaultValue(20)]
+        public int UpdateDomains { get; set; } = 20;
+
+        /// <summary>
+        /// <para>
+        /// Specifies the default Azure virtual machine size.  You the available VM sizes are listed 
+        /// <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-general">here</a>.
+        /// Cluster node VMs will be provisioned with this size unless overridden by <see cref="AzureNodeOptions"/>
+        /// for specific nodes.
+        /// </para>
+        /// <note>
+        /// This defaults to <b>Standard_B2S</b> which should be suitable for testing purposes
+        /// as well as relatively idle clusters.  Each <b>Standard_B2S</b> VM includes 2 virtual
+        /// cores and 4 GiB RAM.  At the time this was written, the pay-as-you-go cost for this
+        /// VM is listed at $0.0416/hour or about $30/month in a USA datacenter.  <b>Bs-series</b>
+        /// VMs are available in almost all Azure datacenters.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "DefaultVmSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultVmSize", ApplyNamingConventions = false)]
+        [DefaultValue(defaultVmSize)]
+        public string DefaultVmSize { get; set; } = defaultVmSize;
+
+        /// <summary>
+        /// Specifies the default Azure storage type to be used when creating a
+        /// node that does not specify the storage type in its <see cref="NodeOptions"/>.
+        /// This defaults to <see cref="AzureStorageTypes.StandardSSD"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "DefaultStorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultStorageType", ApplyNamingConventions = false)]
+        [DefaultValue(AzureStorageTypes.StandardSSD)]
+        public AzureStorageTypes DefaultStorageType { get; set; } = AzureStorageTypes.StandardSSD;
+
+        /// <summary>
+        /// Specifies the default Azure disk size to be used when creating a
+        /// node that does not specify a disk size in its <see cref="NodeOptions"/>.
+        /// This defaults to <b>64 GiB</b>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <see cref="AzureStorageTypes.StandardHDD"/>, <see cref="AzureStorageTypes.StandardSSD"/>, and
+        /// <see cref="AzureStorageTypes.PremiumSSD"/> disks may be provisioned in these
+        /// sizes: <b>4GiB</b>, <b>8GiB</b>, <b>16GiB</b>, <b>32GiB</b>, <b>64GiB</b>, <b>128GiB</b>, <b>256GiB</b>, <b>512GiB</b>,
+        /// <b>1TiB</b>, <b>2TiB</b>, <b>4TiB</b>, <b>8TiB</b>, <b>16TiB</b>, or <b>32TiB</b>.
+        /// </para>
+        /// <para>
+        /// <see cref="AzureStorageTypes.UltraSSD"/> based disks can be provisioned in these sizes:
+        /// <b>4 GiB</b>,<b>8 GiB</b>,<b> GiB</b>,<b>16 GiB</b>,<b>32 GiB</b>,<b>64 GiB</b>,<b>128 GiB</b>,<b>256 GiB</b>,<b>512 GiB</b>,
+        /// or from <b>1 TiB</b> to <b>64TiB</b> in increments of <b>1 TiB</b>.
+        /// </para>
+        /// <note>
+        /// This size will be rounded up to the next valid disk size for the given storage type
+        /// and set to the maximum allowed size, when necessary.
+        /// </note>
+        /// <note>
+        /// The Azure disk sizes listed above may become out-of-date as Azure enhances their
+        /// services.  Review the Azure documentation for more information about what is
+        /// currently supported.
+        /// </note>
+        /// </remarks>
+        [JsonProperty(PropertyName = "DefaultDiskSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultDiskSize", ApplyNamingConventions = false)]
+        [DefaultValue(defaultDiskSize)]
+        public string DefaultDiskSize { get; set; } = defaultDiskSize;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -259,32 +333,32 @@ namespace Neon.Kube
 
             if (string.IsNullOrEmpty(SubscriptionId))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(SubscriptionId)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(SubscriptionId)}] cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(TenantId))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(TenantId)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(TenantId)}] cannot be empty.");
             }
 
-            if (string.IsNullOrEmpty(ApplicationId))
+            if (string.IsNullOrEmpty(AppId))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(ApplicationId)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(AppId)}] cannot be empty.");
             }
 
-            if (string.IsNullOrEmpty(Password))
+            if (string.IsNullOrEmpty(AppPassword))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(Password)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(AppPassword)}] cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(Region))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(Region)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(Region)}] cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(DomainLabel))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(DomainLabel)}] property cannot be empty.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(DomainLabel)}] cannot be empty.");
             }
 
             // Verify [ResourceGroup].
@@ -296,24 +370,24 @@ namespace Neon.Kube
 
             if (ResourceGroup.Length > 64)
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property cannot be longer than 64 characters.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}={ResourceGroup}] is longer than 64 characters.");
             }
 
             if (!char.IsLetter(ResourceGroup.First()))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must begin with a letter.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}={ResourceGroup}] does not begin with a letter.");
             }
 
             if (ResourceGroup.Last() == '_' || ResourceGroup.Last() == '-')
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must not end with a dash or underscore.");
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}={ResourceGroup}] ends with a dash or underscore.");
             }
 
             foreach (var ch in ResourceGroup)
             {
                 if (!(char.IsLetterOrDigit(ch) || ch == '_' || ch == '-'))
                 {
-                    throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must include only letters, digits, dashes or underscores.");
+                    throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}={ResourceGroup}] includes characters other than letters, digits, dashes and underscores.");
                 }
             }
 
@@ -322,6 +396,25 @@ namespace Neon.Kube
             if (Environment != null)
             {
                 Environment.Validate(clusterDefinition);
+            }
+
+            // Verify [DefaultVmSize]
+
+            if (string.IsNullOrEmpty(DefaultVmSize))
+            {
+                DefaultVmSize = defaultVmSize;
+            }
+
+            // Verify [DefaultDiskSize].
+
+            if (string.IsNullOrEmpty(DefaultDiskSize))
+            {
+                DefaultDiskSize = AzureOptions.defaultDiskSize;
+            }
+
+            if (!ByteUnits.TryParse(DefaultDiskSize, out var defaultDiskSize) || defaultDiskSize <= 0)
+            {
+                throw new ClusterDefinitionException($"Azure hosting [{nameof(DefaultDiskSize)}={DefaultDiskSize}] is not valid.");
             }
 
             // Check Azure cluster limits.

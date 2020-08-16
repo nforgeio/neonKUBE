@@ -111,14 +111,9 @@ namespace Neon.Kube
         public const string LabelEnvironment = ClusterDefinition.ReservedLabelPrefix + "cluster.environment";
 
         /// <summary>
-        /// Reserved label name that identifies the node's public IP address or FQDN.
-        /// </summary>
-        public const string LabelPublicAddress = ClusterDefinition.ReservedLabelPrefix + "node.public_address";
-
-        /// <summary>
         /// Reserved label name that identifies the node's private IP address.
         /// </summary>
-        public const string LabelPrivateAddress = ClusterDefinition.ReservedLabelPrefix + "node.private_address";
+        public const string LabelAddress = ClusterDefinition.ReservedLabelPrefix + "node.private_address";
 
         /// <summary>
         /// Reserved label name that identifies the node role.
@@ -142,11 +137,6 @@ namespace Neon.Kube
         /// Reserved label name that identifies the node's Azure attached storage type.
         /// </summary>
         public const string LabelAzureStorageType = ClusterDefinition.ReservedLabelPrefix + "azure.storage_type";
-
-        /// <summary>
-        /// Reserved label name that identifies the node's Azure attached drive count.
-        /// </summary>
-        public const string LabelAzureDriveCount = ClusterDefinition.ReservedLabelPrefix + "azure.drive_count";
 
         /// <summary>
         /// Reserved label name that identifies the node's Azure attached drive size.
@@ -187,7 +177,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "StorageSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [YamlMember(Alias = "StorageSize", ApplyNamingConventions = false)]
-        [DefaultValue(0)]
+        [DefaultValue(null)]
         public string StorageSize { get; set; }
 
         /// <summary>
@@ -487,7 +477,7 @@ namespace Neon.Kube
         // Implementation
 
         /// <summary>
-        /// Enumerates the node labels.
+        /// Enumerates the standard neonKUBE node labels.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
@@ -503,8 +493,7 @@ namespace Neon.Kube
 
                 // Standard labels from the parent node definition.
 
-                list.Add(new KeyValuePair<string, object>(LabelPublicAddress,           Node.PublicAddress));
-                list.Add(new KeyValuePair<string, object>(LabelPrivateAddress,          Node.PrivateAddress));
+                list.Add(new KeyValuePair<string, object>(LabelAddress,                 Node.Address));
                 list.Add(new KeyValuePair<string, object>(LabelRole,                    Node.Role));
                 list.Add(new KeyValuePair<string, object>(LabelIngress,                 Node.Ingress));
 
@@ -512,8 +501,7 @@ namespace Neon.Kube
                 {
                     list.Add(new KeyValuePair<string, object>(LabelAzureVmSize,         Node.Azure.VmSize));
                     list.Add(new KeyValuePair<string, object>(LabelAzureStorageType,    Node.Azure.StorageType));
-                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveCount,     Node.Azure.HardDriveCount));
-                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveSize,      Node.Azure.HardDriveSizeGiB));
+                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveSize,      Node.Azure.DiskSize));
                 }
 
                 // Standard labels from this class.
@@ -594,14 +582,12 @@ namespace Neon.Kube
             {
                 switch (label.Key)
                 {
-                    case LabelPublicAddress:                Node.PublicAddress = label.Value; break;
-                    case LabelPrivateAddress:               Node.PrivateAddress = label.Value; break;
+                    case LabelAddress:                      Node.Address = label.Value; break;
                     case LabelRole:                         Node.Role = label.Value; break;
                     case LabelIngress:                      ParseCheck(label, () => { Node.Ingress = NeonHelper.ParseNullableBool(label.Value); }); break; 
 
                     case LabelAzureVmSize:
                     case LabelAzureStorageType:
-                    case LabelAzureDriveCount:
                     case LabelAzureDriveSize:
 
                         if (Node.Azure == null)
@@ -611,10 +597,9 @@ namespace Neon.Kube
 
                         switch (label.Key)
                         {
-                            case LabelAzureVmSize:          ParseCheck(label, () => { Node.Azure.VmSize = NeonHelper.ParseEnum<AzureVmSizes>(label.Value); }); break;
+                            case LabelAzureVmSize:          Node.Azure.VmSize = label.Value; break;
                             case LabelAzureStorageType:     ParseCheck(label, () => { Node.Azure.StorageType = NeonHelper.ParseEnum<AzureStorageTypes>(label.Value); }); break;
-                            case LabelAzureDriveCount:      ParseCheck(label, () => { Node.Azure.HardDriveCount = int.Parse(label.Value); }); break;
-                            case LabelAzureDriveSize:       ParseCheck(label, () => { Node.Azure.HardDriveSizeGiB = int.Parse(label.Value); }); break;
+                            case LabelAzureDriveSize:       Node.Azure.DiskSize = label.Value; break;
                         }
                         break;
 

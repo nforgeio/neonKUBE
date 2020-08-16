@@ -258,7 +258,7 @@ TCPKeepAlive yes
             if (node.Metadata != null)
             {
                 sb.AppendLine($"NEON_NODE_ROLE={node.Metadata.Role}");
-                sb.AppendLine($"NEON_NODE_IP={node.Metadata.PrivateAddress}");
+                sb.AppendLine($"NEON_NODE_IP={node.Metadata.Address}");
                 sb.AppendLine($"NEON_NODE_HDD={node.Metadata.Labels.StorageHDD.ToString().ToLowerInvariant()}");
             }
 

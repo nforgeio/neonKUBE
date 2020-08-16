@@ -43,8 +43,42 @@ namespace Neon.Kube
     /// </summary>
     public class NetworkOptions
     {
-        private const string defaultPodSubnet     = "10.254.0.0/16";
+        //---------------------------------------------------------------------
+        // Local types
+
+        /// <summary>
+        /// Used for checking subnet conflicts below.
+        /// </summary>
+        private class SubnetDefinition
+        {
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="name">Subnet name.</param>
+            /// <param name="cidr">Subnet CIDR.</param>
+            public SubnetDefinition(string name, NetworkCidr cidr)
+            {
+                this.Name = $"{nameof(NetworkOptions)}.{name}";
+                this.Cidr = cidr;
+            }
+
+            /// <summary>
+            /// Identifies the subnet.
+            /// </summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// The subnet CIDR.
+            /// </summary>
+            public NetworkCidr Cidr { get; set; }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
+        private const string defaultPodSubnet = "10.254.0.0/16";
         private const string defaultServiceSubnet = "10.253.0.0/16";
+        private const string defaultCloudNodeSubnet = "10.100.0.0/16";
 
         /// <summary>
         /// Default constructor.
@@ -69,18 +103,39 @@ namespace Neon.Kube
         /// </para>
         /// <note>
         /// This property must be configured for the on-premise providers (<see cref="HostingEnvironments.Machine"/>, 
-        /// <b>HyperV</b>, and <b>XenServer</b>".  This is computed automatically by the <b>neon</b> tool when
-        /// provisioning in a cloud environment.
+        /// <b>HyperV</b>, and <b>XenServer</b>,...).  This defaults to <b>10.100.0.0/16</b> for cloud deployments 
+        /// but can be customized as required.
         /// </note>
         /// <note>
         /// For on-premise clusters, the statically assigned IP addresses assigned 
         /// to the nodes must reside within the this subnet.  The network gateway
-        /// will be assumed to be the second address in this subnet and the broadcast
+        /// will be assumed to be the second address in the subnet and the broadcast
         /// address will assumed to be the last address.
         /// </note>
+        /// <note>
+        /// <para>
+        /// For cloud deployments, nodes will be assigned reasolable IP addresses by default.  You may assigned specific
+        /// IP addresses to nodes within the to nodes if necessary, with a couple reservations:
+        /// </para>
+        /// <list type="bullet">
+        ///     <item>
+        ///     The first 10 IP addresses of the <see cref="NodeSubnet"/> are reserved for use by the cloud as well
+        ///     as neonKUBE.  The default cloud <see cref="NodeSubnet"/> is <b>10.100.0.0/16</b> which means that
+        ///     addresses from <b>10.100.0.0 - 10.100.0.9</b> are reserved, so the first available node IP will be
+        ///     <b>10.100.0.10</b>.  Cloud platforms typically use IPs in the range for as the default gateway and
+        ///     also for DNS request forwarding.  neonKUBE reserves the remaining addresses for potential future
+        ///     features like integrated VPN and cluster management VMs.
+        ///     </item>
+        ///     <item>
+        ///     The last IP address of the <see cref="NodeSubnet"/> is also reserved.  Clouds typically use this
+        ///     as the UDP broadcast address for the network.  This will be <b>10.100.255.255</b> for the default
+        ///     cloud subnet.
+        ///     </item>
+        /// </list>
+        /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "NodesSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "nodesSubnet", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "NodeSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "nodeSubnet", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string NodeSubnet { get; set; }
 
@@ -116,7 +171,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Nameservers", Required = Required.Default)]
         [YamlMember(Alias = "nameservers", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string[] Nameservers { get; set; } = null;
+        public List<string> Nameservers { get; set; } = null;
 
         /// <summary>
         /// Specifies the default network gateway address to be configured for hosts.  This defaults to the 
@@ -125,7 +180,7 @@ namespace Neon.Kube
         /// environments.
         /// </summary>
         [JsonProperty(PropertyName = "Gateway", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "gGateway", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "gateway", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Gateway { get; set; } = null;
 
@@ -149,37 +204,66 @@ namespace Neon.Kube
         /// gateway services which are then responsible for routing to the target Kubernetes 
         /// services.
         /// </summary>
-        [JsonProperty(PropertyName = "IngressRoutes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "ingressRoutes", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "IngressRules", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ingressRules", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public List<IngressRoute> IngressRoutes { get; set; } = new List<IngressRoute>();
+        public List<IngressRule> IngressRules { get; set; } = new List<IngressRule>();
 
         /// <summary>
-        /// Used for checking subnet conflicts below.
+        /// <para>
+        /// Optionally specifies whitelisted and/or blacklisted external addresses for
+        /// outbound traffic.  This defaults to allowing outbound traffic to anywhere 
+        /// when the property is <c>null</c> or empty.
+        /// </para>
+        /// <note>
+        /// Address rules are processed in order, from first to last so you may consider
+        /// putting your blacklist rules before your whitelist rules.
+        /// </note>
+        /// <note>
+        /// This currently applies to all network ports.
+        /// </note>
         /// </summary>
-        private class SubnetDefinition
-        {
-            /// <summary>
-            /// Constructor.
-            /// </summary>
-            /// <param name="name">Subnet name.</param>
-            /// <param name="cidr">Subnet CIDR.</param>
-            public SubnetDefinition(string name, NetworkCidr cidr)
-            {
-                this.Name = $"{nameof(NetworkOptions)}.{name}";
-                this.Cidr = cidr;
-            }
+        [JsonProperty(PropertyName = "EgressAddressRules", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "egressAddressRules", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public List<AddressRule> EgressAddressRules { get; set; } = new List<AddressRule>();
 
-            /// <summary>
-            /// Identifies the subnet.
-            /// </summary>
-            public string Name { get; set; }
+        /// <summary>
+        /// <para>
+        /// Optionally specifies whitelisted and/or blacklisted external addresses for
+        /// node management.  This can be used to lock down node specific SSH traffic 
+        /// being routed via temporary load balancer NAT rules.  This defaults to allowing 
+        /// inbound traffic from anywhere when the property is <c>null</c> or empty.
+        /// </para>
+        /// <note>
+        /// Address rules are processed in order, from first to last so you may consider
+        /// putting your blacklist rules before your whitelist rules.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "ManagementAddressRules", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "managementAddressRules", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public List<AddressRule> ManagementAddressRules { get; set; } = new List<AddressRule>();
 
-            /// <summary>
-            /// The subnet CIDR.
-            /// </summary>
-            public NetworkCidr Cidr { get; set; }
-        }
+        /// <summary>
+        /// <para>
+        /// Optionally specifies the maximum time a SSH management NAT rule may remain active
+        /// before it may be deleted automatically.  This defaults to 24 hours and cannot be
+        /// less than one hour.
+        /// </para>
+        /// <note>
+        /// This is a <c>double</c> so you can specify fractions of an hour.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "ManagementNatTtlHours", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "managementNatTtlHours", ApplyNamingConventions = false)]
+        [DefaultValue(1.0)]
+        public double ManagementNatTtlHours { get; set; } = 24.0;
+
+        /// <summary>
+        /// Returns <see cref="ManagementNatTtlHours"/> as a <see cref="TimeSpan"/>.
+        /// </summary>
+        internal TimeSpan ManagementNatTtl => TimeSpan.FromHours(ManagementNatTtlHours);
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -192,13 +276,19 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            var isCloud       = clusterDefinition.Hosting.IsCloudProvider;
+            var subnets       = new List<SubnetDefinition>();
+            var gateway       = (IPAddress)null;
+            var premiseSubnet = (NetworkCidr)null;
+            var nodeSubnet    = (NetworkCidr)null;
+
             // Nameservers
 
-            var subnets = new List<SubnetDefinition>();
+            Nameservers = Nameservers ?? new List<string>();
 
-            if (Nameservers == null || Nameservers.Length == 0)
+            if (!isCloud && (Nameservers == null || Nameservers.Count == 0))
             {
-                Nameservers = new string[] { "8.8.8.8", "8.8.4.4" };
+                Nameservers = new List<string> { "8.8.8.8", "8.8.4.4" };
             }
 
             foreach (var nameserver in Nameservers)
@@ -211,12 +301,75 @@ namespace Neon.Kube
 
             // Verify [PremiseSubnet].
 
-            if (!NetworkCidr.TryParse(PremiseSubnet, out var premiseSubnet))
+            if (!isCloud)
             {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}] is not a valid IPv4 subnet.");
+                if (!NetworkCidr.TryParse(PremiseSubnet, out premiseSubnet))
+                {
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}] is not a valid IPv4 subnet.");
+                }
+
+                subnets.Add(new SubnetDefinition(nameof(PremiseSubnet), premiseSubnet));
             }
 
-            subnets.Add(new SubnetDefinition(nameof(PremiseSubnet), premiseSubnet));
+            // Verify [NodeSubnet].
+
+            if (isCloud)
+            {
+                if (string.IsNullOrEmpty(NodeSubnet))
+                {
+                    nodeSubnet = NetworkCidr.Parse(defaultCloudNodeSubnet);
+                    NodeSubnet  = defaultCloudNodeSubnet;
+                }
+                else
+                {
+                    if (!NetworkCidr.TryParse(NodeSubnet, out nodeSubnet))
+                    {
+                        throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodeSubnet)}={NodeSubnet}] is not a valid IPv4 subnet.");
+                    }
+                }
+            }
+            else
+            {
+                if (!NetworkCidr.TryParse(NodeSubnet, out nodeSubnet))
+                {
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodeSubnet)}={NodeSubnet}] is not a valid IPv4 subnet.");
+                }
+
+                if (!premiseSubnet.Contains(nodeSubnet))
+                {
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodeSubnet)}={NodeSubnet}] is not within [{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}].");
+                }
+            }
+
+            subnets.Add(new SubnetDefinition(nameof(NodeSubnet), nodeSubnet));
+
+            // Verify [Gateway]
+
+            if (isCloud)
+            {
+                gateway = nodeSubnet.FirstUsableAddress;
+                Gateway = gateway.ToString();
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(Gateway))
+                {
+                    // Default to the first valid address of the cluster nodes subnet 
+                    // if this isn't already set.
+
+                    Gateway = premiseSubnet.FirstUsableAddress.ToString();
+                }
+
+                if (!IPAddress.TryParse(Gateway, out gateway) || gateway.AddressFamily != AddressFamily.InterNetwork)
+                {
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] is not a valid IPv4 address.");
+                }
+
+                if (!premiseSubnet.Contains(gateway))
+                {
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] address is not within the [{nameof(NetworkOptions)}.{nameof(NetworkOptions.NodeSubnet)}={NodeSubnet}] subnet.");
+                }
+            }
 
             // Verify [PodSubnet].
 
@@ -236,54 +389,74 @@ namespace Neon.Kube
 
             subnets.Add(new SubnetDefinition(nameof(ServiceSubnet), serviceSubnet));
 
-            // Verify [Gateway]
-
-            if (string.IsNullOrEmpty(Gateway))
-            {
-                // Default to the first valid address of the cluster nodes subnet 
-                // if this isn't already set.
-
-                Gateway = premiseSubnet.FirstUsableAddress.ToString();
-            }
-
-            if (!IPAddress.TryParse(Gateway, out var gateway) || gateway.AddressFamily != AddressFamily.InterNetwork)
-            {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] is not a valid IPv4 address.");
-            }
-
-            if (!premiseSubnet.Contains(gateway))
-            {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] address is not within the [{nameof(NetworkOptions)}.{nameof(NetworkOptions.NodeSubnet)}={NodeSubnet}] subnet.");
-            }
-
-            // Verify [NodeSubnet].
-
-            if (!NetworkCidr.TryParse(NodeSubnet, out var nodesSubnet))
-            {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodeSubnet)}={NodeSubnet}] is not a valid IPv4 subnet.");
-            }
-
-            if (!premiseSubnet.Contains(nodesSubnet))
-            {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodeSubnet)}={NodeSubnet}] is not within [{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}].");
-            }
-
             // Verify that none of the major subnets conflict.
 
             foreach (var subnet in subnets)
             {
-                foreach (var subnetTest in subnets)
+                foreach (var next in subnets)
                 {
-                    if (subnet == subnetTest)
+                    if (subnet == next)
                     {
-                        continue;   // Don't test against self.[
+                        continue;   // Don't test against self.
                     }
 
-                    if (subnet.Cidr.Overlaps(subnetTest.Cidr))
+                    if (subnet.Cidr.Overlaps(next.Cidr))
                     {
-                        throw new ClusterDefinitionException($"[{subnet.Name}={subnet.Cidr}] and [{subnetTest.Name}={subnetTest.Cidr}] overlap.");
+                        throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}]: Subnet conflict: [{subnet.Name}={subnet.Cidr}] and [{next.Name}={next.Cidr}] overlap.");
                     }
                 }
+            }
+
+            // Verify [IngressRules].
+
+            IngressRules = IngressRules ?? new List<IngressRule>();
+
+            foreach (var rule in IngressRules)
+            {
+                rule.Validate(clusterDefinition);
+            }
+
+            // Verify [EgressAddressRules].
+
+            EgressAddressRules = EgressAddressRules ?? new List<AddressRule>();
+
+            foreach (var rule in EgressAddressRules)
+            {
+                rule.Validate(clusterDefinition, nameof(EgressAddressRules));
+            }
+
+            // Verify [ManageAddressRules].
+
+            ManagementAddressRules = ManagementAddressRules ?? new List<AddressRule>();
+
+            foreach (var rule in ManagementAddressRules)
+            {
+                rule.Validate(clusterDefinition, nameof(ManagementAddressRules));
+            }
+
+            // Verify [ManagementNatTtlHours].
+
+            if (ManagementNatTtlHours < 1.0)
+            {
+                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(ManagementNatTtlHours)}={ManagementNatTtlHours}]: Cannot be less than [1 hour].");
+            }
+        }
+
+        /// <summary>
+        /// Ensures that for cloud deployments, an explicit node address assignment does not conflict 
+        /// with any VNET addresses reserved by the cloud provider or neonKUBE.
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="nodeDefinition">The node definition.</param>
+        /// <exception cref="ClusterDefinitionException">Thrown for cloud deployments where the node specifies an explicit IP address that conflicts with a reserved VNET address.</exception>
+        internal void ValidateCloudNodeAddress(ClusterDefinition clusterDefinition, NodeDefinition nodeDefinition)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<ArgumentNullException>(nodeDefinition != null, nameof(nodeDefinition));
+
+            if (clusterDefinition.Hosting.IsCloudProvider)
+            {
+                var nodeSubnet = clusterDefinition.Network.NodeSubnet;
             }
         }
     }

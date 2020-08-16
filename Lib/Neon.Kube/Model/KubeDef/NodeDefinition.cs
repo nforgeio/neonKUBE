@@ -34,6 +34,7 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
+using System.Xml;
 
 namespace Neon.Kube
 {
@@ -100,24 +101,14 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// The node's public IP address or DNS name.  This will be generally initialized
-        /// to <c>null</c> before provisioning a cluster.  This will be initialized while
-        /// by the <b>neon-cli</b> tool for master nodes when provisioning in a cloud provider.
-        /// </summary>
-        [JsonProperty(PropertyName = "PublicAddress", Required = Required.Default)]
-        [YamlMember(Alias = "publicAddress", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string PublicAddress { get; set; } = null;
-
-        /// <summary>
         /// The node's IP address or <c>null</c> if one has not been assigned yet.
         /// Note that an node's IP address cannot be changed once the node has
         /// been added to the cluster.
         /// </summary>
-        [JsonProperty(PropertyName = "PrivateAddress", Required = Required.Default)]
-        [YamlMember(Alias = "privateAddress", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Address", Required = Required.Default)]
+        [YamlMember(Alias = "address", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string PrivateAddress { get; set; } = null;
+        public string Address { get; set; } = null;
 
         /// <summary>
         /// Indicates that the node will act as a master node (defaults to <c>false</c>).
@@ -360,16 +351,26 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid because node names starting with [node-] are reserved.");
             }
 
+            if (string.IsNullOrEmpty(Role))
+            {
+                Role = NodeRole.Worker;
+            }
+
+            if (!Role.Equals(NodeRole.Master, StringComparison.InvariantCultureIgnoreCase) && !Role.Equals(NodeRole.Worker, StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new ClusterDefinitionException($"Node [{Name}] has invalid [{nameof(Role)}={Role}].  This must be [{NodeRole.Master}] or [{NodeRole.Worker}].");
+            }
+
             if (clusterDefinition.Hosting.IsOnPremiseProvider)
             {
-                if (string.IsNullOrEmpty(PrivateAddress))
+                if (string.IsNullOrEmpty(Address))
                 {
-                    throw new ClusterDefinitionException($"Node [{Name}] requires [{nameof(PrivateAddress)}] when hosting in an on-premise facility.");
+                    throw new ClusterDefinitionException($"Node [{Name}] requires [{nameof(Address)}] when hosting in an on-premise facility.");
                 }
 
-                if (!IPAddress.TryParse(PrivateAddress, out var nodeAddress))
+                if (!IPAddress.TryParse(Address, out var nodeAddress))
                 {
-                    throw new ClusterDefinitionException($"Node [{Name}] has invalid IP address [{PrivateAddress}].");
+                    throw new ClusterDefinitionException($"Node [{Name}] has invalid IP address [{Address}].");
                 }
             }
 

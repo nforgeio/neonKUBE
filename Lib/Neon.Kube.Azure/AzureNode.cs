@@ -21,7 +21,7 @@ using Neon.Net;
 
 using AzureEnvironment = Microsoft.Azure.Management.ResourceManager.Fluent.AzureEnvironment;
 
-namespace Neon.Kube.Azure
+namespace Neon.Kube
 {
     /// <summary>
     /// Holds information about a cluster node VM within the context of an Azure deployment. 
@@ -62,7 +62,7 @@ namespace Neon.Kube.Azure
         /// <summary>
         /// Returns the node's private IP address within the Azure <b>VNET</b>.
         /// </summary>
-        public IPAddress PrivateAddress => Node.PrivateAddress;
+        public IPAddress PrivateAddress => Node.Address;
 
         /// <summary>
         /// Nodes may be accessed externally via SSH when a NAT rule is configured

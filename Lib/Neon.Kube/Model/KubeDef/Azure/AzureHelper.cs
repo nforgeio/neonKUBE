@@ -52,129 +52,122 @@ namespace Neon.Kube
         public const int MaxHostedEndpoints = 150;
 
         /// <summary>
-        /// Converts the requested disk size in GiB to the actual required size of the Azure
+        /// Converts the requested disk size in bytes to the actual required size of the Azure
         /// managed disk in GiB.
         /// </summary>
         /// <param name="storageType">Specifies the disk storage type.</param>
-        /// <param name="requestedSizeGiB">The requested size in GB.</param>
+        /// <param name="driveSizeBytes">The requested size in bytes.</param>
         /// <returns>The actual Azure disk size in GiB.</returns>
-        public static int GetDiskSizeGiB(AzureStorageTypes storageType, int requestedSizeGiB)
+        public static decimal GetDiskSizeGiB(AzureStorageTypes storageType, decimal driveSizeBytes)
         {
+            var driveSizeGiB = driveSizeBytes / ByteUnits.GibiBytes;
+
             switch (storageType)
             {
                 case AzureStorageTypes.StandardHDD:
-
-                    // Azure currently standard HDD sizes: 32GiB, 64GiB, 128GiB, 512GiB, 1TiB, 2TiB, 4TiB, 8TiB, 16TiB or 32TiB.
-
-                    if (requestedSizeGiB <= 32)
-                    {
-                        return 32;
-                    }
-                    else if (requestedSizeGiB <= 64)
-                    {
-                        return 64;
-                    }
-                    else if (requestedSizeGiB <= 128)
-                    {
-                        return 128;
-                    }
-                    else if (requestedSizeGiB <= 512)
-                    {
-                        return 512;
-                    }
-                    else if (requestedSizeGiB <= 1024)
-                    {
-                        return 1024;
-                    }
-                    else if (requestedSizeGiB <= 2048)
-                    {
-                        return 2048;
-                    }
-                    else if (requestedSizeGiB <= 8192)
-                    {
-                        return 8192;
-                    }
-                    else if (requestedSizeGiB <= 16314)
-                    {
-                        return 16314;
-                    }
-                    else
-                    {
-                        return 32628;
-                    }
-
                 case AzureStorageTypes.StandardSSD:
-
-                    // Azure currently standard SSD sizes: 128GB, 512GB, 1TB, 2TB, 4TB, 8TB, 16TB or 32TB.
-
-                    if (requestedSizeGiB <= 128)
-                    {
-                        return 128;
-                    }
-                    else if (requestedSizeGiB <= 512)
-                    {
-                        return 512;
-                    }
-                    else if (requestedSizeGiB <= 1024)
-                    {
-                        return 1024;
-                    }
-                    else if (requestedSizeGiB <= 2048)
-                    {
-                        return 2048;
-                    }
-                    else if (requestedSizeGiB <= 8192)
-                    {
-                        return 8192;
-                    }
-                    else if (requestedSizeGiB <= 16314)
-                    {
-                        return 16314;
-                    }
-                    else
-                    {
-                        return 32628;
-                    }
-
                 case AzureStorageTypes.PremiumSSD:
 
-                    // Azure currently premium disks sizes: 32GB, 64GB, 128GB, 512GB, 1TB, 2TB, 4TB, 8TB, 16TB or 32TB.
+                    // Azure premium disks sizes: 32GiB, 64GiB, 128GiB, 512GiB, 1TiB, 2TiB, 4TiB, 8TiB, 16TiB or 32TiB.
 
-                    if (requestedSizeGiB <= 32)
+                    if (driveSizeGiB <= 32)
                     {
                         return 32;
                     }
-                    else if (requestedSizeGiB <= 64)
+                    else if (driveSizeGiB <= 64)
                     {
                         return 64;
                     }
-                    else if (requestedSizeGiB <= 128)
+                    else if (driveSizeGiB <= 128)
                     {
                         return 128;
                     }
-                    else if (requestedSizeGiB <= 512)
+                    else if (driveSizeGiB <= 256)
+                    {
+                        return 256;
+                    }
+                    else if (driveSizeGiB <= 512)
                     {
                         return 512;
                     }
-                    else if (requestedSizeGiB <= 1024)
+                    else if (driveSizeGiB <= 1024)
                     {
                         return 1024;
                     }
-                    else if (requestedSizeGiB <= 2048)
+                    else if (driveSizeGiB <= 2048)
                     {
                         return 2048;
                     }
-                    else if (requestedSizeGiB <= 8192)
+                    else if (driveSizeGiB <= 4096)
+                    {
+                        return 4096;
+                    }
+                    else if (driveSizeGiB <= 8192)
                     {
                         return 8192;
                     }
-                    else if (requestedSizeGiB <= 16314)
+                    else if (driveSizeGiB <= 16314)
                     {
                         return 16314;
                     }
                     else
                     {
-                        return 32628;
+                        return 32768;
+                    }
+
+                case AzureStorageTypes.UltraSSD:
+
+                    // Azure ultra disks sizes: 4GiB, 8GiB, 16GiB, 32GiB, 64GiB, 128GiB, 256GiB, 512GiB
+                    //                          and 1TiB - 64TiB in 1TiB increments
+
+                    if (driveSizeGiB < 4)
+                    {
+                        return 4;
+                    }
+                    else if (driveSizeGiB < 8)
+                    {
+                        return 8;
+                    }
+                    else if (driveSizeGiB < 16)
+                    {
+                        return 16;
+                    }
+                    else if (driveSizeGiB < 32)
+                    {
+                        return 32;
+                    }
+                    else if (driveSizeGiB < 64)
+                    {
+                        return 64;
+                    }
+                    else if (driveSizeGiB < 128)
+                    {
+                        return 128;
+                    }
+                    else if (driveSizeGiB < 256)
+                    {
+                        return 256;
+                    }
+                    else if (driveSizeGiB < 512)
+                    {
+                        return 512;
+                    }
+                    else if (driveSizeGiB < 65536)
+                    {
+                        // Round up to the nearest 1TiB.
+
+                        var driveSizeTiB = driveSizeGiB / 1024;
+
+                        if (driveSizeGiB % 1024 != 0)
+                        {
+                            driveSizeTiB++;
+                        }
+
+                        return driveSizeTiB * 1024;
+                    }
+                    else
+                    {
+                        return 65536;
                     }
 
                 default:
