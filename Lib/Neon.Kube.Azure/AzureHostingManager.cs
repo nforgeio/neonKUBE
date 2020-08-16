@@ -18,15 +18,18 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Dynamic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -47,17 +50,10 @@ using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
 using Neon.Time;
-using Microsoft.Azure.Management.Monitor.Fluent.Models;
-using Microsoft.Azure.Management.ContainerService.Fluent.Models;
-using Microsoft.Azure.Management.AppService.Fluent;
-using Microsoft.Azure.Management.CosmosDB.Fluent.Models;
-using Microsoft.Azure.Management.Network.Models;
 
 using INetworkSecurityGroup = Microsoft.Azure.Management.Network.Fluent.INetworkSecurityGroup;
 using SecurityRuleProtocol  = Microsoft.Azure.Management.Network.Fluent.Models.SecurityRuleProtocol;
 using TransportProtocol     = Microsoft.Azure.Management.Network.Fluent.Models.TransportProtocol;
-using Microsoft.Azure.Management.ResourceManager.Fluent.Core;
-using Remotion.Linq.Parsing;
 
 namespace Neon.Kube
 {
@@ -254,10 +250,10 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Flags used to customize how the cluster load balancer is updated.
+        /// Flags used to customize how the cluster network is updated.
         /// </summary>
         [Flags]
-        private enum LoadBalancerUpdate
+        private enum NetworkOperations
         {
             /// <summary>
             /// Update the cluster's ingress rules.
@@ -270,20 +266,22 @@ namespace Neon.Kube
             AddSshRules = 0x0002,
             
             /// <summary>
-            /// Remove SSH management NAT rules for every node in the cluster.
+            /// Remove all SSH management NAT rules for every node in the cluster.
             /// </summary>
             RemoveSshRules = 0x0004,
 
             /// <summary>
             /// SSH management rule names include an encoded UTC timestamp.  This
-            /// flag specifies that any SSH management rules with a timestamp older
-            /// than 24 hours will be removed.
+            /// flag indicates that any SSH management rules with a timestamp older
+            /// <see cref="NetworkOptions.ManagementAddressRules"/> will be removed.
             /// </summary>
             PurgeSshRules = 0x0008
         }
 
         //---------------------------------------------------------------------
         // Static members
+
+        private static Regex timestampRegex = new Regex(@"-\d{14}");
 
         /// <summary>
         /// Ensures that the assembly hosting this hosting manager is loaded.
@@ -292,6 +290,55 @@ namespace Neon.Kube
         {
             // We don't have to do anything here because the assembly is loaded
             // as a byproduct of calling this method.
+        }
+
+        /// <summary>
+        /// Determines whether a resource name includes a timestamp.
+        /// </summary>
+        /// <param name="name">The name being checked.</param>
+        /// <returns><c>true</c> if the name includes a timestamp.</returns>
+        /// <remarks>
+        /// Some Azure resources like load balancer and network security group rules
+        /// include a creation timestamp at the end of the name, like: 
+        /// <b>NAME-YYYYMMDDHHMMSS</b> (UTC).  These are used to make it 
+        /// easier to update rules as well as to purge older rules.
+        /// </remarks>
+        private static bool HasTimestamp(string name)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            return timestampRegex.Match(name).Success;
+        }
+
+        /// <summary>
+        /// Extracts the timestamp (UTC) from a resource name.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <returns>The <see cref="DateTime"/>.</returns>
+        /// <exception cref="FormatException">Thrown if the name doesn't include a timestamp.</exception>
+        private static DateTime ExtractTimestamp(string name)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
+
+            if (!HasTimestamp(name))
+            {
+                throw new FormatException($"Resource name [{name}] does not include a timestamp.");
+            }
+
+            var timestamp = name.Substring(name.LastIndexOf('-') + 1);
+
+            return DateTime.ParseExact(timestamp, "yyyyMMddhhmmss", CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
+        /// Converts a <see cref="DateTime"/> into a timestamp suitable for adding
+        /// to a resource name.
+        /// </summary>
+        /// <param name="time">The time.</param>
+        /// <returns>The timestamp string.</returns>
+        private static string ToTimestamp(DateTime time)
+        {
+            return time.ToString("yyyyMMddhhmmss", CultureInfo.InvariantCulture);
         }
 
         //---------------------------------------------------------------------
@@ -332,7 +379,6 @@ namespace Neon.Kube
         private string                          loadbalancerName;
         private string                          loadbalancerFrontendName;
         private string                          loadbalancerBackendName;
-        private string                          loadbalancerProbeName;
         private string                          subnetNsgName;
 
         // These fields hold various Azure components while provisioning is in progress.
@@ -387,7 +433,6 @@ namespace Neon.Kube
             this.subnetNsgName               = GetResourceName("nsg", "subnet");
             this.loadbalancerFrontendName    = "frontend";
             this.loadbalancerBackendName     = "backend";
-            this.loadbalancerProbeName       = "probe";
 
             // Initialize the node mapping dictionary and also ensure
             // that each node has Azure reasonable Azure node options.
@@ -604,6 +649,7 @@ namespace Neon.Kube
             controller.AddGlobalStep("virtual network", () => CreateVirtualNetwork());
             controller.AddGlobalStep("public address", () => CreatePublicAddress());
             controller.AddGlobalStep("load balancer", () => CreateLoadBalancer());
+            controller.AddGlobalStep("ingress rules", () => UpdateNetwork(NetworkOperations.IngressRules));
             controller.AddStep("virtual machines", CreateVm);
 
             if (!controller.Run(leaveNodesConnected: false))
@@ -881,7 +927,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Create or updates the network security groups.
+        /// Creates the network security groups.
         /// </summary>
         private void CreateNetworkSecurityGroups()
         {
@@ -891,128 +937,18 @@ namespace Neon.Kube
 
             if (subnetNsg == null)
             {
-                // Create the security group, remove any Azure default rules 
-                // and then add rules defined by the cluster definition.
+                // Note that we're going to add rules later.
 
                 subnetNsg = azure.NetworkSecurityGroups
                     .Define(subnetNsgName)
                     .WithRegion(region)
                     .WithExistingResourceGroup(resourceGroup)
                     .Create();
-
-                var subnetNsgUpdater = subnetNsg.Update();
-
-                // Add the ingress rules from the cluster definition.  To keep things simple,
-                // we're going to generate a separate rule for each source address restriction.
-                // In theory, we could have tried collecting allow and deny rules together to
-                // reduce the number of rules but that doesn't seem worth the trouble.  This
-                // is possible because NSGs rules allow a comma separated list of IP addresses
-                // or subnets to be specified.
-                //
-                // We may need to revisit this if we start approaching Azure rule limits.  This
-                // would also be a good time to handle port ranges as well.
-
-                foreach (var ingressRule in networkOptions.IngressRules)
-                {
-                    var priority  = 2000;
-                    var ruleCount = 0;
-
-                    if (ingressRule.AddressRules == null || ingressRule.AddressRules.Count == 0)
-                    {
-                        // Default to allowing all addresses when there's no address rules are specified.
-
-                        subnetNsgUpdater.DefineRule($"ingress-{ingressRule.Name}-{ingressRule.ExternalPort}-tcp-{ruleCount}")
-                            .AllowInbound()
-                            .FromAnyAddress()
-                            .FromPort(ingressRule.ExternalPort)
-                            .ToAnyAddress()
-                            .ToPort(ingressRule.NodePort)
-                            .WithProtocol(SecurityRuleProtocol.Tcp)                     // Only TCP is supported by Istio now
-                            .WithPriority(priority++)
-                            .Attach();
-
-                        ruleCount++;
-                    }
-                    else
-                    {
-                        // We need to generate a separate NSG rule for each address rule.
-
-                        foreach (var addressRule in ingressRule.AddressRules)
-                        {
-                            switch (addressRule.Action)
-                            {
-                                case AddressRuleAction.Allow:
-
-                                    if (addressRule.IsAny)
-                                    {
-                                        subnetNsgUpdater.DefineRule($"ingress-{ingressRule.Name}-{ingressRule.ExternalPort}-tcp-{ruleCount}")
-                                            .AllowInbound()
-                                            .FromAnyAddress()
-                                            .FromAnyPort()
-                                            .ToAnyAddress()
-                                            .ToPort(ingressRule.NodePort)
-                                            .WithProtocol(SecurityRuleProtocol.Tcp)                     // Only TCP is supported by Istio now
-                                            .WithPriority(priority++)
-                                            .Attach();
-                                    }
-                                    else
-                                    {
-                                        subnetNsgUpdater.DefineRule($"ingress-{ingressRule.Name}-{ingressRule.ExternalPort}-tcp-{ruleCount}")
-                                            .AllowInbound()
-                                            .FromAddress(addressRule.AddressOrSubnet)
-                                            .FromPort(ingressRule.ExternalPort)
-                                            .ToAnyAddress()
-                                            .ToPort(ingressRule.NodePort)
-                                            .WithProtocol(SecurityRuleProtocol.Tcp)                     // Only TCP is supported by Istio now
-                                            .WithPriority(priority++)
-                                            .Attach();
-                                    }
-                                    break;
-
-                                case AddressRuleAction.Deny:
-
-                                    if (addressRule.IsAny)
-                                    {
-                                        subnetNsgUpdater.DefineRule($"ingress-{ingressRule.Name}-{ingressRule.ExternalPort}-tcp-{ruleCount}")
-                                            .DenyInbound()
-                                            .FromAnyAddress()
-                                            .FromPort(ingressRule.ExternalPort)
-                                            .ToAnyAddress()
-                                            .ToPort(ingressRule.NodePort)
-                                            .WithProtocol(SecurityRuleProtocol.Tcp)                     // Only TCP is supported by Istio now
-                                            .WithPriority(priority++)
-                                            .Attach();
-                                    }
-                                    else
-                                    {
-                                        subnetNsgUpdater.DefineRule($"ingress-{ingressRule.Name}-{ingressRule.ExternalPort}-tcp-{ruleCount}")
-                                            .DenyInbound()
-                                            .FromAddress(addressRule.AddressOrSubnet)
-                                            .FromPort(ingressRule.ExternalPort)
-                                            .ToAnyAddress()
-                                            .ToPort(ingressRule.NodePort)
-                                            .WithProtocol(SecurityRuleProtocol.Tcp)                     // Only TCP is supported by Istio now
-                                            .WithPriority(priority++)
-                                            .Attach();
-                                    }
-                                    break;
-
-                                default:
-
-                                    throw new NotImplementedException();
-                            }
-
-                            ruleCount++;
-                        }
-                    }
-                }
-
-                subnetNsgUpdater.Apply();
             }
         }
 
         /// <summary>
-        /// Creates the cluster's virtual network if it doesn't already exist.
+        /// Creates the cluster's virtual network.
         /// </summary>
         private void CreateVirtualNetwork()
         {
@@ -1051,7 +987,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates the cluster's external load balancer if it doesn't already exist.
+        /// Create the cluster's external load balancer.
         /// </summary>
         private void CreateLoadBalancer()
         {
@@ -1169,11 +1105,201 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Updates the load balancer configuration based on the flags passed.
+        /// Updates the load balancer and related security rules based on the operation flags passed.
         /// </summary>
-        /// <param name="updateFlags">Flags that control how the load balancer is updated.</param>
-        private void UpdateLoadBalancer(LoadBalancerUpdate updateFlags)
+        /// <param name="operations">Flags that control how the load balancer and related security rules are updated.</param>
+        private void UpdateNetwork(NetworkOperations operations)
         {
+            var loadbalancerUpdater = loadBalancer.Update();
+            var subnetNsgUpdater    = subnetNsg.Update();
+
+            if ((operations & NetworkOperations.IngressRules) != 0)
+            {
+                UpdateNetworkIngress(loadbalancerUpdater, subnetNsgUpdater);
+            }
+
+            subnetNsgUpdater.Apply();
+            loadbalancerUpdater.Apply();
+        }
+
+        /// <summary>
+        /// Updates the load balancer and network security rules to match the current cluster definition.
+        /// </summary>
+        /// <param name="loadBalancerUpdater">The load balancer updater.</param>
+        /// <param name="subnetNsgUpdater">The subnet NSG updater.</param>
+        private void UpdateNetworkIngress(
+            Microsoft.Azure.Management.Network.Fluent.LoadBalancer.Update.IUpdate           loadBalancerUpdater,
+            Microsoft.Azure.Management.Network.Fluent.NetworkSecurityGroup.Update.IUpdate   subnetNsgUpdater)
+        {
+            // So the trick here is that we need to update the rules for each of the load balancer
+            // and network security group in a single go but the fluent API requires us to add,
+            // update and/or delete rules by name.  This will be hard to do because we'd need
+            // to identify which existing rules map to the possibly changed set of new rules.
+            //
+            // The easiest approach is to delete all of the old rules and then add the new ones.
+            // The problem here is that we need to user new rule names that don't conflict with
+            // any existing rules.  We're going to accomplish this by appending a second resolution
+            // timestamp (UTC) to each name.   This will also come in handy for purging old
+            // temporarly rules.
+
+            foreach (var rule in loadBalancer.LoadBalancingRules.Values
+                .Where(r => r.Name.StartsWith("ingress-", StringComparison.InvariantCultureIgnoreCase) && HasTimestamp(r.Name)))
+            {
+                loadBalancerUpdater.WithoutLoadBalancingRule(rule.Name);
+            }
+
+            foreach (var rule in subnetNsg.SecurityRules.Values
+                .Where(r => r.Name.StartsWith("ingress-", StringComparison.InvariantCultureIgnoreCase) && HasTimestamp(r.Name)))
+            {
+                subnetNsgUpdater.WithoutRule(rule.Name);
+            }
+
+            // We also need to remove any existing load balancer ingress related health probes.  We'll 
+            // recreate these as necessary below.
+
+            foreach (var probe in loadBalancer.TcpProbes.Values
+                .Where(p => p.Name.StartsWith("ingress-", StringComparison.InvariantCultureIgnoreCase) && HasTimestamp(p.Name)))
+            {
+                loadBalancerUpdater.WithoutProbe(probe.Name);
+            }
+
+            // We're going to use the same timestamp for all new/updated rules.
+
+            var timestamp = ToTimestamp(DateTime.UtcNow);
+
+            // Add the load balancer ingress rules and probes.
+
+            var ruleCount = 0;
+
+            foreach (var ingressRule in networkOptions.IngressRules)
+            {
+                var probeName = $"ingress-{ingressRule.Name}-{ingressRule.ExternalPort}-tcp-{timestamp}";
+
+                loadBalancerUpdater.DefineTcpProbe(probeName)
+                    .WithPort(ingressRule.NodePort)
+                    .Attach();
+
+                var ruleName = $"ingress-{ingressRule.Name}-{ingressRule.ExternalPort}-tcp-{timestamp}";
+
+                loadBalancerUpdater.DefineLoadBalancingRule(ruleName)
+                    .WithProtocol(TransportProtocol.Tcp)                            // Only TCP is supported by Istio now
+                    .FromExistingPublicIPAddress(publicAddress)
+                    .FromFrontendPort(ingressRule.ExternalPort)
+                    .ToBackend(loadbalancerBackendName)
+                    .ToBackendPort(ingressRule.NodePort)
+                    .WithIdleTimeoutInMinutes(5)
+                    .Attach();
+            }
+
+            // Add the NSG rules for the ingress rules from the cluster definition.  To keep
+            // things simple, we're going to generate a separate rule for each source address
+            // restriction.  In theory, we could have tried collecting allow and deny rules 
+            // together to reduce the number of rules but that doesn't seem worth the trouble. 
+            // This is possible because NSGs rules allow a comma separated list of IP addresses
+            // or subnets to be specified.
+            //
+            // We may need to revisit this if we approach Azure rule count limits.  This
+            // would also be a good time to handle port ranges as well.
+
+            var priority = 2000;
+
+            ruleCount = 0;
+
+            foreach (var ingressRule in networkOptions.IngressRules)
+            {
+                // Generate a suffix that will ensure that all rule names are unique.
+
+                var ruleName = $"ingress-{ingressRule.Name}-{ingressRule.ExternalPort}-tcp-{ruleCount}-{timestamp}";
+
+                if (ingressRule.AddressRules == null || ingressRule.AddressRules.Count == 0)
+                {
+                    // Default to allowing all addresses when there's no address rules are specified.
+
+                    subnetNsgUpdater.DefineRule(ruleName)
+                        .AllowInbound()
+                        .FromAnyAddress()
+                        .FromPort(ingressRule.ExternalPort)
+                        .ToAnyAddress()
+                        .ToPort(ingressRule.NodePort)
+                        .WithProtocol(SecurityRuleProtocol.Tcp)                     // Only TCP is supported by Istio now
+                        .WithPriority(priority++)
+                        .Attach();
+
+                    ruleCount++;
+                }
+                else
+                {
+                    // We need to generate a separate NSG rule for each address rule.
+
+                    foreach (var addressRule in ingressRule.AddressRules)
+                    {
+                        switch (addressRule.Action)
+                        {
+                            case AddressRuleAction.Allow:
+
+                                if (addressRule.IsAny)
+                                {
+                                    subnetNsgUpdater.DefineRule(ruleName)
+                                        .AllowInbound()
+                                        .FromAnyAddress()
+                                        .FromAnyPort()
+                                        .ToAnyAddress()
+                                        .ToPort(ingressRule.NodePort)
+                                        .WithProtocol(SecurityRuleProtocol.Tcp)                     // Only TCP is supported by Istio now
+                                        .WithPriority(priority++)
+                                        .Attach();
+                                }
+                                else
+                                {
+                                    subnetNsgUpdater.DefineRule(ruleName)
+                                        .AllowInbound()
+                                        .FromAddress(addressRule.AddressOrSubnet)
+                                        .FromPort(ingressRule.ExternalPort)
+                                        .ToAnyAddress()
+                                        .ToPort(ingressRule.NodePort)
+                                        .WithProtocol(SecurityRuleProtocol.Tcp)                     // Only TCP is supported by Istio now
+                                        .WithPriority(priority++)
+                                        .Attach();
+                                }
+                                break;
+
+                            case AddressRuleAction.Deny:
+
+                                if (addressRule.IsAny)
+                                {
+                                    subnetNsgUpdater.DefineRule(ruleName)
+                                        .DenyInbound()
+                                        .FromAnyAddress()
+                                        .FromPort(ingressRule.ExternalPort)
+                                        .ToAnyAddress()
+                                        .ToPort(ingressRule.NodePort)
+                                        .WithProtocol(SecurityRuleProtocol.Tcp)                     // Only TCP is supported by Istio now
+                                        .WithPriority(priority++)
+                                        .Attach();
+                                }
+                                else
+                                {
+                                    subnetNsgUpdater.DefineRule(ruleName)
+                                        .DenyInbound()
+                                        .FromAddress(addressRule.AddressOrSubnet)
+                                        .FromPort(ingressRule.ExternalPort)
+                                        .ToAnyAddress()
+                                        .ToPort(ingressRule.NodePort)
+                                        .WithProtocol(SecurityRuleProtocol.Tcp)                     // Only TCP is supported by Istio now
+                                        .WithPriority(priority++)
+                                        .Attach();
+                                }
+                                break;
+
+                            default:
+
+                                throw new NotImplementedException();
+                        }
+
+                        ruleCount++;
+                    }
+                }
+            }
         }
     }
 }
