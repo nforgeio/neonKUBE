@@ -53,12 +53,12 @@ namespace Neon.Kube
         public string Name { get; set; }
 
         /// <summary>
-        /// The ingress port.
+        /// The external ingress port.
         /// </summary>
-        [JsonProperty(PropertyName = "Port", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "port", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "ExternalPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "externalPort", ApplyNamingConventions = false)]
         [DefaultValue(0)]
-        public int Port { get; set; }
+        public int ExternalPort { get; set; }
 
         /// <summary>
         /// The Kubernetes NodePort. This is where the ingress gateway is listening.
@@ -69,17 +69,15 @@ namespace Neon.Kube
         public int NodePort { get; set; }
 
         /// <summary>
-        /// The target port within the cluster for the ingress rule.
-        /// </summary>
-        [JsonProperty(PropertyName = "TargetPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "targetPort", ApplyNamingConventions = false)]
-        [DefaultValue(0)]
-        public int TargetPort { get; set; }
-
-        /// <summary>
+        /// <para>
         /// Optionally specifies whitelisted and/or blacklisted external addresses for
         /// inbound traffic.  This defaults to allowing inbound traffic from anywhere 
         /// when the property is <c>null</c> or empty.
+        /// <note>
+        /// Address rules are processed in order, from first to last so you may consider
+        /// putting your blacklist rules before your whitelist rules.
+        /// </note>
+        /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "AddressRules", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "addressRules", ApplyNamingConventions = false)]
@@ -99,14 +97,9 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(Name)}] is required when specifying an ingress rule.");
             }
 
-            if (!NetHelper.IsValidPort(Port))
+            if (!NetHelper.IsValidPort(ExternalPort))
             {
-                throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(Port)}={Port}] is not a valid TCP port.");
-            }
-
-            if (!NetHelper.IsValidPort(TargetPort))
-            {
-                throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(TargetPort)}={TargetPort}] is not a valid TCP port.");
+                throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(ExternalPort)}={ExternalPort}] is not a valid TCP port.");
             }
 
             if (!NetHelper.IsValidPort(NodePort))

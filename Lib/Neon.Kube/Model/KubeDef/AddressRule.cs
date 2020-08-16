@@ -47,38 +47,38 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Static members
 
-        private static AddressRule allowAny;
-        private static AddressRule denyAny;
+        private static AddressRule allowAll;
+        private static AddressRule denyAll;
 
         /// <summary>
         /// Returns an <see cref="AddressRule"/> that <b>allows</b> network traffic to/from all IP addresses.
         /// </summary>
-        public static AddressRule AllowAny
+        public static AddressRule AllowAll
         {
             get
             {
-                if (allowAny == null)
+                if (allowAll == null)
                 {
-                    allowAny = new AddressRule("any", AddressRuleAction.Allow);
+                    allowAll = new AddressRule("any", AddressRuleAction.Allow);
                 }
 
-                return allowAny;
+                return allowAll;
             }
         }
 
         /// <summary>
         /// Returns an <see cref="AddressRule"/> that <b>denies</b> network traffic to/from all IP addresses.
         /// </summary>
-        public static AddressRule DenyAny
+        public static AddressRule DenyAll
         {
             get
             {
-                if (denyAny == null)
+                if (denyAll == null)
                 {
-                    denyAny = new AddressRule("any", AddressRuleAction.Deny);
+                    denyAll = new AddressRule("any", AddressRuleAction.Deny);
                 }
 
-                return denyAny;
+                return denyAll;
             }
         }
 
@@ -122,13 +122,13 @@ namespace Neon.Kube
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public bool IsAny => string.IsNullOrEmpty(AddressOrSubnet);
+        public bool IsAny => string.IsNullOrEmpty(AddressOrSubnet) || AddressOrSubnet.Equals("any", StringComparison.InvariantCultureIgnoreCase);
 
         /// <summary>
-        /// Returns the specified IP address or subnet or <c>null</c> for all possible IP addresses.
+        /// Returns the specified IP address or subnet or <b>"any"</b> or <c>null</c> for all possible IP addresses.
         /// </summary>
         [JsonProperty(PropertyName = "AddressOrSubnet", Required = Required.AllowNull)]
-        [YamlMember(Alias = "adressOrSubnet", ApplyNamingConventions = false)]
+        [YamlMember(Alias = "addressOrSubnet", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string AddressOrSubnet { get; private set; }
 

@@ -76,8 +76,8 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Implementation
 
-        private const string defaultPodSubnet       = "10.254.0.0/16";
-        private const string defaultServiceSubnet   = "10.253.0.0/16";
+        private const string defaultPodSubnet = "10.254.0.0/16";
+        private const string defaultServiceSubnet = "10.253.0.0/16";
         private const string defaultCloudNodeSubnet = "10.100.0.0/16";
 
         /// <summary>
@@ -216,6 +216,10 @@ namespace Neon.Kube
         /// when the property is <c>null</c> or empty.
         /// </para>
         /// <note>
+        /// Address rules are processed in order, from first to last so you may consider
+        /// putting your blacklist rules before your whitelist rules.
+        /// </note>
+        /// <note>
         /// This currently applies to all network ports.
         /// </note>
         /// </summary>
@@ -223,6 +227,43 @@ namespace Neon.Kube
         [YamlMember(Alias = "egressAddressRules", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public List<AddressRule> EgressAddressRules { get; set; } = new List<AddressRule>();
+
+        /// <summary>
+        /// <para>
+        /// Optionally specifies whitelisted and/or blacklisted external addresses for
+        /// node management.  This can be used to lock down node specific SSH traffic 
+        /// being routed via temporary load balancer NAT rules.  This defaults to allowing 
+        /// inbound traffic from anywhere when the property is <c>null</c> or empty.
+        /// </para>
+        /// <note>
+        /// Address rules are processed in order, from first to last so you may consider
+        /// putting your blacklist rules before your whitelist rules.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "ManagementAddressRules", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "managementAddressRules", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public List<AddressRule> ManagementAddressRules { get; set; } = new List<AddressRule>();
+
+        /// <summary>
+        /// <para>
+        /// Optionally specifies the maximum time a SSH management NAT rule may remain active
+        /// before it may be deleted automatically.  This defaults to 24 hours and cannot be
+        /// less than one hour.
+        /// </para>
+        /// <note>
+        /// This is a <c>double</c> so you can specify fractions of an hour.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "ManagementNatTtlHours", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "managementNatTtlHours", ApplyNamingConventions = false)]
+        [DefaultValue(1.0)]
+        public double ManagementNatTtlHours { get; set; } = 24.0;
+
+        /// <summary>
+        /// Returns <see cref="ManagementNatTtlHours"/> as a <see cref="TimeSpan"/>.
+        /// </summary>
+        internal TimeSpan ManagementNatTtl => TimeSpan.FromHours(ManagementNatTtlHours);
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -375,13 +416,29 @@ namespace Neon.Kube
                 rule.Validate(clusterDefinition);
             }
 
-            // Verify
+            // Verify [EgressAddressRules].
 
             EgressAddressRules = EgressAddressRules ?? new List<AddressRule>();
 
             foreach (var rule in EgressAddressRules)
             {
-                rule.Validate(clusterDefinition, "egress-address");
+                rule.Validate(clusterDefinition, nameof(EgressAddressRules));
+            }
+
+            // Verify [ManageAddressRules].
+
+            ManagementAddressRules = ManagementAddressRules ?? new List<AddressRule>();
+
+            foreach (var rule in ManagementAddressRules)
+            {
+                rule.Validate(clusterDefinition, nameof(ManagementAddressRules));
+            }
+
+            // Verify [ManagementNatTtlHours].
+
+            if (ManagementNatTtlHours < 1.0)
+            {
+                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(ManagementNatTtlHours)}={ManagementNatTtlHours}]: Cannot be less than [1 hour].");
             }
         }
 
