@@ -97,7 +97,7 @@ Follow the steps below to configure a development or test workstation:
 
 13. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
 
-    * **IMPORTANT:** All neonFORGE related repositories must be cloned within the same parent directory.
+    * **IMPORTANT:** All neonFORGE related repositories must be cloned within the same parent directory and their folder names cannot be changed.
     * Create an individual GitHub account [here](https://github.com/join?source=header-home) if you don't already have one
     * Go to [GitHub](http://github.com) and log into your account
     * Go to the neonKUBE [repository](https://github.com/nforgeio/neonKUBE).
@@ -106,15 +106,44 @@ Follow the steps below to configure a development or test workstation:
     * Choose or enter the directory where the repository will be cloned.  This defaults to a user-specific folder.  I typically change this to a global folder to keep the file paths short.
     * Click **Clone**
 
-14. **Close** any running instances of **Visual Studio**
+14. Configure the build **environment variables**:
 
-15. Install the latest release of **neonKUBE** from [here](https://github.com/nforgeio/neonKUBE/releases)
+    * Open **File Explorer**
+    * Navigate to the directory holding the cloned repository
+    * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
+    * Press ENTER to close the CMD window when the script is finished
+  
+15. **Clone** the other neonFORGE repos to the same directory as **neonKUBE** without changing their folder names:
 
-16. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from [here](http://www.7-zip.org/download.html)
+    * [https://github.com/nforgeio/temporal-samples](https://github.com/nforgeio/temporal-samples)
+    * [https://github.com/nforgeio/cadence-samples](https://github.com/nforgeio/cadence-samples)
+    * [https://github.com/nforgeio/nforgeio.github.io](https://github.com/nforgeio/nforgeio.github.io)
 
-17. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
+    You can do this manually or use the CMD script below: 
 
-18. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
+    ```
+    cd "%NF_ROOT%\.."
+    mkdir nforgeio.github.io
+    git clone https://github.com/nforgeio/nforgeio.github.io.git
+
+    cd "%NF_ROOT%\.."
+    mkdir cadence-samples
+    git clone https://github.com/nforgeio/cadence-samples.git
+
+    cd "%NF_ROOT%\.."
+    mkdir temporal-samples
+    git clone https://github.com/nforgeio/temporal-samples.git
+    ```
+
+16. **Close** any running instances of **Visual Studio**
+
+17. Install the latest release of **neonKUBE** from [here](https://github.com/nforgeio/neonKUBE/releases)
+
+18. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from [here](http://www.7-zip.org/download.html)
+
+19. Install **Cygwin - setup-x86-64.exe** (all packages and default path) from: [here](https://www.cygwin.com/setup-x86_64.exe)
+
+20. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
 
     * Install **WinSCP** from [here](http://winscp.net/eng/download.php) (I typically use the "Explorer" interface)
     * Install **PuTTY** from [here](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
@@ -123,26 +152,19 @@ Follow the steps below to configure a development or test workstation:
     
       ![WinSCP Hidden Files](Images/DEVELOPER/WinSCPHiddenFiles.png?raw=true)
 
-19. Configure the build **environment variables**:
+21. Install the latest release build of neonKUBE from [here](https://github.com/nforgeio/neonKUBE/releases)
 
-    * Open **File Explorer**
-    * Navigate to the directory holding the cloned repository
-    * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
-    * Press ENTER to close the CMD window when the script is finished
-  
-20. Install the latest release build of neonKUBE from [here](https://github.com/nforgeio/neonKUBE/releases)
+22. Restart Visual Studio (to pick up the environment changes).
 
-21. Restart Visual Studio (to pick up the environment changes).
-
-22. Confirm that the solution builds:
+23. Confirm that the solution builds:
 
     * Run **Visual Studio** as **administrator**
     * Open **$/neonKUBE.sln** (where **$** is the repo root directory)
     * Select **Build/Rebuild** Solution
 
-23. Install **InnoSetup** from the **$/External** directory using default settings.  This is required to build the Windows neonKUBE installer.
+24. Install **InnoSetup** from the **$/External** directory using default settings.  This is required to build the Windows neonKUBE installer.
 
-24. *Optional*: Install **OpenVPN**
+25. *Optional*: Install **OpenVPN**
 
     * Download the Windows Installer from [here](https://openvpn.net/index.php/open-source/downloads.html)
     * Run this command as administrator in a CMD window to install a second TAP interface:
@@ -151,11 +173,11 @@ Follow the steps below to configure a development or test workstation:
       ```
     * Obtain your WowRacks VPN credentials from another developer who has ADMIN access.
 
-25. *Optional*: Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
+26. *Optional*: Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
 
-26. *Optional*: Install **Postman** REST API tool from [here](https://www.getpostman.com/postman)
+27. *Optional*: Install **Postman** REST API tool from [here](https://www.getpostman.com/postman)
 
-27. *Optional*: Install **Cmdr/Mini** command shell:
+28. *Optional*: Install **Cmdr/Mini** command shell:
 
   * **IMPORTANT: Don't install the Full version** to avoid installing Linux command line tools that might conflict with the Cygwin tools installed earlier.
   * Download the ZIP archive from: [here](http://cmder.net/)
@@ -164,9 +186,9 @@ Follow the steps below to configure a development or test workstation:
   * Run Cmdr and configure settings as desired.
   * Consider removing the alias definitions in `$\config\user-aliases.cmd` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
 
-28. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
+29. *Optional*: Install the latest version of **XCP-ng Center** from [here](https://github.com/xcp-ng/xenadmin/releases) if you'll need to manage Virtual Machines hosted on XCP-ng.
 
-29. *Optional*: Developers who will be publishing releases will need to:
+30. *Optional*: Developers who will be publishing releases will need to:
 
     * **Download:** the latest recommended **nuget.exe** from [here](https://www.nuget.org/downloads) and put this somewhere in your `PATH`
     * Obtain a nuget API key from a senior developer and install the key on their workstation via:
@@ -201,4 +223,4 @@ Follow the steps below to configure a development or test workstation:
     git clone https://github.com/nforgeio/temporal-samples.git
     ```
 
-30. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
+31. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
