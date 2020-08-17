@@ -111,6 +111,14 @@ namespace Neon.Kube
         public string Address { get; set; } = null;
 
         /// <summary>
+        /// <b>INTERNAL USE ONLY:</b> Holds the IP endpoint that can be used to connect to
+        /// the node via SSH from outside the cluster, particularily for cloud deployments.
+        /// This references the cluster's public IP address and an allocated load balancer
+        /// NAT port that routes to the node.
+        /// </summary>
+        public IPEndPoint PublicSshEndpoint { get; set; }
+
+        /// <summary>
         /// Indicates that the node will act as a master node (defaults to <c>false</c>).
         /// </summary>
         /// <remarks>

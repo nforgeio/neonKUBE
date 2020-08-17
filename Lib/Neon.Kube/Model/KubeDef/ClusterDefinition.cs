@@ -448,60 +448,51 @@ namespace Neon.Kube
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public IEnumerable<NodeDefinition> Nodes
-        {
-            get { return NodeDefinitions.Values; }
-        }
+        public IEnumerable<NodeDefinition> Nodes => NodeDefinitions.Values;
 
         /// <summary>
         /// Enumerates all cluster node definitions sorted in ascending order by name.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public IEnumerable<NodeDefinition> SortedNodes
-        {
-            get { return Nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase); }
-        }
+        public IEnumerable<NodeDefinition> SortedNodes => Nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Enumerates the cluster master node definitions.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public IEnumerable<NodeDefinition> Masters
-        {
-            get { return Nodes.Where(n => n.IsMaster); }
-        }
+        public IEnumerable<NodeDefinition> Masters => Nodes.Where(n => n.IsMaster);
 
         /// <summary>
         /// Enumerates the cluster master node definitions sorted in ascending order by name.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public IEnumerable<NodeDefinition> SortedMasters
-        {
-            get { return Masters.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase); }
-        }
+        public IEnumerable<NodeDefinition> SortedMasters => Masters.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Enumerates the cluster worker node definitions.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public IEnumerable<NodeDefinition> Workers
-        {
-            get { return Nodes.Where(n => n.IsWorker); }
-        }
+        public IEnumerable<NodeDefinition> Workers => Nodes.Where(n => n.IsWorker);
 
         /// <summary>
         /// Enumerates the cluster worker node definitions sorted in ascending order by name.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public IEnumerable<NodeDefinition> SortedWorkers
-        {
-            get { return Workers.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase); }
-        }
+        public IEnumerable<NodeDefinition> SortedWorkers => Workers.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Enumerates the cluster master nodes sorted by name follwed by the worker nodes,
+        /// also sorted by name.  This is convienent for situations like assigning IP addresses
+        /// or ports such that the masters are grouped together first.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public IEnumerable<NodeDefinition> SortedMastersThenWorkers => SortedMasters.Union(SortedWorkers);
 
         /// <summary>
         /// Validates that node private IP addresses are set, are within the nodes subnet, and
