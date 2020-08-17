@@ -407,13 +407,22 @@ namespace Neon.Kube
                 }
             }
 
-            // Verify [IngressRules].
+            // Verify [IngressRules] and also ensure that all rule names are unique.
 
             IngressRules = IngressRules ?? new List<IngressRule>();
+
+            var ingressRuleNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
             foreach (var rule in IngressRules)
             {
                 rule.Validate(clusterDefinition);
+
+                if (ingressRuleNames.Contains(rule.Name))
+                {
+                    throw new ClusterDefinitionException($"Ingress Rule Conflict: Multiple rules have the same name: [{rule.Name}].");
+                }
+
+                ingressRuleNames.Add(rule.Name);
             }
 
             // Verify [EgressAddressRules].

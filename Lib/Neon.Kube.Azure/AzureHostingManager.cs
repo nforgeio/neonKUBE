@@ -281,6 +281,21 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Static members
 
+        /// <summary>
+        /// The first NSG rule priority to use for ingress rules.
+        /// </summary>
+        private const int firstIngressNsgRulePriority = 1000;
+
+        /// <summary>
+        /// The first NSG rule priority to use for temporary management SSH rules.
+        /// </summary>
+        private const int firstManageNsgRulePriority = 2000;
+
+        /// <summary>
+        /// The prefix used for 
+        /// </summary>
+        private const string ingressNsgRulePrefix = "ingress-";
+
         private static Regex timestampRegex = new Regex(@"-\d{14}");
 
         /// <summary>
@@ -1251,7 +1266,7 @@ namespace Neon.Kube
                     .WithPort(ingressRule.NodePort)
                     .Attach();
 
-                var ruleName = $"ingress-{ingressRule.Name}-{ingressRule.ExternalPort}-{protocolId}-{timestamp}";
+                var ruleName = $"ingress-{ingressRule.Name}-{ingressRule.ExternalPort}-{timestamp}";
 
                 loadBalancerUpdater.DefineLoadBalancingRule(ruleName)
                     .WithProtocol(ToSTransportProtocol(ingressRule.Protocol))
@@ -1270,10 +1285,10 @@ namespace Neon.Kube
             // This is possible because NSGs rules allow a comma separated list of IP addresses
             // or subnets to be specified.
             //
-            // We may need to revisit this if we approach Azure rule count limits.  This
-            // would also be a good time to handle port ranges as well.
+            // We may need to revisit this if we approach Azure rule count limits (currently 1000
+            // rules per NSG).  This would also be a good time to support port ranges as well.
 
-            var priority = 2000;
+            var priority = firstIngressNsgRulePriority;
 
             ruleCount = 0;
 
@@ -1281,8 +1296,9 @@ namespace Neon.Kube
             {
                 // Generate a suffix that will ensure that all rule names are unique.
 
-                var protocolId = IngressProtocolId(ingressRule.Protocol);
-                var ruleName   = $"ingress-{ingressRule.Name}-{ingressRule.ExternalPort}-{protocolId}-{ruleCount}-{timestamp}";
+                var protocolId   = IngressProtocolId(ingressRule.Protocol);
+                var ruleName     = $"ingress-{ingressRule.Name}-{ingressRule.ExternalPort}-{protocolId}-{ruleCount}-{timestamp}";
+                var ruleProtocol = ToSecurityRuleProtocol(ingressRule.Protocol);
 
                 if (ingressRule.AddressRules == null || ingressRule.AddressRules.Count == 0)
                 {
@@ -1294,7 +1310,7 @@ namespace Neon.Kube
                         .FromPort(ingressRule.ExternalPort)
                         .ToAnyAddress()
                         .ToPort(ingressRule.NodePort)
-                        .WithProtocol(SecurityRuleProtocol.Tcp)                     // Only TCP is supported by Istio now
+                        .WithProtocol(ruleProtocol)
                         .WithPriority(priority++)
                         .Attach();
 
@@ -1318,7 +1334,7 @@ namespace Neon.Kube
                                         .FromAnyPort()
                                         .ToAnyAddress()
                                         .ToPort(ingressRule.NodePort)
-                                        .WithProtocol(SecurityRuleProtocol.Tcp)                     // Only TCP is supported by Istio now
+                                        .WithProtocol(ruleProtocol)
                                         .WithPriority(priority++)
                                         .Attach();
                                 }
@@ -1330,7 +1346,7 @@ namespace Neon.Kube
                                         .FromPort(ingressRule.ExternalPort)
                                         .ToAnyAddress()
                                         .ToPort(ingressRule.NodePort)
-                                        .WithProtocol(SecurityRuleProtocol.Tcp)                     // Only TCP is supported by Istio now
+                                        .WithProtocol(ruleProtocol)
                                         .WithPriority(priority++)
                                         .Attach();
                                 }
@@ -1346,7 +1362,7 @@ namespace Neon.Kube
                                         .FromPort(ingressRule.ExternalPort)
                                         .ToAnyAddress()
                                         .ToPort(ingressRule.NodePort)
-                                        .WithProtocol(SecurityRuleProtocol.Tcp)                     // Only TCP is supported by Istio now
+                                        .WithProtocol(ruleProtocol)
                                         .WithPriority(priority++)
                                         .Attach();
                                 }
@@ -1358,7 +1374,7 @@ namespace Neon.Kube
                                         .FromPort(ingressRule.ExternalPort)
                                         .ToAnyAddress()
                                         .ToPort(ingressRule.NodePort)
-                                        .WithProtocol(SecurityRuleProtocol.Tcp)                     // Only TCP is supported by Istio now
+                                        .WithProtocol(ruleProtocol)
                                         .WithPriority(priority++)
                                         .Attach();
                                 }
