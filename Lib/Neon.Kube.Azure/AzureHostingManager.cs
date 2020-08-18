@@ -57,6 +57,7 @@ using INetworkSecurityGroupUpdater = Microsoft.Azure.Management.Network.Fluent.N
 using SecurityRuleProtocol         = Microsoft.Azure.Management.Network.Fluent.Models.SecurityRuleProtocol;
 using TransportProtocol            = Microsoft.Azure.Management.Network.Fluent.Models.TransportProtocol;
 using ILoadBalancerUpdater         = Microsoft.Azure.Management.Network.Fluent.LoadBalancer.Update.IUpdate;
+using AutoMapper;
 
 namespace Neon.Kube
 {
@@ -215,9 +216,14 @@ namespace Neon.Kube
             public NodeDefinition Metadata => Proxy.Metadata;
 
             /// <summary>
-            /// Returns the node name.
+            /// Returns the name of the node as defined in the cluster definition.
             /// </summary>
-            public string Name => hostingManager.GetResourceName("vm", Proxy.Name);
+            public string Name => Proxy.Metadata.Name;
+
+            /// <summary>
+            /// Returns the name of the Azure VM for this node.
+            /// </summary>
+            public string VmName => hostingManager.GetResourceName("vm", Proxy.Name);
 
             /// <summary>
             /// The associated Azure VM.
@@ -316,6 +322,11 @@ namespace Neon.Kube
         /// Used to identify resource names that include a timestamp.
         /// </summary>
         private static Regex timestampRegex = new Regex(@"-\d{14}");
+
+        /// <summary>
+        /// Used to tag VMs with the cluster node name.
+        /// </summary>
+        private static string NodeNameTag = "neonkube.io.node.name";
 
         /// <summary>
         /// Ensures that the assembly hosting this hosting manager is loaded.
@@ -509,8 +520,8 @@ namespace Neon.Kube
             this.proximityPlacementGroupName = GetResourceName("ppg", "cluster", true);
             this.loadbalancerName            = GetResourceName("lbe", "cluster", true);
             this.subnetNsgName               = GetResourceName("nsg", "subnet");
-            this.loadbalancerFrontendName    = "frontend";
-            this.loadbalancerBackendName     = "backend";
+            this.loadbalancerFrontendName    = "ingress";
+            this.loadbalancerBackendName     = "ingress";
 
             // Initialize the node mapping dictionary and also ensure
             // that each node has Azure reasonable Azure node options.
@@ -739,8 +750,41 @@ namespace Neon.Kube
             controller.AddGlobalStep("virtual network", () => CreateVirtualNetwork());
             controller.AddGlobalStep("public address", () => CreatePublicAddress());
             controller.AddGlobalStep("load balancer", () => CreateLoadBalancer());
+            controller.AddGlobalStep("listing virtual machines",
+                () =>
+                {
+                    // Update [azureNodes] with any existing Azure nodes and their NICs.
+                    // Note that it's possible for VMs that are unrelated to the cluster
+                    // to be in the resource group, so we'll have to ignore these.
+
+                    foreach (var vm in azure.VirtualMachines.ListByResourceGroup(resourceGroup))
+                    {
+                        if (!vm.Tags.TryGetValue(NodeNameTag, out var nodeName))
+                        {
+                            break;  // Not a cluster VM
+                        }
+
+                        if (!azureNodes.TryGetValue(nodeName, out var azureNode))
+                        {
+                            // $todo(jefflill):
+                            //
+                            // This happens when a VM exists for the node but there's no node
+                            // defined in the cluster definition.  In the future, we should
+                            // remove the node from the cluster when we support adding/removing
+                            // nodes in an existing cluster.
+                            //
+                            // We're going to ignore these for the time being.
+
+                            break;
+                        }
+
+                        azureNode.Vm  = vm;
+                        azureNode.Nic = vm.GetPrimaryNetworkInterface();
+                    }
+                },
+                quiet: true);
             controller.AddStep("virtual machines", CreateVm);
-            controller.AddGlobalStep("ingress rules", () => UpdateNetwork(NetworkOperations.IngressRules | NetworkOperations.AddSystemSshRules));
+            controller.AddGlobalStep("ingress rules and security", () => UpdateNetwork(NetworkOperations.IngressRules | NetworkOperations.AddSystemSshRules));
 
             if (!controller.Run(leaveNodesConnected: false))
             {
@@ -1113,7 +1157,7 @@ namespace Neon.Kube
                 .WithSku(LoadBalancerSkuType.Standard)
                 .Create();
 
-            loadBalancer.Update()
+            loadBalancer = loadBalancer.Update()
                 .WithoutLoadBalancingRule("dummy")
                 .Apply();
         }
@@ -1127,6 +1171,13 @@ namespace Neon.Kube
         {
             var azureNode = azureNodes[node.Name];
 
+            if (azureNode.Vm != null)
+            {
+                // The VM already exists.
+
+                return;
+            }
+
             node.Status = "create NIC";
 
             azureNode.Nic = azure.NetworkInterfaces
@@ -1138,7 +1189,7 @@ namespace Neon.Kube
                 .WithPrimaryPrivateIPAddressStatic(azureNode.Proxy.Metadata.Address)
                 .Create();
 
-            node.Status = "creating...";
+            node.Status = "creating VM";
 
             var azureNodeOptions = azureNode.Proxy.Metadata.Azure;
             var azureStorageType = StorageAccountTypes.StandardSSDLRS;
@@ -1181,7 +1232,7 @@ namespace Neon.Kube
             };
 
             azureNode.Vm = azure.VirtualMachines
-                .Define(azureNode.Name)
+                .Define(azureNode.VmName)
                 .WithRegion(azureOptions.Region)
                 .WithExistingResourceGroup(resourceGroup)
                 .WithExistingPrimaryNetworkInterface(azureNode.Nic)
@@ -1193,6 +1244,7 @@ namespace Neon.Kube
                 .WithNewDataDisk((int)(ByteUnits.Parse(node.Metadata.Azure.DiskSize) / ByteUnits.GibiBytes))
                 .WithSize(node.Metadata.Azure.VmSize)
                 .WithExistingAvailabilitySet(azureNode.IsMaster ? masterAvailabilitySet : workerAvailabilitySet)
+                .WithTag(NodeNameTag, azureNode.Metadata.Name)
                 .Create();
         }
 
@@ -1227,14 +1279,14 @@ namespace Neon.Kube
 
             // Apply the changes.
 
-            subnetNsgUpdater.Apply();
-            loadbalancerUpdater.Apply();
+            subnetNsg    = subnetNsgUpdater.Apply();
+            loadBalancer = loadbalancerUpdater.Apply();
 
             foreach (var node in Nodes)
             {
                 try
                 {
-                    node.NicUpdater.Apply();
+                    node.Nic = node.NicUpdater.Apply();
                 }
                 finally
                 {
@@ -1245,6 +1297,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// Updates the load balancer and network security rules to match the current cluster definition.
+        /// This also ensures that some nodes are marked for ingress when the cluster has one or more
+        /// ingress rules and that nodes marked for ingress are in the load balancer's backend pool.
         /// </summary>
         /// <param name="loadBalancerUpdater">The load balancer updater.</param>
         /// <param name="subnetNsgUpdater">The subnet NSG updater.</param>
@@ -1252,6 +1306,104 @@ namespace Neon.Kube
             ILoadBalancerUpdater            loadBalancerUpdater,
             INetworkSecurityGroupUpdater    subnetNsgUpdater)
         {
+            //-----------------------------------------------------------------
+            // Backend pool:
+
+            // Ensure that we actually have some nodes marked for ingress when the cluster
+            // defines some ingress rules and then ensure that the load balancer's backend
+            // pool includes those node VMs.
+
+            KubeHelper.EnsureIngressNodes(cluster.Definition);
+
+            var backendUpdater = loadBalancerUpdater.UpdateBackend(loadbalancerBackendName);
+            var backendPool    = loadBalancer.Backends[loadbalancerBackendName];
+            var vmList         = azure.VirtualMachines.ListByResourceGroup(resourceGroup);
+            var vmIdToVm       = new Dictionary<string, IVirtualMachine>();
+            var nodeNameToVm   = new Dictionary<string, IVirtualMachine>(StringComparer.InvariantCultureIgnoreCase);
+            var vmIdToNode     = new Dictionary<string, NodeDefinition>();
+            var vmRemoveList   = new List<IVirtualMachine>();
+            var vmAddList      = new List<IVirtualMachine>();
+
+            foreach (var vm in vmList)
+            {
+                Covenant.Assert(vm.Tags.ContainsKey(NodeNameTag));
+
+                var nodeName = vm.Tags[NodeNameTag];
+
+                if (!azureNodes.TryGetValue(nodeName, out var node))
+                {
+                    // This can happen when the cluster node has been removed.  We're
+                    // going to add NULL to the [vmIdToNode] table to indicate that
+                    // the VM should be removed from the pool below.
+                    //
+                    // This is probably overkill, because Azure probably already 
+                    // removed the VM from the pool when the VM itself was removed.
+
+                    node = null;
+                }
+
+                vmIdToNode.Add(vm.Id, node?.Metadata);
+                vmIdToVm.Add(vm.Id, vm);
+                nodeNameToVm.Add(nodeName, vm);
+            }
+
+            // Remove any VMs from the backend pool that are no longer exist or
+            // are not ingress enabled.
+
+            foreach (var vmId in backendPool.GetVirtualMachineIds())
+            {
+                if (!vmIdToNode.TryGetValue(vmId, out var node))
+                {
+                    // I'm not convinced that this will ever happen but we'll 
+                    // remove the VM from the pool anyway, to be safe.
+
+                    node = null;
+                }
+
+                if (node == null || !node.Ingress)
+                {
+                    // It may be possible in rare situations for a VM ID to be
+                    // returned for a VM that was not listed above.  This may
+                    // happen if we're not protecting this operation with some
+                    // kind of global lock (which we'll probably add at some point).
+                    //
+                    // We're just going to leave the VM be in this case.
+
+                    if (vmIdToVm.TryGetValue(vmId, out var vm))
+                    {
+                        vmRemoveList.Add(vm);
+                    }
+                }
+            }
+
+            if (vmRemoveList.Count > 0)
+            {
+                backendUpdater.WithoutExistingVirtualMachines(vmRemoveList);
+            }
+
+            // Add any VMs that are marked for ingress.  We're going to assume
+            // that Azure won't barf when we add a VM that's already in the pool.
+
+            foreach (var ingressNode in azureNodes.Values.Where(node => node.Metadata.Ingress))
+            {
+                if (nodeNameToVm.TryGetValue(ingressNode.Name, out var vm))
+                {
+                    vmAddList.Add(vm);
+                }
+            }
+
+            // I'm going to add the existing VMs to the backend set one at a time
+            // because the API only works when the VMs being added in a batch are 
+            // in the same availability set.
+
+            foreach (var ingressVm in vmAddList)
+            {
+                backendUpdater.WithExistingVirtualMachines(new IHasNetworkInterfaces[] { ingressVm });
+            }
+
+            //-----------------------------------------------------------------
+            // Ingress rules
+
             // Remove all existing cluster ingress rules.
 
             foreach (var rule in loadBalancer.LoadBalancingRules.Values
@@ -1313,7 +1465,7 @@ namespace Neon.Kube
                     .Attach();
             }
 
-            // Add the NSG rules for the ingress rules from the cluster definition.
+            // Add the NSG rules corresponding to the ingress rules from the cluster definition.
             //
             // To keep things simple, we're going to generate a separate rule for each source address
             // restriction.  In theory, we could have tried collecting allow and deny rules 
@@ -1350,7 +1502,7 @@ namespace Neon.Kube
                 {
                     // We need to generate a separate NSG rule for each address rule.  We're going to 
                     // include an address rule index in the name when there's more than one address
-                    // rule to ensure that the rule names are unique.
+                    // rule to ensure that rule names are unique.
 
                     var addressRuleIndex = 0;
 
@@ -1526,7 +1678,7 @@ namespace Neon.Kube
                 {
                     // We need to generate a separate NSG rule for each address rule.  We're going to 
                     // include an address rule index in the name when there's more than one address
-                    // rule to ensure that the rule names are unique.
+                    // rule to ensure that rule names are unique.
 
                     var addressRuleIndex = 0;
 

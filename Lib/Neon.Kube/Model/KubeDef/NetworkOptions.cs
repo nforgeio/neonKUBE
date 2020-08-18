@@ -197,11 +197,6 @@ namespace Neon.Kube
         public bool MutualPodTLS { get; set; } = false;
 
         /// <summary>
-        /// 
-        /// </summary>
-        public string IngressNodeSelector { get; set; } = null;
-
-        /// <summary>
         /// Optionally sets the ingress routing rules external traffic received by nodes
         /// with <see cref="NodeDefinition.Ingress"/> enabled into one or more Istio ingress
         /// gateway services which are then responsible for routing to the target Kubernetes 

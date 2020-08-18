@@ -584,7 +584,7 @@ namespace Neon.Kube
                 {
                     case LabelAddress:                      Node.Address = label.Value; break;
                     case LabelRole:                         Node.Role = label.Value; break;
-                    case LabelIngress:                      ParseCheck(label, () => { Node.Ingress = NeonHelper.ParseNullableBool(label.Value); }); break; 
+                    case LabelIngress:                      ParseCheck(label, () => { Node.Ingress = NeonHelper.ParseBool(label.Value); }); break; 
 
                     case LabelAzureVmSize:
                     case LabelAzureStorageType:
