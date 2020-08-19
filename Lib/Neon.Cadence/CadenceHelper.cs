@@ -201,7 +201,7 @@ namespace Neon.Cadence.Internal
         }
 
         /// <summary>
-        /// Returns the Cadence activity type name to be used for a activity interface or
+        /// Returns the Cadence activity type name to be used for an activity interface or
         /// implementation class.
         /// </summary>
         /// <param name="activityType">The activity interface or implementation type.</param>
@@ -700,7 +700,7 @@ namespace Neon.Cadence.Internal
 
 
         /// <summary>
-        /// Returns the activity interface for a activity implementation class.
+        /// Returns the activity interface for an activity implementation class.
         /// </summary>
         /// <param name="activityType">The activity implementation class.</param>
         /// <returns>The activity interface type.</returns>
