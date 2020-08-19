@@ -180,9 +180,9 @@ namespace Neon.Temporal
             EnsureNotDisposed();
             EnsureCanRegister();
 
-            var workflowInterface = TemporalHelper.GetWorkflowInterface(typeof(TWorkflow));
+            var workflowType = typeof(TWorkflow);
 
-            if (registeredWorkflowTypes.Contains(workflowInterface))
+            if (registeredWorkflowTypes.Contains(workflowType))
             {
                 if (disableDuplicateCheck)
                 {
@@ -190,11 +190,11 @@ namespace Neon.Temporal
                 }
                 else
                 {
-                    throw new RegistrationException($"Workflow implementation [{typeof(TWorkflow).FullName}] has already been registered.");
+                    throw new RegistrationException($"Workflow implementation [{workflowType.FullName}] has already been registered.");
                 }
             }
 
-            registeredWorkflowTypes.Add(workflowInterface);
+            registeredWorkflowTypes.Add(workflowType);
         }
 
         /// <summary>
@@ -228,17 +228,15 @@ namespace Neon.Temporal
             EnsureNotDisposed();
             EnsureCanRegister();
 
-            foreach (var type in assembly.GetTypes().Where(t => t.IsClass))
+            foreach (var workflowType in assembly.GetTypes().Where(t => t.IsClass))
             {
-                var workflowAttribute = type.GetCustomAttribute<WorkflowAttribute>();
+                var workflowAttribute = workflowType.GetCustomAttribute<WorkflowAttribute>();
 
                 if (workflowAttribute != null && workflowAttribute.AutoRegister)
                 {
                     using (await workerMutex.AcquireAsync())
                     {
-                        var workflowInterface = TemporalHelper.GetWorkflowInterface(type);
-
-                        if (registeredWorkflowTypes.Contains(workflowInterface))
+                        if (registeredWorkflowTypes.Contains(workflowType))
                         {
                             if (disableDuplicateCheck)
                             {
@@ -246,11 +244,11 @@ namespace Neon.Temporal
                             }
                             else
                             {
-                                throw new RegistrationException($"Workflow implementation [{type.FullName}] has already been registered.");
+                                throw new RegistrationException($"Workflow implementation [{workflowType.FullName}] has already been registered.");
                             }
                         }
 
-                        registeredWorkflowTypes.Add(workflowInterface);
+                        registeredWorkflowTypes.Add(workflowType);
                     }
                 }
             }

@@ -196,32 +196,30 @@ namespace Neon.Temporal
 
             using (await workerMutex.AcquireAsync())
             {
-                // Fetch the stub for each registered workflow and activity type so that
-                // they'll be precompiled so compilation won't impact workflow and activity
-                // performance, potentially intruducing enough delay to cause decision tasks
-                // or activity heartbeats to fail (in probably rare situations).
-                //
-                // Note that the compiled stubs are cached, so we don't need to worry
-                // about compiling stubs for types more than once causing a problem.
-
-                // $todo(jefflill): Performance optimization:
+                // $todo(jefflill): 
                 //
                 //      https://github.com/nforgeio/neonKUBE/issues/796
-
-                foreach (var workflowInterface in registeredWorkflowTypes)
+                //
+                // We need to replace this with new CadenceClient methods:
+                //
+                //      BuildStub<TWorkflowInterface>()
+                //      BuildStub<TActivityInterface>()
+#if TODO
+                foreach (var workflowType in registeredWorkflowTypes)
                 {
-                    // Workflows, we're going to compile both the external and child
-                    // versions of the stubs.
+                    // We're going to compile both the external and child versions of the stubs.
+
+                    var workflowInterface = TemporalHelper.GetWorkflowInterface(workflowType);
 
                     StubManager.GetWorkflowStub(workflowInterface, isChild: false);
                     StubManager.GetWorkflowStub(workflowInterface, isChild: true);
                 }
 
-                foreach (var activityInterface in registeredActivityTypes)
+                foreach (var activityType in registeredActivityTypes)
                 {
-                    StubManager.GetActivityStub(activityInterface);
+                    StubManager.GetActivityStub(TemporalHelper.GetActivityInterface(activityType));
                 }
-
+#endif
                 // Register workflow implementations.
 
                 foreach (var workflowType in registeredWorkflowTypes)

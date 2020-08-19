@@ -63,7 +63,7 @@ namespace Neon.Temporal
         /// </code>
         /// <para>
         /// where <b>WORKFLOW_TYPENAME</b> defaults to the the workflow interface's fully qualified 
-        /// name (with any leading "I" character removed and <b>METHOD_NAME</b> is from
+        /// name, with any leading "I" character removed and <b>METHOD_NAME</b> is from
         /// <see cref="WorkflowMethodAttribute.Name"/>.  This is the same convention implemented by 
         /// the Java client.
         /// </para>
@@ -91,8 +91,6 @@ namespace Neon.Temporal
                 }
                 else
                 {
-                    TemporalHelper.ValidateWorkflowTypeName(value);
-
                     name = value;
                 }
             }

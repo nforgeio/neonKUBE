@@ -107,19 +107,6 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// Ensures that a workflow type name is valid.
-        /// </summary>
-        /// <param name="name">The workflow type name being checked.</param>
-        /// <exception cref="WorkflowTypeException">Thrown if the name passed is not valid.</exception>
-        internal static void ValidateWorkflowTypeName(string name)
-        {
-            if (name != null && name.Contains(TemporalHelper.WorkflowTypeMethodSeparator))
-            {
-                throw new WorkflowTypeException($"Workflow type names cannot include: \"{TemporalHelper.WorkflowTypeMethodSeparator}\".");
-            }
-        }
-
-        /// <summary>
         /// Converts a .NET type name into a form suitable for using in generated C# source code.
         /// This handles the replacement of any embedded <b>(+)</b> characters that indicate
         /// a nested type into <b>(.)</b> characters compatible with C#. 
@@ -198,7 +185,7 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// Returns the Temporal activity type name to be used for a activity interface or
+        /// Returns the Temporal activity type name to be used for an activity interface or
         /// implementation class.
         /// </summary>
         /// <param name="activityType">The activity interface or implementation type.</param>
@@ -692,7 +679,7 @@ namespace Neon.Temporal.Internal
 
 
         /// <summary>
-        /// Returns the activity interface for a activity implementation class.
+        /// Returns the activity interface for an activity implementation class.
         /// </summary>
         /// <param name="activityType">The activity implementation class.</param>
         /// <returns>The activity interface type.</returns>

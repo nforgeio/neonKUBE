@@ -97,9 +97,9 @@ namespace Neon.Temporal
 
             lock (await workerMutex.AcquireAsync())
             {
-                var activityInterface = TemporalHelper.GetActivityInterface(typeof(TActivity));
+                var activityType = typeof(TActivity);
 
-                if (registeredActivityTypes.Contains(activityInterface))
+                if (registeredActivityTypes.Contains(activityType))
                 {
                     if (disableDuplicateCheck)
                     {
@@ -111,7 +111,7 @@ namespace Neon.Temporal
                     }
                 }
 
-                registeredActivityTypes.Add(activityInterface);
+                registeredActivityTypes.Add(activityType);
             }
         }
 
@@ -147,19 +147,17 @@ namespace Neon.Temporal
             EnsureNotDisposed();
             EnsureCanRegister();
 
-            foreach (var type in assembly.GetTypes().Where(t => t.IsClass))
+            foreach (var activityType in assembly.GetTypes().Where(t => t.IsClass))
             {
-                var activityAttribute = type.GetCustomAttribute<ActivityAttribute>();
+                var activityAttribute = activityType.GetCustomAttribute<ActivityAttribute>();
 
                 if (activityAttribute != null && activityAttribute.AutoRegister)
                 {
-                    var activityTypeName = TemporalHelper.GetActivityTypeName(type, activityAttribute);
+                    var activityTypeName = TemporalHelper.GetActivityTypeName(activityType, activityAttribute);
 
                     using (await workerMutex.AcquireAsync())
                     {
-                        var activityInterface = TemporalHelper.GetActivityInterface(type);
-
-                        if (registeredActivityTypes.Contains(activityInterface))
+                        if (registeredActivityTypes.Contains(activityType))
                         {
                             if (disableDuplicateCheck)
                             {
@@ -167,11 +165,11 @@ namespace Neon.Temporal
                             }
                             else
                             {
-                                throw new RegistrationException($"Activity implementation [{type.FullName}] has already been registered.");
+                                throw new RegistrationException($"Activity implementation [{activityType.FullName}] has already been registered.");
                             }
                         }
 
-                        registeredActivityTypes.Add(activityInterface);
+                        registeredActivityTypes.Add(activityType);
                     }
                 }
             }
