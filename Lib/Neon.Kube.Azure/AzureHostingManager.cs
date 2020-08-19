@@ -784,7 +784,7 @@ namespace Neon.Kube
                 },
                 quiet: true);
             controller.AddStep("virtual machines", CreateVm);
-            controller.AddGlobalStep("ingress rules and security", () => UpdateNetwork(NetworkOperations.IngressRules | NetworkOperations.AddSystemSshRules));
+            controller.AddGlobalStep("ingress/security rules", () => UpdateNetwork(NetworkOperations.IngressRules | NetworkOperations.AddSystemSshRules));
 
             if (!controller.Run(leaveNodesConnected: false))
             {
@@ -1189,7 +1189,7 @@ namespace Neon.Kube
                 .WithPrimaryPrivateIPAddressStatic(azureNode.Proxy.Metadata.Address)
                 .Create();
 
-            node.Status = "creating VM";
+            node.Status = "create VM";
 
             var azureNodeOptions = azureNode.Proxy.Metadata.Azure;
             var azureStorageType = StorageAccountTypes.StandardSSDLRS;
@@ -1320,9 +1320,6 @@ namespace Neon.Kube
             var vmList         = azure.VirtualMachines.ListByResourceGroup(resourceGroup);
             var vmIdToVm       = new Dictionary<string, IVirtualMachine>();
             var nodeNameToVm   = new Dictionary<string, IVirtualMachine>(StringComparer.InvariantCultureIgnoreCase);
-            var vmIdToNode     = new Dictionary<string, NodeDefinition>();
-            var vmRemoveList   = new List<IVirtualMachine>();
-            var vmAddList      = new List<IVirtualMachine>();
 
             foreach (var vm in vmList)
             {
@@ -1342,67 +1339,28 @@ namespace Neon.Kube
                     node = null;
                 }
 
-                vmIdToNode.Add(vm.Id, node?.Metadata);
                 vmIdToVm.Add(vm.Id, vm);
                 nodeNameToVm.Add(nodeName, vm);
             }
 
-            // Remove any VMs from the backend pool that are no longer exist or
-            // are not ingress enabled.
-
-            foreach (var vmId in backendPool.GetVirtualMachineIds())
-            {
-                if (!vmIdToNode.TryGetValue(vmId, out var node))
-                {
-                    // I'm not convinced that this will ever happen but we'll 
-                    // remove the VM from the pool anyway, to be safe.
-
-                    node = null;
-                }
-
-                if (node == null || !node.Ingress)
-                {
-                    // It may be possible in rare situations for a VM ID to be
-                    // returned for a VM that was not listed above.  This may
-                    // happen if we're not protecting this operation with some
-                    // kind of global lock (which we'll probably add at some point).
-                    //
-                    // We're just going to leave the VM be in this case.
-
-                    if (vmIdToVm.TryGetValue(vmId, out var vm))
-                    {
-                        vmRemoveList.Add(vm);
-                    }
-                }
-            }
-
-            if (vmRemoveList.Count > 0)
-            {
-                backendUpdater.WithoutExistingVirtualMachines(vmRemoveList);
-            }
-
             // Add any VMs that are marked for ingress.  We're going to assume
-            // that Azure won't barf when we add a VM that's already in the pool.
+            // that Azure won't barf when we add VMs that are already in the pool.
+            //
+            // We're going to add these VMs to the backend set one at a time
+            // because the API only works when the VMs being added in a batch are 
+            // in the same availability set and generally, masters and nodes will
+            // be located in different sets.
 
             foreach (var ingressNode in azureNodes.Values.Where(node => node.Metadata.Ingress))
             {
                 if (nodeNameToVm.TryGetValue(ingressNode.Name, out var vm))
                 {
-                    vmAddList.Add(vm);
+                    backendUpdater.WithExistingVirtualMachines(new IHasNetworkInterfaces[] { vm });
                 }
             }
 
-            // I'm going to add the existing VMs to the backend set one at a time
-            // because the API only works when the VMs being added in a batch are 
-            // in the same availability set.
-
-            foreach (var ingressVm in vmAddList)
-            {
-                backendUpdater.WithExistingVirtualMachines(new IHasNetworkInterfaces[] { ingressVm });
-            }
-
             //-----------------------------------------------------------------
-            // Ingress rules
+            // Ingress (load balancing) rules
 
             // Remove all existing cluster ingress rules.
 
