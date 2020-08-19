@@ -93,6 +93,38 @@ namespace Neon.Kube
         public List<AddressRule> AddressRules { get; set; } = new List<AddressRule>();
 
         /// <summary>
+        /// <para>
+        /// Optionally specifies the TCP idle time out for TCP related ingress protocols like
+        /// <see cref="IngressProtocol.Http"/>, <see cref="IngressProtocol.Https"/>, and
+        /// <see cref="IngressProtocol.Tcp"/>.  Inbound TCP connections that have no network
+        /// traffic going either way will be closed by supported load balancers or routers.
+        /// This defaults to <b>4 minutes</b>.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// At this point, this property is supported only in cloud environments where we
+        /// can easily control the cluster's external loag balancer.  This also has no
+        /// impact for non-TCP rules.
+        /// </para>
+        /// <para>
+        /// Also note that this value may be modified to ensure that it honors the range of
+        /// values supported by the current cloud.
+        /// </para>
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "TcpIdleTimeoutMinutes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "tcpIdleTimeoutMinutes", ApplyNamingConventions = false)]
+        [DefaultValue(4)]
+        public int TcpIdleTimeoutMinutes { get; set; } = 4;
+
+        /// <summary>
+        /// Returns <see cref="TcpIdleTimeoutMinutes"/> as a <see cref="TimeSpan"/>.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        internal TimeSpan TcpIdleTimeout => TimeSpan.FromMinutes(TcpIdleTimeoutMinutes);
+
+        /// <summary>
         /// Validates the options.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
@@ -121,6 +153,11 @@ namespace Neon.Kube
                 {
                     rule.Validate(clusterDefinition, "ingress-rule-address");
                 }
+            }
+
+            if (TcpIdleTimeoutMinutes <= 0)
+            {
+                throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(TcpIdleTimeoutMinutes)}={TcpIdleTimeoutMinutes}] must be greater than 0.");
             }
         }
     }

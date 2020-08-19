@@ -227,7 +227,7 @@ namespace NeonCli
             sbMasterAddressesArray.Append("(");
             sbPeerMasterAddressesArray.Append("(");
 
-            foreach (var master in clusterDefinition.SortedMasters)
+            foreach (var master in clusterDefinition.SortedMasterNodes)
             {
                 sbMasters.Append($"declare -x -A NEON_MASTER_{index}\n");
                 sbMasters.Append($"NEON_MASTER_{index}=( [\"name\"]=\"{master.Name}\" [\"address\"]=\"{master.Address}\" )\n");
@@ -249,7 +249,7 @@ namespace NeonCli
             sbMasterAddressesArray.Append(" )");
             sbPeerMasterAddressesArray.Append(" )");
 
-            foreach (var master in clusterDefinition.SortedMasters)
+            foreach (var master in clusterDefinition.SortedMasterNodes)
             {
                 var nameField = master.Name;
 
@@ -271,7 +271,7 @@ namespace NeonCli
                 }
             }
 
-            foreach (var master in clusterDefinition.SortedMasters)
+            foreach (var master in clusterDefinition.SortedMasterNodes)
             {
                 sbMasters.Append($"declare -x -A NEON_MASTER_{index}\n");
                 sbMasters.Append($"NEON_MASTER_{index}=( [\"name\"]=\"{master.Name}\" [\"address\"]=\"{master.Address}\" )\n");
@@ -307,7 +307,7 @@ namespace NeonCli
                 }
             }
 
-            foreach (var master in clusterDefinition.SortedMasters)
+            foreach (var master in clusterDefinition.SortedMasterNodes)
             {
                 if (workerTimeSources.Length > 0)
                 {

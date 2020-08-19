@@ -577,7 +577,7 @@ namespace Neon.Kube
         /// <summary>
         /// Enumerates the cluster master nodes in ascending order by name.
         /// </summary>
-        private IEnumerable<AzureNode> SortedMasterNodes => Nodes.Where(node => node.IsWorker).OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase);
+        private IEnumerable<AzureNode> SortedMasterNodes => Nodes.Where(node => node.IsMaster).OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// Enumerates the cluster worker nodes in no particular order.
@@ -592,7 +592,7 @@ namespace Neon.Kube
         /// <summary>
         /// Enumerates the cluster worker nodes in ascending order by name followed by the sorted worker nodes.
         /// </summary>
-        private IEnumerable<AzureNode> SortedMastersThenWorkers => SortedMasterNodes.Union(SorteWorkerNodes);
+        private IEnumerable<AzureNode> SortedMasterThenWorkerNodes => SortedMasterNodes.Union(SorteWorkerNodes);
 
         /// <summary>
         /// Returns the name to use for a cluster related resource based on the standard Azure resource type
@@ -706,7 +706,7 @@ namespace Neon.Kube
 
             // Assign subnet addresses to the nodes, assigning master nodes first.
 
-            foreach (var node in clusterDefinition.SortedMastersThenWorkers)
+            foreach (var node in clusterDefinition.SortedMasterThenWorkerNodes)
             {
                 if (!string.IsNullOrEmpty(node.Address))
                 {
@@ -1411,7 +1411,8 @@ namespace Neon.Kube
                     .WithPort(ingressRule.NodePort)
                     .Attach();
 
-                var ruleName = $"{clusterIngressRulePrefix}{ingressRule.Name}-{timestamp}";
+                var ruleName   = $"{clusterIngressRulePrefix}{ingressRule.Name}-{timestamp}";
+                var tcpTimeout = Math.Min(Math.Max(4, ingressRule.TcpIdleTimeoutMinutes), 30);  // Azure allowed timeout range is [4..30] minutes
 
                 loadBalancerUpdater.DefineLoadBalancingRule(ruleName)
                     .WithProtocol(ToSTransportProtocol(ingressRule.Protocol))
@@ -1419,7 +1420,8 @@ namespace Neon.Kube
                     .FromFrontendPort(ingressRule.ExternalPort)
                     .ToBackend(loadbalancerBackendName)
                     .ToBackendPort(ingressRule.NodePort)
-                    .WithIdleTimeoutInMinutes(5)
+                    .WithProbe(probeName)
+                    .WithIdleTimeoutInMinutes(tcpTimeout)
                     .Attach();
             }
 
@@ -1563,10 +1565,10 @@ namespace Neon.Kube
 
             // We also need to remove any inbound NAT mappings from the cluster VM NICs.
 
-            foreach (var node in Nodes)
-            {
-                node.NicUpdater.WithoutLoadBalancerInboundNatRules();
-            }
+            //foreach (var node in Nodes)
+            //{
+            //    node.NicUpdater.WithoutLoadBalancerInboundNatRules();
+            //}
 
             // We're going to use the same timestamp for all new/updated rules.
 
@@ -1577,7 +1579,7 @@ namespace Neon.Kube
 
             var nextPort = networkOptions.FirstSshManagementPort;
 
-            foreach (var node in cluster.Definition.SortedMastersThenWorkers)
+            foreach (var node in cluster.Definition.SortedMasterThenWorkerNodes)
             {
                 node.PublicSshEndpoint = new IPEndPoint(clusterAddress, nextPort++);
             }
@@ -1585,7 +1587,7 @@ namespace Neon.Kube
             // Add a load balancer SSH NAT rule for each node in the cluster
             // along with a NAT mapping for each node's NIC.
 
-            foreach (var node in SortedMastersThenWorkers)
+            foreach (var node in SortedMasterThenWorkerNodes)
             {
                 var ruleName = $"{systemSshRulePrefix}{node.Name}-{timestamp}";
 
@@ -1594,14 +1596,14 @@ namespace Neon.Kube
                     .FromExistingPublicIPAddress(publicAddress)
                     .FromFrontendPort(node.Metadata.PublicSshEndpoint.Port)
                     .ToBackendPort(NetworkPorts.SSH)
-                    .WithIdleTimeoutInMinutes(5)
+                    .WithIdleTimeoutInMinutes(30)       // Maximum Azure idle timeout
                     .Attach();
 
                 node.NicUpdater
                     .WithExistingLoadBalancerInboundNatRule(loadBalancer, ruleName);
             }
 
-            // Add the NSG rules to allow the NATed system SSH rules.
+            // Add the NSG rules to allow the system SSH NAT rules.
             //
             // To keep things simple, we're going to generate a separate rule for each source address
             // restriction.  In theory, we could have tried collecting allow and deny rules 
@@ -1614,7 +1616,7 @@ namespace Neon.Kube
 
             var priority = firstSystemNsgRulePriority;
 
-            foreach (var node in SortedMastersThenWorkers)
+            foreach (var node in SortedMasterThenWorkerNodes)
             {
                 if (networkOptions.ManagementAddressRules == null || networkOptions.ManagementAddressRules.Count == 0)
                 {

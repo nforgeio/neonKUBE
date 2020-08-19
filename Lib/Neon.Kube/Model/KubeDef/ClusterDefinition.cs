@@ -469,7 +469,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public IEnumerable<NodeDefinition> SortedMasters => Masters.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase);
+        public IEnumerable<NodeDefinition> SortedMasterNodes => Masters.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Enumerates the cluster worker node definitions.
@@ -483,7 +483,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public IEnumerable<NodeDefinition> SortedWorkers => Workers.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase);
+        public IEnumerable<NodeDefinition> SortedWorkerNodes => Workers.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Enumerates the cluster master nodes sorted by name follwed by the worker nodes,
@@ -492,7 +492,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public IEnumerable<NodeDefinition> SortedMastersThenWorkers => SortedMasters.Union(SortedWorkers);
+        public IEnumerable<NodeDefinition> SortedMasterThenWorkerNodes => SortedMasterNodes.Union(SortedWorkerNodes);
 
         /// <summary>
         /// Validates that node private IP addresses are set, are within the nodes subnet, and
