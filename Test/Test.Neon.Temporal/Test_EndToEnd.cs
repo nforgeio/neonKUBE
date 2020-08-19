@@ -96,6 +96,11 @@ namespace TestTemporal
                 this.client      = fixture.Client;
                 this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
 
+                // Prebuild a workflow and activity to ensure that doing that doesn't fail.
+
+                client.BuildActivityStub<IActivityWithResult>();
+                client.BuildWorkflowStub<IActivityWorkflowWithResult>();
+
                 // Create a worker and register the workflow and activity 
                 // implementations to let Temporal know we're open for business.
 
