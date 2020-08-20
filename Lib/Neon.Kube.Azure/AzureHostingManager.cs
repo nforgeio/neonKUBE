@@ -57,7 +57,7 @@ using INetworkSecurityGroupUpdater = Microsoft.Azure.Management.Network.Fluent.N
 using SecurityRuleProtocol         = Microsoft.Azure.Management.Network.Fluent.Models.SecurityRuleProtocol;
 using TransportProtocol            = Microsoft.Azure.Management.Network.Fluent.Models.TransportProtocol;
 using ILoadBalancerUpdater         = Microsoft.Azure.Management.Network.Fluent.LoadBalancer.Update.IUpdate;
-using AutoMapper;
+
 
 namespace Neon.Kube
 {
@@ -210,6 +210,11 @@ namespace Neon.Kube
             public string VmName => hostingManager.GetResourceName("vm", Proxy.Name);
 
             /// <summary>
+            /// Returns the IP address of the node.
+            /// </summary>
+            public string Address => Proxy.Address.ToString();
+
+            /// <summary>
             /// The associated Azure VM.
             /// </summary>
             public IVirtualMachine Vm { get; set; }
@@ -218,11 +223,6 @@ namespace Neon.Kube
             /// The node's network interface.
             /// </summary>
             public INetworkInterface Nic { get; set; }
-
-            /// <summary>
-            /// Holds the node's NIC updater.
-            /// </summary>
-            public INetworkInterfaceUpdater NicUpdater { get; set; }
 
             /// <summary>
             /// Returns <c>true</c> if the node is a master.
@@ -598,7 +598,7 @@ namespace Neon.Kube
             }
 
             //-----------------------------------------------------------------
-            // Automatically assign IP unused IP addresses within the subnet to nodes that 
+            // Automatically assign unused IP addresses within the subnet to nodes that 
             // were not explicitly assigned an address in the cluster definition.
 
             // Add any explicitly assigned addresses to a HashSet so we won't reuse any.
@@ -623,9 +623,9 @@ namespace Neon.Kube
 
             // Assign subnet addresses to the nodes, assigning master nodes first.
 
-            foreach (var node in clusterDefinition.SortedMasterThenWorkerNodes)
+            foreach (var azureNode in clusterDefinition.SortedMasterThenWorkerNodes)
             {
-                if (!string.IsNullOrEmpty(node.Address))
+                if (!string.IsNullOrEmpty(azureNode.Address))
                 {
                     continue;
                 }
@@ -634,7 +634,7 @@ namespace Neon.Kube
                 {
                     if (!assignedAddresses.Contains(addressUint))
                     {
-                        node.Address = NetHelper.UintToAddress(addressUint).ToString();
+                        azureNode.Address = NetHelper.UintToAddress(addressUint).ToString();
 
                         assignedAddresses.Add(addressUint);
                         break;
@@ -1010,7 +1010,7 @@ namespace Neon.Kube
                 return;
             }
 
-            vnet = azure.Networks
+            var vnetCreator = azure.Networks
                 .Define(vnetName)
                 .WithRegion(region)
                 .WithExistingResourceGroup(resourceGroup)
@@ -1018,8 +1018,22 @@ namespace Neon.Kube
                 .DefineSubnet(subnetName)
                     .WithAddressPrefix(networkOptions.NodeSubnet)
                     .WithExistingNetworkSecurityGroup(subnetNsg.Id)
-                    .Attach()
-                .Create();
+                    .Attach();
+
+            var nameservers = cluster.Definition.Network.Nameservers;
+
+            if (nameservers != null)
+            {
+                foreach (var dnsAddress in nameservers)
+                {
+                    if (!vnet.DnsServerIPs.Contains(dnsAddress))
+                    {
+                        vnetCreator.WithDnsServer(dnsAddress);
+                    }
+                }
+            }
+
+            vnet = vnetCreator.Create();
         }
 
         /// <summary>
@@ -1103,7 +1117,7 @@ namespace Neon.Kube
                 .WithExistingResourceGroup(resourceGroup)
                 .WithExistingPrimaryNetwork(vnet)
                 .WithSubnet(subnetName)
-                .WithPrimaryPrivateIPAddressStatic(azureNode.Proxy.Metadata.Address)
+                .WithPrimaryPrivateIPAddressStatic(azureNode.Address)
                 .Create();
 
             node.Status = "create VM";
@@ -1171,16 +1185,10 @@ namespace Neon.Kube
         /// <param name="operations">Flags that control how the load balancer and related security rules are updated.</param>
         private void UpdateNetwork(NetworkOperations operations)
         {
-            // Create updaters for the load balancer, subnet NSG, and all
-            // of the node NICs.
+            // Create updaters for the load balancer and subnet NSG.
 
             var loadbalancerUpdater = loadBalancer.Update();
             var subnetNsgUpdater    = subnetNsg.Update();
-
-            foreach (var node in Nodes)
-            {
-                node.NicUpdater = node.Nic.Update();
-            }
 
             // Configure the updates.
 
@@ -1198,18 +1206,6 @@ namespace Neon.Kube
 
             subnetNsg    = subnetNsgUpdater.Apply();
             loadBalancer = loadbalancerUpdater.Apply();
-
-            foreach (var node in Nodes)
-            {
-                try
-                {
-                    node.Nic = node.NicUpdater.Apply();
-                }
-                finally
-                {
-                    node.NicUpdater = null;
-                }
-            }
         }
 
         /// <summary>
@@ -1234,14 +1230,14 @@ namespace Neon.Kube
 
             // Rebuild the backend pool. 
             //
-            // Note that We're going to add these VMs to the backend set one at a time
+            // Note that we're going to add these VMs to the backend set one at a time
             // because the API only works when the VMs being added in a batch are in 
-            // the same availability set.  Masters and workers will be located within
+            // the same availability set.  Masters and workers are located within
             // different sets by default.
 
             var backendUpdater = loadBalancerUpdater.UpdateBackend(loadbalancerBackendName);
 
-            // backendUpdater.WithoutExistingVirtualMachines();
+            backendUpdater.WithoutExistingVirtualMachines();
 
             foreach (var ingressNode in azureNodes.Values.Where(node => node.Metadata.Ingress))
             {
@@ -1249,6 +1245,8 @@ namespace Neon.Kube
             }
 
             loadBalancerUpdater = backendUpdater.Parent();
+            loadBalancer        = loadBalancerUpdater.Apply();
+            loadBalancerUpdater = loadBalancer.Update();
 
             //-----------------------------------------------------------------
             // Ingress load balancing rules
@@ -1450,21 +1448,14 @@ namespace Neon.Kube
                 subnetNsgUpdater.WithoutRule(rule.Name);
             }
 
-            // Remove all inbound NAT mappings from the cluster VM NICs.
-
-            foreach (var node in Nodes)
-            {
-                node.NicUpdater.WithoutLoadBalancerInboundNatRules();
-            }
-
             // Assign unique port to each node that will be used to NAT external
             // SSH traffic to the node.
 
             var nextPort = networkOptions.FirstSshManagementPort;
 
-            foreach (var node in cluster.Definition.SortedMasterThenWorkerNodes)
+            foreach (var azureNode in cluster.Definition.SortedMasterThenWorkerNodes)
             {
-                node.PublicSshEndpoint = new IPEndPoint(clusterAddress, nextPort++);
+                azureNode.PublicSshEndpoint = new IPEndPoint(clusterAddress, nextPort++);
             }
 
             // Add a load balancer SSH NAT rule for each node in the cluster
@@ -1472,14 +1463,14 @@ namespace Neon.Kube
             // to commit the changes to the load balancer first, before we can
             // connect the rules to each corresponding NIC.
 
-            foreach (var node in SortedMasterThenWorkerNodes)
+            foreach (var azureNode in SortedMasterThenWorkerNodes)
             {
-                var ruleName = $"{systemSshRulePrefix}{node.Name}";
+                var ruleName = $"{systemSshRulePrefix}{azureNode.Name}";
 
                 loadBalancerUpdater.DefineInboundNatRule(ruleName)
                     .WithProtocol(TransportProtocol.Tcp)
                     .FromExistingPublicIPAddress(publicAddress)
-                    .FromFrontendPort(node.Metadata.PublicSshEndpoint.Port)
+                    .FromFrontendPort(azureNode.Metadata.PublicSshEndpoint.Port)
                     .ToBackendPort(NetworkPorts.SSH)
                     .WithIdleTimeoutInMinutes(30)       // Maximum Azure idle timeout
                     .Attach();
@@ -1488,15 +1479,7 @@ namespace Neon.Kube
             loadBalancer        = loadBalancerUpdater.Apply();
             loadBalancerUpdater = loadBalancer.Update();
 
-            foreach (var node in SortedMasterThenWorkerNodes)
-            {
-                var ruleName = $"{systemSshRulePrefix}{node.Name}";
-
-                node.NicUpdater
-                    .WithExistingLoadBalancerInboundNatRule(loadBalancer, ruleName);
-            }
-
-            // Add the NSG rules to allow the system SSH NAT rules.
+            // Add the NSG rules that allow the system SSH NAT rules to work.
             //
             // To keep things simple, we're going to generate a separate rule for each source address
             // restriction.  In theory, we could have tried collecting allow and deny rules 
@@ -1509,13 +1492,13 @@ namespace Neon.Kube
 
             var priority = firstSystemNsgRulePriority;
 
-            foreach (var node in SortedMasterThenWorkerNodes)
+            foreach (var azureNode in SortedMasterThenWorkerNodes)
             {
-                if (networkOptions.ManagementAddressRules == null || networkOptions.ManagementAddressRules.Count == 0)
+                if (networkOptions.SshAddressRules == null || networkOptions.SshAddressRules.Count == 0)
                 {
                     // Default to allowing all addresses when no address rules are specified.
 
-                    var ruleName = $"{systemSshRulePrefix}{node.Name}";
+                    var ruleName = $"{systemSshRulePrefix}{azureNode.Name}";
 
                     subnetNsgUpdater.DefineRule(ruleName)
                         .AllowInbound()
@@ -1535,11 +1518,11 @@ namespace Neon.Kube
 
                     var addressRuleIndex = 0;
 
-                    foreach (var addressRule in networkOptions.ManagementAddressRules)
+                    foreach (var addressRule in networkOptions.SshAddressRules)
                     {
-                        var multipleAddresses = networkOptions.ManagementAddressRules.Count > 1;
-                        var ruleName          = multipleAddresses ? $"{ingressRulePrefix}{node.Name}-{addressRuleIndex++}"
-                                                                  : $"{ingressRulePrefix}{node.Name}";
+                        var multipleAddresses = networkOptions.SshAddressRules.Count > 1;
+                        var ruleName          = multipleAddresses ? $"{ingressRulePrefix}{azureNode.Name}-{addressRuleIndex++}"
+                                                                  : $"{ingressRulePrefix}{azureNode.Name}";
                         switch (addressRule.Action)
                         {
                             case AddressRuleAction.Allow:

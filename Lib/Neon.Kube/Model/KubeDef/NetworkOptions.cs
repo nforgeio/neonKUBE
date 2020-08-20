@@ -229,19 +229,18 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Optionally specifies whitelisted and/or blacklisted external addresses for
-        /// node management.  This can be used to lock down node specific SSH traffic 
-        /// being routed via temporary load balancer NAT rules.  This defaults to allowing 
-        /// inbound traffic from anywhere when the property is <c>null</c> or empty.
+        /// node management via SSH NAT rules.  This defaults to allowing inbound traffic 
+        /// from anywhere when the property is <c>null</c> or empty.
         /// </para>
         /// <note>
         /// Address rules are processed in order, from first to last so you may consider
         /// putting your blacklist rules before your whitelist rules.
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "ManagementAddressRules", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "managementAddressRules", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "SshAddressRules", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "sshAddressRules", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public List<AddressRule> ManagementAddressRules { get; set; } = new List<AddressRule>();
+        public List<AddressRule> SshAddressRules { get; set; } = new List<AddressRule>();
 
         /// <summary>
         /// <para>
@@ -489,11 +488,11 @@ namespace Neon.Kube
 
             // Verify [ManageAddressRules].
 
-            ManagementAddressRules = ManagementAddressRules ?? new List<AddressRule>();
+            SshAddressRules = SshAddressRules ?? new List<AddressRule>();
 
-            foreach (var rule in ManagementAddressRules)
+            foreach (var rule in SshAddressRules)
             {
-                rule.Validate(clusterDefinition, nameof(ManagementAddressRules));
+                rule.Validate(clusterDefinition, nameof(SshAddressRules));
             }
 
             // Verify [ManagementNatTtlHours].
