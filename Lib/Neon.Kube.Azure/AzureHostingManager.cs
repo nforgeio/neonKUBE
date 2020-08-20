@@ -1269,12 +1269,12 @@ namespace Neon.Kube
 
             if ((operations & NetworkOperations.IngressRules) != 0)
             {
-                UpdateNetworkIngress(loadbalancerUpdater, subnetNsgUpdater);
+                UpdateNetworkIngress(ref loadbalancerUpdater, ref subnetNsgUpdater);
             }
 
             if ((operations & NetworkOperations.AddSystemSshRules) != 0)
             {
-                AddSystemSshRules(loadbalancerUpdater, subnetNsgUpdater);
+                AddSystemSshRules(ref loadbalancerUpdater, ref subnetNsgUpdater);
             }
 
             // Apply the changes.
@@ -1303,8 +1303,8 @@ namespace Neon.Kube
         /// <param name="loadBalancerUpdater">The load balancer updater.</param>
         /// <param name="subnetNsgUpdater">The subnet NSG updater.</param>
         private void UpdateNetworkIngress(
-            ILoadBalancerUpdater            loadBalancerUpdater,
-            INetworkSecurityGroupUpdater    subnetNsgUpdater)
+            ref ILoadBalancerUpdater            loadBalancerUpdater,
+            ref INetworkSecurityGroupUpdater    subnetNsgUpdater)
         {
             //-----------------------------------------------------------------
             // Backend pool:
@@ -1480,7 +1480,7 @@ namespace Neon.Kube
                                     subnetNsgUpdater.DefineRule(ruleName)
                                         .AllowInbound()
                                         .FromAnyAddress()
-                                        .FromAnyPort()
+                                        .FromPort(ingressRule.ExternalPort)
                                         .ToAnyAddress()
                                         .ToPort(ingressRule.NodePort)
                                         .WithProtocol(ruleProtocol)
@@ -1546,8 +1546,8 @@ namespace Neon.Kube
         /// <param name="loadBalancerUpdater">The load balancer updater.</param>
         /// <param name="subnetNsgUpdater">The subnet NSG updater.</param>
         private void AddSystemSshRules(
-            ILoadBalancerUpdater            loadBalancerUpdater,
-            INetworkSecurityGroupUpdater    subnetNsgUpdater)
+            ref ILoadBalancerUpdater            loadBalancerUpdater,
+            ref INetworkSecurityGroupUpdater    subnetNsgUpdater)
         {
             // Remove all existing load balancer system SSH related NAT rules.
 
@@ -1563,12 +1563,14 @@ namespace Neon.Kube
                 subnetNsgUpdater.WithoutRule(rule.Name);
             }
 
-            // We also need to remove any inbound NAT mappings from the cluster VM NICs.
+            // Remove any inbound NAT mappings from the cluster VM NICs.
 
             //foreach (var node in Nodes)
             //{
             //    node.NicUpdater.WithoutLoadBalancerInboundNatRules();
             //}
+
+            // 
 
             // We're going to use the same timestamp for all new/updated rules.
 
@@ -1585,7 +1587,9 @@ namespace Neon.Kube
             }
 
             // Add a load balancer SSH NAT rule for each node in the cluster
-            // along with a NAT mapping for each node's NIC.
+            // along with a NAT mapping for each node's NIC.  Note that we need
+            // to commit the changes to the load balancer first, before we can
+            // connect the rules to each corresponding NIC.
 
             foreach (var node in SortedMasterThenWorkerNodes)
             {
@@ -1598,6 +1602,14 @@ namespace Neon.Kube
                     .ToBackendPort(NetworkPorts.SSH)
                     .WithIdleTimeoutInMinutes(30)       // Maximum Azure idle timeout
                     .Attach();
+            }
+
+            loadBalancer        = loadBalancerUpdater.Apply();
+            loadBalancerUpdater = loadBalancer.Update();
+
+            foreach (var node in SortedMasterThenWorkerNodes)
+            {
+                var ruleName = $"{systemSshRulePrefix}{node.Name}-{timestamp}";
 
                 node.NicUpdater
                     .WithExistingLoadBalancerInboundNatRule(loadBalancer, ruleName);
@@ -1656,7 +1668,7 @@ namespace Neon.Kube
                                     subnetNsgUpdater.DefineRule(ruleName)
                                         .AllowInbound()
                                         .FromAnyAddress()
-                                        .FromPort(node.Metadata.PublicSshEndpoint.Port)
+                                        .FromAnyPort()
                                         .ToAnyAddress()
                                         .ToPort(NetworkPorts.SSH)
                                         .WithProtocol(SecurityRuleProtocol.Tcp)
@@ -1668,7 +1680,7 @@ namespace Neon.Kube
                                     subnetNsgUpdater.DefineRule(ruleName)
                                         .AllowInbound()
                                         .FromAddress(addressRule.AddressOrSubnet)
-                                        .FromPort(node.Metadata.PublicSshEndpoint.Port)
+                                        .FromAnyPort()
                                         .ToAnyAddress()
                                         .ToPort(NetworkPorts.SSH)
                                         .WithProtocol(SecurityRuleProtocol.Tcp)
