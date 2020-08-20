@@ -165,22 +165,6 @@ namespace Neon.Kube
         // in addition to adding a rule to the network security group enabling
         // the traffic.  [NetworkOptions.ManagementAddressRules] can be used to
         // restrict where this management traffic may come from.
-        //
-        // The expectation is that management SSH NAT and related securty group
-        // rules are temporary and should not remain active for any longer than
-        // necessary for security reasons.  To accomplish this, the load balancer
-        // management NAT rules will use a naming convention that identifies that
-        // the rule is management related and also includes a UTC timestamp that
-        // indicates when the rule was created.  The associated network security
-        // rule will also use a naming convention that identifies the associated
-        // load balancer NAT rule.  This enables the hosting manager to purge
-        // expired NAT and network security rules older than [NetworkOptions.ManagementNatTtlHours]
-        // (which defaults to 1 hour).
-        //
-        // We're also relying on these timestamps to ensure that we can easily
-        // update load balancer and NSG rules atomically by removing all of the
-        // existing rules first and then adding the new set of rules with new
-        // timestamps.  This is simple and avoids rule name conflicts.
 
         //---------------------------------------------------------------------
         // Private types
@@ -279,13 +263,6 @@ namespace Neon.Kube
             /// Remove all system related SSH management NAT rules.
             /// </summary>
             RemoveSystemSshRules = 0x0004,
-
-            /// <summary>
-            /// Removes expired SSH system and operator management rules.  Rule names include 
-            /// an encoded UTC timestamp and rules with a timestamps older than
-            /// <see cref="NetworkOptions.ManagementNatTtlHours"/> will be removed.
-            /// </summary>
-            PurgeSshRules = 0x0008
         }
 
         //---------------------------------------------------------------------
@@ -304,24 +281,13 @@ namespace Neon.Kube
         /// <summary>
         /// The name prefix for user related defined ingress rules (from the cluster configuration).
         /// </summary>
-        private const string clusterIngressRulePrefix = "cluster-ingress-";
+        private const string ingressRulePrefix = "ingress-";
 
         /// <summary>
         /// The name prefix for system related ingress rules used for configuring
         /// or managing nodes via SSH externally.
         /// </summary>
         private const string systemSshRulePrefix = "system-ssh-";
-
-        /// <summary>
-        /// The name prefix for operator related ingress rules created
-        /// on behalf of a cluster operator who needs to SSH to a specific node.
-        /// </summary>
-        private const string operatorSshRulePrefix = "operator-ssh-";
-
-        /// <summary>
-        /// Used to identify resource names that include a timestamp.
-        /// </summary>
-        private static Regex timestampRegex = new Regex(@"-\d{14}");
 
         /// <summary>
         /// Used to tag VMs with the cluster node name.
@@ -335,55 +301,6 @@ namespace Neon.Kube
         {
             // We don't have to do anything here because the assembly is loaded
             // as a byproduct of calling this method.
-        }
-
-        /// <summary>
-        /// Determines whether a resource name includes a timestamp.
-        /// </summary>
-        /// <param name="name">The name being checked.</param>
-        /// <returns><c>true</c> if the name includes a timestamp.</returns>
-        /// <remarks>
-        /// Some Azure resources like load balancer and network security group rules
-        /// include a creation timestamp at the end of the name, like: 
-        /// <b>NAME-YYYYMMDDHHMMSS</b> (UTC).  These are used to make it 
-        /// easier to update rules as well as to purge older rules.
-        /// </remarks>
-        private static bool HasTimestamp(string name)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
-
-            return timestampRegex.Match(name).Success;
-        }
-
-        /// <summary>
-        /// Extracts the timestamp (UTC) from a resource name.
-        /// </summary>
-        /// <param name="name">The name.</param>
-        /// <returns>The <see cref="DateTime"/>.</returns>
-        /// <exception cref="FormatException">Thrown if the name doesn't include a timestamp.</exception>
-        private static DateTime ExtractTimestamp(string name)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
-
-            if (!HasTimestamp(name))
-            {
-                throw new FormatException($"Resource name [{name}] does not include a timestamp.");
-            }
-
-            var timestamp = name.Substring(name.LastIndexOf('-') + 1);
-
-            return DateTime.ParseExact(timestamp, "yyyyMMddhhmmss", CultureInfo.InvariantCulture);
-        }
-
-        /// <summary>
-        /// Converts a <see cref="DateTime"/> into a timestamp suitable for adding
-        /// to a resource name.
-        /// </summary>
-        /// <param name="time">The time.</param>
-        /// <returns>The timestamp string.</returns>
-        private static string ToTimestamp(DateTime time)
-        {
-            return time.ToString("yyyyMMddhhmmss", CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -755,7 +672,7 @@ namespace Neon.Kube
                 {
                     // Update [azureNodes] with any existing Azure nodes and their NICs.
                     // Note that it's possible for VMs that are unrelated to the cluster
-                    // to be in the resource group, so we'll have to ignore these.
+                    // to be in the resource group, so we'll have to ignore those.
 
                     foreach (var vm in azure.VirtualMachines.ListByResourceGroup(resourceGroup))
                     {
@@ -1136,7 +1053,7 @@ namespace Neon.Kube
 
             // The Azure fluent API does not support creating a load balancer without
             // any rules.  So we're going to create the load balancer with a dummy rule
-            // and then delete the rule straight away.
+            // and then delete that rule straight away.
 
             loadBalancer = azure.LoadBalancers
                 .Define(loadbalancerName)
@@ -1315,63 +1232,37 @@ namespace Neon.Kube
 
             KubeHelper.EnsureIngressNodes(cluster.Definition);
 
-            var backendUpdater = loadBalancerUpdater.UpdateBackend(loadbalancerBackendName);
-            var backendPool    = loadBalancer.Backends[loadbalancerBackendName];
-            var vmList         = azure.VirtualMachines.ListByResourceGroup(resourceGroup);
-            var vmIdToVm       = new Dictionary<string, IVirtualMachine>();
-            var nodeNameToVm   = new Dictionary<string, IVirtualMachine>(StringComparer.InvariantCultureIgnoreCase);
-
-            foreach (var vm in vmList)
-            {
-                Covenant.Assert(vm.Tags.ContainsKey(NodeNameTag));
-
-                var nodeName = vm.Tags[NodeNameTag];
-
-                if (!azureNodes.TryGetValue(nodeName, out var node))
-                {
-                    // This can happen when the cluster node has been removed.  We're
-                    // going to add NULL to the [vmIdToNode] table to indicate that
-                    // the VM should be removed from the pool below.
-                    //
-                    // This is probably overkill, because Azure probably already 
-                    // removed the VM from the pool when the VM itself was removed.
-
-                    node = null;
-                }
-
-                vmIdToVm.Add(vm.Id, vm);
-                nodeNameToVm.Add(nodeName, vm);
-            }
-
-            // Add any VMs that are marked for ingress.  We're going to assume
-            // that Azure won't barf when we add VMs that are already in the pool.
+            // Rebuild the backend pool. 
             //
-            // We're going to add these VMs to the backend set one at a time
-            // because the API only works when the VMs being added in a batch are 
-            // in the same availability set and generally, masters and nodes will
-            // be located in different sets.
+            // Note that We're going to add these VMs to the backend set one at a time
+            // because the API only works when the VMs being added in a batch are in 
+            // the same availability set.  Masters and workers will be located within
+            // different sets by default.
+
+            var backendUpdater = loadBalancerUpdater.UpdateBackend(loadbalancerBackendName);
+
+            // backendUpdater.WithoutExistingVirtualMachines();
 
             foreach (var ingressNode in azureNodes.Values.Where(node => node.Metadata.Ingress))
             {
-                if (nodeNameToVm.TryGetValue(ingressNode.Name, out var vm))
-                {
-                    backendUpdater.WithExistingVirtualMachines(new IHasNetworkInterfaces[] { vm });
-                }
+                backendUpdater.WithExistingVirtualMachines(new IHasNetworkInterfaces[] { ingressNode.Vm });
             }
 
+            loadBalancerUpdater = backendUpdater.Parent();
+
             //-----------------------------------------------------------------
-            // Ingress (load balancing) rules
+            // Ingress load balancing rules
 
             // Remove all existing cluster ingress rules.
 
             foreach (var rule in loadBalancer.LoadBalancingRules.Values
-                .Where(r => r.Name.StartsWith(clusterIngressRulePrefix, StringComparison.InvariantCultureIgnoreCase) && HasTimestamp(r.Name)))
+                .Where(r => r.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 loadBalancerUpdater.WithoutLoadBalancingRule(rule.Name);
             }
 
             foreach (var rule in subnetNsg.SecurityRules.Values
-                .Where(r => r.Name.StartsWith(clusterIngressRulePrefix, StringComparison.InvariantCultureIgnoreCase) && HasTimestamp(r.Name)))
+                .Where(r => r.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 subnetNsgUpdater.WithoutRule(rule.Name);
             }
@@ -1380,38 +1271,34 @@ namespace Neon.Kube
             // recreate these as necessary below.
 
             foreach (var probe in loadBalancer.HttpProbes.Values
-                .Where(p => p.Name.StartsWith(clusterIngressRulePrefix, StringComparison.InvariantCultureIgnoreCase) && HasTimestamp(p.Name)))
+                .Where(p => p.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 loadBalancerUpdater.WithoutProbe(probe.Name);
             }
 
             foreach (var probe in loadBalancer.HttpsProbes.Values
-                .Where(p => p.Name.StartsWith(clusterIngressRulePrefix, StringComparison.InvariantCultureIgnoreCase) && HasTimestamp(p.Name)))
+                .Where(p => p.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 loadBalancerUpdater.WithoutProbe(probe.Name);
             }
 
             foreach (var probe in loadBalancer.TcpProbes.Values
-                .Where(p => p.Name.StartsWith(clusterIngressRulePrefix, StringComparison.InvariantCultureIgnoreCase) && HasTimestamp(p.Name)))
+                .Where(p => p.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 loadBalancerUpdater.WithoutProbe(probe.Name);
             }
-
-            // We're going to use the same timestamp for all new/updated rules and probes.
-
-            var timestamp = ToTimestamp(DateTime.UtcNow);
 
             // Add the load balancer ingress rules and probes.
 
             foreach (var ingressRule in networkOptions.IngressRules)
             {
-                var probeName = $"{clusterIngressRulePrefix}{ingressRule.Name}-{timestamp}";
+                var probeName = $"{ingressRulePrefix}{ingressRule.Name}";
 
                 loadBalancerUpdater.DefineTcpProbe(probeName)
                     .WithPort(ingressRule.NodePort)
                     .Attach();
 
-                var ruleName   = $"{clusterIngressRulePrefix}{ingressRule.Name}-{timestamp}";
+                var ruleName   = $"{ingressRulePrefix}{ingressRule.Name}";
                 var tcpTimeout = Math.Min(Math.Max(4, ingressRule.TcpIdleTimeoutMinutes), 30);  // Azure allowed timeout range is [4..30] minutes
 
                 loadBalancerUpdater.DefineLoadBalancingRule(ruleName)
@@ -1446,12 +1333,12 @@ namespace Neon.Kube
                 {
                     // Default to allowing all addresses when no address rules are specified.
 
-                    var ruleName = $"{clusterIngressRulePrefix}{ingressRule.Name}-{timestamp}";
+                    var ruleName = $"{ingressRulePrefix}{ingressRule.Name}";
 
                     subnetNsgUpdater.DefineRule(ruleName)
                         .AllowInbound()
                         .FromAnyAddress()
-                        .FromPort(ingressRule.ExternalPort)
+                        .FromAnyPort()
                         .ToAnyAddress()
                         .ToPort(ingressRule.NodePort)
                         .WithProtocol(ruleProtocol)
@@ -1469,8 +1356,8 @@ namespace Neon.Kube
                     foreach (var addressRule in ingressRule.AddressRules)
                     {
                         var multipleAddresses = ingressRule.AddressRules.Count > 1;
-                        var ruleName          = multipleAddresses ? $"{clusterIngressRulePrefix}{ingressRule.Name}-{addressRuleIndex++}-{timestamp}"
-                                                                  : $"{clusterIngressRulePrefix}{ingressRule.Name}-{timestamp}";
+                        var ruleName          = multipleAddresses ? $"{ingressRulePrefix}{ingressRule.Name}-{addressRuleIndex++}"
+                                                                  : $"{ingressRulePrefix}{ingressRule.Name}";
                         switch (addressRule.Action)
                         {
                             case AddressRuleAction.Allow:
@@ -1480,7 +1367,7 @@ namespace Neon.Kube
                                     subnetNsgUpdater.DefineRule(ruleName)
                                         .AllowInbound()
                                         .FromAnyAddress()
-                                        .FromPort(ingressRule.ExternalPort)
+                                        .FromAnyPort()
                                         .ToAnyAddress()
                                         .ToPort(ingressRule.NodePort)
                                         .WithProtocol(ruleProtocol)
@@ -1492,7 +1379,7 @@ namespace Neon.Kube
                                     subnetNsgUpdater.DefineRule(ruleName)
                                         .AllowInbound()
                                         .FromAddress(addressRule.AddressOrSubnet)
-                                        .FromPort(ingressRule.ExternalPort)
+                                        .FromAnyPort()
                                         .ToAnyAddress()
                                         .ToPort(ingressRule.NodePort)
                                         .WithProtocol(ruleProtocol)
@@ -1508,7 +1395,7 @@ namespace Neon.Kube
                                     subnetNsgUpdater.DefineRule(ruleName)
                                         .DenyInbound()
                                         .FromAnyAddress()
-                                        .FromPort(ingressRule.ExternalPort)
+                                        .FromAnyPort()
                                         .ToAnyAddress()
                                         .ToPort(ingressRule.NodePort)
                                         .WithProtocol(ruleProtocol)
@@ -1520,7 +1407,7 @@ namespace Neon.Kube
                                     subnetNsgUpdater.DefineRule(ruleName)
                                         .DenyInbound()
                                         .FromAddress(addressRule.AddressOrSubnet)
-                                        .FromPort(ingressRule.ExternalPort)
+                                        .FromAnyPort()
                                         .ToAnyAddress()
                                         .ToPort(ingressRule.NodePort)
                                         .WithProtocol(ruleProtocol)
@@ -1552,29 +1439,23 @@ namespace Neon.Kube
             // Remove all existing load balancer system SSH related NAT rules.
 
             foreach (var rule in loadBalancer.LoadBalancingRules.Values
-                .Where(r => r.Name.StartsWith(systemSshRulePrefix, StringComparison.InvariantCultureIgnoreCase) && HasTimestamp(r.Name)))
+                .Where(r => r.Name.StartsWith(systemSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 loadBalancerUpdater.WithoutLoadBalancingRule(rule.Name);
             }
 
             foreach (var rule in subnetNsg.SecurityRules.Values
-                .Where(r => r.Name.StartsWith(systemSshRulePrefix, StringComparison.InvariantCultureIgnoreCase) && HasTimestamp(r.Name)))
+                .Where(r => r.Name.StartsWith(systemSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 subnetNsgUpdater.WithoutRule(rule.Name);
             }
 
-            // Remove any inbound NAT mappings from the cluster VM NICs.
+            // Remove all inbound NAT mappings from the cluster VM NICs.
 
-            //foreach (var node in Nodes)
-            //{
-            //    node.NicUpdater.WithoutLoadBalancerInboundNatRules();
-            //}
-
-            // 
-
-            // We're going to use the same timestamp for all new/updated rules.
-
-            var timestamp = ToTimestamp(DateTime.UtcNow);
+            foreach (var node in Nodes)
+            {
+                node.NicUpdater.WithoutLoadBalancerInboundNatRules();
+            }
 
             // Assign unique port to each node that will be used to NAT external
             // SSH traffic to the node.
@@ -1593,7 +1474,7 @@ namespace Neon.Kube
 
             foreach (var node in SortedMasterThenWorkerNodes)
             {
-                var ruleName = $"{systemSshRulePrefix}{node.Name}-{timestamp}";
+                var ruleName = $"{systemSshRulePrefix}{node.Name}";
 
                 loadBalancerUpdater.DefineInboundNatRule(ruleName)
                     .WithProtocol(TransportProtocol.Tcp)
@@ -1609,7 +1490,7 @@ namespace Neon.Kube
 
             foreach (var node in SortedMasterThenWorkerNodes)
             {
-                var ruleName = $"{systemSshRulePrefix}{node.Name}-{timestamp}";
+                var ruleName = $"{systemSshRulePrefix}{node.Name}";
 
                 node.NicUpdater
                     .WithExistingLoadBalancerInboundNatRule(loadBalancer, ruleName);
@@ -1620,7 +1501,7 @@ namespace Neon.Kube
             // To keep things simple, we're going to generate a separate rule for each source address
             // restriction.  In theory, we could have tried collecting allow and deny rules 
             // together to reduce the number of rules but that doesn't seem worth the trouble. 
-            // This is possible because NSGs rules allow a comma separated list of IP addresses
+            // This would be possible because NSGs rules allow a comma separated list of IP addresses
             // or subnets to be specified.
             //
             // We may need to revisit this if we approach Azure rule count limits (currently 1000
@@ -1634,12 +1515,12 @@ namespace Neon.Kube
                 {
                     // Default to allowing all addresses when no address rules are specified.
 
-                    var ruleName = $"{systemSshRulePrefix}{node.Name}-{timestamp}";
+                    var ruleName = $"{systemSshRulePrefix}{node.Name}";
 
                     subnetNsgUpdater.DefineRule(ruleName)
                         .AllowInbound()
                         .FromAnyAddress()
-                        .FromPort(node.Metadata.PublicSshEndpoint.Port)
+                        .FromAnyPort()
                         .ToAnyAddress()
                         .ToPort(NetworkPorts.SSH)
                         .WithProtocol(SecurityRuleProtocol.Tcp)
@@ -1657,8 +1538,8 @@ namespace Neon.Kube
                     foreach (var addressRule in networkOptions.ManagementAddressRules)
                     {
                         var multipleAddresses = networkOptions.ManagementAddressRules.Count > 1;
-                        var ruleName          = multipleAddresses ? $"{clusterIngressRulePrefix}{node.Name}-{addressRuleIndex++}-{timestamp}"
-                                                                  : $"{clusterIngressRulePrefix}{node.Name}-{timestamp}";
+                        var ruleName          = multipleAddresses ? $"{ingressRulePrefix}{node.Name}-{addressRuleIndex++}"
+                                                                  : $"{ingressRulePrefix}{node.Name}";
                         switch (addressRule.Action)
                         {
                             case AddressRuleAction.Allow:
@@ -1696,7 +1577,7 @@ namespace Neon.Kube
                                     subnetNsgUpdater.DefineRule(ruleName)
                                         .DenyInbound()
                                         .FromAnyAddress()
-                                        .FromPort(node.Metadata.PublicSshEndpoint.Port)
+                                        .FromAnyPort()
                                         .ToAnyAddress()
                                         .ToPort(NetworkPorts.SSH)
                                         .WithProtocol(SecurityRuleProtocol.Tcp)
@@ -1708,7 +1589,7 @@ namespace Neon.Kube
                                     subnetNsgUpdater.DefineRule(ruleName)
                                         .DenyInbound()
                                         .FromAddress(addressRule.AddressOrSubnet)
-                                        .FromPort(node.Metadata.PublicSshEndpoint.Port)
+                                        .FromAnyPort()
                                         .ToAnyAddress()
                                         .ToPort(NetworkPorts.SSH)
                                         .WithProtocol(SecurityRuleProtocol.Tcp)
