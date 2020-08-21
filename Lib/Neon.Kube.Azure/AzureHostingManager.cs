@@ -1003,13 +1003,6 @@ namespace Neon.Kube
         /// </summary>
         private void CreateVirtualNetwork()
         {
-            vnet = azure.Networks.ListByResourceGroup(resourceGroup).FirstOrDefault(vnet => vnet.Name.Equals(vnetName, StringComparison.InvariantCultureIgnoreCase));
-
-            if (vnet != null)
-            {
-                return;
-            }
-
             var vnetCreator = azure.Networks
                 .Define(vnetName)
                 .WithRegion(region)
@@ -1024,12 +1017,9 @@ namespace Neon.Kube
 
             if (nameservers != null)
             {
-                foreach (var dnsAddress in nameservers)
+                foreach (var nameserver in nameservers)
                 {
-                    if (!vnet.DnsServerIPs.Contains(dnsAddress))
-                    {
-                        vnetCreator.WithDnsServer(dnsAddress);
-                    }
+                    vnetCreator.WithDnsServer(nameserver);
                 }
             }
 
@@ -1458,10 +1448,13 @@ namespace Neon.Kube
                 azureNode.PublicSshEndpoint = new IPEndPoint(clusterAddress, nextPort++);
             }
 
-            // Add a load balancer SSH NAT rule for each node in the cluster
-            // along with a NAT mapping for each node's NIC.  Note that we need
-            // to commit the changes to the load balancer first, before we can
-            // connect the rules to each corresponding NIC.
+            loadBalancer        = loadBalancerUpdater.Apply();
+            loadBalancerUpdater = loadBalancer.Update();
+
+            // Add the SSH NAT rules for each node.  Note that we need to do this in two steps:
+            //
+            //      1. Add the NAT rule to the load balancer
+            //      2. Tie the node VM's NIC to the rule
 
             foreach (var azureNode in SortedMasterThenWorkerNodes)
             {
@@ -1474,6 +1467,43 @@ namespace Neon.Kube
                     .ToBackendPort(NetworkPorts.SSH)
                     .WithIdleTimeoutInMinutes(30)       // Maximum Azure idle timeout
                     .Attach();
+            }
+
+            loadBalancer        = loadBalancerUpdater.Apply();
+            loadBalancerUpdater = loadBalancer.Update();
+
+            foreach (var azureNode in SortedMasterThenWorkerNodes)
+            {
+                var ruleName = $"{systemSshRulePrefix}{azureNode.Name}";
+
+                azureNode.Nic = azureNode.Nic.Update()
+                    .WithExistingLoadBalancerBackend(loadBalancer, loadbalancerBackendName)
+                    .WithExistingLoadBalancerInboundNatRule(loadBalancer, ruleName)
+                    .Apply();
+            }
+
+            // We need to enable/disable TCP reset for load balancer and NAT rules.
+            // This needs to be done via the low-level API because the Fluent API
+            // doesn't support it.
+            //
+            // All SSH NAT rules will enable this.  Ingress rules will honor a property.
+
+            foreach (var natRule in loadBalancer.Inner.InboundNatRules)
+            {
+                natRule.EnableTcpReset = true;
+            }
+
+            var addressRuleIndex = 0;
+
+            foreach (var ingressRule in cluster.Definition.Network.IngressRules)
+            {
+                var multipleAddresses = ingressRule.AddressRules.Count > 1;
+                var ruleName          = multipleAddresses ? $"{ingressRulePrefix}{ingressRule.Name}-{addressRuleIndex++}"
+                                                          : $"{ingressRulePrefix}{ingressRule.Name}";
+
+                var rule = loadBalancer.Inner.LoadBalancingRules.Single(r => r.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase));
+
+                rule.EnableTcpReset = ingressRule.IdleTcpReset;
             }
 
             loadBalancer        = loadBalancerUpdater.Apply();
@@ -1496,7 +1526,7 @@ namespace Neon.Kube
             {
                 if (networkOptions.SshAddressRules == null || networkOptions.SshAddressRules.Count == 0)
                 {
-                    // Default to allowing all addresses when no address rules are specified.
+                    // Default to allowing all source addresses when no address rules are specified.
 
                     var ruleName = $"{systemSshRulePrefix}{azureNode.Name}";
 
@@ -1512,11 +1542,11 @@ namespace Neon.Kube
                 }
                 else
                 {
-                    // We need to generate a separate NSG rule for each address rule.  We're going to 
-                    // include an address rule index in the name when there's more than one address
+                    // We need to generate a separate NSG rule for each source address rule.  We're going
+                    // to include an address rule index in the name when there's more than one address
                     // rule to ensure that rule names are unique.
 
-                    var addressRuleIndex = 0;
+                    addressRuleIndex = 0;
 
                     foreach (var addressRule in networkOptions.SshAddressRules)
                     {

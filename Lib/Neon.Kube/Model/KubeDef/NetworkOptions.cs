@@ -262,7 +262,6 @@ namespace Neon.Kube
         /// </summary>
         internal TimeSpan ManagementNatTtl => TimeSpan.FromHours(ManagementNatTtlHours);
 
-
         /// <summary>
         /// <para>
         /// Specifies the start of a range of ingress load balancer ports reserved by

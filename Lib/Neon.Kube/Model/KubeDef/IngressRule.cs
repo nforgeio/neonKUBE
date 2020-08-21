@@ -125,6 +125,23 @@ namespace Neon.Kube
         internal TimeSpan TcpIdleTimeout => TimeSpan.FromMinutes(TcpIdleTimeoutMinutes);
 
         /// <summary>
+        /// <para>
+        /// Optionally controls whether the cluster router or load balancer sends a TCP RESET
+        /// packet to both ends of a TCP connection that has been idle for longer than
+        /// <see cref="TcpIdleTimeoutMinutes"/>.  This defaults to <c>false</c>.
+        /// </para>
+        /// <note>
+        /// At this point, this property is supported only in cloud environments where we
+        /// can easily control the cluster's external loag balancer.  This also has no
+        /// impact for non-TCP rules.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "IdleTcpReset", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "idleTcpReset", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool IdleTcpReset { get; set; } = false;
+
+        /// <summary>
         /// Validates the options.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
