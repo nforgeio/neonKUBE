@@ -244,26 +244,6 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Optionally specifies the maximum time a SSH management NAT rule may remain active
-        /// before it may be deleted automatically.  This defaults to 24 hours and cannot be
-        /// less than one hour.
-        /// </para>
-        /// <note>
-        /// This is a <c>double</c> so you can specify fractions of an hour.
-        /// </note>
-        /// </summary>
-        [JsonProperty(PropertyName = "ManagementNatTtlHours", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "managementNatTtlHours", ApplyNamingConventions = false)]
-        [DefaultValue(1.0)]
-        public double ManagementNatTtlHours { get; set; } = 24.0;
-
-        /// <summary>
-        /// Returns <see cref="ManagementNatTtlHours"/> as a <see cref="TimeSpan"/>.
-        /// </summary>
-        internal TimeSpan ManagementNatTtl => TimeSpan.FromHours(ManagementNatTtlHours);
-
-        /// <summary>
-        /// <para>
         /// Specifies the start of a range of ingress load balancer ports reserved by
         /// neonKUBE.  These are reserved for temporarily exposing SSH from individual 
         /// cluster nodes to the Internet during cluster setup as well as afterwards so 
@@ -485,20 +465,13 @@ namespace Neon.Kube
                 rule.Validate(clusterDefinition, nameof(EgressAddressRules));
             }
 
-            // Verify [ManageAddressRules].
+            // Verify [SshAddressRules].
 
             SshAddressRules = SshAddressRules ?? new List<AddressRule>();
 
             foreach (var rule in SshAddressRules)
             {
                 rule.Validate(clusterDefinition, nameof(SshAddressRules));
-            }
-
-            // Verify [ManagementNatTtlHours].
-
-            if (ManagementNatTtlHours < 1.0)
-            {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(ManagementNatTtlHours)}={ManagementNatTtlHours}]: Cannot be less than [1 hour].");
             }
         }
 

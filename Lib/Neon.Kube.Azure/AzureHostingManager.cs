@@ -239,6 +239,11 @@ namespace Neon.Kube
             {
                 get { return Proxy.Metadata.Role == NodeRole.Worker; }
             }
+
+            /// <summary>
+            /// The Azure availablity set hosting this node.
+            /// </summary>
+            public string AvailabilitySetName { get; set; }
         }
 
         /// <summary>
@@ -348,20 +353,20 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy                    cluster;
-        private string                          clusterName;
-        private string                          nodeUsername;
-        private string                          nodePassword;
-        private CloudOptions                    cloudOptions;
-        private AzureOptions                    azureOptions;
-        private string                          region;
-        private AzureCredentials                azureCredentials;
-        private string                          resourceGroup;
-        private KubeSetupInfo                   setupInfo;
-        private HostingOptions                  hostingOptions;
-        private NetworkOptions                  networkOptions;
-        private Dictionary<string, AzureNode>   azureNodes;
-        private IAzure                          azure;
+        private ClusterProxy                            cluster;
+        private string                                  clusterName;
+        private string                                  nodeUsername;
+        private string                                  nodePassword;
+        private CloudOptions                            cloudOptions;
+        private AzureOptions                            azureOptions;
+        private string                                  region;
+        private AzureCredentials                        azureCredentials;
+        private string                                  resourceGroup;
+        private KubeSetupInfo                           setupInfo;
+        private HostingOptions                          hostingOptions;
+        private NetworkOptions                          networkOptions;
+        private Dictionary<string, AzureNode>           azureNodes;
+        private IAzure                                  azure;
 
         // Azure requires that the various components that need to be provisioned
         // for the cluster have names.  We're going to generate these in the constructor.
@@ -374,26 +379,23 @@ namespace Neon.Kube
         // we wouldn't want to node names like "master-0" to conflict across multiple 
         // clusters.
 
-        private string                          publicAddressName;
-        private string                          vnetName;
-        private string                          subnetName;
-        private string                          masterAvailabilitySetName;
-        private string                          workerAvailabilitySetName;
-        private string                          proximityPlacementGroupName;
-        private string                          loadbalancerName;
-        private string                          loadbalancerFrontendName;
-        private string                          loadbalancerBackendName;
-        private string                          subnetNsgName;
+        private string                                  publicAddressName;
+        private string                                  vnetName;
+        private string                                  subnetName;
+        private string                                  proximityPlacementGroupName;
+        private string                                  loadbalancerName;
+        private string                                  loadbalancerFrontendName;
+        private string                                  loadbalancerBackendName;
+        private string                                  subnetNsgName;
 
         // These fields hold various Azure components while provisioning is in progress.
 
-        private IPublicIPAddress                publicAddress;
-        private IPAddress                       clusterAddress;
-        private INetwork                        vnet;
-        private ILoadBalancer                   loadBalancer;
-        private IAvailabilitySet                masterAvailabilitySet;
-        private IAvailabilitySet                workerAvailabilitySet;
-        private INetworkSecurityGroup           subnetNsg;
+        private IPublicIPAddress                        publicAddress;
+        private IPAddress                               clusterAddress;
+        private INetwork                                vnet;
+        private ILoadBalancer                           loadBalancer;
+        private Dictionary<string, IAvailabilitySet>    nameToAvailabilitySet;
+        private INetworkSecurityGroup                   subnetNsg;
 
         /// <summary>
         /// Constructor.
@@ -421,6 +423,7 @@ namespace Neon.Kube
             this.hostingOptions              = cluster.Definition.Hosting;
             this.cloudOptions                = hostingOptions.Cloud;
             this.networkOptions              = cluster.Definition.Network;
+            this.nameToAvailabilitySet       = new Dictionary<string, IAvailabilitySet>(StringComparer.InvariantCultureIgnoreCase);
 
             // Initialize the component names as they will be deployed to Azure.  Note that we're
             // going to prefix each name with the Azure item type convention described here:
@@ -432,8 +435,6 @@ namespace Neon.Kube
             this.publicAddressName           = GetResourceName("pip", "cluster", true);
             this.vnetName                    = GetResourceName("vnet", "cluster", true);
             this.subnetName                  = GetResourceName("snet", "cluster", true);
-            this.masterAvailabilitySetName   = GetResourceName("avail", "master");
-            this.workerAvailabilitySetName   = GetResourceName("avail", "worker");
             this.proximityPlacementGroupName = GetResourceName("ppg", "cluster", true);
             this.loadbalancerName            = GetResourceName("lbe", "cluster", true);
             this.subnetNsgName               = GetResourceName("nsg", "subnet");
@@ -918,43 +919,46 @@ namespace Neon.Kube
         /// </summary>
         private void CreateAvailabilitySets()
         {
-            // Availability sets
+            // Create the availbility sets defined for the cluster nodes.
 
             var existingAvailabilitySets = azure.AvailabilitySets.ListByResourceGroup(resourceGroup);
 
-            masterAvailabilitySet = existingAvailabilitySets.FirstOrDefault(aset => aset.Name.Equals(masterAvailabilitySetName, StringComparison.InvariantCultureIgnoreCase));
-            workerAvailabilitySet = existingAvailabilitySets.FirstOrDefault(aset => aset.Name.Equals(workerAvailabilitySetName, StringComparison.InvariantCultureIgnoreCase));
-
-            if (azureOptions.DisableProximityPlacement)
+            foreach (var azureNode in azureNodes.Values)
             {
-                if (masterAvailabilitySet == null)
+                azureNode.AvailabilitySetName = GetResourceName("avail", azureNode.Metadata.Labels.PhysicalAvailabilitySet);
+
+                var existingSet = existingAvailabilitySets.FirstOrDefault(set => set.Name.Equals(azureNode.AvailabilitySetName, StringComparison.InvariantCultureIgnoreCase));
+
+                if (existingSet != null)
                 {
-                    masterAvailabilitySet = (IAvailabilitySet)azure.AvailabilitySets
-                        .Define(masterAvailabilitySetName)
+                    // The avcailablity set already exists.
+
+                    if (!nameToAvailabilitySet.ContainsKey(azureNode.AvailabilitySetName))
+                    {
+                        nameToAvailabilitySet.Add(azureNode.AvailabilitySetName, existingSet);
+                    }
+
+                    continue;
+                }
+
+                // Create the availablity set.
+
+                IAvailabilitySet newSet;
+
+                if (azureOptions.DisableProximityPlacement)
+                {
+                    newSet = (IAvailabilitySet)azure.AvailabilitySets
+                        .Define(azureNode.AvailabilitySetName)
                         .WithRegion(region)
                         .WithExistingResourceGroup(resourceGroup)
                         .WithUpdateDomainCount(azureOptions.UpdateDomains)
                         .WithFaultDomainCount(azureOptions.FaultDomains)
                         .Create();
                 }
-
-                if (workerAvailabilitySet == null)
+                else
                 {
-                    workerAvailabilitySet = (IAvailabilitySet)azure.AvailabilitySets
-                        .Define(workerAvailabilitySetName)
-                        .WithRegion(region)
-                        .WithExistingResourceGroup(resourceGroup)
-                        .WithUpdateDomainCount(azureOptions.UpdateDomains)
-                        .WithFaultDomainCount(azureOptions.FaultDomains)
-                        .Create();
-                }
-            }
-            else
-            {
-                if (masterAvailabilitySet == null)
-                {
-                    masterAvailabilitySet = (IAvailabilitySet)azure.AvailabilitySets
-                        .Define(masterAvailabilitySetName)
+                    newSet = (IAvailabilitySet)azure.AvailabilitySets
+                        .Define(azureNode.AvailabilitySetName)
                         .WithRegion(region)
                         .WithExistingResourceGroup(resourceGroup)
                         .WithNewProximityPlacementGroup(proximityPlacementGroupName, ProximityPlacementGroupType.Standard)
@@ -963,17 +967,7 @@ namespace Neon.Kube
                         .Create();
                 }
 
-                if (workerAvailabilitySet == null)
-                {
-                    workerAvailabilitySet = (IAvailabilitySet)azure.AvailabilitySets
-                        .Define(workerAvailabilitySetName)
-                        .WithRegion(region)
-                        .WithExistingResourceGroup(resourceGroup)
-                        .WithNewProximityPlacementGroup(proximityPlacementGroupName, ProximityPlacementGroupType.Standard)
-                        .WithUpdateDomainCount(azureOptions.UpdateDomains)
-                        .WithFaultDomainCount(azureOptions.FaultDomains)
-                        .Create();
-                }
+                nameToAvailabilitySet.Add(azureNode.AvailabilitySetName, newSet);
             }
         }
 
@@ -1164,7 +1158,7 @@ namespace Neon.Kube
                 .WithDataDiskDefaultStorageAccountType(azureStorageType)
                 .WithNewDataDisk((int)(ByteUnits.Parse(node.Metadata.Azure.DiskSize) / ByteUnits.GibiBytes))
                 .WithSize(node.Metadata.Azure.VmSize)
-                .WithExistingAvailabilitySet(azureNode.IsMaster ? masterAvailabilitySet : workerAvailabilitySet)
+                .WithExistingAvailabilitySet(nameToAvailabilitySet[azureNode.AvailabilitySetName])
                 .WithTag(NodeNameTag, azureNode.Metadata.Name)
                 .Create();
         }

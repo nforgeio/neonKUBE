@@ -41,7 +41,7 @@ namespace Neon.Kube
     /// </summary>
     public class AzureOptions
     {
-        private const string defaultVmSize    = "Standard_B2S";
+        private const string defaultVmSize   = "Standard_B2S";
         private const string defaultDiskSize = "128 GiB";
 
         /// <summary>
@@ -139,6 +139,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// The DNS domain prefix for the public IP address to be assigned to the cluster.
+        /// This defaults to <b>"neon-UUID"</b> where UUID is generated.
         /// </summary>
         /// <remarks>
         /// <note>
@@ -358,7 +359,9 @@ namespace Neon.Kube
 
             if (string.IsNullOrEmpty(DomainLabel))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(DomainLabel)}] cannot be empty.");
+                // We're going to generate a GUID and strip out the dashes.
+
+                DomainLabel = "neon-" + Guid.NewGuid().ToString("d").Replace("-", string.Empty);
             }
 
             // Verify [ResourceGroup].

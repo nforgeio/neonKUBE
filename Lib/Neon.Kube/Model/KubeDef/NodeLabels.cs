@@ -256,8 +256,6 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Define physical host labels.
 
-        private string physicalFaultDomain = string.Empty;
-
         /// <summary>
         /// Reserved label name for <see cref="LabelPhysicalPower"/>.
         /// </summary>
@@ -269,9 +267,9 @@ namespace Neon.Kube
         public const string LabelPhysicalMachine = ClusterDefinition.ReservedLabelPrefix + "physical.machine";
 
         /// <summary>
-        /// Reserved label name for <see cref="PhysicalFaultDomain"/>.
+        /// Reserved label name for <see cref="PhysicalAvailabilitySet"/>.
         /// </summary>
-        public const string LabelPhysicalFaultDomain = ClusterDefinition.ReservedLabelPrefix + "physical.faultdomain";
+        public const string LabelPhysicalAvailabilitytSet = ClusterDefinition.ReservedLabelPrefix + "physical.availability-set";
 
         /// <summary>
         /// Reserved label name for <see cref="LabelPhysicalPower"/>.
@@ -311,83 +309,50 @@ namespace Neon.Kube
         public string PhysicalMachine { get; set; } = string.Empty;
 
         /// <summary>
-        /// <b>io.neonkube/physical.faultdomain</b> [<c>string</c>]: A free format string 
-        /// grouping the host by the possibility of underlying hardware or software failures.
-        /// This defaults to the <b>empty string</b>.
+        /// <para>
+        /// <b>io.neonkube/physical.availability-set</b> [<c>string</c>]: Indicates that 
+        /// the hosting environment will try to ensure that cluster VMs with the same
+        /// availability set are deployed in a manner that reduces the possibility that
+        /// more than one VM at a time will be taken offline for maintenance.
+        /// </para>
+        /// <para>
+        /// This defaults to <b>master</b> for cluster master nodes and <b>worker</b>
+        /// for worker nodes.
+        /// </para>
+        /// <note>
+        /// <b>IMPORTANT:</b> Master nodes should generally be located within their
+        /// own availablity set.
+        /// </note>
         /// </summary>
         /// <remarks>
         /// <para>
-        /// The idea here is to identify broad possible failure scenarios and to assign hosts
-        /// to fault domains in such a way that a failure for one domain will be unlikely
-        /// to impact the hosts in another.  These groupings can be used to spread application
-        /// containers across available fault domains such that an application has a reasonable 
-        /// potential to continue operating in the face of hardware or network failures.
+        /// This is typcally used for distributing pods across cluster nodes to 
+        /// protect against more than one of them going down at once due to
+        /// scheduled maintenance.
         /// </para>
         /// <para>
-        /// Fault domains will be mapped to your specific hardware and networking architecture.
-        /// Here are some example scenarios:
+        /// On premise deployments don't currently support automatic provisioning by
+        /// availability sets but that may happen in the future (e.g. by managing 
+        /// clusters of XenServer host machines).  You'll need to manually specify 
+        /// these labels to match your deployment and maintenance policies.
         /// </para>
-        /// <list type="table">
-        /// <item>
-        ///     <term><b>VMs on one machine:</b></term>
-        ///     <description>
-        ///     <para>
-        ///     This will be a common setup for development and test where every host
-        ///     node is simply a virtual machine running locally.  In this case, the
-        ///     fault domain could be set to the virtual machine name such that
-        ///     failures can be tested by simply stopping a VM.
-        ///     </para>
-        ///     <note>
-        ///     If no fault domain is specified for a node, then the fault domain
-        ///     will default to the node name.
-        ///     </note>
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>Single Rack:</b></term>
-        ///     <description>
-        ///     For a cluster deployed to a single rack with a shared network connection,
-        ///     the fault domain will typically be the physical machine such that the 
-        ///     loss of a machine can be tolerated.
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>Multiple Racks:</b></term>
-        ///     <description>
-        ///     For clusters deployed to multiple racks, each with their own network
-        ///     connection, the fault domain will typically be set at the rack
-        ///     level, such that the loss of a rack or its network connectivity can
-        ///     be tolerated.
-        ///     </description>
-        /// </item>
-        /// <item>
-        ///     <term><b>Advanced:</b></term>
-        ///     <description>
-        ///     <para>
-        ///     More advanced scenarios are possible.  For example, a datacenter may
-        ///     have multiple pods, floors, or buildings that each have redundant 
-        ///     infrastructure such as power and networking.  You could set the fault
-        ///     domain at the pod or floor level.
-        ///     </para>
-        ///     <para>
-        ///     For clusters that span physical datacenters, you could potentially map
-        ///     each datacenter to an fault domain.
-        ///     </para>
-        ///     </description>
-        /// </item>
-        /// </list>
+        /// <para>
+        /// Cloud deployments generally implement the concept of availablity sets.
+        /// These are used to group VMs together such that only one will be down
+        /// for scheduled maintenance at any given moment and also that after a
+        /// reboot, there will be a reasonable delay (like 30 minutes) to allow
+        /// the VMs to collectively recover before rebooting the next VM.  neonKUBE
+        /// will provision node VMs that have the same <see cref="PhysicalAvailabilitySet"/> 
+        /// into the same cloud availablity set (for clouds that support this).
+        /// </para>
         /// </remarks>
-        [JsonProperty(PropertyName = "PhysicalFaultDomain", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [YamlMember(Alias = "physicalFaultDomain", ApplyNamingConventions = false)]
-        [DefaultValue("")]
-        public string PhysicalFaultDomain
-        {
-            get { return string.IsNullOrWhiteSpace(physicalFaultDomain) ? Node.Name : physicalFaultDomain; }
-            set { physicalFaultDomain = value; }
-        }
+        [JsonProperty(PropertyName = "PhysicalAvailabilitySet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [YamlMember(Alias = "physicalAvailabilitySet", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string PhysicalAvailabilitySet { get; set; } = null;
 
         /// <summary>
-        /// <b>io.neonkube/physical.power</b> [<c>string</c>]: Describes host the physical power
+        /// <b>io.neonkube/physical.power</b> [<c>string</c>]: Describes the physical power
         /// to the server may be controlled.  This defaults to the <b>empty string</b>.
         /// </summary>
         /// <remarks>
@@ -493,38 +458,38 @@ namespace Neon.Kube
 
                 // Standard labels from the parent node definition.
 
-                list.Add(new KeyValuePair<string, object>(LabelAddress,                 Node.Address));
-                list.Add(new KeyValuePair<string, object>(LabelRole,                    Node.Role));
-                list.Add(new KeyValuePair<string, object>(LabelIngress,                 Node.Ingress));
+                list.Add(new KeyValuePair<string, object>(LabelAddress,                     Node.Address));
+                list.Add(new KeyValuePair<string, object>(LabelRole,                        Node.Role));
+                list.Add(new KeyValuePair<string, object>(LabelIngress,                     Node.Ingress));
 
                 if (Node.Azure != null)
                 {
-                    list.Add(new KeyValuePair<string, object>(LabelAzureVmSize,         Node.Azure.VmSize));
-                    list.Add(new KeyValuePair<string, object>(LabelAzureStorageType,    Node.Azure.StorageType));
-                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveSize,      Node.Azure.DiskSize));
+                    list.Add(new KeyValuePair<string, object>(LabelAzureVmSize,             Node.Azure.VmSize));
+                    list.Add(new KeyValuePair<string, object>(LabelAzureStorageType,        Node.Azure.StorageType));
+                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveSize,          Node.Azure.DiskSize));
                 }
 
                 // Standard labels from this class.
 
-                list.Add(new KeyValuePair<string, object>(LabelStorageSize,             StorageSize));
-                list.Add(new KeyValuePair<string, object>(LabelStorageLocal,            StorageLocal));
-                list.Add(new KeyValuePair<string, object>(LabelStorageHDD,              NeonHelper.ToBoolString(StorageHDD)));
-                list.Add(new KeyValuePair<string, object>(LabelStorageRedundant,        NeonHelper.ToBoolString(StorageRedundant)));
-                list.Add(new KeyValuePair<string, object>(LabelStorageEphemeral,        NeonHelper.ToBoolString(StorageEphemeral)));
+                list.Add(new KeyValuePair<string, object>(LabelStorageSize,                 StorageSize));
+                list.Add(new KeyValuePair<string, object>(LabelStorageLocal,                StorageLocal));
+                list.Add(new KeyValuePair<string, object>(LabelStorageHDD,                  NeonHelper.ToBoolString(StorageHDD)));
+                list.Add(new KeyValuePair<string, object>(LabelStorageRedundant,            NeonHelper.ToBoolString(StorageRedundant)));
+                list.Add(new KeyValuePair<string, object>(LabelStorageEphemeral,            NeonHelper.ToBoolString(StorageEphemeral)));
 
-                list.Add(new KeyValuePair<string, object>(LabelComputeCores,            ComputeCores));
-                list.Add(new KeyValuePair<string, object>(LabelComputeRamMiB,           ComputeRam));
+                list.Add(new KeyValuePair<string, object>(LabelComputeCores,                ComputeCores));
+                list.Add(new KeyValuePair<string, object>(LabelComputeRamMiB,               ComputeRam));
 
-                list.Add(new KeyValuePair<string, object>(LabelPhysicalLocation,        PhysicalLocation));
-                list.Add(new KeyValuePair<string, object>(LabelPhysicalMachine,         PhysicalMachine));
-                list.Add(new KeyValuePair<string, object>(LabelPhysicalFaultDomain,     PhysicalFaultDomain));
-                list.Add(new KeyValuePair<string, object>(LabelPhysicalPower,           PhysicalPower));
+                list.Add(new KeyValuePair<string, object>(LabelPhysicalLocation,            PhysicalLocation));
+                list.Add(new KeyValuePair<string, object>(LabelPhysicalMachine,             PhysicalMachine));
+                list.Add(new KeyValuePair<string, object>(LabelPhysicalAvailabilitytSet,    PhysicalAvailabilitySet));
+                list.Add(new KeyValuePair<string, object>(LabelPhysicalPower,               PhysicalPower));
 
-                list.Add(new KeyValuePair<string, object>(LabelIstio,                   NeonHelper.ToBoolString(Istio)));
+                list.Add(new KeyValuePair<string, object>(LabelIstio,                       NeonHelper.ToBoolString(Istio)));
 
-                list.Add(new KeyValuePair<string, object>(LabelElasticsearch,           NeonHelper.ToBoolString(Elasticsearch)));
+                list.Add(new KeyValuePair<string, object>(LabelElasticsearch,               NeonHelper.ToBoolString(Elasticsearch)));
 
-                list.Add(new KeyValuePair<string, object>(LabelM3DB,                    NeonHelper.ToBoolString(M3DB)));
+                list.Add(new KeyValuePair<string, object>(LabelM3DB,                        NeonHelper.ToBoolString(M3DB)));
 
                 return list;
             }
@@ -604,18 +569,18 @@ namespace Neon.Kube
                         break;
 
                     case LabelStorageSize:                  ParseCheck(label, () => { Node.Labels.StorageSize = label.Value; }); break;
-                    case LabelStorageLocal:                 Node.Labels.StorageLocal     = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
-                    case LabelStorageHDD:                   Node.Labels.StorageHDD       = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
-                    case LabelStorageRedundant:             Node.Labels.StorageRedundant = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
-                    case LabelStorageEphemeral:             Node.Labels.StorageEphemeral = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelStorageLocal:                 Node.Labels.StorageLocal            = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelStorageHDD:                   Node.Labels.StorageHDD              = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelStorageRedundant:             Node.Labels.StorageRedundant        = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelStorageEphemeral:             Node.Labels.StorageEphemeral        = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
 
                     case LabelComputeCores:                 ParseCheck(label, () => { Node.Labels.ComputeCores = int.Parse(label.Value); }); break;
                     case LabelComputeRamMiB:                ParseCheck(label, () => { Node.Labels.ComputeRam = int.Parse(label.Value); }); break;
 
-                    case LabelPhysicalLocation:             Node.Labels.PhysicalLocation    = label.Value; break;
-                    case LabelPhysicalMachine:              Node.Labels.PhysicalMachine     = label.Value; break;
-                    case LabelPhysicalFaultDomain:          Node.Labels.PhysicalFaultDomain = label.Value; break;
-                    case LabelPhysicalPower:                Node.Labels.PhysicalPower       = label.Value; break;
+                    case LabelPhysicalLocation:             Node.Labels.PhysicalLocation        = label.Value; break;
+                    case LabelPhysicalMachine:              Node.Labels.PhysicalMachine         = label.Value; break;
+                    case LabelPhysicalAvailabilitytSet:     Node.Labels.PhysicalAvailabilitySet = label.Value; break;
+                    case LabelPhysicalPower:                Node.Labels.PhysicalPower           = label.Value; break;
 
                     case LabelDatacenter:
                     case LabelEnvironment:

@@ -749,6 +749,19 @@ namespace Neon.Kube
                     throw new ClusterDefinitionException($"Node [name={node.Name}] is not assigned a private IP address.  This is required when deploying to a [{nameof(Environment)}={Environment}] hosting environment.");
                 }
             }
+
+            // Ensure that every node is assigned to an availablity set, assigning master
+            // nodes to the [master] set by default and worker nodes to the [worker] set.
+
+            foreach (var node in Nodes)
+            {
+                if (!string.IsNullOrEmpty(node.Labels.PhysicalAvailabilitySet))
+                {
+                    continue;
+                }
+
+                node.Labels.PhysicalAvailabilitySet = node.IsMaster ? "master" : "worker";
+            }
         }
 
         /// <summary>
