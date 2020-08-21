@@ -1178,6 +1178,11 @@ namespace Neon.Kube
             {
                 AddSystemSshRules();
             }
+
+            if ((operations & NetworkOperations.RemoveSystemSshRules) != 0)
+            {
+                RemoveSystemSshRules();
+            }
         }
 
         /// <summary>
@@ -1419,7 +1424,7 @@ namespace Neon.Kube
         /// <summary>
         /// Adds system related SSH management NAT rules for every node in the cluster.
         /// These are used by neonKUBE related tools for provisioning, setting up, and
-        /// managing clusters.
+        /// managing clusters.  Related NSG rules will also be created. 
         /// </summary>
         private void AddSystemSshRules()
         {
@@ -1541,8 +1546,8 @@ namespace Neon.Kube
                     foreach (var addressRule in networkOptions.SshAddressRules)
                     {
                         var multipleAddresses = networkOptions.SshAddressRules.Count > 1;
-                        var ruleName          = multipleAddresses ? $"{ingressRulePrefix}{azureNode.Name}-{addressRuleIndex++}"
-                                                                  : $"{ingressRulePrefix}{azureNode.Name}";
+                        var ruleName          = multipleAddresses ? $"{systemSshRulePrefix}{azureNode.Name}-{addressRuleIndex++}"
+                                                                  : $"{systemSshRulePrefix}{azureNode.Name}";
                         switch (addressRule.Action)
                         {
                             case AddressRuleAction.Allow:
@@ -1610,6 +1615,46 @@ namespace Neon.Kube
             }
 
             // Apply the updates.
+
+            loadBalancer = loadBalancerUpdater.Apply();
+            subnetNsg    = subnetNsgUpdater.Apply();
+        }
+
+        /// <summary>
+        /// Removes system related SSH management NAT rules for every node in the cluster.
+        /// These are used by neonKUBE related tools for provisioning, setting up, and
+        /// managing clusters.  Related NSG rules will also be removed. 
+        /// </summary>
+        private void RemoveSystemSshRules()
+        {
+            var loadBalancerUpdater = loadBalancer.Update();
+            var subnetNsgUpdater    = subnetNsg.Update();
+
+            // Remove all existing load balancer system SSH related NAT rules.
+
+            foreach (var lbRule in loadBalancer.LoadBalancingRules.Values
+                .Where(r => r.Name.StartsWith(systemSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                loadBalancerUpdater.WithoutLoadBalancingRule(lbRule.Name);
+            }
+
+            foreach (var rule in subnetNsg.SecurityRules.Values
+                .Where(r => r.Name.StartsWith(systemSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                subnetNsgUpdater.WithoutRule(rule.Name);
+            }
+
+            loadBalancer        = loadBalancerUpdater.Apply();
+            loadBalancerUpdater = loadBalancer.Update();
+
+            // Remove all of the SSH NAT related NSG rules.
+
+            foreach (var nsgRule in subnetNsg.SecurityRules.Values)
+            {
+                subnetNsgUpdater.WithoutRule(nsgRule.Name);
+            }
+
+            // Apply the changes.
 
             loadBalancer = loadBalancerUpdater.Apply();
             subnetNsg    = subnetNsgUpdater.Apply();
