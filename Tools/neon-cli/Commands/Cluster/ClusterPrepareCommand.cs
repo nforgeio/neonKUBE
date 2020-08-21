@@ -310,7 +310,7 @@ Server Requirements:
                 //-----------------------------------------------------------------
                 // Perform basic environment provisioning.  This creates basic cluster components
                 // such as virtual machines, networks, load balancers, public IP addresses, security
-                // groups,... as required for the hosting environment.
+                // groups, etc. as required for the hosting environment.
 
                 hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManager(cluster, kubeSetupInfo, Program.LogPath);
 
@@ -328,6 +328,20 @@ Server Requirements:
                 {
                     Program.VerifyAdminPrivileges($"Provisioning to [{cluster.Definition.Hosting.Environment}] requires elevated administrator privileges.");
                 }
+
+                // Persist the cluster context extension information including
+                // the node SSH credentials.
+
+                var contextExtensionsPath = KubeHelper.GetContextExtensionPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
+                var contextExtension      = new KubeContextExtension(contextExtensionsPath)
+                {
+                    ClusterDefinition = clusterDefinition,
+                    SshUsername       = Program.MachineUsername,
+                    SshPassword       = Program.MachinePassword,
+                    SetupDetails      = new KubeSetupDetails() { SetupPending = true }
+                };
+
+                contextExtension.Save();
 
                 if (!hostingManager.Provision(force, Program.MachinePassword, orgSshPassword))
                 {
@@ -419,19 +433,6 @@ Server Requirements:
                     Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
                     Program.Exit(1);
                 }
-
-                // Persist the cluster context extension.
-
-                var contextExtensionsPath = KubeHelper.GetContextExtensionPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
-                var contextExtension      = new KubeContextExtension(contextExtensionsPath)
-                {
-                    ClusterDefinition = clusterDefinition,
-                    SshUsername       = Program.MachineUsername,
-                    SshPassword       = Program.MachinePassword,
-                    SetupDetails      = new KubeSetupDetails() { SetupPending = true }
-                };
-
-                contextExtension.Save();
 
                 // Write the operation end marker to all cluster node logs.
 
