@@ -270,5 +270,20 @@ namespace Neon.Kube
         /// address.
         /// </summary>
         public const int CloudVNetEndReservedIPs = 1;
+
+        /// <summary>
+        /// The latest neonKUBE cluster version supported.
+        /// </summary>
+        public const string LatestClusterVersion = "0.1.0-alpha";
+
+        /// <summary>
+        /// Lists thje supported neonKUBE cluster versions.
+        /// </summary>
+        public static IReadOnlyList<string> SupportedClusterVersions =
+            new List<string>()
+            {
+                "0.1.0-alpha"
+            }
+            .AsReadOnly();
     }
 }

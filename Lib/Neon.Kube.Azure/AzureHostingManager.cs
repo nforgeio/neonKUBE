@@ -57,7 +57,6 @@ using INetworkSecurityGroupUpdater = Microsoft.Azure.Management.Network.Fluent.N
 using SecurityRuleProtocol         = Microsoft.Azure.Management.Network.Fluent.Models.SecurityRuleProtocol;
 using TransportProtocol            = Microsoft.Azure.Management.Network.Fluent.Models.TransportProtocol;
 using ILoadBalancerUpdater         = Microsoft.Azure.Management.Network.Fluent.LoadBalancer.Update.IUpdate;
-using Microsoft.Rest.Azure;
 
 namespace Neon.Kube
 {
@@ -270,6 +269,76 @@ namespace Neon.Kube
             RemoveNeonSshRules = 0x0004,
         }
 
+        /// <summary>
+        /// Describes an Ubuntu image from the Azure marketplace.
+        /// </summary>
+        private class AzureUbuntuImage
+        {
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="clusterVersion">Specifies the neonKUBE cluster version.</param>
+            /// <param name="ubuntuVersion">Specifies the Ubuntu image version.</param>
+            /// <param name="vmGen">Specifies the Azure image generation (1 or 2).</param>
+            /// <param name="isPrepared">
+            /// Pass <c>true</c> for Ubuntu images that have already seen basic
+            /// preparation for inclusion into a neonKUBE cluster, or <c>false</c>
+            /// for unmodified base Ubuntu images.
+            /// <param name="imageRef">Specifies the Azure image reference.</param>
+            /// </param>
+            public AzureUbuntuImage(string clusterVersion, string ubuntuVersion, int vmGen, bool isPrepared, ImageReference imageRef)
+            {
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterVersion), nameof(clusterVersion));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(ubuntuVersion), nameof(ubuntuVersion));
+                Covenant.Requires<ArgumentException>(vmGen == 1 || vmGen == 2, nameof(vmGen));
+                Covenant.Requires<ArgumentNullException>(imageRef != null, nameof(imageRef));
+
+                this.ClusterVersion = SemanticVersion.Parse(clusterVersion);
+                this.UbuntuVersion  = ubuntuVersion;
+                this.VmGen          = vmGen;
+                this.IsPrepared     = isPrepared;
+                this.ImageRef       = imageRef;
+            }
+
+            /// <summary>
+            /// Returns the neonKUBE cluster version.
+            /// </summary>
+            public SemanticVersion ClusterVersion { get; private set; }
+
+            /// <summary>
+            /// Returns the Ubuntu version deployed by the image.
+            /// </summary>
+            public string UbuntuVersion { get; private set; }
+
+            /// <summary>
+            /// <para>
+            /// Returns the Azure VM image type.  Gen1 images use the older BIOS boot
+            /// mechanism and use IDE to access the disks.  Gen2 images use UEFI
+            /// to boot and use SCSI to access the disks.  Gen2 images allow OS
+            /// disks creater than 2TiB but do not support disk encryption.  Gen2
+            /// VMs will likely run faster as well because they support accelerated
+            /// networking.
+            /// </para>
+            /// <note>
+            /// Most VM sizes can deploy using Gen1 or Gen2 images but this is
+            /// not always the case.
+            /// </note>
+            /// </summary>
+            public int VmGen { get; private set; }
+
+            /// <summary>
+            /// Returns <c>true</c> for Ubuntu images that have already seen basic
+            /// preparation for inclusion into a neonKUBE cluster.  This will be
+            /// <c>false</c> for unmodified base Ubuntu images.
+            /// </summary>
+            public bool IsPrepared { get; private set; }
+
+            /// <summary>
+            /// Returns the Azure image reference.
+            /// </summary>
+            public ImageReference ImageRef { get; private set; }
+        }
+
         //---------------------------------------------------------------------
         // Static members
 
@@ -300,12 +369,134 @@ namespace Neon.Kube
         private static string NodeNameTag = "neonkube.io.node.name";
 
         /// <summary>
+        /// Returns the list of supported Ubuntu images in the Azure Marketplace.
+        /// </summary>
+        private static IReadOnlyList<AzureUbuntuImage> ubuntuImages;
+
+        /// <summary>
+        /// Returns the list of Azure VM size name <see cref="Regex"/> patterns
+        /// that match VMs that are known to be <b>incompatible</b> with Gen1 VM images.
+        /// </summary>
+        private static IReadOnlyList<Regex> gen1VmSizeNotAllowedRegex;
+
+        /// <summary>
+        /// Returns the list of Azure VM size name <see cref="Regex"/> patterns
+        /// for VMs that are known to be <b>compatible</b> with Gen2 VM images.
+        /// </summary>
+        private static IReadOnlyList<Regex> gen2VmSizeAllowedRegex;
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static AzureHostingManager()
+        {
+            // IMPORTANT: 
+            //
+            // This list will need to be updated as new cluster versions
+            // are supported.             
+
+            ubuntuImages = new List<AzureUbuntuImage>()
+            {
+                new AzureUbuntuImage("0.1.0-alpha", "20.04", vmGen: 1, isPrepared: false,
+                    new ImageReference()
+                    {
+                        Publisher = "Canonical",
+                        Offer     = "0001-com-ubuntu-server-focal",
+                        Sku       = "20_04-lts",
+                        Version   = "20.04.202007290"
+                    }),
+
+                new AzureUbuntuImage("0.1.0-alpha", "20.04", vmGen: 2, isPrepared: false,
+                    new ImageReference()
+                    {
+                        Publisher = "Canonical",
+                        Offer     = "0001-com-ubuntu-server-focal",
+                        Sku       = "20_04-lts-gen2",
+                        Version   = "20.04.202007290"
+                    })
+            }
+            .AsReadOnly();
+
+            // IMPORTANT:
+            //
+            // These lists should be updated periodically as Azure adds new VM sizes
+            // that support or don't support Gen1/Gen2 images.
+            //
+            //      https://docs.microsoft.com/en-us/azure/virtual-machines/windows/generation-2#generation-2-vm-sizes
+
+            gen1VmSizeNotAllowedRegex = new List<Regex>()
+            {
+                // Mv2-series VMs do not support Gen1 VMs.
+
+                new Regex(@"^Standard_M.*_v2$", RegexOptions.IgnoreCase)
+            }
+            .AsReadOnly();
+
+            gen2VmSizeAllowedRegex = new List<Regex>
+            {
+                new Regex(@"^Standard_B", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_DC", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_D.*_v2$", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_DS.*_v2$", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_D.*_v3$", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_DS.*_v3", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_D.*a_v4$", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_D.*as_v4$", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_E.*_v3$", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_E.*s_v3$", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_E.*a_v4$", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_E.*as_v4$", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_F.*s_v2$", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_GS", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_G", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_NV", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_HB.*rs$", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_HC.*rs$", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_L.*s$", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_GS", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_G", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_NV", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_L.*s_v2$", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_M.*ms$", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_NC.*s_v2$", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_NC.*s_v$", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_ND.*s$", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_NV.*s_v3$", RegexOptions.IgnoreCase),
+            }
+            .AsReadOnly();
+        }
+
+        /// <summary>
         /// Ensures that the assembly hosting this hosting manager is loaded.
         /// </summary>
         public static void Load()
         {
             // We don't have to do anything here because the assembly is loaded
             // as a byproduct of calling this method.
+        }
+
+        /// <summary>
+        /// Returns the base Azure Ubuntu image to use for the specified neonKUBE cluster version.
+        /// </summary>
+        /// <param name="clusterVersion">The neonKUBE cluster version.</param>
+        /// <param name="vmGen">The Azure VM generation (1 or 2).</param>
+        /// <returns>The Azure base image reference.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown if no base image can be located.</exception>
+        private static ImageReference GetBaseUbuntuImage(string clusterVersion, int vmGen)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterVersion), nameof(clusterVersion));
+            Covenant.Requires<ArgumentException>(vmGen == 1 || vmGen == 2, nameof(vmGen));
+
+            var clusterSematicVersion = SemanticVersion.Parse(clusterVersion);
+            var image                 = ubuntuImages.SingleOrDefault(img => img.ClusterVersion == clusterSematicVersion &&
+                                                                            !img.IsPrepared &&
+                                                                            img.VmGen == vmGen);
+            if (image == null)
+            {
+                throw new KeyNotFoundException($"Cannot locate a base Azure Ubuntu image for cluster version [{clusterVersion}].");
+            }
+
+            return image.ImageRef;
         }
 
         /// <summary>
@@ -1136,15 +1327,29 @@ namespace Neon.Kube
                     throw new NotImplementedException();
             }
 
-            // $todo(jefflill): We need to use the Gen2 image when supported by the VM size
+            // We're going to favor Gen2 images if the VM size supports that and the
+            // user has not overridden the generation for the node.
 
-            var imageRef = new ImageReference()
+            var vmGen = azureNodeOptions.VmGen;
+
+            if (!vmGen.HasValue)
             {
-                Publisher = "Canonical",
-                Offer     = "0001-com-ubuntu-server-focal",
-                Sku       = "20_04-lts",
-                Version   = "20.04.202007290"
-            };
+                foreach (var regex in gen2VmSizeAllowedRegex)
+                {
+                    if (regex.Match(node.Metadata.Azure.VmSize).Success)
+                    {
+                        vmGen = 2;  // Gen2 is supported 
+                        break;
+                    }
+                }
+
+                if (!vmGen.HasValue)
+                {
+                    vmGen = 1;      // Gen2 is not supported 
+                }
+            }
+
+            var imageRef = GetBaseUbuntuImage(cluster.Definition.ClusterVersion, vmGen: vmGen.Value);
 
             azureNode.Vm = azure.VirtualMachines
                 .Define(azureNode.VmName)

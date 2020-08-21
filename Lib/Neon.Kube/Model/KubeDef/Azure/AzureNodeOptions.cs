@@ -129,6 +129,34 @@ namespace Neon.Kube
         public string DiskSize { get; set; } = null;
 
         /// <summary>
+        /// Optionally overrides the default VM generation assignment made by neonKUBE
+        /// cluster setup for this node.  This defaults to <c>null</c> which allows
+        /// setup to make the choice.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Azure supports two generations of VM images that correspond roughly to HYPER-V
+        /// VM generations. <b>Gen1</b> VMs are are older.  These VMs use BIOS to boot,
+        /// IDE to access disk drives and are somewhat slower to provision and boot.
+        /// <b>Gen2</b> images use UEFI to boot (which supports PXE), OS disk drives
+        /// larger than 2TiB, and accelerated netwoking but Gen2 images don't support
+        /// disk encryption.  Here's a link with additional detail:
+        /// </para>
+        /// <para>
+        /// https://docs.microsoft.com/en-us/azure/virtual-machines/windows/generation-2
+        /// </para>
+        /// <para>
+        /// Not all Azure VM sizes support Gen1 or Gen2 VMs.  neonKUBE attempts to deploy
+        /// Gen2 VMs when supported for best performance.  You can override this behavior
+        /// by setting this value to <b>1</b> or <b>2</b>.
+        /// </para>
+        /// </remarks>
+        [JsonProperty(PropertyName = "VmGen", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "vmGen", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public int? VmGen { get; set; } = null;
+
+        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
@@ -170,12 +198,19 @@ namespace Neon.Kube
 
             if (!ByteUnits.TryParse(this.DiskSize, out var driveSizeBytes) || driveSizeBytes <= 1)
             {
-                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(DiskSize)}={DiskSize}] which is not valid.");
+                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(AzureOptions)}.{nameof(DiskSize)}={DiskSize}] which is not valid.");
             }
 
             var driveSizeGiB = AzureHelper.GetDiskSizeGiB(StorageType, driveSizeBytes);
 
             this.DiskSize = $"{driveSizeGiB} GiB";
+
+            // Validate the VM generation override.
+
+            if (VmGen.HasValue && (VmGen.Value != 1 && VmGen.Value != 2))
+            {
+                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(AzureOptions)}.{nameof(VmGen)}={VmGen}] which is not valid.  Only values of 1 or 2 are allowed.");
+            }
         }
     }
 }

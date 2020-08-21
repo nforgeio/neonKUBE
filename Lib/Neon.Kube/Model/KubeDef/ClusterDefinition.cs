@@ -220,6 +220,16 @@ namespace Neon.Kube
         public string Name { get; set; }
 
         /// <summary>
+        /// Optionally specifies the semantic version of the neonKUBE cluster being created.
+        /// This defaults to <c>null</c> which indicates that the latest supported cluster
+        /// version will be created.
+        /// </summary>
+        [JsonProperty(PropertyName = "ClusterVersion", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "clusterVersion", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string ClusterVersion { get; set; } = null;
+
+        /// <summary>
         /// <para>
         /// Specifies cluster debugging options.
         /// </para>
@@ -600,6 +610,23 @@ namespace Neon.Kube
             foreach (var node in NodeDefinitions.Values)
             {
                 node.Validate(this);
+            }
+
+            if (!string.IsNullOrEmpty(ClusterVersion))
+            {
+                if (!SemanticVersion.TryParse(ClusterVersion, out var clusterVer))
+                {
+                    throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(ClusterVersion)}={ClusterVersion}] is not a valid semantic version.");
+                }
+
+                if (!KubeConst.SupportedClusterVersions.Any(v => v.Equals(ClusterVersion, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(ClusterVersion)}={ClusterVersion}] is not a supported cluster version.");
+                }
+            }
+            else
+            {
+                ClusterVersion = KubeConst.LatestClusterVersion;
             }
 
             if (Name == null)
