@@ -1439,18 +1439,18 @@ subjects:
                                 //
                                 //      https://github.com/nforgeio/neonKUBE/issues/441
 
-                                var managerAddresses = new List<string>();
+                                var masterAddresses = new List<string>();
 
                                 foreach (var master in cluster.Masters)
                                 {
-                                    managerAddresses.Add(master.Address.ToString());
+                                    masterAddresses.Add(master.Address.ToString());
                                 }
 
                                 var utcNow     = DateTime.UtcNow;
                                 var utc10Years = utcNow.AddYears(10);
 
                                 var certificate = TlsCertificate.CreateSelfSigned(
-                                    hostnames: managerAddresses,
+                                    hostnames: masterAddresses,
                                     validDays: (int)(utc10Years - utcNow).TotalDays,
                                     issuedBy:  "kubernetes-dashboard");
 
