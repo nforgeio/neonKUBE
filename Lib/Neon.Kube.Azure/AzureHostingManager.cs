@@ -258,16 +258,16 @@ namespace Neon.Kube
             IngressRules = 0x0001,
 
             /// <summary>
-            /// Add system related SSH management NAT rules for every node in the cluster.
+            /// Add neonKUBE related SSH NAT rules for every node in the cluster.
             /// These are used by neonKUBE related tools for provisioning, setting up, and
             /// managing clusters.
             /// </summary>
-            AddSystemSshRules = 0x0002,
+            AddSNeonSshRules = 0x0002,
 
             /// <summary>
-            /// Remove all system related SSH management NAT rules.
+            /// Remove all neonKUBE related SSH NAT rules.
             /// </summary>
-            RemoveSystemSshRules = 0x0004,
+            RemoveNeonSshRules = 0x0004,
         }
 
         //---------------------------------------------------------------------
@@ -281,7 +281,7 @@ namespace Neon.Kube
         /// <summary>
         /// The first NSG rule priority to use for temporary management SSH rules.
         /// </summary>
-        private const int firstSystemNsgRulePriority = 2000;
+        private const int firstNeonNsgRulePriority = 2000;
 
         /// <summary>
         /// The name prefix for user related defined ingress rules (from the cluster configuration).
@@ -289,10 +289,10 @@ namespace Neon.Kube
         private const string ingressRulePrefix = "ingress-";
 
         /// <summary>
-        /// The name prefix for system related ingress rules used for configuring
+        /// The name prefix for neonKUBE related ingress rules used for configuring
         /// or managing nodes via SSH externally.
         /// </summary>
-        private const string systemSshRulePrefix = "system-ssh-";
+        private const string neonSshRulePrefix = "neon-ssh-";
 
         /// <summary>
         /// Used to tag VMs with the cluster node name.
@@ -702,7 +702,7 @@ namespace Neon.Kube
                 },
                 quiet: true);
             controller.AddStep("virtual machines", CreateVm);
-            controller.AddGlobalStep("ingress/security rules", () => UpdateNetwork(NetworkOperations.IngressRules | NetworkOperations.AddSystemSshRules));
+            controller.AddGlobalStep("ingress/security rules", () => UpdateNetwork(NetworkOperations.IngressRules | NetworkOperations.AddSNeonSshRules));
 
             if (!controller.Run(leaveNodesConnected: false))
             {
@@ -1174,14 +1174,14 @@ namespace Neon.Kube
                 UpdateNetworkIngress();
             }
 
-            if ((operations & NetworkOperations.AddSystemSshRules) != 0)
+            if ((operations & NetworkOperations.AddSNeonSshRules) != 0)
             {
-                AddSystemSshRules();
+                AddNeonSshRules();
             }
 
-            if ((operations & NetworkOperations.RemoveSystemSshRules) != 0)
+            if ((operations & NetworkOperations.RemoveNeonSshRules) != 0)
             {
-                RemoveSystemSshRules();
+                RemoveNeonSshRules();
             }
         }
 
@@ -1422,25 +1422,25 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Adds system related SSH management NAT rules for every node in the cluster.
+        /// Adds neonKUBE related SSH NAT rules for every node in the cluster.
         /// These are used by neonKUBE related tools for provisioning, setting up, and
         /// managing clusters.  Related NSG rules will also be created. 
         /// </summary>
-        private void AddSystemSshRules()
+        private void AddNeonSshRules()
         {
             var loadBalancerUpdater = loadBalancer.Update();
             var subnetNsgUpdater    = subnetNsg.Update();
 
-            // Remove all existing load balancer system SSH related NAT rules.
+            // Remove all existing load balancer neonKUBE SSH related NAT rules.
 
             foreach (var rule in loadBalancer.LoadBalancingRules.Values
-                .Where(r => r.Name.StartsWith(systemSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+                .Where(r => r.Name.StartsWith(neonSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 loadBalancerUpdater.WithoutLoadBalancingRule(rule.Name);
             }
 
             foreach (var rule in subnetNsg.SecurityRules.Values
-                .Where(r => r.Name.StartsWith(systemSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+                .Where(r => r.Name.StartsWith(neonSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 subnetNsgUpdater.WithoutRule(rule.Name);
             }
@@ -1466,7 +1466,7 @@ namespace Neon.Kube
 
             foreach (var azureNode in SortedMasterThenWorkerNodes)
             {
-                var ruleName = $"{systemSshRulePrefix}{azureNode.Name}";
+                var ruleName = $"{neonSshRulePrefix}{azureNode.Name}";
 
                 loadBalancerUpdater.DefineInboundNatRule(ruleName)
                     .WithProtocol(TransportProtocol.Tcp)
@@ -1485,7 +1485,7 @@ namespace Neon.Kube
 
             foreach (var azureNode in SortedMasterThenWorkerNodes)
             {
-                var ruleName = $"{systemSshRulePrefix}{azureNode.Name}";
+                var ruleName = $"{neonSshRulePrefix}{azureNode.Name}";
                 var natRule  = loadBalancer.Inner.InboundNatRules.Single(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase));
 
                 natRule.EnableTcpReset = true;
@@ -1496,7 +1496,7 @@ namespace Neon.Kube
 
             foreach (var azureNode in SortedMasterThenWorkerNodes)
             {
-                var ruleName = $"{systemSshRulePrefix}{azureNode.Name}";
+                var ruleName = $"{neonSshRulePrefix}{azureNode.Name}";
 
                 azureNode.Nic = azureNode.Nic.Update()
                     .WithExistingLoadBalancerBackend(loadBalancer, loadbalancerBackendName)
@@ -1504,7 +1504,7 @@ namespace Neon.Kube
                     .Apply();
             }
 
-            // Add the NSG rules that allow the system SSH NAT rules to work.
+            // Add the NSG rules that allow the neonKUBE SSH NAT rules to work.
             //
             // To keep things simple, we're going to generate a separate rule for each source address
             // restriction.  In theory, we could have tried collecting allow and deny rules 
@@ -1515,7 +1515,7 @@ namespace Neon.Kube
             // We may need to revisit this if we approach Azure rule count limits (currently 1000
             // rules per NSG).  That would also be a good time to support port ranges as well.
 
-            var priority = firstSystemNsgRulePriority;
+            var priority = firstNeonNsgRulePriority;
 
             foreach (var azureNode in SortedMasterThenWorkerNodes)
             {
@@ -1523,7 +1523,7 @@ namespace Neon.Kube
                 {
                     // Default to allowing all source addresses when no address rules are specified.
 
-                    var ruleName = $"{systemSshRulePrefix}{azureNode.Name}";
+                    var ruleName = $"{neonSshRulePrefix}{azureNode.Name}";
 
                     subnetNsgUpdater.DefineRule(ruleName)
                         .AllowInbound()
@@ -1546,8 +1546,8 @@ namespace Neon.Kube
                     foreach (var addressRule in networkOptions.SshAddressRules)
                     {
                         var multipleAddresses = networkOptions.SshAddressRules.Count > 1;
-                        var ruleName          = multipleAddresses ? $"{systemSshRulePrefix}{azureNode.Name}-{addressRuleIndex++}"
-                                                                  : $"{systemSshRulePrefix}{azureNode.Name}";
+                        var ruleName          = multipleAddresses ? $"{neonSshRulePrefix}{azureNode.Name}-{addressRuleIndex++}"
+                                                                  : $"{neonSshRulePrefix}{azureNode.Name}";
                         switch (addressRule.Action)
                         {
                             case AddressRuleAction.Allow:
@@ -1621,25 +1621,25 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Removes system related SSH management NAT rules for every node in the cluster.
+        /// Removes neonKUBE related SSH NAT rules for every node in the cluster.
         /// These are used by neonKUBE related tools for provisioning, setting up, and
         /// managing clusters.  Related NSG rules will also be removed. 
         /// </summary>
-        private void RemoveSystemSshRules()
+        private void RemoveNeonSshRules()
         {
             var loadBalancerUpdater = loadBalancer.Update();
             var subnetNsgUpdater    = subnetNsg.Update();
 
-            // Remove all existing load balancer system SSH related NAT rules.
+            // Remove all existing load balancer neonKUBE SSH related NAT rules.
 
             foreach (var lbRule in loadBalancer.LoadBalancingRules.Values
-                .Where(r => r.Name.StartsWith(systemSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+                .Where(r => r.Name.StartsWith(neonSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 loadBalancerUpdater.WithoutLoadBalancingRule(lbRule.Name);
             }
 
             foreach (var rule in subnetNsg.SecurityRules.Values
-                .Where(r => r.Name.StartsWith(systemSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+                .Where(r => r.Name.StartsWith(neonSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 subnetNsgUpdater.WithoutRule(rule.Name);
             }
