@@ -57,7 +57,7 @@ using INetworkSecurityGroupUpdater = Microsoft.Azure.Management.Network.Fluent.N
 using SecurityRuleProtocol         = Microsoft.Azure.Management.Network.Fluent.Models.SecurityRuleProtocol;
 using TransportProtocol            = Microsoft.Azure.Management.Network.Fluent.Models.TransportProtocol;
 using ILoadBalancerUpdater         = Microsoft.Azure.Management.Network.Fluent.LoadBalancer.Update.IUpdate;
-
+using Microsoft.Rest.Azure;
 
 namespace Neon.Kube
 {
@@ -329,7 +329,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="protocol">The input protocol.</param>
         /// <returns>The output protocol.</returns>
-        private static TransportProtocol ToSTransportProtocol(IngressProtocol protocol)
+        private static TransportProtocol ToTransportProtocol(IngressProtocol protocol)
         {
             switch (protocol)
             {
@@ -1175,27 +1175,15 @@ namespace Neon.Kube
         /// <param name="operations">Flags that control how the load balancer and related security rules are updated.</param>
         private void UpdateNetwork(NetworkOperations operations)
         {
-            // Create updaters for the load balancer and subnet NSG.
-
-            var loadbalancerUpdater = loadBalancer.Update();
-            var subnetNsgUpdater    = subnetNsg.Update();
-
-            // Configure the updates.
-
             if ((operations & NetworkOperations.IngressRules) != 0)
             {
-                UpdateNetworkIngress(ref loadbalancerUpdater, ref subnetNsgUpdater);
+                UpdateNetworkIngress();
             }
 
             if ((operations & NetworkOperations.AddSystemSshRules) != 0)
             {
-                AddSystemSshRules(ref loadbalancerUpdater, ref subnetNsgUpdater);
+                AddSystemSshRules();
             }
-
-            // Apply the changes.
-
-            subnetNsg    = subnetNsgUpdater.Apply();
-            loadBalancer = loadbalancerUpdater.Apply();
         }
 
         /// <summary>
@@ -1203,12 +1191,11 @@ namespace Neon.Kube
         /// This also ensures that some nodes are marked for ingress when the cluster has one or more
         /// ingress rules and that nodes marked for ingress are in the load balancer's backend pool.
         /// </summary>
-        /// <param name="loadBalancerUpdater">The load balancer updater.</param>
-        /// <param name="subnetNsgUpdater">The subnet NSG updater.</param>
-        private void UpdateNetworkIngress(
-            ref ILoadBalancerUpdater            loadBalancerUpdater,
-            ref INetworkSecurityGroupUpdater    subnetNsgUpdater)
+        private void UpdateNetworkIngress()
         {
+            var loadBalancerUpdater = loadBalancer.Update();
+            var subnetNsgUpdater    = subnetNsg.Update();
+
             //-----------------------------------------------------------------
             // Backend pool:
 
@@ -1290,7 +1277,7 @@ namespace Neon.Kube
                 var tcpTimeout = Math.Min(Math.Max(4, ingressRule.TcpIdleTimeoutMinutes), 30);  // Azure allowed timeout range is [4..30] minutes
 
                 loadBalancerUpdater.DefineLoadBalancingRule(ruleName)
-                    .WithProtocol(ToSTransportProtocol(ingressRule.Protocol))
+                    .WithProtocol(ToTransportProtocol(ingressRule.Protocol))
                     .FromExistingPublicIPAddress(publicAddress)
                     .FromFrontendPort(ingressRule.ExternalPort)
                     .ToBackend(loadbalancerBackendName)
@@ -1299,6 +1286,23 @@ namespace Neon.Kube
                     .WithIdleTimeoutInMinutes(tcpTimeout)
                     .Attach();
             }
+
+            loadBalancer        = loadBalancerUpdater.Apply();
+            loadBalancerUpdater = loadBalancer.Update();
+
+            // We need to set [EnableTcpReset] for the load balancer rules separately because
+            // the Fluent API doesn't support the property yet.
+
+            foreach (var ingressRule in networkOptions.IngressRules)
+            {
+                var ruleName = $"{ingressRulePrefix}{ingressRule.Name}";
+                var lbRule   = loadBalancer.Inner.LoadBalancingRules.Single(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase));
+
+                lbRule.EnableTcpReset = ingressRule.IdleTcpReset;
+            }
+
+            loadBalancer        = loadBalancerUpdater.Apply();
+            loadBalancerUpdater = loadBalancer.Update();
 
             // Add the NSG rules corresponding to the ingress rules from the cluster definition.
             //
@@ -1411,6 +1415,11 @@ namespace Neon.Kube
                     }
                 }
             }
+
+            // Apply the updates.
+
+            loadBalancer = loadBalancerUpdater.Apply();
+            subnetNsg    = subnetNsgUpdater.Apply();
         }
 
         /// <summary>
@@ -1418,12 +1427,11 @@ namespace Neon.Kube
         /// These are used by neonKUBE related tools for provisioning, setting up, and
         /// managing clusters.
         /// </summary>
-        /// <param name="loadBalancerUpdater">The load balancer updater.</param>
-        /// <param name="subnetNsgUpdater">The subnet NSG updater.</param>
-        private void AddSystemSshRules(
-            ref ILoadBalancerUpdater            loadBalancerUpdater,
-            ref INetworkSecurityGroupUpdater    subnetNsgUpdater)
+        private void AddSystemSshRules()
         {
+            var loadBalancerUpdater = loadBalancer.Update();
+            var subnetNsgUpdater    = subnetNsg.Update();
+
             // Remove all existing load balancer system SSH related NAT rules.
 
             foreach (var rule in loadBalancer.LoadBalancingRules.Values
@@ -1454,7 +1462,8 @@ namespace Neon.Kube
             // Add the SSH NAT rules for each node.  Note that we need to do this in two steps:
             //
             //      1. Add the NAT rule to the load balancer
-            //      2. Tie the node VM's NIC to the rule
+            //      2. Enable TCP Reset for connections that are idle for too long
+            //      3. Tie the node VM's NIC to the rule
 
             foreach (var azureNode in SortedMasterThenWorkerNodes)
             {
@@ -1472,6 +1481,20 @@ namespace Neon.Kube
             loadBalancer        = loadBalancerUpdater.Apply();
             loadBalancerUpdater = loadBalancer.Update();
 
+            // We need to set [EnableTcpReset] for the load balancer rules separately because
+            // the Fluent API doesn't support the property yet.
+
+            foreach (var azureNode in SortedMasterThenWorkerNodes)
+            {
+                var ruleName = $"{systemSshRulePrefix}{azureNode.Name}";
+                var natRule  = loadBalancer.Inner.InboundNatRules.Single(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase));
+
+                natRule.EnableTcpReset = true;
+            }
+
+            loadBalancer        = loadBalancerUpdater.Apply();
+            loadBalancerUpdater = loadBalancer.Update();
+
             foreach (var azureNode in SortedMasterThenWorkerNodes)
             {
                 var ruleName = $"{systemSshRulePrefix}{azureNode.Name}";
@@ -1481,33 +1504,6 @@ namespace Neon.Kube
                     .WithExistingLoadBalancerInboundNatRule(loadBalancer, ruleName)
                     .Apply();
             }
-
-            // We need to enable/disable TCP reset for load balancer and NAT rules.
-            // This needs to be done via the low-level API because the Fluent API
-            // doesn't support it.
-            //
-            // All SSH NAT rules will enable this.  Ingress rules will honor a property.
-
-            foreach (var natRule in loadBalancer.Inner.InboundNatRules)
-            {
-                natRule.EnableTcpReset = true;
-            }
-
-            var addressRuleIndex = 0;
-
-            foreach (var ingressRule in cluster.Definition.Network.IngressRules)
-            {
-                var multipleAddresses = ingressRule.AddressRules.Count > 1;
-                var ruleName          = multipleAddresses ? $"{ingressRulePrefix}{ingressRule.Name}-{addressRuleIndex++}"
-                                                          : $"{ingressRulePrefix}{ingressRule.Name}";
-
-                var rule = loadBalancer.Inner.LoadBalancingRules.Single(r => r.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase));
-
-                rule.EnableTcpReset = ingressRule.IdleTcpReset;
-            }
-
-            loadBalancer        = loadBalancerUpdater.Apply();
-            loadBalancerUpdater = loadBalancer.Update();
 
             // Add the NSG rules that allow the system SSH NAT rules to work.
             //
@@ -1546,7 +1542,7 @@ namespace Neon.Kube
                     // to include an address rule index in the name when there's more than one address
                     // rule to ensure that rule names are unique.
 
-                    addressRuleIndex = 0;
+                    var addressRuleIndex = 0;
 
                     foreach (var addressRule in networkOptions.SshAddressRules)
                     {
@@ -1618,6 +1614,11 @@ namespace Neon.Kube
                     }
                 }
             }
+
+            // Apply the updates.
+
+            loadBalancer = loadBalancerUpdater.Apply();
+            subnetNsg    = subnetNsgUpdater.Apply();
         }
     }
 }
