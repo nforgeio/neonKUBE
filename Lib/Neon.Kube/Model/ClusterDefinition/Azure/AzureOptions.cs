@@ -113,7 +113,7 @@ namespace Neon.Kube
         /// </para>
         /// <para>
         /// For neonKUBE clusters the additional risk of an Azure provisioning failure is going
-        /// to be very low due to how we use availablity sets, which is as similar deployment
+        /// to be very low due to how we use availability sets, which is as similar deployment
         /// constraint: master nodes are deployed to one availability set and workers to another.
         /// Without a proximity placement group, Azure could deploy the masters to one datacenter
         /// and the workers to another.  This wasn't that likely in the past but as Azure has

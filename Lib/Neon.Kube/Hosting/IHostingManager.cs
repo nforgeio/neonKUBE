@@ -83,6 +83,15 @@ namespace Neon.Kube
         /// be able to log into existing nodes provisioned manually by the cluster operator.
         /// </param>
         /// <returns><c>true</c> on success.</returns>
+        /// <remarks>
+        /// <para>
+        /// For the clusters that return <see cref="CanManageRouter"/>=<c>true</c> (typically
+        /// cloud managers  indicating that they can manage the upstream router or load balancer) 
+        /// this method will leave the public SSH NAT rules in place so that cluster provisioning
+        /// and setup will be able to establish SSH connections to each cluster node.  This is
+        /// equivalent to calling <see cref="EnablePublicSsh"/>.
+        /// </para>
+        /// </remarks>
         bool Provision(bool force, string secureSshPassword, string orgSshPassword = null);
 
         /// <summary>
@@ -102,7 +111,9 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Updates the cluster's load balancer or router to use the current set of
-        /// ingress rules defined by <see cref="NetworkOptions.IngressRules"/>.
+        /// ingress rules defined by <see cref="NetworkOptions.IngressRules"/>.  This
+        /// also updates <see cref="NetworkOptions.EgressAddressRules"/> and public 
+        /// SSH NAT mappings if those are currently enabled.
         /// </para>
         /// <note>
         /// This currently supported only by cloud hosting managers like for Azure,

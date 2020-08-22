@@ -239,7 +239,7 @@ namespace Neon.Kube
             }
 
             /// <summary>
-            /// The Azure availablity set hosting this node.
+            /// The Azure availability set hosting this node.
             /// </summary>
             public string AvailabilitySetName { get; set; }
         }
@@ -253,19 +253,19 @@ namespace Neon.Kube
             /// <summary>
             /// Update the cluster's ingress rules.
             /// </summary>
-            IngressRules = 0x0001,
+            UpdateIngressRules = 0x0001,
 
             /// <summary>
-            /// Add neonKUBE related SSH NAT rules for every node in the cluster.
+            /// Add public SSH NAT rules for every node in the cluster.
             /// These are used by neonKUBE related tools for provisioning, setting up, and
             /// managing clusters.
             /// </summary>
-            AddSNeonSshRules = 0x0002,
+            AddPublicSshRules = 0x0002,
 
             /// <summary>
-            /// Remove all neonKUBE related SSH NAT rules.
+            /// Remove all related SSH NAT rules.
             /// </summary>
-            RemoveNeonSshRules = 0x0004,
+            RemovePublicSshRules = 0x0004,
         }
 
         /// <summary>
@@ -283,7 +283,7 @@ namespace Neon.Kube
             /// Pass <c>true</c> for Ubuntu images that have already seen basic
             /// preparation for inclusion into a neonKUBE cluster, or <c>false</c>
             /// for unmodified base Ubuntu images.
-            /// <param name="imageRef">Specifies the Azure image reference.</param>
+            /// <param name="imageRef">Specifies the Azure VM image reference.</param>
             /// </param>
             public AzureUbuntuImage(string clusterVersion, string ubuntuVersion, int vmGen, bool isPrepared, ImageReference imageRef)
             {
@@ -357,10 +357,10 @@ namespace Neon.Kube
         private const string ingressRulePrefix = "ingress-";
 
         /// <summary>
-        /// The name prefix for neonKUBE related ingress rules used for configuring
-        /// or managing nodes via SSH externally.
+        /// The name prefix for public cluster ingress and NSG rules used for configuring
+        /// or managing nodes public SSH access.
         /// </summary>
-        private const string neonSshRulePrefix = "neon-ssh-";
+        private const string publicSshRulePrefix = "public-ssh-";
 
         /// <summary>
         /// Used to tag VMs with the cluster node name.
@@ -839,15 +839,19 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
 
+            // Update the node credentials.
+
             this.nodeUsername = KubeConst.SysAdminUsername;
             this.nodePassword = secureSshPassword;
 
-            var operation  = $"Provisioning [{cluster.Definition.Name}] on Azure [{region}/{resourceGroup}]";
+            // Initialize and run the [SetupController].
+
+            var operation = $"Provisioning [{cluster.Definition.Name}] on Azure [{region}/{resourceGroup}]";
             var controller = new SetupController<NodeDefinition>(operation, cluster.Nodes)
             {
-                ShowStatus     = this.ShowStatus,
+                ShowStatus = this.ShowStatus,
                 ShowNodeStatus = true,
-                MaxParallel    = int.MaxValue       // There's no reason to constrain this
+                MaxParallel = int.MaxValue       // There's no reason to constrain this
             };
 
             controller.AddGlobalStep("connecting Azure", () => ConnectAzure());
@@ -886,13 +890,21 @@ namespace Neon.Kube
                             break;
                         }
 
-                        azureNode.Vm  = vm;
+                        azureNode.Vm = vm;
                         azureNode.Nic = vm.GetPrimaryNetworkInterface();
                     }
                 },
                 quiet: true);
+            controller.AddStep("credentials",
+                (node, stepDelay) =>
+                {
+                    // Update the node SSH proxies to use the secure SSH password.
+
+                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, secureSshPassword));
+                },
+                quiet: true);
             controller.AddStep("virtual machines", CreateVm);
-            controller.AddGlobalStep("ingress/security rules", () => UpdateNetwork(NetworkOperations.IngressRules | NetworkOperations.AddSNeonSshRules));
+            controller.AddGlobalStep("ingress/security rules", () => UpdateNetwork(NetworkOperations.UpdateIngressRules | NetworkOperations.AddPublicSshRules));
 
             if (!controller.Run(leaveNodesConnected: false))
             {
@@ -901,6 +913,83 @@ namespace Neon.Kube
             }
 
             return true;
+        }
+
+        /// <inheritdoc/>
+        public override bool CanManageRouter => true;
+
+        /// <inheritdoc/>
+        public override void UpdatePublicIngress()
+        {
+            LoadNetworkResources();
+
+            var operations = NetworkOperations.UpdateIngressRules;
+
+            if (loadBalancer.InboundNatRules.Values.Any(rule => rule.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                // It looks like SSH NAT rules are enabled so we'll update
+                // those as well.
+
+                operations |= NetworkOperations.AddPublicSshRules;
+            }
+
+            UpdateNetwork(operations);
+        }
+
+        /// <inheritdoc/>
+        public override void EnablePublicSsh()
+        {
+            LoadNetworkResources();
+            UpdateNetwork(NetworkOperations.AddPublicSshRules);
+        }
+
+        /// <inheritdoc/>
+        public override void DisablePublicSsh()
+        {
+            LoadNetworkResources();
+            UpdateNetwork(NetworkOperations.RemovePublicSshRules);
+        }
+
+        /// <summary>
+        /// Establishes an Azure connection when not already connected and then loads the network related
+        /// Azure resources such as the cluster's public IP address, load balancer and subnet NSG so they 
+        /// can be manipulated by methods that manage public access to the cluster. 
+        /// </summary>
+        private void LoadNetworkResources()
+        {
+            ConnectAzure();
+
+            if (publicAddress == null)
+            {
+                publicAddress = azure.PublicIPAddresses.GetByResourceGroup(resourceGroup, publicAddressName);
+            }
+
+            if (loadBalancer == null)
+            {
+                loadBalancer = azure.LoadBalancers.GetByResourceGroup(resourceGroup, loadbalancerName);
+            }
+
+            if (subnetNsg == null)
+            {
+                subnetNsg = azure.NetworkSecurityGroups.GetByResourceGroup(resourceGroup, subnetNsgName);
+            }
+        }
+
+        /// <inheritdoc/>
+        public override (string Address, int Port) GetSshEndpoint(string nodeName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
+
+            var sshNatRuleName = $"{publicSshRulePrefix}{nodeName}";
+
+            if (loadBalancer.InboundNatRules.TryGetValue(sshNatRuleName, out var sshNatRule))
+            {
+                return (Address: publicAddress.IPAddress, Port: sshNatRule.FrontendPort);
+            }
+            else
+            {
+                return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
+            }
         }
 
         /// <summary>
@@ -1104,25 +1193,21 @@ namespace Neon.Kube
 
             var existingAvailabilitySets = azure.AvailabilitySets.ListByResourceGroup(resourceGroup);
 
+            foreach (var existingAvailablitySet in existingAvailabilitySets)
+            {
+                nameToAvailabilitySet.Add(existingAvailablitySet.Name, existingAvailablitySet);
+            }
+
             foreach (var azureNode in azureNodes.Values)
             {
                 azureNode.AvailabilitySetName = GetResourceName("avail", azureNode.Metadata.Labels.PhysicalAvailabilitySet);
 
-                var existingSet = existingAvailabilitySets.FirstOrDefault(set => set.Name.Equals(azureNode.AvailabilitySetName, StringComparison.InvariantCultureIgnoreCase));
-
-                if (existingSet != null)
+                if (nameToAvailabilitySet.ContainsKey(azureNode.AvailabilitySetName))
                 {
-                    // The avcailablity set already exists.
-
-                    if (!nameToAvailabilitySet.ContainsKey(azureNode.AvailabilitySetName))
-                    {
-                        nameToAvailabilitySet.Add(azureNode.AvailabilitySetName, existingSet);
-                    }
-
-                    continue;
+                    continue;   // The availability set already exists.
                 }
 
-                // Create the availablity set.
+                // Create the availability set.
 
                 IAvailabilitySet newSet;
 
@@ -1364,17 +1449,17 @@ namespace Neon.Kube
         /// <param name="operations">Flags that control how the load balancer and related security rules are updated.</param>
         private void UpdateNetwork(NetworkOperations operations)
         {
-            if ((operations & NetworkOperations.IngressRules) != 0)
+            if ((operations & NetworkOperations.UpdateIngressRules) != 0)
             {
                 UpdateNetworkIngress();
             }
 
-            if ((operations & NetworkOperations.AddSNeonSshRules) != 0)
+            if ((operations & NetworkOperations.AddPublicSshRules) != 0)
             {
                 AddNeonSshRules();
             }
 
-            if ((operations & NetworkOperations.RemoveNeonSshRules) != 0)
+            if ((operations & NetworkOperations.RemovePublicSshRules) != 0)
             {
                 RemoveNeonSshRules();
             }
@@ -1617,8 +1702,8 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Adds neonKUBE related SSH NAT rules for every node in the cluster.
-        /// These are used by neonKUBE related tools for provisioning, setting up, and
+        /// Adds public SSH NAT rules for every node in the cluster.
+        /// These are used by neonKUBE tools for provisioning, setting up, and
         /// managing clusters.  Related NSG rules will also be created. 
         /// </summary>
         private void AddNeonSshRules()
@@ -1626,16 +1711,16 @@ namespace Neon.Kube
             var loadBalancerUpdater = loadBalancer.Update();
             var subnetNsgUpdater    = subnetNsg.Update();
 
-            // Remove all existing load balancer neonKUBE SSH related NAT rules.
+            // Remove all existing load balancer public SSH related NAT rules.
 
             foreach (var rule in loadBalancer.LoadBalancingRules.Values
-                .Where(r => r.Name.StartsWith(neonSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+                .Where(r => r.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 loadBalancerUpdater.WithoutLoadBalancingRule(rule.Name);
             }
 
             foreach (var rule in subnetNsg.SecurityRules.Values
-                .Where(r => r.Name.StartsWith(neonSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+                .Where(r => r.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 subnetNsgUpdater.WithoutRule(rule.Name);
             }
@@ -1661,7 +1746,7 @@ namespace Neon.Kube
 
             foreach (var azureNode in SortedMasterThenWorkerNodes)
             {
-                var ruleName = $"{neonSshRulePrefix}{azureNode.Name}";
+                var ruleName = $"{publicSshRulePrefix}{azureNode.Name}";
 
                 loadBalancerUpdater.DefineInboundNatRule(ruleName)
                     .WithProtocol(TransportProtocol.Tcp)
@@ -1680,7 +1765,7 @@ namespace Neon.Kube
 
             foreach (var azureNode in SortedMasterThenWorkerNodes)
             {
-                var ruleName = $"{neonSshRulePrefix}{azureNode.Name}";
+                var ruleName = $"{publicSshRulePrefix}{azureNode.Name}";
                 var natRule  = loadBalancer.Inner.InboundNatRules.Single(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase));
 
                 natRule.EnableTcpReset = true;
@@ -1691,7 +1776,7 @@ namespace Neon.Kube
 
             foreach (var azureNode in SortedMasterThenWorkerNodes)
             {
-                var ruleName = $"{neonSshRulePrefix}{azureNode.Name}";
+                var ruleName = $"{publicSshRulePrefix}{azureNode.Name}";
 
                 azureNode.Nic = azureNode.Nic.Update()
                     .WithExistingLoadBalancerBackend(loadBalancer, loadbalancerBackendName)
@@ -1699,7 +1784,7 @@ namespace Neon.Kube
                     .Apply();
             }
 
-            // Add the NSG rules that allow the neonKUBE SSH NAT rules to work.
+            // Add the NSG rules so that the public SSH NAT rules will actually work.
             //
             // To keep things simple, we're going to generate a separate rule for each source address
             // restriction.  In theory, we could have tried collecting allow and deny rules 
@@ -1718,7 +1803,7 @@ namespace Neon.Kube
                 {
                     // Default to allowing all source addresses when no address rules are specified.
 
-                    var ruleName = $"{neonSshRulePrefix}{azureNode.Name}";
+                    var ruleName = $"{publicSshRulePrefix}{azureNode.Name}";
 
                     subnetNsgUpdater.DefineRule(ruleName)
                         .AllowInbound()
@@ -1741,8 +1826,8 @@ namespace Neon.Kube
                     foreach (var addressRule in networkOptions.SshAddressRules)
                     {
                         var multipleAddresses = networkOptions.SshAddressRules.Count > 1;
-                        var ruleName          = multipleAddresses ? $"{neonSshRulePrefix}{azureNode.Name}-{addressRuleIndex++}"
-                                                                  : $"{neonSshRulePrefix}{azureNode.Name}";
+                        var ruleName          = multipleAddresses ? $"{publicSshRulePrefix}{azureNode.Name}-{addressRuleIndex++}"
+                                                                  : $"{publicSshRulePrefix}{azureNode.Name}";
                         switch (addressRule.Action)
                         {
                             case AddressRuleAction.Allow:
@@ -1816,7 +1901,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Removes neonKUBE related SSH NAT rules for every node in the cluster.
+        /// Removes public SSH NAT rules for every node in the cluster.
         /// These are used by neonKUBE related tools for provisioning, setting up, and
         /// managing clusters.  Related NSG rules will also be removed. 
         /// </summary>
@@ -1825,16 +1910,16 @@ namespace Neon.Kube
             var loadBalancerUpdater = loadBalancer.Update();
             var subnetNsgUpdater    = subnetNsg.Update();
 
-            // Remove all existing load balancer neonKUBE SSH related NAT rules.
+            // Remove all existing load balancer public SSH related NAT rules.
 
             foreach (var lbRule in loadBalancer.LoadBalancingRules.Values
-                .Where(r => r.Name.StartsWith(neonSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+                .Where(r => r.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 loadBalancerUpdater.WithoutLoadBalancingRule(lbRule.Name);
             }
 
             foreach (var rule in subnetNsg.SecurityRules.Values
-                .Where(r => r.Name.StartsWith(neonSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+                .Where(r => r.Name.StartsWith(publicSshRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 subnetNsgUpdater.WithoutRule(rule.Name);
             }
@@ -1853,33 +1938,6 @@ namespace Neon.Kube
 
             loadBalancer = loadBalancerUpdater.Apply();
             subnetNsg    = subnetNsgUpdater.Apply();
-        }
-
-        /// <inheritdoc/>
-        public override bool CanManageRouter => true;
-
-        /// <inheritdoc/>
-        public override void UpdatePublicIngress()
-        {
-            // $todo(jefflil): Implement this
-        }
-
-        /// <inheritdoc/>
-        public override void EnablePublicSsh()
-        {
-            // $todo(jefflil): Implement this
-        }
-
-        /// <inheritdoc/>
-        public override void DisablePublicSsh()
-        {
-            // $todo(jefflil): Implement this
-        }
-
-        /// <inheritdoc/>
-        public override (string Address, int Port) GetSshEndpoint(string nodeName)
-        {
-            return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
         }
     }
 }

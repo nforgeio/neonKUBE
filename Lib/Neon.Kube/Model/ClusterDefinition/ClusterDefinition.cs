@@ -777,7 +777,7 @@ namespace Neon.Kube
                 }
             }
 
-            // Ensure that every node is assigned to an availablity set, assigning master
+            // Ensure that every node is assigned to an availability set, assigning master
             // nodes to the [master] set by default and worker nodes to the [worker] set.
 
             foreach (var node in Nodes)

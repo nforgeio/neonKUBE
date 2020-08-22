@@ -49,16 +49,6 @@ namespace Neon.Kube
         public static string NeonBranchRegistry => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase) ? NeonProdRegistry : NeonDevRegistry;
 
         /// <summary>
-        /// The default username for component dashboards and management tools.
-        /// </summary>
-        public const string DefaultUsername = "sysadmin";
-
-        /// <summary>
-        /// The default password for component dashboards and management tools.
-        /// </summary>
-        public const string DefaultPassword = "password";
-
-        /// <summary>
         /// Timespan used to introduce some random jitter before an operation
         /// is performed.  This is typically used when it's possible that a 
         /// large number of entities will tend to perform an operation at

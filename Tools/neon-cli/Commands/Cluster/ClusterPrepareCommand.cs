@@ -329,19 +329,27 @@ Server Requirements:
                     Program.VerifyAdminPrivileges($"Provisioning to [{cluster.Definition.Hosting.Environment}] requires elevated administrator privileges.");
                 }
 
-                // Persist the cluster context extension information including
-                // the node SSH credentials.
+                // Load the cluster context extension information if it exists and if it indicates
+                // that setup is still pending, we'll use that information (especially the generated
+                // secure SSH password).
+                //
+                // Otherwise, we'll write (or overwrite) the context file with a fresh context.
 
-                var contextExtensionsPath = KubeHelper.GetContextExtensionPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
-                var contextExtension      = new KubeContextExtension(contextExtensionsPath)
+                var contextExtensionPath = KubeHelper.GetContextExtensionPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
+                var contextExtension     = KubeContextExtension.Load(contextExtensionPath);
+
+                if (contextExtension == null || !contextExtension.SetupDetails.SetupPending)
                 {
-                    ClusterDefinition = clusterDefinition,
-                    SshUsername       = Program.MachineUsername,
-                    SshPassword       = Program.MachinePassword,
-                    SetupDetails      = new KubeSetupDetails() { SetupPending = true }
-                };
+                    contextExtension = new KubeContextExtension(contextExtensionPath)
+                    {
+                        ClusterDefinition = clusterDefinition,
+                        SshUsername       = Program.MachineUsername,
+                        SshPassword       = Program.MachinePassword,
+                        SetupDetails      = new KubeSetupDetails() { SetupPending = true }
+                    };
 
-                contextExtension.Save();
+                    contextExtension.Save();
+                }
 
                 if (!hostingManager.Provision(force, Program.MachinePassword, orgSshPassword))
                 {
@@ -371,7 +379,7 @@ Server Requirements:
                     ipAddressToServer.Add(node.Address, node);
                 }
 
-                // We're going to use the masters as package caches unless the user
+                // We're going to use the masters to be package caches unless the user
                 // specifies something else.
 
                 packageCaches = commandLine.GetOption("--package-cache");     // This overrides the cluster definition, if specified.

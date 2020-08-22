@@ -321,7 +321,7 @@ namespace Neon.Kube
         /// </para>
         /// <note>
         /// <b>IMPORTANT:</b> Master nodes should generally be located within their
-        /// own availablity set.
+        /// own availability set.
         /// </note>
         /// </summary>
         /// <remarks>
@@ -337,13 +337,13 @@ namespace Neon.Kube
         /// these labels to match your deployment and maintenance policies.
         /// </para>
         /// <para>
-        /// Cloud deployments generally implement the concept of availablity sets.
+        /// Cloud deployments generally implement the concept of availability sets.
         /// These are used to group VMs together such that only one will be down
         /// for scheduled maintenance at any given moment and also that after a
         /// reboot, there will be a reasonable delay (like 30 minutes) to allow
         /// the VMs to collectively recover before rebooting the next VM.  neonKUBE
         /// will provision node VMs that have the same <see cref="PhysicalAvailabilitySet"/> 
-        /// into the same cloud availablity set (for clouds that support this).
+        /// into the same cloud availability set (for clouds that support this).
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "PhysicalAvailabilitySet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]

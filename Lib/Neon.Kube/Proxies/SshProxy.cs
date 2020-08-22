@@ -943,9 +943,8 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// <returns>The connection information.</returns>
         private ConnectionInfo GetConnectionInfo()
         {
-            var address   = string.Empty;
-            var isPrivate = true;
-            var port      = SshPort;
+            var address = string.Empty;
+            var port    = SshPort;
 
             if (Cluster?.HostingManager != null)
             {
@@ -957,13 +956,6 @@ rm {KubeHostFolders.Home(Username)}/askpass
             else
             {
                 address = Address.ToString();
-            }
-
-            if (string.IsNullOrEmpty(address))
-            {
-                var addressType = isPrivate ? "private" : "public";
-
-                throw new Exception($"Node [{Name}] does not have a [{addressType}] address.");
             }
 
             var connectionInfo = new ConnectionInfo(address, port, credentials.Username, credentials.AuthenticationMethod)
@@ -1164,7 +1156,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
                             continue;
                         }
 
-                        var name = split[0];
+                        var name  = split[0];
                         var value = split[1];
 
                         switch (name)
@@ -1177,7 +1169,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
                             case "VERSION":
 
                                 var version = value.Replace("\"", string.Empty);
-                                var pSpace = version.IndexOf(' ');
+                                var pSpace  = version.IndexOf(' ');
 
                                 if (pSpace != -1)
                                 {
