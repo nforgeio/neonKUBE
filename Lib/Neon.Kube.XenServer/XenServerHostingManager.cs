@@ -459,8 +459,5 @@ namespace Neon.Kube
         {
             return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
         }
-
-        /// <inheritdoc/>
-        public override bool RequiresAdminPrivileges => false;
     }
 }

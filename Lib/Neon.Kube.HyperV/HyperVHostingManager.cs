@@ -109,6 +109,9 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
+        public override bool RequiresAdminPrivileges => false;
+
+        /// <inheritdoc/>
         public override bool Provision(bool force, string secureSshPassword, string orgSshPassword = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
@@ -121,8 +124,5 @@ namespace Neon.Kube
         {
             return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
         }
-
-        /// <inheritdoc/>
-        public override bool RequiresAdminPrivileges => false;
     }
 }

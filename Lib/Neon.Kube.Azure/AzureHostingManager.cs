@@ -903,15 +903,6 @@ namespace Neon.Kube
             return true;
         }
 
-        /// <inheritdoc/>
-        public override (string Address, int Port) GetSshEndpoint(string nodeName)
-        {
-            return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
-        }
-
-        /// <inheritdoc/>
-        public override bool RequiresAdminPrivileges => false;
-
         /// <summary>
         /// Connects to Azure if we're not already connected.
         /// </summary>
@@ -1862,6 +1853,33 @@ namespace Neon.Kube
 
             loadBalancer = loadBalancerUpdater.Apply();
             subnetNsg    = subnetNsgUpdater.Apply();
+        }
+
+        /// <inheritdoc/>
+        public override bool CanManageRouter => true;
+
+        /// <inheritdoc/>
+        public override void UpdatePublicIngress()
+        {
+            // $todo(jefflil): Implement this
+        }
+
+        /// <inheritdoc/>
+        public override void EnablePublicSsh()
+        {
+            // $todo(jefflil): Implement this
+        }
+
+        /// <inheritdoc/>
+        public override void DisablePublicSsh()
+        {
+            // $todo(jefflil): Implement this
+        }
+
+        /// <inheritdoc/>
+        public override (string Address, int Port) GetSshEndpoint(string nodeName)
+        {
+            return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
         }
     }
 }

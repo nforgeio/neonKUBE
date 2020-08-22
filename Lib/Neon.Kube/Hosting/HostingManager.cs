@@ -94,10 +94,10 @@ namespace Neon.Kube
         public abstract void Validate(ClusterDefinition clusterDefinition);
 
         /// <inheritdoc/>
-        public abstract bool Provision(bool force, string secureSshPassword, string orgSshPassword = null);
+        public virtual bool RequiresAdminPrivileges => true;
 
         /// <inheritdoc/>
-        public abstract (string Address, int Port) GetSshEndpoint(string nodeName);
+        public abstract bool Provision(bool force, string secureSshPassword, string orgSshPassword = null);
 
         /// <inheritdoc/>
         public virtual void AddPostProvisionSteps(SetupController<NodeDefinition> controller)
@@ -105,6 +105,24 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public abstract bool RequiresAdminPrivileges { get; }
+        public virtual bool CanManageRouter => false;
+
+        /// <inheritdoc/>
+        public virtual void UpdatePublicIngress()
+        {
+        }
+
+        /// <inheritdoc/>
+        public virtual void EnablePublicSsh()
+        {
+        }
+
+        /// <inheritdoc/>
+        public virtual void DisablePublicSsh()
+        {
+        }
+
+        /// <inheritdoc/>
+        public abstract (string Address, int Port) GetSshEndpoint(string nodeName);
     }
 }

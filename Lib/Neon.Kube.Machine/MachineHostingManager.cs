@@ -151,18 +151,15 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override (string Address, int Port) GetSshEndpoint(string nodeName)
-        {
-            return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
-        }
-
-        /// <inheritdoc/>
         public override void AddPostProvisionSteps(SetupController<NodeDefinition> controller)
         {
         }
 
         /// <inheritdoc/>
-        public override bool RequiresAdminPrivileges => false;
+        public override (string Address, int Port) GetSshEndpoint(string nodeName)
+        {
+            return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
+        }
 
         /// <summary>
         /// Connects the proxy to the node.
