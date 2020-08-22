@@ -107,8 +107,7 @@ namespace Neon.Kube
         // inbound traffic across a backend pool including the VMs designated to
         // accept ingress traffic into the cluster.  These nodes are identified 
         // by the presence of a [neonkube.io/node.ingress=true] label which can be
-        // set explicitly for each node or assigned via a [NetworkOptions.IngressNodeSelector]
-        // label selector.  neonKUBE will default to reasonable ingress nodes when
+        // set explicitly.  neonKUBE will default to reasonable ingress nodes when
         // necessary.
         //
         // External load balancer traffic can be enabled for specific ports via 
