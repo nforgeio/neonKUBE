@@ -136,12 +136,12 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name that identifies the node's Azure attached storage type.
         /// </summary>
-        public const string LabelAzureStorageType = ClusterDefinition.ReservedLabelPrefix + "azure.storage_type";
+        public const string LabelAzureStorageType = ClusterDefinition.ReservedLabelPrefix + "azure.storage-type";
 
         /// <summary>
         /// Reserved label name that identifies the node's Azure attached drive size.
         /// </summary>
-        public const string LabelAzureDriveSize = ClusterDefinition.ReservedLabelPrefix + "azure.drive_size";
+        public const string LabelAzureDriveSize = ClusterDefinition.ReservedLabelPrefix + "azure.drive-size";
 
         //---------------------------------------------------------------------
         // Define the node storage related labels.
@@ -231,7 +231,7 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name for <see cref="ComputeRam"/>.
         /// </summary>
-        public const string LabelComputeRamMiB = ClusterDefinition.ReservedLabelPrefix + "compute.ram_mib";
+        public const string LabelComputeRamMiB = ClusterDefinition.ReservedLabelPrefix + "compute.ram-mib";
 
         /// <summary>
         /// <b>io.neonkube/compute.cores</b> [<c>int</c>]: Specifies the number of CPU cores.

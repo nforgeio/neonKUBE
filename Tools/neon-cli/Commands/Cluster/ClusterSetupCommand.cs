@@ -313,7 +313,7 @@ OPTIONS:
                     controller.AddGlobalStep("setup cluster", SetupCluster);
 
                     controller.AddGlobalStep("taint nodes", TaintNodes);
-                    if (cluster.Definition.Mon.Enabled)
+                    if (cluster.Definition.Monitor.Enabled)
                     {
                         controller.AddGlobalStep("setup monitoring", SetupMonitoring);
                     }
@@ -2094,7 +2094,7 @@ istioctl install -f istio-cni.yaml
 
             // Install metrics persistence if required.
 
-            if (cluster.Definition.Mon.Prometheus.Persistence && cluster.Definition.Nodes.Any(n => n.Labels.M3DB == true))
+            if (cluster.Definition.Monitor.Prometheus.Persistence && cluster.Definition.Nodes.Any(n => n.Labels.M3DB == true))
             {
                 // Install an Etcd cluster to the monitoring namespace
 
@@ -2344,7 +2344,7 @@ rm -rf {chartName}*
                             {
                                 Capacity = new Dictionary<string, ResourceQuantity>()
                                 {
-                                    { "storage", cluster.Definition.Mon.Prometheus.M3DB.Etcd.DiskSize ?? new ResourceQuantity("1Gi") }
+                                    { "storage", cluster.Definition.Monitor.Prometheus.M3DB.Etcd.DiskSize ?? new ResourceQuantity("1Gi") }
                                 },
                                 AccessModes = new List<string>() { "ReadWriteOnce" },
                                 PersistentVolumeReclaimPolicy = "Retain",
@@ -2392,9 +2392,9 @@ rm -rf {chartName}*
 
                     values.Add(new KeyValuePair<string, object>($"replicas", cluster.Definition.Nodes.Count(n => n.Labels.M3DB == true).ToString()));
 
-                    if (cluster.Definition.Mon.Prometheus.M3DB.Etcd.DiskSize != null)
+                    if (cluster.Definition.Monitor.Prometheus.M3DB.Etcd.DiskSize != null)
                     {
-                        values.Add(new KeyValuePair<string, object>($"volumeClaimTemplate.resources.requests.storage", cluster.Definition.Mon.Prometheus.M3DB.Etcd.DiskSize.ToString()));
+                        values.Add(new KeyValuePair<string, object>($"volumeClaimTemplate.resources.requests.storage", cluster.Definition.Monitor.Prometheus.M3DB.Etcd.DiskSize.ToString()));
                     }
 
                     InstallHelmChartAsync(master, "etcd-cluster", releaseName: "m3db-etcd", @namespace: "monitoring", values: values).Wait();
@@ -2447,7 +2447,7 @@ rm -rf {chartName}*
                             {
                                 Capacity = new Dictionary<string, ResourceQuantity>()
                         {
-                            { "storage", cluster.Definition.Mon.Prometheus.M3DB.DiskSize ??  new ResourceQuantity("1Gi") }
+                            { "storage", cluster.Definition.Monitor.Prometheus.M3DB.DiskSize ??  new ResourceQuantity("1Gi") }
                         },
                                 AccessModes = new List<string>() { "ReadWriteOnce" },
                                 PersistentVolumeReclaimPolicy = "Retain",
@@ -2506,8 +2506,8 @@ rm -rf {chartName}*
                         i++;
                     }
 
-                    values.Add(new KeyValuePair<string, object>($"volumeResources.requests.storage", cluster.Definition.Mon.Prometheus.M3DB.DiskSize.ToString()));
-                    values.Add(new KeyValuePair<string, object>($"volumeResources.limits.storage", cluster.Definition.Mon.Prometheus.M3DB.DiskSize.ToString()));
+                    values.Add(new KeyValuePair<string, object>($"volumeResources.requests.storage", cluster.Definition.Monitor.Prometheus.M3DB.DiskSize.ToString()));
+                    values.Add(new KeyValuePair<string, object>($"volumeResources.limits.storage", cluster.Definition.Monitor.Prometheus.M3DB.DiskSize.ToString()));
 
                     if (cluster.Definition.Nodes.Count(l => l.Labels.M3DB) <= 3)
                     {
@@ -2540,7 +2540,7 @@ rm -rf {chartName}*
                 () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
-                    if (cluster.Definition.Mon.Prometheus.Persistence)
+                    if (cluster.Definition.Monitor.Prometheus.Persistence)
                     {
                         values.Add(new KeyValuePair<string, object>("persistence.enabled", "true"));
                     }
@@ -2597,7 +2597,7 @@ rm -rf {chartName}*
                             {
                                 Capacity = new Dictionary<string, ResourceQuantity>()
                         {
-                            { "storage", new ResourceQuantity(cluster.Definition.Mon.Elasticsearch.DiskSize) }
+                            { "storage", new ResourceQuantity(cluster.Definition.Monitor.Elasticsearch.DiskSize) }
                         },
                                 AccessModes = new List<string>() { "ReadWriteOnce" },
                                 PersistentVolumeReclaimPolicy = "Retain",
@@ -2638,40 +2638,39 @@ rm -rf {chartName}*
             master.InvokeIdempotentAction("deploy/elasticsearch",
                 () =>
                 {
-                var values = new List<KeyValuePair<string, object>>();
+                    var monitorOptions = cluster.Definition.Monitor;
+                    var values         = new List<KeyValuePair<string, object>>();
 
-                values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.resources.requests.storage", cluster.Definition.Mon.Elasticsearch.DiskSize));
-                values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
-                values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
+                    values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.resources.requests.storage", cluster.Definition.Monitor.Elasticsearch.DiskSize));
+                    values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
+                    values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
 
-                if (cluster.Definition.Mon.Elasticsearch.Resources != null)
-                {
-                    if (cluster.Definition.Mon.Elasticsearch.Resources.Limits != null)
+                    if (monitorOptions.Elasticsearch.Resources != null)
                     {
-                        foreach (var r in cluster.Definition.Mon.Elasticsearch.Resources.Limits)
+                        if (monitorOptions.Elasticsearch.Resources.Limits != null)
                         {
-                            values.Add(new KeyValuePair<string, object>($"resources.limits.{r.Key}", r.Value.ToString()));
+                            foreach (var r in monitorOptions.Elasticsearch.Resources.Limits)
+                            {
+                                values.Add(new KeyValuePair<string, object>($"resources.limits.{r.Key}", r.Value.ToString()));
+                            }
+                        }
+
+                        if (monitorOptions.Elasticsearch.Resources.Requests != null)
+                        {
+                            foreach (var r in monitorOptions.Elasticsearch.Resources.Requests)
+                            {
+                                values.Add(new KeyValuePair<string, object>($"resources.requests.{r.Key}", r.Value.ToString()));
+                            }
                         }
                     }
 
-                    if (cluster.Definition.Mon.Elasticsearch.Resources.Requests != null)
+                    InstallHelmChartAsync(master, "elasticsearch", @namespace: "monitoring", timeout: 1200, values: values, wait: false).Wait();
+
+                    // wait for Elasticsearch cluster to be running before proceeding.
+                    while ((k8sClient.ListNamespacedPodAsync("monitoring", labelSelector: "app=elasticsearch-master")).Result.Items.Where(p => p.Status.Phase == "Running").Count() != cluster.Definition.Nodes.Where(l => l.Labels.M3DB == true).Count())
                     {
-                        foreach (var r in cluster.Definition.Mon.Elasticsearch.Resources.Requests)
-                        {
-                            values.Add(new KeyValuePair<string, object>($"resources.requests.{r.Key}", r.Value.ToString()));
-                        }
+                        Thread.Sleep(1000);
                     }
-                }
-
-                InstallHelmChartAsync(master, "elasticsearch", @namespace: "monitoring", timeout: 1200, values: values, wait: false).Wait();
-
-                // wait for Elasticsearch cluster to be running before proceeding.
-                while ((k8sClient.ListNamespacedPodAsync("monitoring", labelSelector: "app=elasticsearch-master")).Result.Items.Where(p => p.Status.Phase == "Running").Count() != cluster.Definition.Nodes.Where(l => l.Labels.M3DB == true).Count())
-                {
-                    Thread.Sleep(1000);
-                }
-                    
-
                 });          
         }
 
