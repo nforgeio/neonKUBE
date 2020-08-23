@@ -626,11 +626,6 @@ OPTIONS:
                     node.Status = "configure: node basics";
                     node.SudoCommand("setup-node.sh");
 
-                    // Tune Linux for SSDs, if enabled.
-
-                    node.Status = "tune: disks";
-                    node.SudoCommand("setup-ssd.sh");
-
                     // Create the container user and group.
 
                     // $todo(jefflill):
