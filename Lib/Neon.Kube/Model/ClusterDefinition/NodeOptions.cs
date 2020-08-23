@@ -39,7 +39,7 @@ using Neon.IO;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Describes cluster host node options.
+    /// Describes cluster node options.
     /// </summary>
     public class NodeOptions
     {
@@ -48,7 +48,7 @@ namespace Neon.Kube
         private const int           defaultPackageManagerRetries   = 5;
 
         /// <summary>
-        /// Specifies whether the host node operating system should be upgraded
+        /// Specifies whether the cluster node operating system should be upgraded
         /// during cluster preparation.  This defaults to <see cref="OsUpgrade.Full"/>
         /// to pick up most criticial updates.
         /// </summary>

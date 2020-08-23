@@ -316,7 +316,7 @@ Server Requirements:
 
                 if (hostingManager == null)
                 {
-                    Console.Error.WriteLine($"*** ERROR: No hosting manager for the [{cluster.Definition.Hosting.Environment}] hosting environment could be located.");
+                    Console.Error.WriteLine($"*** ERROR: No hosting manager for the [{cluster.Definition.Hosting.Environment}] environment could be located.");
                     Program.Exit(1);
                 }
 
@@ -408,8 +408,7 @@ Server Requirements:
 
                 cluster.LogLine(logBeginMarker);
 
-                var nodesText = cluster.Nodes.Count() == 1 ? "node" : "nodes";
-                var operation = $"Preparing [{cluster.Definition.Name}] cluster {nodesText}";
+                var operation = $"Preparing [{cluster.Definition.Name}] cluster nodes";
 
                 var controller = 
                     new SetupController<NodeDefinition>(operation, cluster.Nodes)
@@ -428,7 +427,7 @@ Server Requirements:
                     (node, stepDelay) =>
                     {
                         Thread.Sleep(stepDelay);
-                        CommonSteps.PrepareNode(node, cluster.Definition, kubeSetupInfo, shutdown: false);
+                        CommonSteps.PrepareNode(node, cluster.Definition, kubeSetupInfo, hostingManager, shutdown: false);
                     },
                     stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
             

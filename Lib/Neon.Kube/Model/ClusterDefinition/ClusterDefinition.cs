@@ -447,7 +447,7 @@ namespace Neon.Kube
         public NodeOptions NodeOptions { get; set; } = new NodeOptions();
 
         /// <summary>
-        /// Describes the host nodes in the cluster.
+        /// Describes the cluster nodes.
         /// </summary>
         [JsonProperty(PropertyName = "Nodes", Required = Required.Always)]
         [YamlMember(Alias = "nodes", ApplyNamingConventions = false)]

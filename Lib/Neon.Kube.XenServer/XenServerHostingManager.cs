@@ -459,5 +459,15 @@ namespace Neon.Kube
         {
             return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
         }
+
+        /// <inheritdoc/>
+        public override string GetDataDisk(SshProxy<NodeDefinition> node)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+
+            // This hosting manager doesn't currently provision a separate data disk.
+
+            return "PRIMARY";
+        }
     }
 }

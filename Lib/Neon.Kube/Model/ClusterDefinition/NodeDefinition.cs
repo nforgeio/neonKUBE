@@ -39,7 +39,7 @@ using System.Xml;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Describes a cluster host node.
+    /// Describes a cluster node.
     /// </summary>
     public class NodeDefinition
     {
@@ -171,7 +171,7 @@ namespace Neon.Kube
         public bool Ingress { get; set; } = false;
 
         /// <summary>
-        /// Specifies the labels to be assigned to the host node.  These can provide
+        /// Specifies the labels to be assigned to the cluster node.  These can provide
         /// detailed information such as the host CPU, RAM, storage, etc.  <see cref="NodeLabels"/>
         /// for more information.
         /// </summary>
@@ -181,7 +181,7 @@ namespace Neon.Kube
         public NodeLabels Labels { get; set; }
 
         /// <summary>
-        /// Specifies the taints to be assigned to the host node.  
+        /// Specifies the taints to be assigned to the cluster node.  
         /// </summary>
         [JsonProperty(PropertyName = "Taints")]
         [YamlMember(Alias = "taints", ApplyNamingConventions = false)]

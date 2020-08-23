@@ -152,54 +152,6 @@ namespace NeonCli
 
             var nodeDefinition = node.Metadata;
 
-            // Use the Linux [lsblk] command to discover the prefix for the node's
-            // harddrive block devices.  These are disks with at least one partition.
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/916
-            //
-            // The command output will look something like this:
-            //
-            //      fd0   disk
-            //      loop0 loop
-            //      loop2 loop
-            //      loop3 loop
-            //      loop4 loop
-            //      loop5 loop
-            //      sda   disk
-            //      sda1  part
-            //      sda2  part
-            //      sr0   rom
-            //
-            // We're going to scan for the first disk line with a partition after it.
-
-            var result = node.RunCommand("lsblk --output NAME,TYPE --tree=SIZE --noheadings");
-
-            result.EnsureSuccess();
-
-            var devices = new List<Tuple<string, string>>();
-
-            foreach (var line in result.OutputText.Split('\n', StringSplitOptions.RemoveEmptyEntries))
-            {
-                var columns = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-                devices.Add(new Tuple<string, string>(columns[0].Trim(), columns[1].Trim()));
-            }
-
-            var drivePrefix = (string)null;
-
-            for (int i = 0; i < devices.Count - 2; i++)
-            {
-                if (devices[i].Item2 == "disk" && devices[i + 1].Item2 == "part")
-                {
-                    var name = devices[i].Item1;
-
-                    drivePrefix = name.Substring(0, name.Length - 1);
-                    break;
-                }
-            }
-
-            Covenant.Assert(!string.IsNullOrEmpty(drivePrefix), $"Cannot identify hard disk device prefix for node [{nodeDefinition.Name}].");
-
             // Generate the master node variables in sorted order.  The variable 
             // names will be formatted as:
             //
@@ -331,8 +283,6 @@ namespace NeonCli
 
             SetBashVariable(preprocessReader, "cluster.provisioner", clusterDefinition.Provisioner);
 
-            SetBashVariable(preprocessReader, "node.driveprefix", drivePrefix);
-
             SetBashVariable(preprocessReader, "neon.folders.bin", KubeHostFolders.Bin);
             SetBashVariable(preprocessReader, "neon.folders.config", KubeHostFolders.Config);
             SetBashVariable(preprocessReader, "neon.folders.setup", KubeHostFolders.Setup);
@@ -352,48 +302,6 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "neon.kube.kubeadm.package_version", KubeVersions.KubeAdminPackageVersion);
             SetBashVariable(preprocessReader, "neon.kube.kubectl.package_version", KubeVersions.KubeCtlPackageVersion);
             SetBashVariable(preprocessReader, "neon.kube.kubelet.package_version", KubeVersions.KubeletPackageVersion);
-
-            //-----------------------------------------------------------------
-            // Configure the variables for the [setup-disk.sh] script.
-
-            switch (clusterDefinition.Hosting.Environment)
-            {
-                case HostingEnvironments.Aws:
-
-                    throw new NotImplementedException("$todo(jefflill)");
-
-                case HostingEnvironments.Azure:
-
-                    // For the Cannonical Azure VM image, the primary OS data disk is 
-                    // [/dev/sda], the ephimeral disk is [/dev/sdb] and any mounted 
-                    // Azure disk will be at [/dev/sdc].
-
-                    SetBashVariable(preprocessReader, "data.disk", "/dev/sdc");
-                    break;
-
-                case HostingEnvironments.Google:
-
-                    throw new NotImplementedException("$todo(jefflill)");
-
-                case HostingEnvironments.HyperV:
-                case HostingEnvironments.HyperVLocal:
-                case HostingEnvironments.Machine:
-                case HostingEnvironments.Unknown:
-                case HostingEnvironments.XenServer:
-
-                    // VMs for all of these environments simply host their data on the
-                    // primary OS disk only for now, the idea being that this disk
-                    // can be sized up as necessary.  There are valid scenarios where
-                    // folks would like the data on a different drive (e.g. for better
-                    // performance).  I'm putting support for that on the backlog.
-
-                    SetBashVariable(preprocessReader, "data.disk", "PRIMARY");
-                    break;
-
-                default:
-
-                    throw new NotImplementedException($"The [{clusterDefinition.Hosting.Environment}] hosting environment is not implemented.");
-            }
         }
 
         private static void NewMethod(PreprocessReader preprocessReader, string workerTimeSources)

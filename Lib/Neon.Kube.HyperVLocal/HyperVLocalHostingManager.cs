@@ -224,6 +224,17 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override bool RequiresAdminPrivileges => true;
 
+
+        /// <inheritdoc/>
+        public override string GetDataDisk(SshProxy<NodeDefinition> node)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+
+            // This hosting manager doesn't currently provision a separate data disk.
+
+            return "PRIMARY";
+        }
+
         /// <summary>
         /// Returns the name to use for naming the virtual machine hosting the node.
         /// </summary>
@@ -257,7 +268,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Performs any required Hyper-V initialization before host nodes can be provisioned.
+        /// Performs any required Hyper-V initialization before cluster nodes can be provisioned.
         /// </summary>
         private void PrepareHyperV()
         {

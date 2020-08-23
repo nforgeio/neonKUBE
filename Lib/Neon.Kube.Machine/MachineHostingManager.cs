@@ -333,5 +333,22 @@ echo '{KubeConst.SysAdminUsername}:{secureSshPassword}' | chpasswd
                 }
             }
         }
+
+        /// <inheritdoc/>
+        public override string GetDataDisk(SshProxy<NodeDefinition> node)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+
+            var unpartitonedDisks = node.ListUnpartitionedDisks();
+
+            if (unpartitonedDisks.Count() == 0)
+            {
+                return "PRIMARY";
+            }
+
+            Covenant.Assert(unpartitonedDisks.Count() == 1, "VMs are assumed to have no more than one attached data disk.");
+
+            return unpartitonedDisks.Single();
+        }
     }
 }

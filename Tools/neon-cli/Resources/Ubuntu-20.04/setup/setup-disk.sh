@@ -1,17 +1,16 @@
 ﻿#------------------------------------------------------------------------------
 # Configure and mount the node disk drives.
 #
-# This script may reference setup macro varables that look like $<name>.  These 
-# will be replaced with node specific values before the script is uploaded to 
-# the node.  This is the variable consumed by this script:
+# ARGUMENTS:
 #
-#   $<data.disk>    The Linux device to be mounted for persistent data 
-#                   like [/dev/sdb] or [PRIMARY] if the VM is to use the 
-#                   VM's primary OS disk only.
+#       DATA_DISK   - This will be passed as "PRIMARY" when there's no
+#                     data disk and node will use the OS disk or the
+#                     name of the uninitialized data disk devicce,
+#                     like "/dev/sda".
 #
 # NOTE: This script must be run under sudo.
 
-DATA_DISK=$<data.disk>
+DATA_DISK=${1}
 
 # Configure Bash strict mode so that the entire script will fail if 
 # any of the commands fail.
@@ -40,7 +39,7 @@ echo "** Initializing data disk(s)                **"
 echo "**********************************************"
 
 #------------------------------------------------------------------------------
-# Creates a partition filling the specified drive.
+# Creates a partition, filling the specified drive.
 
 function partitionDrive {
 

@@ -846,7 +846,7 @@ namespace Neon.Kube
                 MaxParallel = int.MaxValue       // There's no reason to constrain this
             };
 
-            controller.AddGlobalStep("connecting Azure", () => ConnectAzure());
+            controller.AddGlobalStep("azure connect", () => ConnectAzure());
             controller.AddGlobalStep("region check", () => VerifyRegionAndVmSizes());
             controller.AddGlobalStep("resource group", () => CreateResourceGroup());
             controller.AddGlobalStep("availability sets", () => CreateAvailabilitySets());
@@ -896,8 +896,8 @@ namespace Neon.Kube
                 },
                 quiet: true);
             controller.AddStep("virtual machines", CreateVm);
-            controller.AddStep("initialize", InitializeNode);
             controller.AddGlobalStep("ingress/security rules", () => UpdateNetwork(NetworkOperations.UpdateIngressRules | NetworkOperations.AddPublicSshRules));
+            controller.AddStep("initialize nodes", InitializeNode);
 
             if (!controller.Run(leaveNodesConnected: false))
             {
@@ -983,6 +983,23 @@ namespace Neon.Kube
             {
                 return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
             }
+        }
+
+        /// <inheritdoc/>
+        public override string GetDataDisk(SshProxy<NodeDefinition> node)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+
+            var unpartitonedDisks = node.ListUnpartitionedDisks();
+
+            if (unpartitonedDisks.Count() == 0)
+            {
+                return "PRIMARY";
+            }
+
+            Covenant.Assert(unpartitonedDisks.Count() == 1, "VMs are assumed to have no more than one attached data disk.");
+
+            return unpartitonedDisks.Single();
         }
 
         /// <summary>
@@ -1352,7 +1369,7 @@ namespace Neon.Kube
                 return;
             }
 
-            node.Status = "create NIC";
+            node.Status = "create: NIC";
 
             azureNode.Nic = azure.NetworkInterfaces
                 .Define(GetResourceName("nic",azureNode.Proxy.Name))
@@ -1363,7 +1380,7 @@ namespace Neon.Kube
                 .WithPrimaryPrivateIPAddressStatic(azureNode.Address)
                 .Create();
 
-            node.Status = "create VM";
+            node.Status = "create: virtual machine";
 
             var azureNodeOptions = azureNode.Proxy.Metadata.Azure;
             var azureStorageType = StorageAccountTypes.StandardSSDLRS;
@@ -1445,7 +1462,7 @@ namespace Neon.Kube
         {
             node.WaitForBoot();
 
-            // All we need to do is install: unzip
+            node.Status = "install: packages";
 
             node.SudoCommand("apt-get install -yq unzip");
         }

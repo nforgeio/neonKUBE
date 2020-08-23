@@ -497,7 +497,7 @@ EOF
 
 #------------------------------------------------------------------------------
 # Install a simple service script that periodically cleans accumulated files
-# on the host node.
+# on the cluster node.
 
 # $todo(jefflill):
 #
@@ -527,7 +527,7 @@ cat <<EOF > ${NEON_BIN_FOLDER}/neon-cleaner
 # limitations under the License.
 
 # This is a simple service script that periodically cleans accumulated files
-# on the host node including:
+# on the cluster node including:
 #
 #   1. Shred and delete the root account's [.bash-history] file 
 #      as a security measure.  These commands could include

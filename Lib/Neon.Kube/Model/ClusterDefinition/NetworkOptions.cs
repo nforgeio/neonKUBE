@@ -338,8 +338,6 @@ namespace Neon.Kube
                 {
                     throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}] is not a valid IPv4 subnet.");
                 }
-
-                subnets.Add(new SubnetDefinition(nameof(PremiseSubnet), premiseSubnet));
             }
 
             // Verify [NodeSubnet].

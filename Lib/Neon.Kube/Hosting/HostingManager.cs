@@ -124,5 +124,8 @@ namespace Neon.Kube
 
         /// <inheritdoc/>
         public abstract (string Address, int Port) GetSshEndpoint(string nodeName);
+
+        /// <inheritdoc/>
+        public abstract string GetDataDisk(SshProxy<NodeDefinition> node);
     }
 }

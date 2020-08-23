@@ -122,6 +122,7 @@ OPTIONS:
         private KubeConfigContext       kubeContext;
         private KubeContextExtension    kubeContextExtension;
         private ClusterProxy            cluster;
+        private HostingManager          hostingManager;
         private KubeSetupInfo           kubeSetupInfo;
         private HttpClient              httpClient;
         private Kubernetes              k8sClient;
@@ -211,11 +212,32 @@ OPTIONS:
 
                 kubeContext = new KubeConfigContext(contextName);
 
+                if (kubeContextExtension.SetupDetails?.SetupInfo != null)
+                {
+                    kubeSetupInfo = kubeContextExtension.SetupDetails.SetupInfo;
+                }
+                else
+                {
+                    using (var client = new HeadendClient())
+                    {
+                        kubeSetupInfo = client.GetSetupInfoAsync(kubeContextExtension.ClusterDefinition).Result;
+                    }
+                }
+
                 KubeHelper.InitContext(kubeContext);
 
-                // Note that cluster setup appends to existing log files.
+                // Initialize the cluster proxy and the hbosting manager.
 
-                cluster = new ClusterProxy(kubeContext, Program.CreateNodeProxy<NodeDefinition>, appendToLog: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
+                cluster        = new ClusterProxy(kubeContext, Program.CreateNodeProxy<NodeDefinition>, appendToLog: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
+                hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManager(cluster, kubeSetupInfo, Program.LogPath);
+
+                if (hostingManager == null)
+                {
+                    Console.Error.WriteLine($"*** ERROR: No hosting manager for the [{cluster.Definition.Hosting.Environment}] environment could be located.");
+                    Program.Exit(1);
+                }
+
+                // Get on with cluster setup.
 
                 var failed = false;
 
@@ -243,25 +265,6 @@ OPTIONS:
                             MaxParallel = Program.MaxParallel
                         };
 
-                    controller.AddGlobalStep("setup details",
-                        () =>
-                        {
-                            if (kubeContextExtension.SetupDetails?.SetupInfo != null)
-                            {
-                                kubeSetupInfo = kubeContextExtension.SetupDetails.SetupInfo;
-                            }
-                            else
-                            {
-                                using (var client = new HeadendClient())
-                                {
-                                    kubeSetupInfo = client.GetSetupInfoAsync(cluster.Definition).Result;
-
-                                    kubeContextExtension.SetupDetails.SetupInfo = kubeSetupInfo;
-                                    kubeContextExtension.Save();
-                                }
-                            }
-                        });
-
                     controller.AddGlobalStep("download binaries", () => WorkstationBinaries());
                     controller.AddWaitUntilOnlineStep("connect");
                     controller.AddStep("ssh certificate", GenerateClientSshCert, node => node == cluster.FirstMaster);
@@ -280,7 +283,7 @@ OPTIONS:
                     controller.AddStep(configureFirstMasterStepLabel,
                         (node, stepDelay) =>
                         {
-                            SetupCommon(node, stepDelay);
+                            SetupCommon(hostingManager, node, stepDelay);
                             node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
                             SetupNode(node);
                         },
@@ -294,7 +297,7 @@ OPTIONS:
                         controller.AddStep("setup other nodes",
                             (node, stepDelay) =>
                             {
-                                SetupCommon(node, stepDelay);
+                                SetupCommon(hostingManager, node, stepDelay);
                                 node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
                                 SetupNode(node);
                             },
@@ -308,7 +311,6 @@ OPTIONS:
                     controller.AddGlobalStep("setup neon-proxy", SetupNeonProxy);
                     controller.AddStep("setup kubernetes", SetupKubernetes);
                     controller.AddGlobalStep("setup cluster", SetupCluster);
-                    //controller.AddGlobalStep("label nodes", LabelNodes);
 
                     controller.AddGlobalStep("taint nodes", TaintNodes);
                     if (cluster.Definition.Mon.Enabled)
@@ -568,10 +570,14 @@ OPTIONS:
         /// <summary>
         /// Performs common node configuration.
         /// </summary>
+        /// <param name="hostingManager">The hosting manager.</param>
         /// <param name="node">The target node.</param>
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void SetupCommon(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void SetupCommon(HostingManager hostingManager, SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
+            Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+
             //-----------------------------------------------------------------
             // NOTE: 
             //
@@ -601,7 +607,7 @@ OPTIONS:
 
                     // Ensure that the node has been prepared for setup.
 
-                    CommonSteps.PrepareNode(node, cluster.Definition, kubeSetupInfo);
+                    CommonSteps.PrepareNode(node, cluster.Definition, kubeSetupInfo, hostingManager);
 
                     // Create the [/mnt-data] folder if it doesn't already exist.  This folder
                     // is where we're going to host the Docker containers and volumes that should

@@ -39,7 +39,7 @@ using Neon.IO;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Enumerates the possible host node operating system upgrade options.
+    /// Enumerates the possible cluster node operating system upgrade options.
     /// </summary>
     public enum OsUpgrade
     {

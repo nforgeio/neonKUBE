@@ -428,7 +428,7 @@ namespace Neon.Kube
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Use this property to define custom host node labels.
+        /// Use this property to define custom cluster node labels.
         /// </para>
         /// <note>
         /// The <b>io.neonkube/</b> label prefix is reserved.

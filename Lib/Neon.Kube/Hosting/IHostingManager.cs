@@ -171,5 +171,18 @@ namespace Neon.Kube
         /// cluster along with the public NAT port.
         /// </remarks>
         (string Address, int Port) GetSshEndpoint(string nodeName);
+
+        /// <summary>
+        /// Identifies the data disk for a node.  This returns the data disk's device 
+        /// name when an unitialized data disk exists or "PRIMARY" when the  OS disk
+        /// will be used for data.
+        /// </summary>
+        /// <returns>The disk device name or "PRIMARY".</returns>
+        /// <remarks>
+        /// <note>
+        /// This will not work after the node's data disk has been initialized.
+        /// </note>
+        /// </remarks>
+        string GetDataDisk(SshProxy<NodeDefinition> node);
     }
 }

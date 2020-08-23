@@ -282,13 +282,13 @@ TCPKeepAlive yes
 
         /// <summary>
         /// Initializes a near virgin server with the basic capabilities required
-        /// for a cluster host node.
+        /// for a cluster node.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="kubeSetupInfo">Kubernetes setup details.</param>
         /// <param name="shutdown">Optionally shuts down the node.</param>
-        public static void PrepareNode(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo, bool shutdown = false)
+        public static void PrepareNode(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition, KubeSetupInfo kubeSetupInfo, HostingManager hostingManager, bool shutdown = false)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
@@ -410,9 +410,11 @@ systemctl restart rsyslog.service
             // We may need an option that allows an operator to pre-build a hardware
             // based drive array or something.  I'm going to defer this to later and
             // concentrate on commodity hardware and cloud deployments for now. 
+            //
+            //      https://github.com/nforgeio/neonKUBE/issues/963
 
             node.Status = "setup: disk";
-            node.SudoCommand("setup-disk.sh");
+            node.SudoCommand("setup-disk.sh", hostingManager.GetDataDisk(node));
 
             // Clear any DHCP leases to be super sure that cloned node
             // VMs will obtain fresh IP addresses.
