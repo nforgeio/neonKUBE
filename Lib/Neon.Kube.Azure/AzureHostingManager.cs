@@ -433,34 +433,26 @@ namespace Neon.Kube
 
             gen2VmSizeAllowedRegex = new List<Regex>
             {
-                new Regex(@"^Standard_B", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_DC", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_D.*_v2$", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_DS.*_v2$", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_D.*_v3$", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_DS.*_v3", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_D.*a_v4$", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_D.*as_v4$", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_E.*_v3$", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_E.*s_v3$", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_E.*a_v4$", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_E.*as_v4$", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_F.*s_v2$", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_GS", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_G", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_NV", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_HB.*rs$", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_HC.*rs$", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_L.*s$", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_GS", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_G", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_NV", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_L.*s_v2$", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_M.*ms$", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_NC.*s_v2$", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_NC.*s_v$", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_ND.*s$", RegexOptions.IgnoreCase),
-                new Regex(@"^Standard_NV.*s_v3$", RegexOptions.IgnoreCase),
+                new Regex(@"^Standard_B", RegexOptions.IgnoreCase),             // B
+                new Regex(@"^Standard_DC.*s_v2$", RegexOptions.IgnoreCase),     // DCsv2
+                new Regex(@"^Standard_D.*_v2$", RegexOptions.IgnoreCase),       // Dv2
+                new Regex(@"^Standard_Ds.*_v2$", RegexOptions.IgnoreCase),      // Dsv3
+                new Regex(@"^Standard_D.*a_v4$", RegexOptions.IgnoreCase),      // Dav4
+                new Regex(@"^Standard_D.*as_v4$", RegexOptions.IgnoreCase),     // Dasv4
+                new Regex(@"^Standard_E.*_v3$", RegexOptions.IgnoreCase),       // Ev3
+                new Regex(@"^Standard_E.*as_v4$", RegexOptions.IgnoreCase),     // Easv4
+                new Regex(@"^Standard_F.*s_v2$", RegexOptions.IgnoreCase),      // Fsv2
+                new Regex(@"^Standard_GS", RegexOptions.IgnoreCase),            // GS
+                new Regex(@"^Standard_HB", RegexOptions.IgnoreCase),            // HB
+                new Regex(@"^Standard_HC", RegexOptions.IgnoreCase),            // HC
+                new Regex(@"^Standard_L.*s$", RegexOptions.IgnoreCase),         // Ls
+                new Regex(@"^Standard_L.*s_v2$", RegexOptions.IgnoreCase),      // Lsv2
+                new Regex(@"^Standard_M", RegexOptions.IgnoreCase),             // M
+                new Regex(@"^Standard_M.*_v2", RegexOptions.IgnoreCase),        // Mv2
+                new Regex(@"^Standard_NC.*s_v2$", RegexOptions.IgnoreCase),     // NCv2
+                new Regex(@"^Standard_NC.*s_v3$", RegexOptions.IgnoreCase),     // NCv3
+                new Regex(@"^Standard_ND.*s$", RegexOptions.IgnoreCase),        // ND
+                new Regex(@"^Standard_NV.*s_v3$", RegexOptions.IgnoreCase),     // NVv3
             }
             .AsReadOnly();
         }
@@ -904,6 +896,7 @@ namespace Neon.Kube
                 },
                 quiet: true);
             controller.AddStep("virtual machines", CreateVm);
+            controller.AddStep("initialize", InitializeNode);
             controller.AddGlobalStep("ingress/security rules", () => UpdateNetwork(NetworkOperations.UpdateIngressRules | NetworkOperations.AddPublicSshRules));
 
             if (!controller.Run(leaveNodesConnected: false))
@@ -1441,6 +1434,20 @@ namespace Neon.Kube
                 .WithExistingAvailabilitySet(nameToAvailabilitySet[azureNode.AvailabilitySetName])
                 .WithTag(NodeNameTag, azureNode.Metadata.Name)
                 .Create();
+        }
+
+        /// <summary>
+        /// Performs some basic node initialization.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        /// <param name="stepDelay">The step delay.</param>
+        private void InitializeNode(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        {
+            node.WaitForBoot();
+
+            // All we need to do is install: unzip
+
+            node.SudoCommand("apt-get install -yq unzip");
         }
 
         /// <summary>

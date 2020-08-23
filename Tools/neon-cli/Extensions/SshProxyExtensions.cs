@@ -364,7 +364,9 @@ namespace NeonCli
 
                 case HostingEnvironments.Azure:
 
-                    // The primary Azure data drive is [/dev/sdb] so any mounted drive will be [/dev/sdc].
+                    // For the Cannonical Azure VM image, the primary OS data disk is 
+                    // [/dev/sda], the ephimeral disk is [/dev/sdb] and any mounted 
+                    // Azure disk will be at [/dev/sdc].
 
                     SetBashVariable(preprocessReader, "data.disk", "/dev/sdc");
                     break;

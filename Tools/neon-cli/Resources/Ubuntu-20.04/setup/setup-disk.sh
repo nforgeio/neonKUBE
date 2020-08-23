@@ -7,7 +7,7 @@
 #
 #   $<data.disk>    The Linux device to be mounted for persistent data 
 #                   like [/dev/sdb] or [PRIMARY] if the VM is to use the 
-#                   VM's parimary OS disk only.
+#                   VM's primary OS disk only.
 #
 # NOTE: This script must be run under sudo.
 
@@ -67,8 +67,8 @@ if [ "$DATA_DISK" == "PRIMARY" ]; then
 
 else
 
-    # We only have a single data disk so there's no need to configure
-    # RAID.  We'll simply initialize and mount the disk.
+    # We only support a single data disk so we'll simply create a partition,
+    # initialize an EXT4 file system and mount it.
 
     # Create the disk partition.
 
@@ -97,7 +97,7 @@ if [ "$DATA_DISK" != "PRIMARY" ]; then
     # new file system and then we need to update [/etc/fstab].
     #
     # We're going to do this by listing the device UUIDs and GREPing
-    # out the line for the new device [/dev/sdc1] or [/dev/md127.  Then 
+    # out the line for the new device [/dev/sdc1] or [/dev/md127].  Then 
     # we'll use Bash REGEX to extract the UUID.  Note the device 
     # listing lines look like:
     #

@@ -343,7 +343,7 @@ Server Requirements:
                     contextExtension = new KubeContextExtension(contextExtensionPath)
                     {
                         ClusterDefinition = clusterDefinition,
-                        SshUsername       = Program.MachineUsername,
+                        SshUsername       = KubeConst.SysAdminUsername,
                         SshPassword       = Program.MachinePassword,
                         SetupDetails      = new KubeSetupDetails() { SetupPending = true }
                     };
@@ -351,7 +351,7 @@ Server Requirements:
                     contextExtension.Save();
                 }
 
-                if (!hostingManager.Provision(force, Program.MachinePassword, orgSshPassword))
+                if (!hostingManager.Provision(force, contextExtension.SshPassword, orgSshPassword))
                 {
                     Program.Exit(1);
                 }

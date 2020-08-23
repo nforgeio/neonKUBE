@@ -247,7 +247,7 @@ touch /etc/cloud/cloud-init.disabled
                 node.SudoCommand(CommandBundle.FromScript(disableCloudInitScript), RunOptions.FaultOnError);
 
                 // We're going to stop and mask the [snapd.service] because we don't want it
-                // automatically updating stuff randomly.
+                // automatically updating stuff.
 
                 Console.WriteLine("Disable:  [snapd.service]");
 
@@ -255,7 +255,7 @@ touch /etc/cloud/cloud-init.disabled
 
                 var disableSnapScript =
 @"
-# Stop and mask [snapd.service] when it's not already masked.
+# Stop and mask [snapd.service] if it's not already masked.
 
 systemctl status --no-pager snapd.service
 

@@ -332,7 +332,6 @@ You can disable the use of this encrypted folder by specifying
 
                 // Load the user name and password from the command line options, if present.
 
-                MachineUsername = KubeConst.SysAdminUsername;
                 MachinePassword = LeftCommandLine.GetOption("--machine-password", KubeConst.VmTemplatePassword);
 
                 // Handle the other options.
@@ -393,16 +392,11 @@ You can disable the use of this encrypted folder by specifying
 
                 // Run the command.
 
-                if (command.NeedsSshCredentials(CommandLine))
+                if (command.NeedsSshCredentials(CommandLine) && string.IsNullOrEmpty(MachinePassword))
                 {
-                    if (string.IsNullOrWhiteSpace(MachineUsername) || string.IsNullOrEmpty(MachinePassword))
-                    {
-                        Console.WriteLine();
-                        Console.WriteLine("    Enter cluster SSH password for [sysadmin]:");
-                        Console.WriteLine("    ------------------------------------------");
-                    }
-
-                    MachineUsername = KubeConst.SysAdminUsername;
+                    Console.WriteLine();
+                    Console.WriteLine($"    Enter cluster SSH password for [{KubeConst.SysAdminUsername}]:");
+                    Console.WriteLine($"    ------------------------------------------");
 
                     while (string.IsNullOrEmpty(MachinePassword))
                     {
@@ -411,9 +405,8 @@ You can disable the use of this encrypted folder by specifying
                 }
                 else
                 {
-                    // Reset these for commands that don't need it.
+                    // Reset this for commands that don't need it.
 
-                    MachineUsername = null;
                     MachinePassword = null;
                 }
 
@@ -599,12 +592,6 @@ You can disable the use of this encrypted folder by specifying
 #pragma warning restore 0436
 
         /// <summary>
-        /// Returns the username used to secure the cluster nodes before they are setup.  This
-        /// defaults to <b>sysadmin</b> which is used for the cluster machine templates.
-        /// </summary>
-        public static string MachineUsername { get; set; }
-
-        /// <summary>
         /// The password used to secure the cluster nodes before they are setup.  This defaults
         /// to <b>sysadmin0000</b> which is used for the cluster machine templates.
         /// </summary>
@@ -666,9 +653,9 @@ You can disable the use of this encrypted folder by specifying
 
             SshCredentials sshCredentials;
 
-            if (!string.IsNullOrEmpty(Program.MachineUsername) && !string.IsNullOrEmpty(Program.MachinePassword))
+            if (!string.IsNullOrEmpty(KubeConst.SysAdminUsername) && !string.IsNullOrEmpty(Program.MachinePassword))
             {
-                sshCredentials = SshCredentials.FromUserPassword(Program.MachineUsername, Program.MachinePassword);
+                sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, Program.MachinePassword);
             }
             else if (KubeHelper.CurrentContext != null)
             {
