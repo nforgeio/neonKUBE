@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    XenServerOptions.cs
+// FILE:	    XenServerHostingOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -29,7 +29,7 @@ namespace Neon.Kube
     /// <summary>
     /// Specifies hosting settings for the Citrix XenServer hypervisor.
     /// </summary>
-    public class XenServerOptions
+    public class XenServerHostingOptions
     {
         private const string defaultStorageRepository = "Local storage";
         private const bool   defaultSnapshot          = false;
@@ -37,7 +37,7 @@ namespace Neon.Kube
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public XenServerOptions()
+        public XenServerHostingOptions()
         {
         }
 
@@ -105,11 +105,10 @@ namespace Neon.Kube
 
             if (string.IsNullOrEmpty(StorageRepository))
             {
-                throw new ClusterDefinitionException($"[{nameof(XenServerOptions)}.{nameof(StorageRepository)}] is required when deploying to XenServer.");
+                throw new ClusterDefinitionException($"[{nameof(XenServerHostingOptions)}.{nameof(StorageRepository)}] is required when deploying to XenServer.");
             }
 
-            clusterDefinition.ValidatePrivateNodeAddresses();                                           // Private node IP addresses must be assigned and valid.
-            clusterDefinition.Hosting.ValidateHypervisor(clusterDefinition, remoteHypervisors: true);   // Hypervisor options must be valid.
+            clusterDefinition.ValidatePrivateNodeAddresses();   // Private node IP addresses must be assigned and valid.
         }
     }
 }

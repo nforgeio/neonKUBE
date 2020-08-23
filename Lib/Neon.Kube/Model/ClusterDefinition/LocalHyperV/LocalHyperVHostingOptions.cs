@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AwsOptions.cs
+// FILE:	    LocalHyperVHostingOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -15,34 +15,24 @@
 // See the License for the specific language governing permissions and
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-
-using Neon.Common;
-using Neon.Net;
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Specifies the Amazon Web Services hosting settings.
+    /// Specifies hosting settings for the local Microsoft Hyper-V hypervisor.
     /// </summary>
-    public class AwsOptions
+    public class LocalHyperVHostingOptions
     {
         /// <summary>
-        /// Constructor.
+        /// Default constructor.
         /// </summary>
-        public AwsOptions()
+        public LocalHyperVHostingOptions()
         {
         }
 
@@ -57,6 +47,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            clusterDefinition.ValidatePrivateNodeAddresses();   // Private node IP addresses must be assigned and valid.
         }
     }
 }

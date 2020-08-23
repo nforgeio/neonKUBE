@@ -132,7 +132,7 @@ namespace Neon.Kube
 
             controller.AddStep("connect nodes", (node, stepDelay) => Connect(node));
             controller.AddStep("verify OS", (node, stepDelay) => KubeHelper.VerifyNodeOs(node));
-            controller.AddStep("initialize nodes", (node, stepDelay) => Initialize(node));
+            controller.AddStep("configure nodes", (node, stepDelay) => Congfigure(node));
 
             if (secureSshPassword != orgSshPassword)
             {
@@ -215,7 +215,7 @@ namespace Neon.Kube
         /// Performs low-level node initialization.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void Initialize(SshProxy<NodeDefinition> node)
+        private void Congfigure(SshProxy<NodeDefinition> node)
         {
             string nodeSshPassword;
 

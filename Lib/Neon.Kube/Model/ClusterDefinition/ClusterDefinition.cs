@@ -507,7 +507,7 @@ namespace Neon.Kube
         /// <summary>
         /// Validates that node private IP addresses are set, are within the nodes subnet, and
         /// are unique.  This method is intended to be called from hosting options classes
-        /// like <see cref="MachineOptions"/> which require specified node IP addresses.
+        /// like <see cref="MachineHostingOptions"/> which require specified node IP addresses.
         /// </summary>
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]

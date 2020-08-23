@@ -49,8 +49,8 @@ namespace Neon.Kube
         /// <summary>
         /// Indicates that the default Azure storage type will be provisioned.
         /// When <see cref="AzureNodeOptions.StorageType"/>=<see cref="Default"/>
-        /// then <see cref="AzureOptions.DefaultStorageType"/> will be provisioned.
-        /// If <see cref="AzureOptions.DefaultStorageType"/>=<see cref="Default"/>
+        /// then <see cref="AzureHostingOptions.DefaultStorageType"/> will be provisioned.
+        /// If <see cref="AzureHostingOptions.DefaultStorageType"/>=<see cref="Default"/>
         /// then <see cref="StandardSSD"/> will be provisioned.
         /// </summary>
         Default = 0,

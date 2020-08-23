@@ -189,106 +189,20 @@ namespace Neon.Kube
         public List<string> Taints { get; set; }
 
         /// <summary>
+        /// Hypervisor hosting related options for environments like Hyper-V and XenServer.
+        /// </summary>
+        [JsonProperty(PropertyName = "Vm")]
+        [YamlMember(Alias = "vm", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public VmNodeOptions Vm { get; set; }
+
+        /// <summary>
         /// Azure provisioning options for this node, or <c>null</c> to use reasonable defaults.
         /// </summary>
         [JsonProperty(PropertyName = "Azure")]
         [YamlMember(Alias = "azure", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public AzureNodeOptions Azure { get; set; }
-
-        /// <summary>
-        /// Identifies the hypervisor instance where this node is to be provisioned for Hyper-V
-        /// or XenServer based clusters.  This name must map to the name of one of the <see cref="HostingOptions.VmHosts"/>
-        /// when set.
-        /// </summary>
-        [JsonProperty(PropertyName = "VmHost", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "vmHost", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string VmHost { get; set; } = null;
-
-        /// <summary>
-        /// Specifies the number of processors to assigned to this node when provisioned on a hypervisor.  This
-        /// defaults to the value specified by <see cref="HostingOptions.VmProcessors"/>.
-        /// </summary>
-        [JsonProperty(PropertyName = "VmProcessors", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "vmProcessors", ApplyNamingConventions = false)]
-        [DefaultValue(0)]
-        public int VmProcessors { get; set; } = 0;
-
-        /// <summary>
-        /// Specifies the maximum amount of memory to allocate to this node when provisioned on a hypervisor.  
-        /// This is specified as a string that can be a byte count or a number with units like <b>512MB</b>, 
-        /// <b>0.5GB</b>, <b>2GB</b>, or <b>1TB</b>.  This defaults to the value specified by 
-        /// <see cref="HostingOptions.VmMemory"/>.
-        /// </summary>
-        [JsonProperty(PropertyName = "VmMemory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "vmMemory", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string VmMemory { get; set; } = null;
-
-        /// <summary>
-        /// The amount of disk space to allocate to this node when when provisioned on a hypervisor.  This is specified as a string
-        /// that can be a byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, or <b>1TB</b>.  This defaults 
-        /// to the value specified by <see cref="HostingOptions.VmDisk"/>.
-        /// </summary>
-        [JsonProperty(PropertyName = "VmDisk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "vmDisk", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string VmDisk { get; set; } = null;
-
-        /// <summary>
-        /// Returns the maximum number processors to allocate for this node when
-        /// hosted on a hypervisor.
-        /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <returns>The number of cores.</returns>
-        public int GetVmProcessors(ClusterDefinition clusterDefinition)
-        {
-            if (VmProcessors != 0)
-            {
-                return VmProcessors;
-            }
-            else
-            {
-                return clusterDefinition.Hosting.VmProcessors;
-            }
-        }
-
-        /// <summary>
-        /// Returns the maximum number of bytes of memory allocate to for this node when
-        /// hosted on a hypervisor.
-        /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <returns>The size in bytes.</returns>
-        public long GetVmMemory(ClusterDefinition clusterDefinition)
-        {
-            if (!string.IsNullOrEmpty(VmMemory))
-            {
-                return ClusterDefinition.ValidateSize(VmMemory, this.GetType(), nameof(VmMemory));
-            }
-            else
-            {
-                return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.VmMemory, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.VmMemory));
-            }
-        }
-
-        /// <summary>
-        /// Returns the maximum number of bytes to disk allocate to for this node when
-        /// hosted on a hypervisor.
-        /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <returns>The size in bytes.</returns>
-        public long GetVmDisk(ClusterDefinition clusterDefinition)
-        {
-            if (!string.IsNullOrEmpty(VmDisk))
-            {
-                return ClusterDefinition.ValidateSize(VmDisk, this.GetType(), nameof(VmDisk));
-            }
-            else
-            {
-                return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.VmDisk, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.VmDisk));
-            }
-        }
 
         /// <summary>
         /// <b>HACK:</b> This used by <see cref="SetupController{T}"/> to introduce a delay for this
@@ -362,31 +276,40 @@ namespace Neon.Kube
                 }
             }
 
-            if (Azure != null)
+            switch (clusterDefinition.Hosting.Environment)
             {
-                Azure.Validate(clusterDefinition, this.Name);
-            }
+                case HostingEnvironments.Aws:
 
-            if (clusterDefinition.Hosting.IsRemoteHypervisorProvider)
-            {
-                if (string.IsNullOrEmpty(VmHost))
-                {
-                    throw new ClusterDefinitionException($"Node [{Name}] does not specify a hypervisor [{nameof(NodeDefinition)}.{nameof(NodeDefinition.VmHost)}].");
-                }
-                else if (clusterDefinition.Hosting.VmHosts.FirstOrDefault(h => h.Name.Equals(VmHost, StringComparison.InvariantCultureIgnoreCase)) == null)
-                {
-                    throw new ClusterDefinitionException($"Node [{Name}] references hypervisor [{VmHost}] which is defined in [{nameof(HostingOptions)}={nameof(HostingOptions.VmHosts)}].");
-                }
-            }
+                    // $todo(jefflill: Implement this
+                    break;
 
-            if (VmMemory != null)
-            {
-                ClusterDefinition.ValidateSize(VmMemory, this.GetType(), nameof(VmMemory));
-            }
+                case HostingEnvironments.Azure:
 
-            if (VmDisk != null)
-            {
-                ClusterDefinition.ValidateSize(VmDisk, this.GetType(), nameof(VmDisk));
+                    Azure = Azure ?? new AzureNodeOptions();
+                    Azure.Validate(clusterDefinition, this.Name);
+                    break;
+
+                case HostingEnvironments.Google:
+
+                    // $todo(jefflill: Implement this
+                    break;
+
+                case HostingEnvironments.Machine:
+
+                    // No machine options to check at this point in time.
+                    break;
+
+                case HostingEnvironments.HyperV:
+                case HostingEnvironments.HyperVLocal:
+                case HostingEnvironments.XenServer:
+
+                    Vm = Vm ?? new VmNodeOptions();
+                    Vm.Validate(clusterDefinition, this.Name);
+                    break;
+
+                default:
+
+                    throw new NotImplementedException($"Hosting environment [{clusterDefinition.Hosting.Environment}] hosting option check is not implemented.");
             }
         }
     }

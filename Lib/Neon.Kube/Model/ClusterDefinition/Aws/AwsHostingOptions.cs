@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    GoogleOptions.cs
+// FILE:	    AwsHostingOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -13,7 +13,6 @@
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
-// limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -36,14 +35,14 @@ using Neon.Net;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Specifies the Google Cloud Platform hosting settings.
+    /// Specifies the Amazon Web Services hosting settings.
     /// </summary>
-    public class GoogleOptions
+    public class AwsHostingOptions
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public GoogleOptions()
+        public AwsHostingOptions()
         {
         }
 
@@ -57,6 +56,7 @@ namespace Neon.Kube
         public void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
         }
     }
 }

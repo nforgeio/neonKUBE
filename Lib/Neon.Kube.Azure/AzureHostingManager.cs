@@ -540,7 +540,7 @@ namespace Neon.Kube
         private string                                  nodeUsername;
         private string                                  nodePassword;
         private CloudOptions                            cloudOptions;
-        private AzureOptions                            azureOptions;
+        private AzureHostingOptions                     azureOptions;
         private string                                  region;
         private AzureCredentials                        azureCredentials;
         private string                                  resourceGroup;
@@ -897,7 +897,7 @@ namespace Neon.Kube
                 quiet: true);
             controller.AddStep("virtual machines", CreateVm);
             controller.AddGlobalStep("ingress/security rules", () => UpdateNetwork(NetworkOperations.UpdateIngressRules | NetworkOperations.AddPublicSshRules));
-            controller.AddStep("initialize nodes", InitializeNode);
+            controller.AddStep("configure nodes", Configure);
 
             if (!controller.Run(leaveNodesConnected: false))
             {
@@ -1458,7 +1458,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <param name="stepDelay">The step delay.</param>
-        private void InitializeNode(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void Configure(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             node.WaitForBoot();
 

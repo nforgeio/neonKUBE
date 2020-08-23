@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AzureOptions.cs
+// FILE:	    AzureHostingOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -39,7 +39,7 @@ namespace Neon.Kube
     /// <summary>
     /// Specifies the Microsoft Azure cluster hosting settings.
     /// </summary>
-    public class AzureOptions
+    public class AzureHostingOptions
     {
         private const string defaultVmSize   = "Standard_B2S";
         private const string defaultDiskSize = "128 GiB";
@@ -47,7 +47,7 @@ namespace Neon.Kube
         /// <summary>
         /// Constructor.
         /// </summary>
-        public AzureOptions()
+        public AzureHostingOptions()
         {
         }
 
@@ -412,7 +412,7 @@ namespace Neon.Kube
 
             if (string.IsNullOrEmpty(DefaultDiskSize))
             {
-                DefaultDiskSize = AzureOptions.defaultDiskSize;
+                DefaultDiskSize = AzureHostingOptions.defaultDiskSize;
             }
 
             if (!ByteUnits.TryParse(DefaultDiskSize, out var defaultDiskSize) || defaultDiskSize <= 0)

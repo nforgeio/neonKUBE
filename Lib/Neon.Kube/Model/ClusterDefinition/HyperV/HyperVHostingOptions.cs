@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    MachineOptions.cs
+// FILE:	    HyperVHostingOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -16,36 +16,24 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
-using System.IO;
-using System.Net;
-using System.Net.Sockets;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-
-using Neon.Common;
-using Neon.Net;
+using YamlDotNet.Serialization;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Specifies hosting settings for bare metal or virtual machines.
+    /// Specifies hosting settings for the Microsoft Hyper-V hypervisor.
     /// </summary>
-    public class MachineOptions
+    public class HyperVHostingOptions
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public MachineOptions()
+        public HyperVHostingOptions()
         {
         }
 

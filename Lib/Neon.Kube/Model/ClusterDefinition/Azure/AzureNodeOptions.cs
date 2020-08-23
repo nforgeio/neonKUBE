@@ -64,7 +64,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Optionally specifies the storage type to use for any mounted drives.  This defaults to <see cref="AzureStorageTypes.Default"/>
-        /// which indicates that <see cref="AzureOptions.DefaultStorageType"/> will specify the storage type
+        /// which indicates that <see cref="AzureHostingOptions.DefaultStorageType"/> will specify the storage type
         /// for this node.  By default, <see cref="AzureStorageTypes.StandardSSD"/> drives will be provisioned
         /// when storage type is not specified.
         /// </para>
@@ -98,7 +98,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Optionally specifies the size of the mounted managed Azure disk as <see cref="ByteUnits"/>.  This
-        /// defaults to <c>null</c> which indicates that <see cref="AzureOptions.DefaultDiskSize"/>
+        /// defaults to <c>null</c> which indicates that <see cref="AzureHostingOptions.DefaultDiskSize"/>
         /// will be used instead, and that defaults to <b>128 GiB</b>.
         /// </summary>
         /// <remarks>
@@ -198,7 +198,7 @@ namespace Neon.Kube
 
             if (!ByteUnits.TryParse(this.DiskSize, out var driveSizeBytes) || driveSizeBytes <= 1)
             {
-                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(AzureOptions)}.{nameof(DiskSize)}={DiskSize}] which is not valid.");
+                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(AzureHostingOptions)}.{nameof(DiskSize)}={DiskSize}] which is not valid.");
             }
 
             var driveSizeGiB = AzureHelper.GetDiskSizeGiB(StorageType, driveSizeBytes);
@@ -209,7 +209,7 @@ namespace Neon.Kube
 
             if (VmGen.HasValue && (VmGen.Value != 1 && VmGen.Value != 2))
             {
-                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(AzureOptions)}.{nameof(VmGen)}={VmGen}] which is not valid.  Only values of 1 or 2 are allowed.");
+                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(AzureHostingOptions)}.{nameof(VmGen)}={VmGen}] which is not valid.  Only values of 1 or 2 are allowed.");
             }
         }
     }
