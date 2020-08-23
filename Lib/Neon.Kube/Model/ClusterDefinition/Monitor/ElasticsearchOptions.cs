@@ -56,13 +56,12 @@ namespace Neon.Kube
         public bool Enabled { get; set; } = true;
 
         /// <summary>
-        /// Indicates whether Elasticsearch metrics are to be enabled for the cluster.  
-        /// This defaults to <c>true</c>.
+        /// Specifies the amount of disk space to allocate to Elasticsearch.
         /// </summary>
         [JsonProperty(PropertyName = "DiskSize", Required = Required.Default)]
         [YamlMember(Alias = "diskSize", ApplyNamingConventions = false)]
-        [DefaultValue("1Gi")]
-        public string DiskSize { get; set; } = "1Gi";
+        [DefaultValue("1 GiB")]
+        public string DiskSize { get; set; } = "1 GiB";
 
         /// <summary>
         /// Compute Resources required by Elasticsearch.
@@ -92,6 +91,13 @@ namespace Neon.Kube
             {
                 return;
             }
+
+            if (LogRetentionDays < 1)
+            {
+                throw new ClusterDefinitionException($"[{nameof(ElasticsearchOptions)}.{nameof(LogRetentionDays)}={LogRetentionDays}] is valid.  This must be at least one day.");
+            }
+
+
         }
     }
 }

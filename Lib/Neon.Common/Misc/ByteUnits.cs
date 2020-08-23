@@ -313,123 +313,123 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>K</b> units.
+        /// Converts a byte count to a string using <b>KB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
-        /// <returns>The size in K.</returns>
-        public static string ToKString(decimal size)
+        /// <returns>The size in KB.</returns>
+        public static string ToKB(decimal size)
         {
-            return $"{ToDoubleString(size, KiloBytes)}K";
+            return $"{ToDoubleString(size, KiloBytes)}KB";
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>Ki</b> units.
+        /// Converts a byte count to a string using <b>KiB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
-        /// <returns>The size in Ki.</returns>
-        public static string ToKiString(decimal size)
+        /// <returns>The size in KiB.</returns>
+        public static string ToKiB(decimal size)
         {
-            return $"{ToDoubleString(size, KibiBytes)}Ki";
+            return $"{ToDoubleString(size, KibiBytes)}KiB";
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>M</b> units.
+        /// Converts a byte count to a string using <b>MB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
-        /// <returns>The size in M.</returns>
-        public static string ToMString(decimal size)
+        /// <returns>The size in MB.</returns>
+        public static string ToMB(decimal size)
         {
-            return $"{ToDoubleString(size, MegaBytes)}M";
+            return $"{ToDoubleString(size, MegaBytes)}MB";
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>Mi</b> units.
+        /// Converts a byte count to a string using <b>MiB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
-        /// <returns>The size in Mi.</returns>
-        public static string ToMiString(decimal size)
+        /// <returns>The size in MiB.</returns>
+        public static string ToMiB(decimal size)
         {
-            return $"{ToDoubleString(size, MebiBytes)}Mi";
+            return $"{ToDoubleString(size, MebiBytes)}MiB";
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>G</b> units.
+        /// Converts a byte count to a string using <b>GB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
-        /// <returns>The size in G.</returns>
-        public static string ToGString(decimal size)
+        /// <returns>The size in GB.</returns>
+        public static string ToGB(decimal size)
         {
-            return $"{ToDoubleString(size, GigaBytes)}G";
+            return $"{ToDoubleString(size, GigaBytes)}GB";
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>Gi</b> units.
+        /// Converts a byte count to a string using <b>GiB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
-        /// <returns>The size in Gi.</returns>
-        public static string ToGiString(decimal size)
+        /// <returns>The size in GiB.</returns>
+        public static string ToGiB(decimal size)
         {
-            return $"{ToDoubleString(size, GibiBytes)}Gi";
+            return $"{ToDoubleString(size, GibiBytes)}GiB";
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>T</b> units.
+        /// Converts a byte count to a string using <b>TB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
-        /// <returns>The size in T.</returns>
-        public static string ToTString(decimal size)
+        /// <returns>The size in TB.</returns>
+        public static string ToTB(decimal size)
         {
-            return $"{ToDoubleString(size, TeraBytes)}T";
+            return $"{ToDoubleString(size, TeraBytes)}TB";
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>Ti</b> units.
+        /// Converts a byte count to a string using <b>TiB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
-        /// <returns>The size in Ti.</returns>
-        public static string ToTiString(decimal size)
+        /// <returns>The size in TiB.</returns>
+        public static string ToTiB(decimal size)
         {
-            return $"{ToDoubleString(size, TebiBytes)}Ti";
+            return $"{ToDoubleString(size, TebiBytes)}TiB";
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>P</b> units.
+        /// Converts a byte count to a string using <b>PB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
-        /// <returns>The size in P.</returns>
-        public static string ToPString(decimal size)
+        /// <returns>The size in PB.</returns>
+        public static string ToPB(decimal size)
         {
-            return $"{ToDoubleString(size, PetaBytes)}P";
+            return $"{ToDoubleString(size, PetaBytes)}PB";
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>Pi</b> units.
+        /// Converts a byte count to a string using <b>PiB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
-        /// <returns>The size in Pi.</returns>
-        public static string ToPiString(decimal size)
+        /// <returns>The size in PiB.</returns>
+        public static string ToPiB(decimal size)
         {
-            return $"{ToDoubleString(size, PebiBytes)}Pi";
+            return $"{ToDoubleString(size, PebiBytes)}PiB";
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>E</b> units.
+        /// Converts a byte count to a string using <b>EB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
-        /// <returns>The size in E.</returns>
-        public static string ToEString(decimal size)
+        /// <returns>The size in EB.</returns>
+        public static string ToEB(decimal size)
         {
-            return $"{ToDoubleString(size, ExaBytes)}E";
+            return $"{ToDoubleString(size, ExaBytes)}EB";
         }
 
         /// <summary>
-        /// Converts a byte count to a string using <b>Ei</b> units.
+        /// Converts a byte count to a string using <b>EiB</b> units.
         /// </summary>
         /// <param name="size">The size.</param>
         /// <returns>The size in Ei.</returns>
-        public static string ToEiString(decimal size)
+        public static string ToEiB(decimal size)
         {
-            return $"{ToDoubleString(size, ExbiBytes)}Ei";
+            return $"{ToDoubleString(size, ExbiBytes)}EiB";
         }
     }
 }

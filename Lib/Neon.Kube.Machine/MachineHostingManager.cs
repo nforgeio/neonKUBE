@@ -327,7 +327,7 @@ echo '{KubeConst.SysAdminUsername}:{secureSshPassword}' | chpasswd
                 {
                     if (long.TryParse(result.OutputText.Trim(), out var deviceSize) && deviceSize > 0)
                     {
-                        node.Metadata.Labels.StorageSize = ByteUnits.ToGiString(deviceSize);
+                        node.Metadata.Labels.StorageSize = ByteUnits.ToGiB(deviceSize);
                         break;
                     }
                 }

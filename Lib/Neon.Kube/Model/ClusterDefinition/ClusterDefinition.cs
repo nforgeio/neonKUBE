@@ -277,19 +277,10 @@ namespace Neon.Kube
         /// Returns the options to be used for configuring the cluster integrated
         /// Elasticsearch/Fluentd/Kibana (Mon) logging stack.
         /// </summary>
-        [JsonProperty(PropertyName = "Mon", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "mon", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Monitor", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "monitor", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public MonOptions Mon { get; set; } = new MonOptions();
-
-        /// <summary>
-        /// Returns the options to be used for configuring the cluster integrated
-        /// Elasticsearch/Fluentd/Kibana (Mon) logging stack.
-        /// </summary>
-        [JsonProperty(PropertyName = "Prometheus", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "prometheus", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public PrometheusOptions Prometheus { get; set; } = new PrometheusOptions();
+        public MonitorOptions Monitor { get; set; } = new MonitorOptions();
 
         /// <summary>
         /// Optionally enable unit testing on this cluster.  This is disabled by 
@@ -576,8 +567,7 @@ namespace Neon.Kube
             Provisioner = Provisioner ?? defaultProvisioner;
             Kubernetes  = Kubernetes ?? new KubernetesOptions();
             Docker      = Docker ?? new DockerOptions();
-            Mon         = Mon ?? new MonOptions() { Enabled = false };
-            Prometheus  = Prometheus ?? new PrometheusOptions() { Enabled = false };
+            Monitor     = Monitor ?? new MonitorOptions();
             Setup       = Setup ?? new SetupOptions();
             Hosting     = Hosting ?? new HostingOptions();
             NodeOptions = NodeOptions ?? new NodeOptions();
@@ -587,8 +577,7 @@ namespace Neon.Kube
             Security.Validate(this);
             Kubernetes.Validate(this);
             Docker.Validate(this);
-            Mon.Validate(this);
-            Prometheus.Validate(this);
+            Monitor.Validate(this);
             Setup.Validate(this);
             Network.Validate(this);
             Hosting.Validate(this);

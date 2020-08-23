@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    MonOptions.cs
+// FILE:	    MonitorOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -42,7 +42,7 @@ namespace Neon.Kube
     /// Specifies the options for configuring the cluster integrated
     /// Elasticsearch/Fluentd/Kibana (EFK) logging stack.
     /// </summary>
-    public class MonOptions
+    public class MonitorOptions
     {
         /// <summary>
         /// Indicates whether the EFK stack is to be enabled for the cluster.  
@@ -81,6 +81,12 @@ namespace Neon.Kube
             {
                 return;
             }
+
+            Elasticsearch = Elasticsearch ?? new ElasticsearchOptions();
+            Prometheus    = Prometheus ?? new PrometheusOptions();
+
+            Elasticsearch.Validate(clusterDefinition);
+            Prometheus.Validate(clusterDefinition);
         }
     }
 }

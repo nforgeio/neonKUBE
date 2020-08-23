@@ -378,9 +378,8 @@ namespace Neon.Kube
         public const string LabelIstio = ClusterDefinition.ReservedLabelPrefix + "istio";
 
         /// <summary>
-        /// <b>io.neonkube.mon.istio.enabled</b> [<c>bool</c>]: Indicates that Istio 
-        /// will be deployed to this node.  
-        /// This defaults to <c>false</c>.
+        /// <b>io.neonkube.istio.enabled</b> [<c>bool</c>]: Indicates that Istio 
+        /// will be deployed to this node.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Istio", Required = Required.Default)]
         [YamlMember(Alias = "istio", ApplyNamingConventions = false)]
@@ -393,15 +392,15 @@ namespace Neon.Kube
         /// <summary>
         /// Reserved label name for <see cref="Elasticsearch"/>.
         /// </summary>
-        public const string LabelElasticsearch = ClusterDefinition.ReservedLabelPrefix + "mon.elasticsearch";
+        public const string LabelElasticsearch = ClusterDefinition.ReservedLabelPrefix + "monitor.elasticsearch";
 
         /// <summary>
         /// Reserved label name for <see cref="M3DB"/>.
         /// </summary>
-        public const string LabelM3DB = ClusterDefinition.ReservedLabelPrefix + "mon.m3db";
+        public const string LabelM3DB = ClusterDefinition.ReservedLabelPrefix + "monitor.m3db";
 
         /// <summary>
-        /// <b>io.neonkube.mon.elasticsearch.enabled</b> [<c>bool</c>]: Indicates that Elasticsearch 
+        /// <b>io.neonkube.monitor.elasticsearch</b> [<c>bool</c>]: Indicates that Elasticsearch 
         /// will be deployed to this node if <see cref="ElasticsearchOptions.Enabled"/> is <c>true</c>.  
         /// This defaults to <c>false</c>.
         /// </summary>
@@ -411,7 +410,7 @@ namespace Neon.Kube
         public bool Elasticsearch { get; set; } = false;
 
         /// <summary>
-        /// <b>io.neonkube.mon.m3db.enabled</b> [<c>bool</c>]: Indicates that M3DB 
+        /// <b>io.neonkube.monitor.m3db</b> [<c>bool</c>]: Indicates that M3DB 
         /// will be deployed to this node if <see cref="PrometheusOptions.Enabled"/> is <c>true</c>.  
         /// This defaults to <c>false</c>.
         /// </summary>
