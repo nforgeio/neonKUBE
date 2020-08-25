@@ -113,13 +113,13 @@ namespace Neon.ModelGen
 
             // NOTE: 
             // 
-            // We need add all of the NETStandard reference assembly so that
+            // We need thr the NETStandard reference assembly so that
             // compilation will actually work.
             // 
             // We've set [PreserveCompilationContext=true] in [Neon.ModelGen.csproj]
             // so that the reference assemblies will be written to places like:
             //
-            //      bin/Debug/netstandard2.0/refs/*
+            //      bin/Debug/netstandard2.1/refs/*
             //
             // This is where we obtained the these assemblies and added them
             // all as resources within the [Netstandard] project folder.

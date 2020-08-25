@@ -94,6 +94,7 @@ Follow the steps below to configure a development or test workstation:
     * Click **Apply**
     * Select the **Resource** tab on the left set **CPUs=4** and **Memory=4GB**.
     * Click **Apply**
+    * **IMPORTANT:** **Do not enable WSL2** support if available.  WSL2 doesn't support IPv4 loopback addresses which will result in failed unit tests.
 
 13. **Clone** the [https://github.com/nforgeio/neonKUBE](https://github.com/nforgeio/neonKUBE) repository to your workstation:
 
@@ -103,7 +104,7 @@ Follow the steps below to configure a development or test workstation:
     * Go to the neonKUBE [repository](https://github.com/nforgeio/neonKUBE).
     * Click the *green* **Code** button and select **Open in Visual Studio**
     * A *Launch Application* dialog will appear.  Select **Microsoft Visual Studio Protocol Handler Selector** and click **Open Link**
-    * Choose or enter the directory where the repository will be cloned.  This defaults to a user-specific folder.  I typically change this to a global folder to keep the file paths short.
+    * Choose or enter the directory where the repository will be cloned.  This defaults to a user specific folder.  I typically change this to a global folder to keep the file paths short.
     * Click **Clone**
 
 14. Configure the build **environment variables**:
