@@ -38,7 +38,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
     <PackageReference Include="NATS.Client" Version="0.10.1" />
     <PackageReference Include="STAN.Client" Version="0.2.1" />
     <PackageReference Include="xunit" Version="2.4.1" />
