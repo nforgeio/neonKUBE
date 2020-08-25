@@ -3,7 +3,7 @@
     "tfm": "netcoreapp3.1",
     "framework": {
       "name": "Microsoft.NETCore.App",
-      "version": "3.1.6"
+      "version": "3.1.7"
     },
     "configProperties": {
       "System.GC.Concurrent": true,
