@@ -132,7 +132,7 @@ namespace Neon.Kube
 
             controller.AddStep("connect nodes", (node, stepDelay) => Connect(node));
             controller.AddStep("verify OS", (node, stepDelay) => KubeHelper.VerifyNodeOs(node));
-            controller.AddStep("initialize nodes", (node, stepDelay) => Initialize(node));
+            controller.AddStep("configure nodes", (node, stepDelay) => Congfigure(node));
 
             if (secureSshPassword != orgSshPassword)
             {
@@ -151,18 +151,15 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override (string Address, int Port) GetSshEndpoint(string nodeName)
-        {
-            return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
-        }
-
-        /// <inheritdoc/>
         public override void AddPostProvisionSteps(SetupController<NodeDefinition> controller)
         {
         }
 
         /// <inheritdoc/>
-        public override bool RequiresAdminPrivileges => false;
+        public override (string Address, int Port) GetSshEndpoint(string nodeName)
+        {
+            return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
+        }
 
         /// <summary>
         /// Connects the proxy to the node.
@@ -218,7 +215,7 @@ namespace Neon.Kube
         /// Performs low-level node initialization.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void Initialize(SshProxy<NodeDefinition> node)
+        private void Congfigure(SshProxy<NodeDefinition> node)
         {
             string nodeSshPassword;
 
@@ -330,11 +327,28 @@ echo '{KubeConst.SysAdminUsername}:{secureSshPassword}' | chpasswd
                 {
                     if (long.TryParse(result.OutputText.Trim(), out var deviceSize) && deviceSize > 0)
                     {
-                        node.Metadata.Labels.StorageSize = ByteUnits.ToGiString(deviceSize);
+                        node.Metadata.Labels.StorageSize = ByteUnits.ToGiB(deviceSize);
                         break;
                     }
                 }
             }
+        }
+
+        /// <inheritdoc/>
+        public override string GetDataDisk(SshProxy<NodeDefinition> node)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+
+            var unpartitonedDisks = node.ListUnpartitionedDisks();
+
+            if (unpartitonedDisks.Count() == 0)
+            {
+                return "PRIMARY";
+            }
+
+            Covenant.Assert(unpartitonedDisks.Count() == 1, "VMs are assumed to have no more than one attached data disk.");
+
+            return unpartitonedDisks.Single();
         }
     }
 }

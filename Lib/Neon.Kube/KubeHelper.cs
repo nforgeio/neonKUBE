@@ -2211,5 +2211,46 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
                 node.Fault("Expected: Ubuntu 20.04+");
             }
         }
+
+        /// <summary>
+        /// <para>
+        /// Ensures that at least one cluster node is enabled for cluster ingress
+        /// network traffic.
+        /// </para>
+        /// <note>
+        /// It is possible for the user to have set <see cref="NodeDefinition.Ingress"/>
+        /// to <c>false</c> for all nodes.  We're going to pick a reasonable set of
+        /// nodes in this case.  I there are 3 or more workers, then only the workers
+        /// will receive traffic, otherwise all nodes will receive traffic.
+        /// </note>
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        public static void EnsureIngressNodes(ClusterDefinition clusterDefinition)
+        {
+            if (clusterDefinition.Network.IngressRules?.Count() == 0)
+            {
+                return;
+            }
+
+            if (!clusterDefinition.Nodes.Any(node => node.Ingress))
+            {
+                var workerCount = clusterDefinition.Workers.Count();
+
+                if (workerCount < 3)
+                {
+                    foreach (var node in clusterDefinition.Nodes)
+                    {
+                        node.Ingress = true;
+                    }
+                }
+                else
+                {
+                    foreach (var worker in clusterDefinition.Workers)
+                    {
+                        worker.Ingress = true;
+                    }
+                }
+            }
+        }
     }
 }

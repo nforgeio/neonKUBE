@@ -286,7 +286,6 @@ namespace NeonCli
                                     new File("setup-ntp.sh", hasVariables: true),
                                     new File("setup-package-proxy.sh", hasVariables: true),
                                     new File("setup-prep.sh", hasVariables: true),
-                                    new File("setup-ssd.sh", hasVariables: true),
                                     new File("setup-utility.sh", hasVariables: true),
                                 }),
                             new Folder("updates",

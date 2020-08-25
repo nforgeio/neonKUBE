@@ -72,9 +72,6 @@
     <None Update="Resources\Ubuntu-20.04\setup\setup-prep.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-20.04\setup\setup-ssd.sh">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Update="Resources\Ubuntu-20.04\setup\setup-utility.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

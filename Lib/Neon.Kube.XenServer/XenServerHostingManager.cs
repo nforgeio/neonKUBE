@@ -107,7 +107,7 @@ namespace Neon.Kube
             this.cluster.HostingManager = this;
             this.setupInfo              = setupInfo;
             this.logFolder              = logFolder;
-            this.maxVmNameWidth         = cluster.Definition.Nodes.Max(n => n.Name.Length) + cluster.Definition.Hosting.GetVmNamePrefix(cluster.Definition).Length;
+            this.maxVmNameWidth         = cluster.Definition.Nodes.Max(n => n.Name.Length) + cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition).Length;
         }
 
         /// <inheritdoc/>
@@ -173,22 +173,22 @@ namespace Neon.Kube
             {
                 if (string.IsNullOrEmpty(node.Labels.PhysicalMachine))
                 {
-                    node.Labels.PhysicalMachine = node.VmHost;
+                    node.Labels.PhysicalMachine = node.Vm.Host;
                 }
 
                 if (node.Labels.ComputeCores == 0)
                 {
-                    node.Labels.ComputeCores = node.GetVmProcessors(cluster.Definition);
+                    node.Labels.ComputeCores = node.Vm.GetProcessors(cluster.Definition);
                 }
 
                 if (node.Labels.ComputeRam == 0)
                 {
-                    node.Labels.ComputeRam = (int)(node.GetVmMemory(cluster.Definition) / ByteUnits.MebiBytes);
+                    node.Labels.ComputeRam = (int)(node.Vm.GetMemory(cluster.Definition) / ByteUnits.MebiBytes);
                 }
 
                 if (string.IsNullOrEmpty(node.Labels.StorageSize))
                 {
-                    node.Labels.StorageSize = ByteUnits.ToGiString(node.GetVmDisk(cluster.Definition));
+                    node.Labels.StorageSize = ByteUnits.ToGiB(node.Vm.GetDisk(cluster.Definition));
                 }
             }
 
@@ -199,12 +199,12 @@ namespace Neon.Kube
 
             xenHosts = new List<XenClient>();
 
-            foreach (var host in cluster.Definition.Hosting.VmHosts)
+            foreach (var host in cluster.Definition.Hosting.Vm.Hosts)
             {
                 var hostAddress  = host.Address;
                 var hostname     = host.Name;
-                var hostUsername = host.Username ?? cluster.Definition.Hosting.VmHostUsername;
-                var hostPassword = host.Password ?? cluster.Definition.Hosting.VmHostPassword;
+                var hostUsername = host.Username ?? cluster.Definition.Hosting.Vm.HostUsername;
+                var hostPassword = host.Password ?? cluster.Definition.Hosting.Vm.HostPassword;
 
                 if (string.IsNullOrEmpty(hostname))
                 {
@@ -253,7 +253,7 @@ namespace Neon.Kube
         {
             var nodeDefinitions = cluster.Definition.NodeDefinitions.Values;
 
-            return cluster.Nodes.Where(n => n.Metadata.VmHost.Equals(xenHost.Name, StringComparison.InvariantCultureIgnoreCase))
+            return cluster.Nodes.Where(n => n.Metadata.Vm.Host.Equals(xenHost.Name, StringComparison.InvariantCultureIgnoreCase))
                 .OrderBy(n => n.Name, StringComparer.CurrentCultureIgnoreCase)
                 .ToList();
         }
@@ -265,7 +265,7 @@ namespace Neon.Kube
         /// <returns>The virtual machine name.</returns>
         private string GetVmName(SshProxy<NodeDefinition> node)
         {
-            return $"{cluster.Definition.Hosting.GetVmNamePrefix(cluster.Definition)}{node.Name}";
+            return $"{cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition)}{node.Name}";
         }
 
         /// <summary>
@@ -367,9 +367,9 @@ namespace Neon.Kube
             foreach (var node in GetHostedNodes(xenHost))
             {
                 var vmName      = GetVmName(node);
-                var processors  = node.Metadata.GetVmProcessors(cluster.Definition);
-                var memoryBytes = node.Metadata.GetVmMemory(cluster.Definition);
-                var diskBytes   = node.Metadata.GetVmDisk(cluster.Definition);
+                var processors  = node.Metadata.Vm.GetProcessors(cluster.Definition);
+                var memoryBytes = node.Metadata.Vm.GetMemory(cluster.Definition);
+                var diskBytes   = node.Metadata.Vm.GetDisk(cluster.Definition);
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "create: virtual machine");
 
@@ -461,6 +461,13 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override bool RequiresAdminPrivileges => false;
+        public override string GetDataDisk(SshProxy<NodeDefinition> node)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+
+            // This hosting manager doesn't currently provision a separate data disk.
+
+            return "PRIMARY";
+        }
     }
 }

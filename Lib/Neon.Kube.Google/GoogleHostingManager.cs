@@ -109,12 +109,47 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
+        public override bool CanManageRouter => true;
+
+        /// <inheritdoc/>
+        public override void UpdatePublicIngress()
+        {
+            // $todo(jefflil): Implement this
+        }
+
+        /// <inheritdoc/>
+        public override void EnablePublicSsh()
+        {
+            // $todo(jefflil): Implement this
+        }
+
+        /// <inheritdoc/>
+        public override void DisablePublicSsh()
+        {
+            // $todo(jefflil): Implement this
+        }
+
+        /// <inheritdoc/>
         public override (string Address, int Port) GetSshEndpoint(string nodeName)
         {
             return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
         }
 
         /// <inheritdoc/>
-        public override bool RequiresAdminPrivileges => false;
+        public override string GetDataDisk(SshProxy<NodeDefinition> node)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+
+            var unpartitonedDisks = node.ListUnpartitionedDisks();
+
+            if (unpartitonedDisks.Count() == 0)
+            {
+                return "PRIMARY";
+            }
+
+            Covenant.Assert(unpartitonedDisks.Count() == 1, "VMs are assumed to have no more than one attached data disk.");
+
+            return unpartitonedDisks.Single();
+        }
     }
 }

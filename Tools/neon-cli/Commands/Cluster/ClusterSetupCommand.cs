@@ -122,6 +122,7 @@ OPTIONS:
         private KubeConfigContext       kubeContext;
         private KubeContextExtension    kubeContextExtension;
         private ClusterProxy            cluster;
+        private HostingManager          hostingManager;
         private KubeSetupInfo           kubeSetupInfo;
         private HttpClient              httpClient;
         private Kubernetes              k8sClient;
@@ -211,11 +212,32 @@ OPTIONS:
 
                 kubeContext = new KubeConfigContext(contextName);
 
+                if (kubeContextExtension.SetupDetails?.SetupInfo != null)
+                {
+                    kubeSetupInfo = kubeContextExtension.SetupDetails.SetupInfo;
+                }
+                else
+                {
+                    using (var client = new HeadendClient())
+                    {
+                        kubeSetupInfo = client.GetSetupInfoAsync(kubeContextExtension.ClusterDefinition).Result;
+                    }
+                }
+
                 KubeHelper.InitContext(kubeContext);
 
-                // Note that cluster setup appends to existing log files.
+                // Initialize the cluster proxy and the hbosting manager.
 
-                cluster = new ClusterProxy(kubeContext, Program.CreateNodeProxy<NodeDefinition>, appendToLog: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
+                cluster        = new ClusterProxy(kubeContext, Program.CreateNodeProxy<NodeDefinition>, appendToLog: true, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
+                hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManager(cluster, kubeSetupInfo, Program.LogPath);
+
+                if (hostingManager == null)
+                {
+                    Console.Error.WriteLine($"*** ERROR: No hosting manager for the [{cluster.Definition.Hosting.Environment}] environment could be located.");
+                    Program.Exit(1);
+                }
+
+                // Get on with cluster setup.
 
                 var failed = false;
 
@@ -243,25 +265,6 @@ OPTIONS:
                             MaxParallel = Program.MaxParallel
                         };
 
-                    controller.AddGlobalStep("setup details",
-                        () =>
-                        {
-                            if (kubeContextExtension.SetupDetails?.SetupInfo != null)
-                            {
-                                kubeSetupInfo = kubeContextExtension.SetupDetails.SetupInfo;
-                            }
-                            else
-                            {
-                                using (var client = new HeadendClient())
-                                {
-                                    kubeSetupInfo = client.GetSetupInfoAsync(cluster.Definition).Result;
-
-                                    kubeContextExtension.SetupDetails.SetupInfo = kubeSetupInfo;
-                                    kubeContextExtension.Save();
-                                }
-                            }
-                        });
-
                     controller.AddGlobalStep("download binaries", () => WorkstationBinaries());
                     controller.AddWaitUntilOnlineStep("connect");
                     controller.AddStep("ssh certificate", GenerateClientSshCert, node => node == cluster.FirstMaster);
@@ -280,7 +283,7 @@ OPTIONS:
                     controller.AddStep(configureFirstMasterStepLabel,
                         (node, stepDelay) =>
                         {
-                            SetupCommon(node, stepDelay);
+                            SetupCommon(hostingManager, node, stepDelay);
                             node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
                             SetupNode(node);
                         },
@@ -294,7 +297,7 @@ OPTIONS:
                         controller.AddStep("setup other nodes",
                             (node, stepDelay) =>
                             {
-                                SetupCommon(node, stepDelay);
+                                SetupCommon(hostingManager, node, stepDelay);
                                 node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
                                 SetupNode(node);
                             },
@@ -308,10 +311,9 @@ OPTIONS:
                     controller.AddGlobalStep("setup neon-proxy", SetupNeonProxy);
                     controller.AddStep("setup kubernetes", SetupKubernetes);
                     controller.AddGlobalStep("setup cluster", SetupCluster);
-                    //controller.AddGlobalStep("label nodes", LabelNodes);
 
                     controller.AddGlobalStep("taint nodes", TaintNodes);
-                    if (cluster.Definition.Mon.Enabled)
+                    if (cluster.Definition.Monitor.Enabled)
                     {
                         controller.AddGlobalStep("setup monitoring", SetupMonitoring);
                     }
@@ -568,10 +570,14 @@ OPTIONS:
         /// <summary>
         /// Performs common node configuration.
         /// </summary>
+        /// <param name="hostingManager">The hosting manager.</param>
         /// <param name="node">The target node.</param>
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void SetupCommon(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void SetupCommon(HostingManager hostingManager, SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
+            Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+
             //-----------------------------------------------------------------
             // NOTE: 
             //
@@ -601,7 +607,7 @@ OPTIONS:
 
                     // Ensure that the node has been prepared for setup.
 
-                    CommonSteps.PrepareNode(node, cluster.Definition, kubeSetupInfo);
+                    CommonSteps.PrepareNode(node, cluster.Definition, kubeSetupInfo, hostingManager);
 
                     // Create the [/mnt-data] folder if it doesn't already exist.  This folder
                     // is where we're going to host the Docker containers and volumes that should
@@ -625,11 +631,6 @@ OPTIONS:
 
                     node.Status = "configure: node basics";
                     node.SudoCommand("setup-node.sh");
-
-                    // Tune Linux for SSDs, if enabled.
-
-                    node.Status = "tune: disks";
-                    node.SudoCommand("setup-ssd.sh");
 
                     // Create the container user and group.
 
@@ -1439,18 +1440,18 @@ subjects:
                                 //
                                 //      https://github.com/nforgeio/neonKUBE/issues/441
 
-                                var managerAddresses = new List<string>();
+                                var masterAddresses = new List<string>();
 
                                 foreach (var master in cluster.Masters)
                                 {
-                                    managerAddresses.Add(master.Address.ToString());
+                                    masterAddresses.Add(master.Address.ToString());
                                 }
 
                                 var utcNow     = DateTime.UtcNow;
                                 var utc10Years = utcNow.AddYears(10);
 
                                 var certificate = TlsCertificate.CreateSelfSigned(
-                                    hostnames: managerAddresses,
+                                    hostnames: masterAddresses,
                                     validDays: (int)(utc10Years - utcNow).TotalDays,
                                     issuedBy:  "kubernetes-dashboard");
 
@@ -2093,7 +2094,7 @@ istioctl install -f istio-cni.yaml
 
             // Install metrics persistence if required.
 
-            if (cluster.Definition.Mon.Prometheus.Persistence && cluster.Definition.Nodes.Any(n => n.Labels.M3DB == true))
+            if (cluster.Definition.Monitor.Prometheus.Persistence && cluster.Definition.Nodes.Any(n => n.Labels.M3DB == true))
             {
                 // Install an Etcd cluster to the monitoring namespace
 
@@ -2343,7 +2344,7 @@ rm -rf {chartName}*
                             {
                                 Capacity = new Dictionary<string, ResourceQuantity>()
                                 {
-                                    { "storage", cluster.Definition.Mon.Prometheus.M3DB.Etcd.DiskSize ?? new ResourceQuantity("1Gi") }
+                                    { "storage", cluster.Definition.Monitor.Prometheus.M3DB.Etcd.DiskSize ?? new ResourceQuantity("1Gi") }
                                 },
                                 AccessModes = new List<string>() { "ReadWriteOnce" },
                                 PersistentVolumeReclaimPolicy = "Retain",
@@ -2391,9 +2392,9 @@ rm -rf {chartName}*
 
                     values.Add(new KeyValuePair<string, object>($"replicas", cluster.Definition.Nodes.Count(n => n.Labels.M3DB == true).ToString()));
 
-                    if (cluster.Definition.Mon.Prometheus.M3DB.Etcd.DiskSize != null)
+                    if (cluster.Definition.Monitor.Prometheus.M3DB.Etcd.DiskSize != null)
                     {
-                        values.Add(new KeyValuePair<string, object>($"volumeClaimTemplate.resources.requests.storage", cluster.Definition.Mon.Prometheus.M3DB.Etcd.DiskSize.ToString()));
+                        values.Add(new KeyValuePair<string, object>($"volumeClaimTemplate.resources.requests.storage", cluster.Definition.Monitor.Prometheus.M3DB.Etcd.DiskSize.ToString()));
                     }
 
                     InstallHelmChartAsync(master, "etcd-cluster", releaseName: "m3db-etcd", @namespace: "monitoring", values: values).Wait();
@@ -2446,7 +2447,7 @@ rm -rf {chartName}*
                             {
                                 Capacity = new Dictionary<string, ResourceQuantity>()
                         {
-                            { "storage", cluster.Definition.Mon.Prometheus.M3DB.DiskSize ??  new ResourceQuantity("1Gi") }
+                            { "storage", cluster.Definition.Monitor.Prometheus.M3DB.DiskSize ??  new ResourceQuantity("1Gi") }
                         },
                                 AccessModes = new List<string>() { "ReadWriteOnce" },
                                 PersistentVolumeReclaimPolicy = "Retain",
@@ -2505,8 +2506,8 @@ rm -rf {chartName}*
                         i++;
                     }
 
-                    values.Add(new KeyValuePair<string, object>($"volumeResources.requests.storage", cluster.Definition.Mon.Prometheus.M3DB.DiskSize.ToString()));
-                    values.Add(new KeyValuePair<string, object>($"volumeResources.limits.storage", cluster.Definition.Mon.Prometheus.M3DB.DiskSize.ToString()));
+                    values.Add(new KeyValuePair<string, object>($"volumeResources.requests.storage", cluster.Definition.Monitor.Prometheus.M3DB.DiskSize.ToString()));
+                    values.Add(new KeyValuePair<string, object>($"volumeResources.limits.storage", cluster.Definition.Monitor.Prometheus.M3DB.DiskSize.ToString()));
 
                     if (cluster.Definition.Nodes.Count(l => l.Labels.M3DB) <= 3)
                     {
@@ -2539,7 +2540,7 @@ rm -rf {chartName}*
                 () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
-                    if (cluster.Definition.Mon.Prometheus.Persistence)
+                    if (cluster.Definition.Monitor.Prometheus.Persistence)
                     {
                         values.Add(new KeyValuePair<string, object>("persistence.enabled", "true"));
                     }
@@ -2596,7 +2597,7 @@ rm -rf {chartName}*
                             {
                                 Capacity = new Dictionary<string, ResourceQuantity>()
                         {
-                            { "storage", new ResourceQuantity(cluster.Definition.Mon.Elasticsearch.DiskSize) }
+                            { "storage", new ResourceQuantity(cluster.Definition.Monitor.Elasticsearch.DiskSize) }
                         },
                                 AccessModes = new List<string>() { "ReadWriteOnce" },
                                 PersistentVolumeReclaimPolicy = "Retain",
@@ -2637,40 +2638,39 @@ rm -rf {chartName}*
             master.InvokeIdempotentAction("deploy/elasticsearch",
                 () =>
                 {
-                var values = new List<KeyValuePair<string, object>>();
+                    var monitorOptions = cluster.Definition.Monitor;
+                    var values         = new List<KeyValuePair<string, object>>();
 
-                values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.resources.requests.storage", cluster.Definition.Mon.Elasticsearch.DiskSize));
-                values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
-                values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
+                    values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.resources.requests.storage", cluster.Definition.Monitor.Elasticsearch.DiskSize));
+                    values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
+                    values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
 
-                if (cluster.Definition.Mon.Elasticsearch.Resources != null)
-                {
-                    if (cluster.Definition.Mon.Elasticsearch.Resources.Limits != null)
+                    if (monitorOptions.Elasticsearch.Resources != null)
                     {
-                        foreach (var r in cluster.Definition.Mon.Elasticsearch.Resources.Limits)
+                        if (monitorOptions.Elasticsearch.Resources.Limits != null)
                         {
-                            values.Add(new KeyValuePair<string, object>($"resources.limits.{r.Key}", r.Value.ToString()));
+                            foreach (var r in monitorOptions.Elasticsearch.Resources.Limits)
+                            {
+                                values.Add(new KeyValuePair<string, object>($"resources.limits.{r.Key}", r.Value.ToString()));
+                            }
+                        }
+
+                        if (monitorOptions.Elasticsearch.Resources.Requests != null)
+                        {
+                            foreach (var r in monitorOptions.Elasticsearch.Resources.Requests)
+                            {
+                                values.Add(new KeyValuePair<string, object>($"resources.requests.{r.Key}", r.Value.ToString()));
+                            }
                         }
                     }
 
-                    if (cluster.Definition.Mon.Elasticsearch.Resources.Requests != null)
+                    InstallHelmChartAsync(master, "elasticsearch", @namespace: "monitoring", timeout: 1200, values: values, wait: false).Wait();
+
+                    // wait for Elasticsearch cluster to be running before proceeding.
+                    while ((k8sClient.ListNamespacedPodAsync("monitoring", labelSelector: "app=elasticsearch-master")).Result.Items.Where(p => p.Status.Phase == "Running").Count() != cluster.Definition.Nodes.Where(l => l.Labels.M3DB == true).Count())
                     {
-                        foreach (var r in cluster.Definition.Mon.Elasticsearch.Resources.Requests)
-                        {
-                            values.Add(new KeyValuePair<string, object>($"resources.requests.{r.Key}", r.Value.ToString()));
-                        }
+                        Thread.Sleep(1000);
                     }
-                }
-
-                InstallHelmChartAsync(master, "elasticsearch", @namespace: "monitoring", timeout: 1200, values: values, wait: false).Wait();
-
-                // wait for Elasticsearch cluster to be running before proceeding.
-                while ((k8sClient.ListNamespacedPodAsync("monitoring", labelSelector: "app=elasticsearch-master")).Result.Items.Where(p => p.Status.Phase == "Running").Count() != cluster.Definition.Nodes.Where(l => l.Labels.M3DB == true).Count())
-                {
-                    Thread.Sleep(1000);
-                }
-                    
-
                 });          
         }
 

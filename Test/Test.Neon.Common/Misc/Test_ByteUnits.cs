@@ -279,53 +279,53 @@ namespace TestCommon
             Assert.Equal("500", ByteUnits.ToByteString(500));
             Assert.Equal("1000000", ByteUnits.ToByteString(1000000));
 
-            Assert.Equal("1K", ByteUnits.ToKString(1000));
-            Assert.Equal("2K", ByteUnits.ToKString(2000));
-            Assert.Equal("0.5K", ByteUnits.ToKString(500));
+            Assert.Equal("1KB", ByteUnits.ToKB(1000));
+            Assert.Equal("2KB", ByteUnits.ToKB(2000));
+            Assert.Equal("0.5KB", ByteUnits.ToKB(500));
 
-            Assert.Equal("1Ki", ByteUnits.ToKiString(1024));
-            Assert.Equal("2Ki", ByteUnits.ToKiString(2048));
-            Assert.Equal("0.5Ki", ByteUnits.ToKiString(512));
+            Assert.Equal("1KiB", ByteUnits.ToKiB(1024));
+            Assert.Equal("2KiB", ByteUnits.ToKiB(2048));
+            Assert.Equal("0.5KiB", ByteUnits.ToKiB(512));
 
-            Assert.Equal("1M", ByteUnits.ToMString(1000000));
-            Assert.Equal("2M", ByteUnits.ToMString(2000000));
-            Assert.Equal("0.5M", ByteUnits.ToMString(500000));
+            Assert.Equal("1MB", ByteUnits.ToMB(1000000));
+            Assert.Equal("2MB", ByteUnits.ToMB(2000000));
+            Assert.Equal("0.5MB", ByteUnits.ToMB(500000));
 
-            Assert.Equal("1Mi", ByteUnits.ToMiString(1 * ByteUnits.MebiBytes));
-            Assert.Equal("2Mi", ByteUnits.ToMiString(2 * ByteUnits.MebiBytes));
-            Assert.Equal("0.5Mi", ByteUnits.ToMiString(ByteUnits.MebiBytes/2));
+            Assert.Equal("1MiB", ByteUnits.ToMiB(1 * ByteUnits.MebiBytes));
+            Assert.Equal("2MiB", ByteUnits.ToMiB(2 * ByteUnits.MebiBytes));
+            Assert.Equal("0.5MiB", ByteUnits.ToMiB(ByteUnits.MebiBytes/2));
 
-            Assert.Equal("1G", ByteUnits.ToGString(1000000000));
-            Assert.Equal("2G", ByteUnits.ToGString(2000000000));
-            Assert.Equal("0.5G", ByteUnits.ToGString(500000000));
+            Assert.Equal("1GB", ByteUnits.ToGB(1000000000));
+            Assert.Equal("2GB", ByteUnits.ToGB(2000000000));
+            Assert.Equal("0.5GB", ByteUnits.ToGB(500000000));
 
-            Assert.Equal("1Gi", ByteUnits.ToGiString(1 * ByteUnits.GibiBytes));
-            Assert.Equal("2Gi", ByteUnits.ToGiString(2 * ByteUnits.GibiBytes));
-            Assert.Equal("0.5Gi", ByteUnits.ToGiString(ByteUnits.GibiBytes/2));
+            Assert.Equal("1GiB", ByteUnits.ToGiB(1 * ByteUnits.GibiBytes));
+            Assert.Equal("2GiB", ByteUnits.ToGiB(2 * ByteUnits.GibiBytes));
+            Assert.Equal("0.5GiB", ByteUnits.ToGiB(ByteUnits.GibiBytes/2));
 
-            Assert.Equal("1T", ByteUnits.ToTString(1000000000000));
-            Assert.Equal("2T", ByteUnits.ToTString(2000000000000));
-            Assert.Equal("0.5T", ByteUnits.ToTString(500000000000));
+            Assert.Equal("1TB", ByteUnits.ToTB(1000000000000));
+            Assert.Equal("2TB", ByteUnits.ToTB(2000000000000));
+            Assert.Equal("0.5TB", ByteUnits.ToTB(500000000000));
 
-            Assert.Equal("1Ti", ByteUnits.ToTiString(1 * ByteUnits.TebiBytes));
-            Assert.Equal("2Ti", ByteUnits.ToTiString(2 * ByteUnits.TebiBytes));
-            Assert.Equal("0.5Ti", ByteUnits.ToTiString(ByteUnits.TebiBytes/2));
+            Assert.Equal("1TiB", ByteUnits.ToTiB(1 * ByteUnits.TebiBytes));
+            Assert.Equal("2TiB", ByteUnits.ToTiB(2 * ByteUnits.TebiBytes));
+            Assert.Equal("0.5TiB", ByteUnits.ToTiB(ByteUnits.TebiBytes/2));
 
-            Assert.Equal("1P", ByteUnits.ToPString(1000000000000000));
-            Assert.Equal("2P", ByteUnits.ToPString(2000000000000000));
-            Assert.Equal("0.5P", ByteUnits.ToPString(500000000000000));
+            Assert.Equal("1PB", ByteUnits.ToPB(1000000000000000));
+            Assert.Equal("2PB", ByteUnits.ToPB(2000000000000000));
+            Assert.Equal("0.5PB", ByteUnits.ToPB(500000000000000));
 
-            Assert.Equal("1Pi", ByteUnits.ToPiString(1 * ByteUnits.PebiBytes));
-            Assert.Equal("2Pi", ByteUnits.ToPiString(2 * ByteUnits.PebiBytes));
-            Assert.Equal("0.5Pi", ByteUnits.ToPiString(ByteUnits.PebiBytes / 2));
+            Assert.Equal("1PiB", ByteUnits.ToPiB(1 * ByteUnits.PebiBytes));
+            Assert.Equal("2PiB", ByteUnits.ToPiB(2 * ByteUnits.PebiBytes));
+            Assert.Equal("0.5PiB", ByteUnits.ToPiB(ByteUnits.PebiBytes / 2));
 
-            Assert.Equal("1E", ByteUnits.ToEString(1000000000000000000));
-            Assert.Equal("2E", ByteUnits.ToEString(2000000000000000000));
-            Assert.Equal("0.5E", ByteUnits.ToEString(500000000000000000));
+            Assert.Equal("1EB", ByteUnits.ToEB(1000000000000000000));
+            Assert.Equal("2EB", ByteUnits.ToEB(2000000000000000000));
+            Assert.Equal("0.5EB", ByteUnits.ToEB(500000000000000000));
 
-            Assert.Equal("1Ei", ByteUnits.ToEiString(1 * ByteUnits.ExbiBytes));
-            Assert.Equal("2Ei", ByteUnits.ToEiString(2 * ByteUnits.ExbiBytes));
-            Assert.Equal("0.5Ei", ByteUnits.ToEiString(ByteUnits.ExbiBytes / 2));
+            Assert.Equal("1EiB", ByteUnits.ToEiB(1 * ByteUnits.ExbiBytes));
+            Assert.Equal("2EiB", ByteUnits.ToEiB(2 * ByteUnits.ExbiBytes));
+            Assert.Equal("0.5EiB", ByteUnits.ToEiB(ByteUnits.ExbiBytes / 2));
         }
 
         [Fact]

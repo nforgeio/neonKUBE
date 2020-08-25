@@ -160,7 +160,7 @@ schedulerName: ""
 
 imagePullSecrets: []
 nodeSelector:
-  neonkube.io/mon.elasticsearch: "true"
+  neonkube.io/monitor.elasticsearch: "true"
 tolerations:
   - key: "neonkube.io/elasticsearch"
     operator: "Exists"

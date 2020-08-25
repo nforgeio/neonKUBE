@@ -49,16 +49,6 @@ namespace Neon.Kube
         public static string NeonBranchRegistry => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase) ? NeonProdRegistry : NeonDevRegistry;
 
         /// <summary>
-        /// The default username for component dashboards and management tools.
-        /// </summary>
-        public const string DefaultUsername = "sysadmin";
-
-        /// <summary>
-        /// The default password for component dashboards and management tools.
-        /// </summary>
-        public const string DefaultPassword = "password";
-
-        /// <summary>
         /// Timespan used to introduce some random jitter before an operation
         /// is performed.  This is typically used when it's possible that a 
         /// large number of entities will tend to perform an operation at
@@ -270,5 +260,20 @@ namespace Neon.Kube
         /// address.
         /// </summary>
         public const int CloudVNetEndReservedIPs = 1;
+
+        /// <summary>
+        /// The latest neonKUBE cluster version supported.
+        /// </summary>
+        public const string LatestClusterVersion = "0.1.0-alpha";
+
+        /// <summary>
+        /// Lists thje supported neonKUBE cluster versions.
+        /// </summary>
+        public static IReadOnlyList<string> SupportedClusterVersions =
+            new List<string>()
+            {
+                "0.1.0-alpha"
+            }
+            .AsReadOnly();
     }
 }

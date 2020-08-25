@@ -310,13 +310,13 @@ Server Requirements:
                 //-----------------------------------------------------------------
                 // Perform basic environment provisioning.  This creates basic cluster components
                 // such as virtual machines, networks, load balancers, public IP addresses, security
-                // groups,... as required for the hosting environment.
+                // groups, etc. as required for the hosting environment.
 
                 hostingManager = new HostingManagerFactory(() => HostingLoader.Initialize()).GetManager(cluster, kubeSetupInfo, Program.LogPath);
 
                 if (hostingManager == null)
                 {
-                    Console.Error.WriteLine($"*** ERROR: No hosting manager for the [{cluster.Definition.Hosting.Environment}] hosting environment could be located.");
+                    Console.Error.WriteLine($"*** ERROR: No hosting manager for the [{cluster.Definition.Hosting.Environment}] environment could be located.");
                     Program.Exit(1);
                 }
 
@@ -329,7 +329,29 @@ Server Requirements:
                     Program.VerifyAdminPrivileges($"Provisioning to [{cluster.Definition.Hosting.Environment}] requires elevated administrator privileges.");
                 }
 
-                if (!hostingManager.Provision(force, Program.MachinePassword, orgSshPassword))
+                // Load the cluster context extension information if it exists and if it indicates
+                // that setup is still pending, we'll use that information (especially the generated
+                // secure SSH password).
+                //
+                // Otherwise, we'll write (or overwrite) the context file with a fresh context.
+
+                var contextExtensionPath = KubeHelper.GetContextExtensionPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
+                var contextExtension     = KubeContextExtension.Load(contextExtensionPath);
+
+                if (contextExtension == null || !contextExtension.SetupDetails.SetupPending)
+                {
+                    contextExtension = new KubeContextExtension(contextExtensionPath)
+                    {
+                        ClusterDefinition = clusterDefinition,
+                        SshUsername       = KubeConst.SysAdminUsername,
+                        SshPassword       = Program.MachinePassword,
+                        SetupDetails      = new KubeSetupDetails() { SetupPending = true }
+                    };
+
+                    contextExtension.Save();
+                }
+
+                if (!hostingManager.Provision(force, contextExtension.SshPassword, orgSshPassword))
                 {
                     Program.Exit(1);
                 }
@@ -357,7 +379,7 @@ Server Requirements:
                     ipAddressToServer.Add(node.Address, node);
                 }
 
-                // We're going to use the masters as package caches unless the user
+                // We're going to use the masters to be package caches unless the user
                 // specifies something else.
 
                 packageCaches = commandLine.GetOption("--package-cache");     // This overrides the cluster definition, if specified.
@@ -386,8 +408,7 @@ Server Requirements:
 
                 cluster.LogLine(logBeginMarker);
 
-                var nodesText = cluster.Nodes.Count() == 1 ? "node" : "nodes";
-                var operation = $"Preparing [{cluster.Definition.Name}] cluster {nodesText}";
+                var operation = $"Preparing [{cluster.Definition.Name}] cluster nodes";
 
                 var controller = 
                     new SetupController<NodeDefinition>(operation, cluster.Nodes)
@@ -406,7 +427,7 @@ Server Requirements:
                     (node, stepDelay) =>
                     {
                         Thread.Sleep(stepDelay);
-                        CommonSteps.PrepareNode(node, cluster.Definition, kubeSetupInfo, shutdown: false);
+                        CommonSteps.PrepareNode(node, cluster.Definition, kubeSetupInfo, hostingManager, shutdown: false);
                     },
                     stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
             
@@ -419,19 +440,6 @@ Server Requirements:
                     Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
                     Program.Exit(1);
                 }
-
-                // Persist the cluster context extension.
-
-                var contextExtensionsPath = KubeHelper.GetContextExtensionPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
-                var contextExtension      = new KubeContextExtension(contextExtensionsPath)
-                {
-                    ClusterDefinition = clusterDefinition,
-                    SshUsername       = Program.MachineUsername,
-                    SshPassword       = Program.MachinePassword,
-                    SetupDetails      = new KubeSetupDetails() { SetupPending = true }
-                };
-
-                contextExtension.Save();
 
                 // Write the operation end marker to all cluster node logs.
 

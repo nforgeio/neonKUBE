@@ -206,7 +206,7 @@ namespace NeonCli
             {
                 var output = node.SudoCommand("/usr/bin/ntpq -pw", RunOptions.LogOutput).OutputText;
 
-                foreach (var master in clusterDefinition.SortedMasters)
+                foreach (var master in clusterDefinition.SortedMasterNodes)
                 {
                     // We're going to check the for presence of the master's IP address
                     // or its name, the latter because [ntpq] appears to attempt a reverse

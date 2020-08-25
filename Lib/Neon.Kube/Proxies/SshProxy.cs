@@ -943,9 +943,8 @@ rm {KubeHostFolders.Home(Username)}/askpass
         /// <returns>The connection information.</returns>
         private ConnectionInfo GetConnectionInfo()
         {
-            var address   = string.Empty;
-            var isPrivate = true;
-            var port      = SshPort;
+            var address = string.Empty;
+            var port    = SshPort;
 
             if (Cluster?.HostingManager != null)
             {
@@ -957,13 +956,6 @@ rm {KubeHostFolders.Home(Username)}/askpass
             else
             {
                 address = Address.ToString();
-            }
-
-            if (string.IsNullOrEmpty(address))
-            {
-                var addressType = isPrivate ? "private" : "public";
-
-                throw new Exception($"Node [{Name}] does not have a [{addressType}] address.");
             }
 
             var connectionInfo = new ConnectionInfo(address, port, credentials.Username, credentials.AuthenticationMethod)
@@ -1164,7 +1156,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
                             continue;
                         }
 
-                        var name = split[0];
+                        var name  = split[0];
                         var value = split[1];
 
                         switch (name)
@@ -1177,7 +1169,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
                             case "VERSION":
 
                                 var version = value.Replace("\"", string.Empty);
-                                var pSpace = version.IndexOf(' ');
+                                var pSpace  = version.IndexOf(' ');
 
                                 if (pSpace != -1)
                                 {
@@ -2328,7 +2320,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
             //
             //      6. Delete the [$] folder.
             //
-            // In addition, the [neon-cleaner] service deployed to the host nodes will
+            // In addition, the [neon-cleaner] service deployed to the cluster nodes will
             // periodically purge orphaned temporary command folders older than one day.
 
             // Create the command folder.
@@ -2715,7 +2707,7 @@ echo $? > {cmdFolder}/exit
         /// command, try uploading and executing a <see cref="CommandBundle"/> instead.
         /// </note>
         /// <para>
-        /// This method is intended for situations where one or more files need to be uploaded to a cluster host node 
+        /// This method is intended for situations where one or more files need to be uploaded to a cluster node 
         /// and then be used when a command is executed.
         /// </para>
         /// <para>
@@ -2956,7 +2948,7 @@ echo $? > {cmdFolder}/exit
         /// <returns>The <see cref="CommandResponse"/>.</returns>
         /// <remarks>
         /// <para>
-        /// This method is intended for situations where one or more files need to be uploaded to a cluster host node 
+        /// This method is intended for situations where one or more files need to be uploaded to a cluster node 
         /// and then be used when a command is executed.
         /// </para>
         /// <para>
@@ -3267,6 +3259,107 @@ echo $? > {cmdFolder}/exit
             var epochSeconds = long.Parse(response.OutputText.Trim());
 
             return NeonHelper.UnixEpoch + TimeSpan.FromSeconds(epochSeconds);
+        }
+
+        /// <summary>
+        /// Returns the names of the node's unpartitioned disk block devices.  This can
+        /// be useful for identifying newly attached data disks during cluster setup.
+        /// </summary>
+        /// <returns>The list of unpartitioned Linux disk names.</returns>
+        public IEnumerable<string> ListUnpartitionedDisks()
+        {
+            // Linux does not guarentee that the device names for specific devices
+            // will remain the same across reboots or even first boot.  This is a
+            // problem for cluster setup when a data disk has been attached, which
+            // current applies only to cloud environments.
+            //
+            // We need to be able to identify the data disk so that we can partition
+            // and then create and mount a file system.
+            //
+            // This method uses the Linux [lsblk] to list the block devices and then
+            // look for disks that haven't been partitioned.  The command output
+            // will look something like this:
+            //
+            //      fd0   disk
+            //      loop0 loop
+            //      loop2 loop
+            //      loop3 loop
+            //      loop4 loop
+            //      loop5 loop
+            //      sda   disk
+            //      sda1  part
+            //      sda2  part
+            //      sdb   disk
+            //      sr0   rom
+            //
+            // In this example, [sda] is partitioned and must be the OS disk (because
+            // there's no other partitioned disk).  [sdb] is not partitioned, so it
+            // must be the new data disk.
+
+            // List all of the block device names along with their types.
+
+            var result = SudoCommand("lsblk --output NAME,TYPE --tree=SIZE --noheadings");
+
+            result.EnsureSuccess();
+
+            var devices = new List<Tuple<string, string>>();
+
+            foreach (var line in result.OutputText.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var columns = line.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                devices.Add(new Tuple<string, string>(columns[0].Trim(), columns[1].Trim()));
+            }
+
+            // Iterate through the devices and add the disks to a dictionary.
+
+            var diskNameToIsPartitioned = new Dictionary<string, bool>();
+
+            foreach (var device in devices.Where(d => d.Item2 == "disk"))
+            {
+                diskNameToIsPartitioned.Add(device.Item1, false);
+            }
+
+            // Iterate through the partitions, extract the parent disk name
+            // and then mark those disks that have any partitions.  Then the
+            // unpartitioned disks will be easy to identify.
+
+            foreach (var device in devices.Where(d => d.Item2 == "part"))
+            {
+                var deviceName = device.Item1;
+
+                // Strip off any trailing digits to obtain the disk name.
+
+                var firstDigitPos = -1;
+
+                for (int i = 0; i < deviceName.Length; i++)
+                {
+                    if (char.IsDigit(deviceName[i]))
+                    {
+                        firstDigitPos = i;
+                        break;
+                    }
+                }
+
+                if (firstDigitPos == -1)
+                {
+                    // I don't think this will ever happen, but we'll ignore this
+                    // device just to be safe.
+
+                    continue;
+                }
+
+                var diskName = deviceName.Substring(0, firstDigitPos);
+
+                if (diskNameToIsPartitioned.ContainsKey(diskName))
+                {
+                    diskNameToIsPartitioned[diskName] = true;
+                }
+            }
+
+            return diskNameToIsPartitioned
+                .Where(keyValue => !keyValue.Value)
+                .Select(keyValue => $"/dev/{keyValue.Key}");
         }
 
         /// <summary>

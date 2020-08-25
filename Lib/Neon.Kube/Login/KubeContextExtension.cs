@@ -45,8 +45,29 @@ namespace Neon.Kube
     /// </summary>
     public class KubeContextExtension
     {
-        private object syncRoot = new object();
-        private string path;
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Reads a <see cref="KubeContextExtension"/> from a file if it exists.
+        /// </summary>
+        /// <param name="path">Path the the context extension file.</param>
+        /// <returns>The <see cref="KubeContextExtension"/> if the file exists or <c>null</c>.</returns>
+        public static KubeContextExtension Load(string path)
+        {
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+
+            return NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(path), strict: true);
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
+        private object      syncRoot = new object();
+        private string      path;
 
         /// <summary>
         /// Default constructor.

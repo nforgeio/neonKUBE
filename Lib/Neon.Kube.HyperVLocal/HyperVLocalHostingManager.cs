@@ -180,17 +180,17 @@ namespace Neon.Kube
 
                 if (node.Labels.ComputeCores == 0)
                 {
-                    node.Labels.ComputeCores = cluster.Definition.Hosting.VmProcessors;
+                    node.Labels.ComputeCores = cluster.Definition.Hosting.Vm.Processors;
                 }
 
                 if (node.Labels.ComputeRam == 0)
                 {
-                    node.Labels.ComputeRam = (int)(ClusterDefinition.ValidateSize(cluster.Definition.Hosting.VmMemory, typeof(HostingOptions), nameof(HostingOptions.VmMemory))/ ByteUnits.MebiBytes);
+                    node.Labels.ComputeRam = (int)(ClusterDefinition.ValidateSize(cluster.Definition.Hosting.Vm.Memory, typeof(HostingOptions), nameof(HostingOptions.Vm.Memory))/ ByteUnits.MebiBytes);
                 }
 
                 if (string.IsNullOrEmpty(node.Labels.StorageSize))
                 {
-                    node.Labels.StorageSize = ByteUnits.ToGiString(node.GetVmMemory(cluster.Definition));
+                    node.Labels.StorageSize = ByteUnits.ToGiB(node.Vm.GetMemory(cluster.Definition));
                 }
             }
 
@@ -224,6 +224,17 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override bool RequiresAdminPrivileges => true;
 
+
+        /// <inheritdoc/>
+        public override string GetDataDisk(SshProxy<NodeDefinition> node)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+
+            // This hosting manager doesn't currently provision a separate data disk.
+
+            return "PRIMARY";
+        }
+
         /// <summary>
         /// Returns the name to use for naming the virtual machine hosting the node.
         /// </summary>
@@ -231,7 +242,7 @@ namespace Neon.Kube
         /// <returns>The virtual machine name.</returns>
         private string GetVmName(NodeDefinition node)
         {
-            return $"{cluster.Definition.Hosting.GetVmNamePrefix(cluster.Definition)}{node.Name}";
+            return $"{cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition)}{node.Name}";
         }
 
         /// <summary>
@@ -244,7 +255,7 @@ namespace Neon.Kube
         /// </returns>
         private string ExtractNodeName(string machineName)
         {
-            var clusterPrefix = cluster.Definition.Hosting.GetVmNamePrefix(cluster.Definition);
+            var clusterPrefix = cluster.Definition.Hosting.Vm.GetVmNamePrefix(cluster.Definition);
 
             if (machineName.StartsWith(clusterPrefix))
             {
@@ -257,16 +268,16 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Performs any required Hyper-V initialization before host nodes can be provisioned.
+        /// Performs any required Hyper-V initialization before cluster nodes can be provisioned.
         /// </summary>
         private void PrepareHyperV()
         {
             // Determine where we're going to place the VM hard drive files and
             // ensure that the directory exists.
 
-            if (!string.IsNullOrEmpty(cluster.Definition.Hosting.VmDriveFolder))
+            if (!string.IsNullOrEmpty(cluster.Definition.Hosting.Vm.DriveFolder))
             {
-                vmDriveFolder = cluster.Definition.Hosting.VmDriveFolder;
+                vmDriveFolder = cluster.Definition.Hosting.Vm.DriveFolder;
             }
             else
             {
@@ -607,9 +618,9 @@ namespace Neon.Kube
 
                 // Create the virtual machine if it doesn't already exist.
 
-                var processors  = node.Metadata.GetVmProcessors(cluster.Definition);
-                var memoryBytes = node.Metadata.GetVmMemory(cluster.Definition);
-                var diskBytes   = node.Metadata.GetVmDisk(cluster.Definition);
+                var processors  = node.Metadata.Vm.GetProcessors(cluster.Definition);
+                var memoryBytes = node.Metadata.Vm.GetMemory(cluster.Definition);
+                var diskBytes   = node.Metadata.Vm.GetDisk(cluster.Definition);
 
                 node.Status = $"create: virtual machine";
                 hyperv.AddVm(

@@ -58,6 +58,12 @@ namespace Neon.Kube
         void Validate(ClusterDefinition clusterDefinition);
 
         /// <summary>
+        /// Returns <c>true</c> if provisoning requires that the user have
+        /// administrator privileges.
+        /// </summary>
+        bool RequiresAdminPrivileges { get; }
+
+        /// <summary>
         /// Creates and initializes the cluster resources such as the virtual machines,
         /// networks, load balancers, network security groups, public IP addresses etc.
         /// </summary>
@@ -77,32 +83,106 @@ namespace Neon.Kube
         /// be able to log into existing nodes provisioned manually by the cluster operator.
         /// </param>
         /// <returns><c>true</c> on success.</returns>
+        /// <remarks>
+        /// <para>
+        /// For the clusters that return <see cref="CanManageRouter"/>=<c>true</c> (typically
+        /// cloud managers  indicating that they can manage the upstream router or load balancer) 
+        /// this method will leave the public SSH NAT rules in place so that cluster provisioning
+        /// and setup will be able to establish SSH connections to each cluster node.  This is
+        /// equivalent to calling <see cref="EnablePublicSsh"/>.
+        /// </para>
+        /// </remarks>
         bool Provision(bool force, string secureSshPassword, string orgSshPassword = null);
 
         /// <summary>
-        /// Returns the FQDN or IP address (as a string) and the port to use
-        /// to establish a SSH connection to a node while provisioning is in
-        /// progress.
-        /// </summary>
-        /// <param name="nodeName">The target node's name.</param>
-        /// <returns>A <b>(string Address, int Port)</b> tuple.</returns>
-        /// <remarks>
-        /// Hosting platforms such as Azure that may not assign public IP addresses
-        /// to cluster nodes will return the IP address of the traffic manager and
-        /// a temporary NAT port for the node.
-        /// </remarks>
-        (string Address, int Port) GetSshEndpoint(string nodeName);
-
-        /// <summary>
-        /// Adds any necessary post-provisioning steps to the step controller.
+        /// Adds any necessary post-provisioning steps to a setup controller.
         /// </summary>
         /// <param name="controller">The target setup controller.</param>
         void AddPostProvisionSteps(SetupController<NodeDefinition> controller);
 
         /// <summary>
-        /// Returns <c>true</c> if provisoning requires that the user have
-        /// administrator privileges.
+        /// Returns <c>true</c> if the hosting manage is capable of updating the upstream
+        /// network router or load balancer.  Cloud based managers will return <c>true</c>
+        /// whereas on-premise managers will return <c>false</c> because we don't have
+        /// the ability to manage physical routers yet.
         /// </summary>
-        bool RequiresAdminPrivileges { get; }
+        bool CanManageRouter { get; }
+
+        /// <summary>
+        /// <para>
+        /// Updates the cluster's load balancer or router to use the current set of
+        /// ingress rules defined by <see cref="NetworkOptions.IngressRules"/>.  This
+        /// also updates <see cref="NetworkOptions.EgressAddressRules"/> and public 
+        /// SSH NAT mappings if those are currently enabled.
+        /// </para>
+        /// <note>
+        /// This currently supported only by cloud hosting managers like for Azure,
+        /// AWS, and Google.  This will do nothing for the on-premise hosting managers
+        /// because we don't have the ability to manage physical routers yet.
+        /// </note>
+        /// </summary>
+        void UpdatePublicIngress();
+
+        /// <summary>
+        /// <para>
+        /// Enables public SSH access for every node in the cluster, honoring source
+        /// address limitations specified by <see cref="NetworkOptions.SshAddressRules"/>
+        /// in the cluster definition.
+        /// </para>
+        /// <para>
+        /// Each node will be assigned a public port that has a NAT rule directing SSH
+        /// traffic to that specific node.  These ports will be in the range of
+        /// <see cref="NetworkOptions.ReservedIngressStartPort"/> to <see cref="NetworkOptions.ReservedIngressEndPort"/>.
+        /// <see cref="GetSshEndpoint(string)"/> will return the external endpoint
+        /// for nodes when external SSH is enabled. 
+        /// </para>
+        /// <note>
+        /// This currently supported only by cloud hosting managers like: Azure,
+        /// AWS, and Google.  This will do nothing for the on-premise hosting managers
+        /// because we don't have the ability to manage physical routers yet.
+        /// </note>
+        /// </summary>
+        void EnablePublicSsh();
+
+        /// <summary>
+        /// <para>
+        /// Disables public SSH access for every node in the cluster, honoring source
+        /// address limitations specified by <see cref="NetworkOptions.SshAddressRules"/>
+        /// in the cluster definition.
+        /// </para>
+        /// <note>
+        /// This currently supported only by cloud hosting managers like: Azure,
+        /// AWS, and Google.  This will do nothing for the on-premise hosting managers
+        /// because we don't have the ability to manage physical routers yet.
+        /// </note>
+        /// </summary>
+        void DisablePublicSsh();
+
+        /// <summary>
+        /// Returns the FQDN or IP address (as a string) and the port to use
+        /// to establish a SSH connection to a specific node. 
+        /// </summary>
+        /// <param name="nodeName">The target node's name.</param>
+        /// <returns>A <b>(string Address, int Port)</b> tuple.</returns>
+        /// <remarks>
+        /// This will return the direct private node endpoint by default.  If
+        /// <see cref="EnablePublicSsh"/> has been called and is supported by 
+        /// the hosting manager, then this returns the public address of the
+        /// cluster along with the public NAT port.
+        /// </remarks>
+        (string Address, int Port) GetSshEndpoint(string nodeName);
+
+        /// <summary>
+        /// Identifies the data disk for a node.  This returns the data disk's device 
+        /// name when an unitialized data disk exists or "PRIMARY" when the  OS disk
+        /// will be used for data.
+        /// </summary>
+        /// <returns>The disk device name or "PRIMARY".</returns>
+        /// <remarks>
+        /// <note>
+        /// This will not work after the node's data disk has been initialized.
+        /// </note>
+        /// </remarks>
+        string GetDataDisk(SshProxy<NodeDefinition> node);
     }
 }

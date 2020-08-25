@@ -109,6 +109,9 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
+        public override bool RequiresAdminPrivileges => false;
+
+        /// <inheritdoc/>
         public override bool Provision(bool force, string secureSshPassword, string orgSshPassword = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
@@ -123,6 +126,13 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override bool RequiresAdminPrivileges => false;
+        public override string GetDataDisk(SshProxy<NodeDefinition> node)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+
+            // This hosting manager doesn't currently provision a separate data disk.
+
+            return "PRIMARY";
+        }
     }
 }
