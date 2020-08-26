@@ -48,8 +48,6 @@ namespace Neon.Net
         //---------------------------------------------------------------------
         // Static methods
 
-        private static char[] period = new char[] { '.' };
-
         /// <summary>
         /// <para>
         /// Parses a <see cref="Jwt"/> from an encoded string.
@@ -94,7 +92,7 @@ namespace Neon.Net
             // We're going to verify that these JSON objects exist and then parse
             // them as Newtonsoft [JObject] instances. 
 
-            var parts = jwtString.Split(period);
+            var parts = jwtString.Split('.');
 
             if (parts.Length != 3)
             {

@@ -124,27 +124,28 @@ namespace Microsoft.Net.Http.Client
 
         private async Task<List<string>> ReadResponseLinesAsync(CancellationToken cancellationToken)
         {
-            List<string> lines = new List<string>();
-            string line = await Transport.ReadLineAsync(cancellationToken);
+            var lines = new List<string>();
+            var line  = await Transport.ReadLineAsync(cancellationToken);
+
             while (line.Length > 0)
             {
                 lines.Add(line);
                 line = await Transport.ReadLineAsync(cancellationToken);
             }
+
             return lines;
         }
 
         private HttpResponseMessage CreateResponseMessage(List<string> responseLines)
         {
-            string responseLine = responseLines.First();
-            // HTTP/1.1 200 OK
-            string[] responseLineParts = responseLine.Split(new[] { ' ' }, 3);
-            // TODO: Verify HTTP/1.0 or 1.1.
+            var responseLine      = responseLines.First();
+            var responseLineParts = responseLine.Split(' ', 3);
             if (responseLineParts.Length < 2)
             {
                 throw new HttpRequestException("Invalid response line: " + responseLine);
             }
-            int statusCode = 0;
+
+            var statusCode = 0;
             if (int.TryParse(responseLineParts[1], NumberStyles.None, CultureInfo.InvariantCulture, out statusCode))
             {
                 // TODO: Validate range
@@ -153,29 +154,37 @@ namespace Microsoft.Net.Http.Client
             {
                 throw new HttpRequestException("Invalid status code: " + responseLineParts[1]);
             }
-            HttpResponseMessage response = new HttpResponseMessage((HttpStatusCode)statusCode);
+
+            var response = new HttpResponseMessage((HttpStatusCode)statusCode);
+
             if (responseLineParts.Length >= 3)
             {
                 response.ReasonPhrase = responseLineParts[2];
             }
+
             var content = new HttpConnectionResponseContent(this);
+
             response.Content = content;
 
             foreach (var rawHeader in responseLines.Skip(1))
             {
-                int colonOffset = rawHeader.IndexOf(':');
+                var colonOffset = rawHeader.IndexOf(':');
+
                 if (colonOffset <= 0)
                 {
                     throw new HttpRequestException("The given header line format is invalid: " + rawHeader);
                 }
-                string headerName = rawHeader.Substring(0, colonOffset);
-                string headerValue = rawHeader.Substring(colonOffset + 2);
+
+                var headerName  = rawHeader.Substring(0, colonOffset);
+                var headerValue = rawHeader.Substring(colonOffset + 2);
+
                 if (!response.Headers.TryAddWithoutValidation(headerName, headerValue))
                 {
                     bool success = response.Content.Headers.TryAddWithoutValidation(headerName, headerValue);
                     System.Diagnostics.Debug.Assert(success, "Failed to add response header: " + rawHeader);
                 }
             }
+
             // After headers have been set
             content.ResolveResponseStream(chunked: response.Headers.TransferEncodingChunked.HasValue && response.Headers.TransferEncodingChunked.Value);
 

@@ -1003,7 +1003,7 @@ namespace Neon.Service
                             continue;
                         }
 
-                        var fields = line.Split(new char[] { '=' }, 2);
+                        var fields = line.Split('=', 2);
 
                         if (fields.Length != 2)
                         {

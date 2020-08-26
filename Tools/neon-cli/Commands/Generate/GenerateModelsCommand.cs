@@ -132,7 +132,7 @@ style design conventions.  See this GitHub issue for more information:
 
             if (!string.IsNullOrEmpty(targetOption))
             {
-                foreach (var target in targetOption.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                foreach (var target in targetOption.Split( ',', StringSplitOptions.RemoveEmptyEntries))
                 {
                     targets.Add(target);
                 }

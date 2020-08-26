@@ -1149,7 +1149,7 @@ rm {KubeHostFolders.Home(Username)}/askpass
                             continue;
                         }
 
-                        var split = line.Split(new char[] { '=' }, 2);
+                        var split = line.Split('=', 2);
 
                         if (split.Length < 2)
                         {
@@ -3304,9 +3304,9 @@ echo $? > {cmdFolder}/exit
 
             var devices = new List<Tuple<string, string>>();
 
-            foreach (var line in result.OutputText.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var line in result.OutputText.Split('\n', StringSplitOptions.RemoveEmptyEntries))
             {
-                var columns = line.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                var columns = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
                 devices.Add(new Tuple<string, string>(columns[0].Trim(), columns[1].Trim()));
             }
