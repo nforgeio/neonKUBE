@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <RootNamespace>Neon.Kube</RootNamespace>
     <Authors>Jeff Lill</Authors>
     <Version>2.1.0-internal</Version>
@@ -55,8 +55,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\nuget-icon.png" Pack="true" PackagePath=""/>
-    <None Include="..\..\LICENSE" Pack="True" PackagePath=""/>
+    <None Include="..\nuget-icon.png" Pack="true" PackagePath="" />
+    <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
   </ItemGroup>
 
 </Project>

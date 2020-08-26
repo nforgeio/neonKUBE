@@ -46,7 +46,7 @@ $exitCode = $lastExitCode
 
 if ($exitCode -ne 0)
 {
-    Write-Error "*** ERROR: [temporal-proxy] WINDOWS build failed.  Check build logs: $logPath"
+    Write-Error "*** ERROR[0]: [temporal-proxy] WINDOWS build failed.  Check build logs: $logPath"
     Set-Location $orgDirectory
     exit $exitCode
 }
@@ -60,7 +60,7 @@ $exitCode = $lastExitCode
 
 if ($exitCode -ne 0)
 {
-    Write-Error "*** ERROR: [temporal-proxy] LINUX build failed.  Check build logs: $logPath"
+    Write-Error "*** ERROR[1]: [temporal-proxy] LINUX build failed.  Check build logs: $logPath"
     Set-Location $orgDirectory
     exit $exitCode
 }
@@ -74,7 +74,7 @@ $exitCode = $lastExitCode
 
 if ($exitCode -ne 0)
 {
-    Write-Error "*** ERROR: [temporal-proxy] OSX build failed.  Check build logs: $logPath"
+    Write-Error "*** ERROR[2]: [temporal-proxy] OSX build failed.  Check build logs: $logPath"
     Set-Location $orgDirectory
     exit $exitCode
 }

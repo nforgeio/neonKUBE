@@ -706,7 +706,7 @@ namespace Neon.Kube
                 //      HOSTNAME:PORT
                 //      ADDRESS:PORT
 
-                foreach (var endpoint in PackageProxy.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries))
+                foreach (var endpoint in PackageProxy.Split(' ', StringSplitOptions.RemoveEmptyEntries))
                 {
                     var fields = endpoint.Split(':');
 

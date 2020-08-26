@@ -4542,86 +4542,86 @@
             <param name="units">The units.</param>
             <returns>The floating point string.</returns>
         </member>
-        <member name="M:Neon.Common.ByteUnits.ToKString(System.Decimal)">
+        <member name="M:Neon.Common.ByteUnits.ToKB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>K</b> units.
+            Converts a byte count to a string using <b>KB</b> units.
             </summary>
             <param name="size">The size.</param>
-            <returns>The size in K.</returns>
+            <returns>The size in KB.</returns>
         </member>
-        <member name="M:Neon.Common.ByteUnits.ToKiString(System.Decimal)">
+        <member name="M:Neon.Common.ByteUnits.ToKiB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>Ki</b> units.
+            Converts a byte count to a string using <b>KiB</b> units.
             </summary>
             <param name="size">The size.</param>
-            <returns>The size in Ki.</returns>
+            <returns>The size in KiB.</returns>
         </member>
-        <member name="M:Neon.Common.ByteUnits.ToMString(System.Decimal)">
+        <member name="M:Neon.Common.ByteUnits.ToMB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>M</b> units.
+            Converts a byte count to a string using <b>MB</b> units.
             </summary>
             <param name="size">The size.</param>
-            <returns>The size in M.</returns>
+            <returns>The size in MB.</returns>
         </member>
-        <member name="M:Neon.Common.ByteUnits.ToMiString(System.Decimal)">
+        <member name="M:Neon.Common.ByteUnits.ToMiB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>Mi</b> units.
+            Converts a byte count to a string using <b>MiB</b> units.
             </summary>
             <param name="size">The size.</param>
-            <returns>The size in Mi.</returns>
+            <returns>The size in MiB.</returns>
         </member>
-        <member name="M:Neon.Common.ByteUnits.ToGString(System.Decimal)">
+        <member name="M:Neon.Common.ByteUnits.ToGB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>G</b> units.
+            Converts a byte count to a string using <b>GB</b> units.
             </summary>
             <param name="size">The size.</param>
-            <returns>The size in G.</returns>
+            <returns>The size in GB.</returns>
         </member>
-        <member name="M:Neon.Common.ByteUnits.ToGiString(System.Decimal)">
+        <member name="M:Neon.Common.ByteUnits.ToGiB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>Gi</b> units.
+            Converts a byte count to a string using <b>GiB</b> units.
             </summary>
             <param name="size">The size.</param>
-            <returns>The size in Gi.</returns>
+            <returns>The size in GiB.</returns>
         </member>
-        <member name="M:Neon.Common.ByteUnits.ToTString(System.Decimal)">
+        <member name="M:Neon.Common.ByteUnits.ToTB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>T</b> units.
+            Converts a byte count to a string using <b>TB</b> units.
             </summary>
             <param name="size">The size.</param>
-            <returns>The size in T.</returns>
+            <returns>The size in TB.</returns>
         </member>
-        <member name="M:Neon.Common.ByteUnits.ToTiString(System.Decimal)">
+        <member name="M:Neon.Common.ByteUnits.ToTiB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>Ti</b> units.
+            Converts a byte count to a string using <b>TiB</b> units.
             </summary>
             <param name="size">The size.</param>
-            <returns>The size in Ti.</returns>
+            <returns>The size in TiB.</returns>
         </member>
-        <member name="M:Neon.Common.ByteUnits.ToPString(System.Decimal)">
+        <member name="M:Neon.Common.ByteUnits.ToPB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>P</b> units.
+            Converts a byte count to a string using <b>PB</b> units.
             </summary>
             <param name="size">The size.</param>
-            <returns>The size in P.</returns>
+            <returns>The size in PB.</returns>
         </member>
-        <member name="M:Neon.Common.ByteUnits.ToPiString(System.Decimal)">
+        <member name="M:Neon.Common.ByteUnits.ToPiB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>Pi</b> units.
+            Converts a byte count to a string using <b>PiB</b> units.
             </summary>
             <param name="size">The size.</param>
-            <returns>The size in Pi.</returns>
+            <returns>The size in PiB.</returns>
         </member>
-        <member name="M:Neon.Common.ByteUnits.ToEString(System.Decimal)">
+        <member name="M:Neon.Common.ByteUnits.ToEB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>E</b> units.
+            Converts a byte count to a string using <b>EB</b> units.
             </summary>
             <param name="size">The size.</param>
-            <returns>The size in E.</returns>
+            <returns>The size in EB.</returns>
         </member>
-        <member name="M:Neon.Common.ByteUnits.ToEiString(System.Decimal)">
+        <member name="M:Neon.Common.ByteUnits.ToEiB(System.Decimal)">
             <summary>
-            Converts a byte count to a string using <b>Ei</b> units.
+            Converts a byte count to a string using <b>EiB</b> units.
             </summary>
             <param name="size">The size.</param>
             <returns>The size in Ei.</returns>
@@ -5207,6 +5207,55 @@
             </summary>
             <param name="instance">The object instance.</param>
             <returns>The rendered string.</returns>
+        </member>
+        <member name="T:Neon.Data.IntegerEnumConverter`1">
+            <summary>
+            Implements a type converter that converts between integers and an enum type.
+            </summary>
+            <typeparam name="TEnum">The enumation type being converted.</typeparam>
+            <remarks>
+            <note>
+            This works for both string and integer values and we don't ensure that 
+            an integer input value actually corresponds to an enum value, we just cast
+            the integer.
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.Data.IntegerEnumConverter`1.CanConvert(System.Type)">
+            <summary>
+            Determines whether the converter is able to convert a value of a specific type.
+            </summary>
+            <param name="objectType">The value type.</param>
+            <returns><c>true</c> if the type can be converted.</returns>
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Data.IntegerEnumConverter`1.WriteJson(Newtonsoft.Json.JsonWriter,System.Object,Newtonsoft.Json.JsonSerializer)">
+            <summary>
+            Writes an integer or enum value as an integer.
+            </summary>
+            <param name="writer">The writer.</param>
+            <param name="value">The value.</param>
+            <param name="serializer">The serializer.</param>
+            <remarks>
+            <note>
+            The <paramref name="serializer"/> parameter is ignored.
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.Data.IntegerEnumConverter`1.ReadJson(Newtonsoft.Json.JsonReader,System.Type,System.Object,Newtonsoft.Json.JsonSerializer)">
+            <summary>
+            Reads an integer or enum value as a enum.
+            </summary>
+            <param name="reader">The reader.</param>
+            <param name="objectType">The value type.</param>
+            <param name="existingValue">The existing value.</param>
+            <param name="serializer">The serializer.</param>
+            <returns>The value read.</returns>
+            <remarks>
+            <note>
+            The <paramref name="serializer"/> parameter is ignored.
+            </note>
+            </remarks>
         </member>
         <member name="T:Neon.Data.JsonExtensions">
             <summary>
@@ -11959,7 +12008,7 @@
             <returns>The new <see cref="T:Neon.Time.GoTimeSpan"/>.</returns>
             <exception cref="T:System.ArgumentOutOfRangeException">Thrown if the input is outside the capability of a <see cref="T:Neon.Time.GoTimeSpan"/>.</exception>
         </member>
-        <member name="M:Neon.Time.GoTimeSpan.ToTicks(System.Double)">
+        <member name="M:Neon.Time.GoTimeSpan.ToTicks(System.Decimal)">
             <summary>
             Converts a <c>double</c> nanosecond count to a <c>long</c>, ensuring that the
             result can be represented as a <see cref="T:Neon.Time.GoTimeSpan"/>.

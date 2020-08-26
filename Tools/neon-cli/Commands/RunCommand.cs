@@ -191,7 +191,7 @@ Pass a potentially encrypted file:
                                 continue;
                             }
 
-                            var fields = line.Split(new char[] { '=' }, 2);
+                            var fields = line.Split( '=', 2);
 
                             if (fields.Length != 2 || fields[0] == string.Empty)
                             {

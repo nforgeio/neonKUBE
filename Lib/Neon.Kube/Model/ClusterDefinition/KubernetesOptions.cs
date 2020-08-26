@@ -186,7 +186,7 @@ namespace Neon.Kube
             {
                 // Ensure that this specifies a HOSTNAME:PORT or IPADDRESS:PORT.
 
-                var fields = ApiLoadBalancer.Split(new char[] { ':' }, 2);
+                var fields = ApiLoadBalancer.Split(':', 2);
                 var error  = $"[{nameof(KubernetesOptions)}.{nameof(ApiLoadBalancer)}={ApiLoadBalancer}] is invalid].";
 
                 if (!NetHelper.IsValidHost(fields[0]) || !IPAddress.TryParse(fields[0], out var address) || address.AddressFamily != AddressFamily.InterNetwork)

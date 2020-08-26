@@ -379,7 +379,7 @@ namespace TestCommon
         /// <returns>The line array.</returns>
         private string[] SplitLines(StringBuilder sb)
         {
-            return sb.ToString().Replace("\r\n", "\n").Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            return sb.ToString().Replace("\r\n", "\n").Split('\n', StringSplitOptions.RemoveEmptyEntries);
         }
     }
 }

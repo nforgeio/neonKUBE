@@ -99,6 +99,19 @@ function PublishCore
     }
 }
 
+#------------------------------------------------------------------------------
+
+# We see somewhat random build problems when Visual Studio has the solution open,
+# do have the user close Visual Studio instances first.
+
+Get-Process -Name devenv -ErrorAction SilentlyContinue
+
+if ($?)
+{
+    Write-Error -Message "ERROR: Please close all Visual Studio instances before building."
+    exit 1
+}
+
 $originalDir = $pwd
 cd $nfRoot
 
@@ -178,7 +191,7 @@ if ($tools)
     "Generating OS/X neon-cli SHA512..."
     ""
 
-    & cat "$nfBuild\osx\neon-osx" | openssl dgst -sha512 -hex > "$nfBuild\osx\neon-osx-$kubeVersion.sha512.txt"
+    & cat "$nfBuild\osx\neon-osx" | openssl dgst -sha512 -hex > "$nfBuild\osx\neon-osx-$desktopVersion.sha512.txt"
 
     if (-not $?)
     {
@@ -231,7 +244,7 @@ if ($installer)
     "Generating windows installer SHA512..."
 	""
 	
-    & cat "$nfBuild\neonKUBE-setup-$kubeVersion.exe" | openssl dgst -sha512 -hex > "$nfBuild\neonKUBE-setup-$kubeVersion.sha512.txt"
+    & cat "$nfBuild\neonDESKTOP-setup-$desktopVersion.exe" | openssl dgst -sha512 -hex > "$nfBuild\neonDESKTOP-setup-$desktopVersion.sha512.txt"
 
     if (-not $?)
     {

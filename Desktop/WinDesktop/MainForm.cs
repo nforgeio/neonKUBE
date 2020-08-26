@@ -700,7 +700,7 @@ namespace WinDesktop
 
                         Covenant.Assert(!string.IsNullOrEmpty(tokenLine));
 
-                        dashboardToken = tokenLine.Split(new char[] { ' ' }, 2).Skip(1).First().Trim();
+                        dashboardToken = tokenLine.Split(' ', 2).Skip(1).First().Trim();
                     }
 
                     Action<RequestContext> kubernetesDashboardRequestHandler =

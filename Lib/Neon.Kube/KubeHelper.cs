@@ -1155,7 +1155,7 @@ namespace Neon.Kube
                         var sb    = new StringBuilder();
                         var found = false;
 
-                        foreach (var path in kubeConfigVar.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+                        foreach (var path in kubeConfigVar.Split(';', StringSplitOptions.RemoveEmptyEntries))
                         {
                             if (path == KubeConfigPath)
                             {

@@ -3,19 +3,19 @@
 ;   NF_BUILD            - The build output folder
 ;   NF_CACHE            - The build cache folder
 ;   NF_KUBE_VERSION     - The Kubernetes version
-;   NF_DESKTOP_VERSION  - The neonKUBE product version
+;   NF_DESKTOP_VERSION  - The neonDESKTOP product version
 
 [Setup]
-AppName=neonKUBE
+AppName=neonDESKTOP
 AppVersion={#GetEnv("NF_DESKTOP_VERSION")}
-DefaultDirName={pf}\neonKUBE
-DefaultGroupName=neonKUBE
-; UninstallDisplayIcon={app}\neonKUBE.Windows\neonDESKTOPwin.exe
+DefaultDirName={pf}\neonDESKTOP
+DefaultGroupName=neonDESKTOP
+; UninstallDisplayIcon={app}\neonDESKTOP.Windows\neonDESKTOPwin.exe
 MinVersion=10.0.16299
 Compression=lzma2
 SolidCompression=no
 OutputDir={#GetEnv("NF_BUILD")}
-OutputBaseFilename=neonKUBE-setup-{#GetEnv("NF_PRODUCT_VERSION")}
+OutputBaseFilename=neonDESKTOP-setup-{#GetEnv("NF_DESKTOP_VERSION")}
 ; "ArchitecturesAllowed=x64" specifies that Setup cannot run on
 ; anything but x64.
 ArchitecturesAllowed=x64

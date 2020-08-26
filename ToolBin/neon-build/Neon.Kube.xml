@@ -597,16 +597,31 @@
         <member name="M:Neon.Kube.HostingManager.Validate(Neon.Kube.ClusterDefinition)">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Kube.HostingManager.Provision(System.Boolean,System.String,System.String)">
+        <member name="P:Neon.Kube.HostingManager.RequiresAdminPrivileges">
             <inheritdoc/>
         </member>
-        <member name="M:Neon.Kube.HostingManager.GetSshEndpoint(System.String)">
+        <member name="M:Neon.Kube.HostingManager.Provision(System.Boolean,System.String,System.String)">
             <inheritdoc/>
         </member>
         <member name="M:Neon.Kube.HostingManager.AddPostProvisionSteps(Neon.Kube.SetupController{Neon.Kube.NodeDefinition})">
             <inheritdoc/>
         </member>
-        <member name="P:Neon.Kube.HostingManager.RequiresAdminPrivileges">
+        <member name="P:Neon.Kube.HostingManager.CanManageRouter">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.HostingManager.UpdatePublicIngress">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.HostingManager.EnablePublicSsh">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.HostingManager.DisablePublicSsh">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.HostingManager.GetSshEndpoint(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:Neon.Kube.HostingManager.GetDataDisk(Neon.Kube.SshProxy{Neon.Kube.NodeDefinition})">
             <inheritdoc/>
         </member>
         <member name="T:Neon.Kube.HostingManagerFactory">
@@ -714,6 +729,12 @@
             <param name="clusterDefinition">The cluster definition.</param>
             <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if any problems were detected.</exception>
         </member>
+        <member name="P:Neon.Kube.IHostingManager.RequiresAdminPrivileges">
+            <summary>
+            Returns <c>true</c> if provisoning requires that the user have
+            administrator privileges.
+            </summary>
+        </member>
         <member name="M:Neon.Kube.IHostingManager.Provision(System.Boolean,System.String,System.String)">
             <summary>
             Creates and initializes the cluster resources such as the virtual machines,
@@ -734,32 +755,107 @@
             is currently used only by the bare metal hosting manager which will need to
             be able to log into existing nodes provisioned manually by the cluster operator.
             </param>
-        </member>
-        <member name="M:Neon.Kube.IHostingManager.GetSshEndpoint(System.String)">
-            <summary>
-            Returns the FQDN or IP address (as a string) and the port to use
-            to establish a SSH connection to a node while provisioning is in
-            progress.
-            </summary>
-            <param name="nodeName">The target node's name.</param>
-            <returns>A <b>(string Address, int Port)</b> tuple.</returns>
+            <returns><c>true</c> on success.</returns>
             <remarks>
-            Hosting platforms such as Azure that may not assign public IP addresses
-            to cluster nodes will return the IP address of the traffic manager and
-            a temporary NAT port for the node.
+            <para>
+            For the clusters that return <see cref="P:Neon.Kube.IHostingManager.CanManageRouter"/>=<c>true</c> (typically
+            cloud managers  indicating that they can manage the upstream router or load balancer) 
+            this method will leave the public SSH NAT rules in place so that cluster provisioning
+            and setup will be able to establish SSH connections to each cluster node.  This is
+            equivalent to calling <see cref="M:Neon.Kube.IHostingManager.EnablePublicSsh"/>.
+            </para>
             </remarks>
         </member>
         <member name="M:Neon.Kube.IHostingManager.AddPostProvisionSteps(Neon.Kube.SetupController{Neon.Kube.NodeDefinition})">
             <summary>
-            Adds any necessary post-provisioning steps to the step controller.
+            Adds any necessary post-provisioning steps to a setup controller.
             </summary>
             <param name="controller">The target setup controller.</param>
         </member>
-        <member name="P:Neon.Kube.IHostingManager.RequiresAdminPrivileges">
+        <member name="P:Neon.Kube.IHostingManager.CanManageRouter">
             <summary>
-            Returns <c>true</c> if provisoning requires that the user have
-            administrator privileges.
+            Returns <c>true</c> if the hosting manage is capable of updating the upstream
+            network router or load balancer.  Cloud based managers will return <c>true</c>
+            whereas on-premise managers will return <c>false</c> because we don't have
+            the ability to manage physical routers yet.
             </summary>
+        </member>
+        <member name="M:Neon.Kube.IHostingManager.UpdatePublicIngress">
+            <summary>
+            <para>
+            Updates the cluster's load balancer or router to use the current set of
+            ingress rules defined by <see cref="P:Neon.Kube.NetworkOptions.IngressRules"/>.  This
+            also updates <see cref="P:Neon.Kube.NetworkOptions.EgressAddressRules"/> and public 
+            SSH NAT mappings if those are currently enabled.
+            </para>
+            <note>
+            This currently supported only by cloud hosting managers like for Azure,
+            AWS, and Google.  This will do nothing for the on-premise hosting managers
+            because we don't have the ability to manage physical routers yet.
+            </note>
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.IHostingManager.EnablePublicSsh">
+            <summary>
+            <para>
+            Enables public SSH access for every node in the cluster, honoring source
+            address limitations specified by <see cref="P:Neon.Kube.NetworkOptions.SshAddressRules"/>
+            in the cluster definition.
+            </para>
+            <para>
+            Each node will be assigned a public port that has a NAT rule directing SSH
+            traffic to that specific node.  These ports will be in the range of
+            <see cref="P:Neon.Kube.NetworkOptions.ReservedIngressStartPort"/> to <see cref="P:Neon.Kube.NetworkOptions.ReservedIngressEndPort"/>.
+            <see cref="M:Neon.Kube.IHostingManager.GetSshEndpoint(System.String)"/> will return the external endpoint
+            for nodes when external SSH is enabled. 
+            </para>
+            <note>
+            This currently supported only by cloud hosting managers like: Azure,
+            AWS, and Google.  This will do nothing for the on-premise hosting managers
+            because we don't have the ability to manage physical routers yet.
+            </note>
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.IHostingManager.DisablePublicSsh">
+            <summary>
+            <para>
+            Disables public SSH access for every node in the cluster, honoring source
+            address limitations specified by <see cref="P:Neon.Kube.NetworkOptions.SshAddressRules"/>
+            in the cluster definition.
+            </para>
+            <note>
+            This currently supported only by cloud hosting managers like: Azure,
+            AWS, and Google.  This will do nothing for the on-premise hosting managers
+            because we don't have the ability to manage physical routers yet.
+            </note>
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.IHostingManager.GetSshEndpoint(System.String)">
+            <summary>
+            Returns the FQDN or IP address (as a string) and the port to use
+            to establish a SSH connection to a specific node. 
+            </summary>
+            <param name="nodeName">The target node's name.</param>
+            <returns>A <b>(string Address, int Port)</b> tuple.</returns>
+            <remarks>
+            This will return the direct private node endpoint by default.  If
+            <see cref="M:Neon.Kube.IHostingManager.EnablePublicSsh"/> has been called and is supported by 
+            the hosting manager, then this returns the public address of the
+            cluster along with the public NAT port.
+            </remarks>
+        </member>
+        <member name="M:Neon.Kube.IHostingManager.GetDataDisk(Neon.Kube.SshProxy{Neon.Kube.NodeDefinition})">
+            <summary>
+            Identifies the data disk for a node.  This returns the data disk's device 
+            name when an unitialized data disk exists or "PRIMARY" when the  OS disk
+            will be used for data.
+            </summary>
+            <returns>The disk device name or "PRIMARY".</returns>
+            <remarks>
+            <note>
+            This will not work after the node's data disk has been initialized.
+            </note>
+            </remarks>
         </member>
         <member name="T:Neon.Kube.IHostingManagerFactory">
             <summary>
@@ -815,16 +911,6 @@
             Returns the appropriate public Docker registry to be used for the git branch the
             assembly was built from.  This returns <see cref="F:Neon.Kube.KubeConst.NeonProdRegistry"/> for release
             branches and <see cref="F:Neon.Kube.KubeConst.NeonDevRegistry"/> for all other branches.
-            </summary>
-        </member>
-        <member name="F:Neon.Kube.KubeConst.DefaultUsername">
-            <summary>
-            The default username for component dashboards and management tools.
-            </summary>
-        </member>
-        <member name="F:Neon.Kube.KubeConst.DefaultPassword">
-            <summary>
-            The default password for component dashboards and management tools.
             </summary>
         </member>
         <member name="F:Neon.Kube.KubeConst.MaxJitter">
@@ -1013,6 +1099,32 @@
         <member name="F:Neon.Kube.KubeConst.MinXenServerVersion">
             <summary>
             The minimum supported XenServer/XCP-ng hypervisor host version.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeConst.CloudVNetStartReservedIPs">
+            <summary>
+            The number of IP addresses reserved by cloud deployments at the beginning of the 
+            nodes subnet by the cloud provider and also for future neonKUBE features.
+            This typically includes the cloud default gateway and DNS forwarding IPs as well
+            as potential future neonKUBE features such as an integrated VPN and perhaps 
+            management VMs.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeConst.CloudVNetEndReservedIPs">
+            <summary>
+            The number of IP addresses reserved by cloud deployments at the end of the nodes
+            subnet by the cloud provider.  This typically includes the network UDP broadcast
+            address.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeConst.LatestClusterVersion">
+            <summary>
+            The latest neonKUBE cluster version supported.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.KubeConst.SupportedClusterVersions">
+            <summary>
+            Lists thje supported neonKUBE cluster versions.
             </summary>
         </member>
         <member name="T:Neon.Kube.KubeHelper">
@@ -1494,6 +1606,21 @@
             cluster.  This faults the nodeproxy on faliure.
             </summary>
             <param name="node">The target node.</param>
+        </member>
+        <member name="M:Neon.Kube.KubeHelper.EnsureIngressNodes(Neon.Kube.ClusterDefinition)">
+            <summary>
+            <para>
+            Ensures that at least one cluster node is enabled for cluster ingress
+            network traffic.
+            </para>
+            <note>
+            It is possible for the user to have set <see cref="P:Neon.Kube.NodeDefinition.Ingress"/>
+            to <c>false</c> for all nodes.  We're going to pick a reasonable set of
+            nodes in this case.  I there are 3 or more workers, then only the workers
+            will receive traffic, otherwise all nodes will receive traffic.
+            </note>
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
         </member>
         <member name="T:Neon.Kube.KubeHostFolders">
             <summary>
@@ -1977,6 +2104,13 @@
             <b><i>USER</i>@<i>NAME</i>.context.yaml</b>.
             </summary>
         </member>
+        <member name="M:Neon.Kube.KubeContextExtension.Load(System.String)">
+            <summary>
+            Reads a <see cref="T:Neon.Kube.KubeContextExtension"/> from a file if it exists.
+            </summary>
+            <param name="path">Path the the context extension file.</param>
+            <returns>The <see cref="T:Neon.Kube.KubeContextExtension"/> if the file exists or <c>null</c>.</returns>
+        </member>
         <member name="M:Neon.Kube.KubeContextExtension.#ctor">
             <summary>
             Default constructor.
@@ -2340,17 +2474,397 @@
             <b>Not Implemented Yet:</b> The optional passphrase used for additional security.
             </summary>
         </member>
-        <member name="T:Neon.Kube.AwsOptions">
+        <member name="T:Neon.Kube.ClusterDefinition">
+            <summary>
+            Describes a Kubernetes cluster.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.NameRegex">
+            <summary>
+            Regex for verifying cluster names for hosts, routes, groups, etc.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.ClusterDefinition.ReservedLabelPrefix">
+            <summary>
+            The prefix reserved for neonKUBE related daemon, image, and pod labels.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.ClusterDefinition.FromYaml(System.String,System.Boolean)">
+            <summary>
+            Parses a cluster definition from YAML text.
+            </summary>
+            <param name="yaml">The JSON text.</param>
+            <param name="strict">Optionally require that all input properties map to <see cref="T:Neon.Kube.ClusterDefinition"/> properties.</param>
+            <returns>The parsed <see cref="T:Neon.Kube.ClusterDefinition"/>.</returns>
+            <remarks>
+            <note>
+            The source is first preprocessed using <see cref="T:Neon.IO.PreprocessReader"/>
+            and then is parsed as YAML.
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.Kube.ClusterDefinition.ValidateFile(System.String,System.Boolean)">
+            <summary>
+            Parses and validates a YAML cluster definition file.
+            </summary>
+            <param name="path">The file path.</param>
+            <param name="strict">Optionally require that all input properties map to <see cref="T:Neon.Kube.ClusterDefinition"/> properties.</param>
+            <exception cref="T:System.ArgumentException">Thrown if the definition is not valid.</exception>
+        </member>
+        <member name="M:Neon.Kube.ClusterDefinition.FromFile(System.String,System.Boolean)">
+            <summary>
+            Parses a YAML cluster definition from a file.
+            </summary>
+            <param name="path">The file path.</param>
+            <param name="strict">Optionally require that all input properties map to <see cref="T:Neon.Kube.ClusterDefinition"/> properties.</param>
+            <returns>The parsed <see cref="T:Neon.Kube.ClusterDefinition"/>.</returns>
+            <exception cref="T:System.ArgumentException">Thrown if the definition is not valid.</exception>
+            <remarks>
+            <note>
+            The source is first preprocessed using <see cref="T:Neon.IO.PreprocessReader"/>
+            and then is parsed as JSON.
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.Kube.ClusterDefinition.IsValidName(System.String)">
+            <summary>
+            Verifies that a string is a valid cluster name.
+            </summary>
+            <param name="name">The name being tested.</param>
+            <returns><c>true</c> if the name is valid.</returns>
+        </member>
+        <member name="M:Neon.Kube.ClusterDefinition.ValidateSize(System.String,System.Type,System.String)">
+            <summary>
+            Ensures that a VM memory or disk size specification is valid and also
+            converts the value to the corresponding long count.
+            </summary>
+            <param name="sizeValue">The size value string.</param>
+            <param name="optionsType">Type of the property holding the size property (used for error reporting).</param>
+            <param name="propertyName">The size property name (used for error reporting).</param>
+            <returns>The size converted into a <c>long</c>.</returns>
+            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the size is not valid.</exception>
+        </member>
+        <member name="M:Neon.Kube.ClusterDefinition.#ctor">
+            <summary>
+            Default constructor.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.Name">
+            <summary>
+            The cluster name.
+            </summary>
+            <remarks>
+            <note>
+            The name may include only letters, numbers, periods, dashes, and underscores.
+            </note>
+            </remarks>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.ClusterVersion">
+            <summary>
+            Optionally specifies the semantic version of the neonKUBE cluster being created.
+            This defaults to <c>null</c> which indicates that the latest supported cluster
+            version will be created.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.Debug">
+            <summary>
+            <para>
+            Specifies cluster debugging options.
+            </para>
+            <note>
+            These options are generally intended for neonKUBE developers only.
+            </note>
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.Security">
+            <summary>
+            Specifies cluster security options.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.Provisioner">
+            <summary>
+            Identifies the tool/version used to provision the cluster.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.Kubernetes">
+            <summary>
+            Returns the Kubernetes cluster options.,
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.Docker">
+            <summary>
+            Returns the options to be used when installing Docker on each
+            of the cluster nodes.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.Monitor">
+            <summary>
+            Returns the options to be used for configuring the cluster integrated
+            Elasticsearch/Fluentd/Kibana (Mon) logging stack.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.AllowUnitTesting">
+            <summary>
+            Optionally enable unit testing on this cluster.  This is disabled by 
+            default for safety.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.Hosting">
+            <summary>
+            Specifies hosting related settings (e.g. the cloud provider).  This defaults to
+            <c>null</c> which indicates that the cluster will be hosted on private servers.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.Datacenter">
+            <summary>
+            Identifies the datacenter.
+            </summary>
+            <remarks>
+            <note>
+            The name may include only letters, numbers, periods, dashes, and underscores.
+            </note>
+            </remarks>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.Environment">
+            <summary>
+            Indicates how the cluster is being used.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.LinuxDistribution">
+            <summary>
+            Specifies the distribution of Linux to be installed on the cluster nodes.  Currently
+            only <b>ubuntu</b> is supported.  This defaults to <b>ubuntu</b>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.LinuxVersion">
+            <summary>
+            <para>
+            Specifies the version of <see cref="P:Neon.Kube.ClusterDefinition.LinuxDistribution"/> to be installed.  This is
+            formatted like <b>20.04.#</b> where <b>#</b> is the minor release or <b>20.04-latest</b>
+            for the latest release.
+            </para>
+            <para>
+            Currently, only <b>Ubuntu 20.04.#</b> releases are supported.  You'll need to check the
+            cluster install documentation to discover which point releases are currently available.
+            </para>
+            <para>
+            This defaults to <b>20.04.latest</b>.
+            </para>
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.LinuxTemplateUri">
+            <summary>
+            <para>
+            Optionally overrides the location of the Linux node template URI.  This is usually
+            located on a neonFORGE managed server and derived from <see cref="P:Neon.Kube.ClusterDefinition.LinuxDistribution"/>
+            and <see cref="P:Neon.Kube.ClusterDefinition.LinuxVersion"/> which should work for most users.
+            </para>
+            <para>
+            You may set this to a custom URI which may be useful for setting up air-gapped 
+            clusters for for testing purposes.  This defaults to <c>null</c>.
+            </para>
+            <note>
+            This URI can use HTTP, HTTPS, or FTP for all hosting environments except <see cref="F:Neon.Kube.HostingEnvironments.XenServer"/>
+            which doesn't support HTTPS.
+            </note>
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.TimeSources">
+            <summary>
+            Specifies the NTP time sources to be configured for the cluster.  These are the
+            FQDNs or IP addresses of the sources.  This defaults to <b>pool.ntp.org</b>.
+            </summary>
+            <remarks>
+            <para>
+            The cluster masters will be configured to synchronize their time with these
+            time sources and the worker nodes will be configured to synchronize their time
+            with the master nodes.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.PackageProxy">
+            <summary>
+            Optionally specifies one or more APT proxy/cache servers the cluster will use to install
+            and update Linux packages.  These are endpoints like <b>HOSTNAME:PORT</b> or <b>ADDRESS.PORT</b>
+            of a <b>apt-cacher-ng</b> or other package proxy server.  The port is generall set to <b>3142</b>
+            Multiple proxies may be specified by separating them with spaces.  This defaults to
+            referencing the <b>apt-cacher-ng</b> instances running on the master nodes.
+            </summary>
+            <remarks>
+            <para>
+            A package cache will greatly reduce the Internet network traffic required to deploy a
+            cluster, especially for large clusters.
+            </para>
+            <note>
+            The cluster nodes are configured to failover to different proxies or to hit the 
+            default Linux distribution package mirror directly if any or all of the caches
+            specified are unavailable.
+            </note>
+            <note>
+            The package caches will be tried in the order they are listed.  This essentially
+            makes the first cache primary, with the others as backups.
+            </note>
+            </remarks>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.Setup">
+            <summary>
+            Optionally specifies setup process related options.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.Network">
+            <summary>
+            Describes the cluster's network configuration.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.NodeOptions">
+            <summary>
+            Specifies host node options.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.NodeDefinitions">
+            <summary>
+            Describes the cluster nodes.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.Nodes">
+            <summary>
+            Enumerates all cluster node definitions.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.SortedNodes">
+            <summary>
+            Enumerates all cluster node definitions sorted in ascending order by name.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.Masters">
+            <summary>
+            Enumerates the cluster master node definitions.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.SortedMasterNodes">
+            <summary>
+            Enumerates the cluster master node definitions sorted in ascending order by name.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.Workers">
+            <summary>
+            Enumerates the cluster worker node definitions.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.SortedWorkerNodes">
+            <summary>
+            Enumerates the cluster worker node definitions sorted in ascending order by name.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ClusterDefinition.SortedMasterThenWorkerNodes">
+            <summary>
+            Enumerates the cluster master nodes sorted by name follwed by the worker nodes,
+            also sorted by name.  This is convienent for situations like assigning IP addresses
+            or ports such that the masters are grouped together first.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.ClusterDefinition.ValidatePrivateNodeAddresses">
+            <summary>
+            Validates that node private IP addresses are set, are within the nodes subnet, and
+            are unique.  This method is intended to be called from hosting options classes
+            like <see cref="T:Neon.Kube.MachineHostingOptions"/> which require specified node IP addresses.
+            </summary>
+            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        </member>
+        <member name="M:Neon.Kube.ClusterDefinition.Validate">
+            <summary>
+            Validates the cluster definition and also ensures that all <c>null</c> properties are
+            initialized to their default values.
+            </summary>
+            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        </member>
+        <member name="M:Neon.Kube.ClusterDefinition.AddNode(Neon.Kube.NodeDefinition)">
+            <summary>
+            Adds a node to the cluster.
+            </summary>
+            <param name="node">The new node.</param>
+        </member>
+        <member name="T:Neon.Kube.DebugOptions">
+            <summary>
+            <para>
+            Specifies cluster debug options.
+            </para>
+            <note>
+            <b>WARNING:</b> In general, you should not customize any debugging options for
+            production clusters.
+            </note>
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.DebugOptions.Validate(Neon.Kube.ClusterDefinition)">
+            <summary>
+            Validates the options.
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
+            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        </member>
+        <member name="T:Neon.Kube.DockerOptions">
+            <summary>
+            Describes the Docker options for a neonKUBE.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.DockerOptions.#ctor">
+            <summary>
+            Default constructor.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.DockerOptions.Version">
+            <summary>
+            <para>
+            The version of Docker to be installed or <b>default</b> to install a reasonable
+            version for the version of Kubernetes being deployed.  This defaults to <b>default</b>
+            which will install a reasonable supported version.
+            </para>
+            <note>
+            Only Community Editions of Docker are supported at this time.
+            </note>
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.DockerOptions.Validate(Neon.Kube.ClusterDefinition)">
+            <summary>
+            Validates the options and also ensures that all <c>null</c> properties are
+            initialized to their default values.
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
+            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        </member>
+        <member name="M:Neon.Kube.DockerOptions.ClearSecrets">
+            <summary>
+            Clears any sensitive properties like the Docker registry credentials.
+            </summary>
+        </member>
+        <member name="T:Neon.Kube.EtcdOptions">
+            <summary>
+            Specifies the options for configuring the cluster integrated Etcd 
+            metrics stack: <a href="https://Etcd.io/">https://Etcd.io/</a>
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.EtcdOptions.Resources">
+            <summary>
+            Compute Resources required by Etcd.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.EtcdOptions.DiskSize">
+            <summary>
+            Indicates disk size for Etcd nodes.  
+            This defaults to <c>false</c>.
+            </summary>
+        </member>
+        <member name="T:Neon.Kube.AwsHostingOptions">
             <summary>
             Specifies the Amazon Web Services hosting settings.
             </summary>
         </member>
-        <member name="M:Neon.Kube.AwsOptions.#ctor">
+        <member name="M:Neon.Kube.AwsHostingOptions.#ctor">
             <summary>
             Constructor.
             </summary>
         </member>
-        <member name="M:Neon.Kube.AwsOptions.Validate(Neon.Kube.ClusterDefinition)">
+        <member name="M:Neon.Kube.AwsHostingOptions.Validate(Neon.Kube.ClusterDefinition)">
             <summary>
             Validates the options and also ensures that all <c>null</c> properties are
             initialized to their default values.
@@ -2494,161 +3008,94 @@
             This is an Azure limit.
             </summary>
         </member>
-        <member name="M:Neon.Kube.AzureHelper.GetDiskSizeGiB(Neon.Kube.AzureStorageTypes,System.Int32)">
+        <member name="M:Neon.Kube.AzureHelper.GetDiskSizeGiB(Neon.Kube.AzureStorageTypes,System.Decimal)">
             <summary>
-            Converts the requested disk size in GiB to the actual required size of the Azure
+            Converts the requested disk size in bytes to the actual required size of the Azure
             managed disk in GiB.
             </summary>
             <param name="storageType">Specifies the disk storage type.</param>
-            <param name="requestedSizeGiB">The requested size in GB.</param>
+            <param name="driveSizeBytes">The requested size in bytes.</param>
             <returns>The actual Azure disk size in GiB.</returns>
         </member>
-        <member name="T:Neon.Kube.AzureNodeOptions">
-            <summary>
-            Azure specific options for cluster cluster node.  The default constructor
-            initializes reasonable defaults.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.AzureNodeOptions.VmSize">
-            <summary>
-            Specifies the Azure virtual machine size.  This defaults to <see cref="F:Neon.Kube.AzureVmSizes.Standard_DS3_v2"/>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.AzureNodeOptions.StorageType">
-            <summary>
-            <para>
-            Specifies the storage type to use for any mounted drives.  This defaults to <see cref="F:Neon.Kube.AzureStorageTypes.StandardHDD_LRS"/>
-            as the lowest cost option.
-            </para>
-            <note>
-            You should really consider upgrading production clusters to one of the SSD based storage types.
-            </note>
-            </summary>
-            <remarks>
-            <note>
-            All virtual machine sizes support <see cref="F:Neon.Kube.AzureStorageTypes.StandardHDD_LRS"/> which is why that
-            is the default value.  Consult the consult the Azure documentation to virtual machine size specified 
-            by <see cref="P:Neon.Kube.AzureNodeOptions.VmSize"/> can support <see cref="F:Neon.Kube.AzureStorageTypes.PremiumSSD_LRS"/>.
-            </note>
-            <para>
-            <see cref="F:Neon.Kube.AzureStorageTypes.StandardHDD_LRS"/> specifies relatively slow rotating hard drives,
-            <see cref="F:Neon.Kube.AzureStorageTypes.StandardSSD_LRS"/> specifies standard SSD based drives,
-            <see cref="F:Neon.Kube.AzureStorageTypes.PremiumSSD_LRS"/> specifies fast SSD based drives.  Azure recommends that
-            most production applications deploy with SSDs.
-            </para>
-            </remarks>
-        </member>
-        <member name="P:Neon.Kube.AzureNodeOptions.HardDriveCount">
-            <summary>
-            <para>
-            Specifies the number of managed Azure data drives to attach to the node's virtual machine.
-            This defaults to <b>1</b>.
-            </para>
-            <note>
-            Currently only values of <b>0..1</b> are supported.  In the future we may allow multiple
-            data disks to be mounted and combined into a RAID0 array.
-            </note>
-            </summary>
-            <remarks>
-            <note>
-            Before setting this, consult the Azure documentation to see how many drives the
-            virtual machine size specified by <see cref="P:Neon.Kube.AzureNodeOptions.VmSize"/> can support.
-            </note>
-            <para>
-            This may be set to <b>0</b> which specifies that the node will store its data on 
-            the local ephemeral (temporary) drive belonging to the Azure virtual machine.
-            This is not recommended for cluster nodes.
-            </para>
-            <para>
-            For most clusters, you'll wish to provision one or more drives per node.
-            </para>
-            </remarks>
-        </member>
-        <member name="P:Neon.Kube.AzureNodeOptions.HardDriveSizeGiB">
-            <summary>
-            Specifies the size of each of the mounted managed drives in gigabytes.  This
-            defaults to <b>64GiB</b>.
-            </summary>
-            <remarks>
-            <para>
-            Azure <see cref="F:Neon.Kube.AzureStorageTypes.StandardHDD_LRS"/> based drives may be provisioned
-            with one of these sizes: <b>32 GiB</b>, <b>64 GiB</b>, <b>128 GiB</b>, <b>256 GiB</b>,
-            <b>512 GiB</b>, <b>1TiB</b>, <b>2TiB</b>, <b>4TiB</b> or <b>8TiB</b>.
-            </para>
-            <para>
-            Azure <see cref="F:Neon.Kube.AzureStorageTypes.StandardSSD_LRS"/> based drives may be provisioned
-            with one of these sizes: <b>32 GiB</b>, <b>64 GiB</b>, <b>128 GiB</b>, <b>256 GiB</b>,
-            <b>512 GiB</b>, <b>1TiB</b>, <b>2TiB</b>, <b>4TiB</b>, <b>8TiB</b>, <b>16TiB</b> or <b>32TiB</b>.
-            </para>
-            <para>
-            Azure <see cref="F:Neon.Kube.AzureStorageTypes.PremiumSSD_LRS"/> based drives may be provisioned
-            with sizes: <b>32GiB</b>, <b>64GiB</b>, <b>128GiB</b>, <b>256GiB</b>, <b>512GiB</b>,
-            <b>1TiB</b>, <b>2TiB</b>, <b>4TiB</b> or <b>8TiB</b>.
-            </para>
-            <note>
-            This size will be rounded up to the next valid drive size for the given storage type
-            and rounded down to the maximum allowed size, if necessary.
-            </note>
-            <note>
-            The Azure drive sizes listed above may become out-of-date as Azure enhances their
-            services.  Review the Azure documentation for more information about what they
-            currently support.
-            </note>
-            </remarks>
-        </member>
-        <member name="M:Neon.Kube.AzureNodeOptions.Validate(Neon.Kube.ClusterDefinition,System.String)">
-            <summary>
-            Validates the options and also ensures that all <c>null</c> properties are
-            initialized to their default values.
-            </summary>
-            <param name="clusterDefinition">The cluster definition.</param>
-            <param name="nodeName">The associated node name.</param>
-            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        </member>
-        <member name="T:Neon.Kube.AzureOptions">
+        <member name="T:Neon.Kube.AzureHostingOptions">
             <summary>
             Specifies the Microsoft Azure cluster hosting settings.
             </summary>
         </member>
-        <member name="M:Neon.Kube.AzureOptions.#ctor">
+        <member name="M:Neon.Kube.AzureHostingOptions.#ctor">
             <summary>
             Constructor.
             </summary>
         </member>
-        <member name="P:Neon.Kube.AzureOptions.SubscriptionId">
+        <member name="P:Neon.Kube.AzureHostingOptions.SubscriptionId">
             <summary>
             Azure account subscription ID obtained from the Azure portal.
             </summary>
         </member>
-        <member name="P:Neon.Kube.AzureOptions.TenantId">
+        <member name="P:Neon.Kube.AzureHostingOptions.TenantId">
             <summary>
             Tenant ID generated when creating the neon tool's Azure service principal.
             </summary>
         </member>
-        <member name="P:Neon.Kube.AzureOptions.ApplicationId">
+        <member name="P:Neon.Kube.AzureHostingOptions.AppId">
             <summary>
-            Application ID generated when creating the neon tool's Azure service principal. 
+            Application ID for the application created to manage Azure access to neonKUBE provisioning and management tools.. 
             </summary>
         </member>
-        <member name="P:Neon.Kube.AzureOptions.Password">
+        <member name="P:Neon.Kube.AzureHostingOptions.AppPassword">
             <summary>
             Password generated when creating the neon tool's Azure service principal.
             </summary>
         </member>
-        <member name="P:Neon.Kube.AzureOptions.ResourceGroup">
+        <member name="P:Neon.Kube.AzureHostingOptions.ResourceGroup">
             <summary>
-            Azure resource group where all clusterv components are to be provisioned.  This defaults
-            to the clusterv name but can be customized as required.
+            Azure resource group where all cluster components are to be provisioned.  This defaults
+            to "neon-" plus the cluster name but can be customized as required.
             </summary>
         </member>
-        <member name="P:Neon.Kube.AzureOptions.Region">
+        <member name="P:Neon.Kube.AzureHostingOptions.Region">
             <summary>
             Identifies the target Azure region (e.g. <b>westus</b>).
             </summary>
         </member>
-        <member name="P:Neon.Kube.AzureOptions.DomainLabel">
+        <member name="P:Neon.Kube.AzureHostingOptions.DisableProximityPlacement">
+            <summary>
+            <para>
+            neonKUBE cluster VMs are all deployed within the same Azure <a href="https://azure.microsoft.com/en-us/blog/introducing-proximity-placement-groups/">placement group</a>
+            by default.  This ensures the smallest possible network latency between the cluster VMs.
+            </para>
+            <note>
+            <para>
+            Proximity placement groups have one downside: they make it more likely that Azure
+            may not be able to find enough unused VMs to satisfy the proximity constraints.  This
+            can happen when you first provision a cluster or later on when you try to scale one.
+            </para>
+            <para>
+            For neonKUBE clusters the additional risk of an Azure provisioning failure is going
+            to be very low due to how we use availability sets, which is as similar deployment
+            constraint: master nodes are deployed to one availability set and workers to another.
+            Without a proximity placement group, Azure could deploy the masters to one datacenter
+            and the workers to another.  This wasn't that likely in the past but as Azure has
+            added more datacenters, the chance of this happening has increased.
+            </para>
+            <para>
+            Adding the proximity placement constrain, requires that Azure deploy both the masters
+            and workers in the same datacenter.  So say your cluster has 3 masters and 50 workers.
+            With proximity placement enabled, the Azure region will need to have a datacenter with
+            53 VMs available with the specified sizes.  With proximity placement disabled, Azure
+            could deploy the 3 masters in one datacenter and the 50 workers in another.
+            </para>
+            </note>
+            <para>
+            This property defaults to <c>false</c>.  You can disable the proximity placement
+            constraint by setting this to <c>true</c>.
+            </para>
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AzureHostingOptions.DomainLabel">
             <summary>
             The DNS domain prefix for the public IP address to be assigned to the cluster.
+            This defaults to <b>"neon-UUID"</b> where UUID is generated.
             </summary>
             <remarks>
             <note>
@@ -2677,97 +3124,128 @@
             </para>
             </remarks>
         </member>
-        <member name="P:Neon.Kube.AzureOptions.StaticClusterAddress">
-            <summary>
-            <para>
-            Specifies whether a static external IP address will be created for the cluster.  A static
-            IP address will never change and may be referenced via a DNS A record.  Static addresses
-            may incur additional costs and Azure limits the number of static addresses that may be
-            provisioned for a subscription.  This defaults to <c>false</c>.
-            </para>
-            <para>
-            When this is <c>false</c>, a dynamic external address will be provisioned.  This may be
-            referenced via a DNS CNAME record and the address may change from time-to-time.
-            </para>
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.AzureOptions.PublicNodeAddresses">
-            <summary>
-            <note>
-            <b>IMPORTANT:</b> assigning public IP addresses to cluster nodes is not currently
-            implemented.
-            </note>
-            <para>
-            Specifies whether the cluster nodes should be provisioned with public IP addresses
-            in addition to the cluster wide public IP addresses assigned to the traffic manager.
-            This defaults to <c>false</c>.
-            </para>
-            <note>
-            You will incur additional recuring costs for each public IP address.
-            </note>
-            </summary>
-            <remarks>
-            <para>
-            There are two main reasons for enabling this.
-            </para>
-            <list type="number">
-            <item>
-            Outbound SNAT port exhaustion: This can occur when cluster nodes behind a load
-            balancer have a high rate of outbound requests to the Internet.  The essential
-            issue is that the traffic manager can NAT a maximum of 64K outbound connections
-            for the entire cluster.  This is described in detail 
-            <a href="https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-outbound-connections#load-balanced-vm-with-no-instance-level-public-ip-address">here</a>.
-            Assigning a public IP address to each node removes this cluster level restriction
-            such that each node can have up to 64K outbound connections.
-            </item>
-            <item>
-            Occasionally, it's important to be able to reach specific cluster nodes directly
-            from the Internet.
-            </item>
-            </list>
-            <para>
-            Enabling this directs the <b>neon-cli</b> to create a dynamic instance level IP
-            address for each cluster node and add a public network interface to each cluster 
-            virtual machine.
-            </para>
-            <note>
-            The public network interface will be protected by a public security group that
-            denies all inbound traffic and allows all outbound traffic by default.
-            </note>
-            </remarks>
-        </member>
-        <member name="P:Neon.Kube.AzureOptions.Environment">
+        <member name="P:Neon.Kube.AzureHostingOptions.Environment">
             <summary>
             Specifies the target Azure environment.  This defaults to the 
             normal public Azure cloud.  See <see cref="T:Neon.Kube.AzureCloudEnvironment"/>
             for other possibilities.
             </summary>
         </member>
-        <member name="P:Neon.Kube.AzureOptions.FaultDomains">
-            <summary>
-            Specifies the number of Azure fault domains the cluster nodes should be
-            distributed across.  This defaults to <b>2</b> which should not be increased
-            without making sure that your subscription supports the increase (most won't).
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.AzureOptions.UpdateDomains">
+        <member name="P:Neon.Kube.AzureHostingOptions.FaultDomains">
             <summary>
             <para>
-            Specifies the number of Azure update domains the cluster nodes will 
-            distributed across.  This defaults to <b>5</b>  You may customize this
-            with a value in the range of <b>2</b>...<b>20</b>.
+            Specifies the number of Azure fault domains the worker nodes should be
+            distributed across.  This defaults to <b>3</b> which should not be increased
+            without making sure that your subscription supports the increase (most won't).
             </para>
             <note>
-            Larger clusters should increase this value to avoid losing significant capacity
-            as Azure updates its underlying infrastructure in an update domain requiring
-            VM shutdown and restarts.  A value of <b>2</b> indicates that one half of the
-            cluster servers may be restarted during an update domain upgrade.  A value
-            of <b>20</b> indicates that one twentieth of your VMs may be recycled at a
-            time.
+            Manager nodes will always be provisioned in three fault domains to ensure
+            that there will always be a quorum after any single fault domain failure.
             </note>
             </summary>
         </member>
-        <member name="M:Neon.Kube.AzureOptions.Validate(Neon.Kube.ClusterDefinition)">
+        <member name="P:Neon.Kube.AzureHostingOptions.UpdateDomains">
+            <summary>
+            <para>
+            Specifies the number of Azure update domains the cluster workers will 
+            distributed across.  This defaults to <b>20</b>  You may customize this
+            with a value in the range of <b>2</b>...<b>20</b>.
+            </para>
+            <para>
+            Azure automatically distributes VMs across the specified number of update
+            domains and when it's necessary to perform planned maintenance on the underlying
+            hardware or to relocate a VM to another host, Azure gaurantees that it will
+            reboot hosts in only one update domain at a time and then wait 30 minutes between
+            update domains to give the application a chance to stablize.
+            </para>
+            <para>
+            A value of <b>2</b> indicates that one half of the cluster servers may be rebooted
+            at the same time during an update domain upgrade.  A value of <b>20</b> indicates 
+            that one twentieth of your VMs may be rebooted at a time.
+            </para>
+            <note>
+            <para>
+            There's no way to specifically assign cluster nodes to specific update domains
+            in Azure.  This would have been nice for a cluster hosting replicated database
+            nodes where we'd like to assign replica nodes to different update domains such
+            that all data would still be available while an update domain was being rebooted.
+            </para>
+            <para>
+            I imagine Azure doesn't allow this due to the difficuilty of ensuring these
+            constraints across a very large number of customer deployments.  Azure also
+            mentions that the disruption of a VM for planned maintenance can be slight
+            because VMs can be relocated from one host to another while still running.
+            </para>
+            </note>
+            <note>
+            Manager nodes are always deployed with 20 update domains and since no cluster
+            should ever need anywhere close this number of managers, we'll be ensured
+            that only a single manager will be rebooted together during planned Azure
+            maintenance and the 30 minutes Azure waits after rebooting an update domain
+            gives the rebooted manager a chance to rejoin the other managers and catch
+            up on any changes that happened while it was offline.
+            </note>
+            <note>
+            neonKUBE deploys manager and worker nodes in separate Azure availability zones.
+            This means that there will always be a quorum of managers available as any one
+            update zone is rebooted.
+            </note>
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AzureHostingOptions.DefaultVmSize">
+            <summary>
+            <para>
+            Specifies the default Azure virtual machine size.  You the available VM sizes are listed 
+            <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-general">here</a>.
+            Cluster node VMs will be provisioned with this size unless overridden by <see cref="T:Neon.Kube.AzureNodeOptions"/>
+            for specific nodes.
+            </para>
+            <note>
+            This defaults to <b>Standard_B2S</b> which should be suitable for testing purposes
+            as well as relatively idle clusters.  Each <b>Standard_B2S</b> VM includes 2 virtual
+            cores and 4 GiB RAM.  At the time this was written, the pay-as-you-go cost for this
+            VM is listed at $0.0416/hour or about $30/month in a USA datacenter.  <b>Bs-series</b>
+            VMs are available in almost all Azure datacenters.
+            </note>
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AzureHostingOptions.DefaultStorageType">
+            <summary>
+            Specifies the default Azure storage type to be used when creating a
+            node that does not specify the storage type in its <see cref="T:Neon.Kube.NodeOptions"/>.
+            This defaults to <see cref="F:Neon.Kube.AzureStorageTypes.StandardSSD"/>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AzureHostingOptions.DefaultDiskSize">
+            <summary>
+            Specifies the default Azure disk size to be used when creating a
+            node that does not specify a disk size in its <see cref="T:Neon.Kube.NodeOptions"/>.
+            This defaults to <b>64 GiB</b>.
+            </summary>
+            <remarks>
+            <para>
+            <see cref="F:Neon.Kube.AzureStorageTypes.StandardHDD"/>, <see cref="F:Neon.Kube.AzureStorageTypes.StandardSSD"/>, and
+            <see cref="F:Neon.Kube.AzureStorageTypes.PremiumSSD"/> disks may be provisioned in these
+            sizes: <b>4GiB</b>, <b>8GiB</b>, <b>16GiB</b>, <b>32GiB</b>, <b>64GiB</b>, <b>128GiB</b>, <b>256GiB</b>, <b>512GiB</b>,
+            <b>1TiB</b>, <b>2TiB</b>, <b>4TiB</b>, <b>8TiB</b>, <b>16TiB</b>, or <b>32TiB</b>.
+            </para>
+            <para>
+            <see cref="F:Neon.Kube.AzureStorageTypes.UltraSSD"/> based disks can be provisioned in these sizes:
+            <b>4 GiB</b>,<b>8 GiB</b>,<b> GiB</b>,<b>16 GiB</b>,<b>32 GiB</b>,<b>64 GiB</b>,<b>128 GiB</b>,<b>256 GiB</b>,<b>512 GiB</b>,
+            or from <b>1 TiB</b> to <b>64TiB</b> in increments of <b>1 TiB</b>.
+            </para>
+            <note>
+            This size will be rounded up to the next valid disk size for the given storage type
+            and set to the maximum allowed size, when necessary.
+            </note>
+            <note>
+            The Azure disk sizes listed above may become out-of-date as Azure enhances their
+            services.  Review the Azure documentation for more information about what is
+            currently supported.
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.Kube.AzureHostingOptions.Validate(Neon.Kube.ClusterDefinition)">
             <summary>
             Validates the options and also ensures that all <c>null</c> properties are
             initialized to their default values.
@@ -2775,128 +3253,174 @@
             <param name="clusterDefinition">The cluster definition.</param>
             <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         </member>
+        <member name="T:Neon.Kube.AzureNodeOptions">
+            <summary>
+            Azure specific options for cluster cluster node.  The default constructor
+            initializes reasonable defaults.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AzureNodeOptions.VmSize">
+            <summary>
+            <para>
+            Specifies the Azure virtual machine size.  You the available VM sizes are listed 
+            <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-general">here</a>.
+            </para>
+            <note>
+            This defaults to <b>Standard_B2S</b> which should be suitable for testing purposes
+            as well as relatively idle clusters.  Each <b>Standard_B2S</b> VM includes 2 virtual
+            cores and 4 GiB RAM.  At the time this was written, the pay-as-you-go cost for this
+            VM is listed at $0.0416/hour or about $30/month in a USA datacenter.  <b>Bs-series</b>
+            VMs are available in almost all Azure datacenters.
+            </note>
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AzureNodeOptions.StorageType">
+            <summary>
+            <para>
+            Optionally specifies the storage type to use for any mounted drives.  This defaults to <see cref="F:Neon.Kube.AzureStorageTypes.Default"/>
+            which indicates that <see cref="P:Neon.Kube.AzureHostingOptions.DefaultStorageType"/> will specify the storage type
+            for this node.  By default, <see cref="F:Neon.Kube.AzureStorageTypes.StandardSSD"/> drives will be provisioned
+            when storage type is not specified.
+            </para>
+            <note>
+            You should really consider upgrading production clusters to one of the SSD based storage types.
+            </note>
+            </summary>
+            <remarks>
+            <note>
+            All virtual machine sizes support <see cref="F:Neon.Kube.AzureStorageTypes.StandardHDD"/> which is why that
+            is the default value.  Consult the consult the Azure documentation to virtual machine size specified 
+            by <see cref="P:Neon.Kube.AzureNodeOptions.VmSize"/> can support <see cref="F:Neon.Kube.AzureStorageTypes.PremiumSSD"/>.
+            </note>
+            <para>
+            <see cref="F:Neon.Kube.AzureStorageTypes.StandardHDD"/> specifies relatively slow rotating hard drives,
+            <see cref="F:Neon.Kube.AzureStorageTypes.StandardSSD"/> specifies standard SSD based drives,
+            <see cref="F:Neon.Kube.AzureStorageTypes.PremiumSSD"/> specifies fast SSD based drives, and finally
+            <see cref="F:Neon.Kube.AzureStorageTypes.UltraSSD"/> specifies super fast SSD based drives.  Azure recommends that
+            most production VMs deploy with SSDs.
+            </para>
+            <note>
+            <see cref="F:Neon.Kube.AzureStorageTypes.UltraSSD"/> storage is still relatively new and your region may not be able to
+            attach ultra drives to all VM instance types.  See this <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/windows/disks-enable-ultra-ssd">note</a>
+            for more information.
+            </note>
+            </remarks>
+        </member>
+        <member name="P:Neon.Kube.AzureNodeOptions.DiskSize">
+            <summary>
+            Optionally specifies the size of the mounted managed Azure disk as <see cref="T:Neon.Common.ByteUnits"/>.  This
+            defaults to <c>null</c> which indicates that <see cref="P:Neon.Kube.AzureHostingOptions.DefaultDiskSize"/>
+            will be used instead, and that defaults to <b>128 GiB</b>.
+            </summary>
+            <remarks>
+            <para>
+            <see cref="F:Neon.Kube.AzureStorageTypes.StandardHDD"/>, <see cref="F:Neon.Kube.AzureStorageTypes.StandardSSD"/>, and
+            <see cref="F:Neon.Kube.AzureStorageTypes.PremiumSSD"/> drives may be provisioned in these
+            sizes: <b>4GiB</b>, <b>8GiB</b>, <b>16GiB</b>, <b>32GiB</b>, <b>64GiB</b>, <b>128GiB</b>, <b>256GiB</b>, <b>512GiB</b>,
+            <b>1TiB</b>, <b>2TiB</b>, <b>4TiB</b>, <b>8TiB</b>, <b>16TiB</b>, or <b>32TiB</b>.
+            </para>
+            <para>
+            <see cref="F:Neon.Kube.AzureStorageTypes.UltraSSD"/> based drives can be provisioned in these sizes:
+            <b>4 GiB</b>,<b>8 GiB</b>,<b> GiB</b>,<b>16 GiB</b>,<b>32 GiB</b>,<b>64 GiB</b>,<b>128 GiB</b>,<b>256 GiB</b>,<b>512 GiB</b>,
+            or from <b>1 TiB</b> to <b>64TiB</b> in increments of <b>1 TiB</b>.
+            </para>
+            <note>
+            This size will be rounded up to the next valid drive size for the given storage type
+            and set to the maximum allowed size, when necessary.
+            </note>
+            <note>
+            The Azure disk sizes listed above may become out-of-date as Azure enhances their
+            services.  Review the Azure documentation for more information about what is
+            currently supported.
+            </note>
+            </remarks>
+        </member>
+        <member name="P:Neon.Kube.AzureNodeOptions.VmGen">
+            <summary>
+            Optionally overrides the default VM generation assignment made by neonKUBE
+            cluster setup for this node.  This defaults to <c>null</c> which allows
+            setup to make the choice.
+            </summary>
+            <remarks>
+            <para>
+            Azure supports two generations of VM images that correspond roughly to HYPER-V
+            VM generations. <b>Gen1</b> VMs are are older.  These VMs use BIOS to boot,
+            IDE to access disk drives and are somewhat slower to provision and boot.
+            <b>Gen2</b> images use UEFI to boot (which supports PXE), OS disk drives
+            larger than 2TiB, and accelerated netwoking but Gen2 images don't support
+            disk encryption.  Here's a link with additional detail:
+            </para>
+            <para>
+            https://docs.microsoft.com/en-us/azure/virtual-machines/windows/generation-2
+            </para>
+            <para>
+            Not all Azure VM sizes support Gen1 or Gen2 VMs.  neonKUBE attempts to deploy
+            Gen2 VMs when supported for best performance.  You can override this behavior
+            by setting this value to <b>1</b> or <b>2</b>.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:Neon.Kube.AzureNodeOptions.Validate(Neon.Kube.ClusterDefinition,System.String)">
+            <summary>
+            Validates the options and also ensures that all <c>null</c> properties are
+            initialized to their default values.
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
+            <param name="nodeName">The associated node name.</param>
+            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        </member>
         <member name="T:Neon.Kube.AzureStorageTypes">
             <summary>
-            Enumerates the possible Azure storage account types.
+            <para>
+            Enumerates the possible Azure storage account types.  Microsoft explains
+            their disk types here:
+            </para>
+            <para>
+            <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/windows/disks-types">https://docs.microsoft.com/en-us/azure/virtual-machines/windows/disks-types</a>
+            </para>
             </summary>
         </member>
-        <member name="F:Neon.Kube.AzureStorageTypes.StandardHDD_LRS">
+        <member name="F:Neon.Kube.AzureStorageTypes.Default">
             <summary>
-            Standard managed spinning drives with local redundancy.
+            Indicates that the default Azure storage type will be provisioned.
+            When <see cref="P:Neon.Kube.AzureNodeOptions.StorageType"/>=<see cref="F:Neon.Kube.AzureStorageTypes.Default"/>
+            then <see cref="P:Neon.Kube.AzureHostingOptions.DefaultStorageType"/> will be provisioned.
+            If <see cref="P:Neon.Kube.AzureHostingOptions.DefaultStorageType"/>=<see cref="F:Neon.Kube.AzureStorageTypes.Default"/>
+            then <see cref="F:Neon.Kube.AzureStorageTypes.StandardSSD"/> will be provisioned.
             </summary>
         </member>
-        <member name="F:Neon.Kube.AzureStorageTypes.StandardSSD_LRS">
+        <member name="F:Neon.Kube.AzureStorageTypes.StandardHDD">
             <summary>
-            Standard managed SSD drives with local redundancy.
+            Standard managed spinning drives are quite slow but are
+            also very inexpensive.  These may be suited for test or latency
+            insensitive clusters.  These are available in sizes up to 32TiB.
             </summary>
         </member>
-        <member name="F:Neon.Kube.AzureStorageTypes.PremiumSSD_LRS">
+        <member name="F:Neon.Kube.AzureStorageTypes.StandardSSD">
             <summary>
-            Premium managed SSD drives with local redundancy.
+            Managed SSD based drives  are a cost effect option that offers
+            better latancy and reliability than <see cref="F:Neon.Kube.AzureStorageTypes.StandardHDD"/>.
+            These are available in sizes up to 32TiB.
             </summary>
         </member>
-        <member name="T:Neon.Kube.AzureVmCapabilities">
+        <member name="F:Neon.Kube.AzureStorageTypes.PremiumSSD">
             <summary>
-            Describes the capabilities of the Azure virtual machines.
+            Premium managed SSD drives deliver high througput and low latency and
+            are suitable for I/O intensive workloads.  These are available in sizes
+            up to 32TiB.
             </summary>
         </member>
-        <member name="M:Neon.Kube.AzureVmCapabilities.#cctor">
+        <member name="F:Neon.Kube.AzureStorageTypes.UltraSSD">
             <summary>
-            Static constructor.
-            </summary>
-        </member>
-        <member name="M:Neon.Kube.AzureVmCapabilities.Get(Neon.Kube.AzureVmSizes)">
-            <summary>
-            Returns the <see cref="T:Neon.Kube.AzureVmCapabilities"/> for a specified VM size.
-            </summary>
-            <param name="vmSize">The VM size.</param>
-            <returns>
-            The requested <see cref="T:Neon.Kube.AzureVmCapabilities"/> or <c>null</c> 
-            if information about the VM cannot be located.
-            </returns>
-        </member>
-        <member name="M:Neon.Kube.AzureVmCapabilities.#ctor(Neon.Kube.AzureVmSizes,Neon.Kube.AzureStorageTypes[])">
-            <summary>
-            Private constructor.
-            </summary>
-            <param name="vmSize">The VM size.</param>
-            <param name="storageTypes">The supported storage types.</param>
-        </member>
-        <member name="P:Neon.Kube.AzureVmCapabilities.IsDeprecated">
-            <summary>
-            Returns <c>true</c> if Azure has deprecated the VM size.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.AzureVmCapabilities.NotSupported">
-            <summary>
-            Returns <c>true</c> if this VM size is not supported by clusters.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.AzureVmCapabilities.VmSize">
-            <summary>
-            Returns the associated <see cref="T:Neon.Kube.AzureVmSizes"/> value.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.AzureVmCapabilities.CoreCount">
-            <summary>
-            Returns the number of virtual CPU cores provided for the VM type.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.AzureVmCapabilities.RamMiB">
-            <summary>
-            Returns RAM provided for the VM type in MiB.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.AzureVmCapabilities.EphemeralDriveGiB">
-            <summary>
-            Returns the size of the VM ephemeral drive in GiB.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.AzureVmCapabilities.EphemeralDriveSSD">
-            <summary>
-            Returns <c>true</c> if the VM ephemeral drive is an SSD.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.AzureVmCapabilities.MaxDataDrives">
-            <summary>
-            Returns the number of data drives that can be attached to the VM.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.AzureVmCapabilities.MaxNics">
-            <summary>
-            Returns the maximum number of network interfaces that can be attached.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.AzureVmCapabilities.LoadBalancing">
-            <summary>
-            Returns <c>true</c> if the VM supports load balancing.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.AzureVmCapabilities.GpuCount">
-            <summary>
-            Returns the number of GPUs.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.AzureVmCapabilities.GpuRamGiB">
-            <summary>
-            Returns the amount of GPU RAM in GiB.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.AzureVmCapabilities.SupportedDataStorageTypes">
-            <summary>
-            Hash set of the supported data drive storage account types.
-            </summary>
-        </member>
-        <member name="M:Neon.Kube.AzureVmCapabilities.SupportsDataStorageType(Neon.Kube.AzureStorageTypes)">
-            <summary>
-            Determines whether the VM supports data drives with a specific storage account type.
-            </summary>
-            <param name="storageType">The storage type being tested.</param>
-            <returns><c>true</c> if the storage type is supported.</returns>
-        </member>
-        <member name="T:Neon.Kube.AzureVmSizes">
-            <summary>
-            Enumerates the possible Azure VM sizes.
+            <para>
+            Ultra managed SSD drives are intended for the most demanding I/O
+            workloads.  These range in size up to 64TiB.
+            </para>
+            <note>
+            These are still relatively new and your region may not be able to
+            attach ultra drives to all VM instance types.  See this <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/windows/disks-enable-ultra-ssd">note</a>
+            for more information.
+            </note>
             </summary>
         </member>
         <member name="T:Neon.Kube.CloudOptions">
@@ -2904,439 +3428,27 @@
             Describes cloud related cluster settings.
             </summary>
         </member>
-        <member name="P:Neon.Kube.CloudOptions.SshIngressStart">
+        <member name="P:Neon.Kube.CloudOptions.PrefixResourceNames">
             <summary>
-            <para>
-            Specifies the start of a range of ingress load balancer ports reserved by
-            neonKUBE for temporarily exposing SSH from individual cluster nodes to the
-            Internet during cluster setup as well as afterwards so that a cluster node
-            can be accessed remotely by a cluster operator.
-            </para>
-            <note>
-            The number ports between <see cref="P:Neon.Kube.CloudOptions.SshIngressStart"/> and <see cref="P:Neon.Kube.CloudOptions.SshIngressEnd"/>
-            must include at least as many ports as there will be nodes deployed to the cluster.
-            This range defaults to <b>64000-64999</b> which will support a cluster with up to
-            1,000 nodes, which is a big number.  This default range is unlikely to conflict with 
-            ports a cluster may need to expliitly expose to the Internet like HTTP/HTTPS (80/443).
-            You can change this range for your cluster to resolve any conflicts when necessary.
-            </note>
+            Specifies that cloud resources created for the cluster have their names prefixed
+            by the cluster name.  This defaults to <c>false</c>.
             </summary>
-        </member>
-        <member name="P:Neon.Kube.CloudOptions.SshIngressEnd">
-            <summary>
+            <remarks>
             <para>
-            Specifies the end of a range of ingress load balancer ports reserved by
-            neonKUBE for temporarily exposing SSH from individual cluster nodes to the
-            Internet during cluster setup as well as afterwards so that a cluster node
-            can be accessed remotely by a cluster operator.
+            neonKUBE cluster resources are deployed to a cluster specific resource group
+            by default.  This means that there's generally no reason to prefix the cluster
+            resource names because they are already scoped to the cluster's resource group.
             </para>
-            <note>
-            The number ports between <see cref="P:Neon.Kube.CloudOptions.SshIngressStart"/> and <see cref="P:Neon.Kube.CloudOptions.SshIngressEnd"/>
-            must include at least as many ports as there will be nodes deployed to the cluster.
-            This range defaults to <b>64000-64999</b> which will support a cluster with up to
-            1,000 nodes, which is a big number.  This default range is unlikely to conflict with 
-            ports a cluster may need to expliitly expose to the Internet like HTTP/HTTPS (80/443).
-            You can change this range for your cluster to resolve any conflicts when necessary.
-            </note>
-            </summary>
+            <para>
+            It is possible though to deploy a cluster into an existing resource group, along
+            with other already existing resources (perhaps another neonKUBE cluster).  You'll need to
+            take care in this situation to avoid resource name conflicts.  To handle this,
+            set this property to <c>true</c> such that every cluster resource created will 
+            include the cluster name in the resource name prefix.
+            </para>
+            </remarks>
         </member>
         <member name="M:Neon.Kube.CloudOptions.Validate(Neon.Kube.ClusterDefinition)">
-            <summary>
-            Validates the options and also ensures that all <c>null</c> properties are
-            initialized to their default values.
-            </summary>
-            <param name="clusterDefinition">The cluster definition.</param>
-            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        </member>
-        <member name="T:Neon.Kube.ClusterDefinition">
-            <summary>
-            Describes a Kubernetes cluster.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.NameRegex">
-            <summary>
-            Regex for verifying cluster names for hosts, routes, groups, etc.
-            </summary>
-        </member>
-        <member name="F:Neon.Kube.ClusterDefinition.ReservedLabelPrefix">
-            <summary>
-            The prefix reserved for neonKUBE related daemon, image, and pod labels.
-            </summary>
-        </member>
-        <member name="M:Neon.Kube.ClusterDefinition.FromYaml(System.String,System.Boolean)">
-            <summary>
-            Parses a cluster definition from YAML text.
-            </summary>
-            <param name="yaml">The JSON text.</param>
-            <param name="strict">Optionally require that all input properties map to <see cref="T:Neon.Kube.ClusterDefinition"/> properties.</param>
-            <returns>The parsed <see cref="T:Neon.Kube.ClusterDefinition"/>.</returns>
-            <remarks>
-            <note>
-            The source is first preprocessed using <see cref="T:Neon.IO.PreprocessReader"/>
-            and then is parsed as YAML.
-            </note>
-            </remarks>
-        </member>
-        <member name="M:Neon.Kube.ClusterDefinition.ValidateFile(System.String,System.Boolean)">
-            <summary>
-            Parses and validates a YAML cluster definition file.
-            </summary>
-            <param name="path">The file path.</param>
-            <param name="strict">Optionally require that all input properties map to <see cref="T:Neon.Kube.ClusterDefinition"/> properties.</param>
-            <exception cref="T:System.ArgumentException">Thrown if the definition is not valid.</exception>
-        </member>
-        <member name="M:Neon.Kube.ClusterDefinition.FromFile(System.String,System.Boolean)">
-            <summary>
-            Parses a YAML cluster definition from a file.
-            </summary>
-            <param name="path">The file path.</param>
-            <param name="strict">Optionally require that all input properties map to <see cref="T:Neon.Kube.ClusterDefinition"/> properties.</param>
-            <returns>The parsed <see cref="T:Neon.Kube.ClusterDefinition"/>.</returns>
-            <exception cref="T:System.ArgumentException">Thrown if the definition is not valid.</exception>
-            <remarks>
-            <note>
-            The source is first preprocessed using <see cref="T:Neon.IO.PreprocessReader"/>
-            and then is parsed as JSON.
-            </note>
-            </remarks>
-        </member>
-        <member name="M:Neon.Kube.ClusterDefinition.IsValidName(System.String)">
-            <summary>
-            Verifies that a string is a valid cluster name.
-            </summary>
-            <param name="name">The name being tested.</param>
-            <returns><c>true</c> if the name is valid.</returns>
-        </member>
-        <member name="M:Neon.Kube.ClusterDefinition.ValidateSize(System.String,System.Type,System.String)">
-            <summary>
-            Ensures that a VM memory or disk size specification is valid and also
-            converts the value to the corresponding long count.
-            </summary>
-            <param name="sizeValue">The size value string.</param>
-            <param name="optionsType">Type of the property holding the size property (used for error reporting).</param>
-            <param name="propertyName">The size property name (used for error reporting).</param>
-            <returns>The size converted into a <c>long</c>.</returns>
-            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the size is not valid.</exception>
-        </member>
-        <member name="M:Neon.Kube.ClusterDefinition.#ctor">
-            <summary>
-            Default constructor.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.Name">
-            <summary>
-            The cluster name.
-            </summary>
-            <remarks>
-            <note>
-            The name may include only letters, numbers, periods, dashes, and underscores.
-            </note>
-            </remarks>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.Debug">
-            <summary>
-            <para>
-            Specifies cluster debugging options.
-            </para>
-            <note>
-            These options are generally intended for neonKUBE developers only.
-            </note>
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.Security">
-            <summary>
-            Specifies cluster security options.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.Provisioner">
-            <summary>
-            Identifies the tool/version used to provision the cluster.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.Kubernetes">
-            <summary>
-            Returns the Kubernetes cluster options.,
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.Docker">
-            <summary>
-            Returns the options to be used when installing Docker on each
-            of the cluster nodes.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.Mon">
-            <summary>
-            Returns the options to be used for configuring the cluster integrated
-            Elasticsearch/Fluentd/Kibana (Mon) logging stack.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.Prometheus">
-            <summary>
-            Returns the options to be used for configuring the cluster integrated
-            Elasticsearch/Fluentd/Kibana (Mon) logging stack.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.AllowUnitTesting">
-            <summary>
-            Optionally enable unit testing on this cluster.  This is disabled by 
-            default for safety.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.Hosting">
-            <summary>
-            Specifies hosting related settings (e.g. the cloud provider).  This defaults to
-            <c>null</c> which indicates that the cluster will be hosted on private servers.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.Datacenter">
-            <summary>
-            Identifies the datacenter.
-            </summary>
-            <remarks>
-            <note>
-            The name may include only letters, numbers, periods, dashes, and underscores.
-            </note>
-            </remarks>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.Environment">
-            <summary>
-            Indicates how the cluster is being used.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.LinuxDistribution">
-            <summary>
-            Specifies the distribution of Linux to be installed on the cluster nodes.  Currently
-            only <b>ubuntu</b> is supported.  This defaults to <b>ubuntu</b>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.LinuxVersion">
-            <summary>
-            <para>
-            Specifies the version of <see cref="P:Neon.Kube.ClusterDefinition.LinuxDistribution"/> to be installed.  This is
-            formatted like <b>20.04.#</b> where <b>#</b> is the minor release or <b>20.04-latest</b>
-            for the latest release.
-            </para>
-            <para>
-            Currently, only <b>Ubuntu 20.04.#</b> releases are supported.  You'll need to check the
-            cluster install documentation to discover which point releases are currently available.
-            </para>
-            <para>
-            This defaults to <b>20.04.latest</b>.
-            </para>
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.LinuxTemplateUri">
-            <summary>
-            <para>
-            Optionally overrides the location of the Linux node template URI.  This is usually
-            located on a neonFORGE managed server and derived from <see cref="P:Neon.Kube.ClusterDefinition.LinuxDistribution"/>
-            and <see cref="P:Neon.Kube.ClusterDefinition.LinuxVersion"/> which should work for most users.
-            </para>
-            <para>
-            You may set this to a custom URI which may be useful for setting up air-gapped 
-            clusters for for testing purposes.  This defaults to <c>null</c>.
-            </para>
-            <note>
-            This URI can use HTTP, HTTPS, or FTP for all hosting environments except <see cref="F:Neon.Kube.HostingEnvironments.XenServer"/>
-            which doesn't support HTTPS.
-            </note>
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.TimeSources">
-            <summary>
-            Specifies the NTP time sources to be configured for the cluster.  These are the
-            FQDNs or IP addresses of the sources.  This defaults to <b>pool.ntp.org</b>.
-            </summary>
-            <remarks>
-            <para>
-            The cluster masters will be configured to synchronize their time with these
-            time sources and the worker nodes will be configured to synchronize their time
-            with the master nodes.
-            </para>
-            </remarks>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.PackageProxy">
-            <summary>
-            Optionally specifies one or more APT proxy/cache servers the cluster will use to install
-            and update Linux packages.  These are endpoints like <b>HOSTNAME:PORT</b> or <b>ADDRESS.PORT</b>
-            of a <b>apt-cacher-ng</b> or other package proxy server.  The port is generall set to <b>3142</b>
-            Multiple proxies may be specified by separating them with spaces.  This defaults to
-            referencing the <b>apt-cacher-ng</b> instances running on the master nodes.
-            </summary>
-            <remarks>
-            <para>
-            A package cache will greatly reduce the Internet network traffic required to deploy a
-            cluster, especially for large clusters.
-            </para>
-            <note>
-            The cluster nodes are configured to failover to different proxies or to hit the 
-            default Linux distribution package mirror directly if any or all of the caches
-            specified are unavailable.
-            </note>
-            <note>
-            The package caches will be tried in the order they are listed.  This essentially
-            makes the first cache primary, with the others as backups.
-            </note>
-            </remarks>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.Setup">
-            <summary>
-            Optionally specifies setup process related options.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.Network">
-            <summary>
-            Describes the cluster's network configuration.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.NodeOptions">
-            <summary>
-            Specifies host node options.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.Cloud">
-            <summary>
-            Specifies cloud related options for clusters to be deployed to the cloud.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.NodeDefinitions">
-            <summary>
-            Describes the host nodes in the cluster.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.Nodes">
-            <summary>
-            Enumerates all cluster node definitions.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.SortedNodes">
-            <summary>
-            Enumerates all cluster node definitions sorted in ascending order by name.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.Masters">
-            <summary>
-            Enumerates the cluster master node definitions.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.SortedMasters">
-            <summary>
-            Enumerates the cluster master node definitions sorted in ascending order by name.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.Workers">
-            <summary>
-            Enumerates the cluster worker node definitions.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ClusterDefinition.SortedWorkers">
-            <summary>
-            Enumerates the cluster worker node definitions sorted in ascending order by name.
-            </summary>
-        </member>
-        <member name="M:Neon.Kube.ClusterDefinition.ValidatePrivateNodeAddresses">
-            <summary>
-            Validates that node private IP addresses are set, are within the nodes subnet, and
-            are unique.  This method is intended to be called from hosting options classes
-            like <see cref="T:Neon.Kube.MachineOptions"/> which require specified node IP addresses.
-            </summary>
-            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        </member>
-        <member name="M:Neon.Kube.ClusterDefinition.Validate">
-            <summary>
-            Validates the cluster definition and also ensures that all <c>null</c> properties are
-            initialized to their default values.
-            </summary>
-            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        </member>
-        <member name="M:Neon.Kube.ClusterDefinition.AddNode(Neon.Kube.NodeDefinition)">
-            <summary>
-            Adds a node to the cluster.
-            </summary>
-            <param name="node">The new node.</param>
-        </member>
-        <member name="T:Neon.Kube.DebugOptions">
-            <summary>
-            <para>
-            Specifies cluster debug options.
-            </para>
-            <note>
-            <b>WARNING:</b> In general, you should not customize any debugging options for
-            production clusters.
-            </note>
-            </summary>
-        </member>
-        <member name="M:Neon.Kube.DebugOptions.Validate(Neon.Kube.ClusterDefinition)">
-            <summary>
-            Validates the options.
-            </summary>
-            <param name="clusterDefinition">The cluster definition.</param>
-            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        </member>
-        <member name="T:Neon.Kube.DockerOptions">
-            <summary>
-            Describes the Docker options for a neonKUBE.
-            </summary>
-        </member>
-        <member name="M:Neon.Kube.DockerOptions.#ctor">
-            <summary>
-            Default constructor.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.DockerOptions.Version">
-            <summary>
-            <para>
-            The version of Docker to be installed or <b>default</b> to install a reasonable
-            version for the version of Kubernetes being deployed.  This defaults to <b>default</b>
-            which will install a reasonable supported version.
-            </para>
-            <note>
-            Only Community Editions of Docker are supported at this time.
-            </note>
-            </summary>
-        </member>
-        <member name="M:Neon.Kube.DockerOptions.Validate(Neon.Kube.ClusterDefinition)">
-            <summary>
-            Validates the options and also ensures that all <c>null</c> properties are
-            initialized to their default values.
-            </summary>
-            <param name="clusterDefinition">The cluster definition.</param>
-            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        </member>
-        <member name="M:Neon.Kube.DockerOptions.ClearSecrets">
-            <summary>
-            Clears any sensitive properties like the Docker registry credentials.
-            </summary>
-        </member>
-        <member name="T:Neon.Kube.ElasticsearchOptions">
-            <summary>
-            Specifies the options for configuring the cluster integrated Elasticsearch 
-            metrics stack: <a href="https://Elastic.co/">https://Elastic.co/</a>
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ElasticsearchOptions.Enabled">
-            <summary>
-            Indicates whether Elasticsearch metrics are to be enabled for the cluster.  
-            This defaults to <c>true</c>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ElasticsearchOptions.DiskSize">
-            <summary>
-            Indicates whether Elasticsearch metrics are to be enabled for the cluster.  
-            This defaults to <c>true</c>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ElasticsearchOptions.Resources">
-            <summary>
-            Compute Resources required by Elasticsearch.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.ElasticsearchOptions.LogRetentionDays">
-            <summary>
-            Log retention period. Logs beyond this number of days will be purged by the ClusterManager
-            </summary>
-        </member>
-        <member name="M:Neon.Kube.ElasticsearchOptions.Validate(Neon.Kube.ClusterDefinition)">
             <summary>
             Validates the options and also ensures that all <c>null</c> properties are
             initialized to their default values.
@@ -3374,34 +3486,17 @@
             Production environment.
             </summary>
         </member>
-        <member name="T:Neon.Kube.EtcdOptions">
-            <summary>
-            Specifies the options for configuring the cluster integrated Etcd 
-            metrics stack: <a href="https://Etcd.io/">https://Etcd.io/</a>
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.EtcdOptions.Resources">
-            <summary>
-            Compute Resources required by Etcd.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.EtcdOptions.DiskSize">
-            <summary>
-            Indicates disk size for Etcd nodes.  
-            This defaults to <c>false</c>.
-            </summary>
-        </member>
-        <member name="T:Neon.Kube.GoogleOptions">
+        <member name="T:Neon.Kube.GoogleHostingOptions">
             <summary>
             Specifies the Google Cloud Platform hosting settings.
             </summary>
         </member>
-        <member name="M:Neon.Kube.GoogleOptions.#ctor">
+        <member name="M:Neon.Kube.GoogleHostingOptions.#ctor">
             <summary>
             Constructor.
             </summary>
         </member>
-        <member name="M:Neon.Kube.GoogleOptions.Validate(Neon.Kube.ClusterDefinition)">
+        <member name="M:Neon.Kube.GoogleHostingOptions.Validate(Neon.Kube.ClusterDefinition)">
             <summary>
             Validates the options and also ensures that all <c>null</c> properties are
             initialized to their default values.
@@ -3585,7 +3680,7 @@
         </member>
         <member name="M:Neon.Kube.HostingOptions.#ctor">
             <summary>
-            Default constructor that initializes a <see cref="F:Neon.Kube.HostingEnvironments.Machine"/> provider.
+            Default constructor.
             </summary>
         </member>
         <member name="P:Neon.Kube.HostingOptions.Environment">
@@ -3626,89 +3721,20 @@
             Specifies the hosting settings when hosting directly on bare metal or virtual machines.
             </summary>
         </member>
+        <member name="P:Neon.Kube.HostingOptions.Cloud">
+            <summary>
+            Specifies cloud related options for clusters to be deployed to one of the public cloud providers.
+            </summary>
+        </member>
         <member name="P:Neon.Kube.HostingOptions.XenServer">
             <summary>
             Specifies the hosting settings when hosting on Citrix XenServer or the XCP-ng hypervisors.
             </summary>
         </member>
-        <member name="P:Neon.Kube.HostingOptions.VmHosts">
+        <member name="P:Neon.Kube.HostingOptions.Vm">
             <summary>
-            Optionally identifies the target Hyper-V or XenServer hypervisor machines.
+            Specifies common hosting settings for hypervisor based environments such as Hyper-V and XenServer.
             </summary>
-        </member>
-        <member name="P:Neon.Kube.HostingOptions.VmHostUsername">
-            <summary>
-            <para>
-            The default username to use for connecting the hypervisor host machines specified by <see cref="P:Neon.Kube.HostingOptions.VmHosts"/>.
-            This may be overridden for specific hypervisor machines.  This defaults to <c>null</c>.
-            </para>
-            <note>
-            This defaults to <b>root</b> for XenServer based environments.
-            </note>
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.HostingOptions.VmHostPassword">
-            <summary>
-            The default password to use for connecting the hypervisor host machines specified by <see cref="P:Neon.Kube.HostingOptions.VmHosts"/>.
-            This may be overridden for specific hypervisor machines within <see cref="P:Neon.Kube.HostingOptions.VmHosts"/> items.  This defaults to <c>null</c>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.HostingOptions.VmProcessors">
-            <summary>
-            The default number of virtual processors to assign to each cluster virtual machine.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.HostingOptions.VmMemory">
-            <summary>
-            Specifies the default maximum amount of memory to allocate to each cluster virtual machine.  This is specified as a string
-            that can be a byte count or a number with units like <b>512MiB</b>, <b>0.5GiB</b>, <b>2iGB</b>, or <b>1TiB</b>.  
-            This defaults to <b>4GiB</b>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.HostingOptions.VmDisk">
-            <summary>
-            Specifies the maximum amount of memory to allocate to each cluster virtual machine.  This is specified as a string
-            that can be a long byte count or a byte count or a number with units like <b>512MiB</b>, <b>0.5GiB</b>, <b>2GiB</b>, 
-            or <b>1TiB</b>.  This defaults to <b>64GiB</b>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.HostingOptions.VmDriveFolder">
-            <summary>
-            <para>
-            Path to the folder where virtual machine hard drive folders are to be persisted.
-            This defaults to the local Hyper-V folder for Windows.
-            </para>
-            <note>
-            This is recognized only when deploying on a local Hyper-V hypervisor, typically
-            for development and test purposes.  This is ignored when provisioning on remote
-            Hyper-V instances or for cloud or bare machine environments.
-            </note>
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.HostingOptions.VmNamePrefix">
-            <summary>
-            <para>
-            The prefix to be prepended to virtual machine provisioned to hypervisors for the
-            <see cref="F:Neon.Kube.HostingEnvironments.HyperV"/>, <see cref="F:Neon.Kube.HostingEnvironments.HyperVLocal"/>,
-            and <see cref="F:Neon.Kube.HostingEnvironments.XenServer"/> environments.
-            </para>
-            <para>
-            When this is <c>null</c> (the default), the cluster name followed by a dash will 
-            prefix the provisioned virtual machine names.  When this is a non-empty string, the
-            value followed by a dash will be used.  If this is empty or whitespace, machine
-            names will not be prefixed.
-            </para>
-            <note>
-            Virtual machine name prefixes will always be converted to lowercase.
-            </note>
-            </summary>
-        </member>
-        <member name="M:Neon.Kube.HostingOptions.GetVmNamePrefix(Neon.Kube.ClusterDefinition)">
-            <summary>
-            Returns the prefix to be used when provisioning virtual machines in hypervisor environments.
-            </summary>
-            <param name="clusterDefinition">The cluster definition.</param>
-            <returns>The prefix.</returns>
         </member>
         <member name="P:Neon.Kube.HostingOptions.IsCloudProvider">
             <summary>
@@ -3734,22 +3760,65 @@
             <param name="clusterDefinition">The cluster definition.</param>
             <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         </member>
-        <member name="M:Neon.Kube.HostingOptions.ValidateHypervisor(Neon.Kube.ClusterDefinition,System.Boolean)">
-            <summary>
-            Validates the Hypervisor related options.
-            </summary>
-            <param name="clusterDefinition">The cluster definition.</param>
-            <param name="remoteHypervisors">
-            Indicates that we're going to be deploying to remote hypervisor
-            host machines as opposed to the local workstation.
-            </param>
-            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        </member>
         <member name="M:Neon.Kube.HostingOptions.ClearSecrets">
             <summary>
             Clears all hosting provider details because they may
             include hosting related secrets.
             </summary>
+        </member>
+        <member name="T:Neon.Kube.HyperVHostingOptions">
+            <summary>
+            Specifies hosting settings for the Microsoft Hyper-V hypervisor.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.HyperVHostingOptions.#ctor">
+            <summary>
+            Default constructor.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.HyperVHostingOptions.Validate(Neon.Kube.ClusterDefinition)">
+            <summary>
+            Validates the options and also ensures that all <c>null</c> properties are
+            initialized to their default values.
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
+            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        </member>
+        <member name="T:Neon.Kube.LocalHyperVHostingOptions">
+            <summary>
+            Specifies hosting settings for the local Microsoft Hyper-V hypervisor.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.LocalHyperVHostingOptions.#ctor">
+            <summary>
+            Default constructor.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.LocalHyperVHostingOptions.Validate(Neon.Kube.ClusterDefinition)">
+            <summary>
+            Validates the options and also ensures that all <c>null</c> properties are
+            initialized to their default values.
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
+            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        </member>
+        <member name="T:Neon.Kube.MachineHostingOptions">
+            <summary>
+            Specifies hosting settings for bare metal or virtual machines.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.MachineHostingOptions.#ctor">
+            <summary>
+            Default constructor.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.MachineHostingOptions.Validate(Neon.Kube.ClusterDefinition)">
+            <summary>
+            Validates the options and also ensures that all <c>null</c> properties are
+            initialized to their default values.
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
+            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         </member>
         <member name="T:Neon.Kube.HypervisorHost">
             <summary>
@@ -3772,13 +3841,13 @@
         <member name="P:Neon.Kube.HypervisorHost.Username">
             <summary>
             The custom username to use when connecting to the hypervisor machine.  This
-            overrides <see cref="P:Neon.Kube.HostingOptions.VmHostUsername"/>.
+            overrides <see cref="P:Neon.Kube.VmHostingOptions.HostUsername"/>.
             </summary>
         </member>
         <member name="P:Neon.Kube.HypervisorHost.Password">
             <summary>
             The custom password to use when connecting to the hypervisor machine.  This
-            overrides <see cref="P:Neon.Kube.HostingOptions.VmHostPassword"/>.
+            overrides <see cref="P:Neon.Kube.VmHostingOptions.HostPassword"/>.
             </summary>
         </member>
         <member name="M:Neon.Kube.HypervisorHost.Validate(Neon.Kube.ClusterDefinition)">
@@ -3788,17 +3857,97 @@
             <param name="clusterDefinition">The cluster definition.</param>
             <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         </member>
-        <member name="T:Neon.Kube.HyperVOptions">
+        <member name="T:Neon.Kube.VmHostingOptions">
             <summary>
-            Specifies hosting settings for the Microsoft Hyper-V hypervisor.
+            Specifies common options for on-premise hypervisor based hosting environments such as
+            Hyper-V and XenServer.
             </summary>
         </member>
-        <member name="M:Neon.Kube.HyperVOptions.#ctor">
+        <member name="M:Neon.Kube.VmHostingOptions.#ctor">
             <summary>
             Default constructor.
             </summary>
         </member>
-        <member name="M:Neon.Kube.HyperVOptions.Validate(Neon.Kube.ClusterDefinition)">
+        <member name="P:Neon.Kube.VmHostingOptions.Hosts">
+            <summary>
+            Optionally identifies the target Hyper-V or XenServer hypervisor machines.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.VmHostingOptions.HostUsername">
+            <summary>
+            <para>
+            The default username to use for connecting the hypervisor host machines specified by <see cref="P:Neon.Kube.VmHostingOptions.Hosts"/>.
+            This may be overridden for specific hypervisor machines.  This defaults to <c>null</c>.
+            </para>
+            <note>
+            This defaults to <b>root</b> for XenServer based environments.
+            </note>
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.VmHostingOptions.HostPassword">
+            <summary>
+            The default password to use for connecting the hypervisor host machines specified by <see cref="P:Neon.Kube.VmHostingOptions.Hosts"/>.
+            This may be overridden for specific hypervisor machines within <see cref="P:Neon.Kube.VmHostingOptions.Hosts"/> items.  This defaults to <c>null</c>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.VmHostingOptions.Processors">
+            <summary>
+            The default number of virtual processors to assign to each cluster virtual machine.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.VmHostingOptions.Memory">
+            <summary>
+            Specifies the default maximum amount of memory to allocate to each cluster virtual machine.  This is specified as a string
+            that can be a byte count or a number with units like <b>512MiB</b>, <b>0.5GiB</b>, <b>2iGB</b>, or <b>1TiB</b>.  
+            This defaults to <b>4GiB</b>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.VmHostingOptions.Disk">
+            <summary>
+            Specifies the maximum amount of memory to allocate to each cluster virtual machine.  This is specified as a string
+            that can be a long byte count or a byte count or a number with units like <b>512MiB</b>, <b>0.5GiB</b>, <b>2GiB</b>, 
+            or <b>1TiB</b>.  This defaults to <b>64GiB</b>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.VmHostingOptions.DriveFolder">
+            <summary>
+            <para>
+            Path to the folder where virtual machine hard drive folders are to be persisted.
+            This defaults to the local Hyper-V folder for Windows.
+            </para>
+            <note>
+            This is recognized only when deploying on a local Hyper-V hypervisor, typically
+            for development and test purposes.  This is ignored when provisioning on remote
+            Hyper-V instances or for cloud or bare machine environments.
+            </note>
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.VmHostingOptions.NamePrefix">
+            <summary>
+            <para>
+            The prefix to be prepended to virtual machine provisioned to hypervisors for the
+            <see cref="F:Neon.Kube.HostingEnvironments.HyperV"/>, <see cref="F:Neon.Kube.HostingEnvironments.HyperVLocal"/>,
+            and <see cref="F:Neon.Kube.HostingEnvironments.XenServer"/> environments.
+            </para>
+            <para>
+            When this is <c>null</c> (the default), the cluster name followed by a dash will 
+            prefix the provisioned virtual machine names.  When this is a non-empty string, the
+            value followed by a dash will be used.  If this is empty or whitespace, machine
+            names will not be prefixed.
+            </para>
+            <note>
+            Virtual machine name prefixes will always be converted to lowercase.
+            </note>
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.VmHostingOptions.GetVmNamePrefix(Neon.Kube.ClusterDefinition)">
+            <summary>
+            Returns the prefix to be used when provisioning virtual machines in hypervisor environments.
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
+            <returns>The prefix.</returns>
+        </member>
+        <member name="M:Neon.Kube.VmHostingOptions.Validate(Neon.Kube.ClusterDefinition)">
             <summary>
             Validates the options and also ensures that all <c>null</c> properties are
             initialized to their default values.
@@ -3806,34 +3955,126 @@
             <param name="clusterDefinition">The cluster definition.</param>
             <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         </member>
-        <member name="T:Neon.Kube.IngressRoute">
+        <member name="T:Neon.Kube.VmNodeOptions">
             <summary>
-            Specifies the ingress rules for the cluster.
+            Specifies common node options for on-premise hypervisor based hosting environments such as
+            Hyper-V and XenServer.
             </summary>
         </member>
-        <member name="P:Neon.Kube.IngressRoute.Name">
+        <member name="M:Neon.Kube.VmNodeOptions.#ctor">
             <summary>
-            The name of the ingress rule.
+            Default constructor.
             </summary>
         </member>
-        <member name="P:Neon.Kube.IngressRoute.Port">
+        <member name="P:Neon.Kube.VmNodeOptions.Host">
             <summary>
-            The ingress port.
+            Identifies the hypervisor instance where this node is to be provisioned for Hyper-V
+            or XenServer based clusters.  This name must map to the name of one of the <see cref="P:Neon.Kube.VmHostingOptions.Hosts"/>
+            when set.
             </summary>
         </member>
-        <member name="P:Neon.Kube.IngressRoute.TargetPort">
+        <member name="P:Neon.Kube.VmNodeOptions.Processors">
             <summary>
-            The target port for the ingress rule.
+            Specifies the number of processors to assigned to this node when provisioned on a hypervisor.  This
+            defaults to the value specified by <see cref="P:Neon.Kube.VmHostingOptions.Processors"/>.
             </summary>
         </member>
-        <member name="P:Neon.Kube.IngressRoute.NodePort">
+        <member name="P:Neon.Kube.VmNodeOptions.Memory">
             <summary>
-            The Kubernetes NodePort. This is where the ingress gateway will listen.
+            Specifies the maximum amount of memory to allocate to this node when provisioned on a hypervisor.  
+            This is specified as a string that can be a byte count or a number with units like <b>512MB</b>, 
+            <b>0.5GB</b>, <b>2GB</b>, or <b>1TB</b>.  This defaults to the value specified by 
+            <see cref="P:Neon.Kube.VmHostingOptions.Memory"/>.
             </summary>
         </member>
-        <member name="M:Neon.Kube.IngressRoute.Validate(Neon.Kube.ClusterDefinition)">
+        <member name="P:Neon.Kube.VmNodeOptions.Disk">
             <summary>
-            Validates the options.
+            The amount of disk space to allocate to this node when when provisioned on a hypervisor.  This is specified as a string
+            that can be a byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, or <b>1TB</b>.  This defaults 
+            to the value specified by <see cref="P:Neon.Kube.VmHostingOptions.Disk"/>.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.VmNodeOptions.GetProcessors(Neon.Kube.ClusterDefinition)">
+            <summary>
+            Returns the maximum number processors to allocate for this node when
+            hosted on a hypervisor.
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
+            <returns>The number of cores.</returns>
+        </member>
+        <member name="M:Neon.Kube.VmNodeOptions.GetMemory(Neon.Kube.ClusterDefinition)">
+            <summary>
+            Returns the maximum number of bytes of memory allocate to for this node when
+            hosted on a hypervisor.
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
+            <returns>The size in bytes.</returns>
+        </member>
+        <member name="M:Neon.Kube.VmNodeOptions.GetDisk(Neon.Kube.ClusterDefinition)">
+            <summary>
+            Returns the maximum number of bytes to disk allocate to for this node when
+            hosted on a hypervisor.
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
+            <returns>The size in bytes.</returns>
+        </member>
+        <member name="M:Neon.Kube.VmNodeOptions.Validate(Neon.Kube.ClusterDefinition,System.String)">
+            <summary>
+            Validates the node definition.
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
+            <param name="nodeName">The node name.</param>
+            <exception cref="T:System.ArgumentException">Thrown if the definition is not valid.</exception>
+        </member>
+        <member name="T:Neon.Kube.XenServerHostingOptions">
+            <summary>
+            Specifies hosting settings for the Citrix XenServer hypervisor.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.XenServerHostingOptions.#ctor">
+            <summary>
+            Default constructor.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.XenServerHostingOptions.StorageRepository">
+            <summary>
+            Identifies the XenServer storage repository to be used to store the XenServer
+            node template as well as the cluster virtual machine images.  This defaults to
+            <b>Local storage</b>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.XenServerHostingOptions.Snapshot">
+            <summary>
+            Optionally directs XenCenter to create the virtual machines using a snapshot of
+            the virtual machine template rather than creating a full copy.  This defaults
+            to <c>false</c>.
+            </summary>
+            <remarks>
+            <para>
+            Virtual machines created via a snapshot will be ready within seconds where as
+            creation can take something like 4 minutes on a SSD or 9 minutes on a spinning
+            drive.  We don't enable snapshots though by default, because some web posts
+            from around 2014 indicate that operators may encounter problems when something
+            like 30 virtual machines have been created as snapshots from the same template.
+            </para>
+            <para>
+            We figure that it's best to default to safe setting for production clusters and
+            then allow operators to override this when provisioning temporary test clusters 
+            or when provisioning on a storage repository that doesn't have these limitations.
+            </para>
+            <note>
+            For snapshots to work, the storage repository must support them and the virtual
+            machine template must reside in the same repository where the virtual machines
+            are being created.  The current <c>neon-cli</c> implementation persists the
+            cluster VM templates to the local storage repository, so support for non-local
+            storage repositories is not support out-of-the-box at this time.
+            </note>
+            </remarks>
+        </member>
+        <member name="M:Neon.Kube.XenServerHostingOptions.Validate(Neon.Kube.ClusterDefinition)">
+            <summary>
+            Validates the options and also ensures that all <c>null</c> properties are
+            initialized to their default values.
             </summary>
             <param name="clusterDefinition">The cluster definition.</param>
             <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
@@ -3933,17 +4174,34 @@
             Clears any sensitive properties like the Docker registry credentials.
             </summary>
         </member>
-        <member name="T:Neon.Kube.LocalHyperVOptions">
+        <member name="T:Neon.Kube.ElasticsearchOptions">
             <summary>
-            Specifies hosting settings for the local Microsoft Hyper-V hypervisor.
+            Specifies the options for configuring the cluster integrated Elasticsearch 
+            metrics stack: <a href="https://Elastic.co/">https://Elastic.co/</a>
             </summary>
         </member>
-        <member name="M:Neon.Kube.LocalHyperVOptions.#ctor">
+        <member name="P:Neon.Kube.ElasticsearchOptions.Enabled">
             <summary>
-            Default constructor.
+            Indicates whether Elasticsearch metrics are to be enabled for the cluster.  
+            This defaults to <c>true</c>.
             </summary>
         </member>
-        <member name="M:Neon.Kube.LocalHyperVOptions.Validate(Neon.Kube.ClusterDefinition)">
+        <member name="P:Neon.Kube.ElasticsearchOptions.DiskSize">
+            <summary>
+            Specifies the amount of disk space to allocate to Elasticsearch.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ElasticsearchOptions.Resources">
+            <summary>
+            Compute Resources required by Elasticsearch.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.ElasticsearchOptions.LogRetentionDays">
+            <summary>
+            Log retention period. Logs beyond this number of days will be purged by the ClusterManager
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.ElasticsearchOptions.Validate(Neon.Kube.ClusterDefinition)">
             <summary>
             Validates the options and also ensures that all <c>null</c> properties are
             initialized to their default values.
@@ -3973,17 +4231,29 @@
             This defaults to <c>false</c>.
             </summary>
         </member>
-        <member name="T:Neon.Kube.MachineOptions">
+        <member name="T:Neon.Kube.MonitorOptions">
             <summary>
-            Specifies hosting settings for bare metal or virtual machines.
+            Specifies the options for configuring the cluster integrated
+            Elasticsearch/Fluentd/Kibana (EFK) logging stack.
             </summary>
         </member>
-        <member name="M:Neon.Kube.MachineOptions.#ctor">
+        <member name="P:Neon.Kube.MonitorOptions.Enabled">
             <summary>
-            Default constructor.
+            Indicates whether the EFK stack is to be enabled for the cluster.  
+            This defaults to <c>true</c>.
             </summary>
         </member>
-        <member name="M:Neon.Kube.MachineOptions.Validate(Neon.Kube.ClusterDefinition)">
+        <member name="P:Neon.Kube.MonitorOptions.Elasticsearch">
+            <summary>
+            Elasticsearch options.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.MonitorOptions.Prometheus">
+            <summary>
+            Prometheus options
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.MonitorOptions.Validate(Neon.Kube.ClusterDefinition)">
             <summary>
             Validates the options and also ensures that all <c>null</c> properties are
             initialized to their default values.
@@ -3991,32 +4261,218 @@
             <param name="clusterDefinition">The cluster definition.</param>
             <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         </member>
-        <member name="T:Neon.Kube.MonOptions">
+        <member name="T:Neon.Kube.PrometheusOptions">
             <summary>
-            Specifies the options for configuring the cluster integrated
-            Elasticsearch/Fluentd/Kibana (EFK) logging stack.
+            Specifies the options for configuring the cluster integrated Prometheus 
+            metrics stack: <a href="https://prometheus.io/">https://prometheus.io/</a>
             </summary>
         </member>
-        <member name="P:Neon.Kube.MonOptions.Enabled">
+        <member name="P:Neon.Kube.PrometheusOptions.Enabled">
             <summary>
-            Indicates whether the EFK stack is to be enabled for the cluster.  
+            Indicates whether Prometheus metrics are to be enabled for the cluster.  
             This defaults to <c>true</c>.
             </summary>
         </member>
-        <member name="P:Neon.Kube.MonOptions.Elasticsearch">
+        <member name="P:Neon.Kube.PrometheusOptions.Persistence">
             <summary>
-            Elasticsearch options.
+            Indicates whether Prometheus persistence is to be enabled.  
+            This defaults to <c>false</c>.
             </summary>
         </member>
-        <member name="P:Neon.Kube.MonOptions.Prometheus">
+        <member name="P:Neon.Kube.PrometheusOptions.Resources">
             <summary>
-            Prometheus options
+            Compute Resources required by Elasticsearch.
             </summary>
         </member>
-        <member name="M:Neon.Kube.MonOptions.Validate(Neon.Kube.ClusterDefinition)">
+        <member name="P:Neon.Kube.PrometheusOptions.M3DB">
+            <summary>
+            M3DB specific options.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.PrometheusOptions.Validate(Neon.Kube.ClusterDefinition)">
             <summary>
             Validates the options and also ensures that all <c>null</c> properties are
             initialized to their default values.
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
+            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        </member>
+        <member name="T:Neon.Kube.AddressRule">
+            <summary>
+            Used to whitelist or blacklist an IP address or subnet within a cluster's
+            <see cref="P:Neon.Kube.NetworkOptions.IngressRules"/> or <see cref="P:Neon.Kube.NetworkOptions.EgressAddressRules"/>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AddressRule.AllowAll">
+            <summary>
+            Returns an <see cref="T:Neon.Kube.AddressRule"/> that <b>allows</b> network traffic to/from all IP addresses.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AddressRule.DenyAll">
+            <summary>
+            Returns an <see cref="T:Neon.Kube.AddressRule"/> that <b>denies</b> network traffic to/from all IP addresses.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.AddressRule.#ctor">
+            <summary>
+            Default constructor.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.AddressRule.#ctor(System.String,Neon.Kube.AddressRuleAction)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="addressOrSubnet">
+            Specifies the IP address or subnet or you may also specify <b>"any"</b>
+            to specifiy all possible IP addresses.
+            </param>
+            <param name="action">Specifies whether network traffic is to be allowed or denied.</param>
+        </member>
+        <member name="P:Neon.Kube.AddressRule.IsAny">
+            <summary>
+            Returns <c>true</c> when the all possible IP addresses were specified.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AddressRule.AddressOrSubnet">
+            <summary>
+            Returns the specified IP address or subnet or <b>"any"</b> or <c>null</c> for all possible IP addresses.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.AddressRule.Action">
+            <summary>
+            Returns the action to performed for network traffic to/from the address or subnet.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.AddressRule.Validate(Neon.Kube.ClusterDefinition,System.String)">
+            <summary>
+            Validates the address rule.
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
+            <param name="context">Indicates where the address rule is specified, like: <b>ingress-rule-address</b> or <b>egress-address</b></param>
+            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown for an invalid rule.</exception>
+        </member>
+        <member name="T:Neon.Kube.AddressRuleAction">
+            <summary>
+            Enumerates the possible actions for an <see cref="T:Neon.Kube.AddressRule"/>.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AddressRuleAction.Allow">
+            <summary>
+            Allow network traffic to or from the IP address or subnet.
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.AddressRuleAction.Deny">
+            <summary>
+            Block network traffic to or from the IP address or subnet.
+            </summary>
+        </member>
+        <member name="T:Neon.Kube.IngressProtocol">
+            <summary>
+            <para>
+            Enumerates the network protocols supported by neonKUBE for ingress traffic.
+            </para>
+            <note>
+            Kubernetes/Istio does not currently support protocols like UCP or ICMP.
+            </note>
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.IngressProtocol.Http">
+            <summary>
+            HTTP
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.IngressProtocol.Https">
+            <summary>
+            HTTPS
+            </summary>
+        </member>
+        <member name="F:Neon.Kube.IngressProtocol.Tcp">
+            <summary>
+            Basic TCP
+            </summary>
+        </member>
+        <member name="T:Neon.Kube.IngressRule">
+            <summary>
+            Specifies a network ingress rule for the cluster.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.IngressRule.Name">
+            <summary>
+            The name of the ingress rule.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.IngressRule.Protocol">
+            <summary>
+            Identifies the network protocol.  This defaults to <see cref="F:Neon.Kube.IngressProtocol.Tcp"/>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.IngressRule.ExternalPort">
+            <summary>
+            The external ingress port.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.IngressRule.NodePort">
+            <summary>
+            The Kubernetes NodePort. This is where the ingress gateway is listening.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.IngressRule.AddressRules">
+            <summary>
+            <para>
+            Optionally specifies whitelisted and/or blacklisted external addresses for
+            inbound traffic.  This defaults to allowing inbound traffic from anywhere 
+            when the property is <c>null</c> or empty.
+            <note>
+            Address rules are processed in order, from first to last so you may consider
+            putting your blacklist rules before your whitelist rules.
+            </note>
+            </para>
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.IngressRule.TcpIdleTimeoutMinutes">
+            <summary>
+            <para>
+            Optionally specifies the TCP idle time out for TCP related ingress protocols like
+            <see cref="F:Neon.Kube.IngressProtocol.Http"/>, <see cref="F:Neon.Kube.IngressProtocol.Https"/>, and
+            <see cref="F:Neon.Kube.IngressProtocol.Tcp"/>.  Inbound TCP connections that have no network
+            traffic going either way will be closed by supported load balancers or routers.
+            This defaults to <b>4 minutes</b>.
+            </para>
+            <note>
+            <para>
+            At this point, this property is supported only in cloud environments where we
+            can easily control the cluster's external loag balancer.  This also has no
+            impact for non-TCP rules.
+            </para>
+            <para>
+            Also note that this value may be modified to ensure that it honors the range of
+            values supported by the current cloud.
+            </para>
+            </note>
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.IngressRule.TcpIdleTimeout">
+            <summary>
+            Returns <see cref="P:Neon.Kube.IngressRule.TcpIdleTimeoutMinutes"/> as a <see cref="T:System.TimeSpan"/>.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.IngressRule.IdleTcpReset">
+            <summary>
+            <para>
+            Optionally controls whether the cluster router or load balancer sends a TCP RESET
+            packet to both ends of a TCP connection that has been idle for longer than
+            <see cref="P:Neon.Kube.IngressRule.TcpIdleTimeoutMinutes"/>.  This defaults to <c>false</c>.
+            </para>
+            <note>
+            At this point, this property is supported only in cloud environments where we
+            can easily control the cluster's external loag balancer.  This also has no
+            impact for non-TCP rules.
+            </note>
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.IngressRule.Validate(Neon.Kube.ClusterDefinition)">
+            <summary>
+            Validates the options.
             </summary>
             <param name="clusterDefinition">The cluster definition.</param>
             <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
@@ -4044,6 +4500,28 @@
             Describes the network options for a cluster.
             </summary>
         </member>
+        <member name="T:Neon.Kube.NetworkOptions.SubnetDefinition">
+            <summary>
+            Used for checking subnet conflicts below.
+            </summary>
+        </member>
+        <member name="M:Neon.Kube.NetworkOptions.SubnetDefinition.#ctor(System.String,Neon.Net.NetworkCidr)">
+            <summary>
+            Constructor.
+            </summary>
+            <param name="name">Subnet name.</param>
+            <param name="cidr">Subnet CIDR.</param>
+        </member>
+        <member name="P:Neon.Kube.NetworkOptions.SubnetDefinition.Name">
+            <summary>
+            Identifies the subnet.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.NetworkOptions.SubnetDefinition.Cidr">
+            <summary>
+            The subnet CIDR.
+            </summary>
+        </member>
         <member name="M:Neon.Kube.NetworkOptions.#ctor">
             <summary>
             Default constructor.
@@ -4063,14 +4541,35 @@
             </para>
             <note>
             This property must be configured for the on-premise providers (<see cref="F:Neon.Kube.HostingEnvironments.Machine"/>, 
-            <b>HyperV</b>, and <b>XenServer</b>".  This is computed automatically by the <b>neon</b> tool when
-            provisioning in a cloud environment.
+            <b>HyperV</b>, and <b>XenServer</b>,...).  This defaults to <b>10.100.0.0/16</b> for cloud deployments 
+            but can be customized as required.
             </note>
             <note>
             For on-premise clusters, the statically assigned IP addresses assigned 
             to the nodes must reside within the this subnet.  The network gateway
-            will be assumed to be the second address in this subnet and the broadcast
+            will be assumed to be the second address in the subnet and the broadcast
             address will assumed to be the last address.
+            </note>
+            <note>
+            <para>
+            For cloud deployments, nodes will be assigned reasolable IP addresses by default.  You may assigned specific
+            IP addresses to nodes within the to nodes if necessary, with a couple reservations:
+            </para>
+            <list type="bullet">
+                <item>
+                The first 10 IP addresses of the <see cref="P:Neon.Kube.NetworkOptions.NodeSubnet"/> are reserved for use by the cloud as well
+                as neonKUBE.  The default cloud <see cref="P:Neon.Kube.NetworkOptions.NodeSubnet"/> is <b>10.100.0.0/16</b> which means that
+                addresses from <b>10.100.0.0 - 10.100.0.9</b> are reserved, so the first available node IP will be
+                <b>10.100.0.10</b>.  Cloud platforms typically use IPs in the range for as the default gateway and
+                also for DNS request forwarding.  neonKUBE reserves the remaining addresses for potential future
+                features like integrated VPN and cluster management VMs.
+                </item>
+                <item>
+                The last IP address of the <see cref="P:Neon.Kube.NetworkOptions.NodeSubnet"/> is also reserved.  Clouds typically use this
+                as the UDP broadcast address for the network.  This will be <b>10.100.255.255</b> for the default
+                cloud subnet.
+                </item>
+            </list>
             </note>
             </summary>
         </member>
@@ -4113,12 +4612,7 @@
             This defaults to <c>false</c>.
             </summary>
         </member>
-        <member name="P:Neon.Kube.NetworkOptions.IngressNodeSelector">
-            <summary>
-            
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.NetworkOptions.IngressRoutes">
+        <member name="P:Neon.Kube.NetworkOptions.IngressRules">
             <summary>
             Optionally sets the ingress routing rules external traffic received by nodes
             with <see cref="P:Neon.Kube.NodeDefinition.Ingress"/> enabled into one or more Istio ingress
@@ -4126,26 +4620,79 @@
             services.
             </summary>
         </member>
-        <member name="T:Neon.Kube.NetworkOptions.SubnetDefinition">
+        <member name="P:Neon.Kube.NetworkOptions.EgressAddressRules">
             <summary>
-            Used for checking subnet conflicts below.
+            <para>
+            Optionally specifies whitelisted and/or blacklisted external addresses for
+            outbound traffic.  This defaults to allowing outbound traffic to anywhere 
+            when the property is <c>null</c> or empty.
+            </para>
+            <note>
+            Address rules are processed in order, from first to last so you may consider
+            putting your blacklist rules before your whitelist rules.
+            </note>
+            <note>
+            This currently applies to all network ports.
+            </note>
             </summary>
         </member>
-        <member name="M:Neon.Kube.NetworkOptions.SubnetDefinition.#ctor(System.String,Neon.Net.NetworkCidr)">
+        <member name="P:Neon.Kube.NetworkOptions.SshAddressRules">
             <summary>
-            Constructor.
+            <para>
+            Optionally specifies whitelisted and/or blacklisted external addresses for
+            node management via SSH NAT rules.  This defaults to allowing inbound traffic 
+            from anywhere when the property is <c>null</c> or empty.
+            </para>
+            <note>
+            Address rules are processed in order, from first to last so you may consider
+            putting your blacklist rules before your whitelist rules.
+            </note>
             </summary>
-            <param name="name">Subnet name.</param>
-            <param name="cidr">Subnet CIDR.</param>
         </member>
-        <member name="P:Neon.Kube.NetworkOptions.SubnetDefinition.Name">
+        <member name="P:Neon.Kube.NetworkOptions.ReservedIngressStartPort">
             <summary>
-            Identifies the subnet.
+            <para>
+            Specifies the start of a range of ingress load balancer ports reserved by
+            neonKUBE.  These are reserved for temporarily exposing SSH from individual 
+            cluster nodes to the Internet during cluster setup as well as afterwards so 
+            that a cluster node can be accessed remotely by a cluster operator as well
+            as for other purposes and for potential future features such as an integrated
+            VPN.
+            </para>
+            <note>
+            The number ports between <see cref="P:Neon.Kube.NetworkOptions.ReservedIngressStartPort"/> and <see cref="P:Neon.Kube.NetworkOptions.ReservedIngressEndPort"/>
+            must include at least as many ports as there will be nodes deployed to the cluster
+            for the temporary SSH NAT rules plus another 100 ports reserved for other purposes.
+            This range defaults to <b>64000-64999</b> which will support a cluster with up to
+            900 nodes.  This default range is unlikely to conflict with ports a cluster is likely
+            to need expose to the Internet like HTTP/HTTPS (80/443).  You can change this range 
+            for your cluster to resolve any conflicts when necessary.
+            </note>
             </summary>
         </member>
-        <member name="P:Neon.Kube.NetworkOptions.SubnetDefinition.Cidr">
+        <member name="P:Neon.Kube.NetworkOptions.ReservedIngressEndPort">
             <summary>
-            The subnet CIDR.
+            <para>
+            Specifies the end of a range of ingress load balancer ports reserved by
+            neonKUBE.  These are reserved for temporarily exposing SSH from individual 
+            cluster nodes to the Internet during cluster setup as well as afterwards so 
+            that a cluster node can be accessed remotely by a cluster operator as well
+            as for other purposes and for potential future features such as an integrated
+            </para>
+            <note>
+            The number ports between <see cref="P:Neon.Kube.NetworkOptions.ReservedIngressStartPort"/> and <see cref="P:Neon.Kube.NetworkOptions.ReservedIngressEndPort"/>
+            must include at least as many ports as there will be nodes deployed to the cluster
+            for the temporary SSH NAT rules plus another 100 ports reserved for other purposes.
+            This range defaults to <b>64000-64999</b> which will support a cluster with up to
+            900 nodes.  This default range is unlikely to conflict with ports a cluster is likely
+            to need expose to the Internet like HTTP/HTTPS (80/443).  You can change this range 
+            for your cluster to resolve any conflicts when necessary.
+            </note>
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.NetworkOptions.FirstSshManagementPort">
+            <summary>
+            Returns the port number for the reserved management SSH ingress NAT rule.
             </summary>
         </member>
         <member name="M:Neon.Kube.NetworkOptions.Validate(Neon.Kube.ClusterDefinition)">
@@ -4156,9 +4703,18 @@
             <param name="clusterDefinition">The cluster definition.</param>
             <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         </member>
+        <member name="M:Neon.Kube.NetworkOptions.ValidateCloudNodeAddress(Neon.Kube.ClusterDefinition,Neon.Kube.NodeDefinition)">
+            <summary>
+            Ensures that for cloud deployments, an explicit node address assignment does not conflict 
+            with any VNET addresses reserved by the cloud provider or neonKUBE.
+            </summary>
+            <param name="clusterDefinition">The cluster definition.</param>
+            <param name="nodeDefinition">The node definition.</param>
+            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown for cloud deployments where the node specifies an explicit IP address that conflicts with a reserved VNET address.</exception>
+        </member>
         <member name="T:Neon.Kube.NodeDefinition">
             <summary>
-            Describes a cluster host node.
+            Describes a cluster node.
             </summary>
         </member>
         <member name="M:Neon.Kube.NodeDefinition.ParseFromLabels(System.Collections.Generic.Dictionary{System.String,System.String})">
@@ -4184,18 +4740,19 @@
             </note>
             </remarks>
         </member>
-        <member name="P:Neon.Kube.NodeDefinition.PublicAddress">
-            <summary>
-            The node's public IP address or DNS name.  This will be generally initialized
-            to <c>null</c> before provisioning a cluster.  This will be initialized while
-            by the <b>neon-cli</b> tool for master nodes when provisioning in a cloud provider.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.NodeDefinition.PrivateAddress">
+        <member name="P:Neon.Kube.NodeDefinition.Address">
             <summary>
             The node's IP address or <c>null</c> if one has not been assigned yet.
             Note that an node's IP address cannot be changed once the node has
             been added to the cluster.
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.NodeDefinition.PublicSshEndpoint">
+            <summary>
+            <b>INTERNAL USE ONLY:</b> Holds the IP endpoint that can be used to connect to
+            the node via SSH from outside the cluster, particularily for cloud deployments.
+            This references the cluster's public IP address and an allocated load balancer
+            NAT port that routes to the node.
             </summary>
         </member>
         <member name="P:Neon.Kube.NodeDefinition.IsMaster">
@@ -4228,103 +4785,36 @@
             <summary>
             <para>
             Indicates whether this node should be configured to accept external network traffic
-            on node ports and route that into the cluster.  This has a tri-state value.
+            on node ports and route that into the cluster.
             </para>
-            <list type="table">
-            <item>
-                <term><c><c>false</c></c></term>
-                <description>
-                The node <b>will not</b> be configured to route external traffic.
-                </description>
-            </item>
-            <item>
-                The node <b>will</b> be configured to route external traffic.
-                <description>
-                The node <b>will</b> be configured to route external traffic.
-                </description>
-            </item>
-            <item>
-                <term><c>null</c></term>
-                <description>
-                This is the default value.  When <b>all nodes</b> have this set to <c>null</c>,
-                cluster setup will configure this automatically based on the number and types
-                of nodes in the cluster.  If the cluster has at least 2 worker nodes then just
-                the worker nodes will be configured to route traffic (the idea being to limit 
-                load on the managers).  If there are fewer than 2 workers, then all cluster
-                nodes will be configured for routing.
-                </description>
-            </item>
-            </list>
+            <note>
+            If all nodes have <see cref="P:Neon.Kube.NodeDefinition.Ingress"/> set to <c>false</c> and the cluster defines
+            one or more <see cref="P:Neon.Kube.NetworkOptions.IngressRules"/> then neonKUBE will choose a
+            reasonable set of nodes to accept ibound traffic.
+            </note>
             </summary>
         </member>
         <member name="P:Neon.Kube.NodeDefinition.Labels">
             <summary>
-            Specifies the labels to be assigned to the host node.  These can provide
+            Specifies the labels to be assigned to the cluster node.  These can provide
             detailed information such as the host CPU, RAM, storage, etc.  <see cref="T:Neon.Kube.NodeLabels"/>
             for more information.
             </summary>
         </member>
         <member name="P:Neon.Kube.NodeDefinition.Taints">
             <summary>
-            Specifies the taints to be assigned to the host node.  
+            Specifies the taints to be assigned to the cluster node.  
+            </summary>
+        </member>
+        <member name="P:Neon.Kube.NodeDefinition.Vm">
+            <summary>
+            Hypervisor hosting related options for environments like Hyper-V and XenServer.
             </summary>
         </member>
         <member name="P:Neon.Kube.NodeDefinition.Azure">
             <summary>
             Azure provisioning options for this node, or <c>null</c> to use reasonable defaults.
             </summary>
-        </member>
-        <member name="P:Neon.Kube.NodeDefinition.VmHost">
-            <summary>
-            Identifies the hypervisor instance where this node is to be provisioned for Hyper-V
-            or XenServer based clusters.  This name must map to the name of one of the <see cref="P:Neon.Kube.HostingOptions.VmHosts"/>
-            when set.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.NodeDefinition.VmProcessors">
-            <summary>
-            Specifies the number of processors to assigned to this node when provisioned on a hypervisor.  This
-            defaults to the value specified by <see cref="P:Neon.Kube.HostingOptions.VmProcessors"/>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.NodeDefinition.VmMemory">
-            <summary>
-            Specifies the maximum amount of memory to allocate to this node when provisioned on a hypervisor.  
-            This is specified as a string that can be a byte count or a number with units like <b>512MB</b>, 
-            <b>0.5GB</b>, <b>2GB</b>, or <b>1TB</b>.  This defaults to the value specified by 
-            <see cref="P:Neon.Kube.HostingOptions.VmMemory"/>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.NodeDefinition.VmDisk">
-            <summary>
-            The amount of disk space to allocate to this node when when provisioned on a hypervisor.  This is specified as a string
-            that can be a byte count or a number with units like <b>512MB</b>, <b>0.5GB</b>, <b>2GB</b>, or <b>1TB</b>.  This defaults 
-            to the value specified by <see cref="P:Neon.Kube.HostingOptions.VmDisk"/>.
-            </summary>
-        </member>
-        <member name="M:Neon.Kube.NodeDefinition.GetVmProcessors(Neon.Kube.ClusterDefinition)">
-            <summary>
-            Returns the maximum number processors to allocate for this node when
-            hosted on a hypervisor.
-            </summary>
-            <param name="clusterDefinition">The cluster definition.</param>
-            <returns>The number of cores.</returns>
-        </member>
-        <member name="M:Neon.Kube.NodeDefinition.GetVmMemory(Neon.Kube.ClusterDefinition)">
-            <summary>
-            Returns the maximum number of bytes of memory allocate to for this node when
-            hosted on a hypervisor.
-            </summary>
-            <param name="clusterDefinition">The cluster definition.</param>
-            <returns>The size in bytes.</returns>
-        </member>
-        <member name="M:Neon.Kube.NodeDefinition.GetVmDisk(Neon.Kube.ClusterDefinition)">
-            <summary>
-            Returns the maximum number of bytes to disk allocate to for this node when
-            hosted on a hypervisor.
-            </summary>
-            <param name="clusterDefinition">The cluster definition.</param>
-            <returns>The size in bytes.</returns>
         </member>
         <member name="P:Neon.Kube.NodeDefinition.StepDelay">
             <summary>
@@ -4399,12 +4889,7 @@
             Reserved label name that identifies the cluster environment.
             </summary>
         </member>
-        <member name="F:Neon.Kube.NodeLabels.LabelPublicAddress">
-            <summary>
-            Reserved label name that identifies the node's public IP address or FQDN.
-            </summary>
-        </member>
-        <member name="F:Neon.Kube.NodeLabels.LabelPrivateAddress">
+        <member name="F:Neon.Kube.NodeLabels.LabelAddress">
             <summary>
             Reserved label name that identifies the node's private IP address.
             </summary>
@@ -4427,11 +4912,6 @@
         <member name="F:Neon.Kube.NodeLabels.LabelAzureStorageType">
             <summary>
             Reserved label name that identifies the node's Azure attached storage type.
-            </summary>
-        </member>
-        <member name="F:Neon.Kube.NodeLabels.LabelAzureDriveCount">
-            <summary>
-            Reserved label name that identifies the node's Azure attached drive count.
             </summary>
         </member>
         <member name="F:Neon.Kube.NodeLabels.LabelAzureDriveSize">
@@ -4532,9 +5012,9 @@
             Reserved label name for <see cref="F:Neon.Kube.NodeLabels.LabelPhysicalMachine"/>.
             </summary>
         </member>
-        <member name="F:Neon.Kube.NodeLabels.LabelPhysicalFaultDomain">
+        <member name="F:Neon.Kube.NodeLabels.LabelPhysicalAvailabilitytSet">
             <summary>
-            Reserved label name for <see cref="P:Neon.Kube.NodeLabels.PhysicalFaultDomain"/>.
+            Reserved label name for <see cref="P:Neon.Kube.NodeLabels.PhysicalAvailabilitySet"/>.
             </summary>
         </member>
         <member name="F:Neon.Kube.NodeLabels.LabelPhysicalPower">
@@ -4568,78 +5048,49 @@
             physical server computer model (e.g. <b>Dell-PowerEdge-R220</b>).  This defaults to the <b>empty string</b>.
             </summary>
         </member>
-        <member name="P:Neon.Kube.NodeLabels.PhysicalFaultDomain">
+        <member name="P:Neon.Kube.NodeLabels.PhysicalAvailabilitySet">
             <summary>
-            <b>io.neonkube/physical.faultdomain</b> [<c>string</c>]: A free format string 
-            grouping the host by the possibility of underlying hardware or software failures.
-            This defaults to the <b>empty string</b>.
+            <para>
+            <b>io.neonkube/physical.availability-set</b> [<c>string</c>]: Indicates that 
+            the hosting environment will try to ensure that cluster VMs with the same
+            availability set are deployed in a manner that reduces the possibility that
+            more than one VM at a time will be taken offline for maintenance.
+            </para>
+            <para>
+            This defaults to <b>master</b> for cluster master nodes and <b>worker</b>
+            for worker nodes.
+            </para>
+            <note>
+            <b>IMPORTANT:</b> Master nodes should generally be located within their
+            own availability set.
+            </note>
             </summary>
             <remarks>
             <para>
-            The idea here is to identify broad possible failure scenarios and to assign hosts
-            to fault domains in such a way that a failure for one domain will be unlikely
-            to impact the hosts in another.  These groupings can be used to spread application
-            containers across available fault domains such that an application has a reasonable 
-            potential to continue operating in the face of hardware or network failures.
+            This is typcally used for distributing pods across cluster nodes to 
+            protect against more than one of them going down at once due to
+            scheduled maintenance.
             </para>
             <para>
-            Fault domains will be mapped to your specific hardware and networking architecture.
-            Here are some example scenarios:
+            On premise deployments don't currently support automatic provisioning by
+            availability sets but that may happen in the future (e.g. by managing 
+            clusters of XenServer host machines).  You'll need to manually specify 
+            these labels to match your deployment and maintenance policies.
             </para>
-            <list type="table">
-            <item>
-                <term><b>VMs on one machine:</b></term>
-                <description>
-                <para>
-                This will be a common setup for development and test where every host
-                node is simply a virtual machine running locally.  In this case, the
-                fault domain could be set to the virtual machine name such that
-                failures can be tested by simply stopping a VM.
-                </para>
-                <note>
-                If no fault domain is specified for a node, then the fault domain
-                will default to the node name.
-                </note>
-                </description>
-            </item>
-            <item>
-                <term><b>Single Rack:</b></term>
-                <description>
-                For a cluster deployed to a single rack with a shared network connection,
-                the fault domain will typically be the physical machine such that the 
-                loss of a machine can be tolerated.
-                </description>
-            </item>
-            <item>
-                <term><b>Multiple Racks:</b></term>
-                <description>
-                For clusters deployed to multiple racks, each with their own network
-                connection, the fault domain will typically be set at the rack
-                level, such that the loss of a rack or its network connectivity can
-                be tolerated.
-                </description>
-            </item>
-            <item>
-                <term><b>Advanced:</b></term>
-                <description>
-                <para>
-                More advanced scenarios are possible.  For example, a datacenter may
-                have multiple pods, floors, or buildings that each have redundant 
-                infrastructure such as power and networking.  You could set the fault
-                domain at the pod or floor level.
-                </para>
-                <para>
-                For clusters that span physical datacenters, you could potentially map
-                each datacenter to an fault domain.
-                </para>
-                </description>
-            </item>
-            </list>
+            <para>
+            Cloud deployments generally implement the concept of availability sets.
+            These are used to group VMs together such that only one will be down
+            for scheduled maintenance at any given moment and also that after a
+            reboot, there will be a reasonable delay (like 30 minutes) to allow
+            the VMs to collectively recover before rebooting the next VM.  neonKUBE
+            will provision node VMs that have the same <see cref="P:Neon.Kube.NodeLabels.PhysicalAvailabilitySet"/> 
+            into the same cloud availability set (for clouds that support this).
+            </para>
             </remarks>
         </member>
         <member name="P:Neon.Kube.NodeLabels.PhysicalPower">
             <summary>
-            <b>io.neonkube/physical.power</b> [<c>string</c>]: Describes host the physical power
+            <b>io.neonkube/physical.power</b> [<c>string</c>]: Describes the physical power
             to the server may be controlled.  This defaults to the <b>empty string</b>.
             </summary>
             <remarks>
@@ -4659,9 +5110,8 @@
         </member>
         <member name="P:Neon.Kube.NodeLabels.Istio">
             <summary>
-            <b>io.neonkube.mon.istio.enabled</b> [<c>bool</c>]: Indicates that Istio 
-            will be deployed to this node.  
-            This defaults to <c>false</c>.
+            <b>io.neonkube.istio.enabled</b> [<c>bool</c>]: Indicates that Istio 
+            will be deployed to this node.  This defaults to <c>false</c>.
             </summary>
         </member>
         <member name="F:Neon.Kube.NodeLabels.LabelElasticsearch">
@@ -4676,14 +5126,14 @@
         </member>
         <member name="P:Neon.Kube.NodeLabels.Elasticsearch">
             <summary>
-            <b>io.neonkube.mon.elasticsearch.enabled</b> [<c>bool</c>]: Indicates that Elasticsearch 
+            <b>io.neonkube.monitor.elasticsearch</b> [<c>bool</c>]: Indicates that Elasticsearch 
             will be deployed to this node if <see cref="P:Neon.Kube.ElasticsearchOptions.Enabled"/> is <c>true</c>.  
             This defaults to <c>false</c>.
             </summary>
         </member>
         <member name="P:Neon.Kube.NodeLabels.M3DB">
             <summary>
-            <b>io.neonkube.mon.m3db.enabled</b> [<c>bool</c>]: Indicates that M3DB 
+            <b>io.neonkube.monitor.m3db</b> [<c>bool</c>]: Indicates that M3DB 
             will be deployed to this node if <see cref="P:Neon.Kube.PrometheusOptions.Enabled"/> is <c>true</c>.  
             This defaults to <c>false</c>.
             </summary>
@@ -4694,7 +5144,7 @@
             </summary>
             <remarks>
             <para>
-            Use this property to define custom host node labels.
+            Use this property to define custom cluster node labels.
             </para>
             <note>
             The <b>io.neonkube/</b> label prefix is reserved.
@@ -4703,7 +5153,7 @@
         </member>
         <member name="P:Neon.Kube.NodeLabels.Standard">
             <summary>
-            Enumerates the node labels.
+            Enumerates the standard neonKUBE node labels.
             </summary>
         </member>
         <member name="P:Neon.Kube.NodeLabels.All">
@@ -4734,12 +5184,12 @@
         </member>
         <member name="T:Neon.Kube.NodeOptions">
             <summary>
-            Describes cluster host node options.
+            Describes cluster node options.
             </summary>
         </member>
         <member name="P:Neon.Kube.NodeOptions.Upgrade">
             <summary>
-            Specifies whether the host node operating system should be upgraded
+            Specifies whether the cluster node operating system should be upgraded
             during cluster preparation.  This defaults to <see cref="F:Neon.Kube.OsUpgrade.Full"/>
             to pick up most criticial updates.
             </summary>
@@ -4782,7 +5232,7 @@
         </member>
         <member name="T:Neon.Kube.OsUpgrade">
             <summary>
-            Enumerates the possible host node operating system upgrade options.
+            Enumerates the possible cluster node operating system upgrade options.
             </summary>
         </member>
         <member name="F:Neon.Kube.OsUpgrade.None">
@@ -4799,42 +5249,6 @@
             <summary>
             Upgrades all components.  This is equivalent to performing: <b>apt-get dist-upgrade</b>
             </summary>
-        </member>
-        <member name="T:Neon.Kube.PrometheusOptions">
-            <summary>
-            Specifies the options for configuring the cluster integrated Prometheus 
-            metrics stack: <a href="https://prometheus.io/">https://prometheus.io/</a>
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.PrometheusOptions.Enabled">
-            <summary>
-            Indicates whether Prometheus metrics are to be enabled for the cluster.  
-            This defaults to <c>true</c>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.PrometheusOptions.Persistence">
-            <summary>
-            Indicates whether Prometheus persistence is to be enabled.  
-            This defaults to <c>false</c>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.PrometheusOptions.Resources">
-            <summary>
-            Compute Resources required by Elasticsearch.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.PrometheusOptions.M3DB">
-            <summary>
-            M3DB specific options.
-            </summary>
-        </member>
-        <member name="M:Neon.Kube.PrometheusOptions.Validate(Neon.Kube.ClusterDefinition)">
-            <summary>
-            Validates the options and also ensures that all <c>null</c> properties are
-            initialized to their default values.
-            </summary>
-            <param name="clusterDefinition">The cluster definition.</param>
-            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         </member>
         <member name="T:Neon.Kube.SecurityOptions">
             <summary>
@@ -4930,59 +5344,6 @@
             <param name="clusterDefinition">The cluster definition.</param>
             <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         </member>
-        <member name="T:Neon.Kube.XenServerOptions">
-            <summary>
-            Specifies hosting settings for the Citrix XenServer hypervisor.
-            </summary>
-        </member>
-        <member name="M:Neon.Kube.XenServerOptions.#ctor">
-            <summary>
-            Default constructor.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.XenServerOptions.StorageRepository">
-            <summary>
-            Identifies the XenServer storage repository to be used to store the XenServer
-            node template as well as the cluster virtual machine images.  This defaults to
-            <b>Local storage</b>.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.XenServerOptions.Snapshot">
-            <summary>
-            Optionally directs XenCenter to create the virtual machines using a snapshot of
-            the virtual machine template rather than creating a full copy.  This defaults
-            to <c>false</c>.
-            </summary>
-            <remarks>
-            <para>
-            Virtual machines created via a snapshot will be ready within seconds where as
-            creation can take something like 4 minutes on a SSD or 9 minutes on a spinning
-            drive.  We don't enable snapshots though by default, because some web posts
-            from around 2014 indicate that operators may encounter problems when something
-            like 30 virtual machines have been created as snapshots from the same template.
-            </para>
-            <para>
-            We figure that it's best to default to safe setting for production clusters and
-            then allow operators to override this when provisioning temporary test clusters 
-            or when provisioning on a storage repository that doesn't have these limitations.
-            </para>
-            <note>
-            For snapshots to work, the storage repository must support them and the virtual
-            machine template must reside in the same repository where the virtual machines
-            are being created.  The current <c>neon-cli</c> implementation persists the
-            cluster VM templates to the local storage repository, so support for non-local
-            storage repositories is not support out-of-the-box at this time.
-            </note>
-            </remarks>
-        </member>
-        <member name="M:Neon.Kube.XenServerOptions.Validate(Neon.Kube.ClusterDefinition)">
-            <summary>
-            Validates the options and also ensures that all <c>null</c> properties are
-            initialized to their default values.
-            </summary>
-            <param name="clusterDefinition">The cluster definition.</param>
-            <exception cref="T:Neon.Kube.ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        </member>
         <member name="T:Neon.Kube.NamespaceDoc">
             <summary>
             This namespace includes neonKUBE Kubernetes distribution related types.
@@ -4995,8 +5356,7 @@
             line options.
             </summary>
             <param name="name">The node name.</param>
-            <param name="publicAddress">The node's public IP address or FQDN.</param>
-            <param name="privateAddress">The node's private IP address.</param>
+            <param name="address">The node's private IP address.</param>
             <param name="appendToLog">
             Pass <c>true</c> to append to an existing log file (or create one if necessary)
             or <c>false</c> to replace any existing log file with a new one.
@@ -5213,7 +5573,7 @@
             <para>
             This class is intended for use with the <see cref="M:Neon.Kube.SshProxy`1.RunCommand(Neon.Kube.CommandBundle,Neon.Kube.RunOptions)"/>
             and  <see cref="M:Neon.Kube.SshProxy`1.SudoCommand(Neon.Kube.CommandBundle,Neon.Kube.RunOptions)"/> methods for situations where
-            one or more files need to be uploaded to a cluster host node and be used when a command is executed.
+            one or more files need to be uploaded to a cluster node and be used when a command is executed.
             </para>
             <para>
             To use this class, construct an instance passing the command and arguments to be executed.  The command be 
@@ -5696,13 +6056,12 @@
             <param name="host">The target server hostname or IP address.</param>
             <returns>The lock object.</returns>
         </member>
-        <member name="M:Neon.Kube.SshProxy`1.#ctor(System.String,System.String,System.Net.IPAddress,Neon.Kube.SshCredentials,System.IO.TextWriter)">
+        <member name="M:Neon.Kube.SshProxy`1.#ctor(System.String,System.Net.IPAddress,Neon.Kube.SshCredentials,System.IO.TextWriter)">
             <summary>
             Constructs a <see cref="T:Neon.Kube.SshProxy`1"/>.
             </summary>
             <param name="name">The display name for the server.</param>
-            <param name="publicAddress">The public IP address or FQDN of the server or <c>null.</c></param>
-            <param name="privateAddress">The private cluster IP address for the server.</param>
+            <param name="address">The private cluster IP address for the server.</param>
             <param name="credentials">The credentials to be used for establishing SSH connections.</param>
             <param name="logWriter">The optional <see cref="T:System.IO.TextWriter"/> where operation logs will be written.</param>
             <exception cref="T:System.ArgumentNullException">
@@ -5799,13 +6158,7 @@
             Returns the display name for the server.
             </summary>
         </member>
-        <member name="P:Neon.Kube.SshProxy`1.PublicAddress">
-            <summary>
-            Returns the cluster public IP address, FQDN, or <c>null</c> for the
-            server.
-            </summary>
-        </member>
-        <member name="P:Neon.Kube.SshProxy`1.PrivateAddress">
+        <member name="P:Neon.Kube.SshProxy`1.Address">
             <summary>
             Returns the cluster private IP address to used for connecting to the server.
             </summary>
@@ -6444,7 +6797,7 @@
             command, try uploading and executing a <see cref="T:Neon.Kube.CommandBundle"/> instead.
             </note>
             <para>
-            This method is intended for situations where one or more files need to be uploaded to a cluster host node 
+            This method is intended for situations where one or more files need to be uploaded to a cluster node 
             and then be used when a command is executed.
             </para>
             <para>
@@ -6595,7 +6948,7 @@
             <returns>The <see cref="T:Neon.Kube.CommandResponse"/>.</returns>
             <remarks>
             <para>
-            This method is intended for situations where one or more files need to be uploaded to a cluster host node 
+            This method is intended for situations where one or more files need to be uploaded to a cluster node 
             and then be used when a command is executed.
             </para>
             <para>
@@ -6700,6 +7053,13 @@
             Returns the current time (UTC) on the remote machine.
             </summary>
             <returns>The machine's current <see cref="T:System.DateTime"/> (UTC).</returns>
+        </member>
+        <member name="M:Neon.Kube.SshProxy`1.ListUnpartitionedDisks">
+            <summary>
+            Returns the names of the node's unpartitioned disk block devices.  This can
+            be useful for identifying newly attached data disks during cluster setup.
+            </summary>
+            <returns>The list of unpartitioned Linux disk names.</returns>
         </member>
         <member name="M:Neon.Kube.SshProxy`1.KubectlApply(System.String,Neon.Kube.RunOptions)">
             <summary>
@@ -7321,28 +7681,28 @@
             <summary>Branch: master</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commit">
-            <summary>Commit: 3ec2e3996</summary>
+            <summary>Commit: ac42eccbc</summary>
         </member>
         <member name="F:ThisAssembly.Git.Sha">
-            <summary>Sha: 3ec2e39967030f6c5c88e98ee3c96e6e48ca3c8e</summary>
+            <summary>Sha: ac42eccbca496c70b56972385aac75b739a24bdb</summary>
         </member>
         <member name="F:ThisAssembly.Git.Commits">
-            <summary>Commits on top of base version: 6183</summary>
+            <summary>Commits on top of base version: 2</summary>
         </member>
         <member name="F:ThisAssembly.Git.Tag">
-            <summary>Tag: c2.1.0-285-g3ec2e3996</summary>
+            <summary>Tag: neonLIBRARY-v2.2.0-2-gac42eccbc</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseTag">
-            <summary>Base tag: c2.1.0</summary>
+            <summary>Base tag: neonLIBRARY-v2.2.0</summary>
         </member>
         <member name="T:ThisAssembly.Git.BaseVersion">
             <summary>Provides access to the base version information used to determine the <see cref="T:ThisAssembly.Git.SemVer" />.</summary>      
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Major">
-            <summary>Major: 0</summary>
+            <summary>Major: 2</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Minor">
-            <summary>Minor: 0</summary>
+            <summary>Minor: 2</summary>
         </member>
         <member name="F:ThisAssembly.Git.BaseVersion.Patch">
             <summary>Patch: 0</summary>
@@ -7351,22 +7711,22 @@
             <summary>Provides access to SemVer information for the current assembly.</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Major">
-            <summary>Major: 0</summary>
+            <summary>Major: 2</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Minor">
-            <summary>Minor: 0</summary>
+            <summary>Minor: 2</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Patch">
-            <summary>Patch: 6183</summary>
+            <summary>Patch: 2</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Label">
-            <summary>Label: </summary>
+            <summary>Label: neonLIBRARY</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.DashLabel">
-            <summary>Label with dash prefix: </summary>
+            <summary>Label with dash prefix: -neonLIBRARY</summary>
         </member>
         <member name="F:ThisAssembly.Git.SemVer.Source">
-            <summary>Source: Default</summary>
+            <summary>Source: Tag</summary>
         </member>
     </members>
 </doc>

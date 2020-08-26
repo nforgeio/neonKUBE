@@ -798,7 +798,7 @@ namespace Neon.Net
                 return false;
             }
 
-            var fields = input.Split(new char[] { ':' }, 2);
+            var fields = input.Split(':', 2);
 
             if (fields.Length != 2)
             {

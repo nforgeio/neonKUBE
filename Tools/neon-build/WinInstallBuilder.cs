@@ -76,7 +76,7 @@ namespace NeonBuild
             //      NF_KUBE_VERSION     - The Kubernetes version
             //      NF_DESKTOP_VERSION  - The neonKUBE product version
 
-            var desktopVersion = File.ReadLines(Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "neonKUBE-version.txt")).First().Trim();
+            var desktopVersion = File.ReadLines(Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "neonDESKTOP-version.txt")).First().Trim();
 
             Environment.SetEnvironmentVariable("NF_KUBE_VERSION", Helper.KubeVersion);
             Environment.SetEnvironmentVariable("NF_DESKTOP_VERSION", desktopVersion);

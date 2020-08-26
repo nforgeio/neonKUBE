@@ -46,7 +46,7 @@ $exitCode = $lastExitCode
 
 if ($exitCode -ne 0)
 {
-    Write-Error "*** ERROR: [cadence-proxy] WINDOWS build failed.  Check build logs: $logPath"
+    Write-Error "*** ERROR[0]: [cadence-proxy] WINDOWS build failed.  Check build logs: $logPath"
     Set-Location $orgDirectory
     exit $exitCode
 }
@@ -60,7 +60,7 @@ $exitCode = $lastExitCode
 
 if ($exitCode -ne 0)
 {
-    Write-Error "*** ERROR: [cadence-proxy] LINUX build failed.  Check build logs: $logPath"
+    Write-Error "*** ERROR[1]: [cadence-proxy] LINUX build failed.  Check build logs: $logPath"
     Set-Location $orgDirectory
     exit $exitCode
 }
@@ -74,7 +74,7 @@ $exitCode = $lastExitCode
 
 if ($exitCode -ne 0)
 {
-    Write-Error "*** ERROR: [cadence-proxy] OSX build failed.  Check build logs: $logPath"
+    Write-Error "*** ERROR[2]: [cadence-proxy] OSX build failed.  Check build logs: $logPath"
     Set-Location $orgDirectory
     exit $exitCode
 }

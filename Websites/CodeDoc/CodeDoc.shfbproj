@@ -31,9 +31,7 @@
       <DocumentationSource sourceFile="..\..\Lib\Neon.Cadence\Neon.Cadence.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Couchbase\Neon.Couchbase.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Docker\Neon.Docker.csproj" />
-      <DocumentationSource sourceFile="..\..\Lib\Neon.Kube\Neon.Kube.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.ModelGen\Neon.ModelGen.csproj" />
-      <DocumentationSource sourceFile="..\..\Lib\Neon.Kube.Service\Neon.Kube.Service.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Nats\Neon.Nats.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.SSH.NET\Neon.SSH.NET.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Web\Neon.Web.csproj" />
@@ -44,6 +42,7 @@
       <DocumentationSource sourceFile="..\..\Lib\Neon.Cryptography\Neon.Cryptography.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Temporal\Neon.Temporal.csproj" />
       <DocumentationSource sourceFile="..\..\Lib\Neon.Xunit.Temporal\Neon.Xunit.Temporal.csproj" />
+      <DocumentationSource sourceFile="..\..\Lib\Neon.Service\Neon.Service.csproj" />
     </DocumentationSources>
     <HelpFileFormat>HtmlHelp1, Website</HelpFileFormat>
     <SyntaxFilters>Standard</SyntaxFilters>

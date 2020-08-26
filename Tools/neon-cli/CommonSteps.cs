@@ -241,7 +241,7 @@ TCPKeepAlive yes
 
             var sbPackageProxies = new StringBuilder();
 
-            foreach (var proxyEndpoint in clusterDefinition.PackageProxy.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries))
+            foreach (var proxyEndpoint in clusterDefinition.PackageProxy.Split(' ', StringSplitOptions.RemoveEmptyEntries))
             {
                 sbPackageProxies.AppendWithSeparator(proxyEndpoint);
             }

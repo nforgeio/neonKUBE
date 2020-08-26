@@ -562,7 +562,7 @@ namespace Neon.Time
             double      minutes = 0;
             double      seconds = 0;
 
-            fields = input.Split(new char[] { ':' }, 2);
+            fields = input.Split(':', 2);
 
             switch (fields[0].Trim().ToLower())
             {

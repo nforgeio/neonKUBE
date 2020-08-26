@@ -134,7 +134,7 @@ customize this in two ways:
 
             var target = commandLine.Arguments[0];
             var error  = $"*** ERROR: [{target}] is not a valid Couchbase target.  Expected: [couchbase://HOST@USER:PASSWORD:BUCKET] or [http(s)://HOST:PORT@USER:PASSWORD:BUCKET]";
-            var fields = target.Split(new char[] { '@' }, 2);
+            var fields = target.Split('@', 2);
 
             if (fields.Length != 2)
             {
