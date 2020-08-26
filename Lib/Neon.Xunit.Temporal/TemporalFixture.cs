@@ -264,7 +264,7 @@ services:
 
             if (!IsRunning)
             {
-                // The old [cadence-dev] container started by [CadenceFixture] has conflicting ports
+                // The [cadence-dev] container started by [CadenceFixture] has conflicting ports
                 // for Cassandra and the web UI, so we're going to stop that container if it's running.
 
                 NeonHelper.Execute(NeonHelper.DockerCli, new object[] { "rm", "--force", "cadence-dev" });

@@ -249,6 +249,26 @@ namespace Neon.Xunit.Cadence
 
             if (!IsRunning)
             {
+                // $hack(jefflill):
+                //
+                // The [temporal-dev] Docker test stack may be running from a previous test run.  
+                // We need to stop this to avoid network port conflicts.  We're just going to
+                // force the removal of the stack's Docker containers.
+                //
+                // This is somewhat fragile because it hardcodes the container names and won't
+                // remove any other stack assets like networks.
+
+                NeonHelper.ExecuteCapture(NeonHelper.DockerCli, new object[] { "rm", "--force",
+                    new string[]
+                    {
+                        "temporal-dev_temporal_1",
+                        "temporal-dev_cassandra_1",
+                        "temporal-dev_temporal-web_1"
+                    } });
+
+
+                // Select the network interface where Cadence will listen.
+
                 if (string.IsNullOrEmpty(hostInterface))
                 {
                     hostInterface = ContainerFixture.DefaultHostInterface;
