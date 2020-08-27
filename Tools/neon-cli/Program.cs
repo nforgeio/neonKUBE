@@ -963,7 +963,7 @@ You can disable the use of this encrypted folder by specifying
                 registry = image.Substring(0, p);
             }
 
-            if (!string.IsNullOrEmpty(registry) && registry == KubeConst.NeonProdRegistry)
+            if (!string.IsNullOrEmpty(registry) && registry == NeonHelper.NeonProdRegistry)
             {
                 var imageWithoutRegistry = image.Substring(registry.Length);
 
@@ -973,7 +973,7 @@ You can disable the use of this encrypted folder by specifying
                 }
                 else if (!IsRelease)
                 {
-                    image = KubeConst.NeonDevRegistry + imageWithoutRegistry;
+                    image = NeonHelper.NeonDevRegistry + imageWithoutRegistry;
                 }
             }
 

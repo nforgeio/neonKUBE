@@ -32,23 +32,6 @@ namespace Neon.Kube
     public static class KubeConst
     {
         /// <summary>
-        /// Identifies the production cluster public Docker registry.
-        /// </summary>
-        public const string NeonProdRegistry = "nkubeio";
-
-        /// <summary>
-        /// Identifies the development cluster public Docker registry.
-        /// </summary>
-        public const string NeonDevRegistry = "nkubedev";
-
-        /// <summary>
-        /// Returns the appropriate public Docker registry to be used for the git branch the
-        /// assembly was built from.  This returns <see cref="NeonProdRegistry"/> for release
-        /// branches and <see cref="NeonDevRegistry"/> for all other branches.
-        /// </summary>
-        public static string NeonBranchRegistry => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase) ? NeonProdRegistry : NeonDevRegistry;
-
-        /// <summary>
         /// Timespan used to introduce some random jitter before an operation
         /// is performed.  This is typically used when it's possible that a 
         /// large number of entities will tend to perform an operation at

@@ -112,7 +112,7 @@ namespace TestXunit
                     composedFixture.AddFixture("container", new ContainerFixture(),
                         containerFixture =>
                         {
-                            containerFixture.StartAsComposed("my-container", $"{KubeConst.NeonBranchRegistry}/test:latest");
+                            containerFixture.StartAsComposed("my-container", $"{NeonHelper.NeonBranchRegistry}/test:latest");
                         });
 
                     composedFixture.AddFixture("hosts", new HostsFixture());
@@ -175,7 +175,7 @@ namespace TestXunit
 $@"version: '3'
 services:
   my-service:
-    image: {KubeConst.NeonBranchRegistry}/test:latest
+    image: {NeonHelper.NeonBranchRegistry}/test:latest
     deploy:
       replicas: 2
 ";

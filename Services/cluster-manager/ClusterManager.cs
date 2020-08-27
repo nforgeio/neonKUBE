@@ -28,9 +28,6 @@ using YamlDotNet.RepresentationModel;
 using k8s;
 using k8s.Models;
 
-using Couchbase;
-using Couchbase.Linq;
-
 namespace ClusterManager
 {
     public partial class ClusterManager : NeonService

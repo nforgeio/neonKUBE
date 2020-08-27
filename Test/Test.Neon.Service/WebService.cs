@@ -33,7 +33,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Neon.Common;
 using Neon.IO;
-using Neon.Kube;
 using Neon.Service;
 using Neon.Xunit;
 

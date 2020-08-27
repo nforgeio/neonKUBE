@@ -21,7 +21,6 @@ using Xunit;
 
 using Neon.Common;
 using Neon.Data;
-using Neon.Kube;
 using Neon.Retry;
 using Neon.Net;
 
@@ -136,7 +135,7 @@ namespace Neon.Xunit
             string[] args          = null,
             string   hostInterface = null)
         {
-            image              = image ?? $"{KubeConst.NeonBranchRegistry}/nats:latest";
+            image              = image ?? $"{NeonHelper.NeonBranchRegistry}/nats:latest";
             this.hostInterface = hostInterface;
 
             base.CheckWithinAction();

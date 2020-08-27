@@ -27,7 +27,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.IO;
-using Neon.Kube;
+using Neon.Windows;
 using Neon.Xunit;
 
 using Xunit;
@@ -57,6 +57,8 @@ namespace Neon.Xunit
     {
         //---------------------------------------------------------------------
         // Static members
+
+        private static readonly char[] equalArray = new char[] { '=' };
 
         private static object syncRoot = new object();
 
@@ -112,6 +114,74 @@ namespace Neon.Xunit
         public Dictionary<string, byte[]> Files { get; private set; } = new Dictionary<string, byte[]>();
 
         /// <summary>
+        /// Encrypts a file or directory when supported by the underlying operating system
+        /// and file system.  Currently, this only works on non-HOME versions of Windows
+        /// and NTFS file systems.  This fails silently.
+        /// </summary>
+        /// <param name="path">The file or directory path.</param>
+        /// <returns><c>true</c> if the operation was successful.</returns>
+        private bool EncryptFile(string path)
+        {
+            try
+            {
+                return Win32.EncryptFile(path);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Looks up a password from the <b>~/.neonkube/passwords</b> folder.
+        /// </summary>
+        /// <param name="passwordName">The password name.</param>
+        /// <returns>The password value.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown if the password doesn't exist.</exception>
+        private string LookupPassword(string passwordName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(passwordName), nameof(passwordName));
+
+            string neonKubeFolder;
+
+            if (NeonHelper.IsWindows)
+            {
+                neonKubeFolder = Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".neonkube");
+
+                Directory.CreateDirectory(neonKubeFolder);
+
+                try
+                {
+                    EncryptFile(neonKubeFolder);
+                }
+                catch
+                {
+                    // Encryption is not available on all platforms (e.g. Windows Home, or non-NTFS
+                    // file systems).  The secrets won't be encrypted for these situations.
+                }
+            }
+            else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
+            {
+                neonKubeFolder = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".neonkube");
+
+                Directory.CreateDirectory(neonKubeFolder);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+
+            var path = Path.Combine(neonKubeFolder, "passwords");
+
+            if (!File.Exists(path))
+            {
+                throw new KeyNotFoundException(passwordName);
+            }
+
+            return File.ReadAllText(path).Trim();
+        }
+
+        /// <summary>
         /// <para>
         /// Loads settings formatted as <c>NAME=VALUE</c> from a text file into the
         /// <see cref="Settings"/> dictionary.  The file will be decrypted using
@@ -124,15 +194,15 @@ namespace Neon.Xunit
         /// <param name="path">The input file path.</param>
         /// <param name="passwordProvider">
         /// Optionally specifies the password provider function to be used to locate the
-        /// password required to decrypt the source file when necessary.  The password will 
-        /// use the <see cref="KubeHelper.LookupPassword(string)"/> method when 
+        /// password required to decrypt the source file when necessary.  This defaults
+        /// to looking for the password inb <b>~/.neonkube/passwords</b> when 
         /// <paramref name="passwordProvider"/> is <c>null</c>.
         /// </param>
         /// <exception cref="FileNotFoundException">Thrown if the file doesn't exist.</exception>
         /// <exception cref="FormatException">Thrown for file formatting problems.</exception>
         public void LoadSettings(string path, Func<string, string> passwordProvider = null)
         {
-            passwordProvider = passwordProvider ?? KubeHelper.LookupPassword;
+            passwordProvider = passwordProvider ?? LookupPassword;
 
             if (!File.Exists(path))
             {
@@ -157,7 +227,7 @@ namespace Neon.Xunit
                             continue;
                         }
 
-                        var fields = line.Split('=', 2);
+                        var fields = line.Split(equalArray, 2);
 
                         if (fields.Length != 2)
                         {
@@ -190,15 +260,15 @@ namespace Neon.Xunit
         /// <param name="path">The input file path.</param>
         /// <param name="passwordProvider">
         /// Optionally specifies the password provider function to be used to locate the
-        /// password required to decrypt the source file when necessary.  The password will 
-        /// use the <see cref="KubeHelper.LookupPassword(string)"/> method when 
+        /// password required to decrypt the source file when necessary.  This defaults
+        /// to looking for the password inb <b>~/.neonkube/passwords</b> when 
         /// <paramref name="passwordProvider"/> is <c>null</c>.
         /// </param>
         /// <exception cref="FileNotFoundException">Thrown if the file doesn't exist.</exception>
         /// <exception cref="FormatException">Thrown for file formatting problems.</exception>
         public void LoadEnvironment(string path, Func<string, string> passwordProvider = null)
         {
-            passwordProvider = passwordProvider ?? KubeHelper.LookupPassword;
+            passwordProvider = passwordProvider ?? LookupPassword;
 
             if (!File.Exists(path))
             {
@@ -223,7 +293,7 @@ namespace Neon.Xunit
                             continue;
                         }
 
-                        var fields = line.Split('=', 2);
+                        var fields = line.Split(equalArray, 2);
 
                         if (fields.Length != 2)
                         {
@@ -252,15 +322,15 @@ namespace Neon.Xunit
         /// <param name="path">The file path.</param>
         /// <param name="passwordProvider">
         /// Optionally specifies the password provider function to be used to locate the
-        /// password required to decrypt the source file when necessary.  The password will 
-        /// use the <see cref="KubeHelper.LookupPassword(string)"/> method when 
+        /// password required to decrypt the source file when necessary.  This defaults
+        /// to looking for the password inb <b>~/.neonkube/passwords</b> when 
         /// <paramref name="passwordProvider"/> is <c>null</c>.
         /// </param>
         /// <exception cref="FileNotFoundException">Thrown if the file doesn't exist.</exception>
         /// <exception cref="FormatException">Thrown for file formatting problems.</exception>
         public void LoadFile(string path, Func<string, string> passwordProvider = null)
         {
-            passwordProvider = passwordProvider ?? KubeHelper.LookupPassword;
+            passwordProvider = passwordProvider ?? LookupPassword;
 
             if (!File.Exists(path))
             {

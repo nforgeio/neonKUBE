@@ -41,12 +41,14 @@ namespace Neon.Net
     {
         // Retry [hosts] file munging operations for up to 10 seconds at 100ms intervals.
 
-        private static readonly TimeSpan maxRetryTime  = TimeSpan.FromSeconds(10);
-        private static readonly TimeSpan retryInterval = TimeSpan.FromMilliseconds(100);
-        private static readonly int maxAttempts        = (int)Math.Max(1, maxRetryTime.TotalMilliseconds / retryInterval.TotalMilliseconds);
+        private static readonly TimeSpan    maxRetryTime  = TimeSpan.FromSeconds(10);
+        private static readonly TimeSpan    retryInterval = TimeSpan.FromMilliseconds(100);
+        private static readonly int         maxAttempts   = (int)Math.Max(1, maxRetryTime.TotalMilliseconds / retryInterval.TotalMilliseconds);
 
-        private static LinearRetryPolicy retryFile     = new LinearRetryPolicy(typeof(IOException), maxAttempts: maxAttempts, retryInterval: retryInterval);
-        private static LinearRetryPolicy retryReady    = new LinearRetryPolicy(typeof(NotReadyException), maxAttempts: maxAttempts, retryInterval: retryInterval);
+        private static LinearRetryPolicy    retryFile     = new LinearRetryPolicy(typeof(IOException), maxAttempts: maxAttempts, retryInterval: retryInterval);
+        private static LinearRetryPolicy    retryReady    = new LinearRetryPolicy(typeof(NotReadyException), maxAttempts: maxAttempts, retryInterval: retryInterval);
+
+        private static readonly char[]      colonArray    = new char[] { ':' };
 
         /// <summary>
         /// Regex for verifying DNS hostnames.
@@ -798,7 +800,7 @@ namespace Neon.Net
                 return false;
             }
 
-            var fields = input.Split(':', 2);
+            var fields = input.Split(colonArray, 2);
 
             if (fields.Length != 2)
             {

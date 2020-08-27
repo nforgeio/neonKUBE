@@ -28,9 +28,9 @@ using Neon.Docker;
 using Neon.Kube;
 using Neon.IO;
 using Neon.Xunit;
-using Neon.Xunit.Kube;
 
 using Xunit;
+using Neon.Xunit.Kube;
 
 namespace TestXunit
 {
