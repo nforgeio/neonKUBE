@@ -265,6 +265,8 @@ namespace Neon.Kube
 
                             try
                             {
+                                logWriter.Flush();
+                                logWriter.Close();
                                 logWriter.Dispose();
                             }
                             catch (ObjectDisposedException)

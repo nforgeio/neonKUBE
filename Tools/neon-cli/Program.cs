@@ -403,12 +403,6 @@ You can disable the use of this encrypted folder by specifying
                         MachinePassword = NeonHelper.ReadConsolePassword("    password: ");
                     }
                 }
-                else
-                {
-                    // Reset this for commands that don't need it.
-
-                    MachinePassword = null;
-                }
 
                 if (command.SplitItem != null)
                 {
@@ -595,7 +589,7 @@ You can disable the use of this encrypted folder by specifying
         /// The password used to secure the cluster nodes before they are setup.  This defaults
         /// to <b>sysadmin0000</b> which is used for the cluster machine templates.
         /// </summary>
-        public static string MachinePassword { get; set; }
+        public static string MachinePassword { get; set; } = KubeConst.VmTemplatePassword;
 
         /// <summary>
         /// Returns the log folder path or a <c>null</c> or empty string 

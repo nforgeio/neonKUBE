@@ -44,7 +44,6 @@ using Neon.HyperV;
 using Neon.IO;
 using Neon.Net;
 using Neon.Time;
-using Org.BouncyCastle.Utilities;
 
 namespace Neon.Kube
 {
@@ -286,7 +285,7 @@ namespace Neon.Kube
 
             Directory.CreateDirectory(vmDriveFolder);
 
-            // Download the zipped VHDX template if it's not already present or has 
+            // Download the GZIPed VHDX template if it's not already present or has 
             // changed.  Note that we're going to name the file the same as the file 
             // name from the URI and we're also going to persist the ETAG and file
             // length in file with the same name with a [.info] extension.

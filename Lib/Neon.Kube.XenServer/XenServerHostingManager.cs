@@ -309,7 +309,7 @@ namespace Neon.Kube
         /// <returns>The template name.</returns>
         private string GetXenTemplateName()
         {
-            return $"neon-{cluster.Definition.LinuxDistribution}-{cluster.Definition.LinuxVersion}"; ;
+            return $"neon-{cluster.Definition.LinuxDistribution}-{cluster.Definition.LinuxVersion}";
         }
 
         /// <summary>
