@@ -156,8 +156,8 @@ namespace Neon.Xunit
                 }
                 catch
                 {
-                    // Encryption is not available on all platforms (e.g. Windows Home, or non-NTFS
-                    // file systems).  The secrets won't be encrypted for these situations.
+                    // Encryption is not available on all platforms (e.g. Linux, OS/X, Windows Home, or non-NTFS
+                    // file systems).  Secrets won't be encrypted for these situations.
                 }
             }
             else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
