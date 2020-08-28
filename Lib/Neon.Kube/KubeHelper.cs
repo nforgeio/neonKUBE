@@ -1367,8 +1367,7 @@ namespace Neon.Kube
         public async static Task<string> ExecInPod(IKubernetes client, V1Pod pod, string @namespace, string[] command)
         {
             var webSocket = await client.WebSocketNamespacedPodExecAsync(pod.Metadata.Name, @namespace, command, pod.Spec.Containers[0].Name);
-
-            var demux = new StreamDemuxer(webSocket);
+            var demux     = new StreamDemuxer(webSocket);
 
             demux.Start();
 
