@@ -31,7 +31,6 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Data;
 using Neon.IO;
-using Neon.Kube;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Tasks;
