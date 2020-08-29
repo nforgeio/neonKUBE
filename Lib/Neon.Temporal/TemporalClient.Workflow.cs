@@ -1111,42 +1111,5 @@ namespace Neon.Temporal
 
             return status.Result;
         }
-
-        /// <summary>
-        /// Ensures that the workflow stub type for the <typeparamref name="TWorkflowInterface"/> has
-        /// already been generated.  This can be used to prevent decision task times out in
-        /// relatively rare situations.
-        /// </summary>
-        /// <typeparam name="TWorkflowInterface">The workflow interface.</typeparam>
-        /// <remarks>
-        /// <para>
-        /// By default, <b>Neon.Temporal</b> API generates and compiles activity and workflow stub
-        /// types on demand when stubs are created by workflows.  This takes about 500ms the first
-        /// time a stub is created for any given activity or workflow type.  These generated types
-        /// are then cached in the current process such that subsequent stubs created for the type
-        /// won't need to be regenerated.
-        /// </para>
-        /// <para>
-        /// This can work OK for less complex workflows, but it's possible for a workflow to create
-        /// so many stubs at once (say at the top of the workflow implementation) such that the
-        /// cumulative compile time can exceed the decision task time out, failing the workflow.
-        /// For example, say a workflow constructs 22 activity stubs immediately after starting.
-        /// At 500ms per stub compilation this could take something like 11 seconds to complete,
-        /// which exceeds the default decision task timeout of 10 seconds.
-        /// </para>
-        /// <para>
-        /// When this happens, you can pre-build and cache activity and workflow stubs before
-        /// starting your workers by calling <see cref="BuildActivityStub{TActivityInterface}"/>
-        /// and/or <see cref="BuildWorkflowStub{TWorkflowInterface}"/>
-        /// </para>
-        /// </remarks>
-        public void BuildWorkflowStub<TWorkflowInterface>()
-            where TWorkflowInterface : IWorkflow
-        {
-            // We need to generate external and child stubs.
-
-            StubManager.GetWorkflowStub(typeof(TWorkflowInterface), isChild: false);
-            StubManager.GetWorkflowStub(typeof(TWorkflowInterface), isChild: true);
-        }
     }
 }

@@ -259,6 +259,9 @@
     <Compile Include="..\Test.Neon.Temporal\Test_FixtureNoConnect.cs">
       <Link>Test_FixtureNoConnect.cs</Link>
     </Compile>
+    <Compile Include="..\Test.Neon.Temporal\Test_GoTimeSpanJsonConverter.cs">
+      <Link>Test_GoTimeSpanJsonConverter.cs</Link>
+    </Compile>
     <Compile Include="..\Test.Neon.Temporal\Test_JsonDataConverter.cs">
       <Link>Test_JsonDataConverter.cs</Link>
     </Compile>
@@ -300,6 +303,9 @@
     </Compile>
     <Compile Include="..\Test.Neon.Temporal\Test_SignalChecks.cs">
       <Link>Test_SignalChecks.cs</Link>
+    </Compile>
+    <Compile Include="..\Test.Neon.Temporal\Test_StubBuilders.cs">
+      <Link>Test_StubBuilders.cs</Link>
     </Compile>
     <Compile Include="..\Test.Neon.Temporal\Test_StubManager.ActivityError.cs">
       <Link>Test_StubManager.ActivityError.cs</Link>
