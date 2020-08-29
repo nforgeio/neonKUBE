@@ -4575,7 +4575,7 @@ namespace TestTemporal
             Assert.Equal("default", await stub.TestAsync());
 
             stub = client.NewWorkflowStub<IWorkflowDefaultArg>();
-            Assert.Equal("test", await stub.TestAsync());
+            Assert.Equal("test", await stub.TestAsync("test"));
         }
 
         [Fact]
