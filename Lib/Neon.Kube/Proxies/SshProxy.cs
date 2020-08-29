@@ -185,7 +185,7 @@ namespace Neon.Kube
         // that the server is still rebooting.
         private readonly string RebootStatusPath = $"{KubeHostFolders.Tmpfs}/rebooting";
 
-        private object          syncLock   = new object();
+        private readonly object syncLock   = new object();
         private bool            isDisposed = false;
         private SshCredentials  credentials;
         private SshClient       sshClient;

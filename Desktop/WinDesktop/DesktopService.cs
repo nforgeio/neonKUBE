@@ -49,8 +49,8 @@ namespace WinDesktop
     /// </remarks>
     public static class DesktopService
     {
-        private static object       syncLock = new object();
-        private static WebListener  listener;
+        private static readonly object      syncLock = new object();
+        private static WebListener          listener;
 
         /// <summary>
         /// Starts the service if it's not already running.

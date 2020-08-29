@@ -139,8 +139,8 @@ namespace Neon.Cadence.Internal
         //---------------------------------------------------------------------
         // Implementation
 
-        private static int      nextClassId = -1;
-        private static object   syncLock    = new object();
+        private static int              nextClassId = -1;
+        private static readonly object  syncLock    = new object();
 
         // These dictionaries map workflow interfaces to their dynamically generated stubs
         // for external and child workflows.

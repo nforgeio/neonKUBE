@@ -30,7 +30,7 @@ namespace Neon.Temporal
         //---------------------------------------------------------------------
         // Static members
 
-        private static char[] colon = new char[] { ':' };
+        private readonly static char[] colon = new char[] { ':' };
 
         /// <summary>
         /// Converts an exception into a string suitable for using to construct

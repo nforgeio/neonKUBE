@@ -586,16 +586,16 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly object                  syncLock      = new object();
-        private static readonly Assembly                thisAssembly  = Assembly.GetExecutingAssembly();
-        private static readonly INeonLogger             log           = LogManager.Default.GetLogger<CadenceClient>();
-        private static bool                             proxyWritten  = false;
-        private static long                             nextClientId  = 0;
-        private static Dictionary<long, CadenceClient>  idToClient    = new Dictionary<long, CadenceClient>();
-        private static long                             nextRequestId = 0;
-        private static Dictionary<long, Operation>      operations    = new Dictionary<long, Operation>();
-        private static INeonLogger                      cadenceLogger;
-        private static INeonLogger                      cadenceProxyLogger;
+        private static readonly object                          syncLock      = new object();
+        private static readonly Assembly                        thisAssembly  = Assembly.GetExecutingAssembly();
+        private static readonly INeonLogger                     log           = LogManager.Default.GetLogger<CadenceClient>();
+        private static bool                                     proxyWritten  = false;
+        private static long                                     nextClientId  = 0;
+        private static readonly Dictionary<long, CadenceClient> idToClient    = new Dictionary<long, CadenceClient>();
+        private static long                                     nextRequestId = 0;
+        private static readonly Dictionary<long, Operation>     operations    = new Dictionary<long, Operation>();
+        private static INeonLogger                              cadenceLogger;
+        private static INeonLogger                              cadenceProxyLogger;
 
         /// <summary>
         /// Resets <see cref="CadenceClient"/> to its initial state, by closing

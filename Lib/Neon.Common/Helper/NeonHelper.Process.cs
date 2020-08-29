@@ -453,7 +453,8 @@ namespace Neon.Common
         /// </summary>
         private sealed class ProcessStreamRedirector
         {
-            private object          syncLock       = new object();
+            private readonly object syncLock       = new object();
+
             public StringBuilder    sbOutput       = new StringBuilder();
             public StringBuilder    sbError        = new StringBuilder();
             public bool             isOutputClosed = false;

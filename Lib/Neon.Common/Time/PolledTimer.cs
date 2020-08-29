@@ -87,11 +87,11 @@ namespace Neon.Time
         private const string BadTimerMsg    = "The default constructor cannot be used to create a timer.";
         private const string BadIntervalMsg = "Timer interval must be non-negative.";
 
-        private object      syncLock  = new object();
-        private TimeSpan    interval  = TimeSpan.Zero;          // The timing interval
-        private DateTime    fireTime  = DateTime.MaxValue;      // Scheduled time to fire (SYS)
-        private bool        autoReset = false;
-        private bool        disabled  = false;
+        private readonly object syncLock  = new object();
+        private TimeSpan        interval  = TimeSpan.Zero;          // The timing interval
+        private DateTime        fireTime  = DateTime.MaxValue;      // Scheduled time to fire (SYS)
+        private bool            autoReset = false;
+        private bool            disabled  = false;
 
         /// <summary>
         /// The default constructor creates a timer that is initially disabled.

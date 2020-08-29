@@ -36,7 +36,7 @@ namespace Neon.Time
     /// </remarks>
     public class GatedTimer : IDisposable
     {
-        private object          syncLock = new object();
+        private readonly object syncLock = new object();
         private INeonLogger     logger   = LogManager.Default.GetLogger<GatedTimer>();
 
         private Timer           timer;          // The underlying timer

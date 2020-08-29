@@ -65,7 +65,7 @@ namespace Neon.Temporal
         //---------------------------------------------------------------------
         // Instance members
 
-        private object                      syncLock = new object();
+        private readonly object             syncLock = new object();
         private string                      workflowId;
         private int                         pendingOperationCount;
         private Dictionary<string, string>  pendingOperationStackTraces;

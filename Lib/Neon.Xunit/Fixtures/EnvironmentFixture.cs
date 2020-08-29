@@ -59,7 +59,7 @@ namespace Neon.Xunit
     /// <threadsafety instance="true"/>
     public class EnvironmentFixture : TestFixture
     {
-        private object                      syncLock = new object();
+        private readonly object             syncLock = new object();
         private Dictionary<string, string>  orgEnvironment;
 
         /// <summary>

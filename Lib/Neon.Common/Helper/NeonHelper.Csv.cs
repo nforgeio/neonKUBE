@@ -28,7 +28,7 @@ namespace Neon.Common
 {
     public static partial class NeonHelper
     {
-        private static char[] csvEscapes = new char[] { '\r', '\n', ',' };
+        private readonly static char[] csvEscapes = new char[] { '\r', '\n', ',' };
 
         /// <summary>
         /// Escapes a string passed so that is suitable for writing to

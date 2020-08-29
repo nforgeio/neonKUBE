@@ -58,7 +58,7 @@ namespace Neon.Common
             public Dictionary<long, string> EnumToOrdinals = new Dictionary<long, string>();
         }
 
-        private static Dictionary<Type, EnumMemberSerializationInfo> typeToEnumMemberInfo = new Dictionary<Type, EnumMemberSerializationInfo>();
+        private static readonly Dictionary<Type, EnumMemberSerializationInfo> typeToEnumMemberInfo = new Dictionary<Type, EnumMemberSerializationInfo>();
 
         //---------------------------------------------------------------------
         // Implementation
@@ -1292,8 +1292,8 @@ namespace Neon.Common
             return encoded.Replace('+', '-').Replace('/', '_');
         }
 
-        private static char[] oneBase64Pad  = "=".ToCharArray();
-        private static char[] twoBase64Pads = "==".ToCharArray();
+        private readonly static char[] oneBase64Pad  = "=".ToCharArray();
+        private readonly static char[] twoBase64Pads = "==".ToCharArray();
 
         /// <summary>
         /// Decodes a base64url encoded string.  This is a URL and filename safe base-64 based 

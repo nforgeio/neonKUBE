@@ -44,7 +44,7 @@ namespace Neon.Xunit
         //---------------------------------------------------------------------
         // Instance members
 
-        private object                          syncLock = new object();
+        private readonly object                 syncLock = new object();
         private Task                            serviceTask;
         private Dictionary<string, HttpClient>  httpClientCache;
         private Dictionary<string, JsonClient>  jsonClientCache;
