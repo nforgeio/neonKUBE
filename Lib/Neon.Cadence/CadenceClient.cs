@@ -232,6 +232,31 @@ namespace Neon.Cadence
     /// after the service or application that implements the workflow anbd activities.
     /// </para>
     /// </note>
+    /// <note>
+    /// <para>
+    /// Activity and workflow stubs are generated and compiled on demand by default.  This takes 
+    /// about 500ms for each stub.  This generally works fine but may cause decision task timeouts 
+    /// for workflows that call a lot of different child workflows or activities.
+    /// </para>
+    /// <para>
+    /// The default workflow decision task timeout is 10 seconds, so a workflow
+    /// that creates 22 stubs when its first called will have a decent chance
+    /// of timing out due to the 500ms * 22 = 11 seconds it will take for the 
+    /// .NET client generate and build the backing classes.
+    /// </para>
+    /// <note>
+    /// This is only an issue the first time a stub classes are built, so it'll
+    /// be very likely that the workflow will proceed the second time it's invoked
+    /// on the same worker because the generated stub classes are cached.
+    /// </note>
+    /// <para>
+    /// You can proactively address this by prebuilding stub classes before starting
+    /// any workers by calling <see cref="BuildActivityStub{TActivity}"/>, 
+    /// <see cref="BuildWorkflowStub{TWorkflow}"/>, and/or <see cref="BuildAssemblyStubs(Assembly)"/>.
+    /// After doing this, the specified stubs will already be generated and compiled
+    /// when the worker starts and begins invoking workflows and activities.
+    /// </para>
+    /// </note>
     /// </remarks>
     public partial class CadenceClient : IDisposable
     {
@@ -586,16 +611,16 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static readonly object                          syncLock      = new object();
-        private static readonly Assembly                        thisAssembly  = Assembly.GetExecutingAssembly();
-        private static readonly INeonLogger                     log           = LogManager.Default.GetLogger<CadenceClient>();
-        private static bool                                     proxyWritten  = false;
-        private static long                                     nextClientId  = 0;
-        private static readonly Dictionary<long, CadenceClient> idToClient    = new Dictionary<long, CadenceClient>();
-        private static long                                     nextRequestId = 0;
-        private static readonly Dictionary<long, Operation>     operations    = new Dictionary<long, Operation>();
-        private static INeonLogger                              cadenceLogger;
-        private static INeonLogger                              cadenceProxyLogger;
+        private static readonly object                              syncLock      = new object();
+        private static readonly Assembly                            thisAssembly  = Assembly.GetExecutingAssembly();
+        private static readonly INeonLogger                         log           = LogManager.Default.GetLogger<CadenceClient>();
+        private static bool                                         proxyWritten  = false;
+        private static long                                         nextClientId  = 0;
+        private static readonly Dictionary<long, CadenceClient>     idToClient    = new Dictionary<long, CadenceClient>();
+        private static long                                         nextRequestId = 0;
+        private static readonly Dictionary<long, Operation>         operations    = new Dictionary<long, Operation>();
+        private static INeonLogger                                  cadenceLogger;
+        private static INeonLogger                                  cadenceProxyLogger;
 
         /// <summary>
         /// Resets <see cref="CadenceClient"/> to its initial state, by closing
@@ -690,7 +715,7 @@ namespace Neon.Cadence
                     }
                 }
             }
-        } 
+        }
 
         /// <summary>
         /// <para>
@@ -740,12 +765,12 @@ namespace Neon.Cadence
                 else if (NeonHelper.IsOSX)
                 {
                     resourcePath = "Neon.Cadence.Resources.cadence-proxy.osx.gz";
-                    binaryPath = Path.Combine(binaryFolder, "cadence-proxy");
+                    binaryPath   = Path.Combine(binaryFolder, "cadence-proxy");
                 }
                 else if (NeonHelper.IsLinux)
                 {
                     resourcePath = "Neon.Cadence.Resources.cadence-proxy.linux.gz";
-                    binaryPath = Path.Combine(binaryFolder, "cadence-proxy");
+                    binaryPath   = Path.Combine(binaryFolder, "cadence-proxy");
                 }
                 else
                 {
@@ -815,7 +840,7 @@ namespace Neon.Cadence
 
             var debugOption = settings.Debug ? " --debug" : string.Empty;
             var commandLine = $"--listen {endpoint.Address}:{endpoint.Port}{debugOption} --client-id {clientId}";
-            
+
             if (NeonHelper.IsWindows && settings.Debug)
             {
                 var startInfo = new ProcessStartInfo(binaryPath, commandLine)
@@ -1359,6 +1384,165 @@ namespace Neon.Cadence
             }
 
             await client.ProxyReplyAsync(request, new LogReply());
+        }
+
+        /// <summary>
+        /// Prebuilds and caches the internal activity stub class backing the
+        /// <typeparamref name="TActivity"/> interface.  Subsequent calls for the
+        /// same activity interface can be made but actually do nothing.
+        /// </summary>
+        /// <typeparam name="TActivity">The target activity interface.</typeparam>
+        /// <remarks>
+        /// <para>
+        /// Activity and workflow stubs are generated and compiled on demand by default.  
+        /// This takes  about 500ms for each stub.  This generally works fine but may cause 
+        /// decision task timeouts for workflows that call a lot of different child
+        /// workflows or activities.
+        /// </para>
+        /// <para>
+        /// The default workflow decision task timeout is 10 seconds, so a workflow
+        /// that creates 22 stubs when its first called will have a decent chance
+        /// of timing out due to the 500ms * 22 = 11 seconds it will take for the 
+        /// .NET client generate and build the backing classes.
+        /// </para>
+        /// <note>
+        /// This is only an issue the first time a stub classes are built, so it'll
+        /// be very likely that the workflow will proceed the second time it's invoked
+        /// on the same worker because the generated stub classes are cached.
+        /// </note>
+        /// <para>
+        /// You can proactively address this by prebuilding stub classes before starting
+        /// any workers by calling <see cref="BuildActivityStub{TActivity}"/>, 
+        /// <see cref="BuildWorkflowStub{TWorkflow}"/>, and/or <see cref="BuildAssemblyStubs(Assembly)"/>.
+        /// After doing this, the specified stubs will already be generated and compiled
+        /// when the worker starts and begins invoking workflows and activities.
+        /// </para>
+        /// </remarks>
+        public static void BuildActivityStub<TActivity>()
+            where TActivity : IActivity
+        {
+            CadenceHelper.ValidateActivityInterface(typeof(TActivity));
+            StubManager.GetActivityStub(typeof(TActivity));
+        }
+
+        /// <summary>
+        /// Prebuilds and caches the internal workflow stub class backing the
+        /// <typeparamref name="TWorkflow"/> interface.  Subsequent calls for the
+        /// same workflow interface can be made but actually do nothing.
+        /// </summary>
+        /// <typeparam name="TWorkflow">The target activity interface.</typeparam>
+        /// <remarks>
+        /// <para>
+        /// Activity and workflow stubs are generated and compiled on demand by default.  
+        /// This takes  about 500ms for each stub.  This generally works fine but may cause 
+        /// decision task timeouts for workflows that call a lot of different child
+        /// workflows or activities.
+        /// </para>
+        /// <para>
+        /// The default workflow decision task timeout is 10 seconds, so a workflow
+        /// that creates 22 stubs when its first called will have a decent chance
+        /// of timing out due to the 500ms * 22 = 11 seconds it will take for the 
+        /// .NET client generate and build the backing classes.
+        /// </para>
+        /// <note>
+        /// This is only an issue the first time a stub classes are built, so it'll
+        /// be very likely that the workflow will proceed the second time it's invoked
+        /// on the same worker because the generated stub classes are cached.
+        /// </note>
+        /// <para>
+        /// You can proactively address this by prebuilding stub classes before starting
+        /// any workers by calling <see cref="BuildActivityStub{TActivity}"/>, 
+        /// <see cref="BuildWorkflowStub{TWorkflow}"/>, and/or <see cref="BuildAssemblyStubs(Assembly)"/>.
+        /// After doing this, the specified stubs will already be generated and compiled
+        /// when the worker starts and begins invoking workflows and activities.
+        /// </para>
+        /// </remarks>
+        public static void BuildWorkflowStub<TWorkflow>()
+            where TWorkflow : IWorkflow
+        {
+            CadenceHelper.ValidateWorkflowInterface(typeof(TWorkflow));
+
+            // Build the external as well as the child stubs.
+
+            StubManager.GetWorkflowStub(typeof(TWorkflow), isChild: false);
+            StubManager.GetWorkflowStub(typeof(TWorkflow), isChild: true);
+        }
+
+        /// <summary>
+        /// Scans the assembly passed for any workflow or activity interfaces and
+        /// pebuilds and caches the generated internal backing classes.  Subsequent 
+        /// calls for the same assembly can be made but actually do nothing.
+        /// </summary>
+        /// <param name="assembly">The target assembly.</param>
+        /// <remarks>
+        /// <para>
+        /// Activity and workflow stubs are generated and compiled on demand by default.  
+        /// This takes  about 500ms for each stub.  This generally works fine but may cause 
+        /// decision task timeouts for workflows that call a lot of different child
+        /// workflows or activities.
+        /// </para>
+        /// <para>
+        /// The default workflow decision task timeout is 10 seconds, so a workflow
+        /// that creates 22 stubs when its first called will have a decent chance
+        /// of timing out due to the 500ms * 22 = 11 seconds it will take for the 
+        /// .NET client generate and build the backing classes.
+        /// </para>
+        /// <note>
+        /// This is only an issue the first time a stub classes are built, so it'll
+        /// be very likely that the workflow will proceed the second time it's invoked
+        /// on the same worker because the generated stub classes are cached.
+        /// </note>
+        /// <para>
+        /// You can proactively address this by prebuilding stub classes before starting
+        /// any workers by calling <see cref="BuildActivityStub{TActivity}"/>, 
+        /// <see cref="BuildWorkflowStub{TWorkflow}"/>, and/or <see cref="BuildAssemblyStubs(Assembly)"/>.
+        /// After doing this, the specified stubs will already be generated and compiled
+        /// when the worker starts and begins invoking workflows and activities.
+        /// </para>
+        /// </remarks>
+        public static void BuildAssemblyStubs(Assembly assembly)
+        {
+            Covenant.Requires<ArgumentNullException>(assembly != null, nameof(assembly));
+
+            foreach (var type in assembly.GetTypes())
+            {
+                if (!type.GetTypeInfo().IsInterface)
+                {
+                    continue;
+                }
+
+                // NOTE: 
+                //
+                // We're going to ignore any activity/workflow interface errors here.  Any problems
+                // will be reported when the user tries to use a bad interface, which will be a 
+                // better user experience.
+
+                if (type.Implements<IActivity>() && type.GetCustomAttribute<ActivityInterfaceAttribute>() != null)
+                {
+                    try
+                    {
+                        StubManager.GetActivityStub(type);
+                    }
+                    catch
+                    {
+                        // Explicitly ignoring this.
+                    }
+                }
+                else if (type.Implements<IWorkflow>() && type.GetCustomAttribute<WorkflowInterfaceAttribute>() != null)
+                {
+                    try
+                    {
+                        // Build the external as well as the child stubs.
+
+                        StubManager.GetWorkflowStub(type, isChild: false);
+                        StubManager.GetWorkflowStub(type, isChild: true);
+                    }
+                    catch
+                    {
+                        // Explicitly ignoring this.
+                    }
+                }
+            }
         }
 
         //---------------------------------------------------------------------

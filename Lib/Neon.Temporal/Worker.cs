@@ -196,32 +196,6 @@ namespace Neon.Temporal
 
             using (await workerMutex.AcquireAsync())
             {
-                // Fetch the stub for each registered workflow and activity type so that
-                // they'll be precompiled so compilation won't impact workflow and activity
-                // performance, potentially intruducing enough delay to cause decision tasks
-                // or activity heartbeats to fail (in probably rare situations).
-                //
-                // Note that the compiled stubs are cached, so we don't need to worry
-                // about compiling stubs for types more than once causing a problem.
-
-                // $todo(jefflill): Performance optimization:
-                //
-                //      https://github.com/nforgeio/neonKUBE/issues/796
-
-                foreach (var workflowInterface in registeredWorkflowTypes)
-                {
-                    // Workflows, we're going to compile both the external and child
-                    // versions of the stubs.
-
-                    StubManager.GetWorkflowStub(workflowInterface, isChild: false);
-                    StubManager.GetWorkflowStub(workflowInterface, isChild: true);
-                }
-
-                foreach (var activityInterface in registeredActivityTypes)
-                {
-                    StubManager.GetActivityStub(activityInterface);
-                }
-
                 // Register workflow implementations.
 
                 foreach (var workflowType in registeredWorkflowTypes)
