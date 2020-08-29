@@ -1449,5 +1449,62 @@ namespace TestTemporal
 
             Assert.Equal(TimeSpan.FromSeconds(77), await stub.TestAsync(TimeSpan.FromSeconds(77)));
         }
+
+        //---------------------------------------------------------------------
+
+        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        public interface IActivityWorkflowDefaultArg : IWorkflow
+        {
+            [WorkflowMethod(Name = "test")]
+            Task<string> TestAsync(bool local, bool useDefault, string value = "default");
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class ActivityWorkflowDefaultArg : WorkflowBase, IActivityWorkflowDefaultArg
+        {
+            public async Task<string> TestAsync(bool local, bool useDefault, string value)
+            {
+                var stub = Workflow.NewActivityStub<IActivityDefaultArg>();
+
+                return await stub.TestAsync(value);
+            }
+        }
+
+        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        public interface IActivityDefaultArg : IActivity
+        {
+            [ActivityMethod]
+            Task<string> TestAsync(string value = "default");
+        }
+
+        [Activity(AutoRegister = true)]
+        public class ActivityDefaultArg : ActivityBase, IActivityDefaultArg
+        {
+            public async Task<string> TestAsync(string value)
+            {
+                return await Task.FromResult(value);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Activity_Default_Arg()
+        {
+            // Normal Activity: Verify that calling an activitiy with default arguments works.
+
+            var stub = client.NewWorkflowStub<IActivityWorkflowDefaultArg>();
+            Assert.Equal("default", await stub.TestAsync(local: false, useDefault: true));
+
+            stub = client.NewWorkflowStub<IActivityWorkflowDefaultArg>();
+            Assert.Equal("test", await stub.TestAsync(local: false, useDefault: false, "test"));
+
+            // Local Activity: Verify that calling an activitiy with default arguments works.
+
+            stub = client.NewWorkflowStub<IActivityWorkflowDefaultArg>();
+            Assert.Equal("default", await stub.TestAsync(local: true, useDefault: true));
+
+            stub = client.NewWorkflowStub<IActivityWorkflowDefaultArg>();
+            Assert.Equal("test", await stub.TestAsync(local: true, useDefault: false, "test"));
+        }
     }
 }

@@ -4530,5 +4530,66 @@ namespace TestCadence
 
             Assert.Equal(TimeSpan.FromSeconds(77), await stub.TestAsync(TimeSpan.FromSeconds(77)));
         }
+
+        //---------------------------------------------------------------------
+
+        [WorkflowInterface(TaskList = CadenceTestHelper.TaskList)]
+        public interface IWorkflowDefaultArg : IWorkflow
+        {
+            [WorkflowMethod(Name = "test")]
+            Task<string> TestAsync(string value = "default");
+
+            [WorkflowMethod(Name = "test-child")]
+            Task<string> TestChildAsync(bool useDefault, string value = "default");
+        }
+
+        [Workflow(AutoRegister = true)]
+        public class WorkflowDefaultArg : WorkflowBase, IWorkflowDefaultArg
+        {
+            public async Task<string> TestAsync(string value)
+            {
+                return await Task.FromResult(value);
+            }
+
+            public async Task<string> TestChildAsync(bool useDefault, string value)
+            {
+                var stub = Workflow.NewChildWorkflowStub<IWorkflowDefaultArg>();
+
+                if (useDefault)
+                {
+                    return await stub.TestAsync();
+                }
+                else
+                {
+                    return await stub.TestAsync(value);
+                }
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_DefaultArg_External()
+        {
+            // Verify that calling an external workflow with default arguments works.
+
+            var stub = client.NewWorkflowStub<IWorkflowDefaultArg>();
+            Assert.Equal("default", await stub.TestAsync());
+
+            stub = client.NewWorkflowStub<IWorkflowDefaultArg>();
+            Assert.Equal("test", await stub.TestAsync());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
+        public async Task Workflow_DefaultArg_Child()
+        {
+            // Verify that calling a child workflow with default arguments works.
+
+            var stub = client.NewWorkflowStub<IWorkflowDefaultArg>();
+            Assert.Equal("default", await stub.TestChildAsync(useDefault: true));
+
+            stub = client.NewWorkflowStub<IWorkflowDefaultArg>();
+            Assert.Equal("test", await stub.TestChildAsync(useDefault: false, "test"));
+        }
     }
 }
