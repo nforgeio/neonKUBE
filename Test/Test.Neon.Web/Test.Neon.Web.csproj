@@ -7,6 +7,7 @@
     <LangVersion>latest</LangVersion>
     <RootNamespace>Test.Neon.Web</RootNamespace>
     <Configurations>Debug;Release;CodeDoc</Configurations>
+    <OutputType>Library</OutputType>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

@@ -39,7 +39,7 @@ namespace Neon.Tasks
     /// <threadsafety instance="true"/>
     public class AsyncManualResetEvent : IDisposable
     {
-        private object                      syncLock = new object();
+        private readonly object             syncLock = new object();
         private bool                        isDisposed;
         private TaskCompletionSource<bool>  tcs;    // NULL if signalled, otherwise the TCS tasks will wait on.
 

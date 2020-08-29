@@ -47,7 +47,7 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Static members
 
-        private static object                                   syncLock = new object();
+        private static readonly object                          syncLock = new object();
         private static Dictionary<HostingEnvironments, Type>    environmentToHostingManager;
 
         /// <summary>

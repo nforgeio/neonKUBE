@@ -31,6 +31,14 @@ namespace Microsoft.Net.Http.Client
 {
     internal class HttpConnection : IDisposable
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        private static readonly char[] spaceArray = new char[] { ' ' };
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         public HttpConnection(BufferedReadStream transport)
         {
             Transport = transport;
@@ -139,7 +147,7 @@ namespace Microsoft.Net.Http.Client
         private HttpResponseMessage CreateResponseMessage(List<string> responseLines)
         {
             var responseLine      = responseLines.First();
-            var responseLineParts = responseLine.Split(' ', 3);
+            var responseLineParts = responseLine.Split(spaceArray, 3);
             if (responseLineParts.Length < 2)
             {
                 throw new HttpRequestException("Invalid response line: " + responseLine);

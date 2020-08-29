@@ -106,7 +106,7 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        linuxTemplateUri = $"https://s3-us-west-2.amazonaws.com/neonforge/kube/hyperv-{clusterDefinition.LinuxDistribution}-{clusterDefinition.LinuxVersion}.vhdx";
+                        linuxTemplateUri = $"https://s3-us-west-2.amazonaws.com/neonkube/vm-images/hyperv/neon-{clusterDefinition.LinuxDistribution}-{clusterDefinition.LinuxVersion}.vhdx";
                     }
                     break;
 
@@ -125,9 +125,12 @@ namespace Neon.Kube
                         // $todo(jefflill): 
                         //
                         // XenServer/XCP-ng doesn't support HTTPS!  This seems super odd.  Perhaps they
-                        // don't want to update public root certificates or something.
+                        // don't want to update public root certificates or something.  This is a security
+                        // hole.  We need to investigate this.
+                        //
+                        //      https://github.com/nforgeio/neonKUBE/issues/971
 
-                        linuxTemplateUri = $"http://s3-us-west-2.amazonaws.com/neonforge/kube/xenserver-{clusterDefinition.LinuxDistribution}-{clusterDefinition.LinuxVersion}.xva";
+                        linuxTemplateUri = $"http://s3-us-west-2.amazonaws.com/neonkube/vm-images/xenserver/neon-{clusterDefinition.LinuxDistribution}-{clusterDefinition.LinuxVersion}.xva";
                     }
                     break;
 
@@ -150,9 +153,9 @@ namespace Neon.Kube
 
                 DockerPackageUri   = $"https://s3-us-west-2.amazonaws.com/neonforge/kube/{KubeVersions.DockerVersion}-ubuntu-bionic-stable-amd64.deb",
 
-                HelmLinuxUri                = $"https://get.helm.sh/helm-v{KubeVersions.HelmVersion}-linux-amd64.tar.gz",
-                HelmOsxUri                  = $"https://get.helm.sh/helm-v{KubeVersions.HelmVersion}-darwin-amd64.tar.gz",
-                HelmWindowsUri              = $"https://get.helm.sh/helm-v{KubeVersions.HelmVersion}-windows-amd64.zip",
+                HelmLinuxUri       = $"https://get.helm.sh/helm-v{KubeVersions.HelmVersion}-linux-amd64.tar.gz",
+                HelmOsxUri         = $"https://get.helm.sh/helm-v{KubeVersions.HelmVersion}-darwin-amd64.tar.gz",
+                HelmWindowsUri     = $"https://get.helm.sh/helm-v{KubeVersions.HelmVersion}-windows-amd64.zip",
 
                 CalicoRbacYamlUri  = $"https://docs.projectcalico.org/v{KubeVersions.CalicoVersion}/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml",
                 CalicoSetupYamlUri = $"https://docs.projectcalico.org/v{KubeVersions.CalicoVersion}/manifests/calico.yaml",

@@ -147,11 +147,11 @@ namespace Neon.Tasks
 
         private const string ObjectName = "AsyncReaderWriterLock";
 
-        private object                                      syncLock = new object();
-        private Lock                                        readerLock;
-        private Lock                                        writerLock;
-        private Task<IDisposable>                           noWaitReaderLockTask;
-        private Task<IDisposable>                           noWaitWriterLockTask;
+        private readonly object                             syncLock = new object();
+        private readonly Lock                               readerLock;
+        private readonly Lock                               writerLock;
+        private readonly Task<IDisposable>                  noWaitReaderLockTask;
+        private readonly Task<IDisposable>                  noWaitWriterLockTask;
         private Queue<TaskCompletionSource<IDisposable>>    waitingWriterTcsQueue;
         private TaskCompletionSource<IDisposable>           waitingReaderTcs;
         private int                                         waitingReaderCount;

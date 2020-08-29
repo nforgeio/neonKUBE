@@ -196,30 +196,6 @@ namespace Neon.Temporal
 
             using (await workerMutex.AcquireAsync())
             {
-                // $todo(jefflill): 
-                //
-                //      https://github.com/nforgeio/neonKUBE/issues/796
-                //
-                // We need to replace this with new CadenceClient methods:
-                //
-                //      BuildStub<TWorkflowInterface>()
-                //      BuildStub<TActivityInterface>()
-#if TODO
-                foreach (var workflowType in registeredWorkflowTypes)
-                {
-                    // We're going to compile both the external and child versions of the stubs.
-
-                    var workflowInterface = TemporalHelper.GetWorkflowInterface(workflowType);
-
-                    StubManager.GetWorkflowStub(workflowInterface, isChild: false);
-                    StubManager.GetWorkflowStub(workflowInterface, isChild: true);
-                }
-
-                foreach (var activityType in registeredActivityTypes)
-                {
-                    StubManager.GetActivityStub(TemporalHelper.GetActivityInterface(activityType));
-                }
-#endif
                 // Register workflow implementations.
 
                 foreach (var workflowType in registeredWorkflowTypes)

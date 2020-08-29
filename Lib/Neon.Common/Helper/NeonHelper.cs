@@ -289,5 +289,23 @@ namespace Neon.Common
                 }
             }
         }
+
+        /// <summary>
+        /// Identifies the production cluster public Docker registry.
+        /// </summary>
+        public const string NeonProdRegistry = "nkubeio";
+
+        /// <summary>
+        /// Identifies the development cluster public Docker registry.
+        /// </summary>
+        public const string NeonDevRegistry = "nkubedev";
+
+        /// <summary>
+        /// Returns the appropriate public Docker registry to be used for the git branch the
+        /// assembly was built from.  This returns <see cref="NeonProdRegistry"/> for release
+        /// branches and <see cref="NeonDevRegistry"/> for all other branches.
+        /// </summary>
+        public static string NeonBranchRegistry => ThisAssembly.Git.Branch.StartsWith("release-", StringComparison.InvariantCultureIgnoreCase) ? NeonProdRegistry : NeonDevRegistry;
     }
 }
+

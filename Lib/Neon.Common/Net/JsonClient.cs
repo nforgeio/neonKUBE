@@ -96,7 +96,7 @@ namespace Neon.Net
         //---------------------------------------------------------------------
         // Instance members
 
-        private object                                      syncLock          = new object();
+        private readonly object                             syncLock          = new object();
         private IRetryPolicy                                safeRetryPolicy   = new ExponentialRetryPolicy(TransientDetector.NetworkOrHttp, initialRetryInterval: TimeSpan.FromMilliseconds(250),maxRetryInterval: TimeSpan.FromSeconds(5));
         private IRetryPolicy                                unsafeRetryPolicy = new NoRetryPolicy();
         private Dictionary<Type, IEnhancedJsonConverter>    typeToConverter   = new Dictionary<Type, IEnhancedJsonConverter>();

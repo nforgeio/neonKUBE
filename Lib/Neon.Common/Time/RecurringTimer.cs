@@ -12,6 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Tasks;
+using System.Net;
 
 namespace Neon.Time
 {
@@ -144,6 +145,8 @@ namespace Neon.Time
     {
         //---------------------------------------------------------------------
         // Static members
+
+        private static readonly char[] colonArray = new char[] { ':'};
 
         /// <summary>
         /// Returns a disabled timer.
@@ -562,7 +565,7 @@ namespace Neon.Time
             double      minutes = 0;
             double      seconds = 0;
 
-            fields = input.Split(':', 2);
+            fields = input.Split(colonArray, 2);
 
             switch (fields[0].Trim().ToLower())
             {

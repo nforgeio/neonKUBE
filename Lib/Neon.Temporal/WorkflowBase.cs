@@ -107,7 +107,7 @@ namespace Neon.Temporal
         //---------------------------------------------------------------------
         // Instance members
 
-        private object                                  syncLock                  = new object();
+        private readonly object                         syncLock                  = new object();
         private long                                    nextLocalActivityActionId = 0;
         private Dictionary<long, LocalActivityAction>   idToLocalActivityAction   = new Dictionary<long, LocalActivityAction>();
         private Dictionary<string, SyncSignalStatus>    signalIdToStatus          = new Dictionary<string, SyncSignalStatus>();

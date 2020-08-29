@@ -22,7 +22,6 @@ using Xunit;
 
 using Neon.Common;
 using Neon.Data;
-using Neon.Kube;
 using Neon.Retry;
 using Neon.Net;
 
@@ -133,7 +132,7 @@ namespace Neon.Xunit
         {
             this.containerName = name;
 
-            image = image ?? $"{KubeConst.NeonBranchRegistry}/nats-streaming:latest";
+            image = image ?? $"{NeonHelper.NeonBranchRegistry}/nats-streaming:latest";
 
             base.CheckWithinAction();
 

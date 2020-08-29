@@ -23,7 +23,6 @@ using Xunit;
 
 using Neon.Common;
 using Neon.Data;
-using Neon.Kube;
 using Neon.Retry;
 using Neon.Net;
 
@@ -224,7 +223,7 @@ namespace Neon.Xunit.Couchbase
             string              hostInterface = null,
             ContainerLimits     limits        = null)
         {
-            image = image ?? $"{KubeConst.NeonBranchRegistry}/couchbase-dev:latest";
+            image = image ?? $"{NeonHelper.NeonBranchRegistry}/couchbase-dev:latest";
 
             base.CheckWithinAction();
 

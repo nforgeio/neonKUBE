@@ -62,8 +62,8 @@ namespace TestCadence
 
             fixture.Start(settings, reconnect: true);
 
-            this.fixture     = fixture;
-            this.client      = fixture.Client;
+            this.fixture = fixture;
+            this.client = fixture.Client;
             this.proxyClient = new HttpClient() { BaseAddress = client.ProxyUri };
         }
 
@@ -76,6 +76,20 @@ namespace TestCadence
             }
         }
 
+        [ActivityInterface]
+        public interface ITestActivity : IActivity
+        {
+            [ActivityMethod]
+            Task Test();
+        }
+
+        [WorkflowInterface]
+        public interface ITestWorkflow : IWorkflow
+        {
+            [WorkflowMethod]
+            Task Test();
+        }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCadence)]
         public async Task Worker()
@@ -83,6 +97,12 @@ namespace TestCadence
             await SyncContext.ClearAsync;
 
             await client.RegisterDomainAsync("test-domain", ignoreDuplicates: true);
+
+            // Verify that the stub builder methods don't barf.
+
+            CadenceClient.BuildActivityStub<ITestActivity>();
+            CadenceClient.BuildWorkflowStub<ITestWorkflow>();
+            CadenceClient.BuildAssemblyStubs(Assembly.GetExecutingAssembly());
 
             // Verify that creating workers with the same attributes actually
             // return the pre-existing instance with an incremented reference

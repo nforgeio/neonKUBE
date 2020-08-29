@@ -51,12 +51,9 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Time;
 
-using INetworkInterfaceUpdater     = Microsoft.Azure.Management.Network.Fluent.NetworkInterface.Update.IUpdate;
-using INetworkSecurityGroup        = Microsoft.Azure.Management.Network.Fluent.INetworkSecurityGroup;
-using INetworkSecurityGroupUpdater = Microsoft.Azure.Management.Network.Fluent.NetworkSecurityGroup.Update.IUpdate;
-using SecurityRuleProtocol         = Microsoft.Azure.Management.Network.Fluent.Models.SecurityRuleProtocol;
-using TransportProtocol            = Microsoft.Azure.Management.Network.Fluent.Models.TransportProtocol;
-using ILoadBalancerUpdater         = Microsoft.Azure.Management.Network.Fluent.LoadBalancer.Update.IUpdate;
+using INetworkSecurityGroup = Microsoft.Azure.Management.Network.Fluent.INetworkSecurityGroup;
+using SecurityRuleProtocol  = Microsoft.Azure.Management.Network.Fluent.Models.SecurityRuleProtocol;
+using TransportProtocol     = Microsoft.Azure.Management.Network.Fluent.Models.TransportProtocol;
 
 namespace Neon.Kube
 {

@@ -52,8 +52,9 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
-        private static byte[] commaBytes   = Encoding.UTF8.GetBytes(",");
-        private static byte[] newlineBytes = new byte[] { 0x0A };
+        private static readonly byte[]      commaBytes   = Encoding.UTF8.GetBytes(",");
+        private static readonly byte[]      newlineBytes = new byte[] { 0x0A };
+        private static readonly char[]      newlineArray = new char[] { '\n' };
 
         /// <summary>
         /// Returns a global <see cref="JsonDataConverter"/> instance.  This is used
@@ -121,7 +122,7 @@ namespace Neon.Cadence
             Covenant.Requires<ArgumentException>(content.Length > 0, nameof(content));
 
             var jsonText  = Encoding.UTF8.GetString(content);
-            var jsonLines = jsonText.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            var jsonLines = jsonText.Split(newlineArray, StringSplitOptions.RemoveEmptyEntries);
 
             if (jsonLines.Length != valueTypes.Length)
             {

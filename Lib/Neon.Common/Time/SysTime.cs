@@ -214,13 +214,13 @@ namespace Neon.Time
         // 5 minutes, looking for a new count that is less than a previous
         // count, indicating that the counter overflowed and wrapped around.
 
-        private static object       syncLock = new object();
-        private static uint         lastCount;      // The last GetTickCount() polled
-        private static ulong        msi;            // Most-significant int
-        private static GatedTimer   timer;          // The poll timer
-        private static TimeSpan     resolution;     // The timer resolution for this machine
-        private static TimeSpan     year;           // Approximate year timspan
-        private static TimeSpan     externalBias;   // Delta between external and local UTC clocks
+        private static readonly object  syncLock = new object();
+        private static uint             lastCount;      // The last GetTickCount() polled
+        private static ulong            msi;            // Most-significant int
+        private static GatedTimer       timer;          // The poll timer
+        private static TimeSpan         resolution;     // The timer resolution for this machine
+        private static TimeSpan         year;           // Approximate year timspan
+        private static TimeSpan         externalBias;   // Delta between external and local UTC clocks
 
         //---------------------------------------------------------------------
         // Unix/Linux Implementation

@@ -30,6 +30,8 @@ namespace Neon.Cadence
         //---------------------------------------------------------------------
         // Static members
 
+        private static readonly char[] colonArray = new char[] { ':' };
+
         /// <summary>
         /// Converts an exception into a string suitable for using to construct
         /// a <see cref="SyncSignalException"/>.
@@ -65,7 +67,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(error), nameof(error));
 
-            var fields = error.Split(':', 2);
+            var fields = error.Split(colonArray, 2);
 
             if (fields.Length != 2)
             {
@@ -87,7 +89,7 @@ namespace Neon.Cadence
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(error), nameof(error));
 
-            var fields = error.Split(':', 2);
+            var fields = error.Split(colonArray, 2);
 
             if (fields.Length != 2)
             {

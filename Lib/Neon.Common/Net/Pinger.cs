@@ -59,8 +59,8 @@ namespace Neon.Net
     /// <threadsafety instance="true"/>
     public class Pinger : IDisposable
     {
-        private object      syncLock    = new object();
-        private Queue<Ping> unusedQueue = new Queue<Ping>();
+        private readonly object     syncLock    = new object();
+        private Queue<Ping>         unusedQueue = new Queue<Ping>();
 
         /// <summary>
         /// Constructor.

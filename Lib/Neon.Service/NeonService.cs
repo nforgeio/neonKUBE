@@ -267,6 +267,8 @@ namespace Neon.Service
         //---------------------------------------------------------------------
         // Static members
 
+        private static readonly char[] equalArray = new char[] { '=' };
+
         /// <summary>
         /// This controls whether any <see cref="NeonService"/> instances will use the global
         /// <see cref="LogManager.Default"/> log manager for logging or maintain its own
@@ -417,7 +419,7 @@ namespace Neon.Service
         //---------------------------------------------------------------------
         // Instance members
 
-        private object                          syncLock = new object();
+        private readonly object                 syncLock = new object();
         private bool                            isRunning;
         private bool                            isDisposed;
         private bool                            stopPending;
@@ -1003,7 +1005,7 @@ namespace Neon.Service
                             continue;
                         }
 
-                        var fields = line.Split('=', 2);
+                        var fields = line.Split(equalArray, 2);
 
                         if (fields.Length != 2)
                         {

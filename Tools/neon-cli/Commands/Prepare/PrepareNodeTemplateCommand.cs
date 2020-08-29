@@ -71,12 +71,7 @@ OPTIONS:
                       This is required for [--xenserver] mode.
 
     --vm-name       - Identifies the VM being used to generate the node
-                      template.  This defaults to the name specified in
-                      the setup instructions:
-
-                          ""xenserver-ubuntu-neon""
-
-                      This is required for [--xenserver] mode.
+                      template.  This is required for [--xenserver] mode.
 
     --update        - Applies any distribution updates to the template. 
 
@@ -136,7 +131,7 @@ node template.
             var hyperv        = commandLine.HasOption("--hyperv");
             var xenserver     = commandLine.HasOption("--xenserver");
             var vmHost        = hyperv ? "Hyper-V" : "XenServer";
-            var vmName        = commandLine.GetOption("--vm-name", "xenserver-ubuntu-neon");
+            var vmName        = commandLine.GetOption("--vm-name");
             var hostAddress   = commandLine.GetOption("--host-address");
             var hostPassword  = commandLine.GetOption("--host-password");
             var update        = commandLine.GetFlag("--update");
@@ -156,10 +151,32 @@ node template.
                     Program.Exit(1);
                 }
 
+                if (string.IsNullOrEmpty(vmName))
+                {
+                    Console.Error.WriteLine("**** ERROR: [--vm-name] must be specified for [--xenserver].");
+                    Program.Exit(1);
+                }
+
                 if (!IPAddress.TryParse(hostAddress, out hostIpAddress))
                 {
                     Console.Error.WriteLine($"**** ERROR: [{hostAddress}] is not a valid IP address.");
                     Program.Exit(1);
+                }
+
+                // Ensure that the named VM actually exists.
+
+                using (var xenHost = new XenClient(hostAddress, "root", hostPassword, name: hostAddress))
+                {
+                    var response = xenHost.InvokeItems("vm-list");
+
+                    var vm = response.Items.Where(item => item["name-label"] == vmName).SingleOrDefault();
+
+                    if (vm == null)
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine($"*** ERROR: Cannot locate VM [{vmName}].");
+                        Program.Exit(1);
+                    }
                 }
             }
 

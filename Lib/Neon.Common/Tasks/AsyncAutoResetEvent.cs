@@ -39,7 +39,7 @@ namespace Neon.Tasks
     /// <threadsafety instance="true"/>
     public class AsyncAutoResetEvent : IDisposable
     {
-        private object                              syncLock            = new object();
+        private readonly object                     syncLock            = new object();
         private Queue<TaskCompletionSource<bool>>   waitingTasks        = new Queue<TaskCompletionSource<bool>>();
         private static Task                         cachedCompletedTask = Task.FromResult(true);
         private bool                                isSignalled;

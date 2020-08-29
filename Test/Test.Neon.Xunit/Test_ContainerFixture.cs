@@ -40,7 +40,7 @@ namespace TestXunit
         {
             this.fixture = fixture;
 
-            fixture.Start("neon-unit-test-container", $"{KubeConst.NeonBranchRegistry}/test:latest");
+            fixture.Start("neon-unit-test-container", $"{NeonHelper.NeonBranchRegistry}/test:latest");
         }
 
         [Fact]

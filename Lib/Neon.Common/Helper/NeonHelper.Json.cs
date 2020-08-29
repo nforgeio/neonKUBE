@@ -38,7 +38,7 @@ namespace Neon.Common
         // This table is used to cache the factory functions used to create instances of 
         // [IRoundtripData] types.  This must be locked to be threadsafe.
 
-        private static Dictionary<Type, Func<string, object>> typeToGeneratedObjectFactory = new Dictionary<Type, Func<string, object>>();
+        private static readonly Dictionary<Type, Func<string, object>> typeToGeneratedObjectFactory = new Dictionary<Type, Func<string, object>>();
 
         /// <summary>
         /// The global <b>relaxed</b> JSON serializer settings.  These settings 

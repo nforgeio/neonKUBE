@@ -1345,8 +1345,15 @@ namespace Neon.Kube
         /// <returns>The <see cref="ExecuteResponse"/>.</returns>
         public static void PortForward(string serviceName, int remotePort, int localPort, string @namespace, Process process)
         {
-            var args = new string[] { "--namespace", @namespace, "port-forward", $"svc/{serviceName}", $"{localPort}:{remotePort}" };
-            Task.Run(() => NeonHelper.ExecuteAsync("kubectl", args: args, process: process));
+            Task.Run(() => NeonHelper.ExecuteAsync("kubectl", 
+                args: new string[]
+                {
+                    "--namespace", @namespace, 
+                    "port-forward",
+                    $"svc/{serviceName}", 
+                    $"{localPort}:{remotePort}" 
+                },
+                process: process));
         }
 
         /// <summary>
@@ -1360,15 +1367,15 @@ namespace Neon.Kube
         public async static Task<string> ExecInPod(IKubernetes client, V1Pod pod, string @namespace, string[] command)
         {
             var webSocket = await client.WebSocketNamespacedPodExecAsync(pod.Metadata.Name, @namespace, command, pod.Spec.Containers[0].Name);
+            var demux     = new StreamDemuxer(webSocket);
 
-            var demux = new StreamDemuxer(webSocket);
             demux.Start();
 
-            var buff = new byte[4096];
+            var buff   = new byte[4096];
             var stream = demux.GetStream(1, 1);
-            var read = stream.Read(buff, 0, 4096);
-            var str = System.Text.Encoding.Default.GetString(buff.Where(b => b != 0).ToArray());
-            return str;
+            var read   = stream.Read(buff, 0, 4096);
+
+            return Encoding.Default.GetString(buff.Where(b => b != 0).ToArray());
         }
 
         /// <summary>

@@ -34,8 +34,8 @@ namespace Neon.Csv
     /// <threadsafety instance="false" />
     public sealed class CsvWriter : IDisposable
     {
-        private static char[]   escaped = new char[] { ',', '"' };
-        private TextWriter      writer;
+        private readonly static char[]  escaped = new char[] { ',', '"' };
+        private TextWriter              writer;
 
         /// <summary>
         /// Constructs a writer to a stream.

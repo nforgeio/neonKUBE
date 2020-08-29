@@ -39,7 +39,6 @@ using Neon.Kube;
 using Neon.IO;
 using Neon.Web;
 using Neon.Xunit;
-using Neon.Xunit.Kube;
 
 using NATS.Client;
 using STAN.Client;

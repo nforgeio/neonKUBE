@@ -100,7 +100,7 @@ namespace Neon.Xunit
 
         private const string dummyIP = "1.2.3.4";
 
-        private static object               syncLock   = new object();
+        private static readonly object      syncLock   = new object();
         private static LinearRetryPolicy    retryFile  = new LinearRetryPolicy(typeof(IOException), maxAttempts: 50, retryInterval: TimeSpan.FromMilliseconds(100));
         private static LinearRetryPolicy    retryReady = new LinearRetryPolicy(typeof(NotReadyException), maxAttempts: 50, retryInterval: TimeSpan.FromMilliseconds(100));
 

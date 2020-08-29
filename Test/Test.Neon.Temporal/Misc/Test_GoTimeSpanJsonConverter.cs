@@ -25,8 +25,6 @@ using Neon.Temporal;
 using Neon.Xunit;
 
 using Newtonsoft.Json;
-using Org.BouncyCastle.Asn1.Cms;
-using Org.BouncyCastle.Utilities;
 using Xunit;
 
 namespace TestTemporal

@@ -28,9 +28,9 @@ using Neon.Docker;
 using Neon.Kube;
 using Neon.IO;
 using Neon.Xunit;
-using Neon.Xunit.Kube;
 
 using Xunit;
+using Neon.Xunit.Kube;
 
 namespace TestXunit
 {
@@ -128,7 +128,7 @@ namespace TestXunit
                     {
                         Assert.Same(testContext, TestContext.Current);
 
-                        testContext.LoadSettings(tempFile.Path);
+                        testContext.LoadSettings(tempFile.Path, KubeHelper.LookupPassword);
 
                         foreach (var item in testSettings)
                         {
@@ -231,7 +231,7 @@ namespace TestXunit
                         {
                             Assert.Same(testContext, TestContext.Current);
 
-                            testContext.LoadEnvironment(tempFile.Path);
+                            testContext.LoadEnvironment(tempFile.Path, KubeHelper.LookupPassword);
 
                             foreach (var item in testSettings)
                             {

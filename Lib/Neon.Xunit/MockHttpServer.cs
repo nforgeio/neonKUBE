@@ -41,7 +41,7 @@ namespace Neon.Xunit
     /// <threadsafety instance="true"/>
     public sealed class MockHttpServer : IDisposable
     {
-        private object                      syncLock = new object();
+        private readonly object             syncLock = new object();
         private WebListener                 listener;
         private Func<RequestContext, Task>  handler;
 

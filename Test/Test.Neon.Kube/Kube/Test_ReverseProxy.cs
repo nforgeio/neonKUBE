@@ -112,7 +112,7 @@ namespace TestKube
         /// </summary>
         private sealed class ProxyTestFixture : IDisposable
         {
-            private object                              syncLock   = new object();
+            private readonly object                     syncLock   = new object();
             private ReverseProxy                        proxy;
             private MockHttpServer                      server;
             private HttpClient                          client;

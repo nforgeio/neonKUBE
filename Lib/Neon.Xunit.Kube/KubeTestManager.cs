@@ -43,7 +43,7 @@ namespace Neon.Xunit.Kube
         //---------------------------------------------------------------------
         // Static members
 
-        private static object syncLock = new object();
+        private static readonly object syncLock = new object();
 
         /// <summary>
         /// Returns the current test manager.
