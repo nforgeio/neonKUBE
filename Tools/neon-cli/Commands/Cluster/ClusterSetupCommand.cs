@@ -168,6 +168,12 @@ OPTIONS:
                 Program.Exit(1);
             }
 
+            if (string.IsNullOrEmpty(kubeContextExtension.SshPassword))
+            {
+                Console.Error.WriteLine($"*** ERROR: No cluster node SSH password found.");
+                Program.Exit(1);
+            }
+
             var handler = new HttpClientHandler()
             {
                 AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
@@ -308,7 +314,7 @@ OPTIONS:
                     //-----------------------------------------------------------------
                     // Kubernetes configuration.
 
-                    controller.AddGlobalStep("setup neon-proxy", SetupNeonProxy);
+                    controller.AddGlobalStep("etc high-availability", SetupEtcHaProxy);
                     controller.AddStep("setup kubernetes", SetupKubernetes);
                     controller.AddGlobalStep("setup cluster", SetupCluster);
 
@@ -789,7 +795,11 @@ ff02::2         ip6-allrouters
             node.UploadText("/etc/hosts", sbHosts, 4, Encoding.UTF8);
         }
 
-        private void SetupNeonProxy()
+        /// <summary>
+        /// Configures a local HAProxy container that makes the Kubernetes Etc
+        /// cluster highly available.
+        /// </summary>
+        private void SetupEtcHaProxy()
         {
             var sbHaProxy = new StringBuilder();
 
@@ -829,22 +839,22 @@ $@"
 
             foreach (var node in cluster.Nodes)
             {
-                node.InvokeIdempotentAction("setup/setup-neon-proxy",
+                node.InvokeIdempotentAction("setup/setup-etc-ha",
                     () =>
                     {
-                        node.Status = "setup: neon-proxy";
+                        node.Status = "setup: etc high-availability";
 
-                        node.UploadText("/etc/neonkube/neon-proxy.cfg", sbHaProxy);
+                        node.UploadText("/etc/neonkube/neon-etc-proxy.cfg", sbHaProxy);
 
-
-                        node.SudoCommand(@"docker run \
-                                            --name neon-proxy \
-                                            --detach \
-                                            --restart=always \
-                                            -v /etc/neonkube/neon-proxy.cfg:/etc/haproxy/haproxy.cfg \
-                                            --network host \
-                                            --log-driver json-file \
-                                            nkubeio/haproxy");
+                        node.SudoCommand("docker run",
+                            "--name=neon-etc-proxy",
+                            "--detach",
+                            "--restart=always",
+                            "-v=/etc/neonkube/neon-etc-proxy.cfg:/etc/haproxy/haproxy.cfg",
+                            "--network=host",
+                            "--log-driver=json-file",
+                            $"{NeonHelper.NeonBranchRegistry}/haproxy"
+                        );
                     });
             }
         }
@@ -2992,36 +3002,6 @@ chmod 666 /run/ssh-key*
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Changes the admin account's password on a node.
-        /// </summary>
-        /// <param name="node">The target node.</param>
-        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
-        private void SetStrongPassword(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
-        {
-            node.InvokeIdempotentAction("setup/strong-password",
-                () =>
-                {
-                    Thread.Sleep(stepDelay);
-
-                    node.Status = "strong password";
-
-                    var script =
-$@"
-echo '{kubeContextExtension.SshUsername}:{kubeContextExtension.SshPassword}' | chpasswd
-";
-                    var response = node.SudoCommand(CommandBundle.FromScript(script));
-
-                    if (response.ExitCode != 0)
-                    {
-                        Console.Error.WriteLine($"*** ERROR: Unable to set a strong password [exitcode={response.ExitCode}].");
-                        Program.Exit(response.ExitCode);
-                    }
-
-                    node.UpdateCredentials(SshCredentials.FromUserPassword(kubeContextExtension.SshUsername, kubeContextExtension.SshPassword));
-                });
         }
 
         /// <summary>
