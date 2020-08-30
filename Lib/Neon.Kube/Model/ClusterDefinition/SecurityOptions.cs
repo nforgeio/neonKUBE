@@ -55,44 +55,6 @@ namespace Neon.Kube
         public int PasswordLength { get; set; } = defaultPasswordLength;
 
         /// <summary>
-        /// <para>
-        /// Normally cluster nodes are configured such that the <b>sysadmin</b> user account 
-        /// password is set to cryptographically random password with <see cref="PasswordLength"/>
-        /// characters.  This happens during cluster provisioning.
-        /// </para>
-        /// <para>
-        /// You can disable these secure passwords by setting <see cref="KeepNodePassword"/> to 
-        /// <c>true</c>.  In general, this means that the <b>sysadmin</b> password will generally
-        /// remain as the insecure <b>sysadmin0000</b> password.
-        /// </para>
-        /// <note>
-        /// <b>WARNING:</b> Be very careful about enabling this for production clusters!
-        /// </note>
-        /// </summary>
-        /// <remarks>
-        /// <para>
-        /// There are really only two scnerios where you'd want to enable this:
-        /// </para>
-        /// <list type="number">
-        /// <item>
-        /// <b>Cluster development and debugging:</b> Sometimes neonKUBE developers may wish to enable
-        /// this while developing and debugging cluster deployment and other operations to make it easy
-        /// to SSH into cluster nodes to poke around.
-        /// </item>
-        /// <item>
-        /// <b>Bare metal (machine) deployments:</b> Cluster operators may wish to configure a secure
-        /// <b>sysadmin</b> password when they manually configure the target node machines and/or 
-        /// virtual machines.  Setting this to <c>true</c> will have the <see cref="HostingEnvironments.Machine"/>
-        /// cluster provisioner to retain this secure password rather than setting a new one. 
-        /// </item>
-        /// </list>
-        /// </remarks>
-        [JsonProperty(PropertyName = "KeepNodePassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "keepNodePassword", ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public bool KeepNodePassword { get; set; } = false;
-
-        /// <summary>
         /// Validates the options.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>

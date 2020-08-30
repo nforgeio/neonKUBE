@@ -64,6 +64,11 @@ namespace Neon.Kube
         bool RequiresAdminPrivileges { get; }
 
         /// <summary>
+        /// Specifies whether a cryptographically random node password should be generated.
+        /// </summary>
+        bool GenerateSecurePassword { get; }
+
+        /// <summary>
         /// Creates and initializes the cluster resources such as the virtual machines,
         /// networks, load balancers, network security groups, public IP addresses etc.
         /// </summary>

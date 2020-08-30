@@ -243,6 +243,15 @@ OPTIONS:
                     Program.Exit(1);
                 }
 
+                // Update the cluster node SSH credentials to use the secure password.
+
+                var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, kubeContextExtension.SshPassword);
+
+                foreach (var node in cluster.Nodes)
+                {
+                    node.UpdateCredentials(sshCredentials);
+                }
+
                 // Get on with cluster setup.
 
                 var failed = false;

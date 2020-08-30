@@ -45,17 +45,17 @@ namespace Neon.Kube
         /// <summary>
         /// The package version for Kubernetes admin service.
         /// </summary>
-        public const string KubeAdminPackageVersion = "1.18.6";
+        public const string KubeAdminPackageVersion = "1.18.6-00";
 
         /// <summary>
         /// The package version for the Kubernetes cli.
         /// </summary>
-        public const string KubeCtlPackageVersion = "1.18.6";
+        public const string KubeCtlPackageVersion = "1.18.6-00";
 
         /// <summary>
         /// The package version for the Kubelet service.
         /// </summary>
-        public const string KubeletPackageVersion = "1.18.6";
+        public const string KubeletPackageVersion = "1.18.6-00";
 
         /// <summary>
         /// The version of Docker to be installed.

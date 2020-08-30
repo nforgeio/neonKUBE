@@ -33,7 +33,7 @@ $src_tools_path    = "$src_path\\Tools"
 
 # TINI init manager binary download URL (obtained from: https://github.com/krallin/tini/releases)
 
-$tini_url = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/tini-0.18.0"
+$tini_url = "https://neonkube.s3-us-west-2.amazonaws.com/misc/tini-0.18.0"
 
 #------------------------------------------------------------------------------
 # Executes a command, throwing an exception for non-zero error codes.

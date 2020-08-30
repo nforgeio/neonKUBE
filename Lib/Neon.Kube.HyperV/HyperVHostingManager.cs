@@ -75,7 +75,15 @@ namespace Neon.Kube
         private string                          switchName;
 
         /// <summary>
-        /// Constructor.
+        /// Creates an instance that is only capable of validating the hosting
+        /// related options in the cluster definition.
+        /// </summary>
+        public HyperVHostingManager()
+        {
+        }
+
+        /// <summary>
+        /// Creates an instance that is capable of provisioning the cluster.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
         /// <param name="setupInfo">Specifies the cluster setup information.</param>

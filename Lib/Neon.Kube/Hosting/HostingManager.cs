@@ -97,6 +97,9 @@ namespace Neon.Kube
         public virtual bool RequiresAdminPrivileges => true;
 
         /// <inheritdoc/>
+        public virtual bool GenerateSecurePassword => true;
+
+        /// <inheritdoc/>
         public abstract bool Provision(bool force, string secureSshPassword, string orgSshPassword = null);
 
         /// <inheritdoc/>

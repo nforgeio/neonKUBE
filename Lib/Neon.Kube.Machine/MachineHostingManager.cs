@@ -73,7 +73,15 @@ namespace Neon.Kube
         private Dictionary<string, string>      nodeToPassword;
 
         /// <summary>
-        /// Constructor.
+        /// Creates an instance that is only capable of validating the hosting
+        /// related options in the cluster definition.
+        /// </summary>
+        public MachineHostingManager()
+        {
+        }
+
+        /// <summary>
+        /// Creates an instance that is capable of provisioning the cluster.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
         /// <param name="setupInfo">Specifies the cluster setup information.</param>
@@ -112,6 +120,9 @@ namespace Neon.Kube
         public override void Validate(ClusterDefinition clusterDefinition)
         {
         }
+
+        /// <inheritdoc/>
+        public override bool GenerateSecurePassword => true;
 
         /// <inheritdoc/>
         public override bool Provision(bool force, string secureSshPassword, string orgSshPassword = null)

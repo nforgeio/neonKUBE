@@ -241,9 +241,12 @@ TCPKeepAlive yes
 
             var sbPackageProxies = new StringBuilder();
 
-            foreach (var proxyEndpoint in clusterDefinition.PackageProxy.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            if (clusterDefinition.PackageProxy != null)
             {
-                sbPackageProxies.AppendWithSeparator(proxyEndpoint);
+                foreach (var proxyEndpoint in clusterDefinition.PackageProxy.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    sbPackageProxies.AppendWithSeparator(proxyEndpoint);
+                }
             }
             
             sb.AppendLine($"NEON_PACKAGE_PROXY={sbPackageProxies}");

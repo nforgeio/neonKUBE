@@ -166,19 +166,18 @@ namespace Neon.Kube
             }
         }
 
-        /// <summary>
-        /// Returns the <see cref="HostingManager"/> for a specific environment.
-        /// </summary>
-        /// <param name="cluster">The cluster being managed.</param>
-        /// <param name="setupInfo">Specifies the cluster setup information.</param>
-        /// <param name="logFolder">
-        /// The folder where log files are to be written, otherwise or <c>null</c> or 
-        /// empty if logging is disabled.
-        /// </param>
-        /// <returns>
-        /// The <see cref="HostingManager"/> or <c>null</c> if no hosting manager
-        /// could be located for the specified cluster environment.
-        /// </returns>
+        /// <inheritdoc/>
+        public HostingManager GetManager(HostingEnvironments environment)
+        {
+            if (!environmentToHostingManager.TryGetValue(environment, out var managerType))
+            {
+                return null;
+            }
+
+            return (HostingManager)Activator.CreateInstance(managerType);
+        }
+
+        /// <inheritdoc/>
         public HostingManager GetManager(ClusterProxy cluster, KubeSetupInfo setupInfo, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
