@@ -51,7 +51,7 @@ namespace Neon.Kube
     /// Manages cluster provisioning on the local workstation using Microsoft Hyper-V virtual machines.
     /// This is typically used for development and test purposes.
     /// </summary>
-    [HostingProvider(HostingEnvironments.HyperVLocal)]
+    [HostingProvider(HostingEnvironment.HyperVLocal)]
     public class HyperVLocalHostingManager : HostingManager
     {
         //---------------------------------------------------------------------
@@ -160,6 +160,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
         }
 
         /// <inheritdoc/>

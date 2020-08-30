@@ -47,7 +47,7 @@ namespace Neon.Kube
     /// <summary>
     /// Manages cluster provisioning directly on bare metal or virtual machines.
     /// </summary>
-    [HostingProvider(HostingEnvironments.Machine)]
+    [HostingProvider(HostingEnvironment.Machine)]
     public partial class MachineHostingManager : HostingManager
     {
         //---------------------------------------------------------------------
@@ -119,6 +119,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
         }
 
         /// <inheritdoc/>

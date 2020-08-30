@@ -192,7 +192,7 @@ Server Requirements:
                 // environments because we're assuming that the cluster will run in its own
                 // private network so there'll ne no possibility of conflicts.
 
-                if (cluster.Definition.Hosting.Environment != HostingEnvironments.Machine && 
+                if (cluster.Definition.Hosting.Environment != HostingEnvironment.Machine && 
                     !cluster.Definition.Hosting.IsCloudProvider)
                 {
                     Console.WriteLine();

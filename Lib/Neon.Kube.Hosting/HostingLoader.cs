@@ -48,7 +48,7 @@ namespace Neon.Kube
         // Static members
 
         private static readonly object                          syncLock = new object();
-        private static Dictionary<HostingEnvironments, Type>    environmentToHostingManager;
+        private static Dictionary<HostingEnvironment, Type>    environmentToHostingManager;
 
         /// <summary>
         /// <para>
@@ -109,7 +109,7 @@ namespace Neon.Kube
                 // end then use the environment specified in the attributes to determine
                 // which hosting manager class to instantiate and return.
 
-                environmentToHostingManager = new Dictionary<HostingEnvironments, Type>();
+                environmentToHostingManager = new Dictionary<HostingEnvironment, Type>();
 
                 foreach (var assembly in AppDomain.CurrentDomain.GetUserAssemblies())
                 {
@@ -143,20 +143,20 @@ namespace Neon.Kube
         // Instance members
 
         /// <inheritdoc/>
-        public bool IsCloudEnvironment(HostingEnvironments environment)
+        public bool IsCloudEnvironment(HostingEnvironment environment)
         {
             switch (environment)
             {
-                case HostingEnvironments.Aws:
-                case HostingEnvironments.Azure:
-                case HostingEnvironments.Google:
+                case HostingEnvironment.Aws:
+                case HostingEnvironment.Azure:
+                case HostingEnvironment.Google:
 
                     return true;
 
-                case HostingEnvironments.HyperV:
-                case HostingEnvironments.HyperVLocal:
-                case HostingEnvironments.Machine:
-                case HostingEnvironments.XenServer:
+                case HostingEnvironment.HyperV:
+                case HostingEnvironment.HyperVLocal:
+                case HostingEnvironment.Machine:
+                case HostingEnvironment.XenServer:
 
                     return false;
 
@@ -167,7 +167,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public HostingManager GetManager(HostingEnvironments environment)
+        public HostingManager GetManager(HostingEnvironment environment)
         {
             if (!environmentToHostingManager.TryGetValue(environment, out var managerType))
             {

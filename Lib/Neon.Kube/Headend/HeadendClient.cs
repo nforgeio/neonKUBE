@@ -88,17 +88,17 @@ namespace Neon.Kube
 
             switch (clusterDefinition.Hosting.Environment)
             {
-                case HostingEnvironments.Aws:
-                case HostingEnvironments.Azure:
-                case HostingEnvironments.Google:
+                case HostingEnvironment.Aws:
+                case HostingEnvironment.Azure:
+                case HostingEnvironment.Google:
 
                     // Node templates are provided by virtual machine images in the cloud.
 
                     linuxTemplateUri = null;
                     break;
 
-                case HostingEnvironments.HyperV:
-                case HostingEnvironments.HyperVLocal:
+                case HostingEnvironment.HyperV:
+                case HostingEnvironment.HyperVLocal:
 
                     if (!string.IsNullOrEmpty(clusterDefinition.LinuxTemplateUri))
                     {
@@ -110,11 +110,11 @@ namespace Neon.Kube
                     }
                     break;
 
-                case HostingEnvironments.Machine:
+                case HostingEnvironment.Machine:
 
                     break;
 
-                case HostingEnvironments.XenServer:
+                case HostingEnvironment.XenServer:
 
                     if (!string.IsNullOrEmpty(clusterDefinition.LinuxTemplateUri))
                     {

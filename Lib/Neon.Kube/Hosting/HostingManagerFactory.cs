@@ -82,7 +82,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public HostingManager GetManager(HostingEnvironments environment)
+        public HostingManager GetManager(HostingEnvironment environment)
         {
             CheckInitialized();
 
@@ -101,7 +101,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public bool IsCloudEnvironment(HostingEnvironments environment)
+        public bool IsCloudEnvironment(HostingEnvironment environment)
         {
             CheckInitialized();
 

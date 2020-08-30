@@ -45,7 +45,7 @@ namespace Neon.Kube
     /// <summary>
     /// Manages cluster provisioning on the Google Cloud Platform.
     /// </summary>
-    [HostingProvider(HostingEnvironments.Google)]
+    [HostingProvider(HostingEnvironment.Google)]
     public class GoogleHostingManager : HostingManager
     {
         //---------------------------------------------------------------------
@@ -106,6 +106,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
         }
 
         /// <inheritdoc/>

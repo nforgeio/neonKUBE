@@ -361,7 +361,7 @@ namespace Neon.Kube
         /// clusters for for testing purposes.  This defaults to <c>null</c>.
         /// </para>
         /// <note>
-        /// This URI can use HTTP, HTTPS, or FTP for all hosting environments except <see cref="HostingEnvironments.XenServer"/>
+        /// This URI can use HTTP, HTTPS, or FTP for all hosting environments except <see cref="HostingEnvironment.XenServer"/>
         /// which doesn't support HTTPS.
         /// </note>
         /// </summary>

@@ -49,7 +49,9 @@ namespace NeonCli
 
                 var sbInfo = new StringBuilder();
 
-                if (context.Extension.SetupDetails.SetupPending)
+                if (context.Extension != null &&
+                    context.Extension.SetupDetails != null && 
+                    context.Extension.SetupDetails.SetupPending)
                 {
                     sbInfo.AppendWithSeparator("setup");
                 }

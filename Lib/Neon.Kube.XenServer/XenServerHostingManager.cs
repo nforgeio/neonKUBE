@@ -37,7 +37,7 @@ namespace Neon.Kube
     /// <summary>
     /// Manages cluster provisioning on the XenServer hypervisor.
     /// </summary>
-    [HostingProvider(HostingEnvironments.XenServer)]
+    [HostingProvider(HostingEnvironment.XenServer)]
     public partial class XenServerHostingManager : HostingManager
     {
         //---------------------------------------------------------------------
@@ -148,6 +148,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
         }
 
         /// <inheritdoc/>

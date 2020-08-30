@@ -45,7 +45,7 @@ namespace Neon.Kube
     /// <summary>
     /// Manages cluster provisioning on Amazon Web Services.
     /// </summary>
-    [HostingProvider(HostingEnvironments.Aws)]
+    [HostingProvider(HostingEnvironment.Aws)]
     public class AwsHostingManager : HostingManager
     {
         //---------------------------------------------------------------------
@@ -106,6 +106,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
         }
 
         /// <inheritdoc/>

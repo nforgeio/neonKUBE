@@ -278,30 +278,30 @@ namespace Neon.Kube
 
             switch (clusterDefinition.Hosting.Environment)
             {
-                case HostingEnvironments.Aws:
+                case HostingEnvironment.Aws:
 
                     // $todo(jefflill: Implement this
                     break;
 
-                case HostingEnvironments.Azure:
+                case HostingEnvironment.Azure:
 
                     Azure = Azure ?? new AzureNodeOptions();
                     Azure.Validate(clusterDefinition, this.Name);
                     break;
 
-                case HostingEnvironments.Google:
+                case HostingEnvironment.Google:
 
                     // $todo(jefflill: Implement this
                     break;
 
-                case HostingEnvironments.Machine:
+                case HostingEnvironment.Machine:
 
                     // No machine options to check at this point in time.
                     break;
 
-                case HostingEnvironments.HyperV:
-                case HostingEnvironments.HyperVLocal:
-                case HostingEnvironments.XenServer:
+                case HostingEnvironment.HyperV:
+                case HostingEnvironment.HyperVLocal:
+                case HostingEnvironment.XenServer:
 
                     Vm = Vm ?? new VmNodeOptions();
                     Vm.Validate(clusterDefinition, this.Name);

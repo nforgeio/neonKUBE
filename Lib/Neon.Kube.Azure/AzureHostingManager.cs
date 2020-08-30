@@ -62,7 +62,7 @@ namespace Neon.Kube
     /// </summary>
     /// <remarks>
     /// </remarks>
-    [HostingProvider(HostingEnvironments.Azure)]
+    [HostingProvider(HostingEnvironment.Azure)]
     public class AzureHostingManager : HostingManager
     {
         // IMPLEMENTATION NOTE:
@@ -180,7 +180,7 @@ namespace Neon.Kube
             {
                 Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
 
-                this.Proxy      = node;
+                this.Proxy          = node;
                 this.hostingManager = hostingManager;
             }
 
@@ -732,6 +732,10 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            var networkOptions = clusterDefinition.Network;
+
             // Ensure that any explicit node IP address assignments are located
             // within the nodes subnet and do not conflict with any of the addresses
             // reserved by the cloud provider or neonKUBE.  We're also going to 
@@ -977,6 +981,23 @@ namespace Neon.Kube
         public override (string Address, int Port) GetSshEndpoint(string nodeName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName), nameof(nodeName));
+
+            // Connect to Azure and fetch the load balancer and public address information,
+            // if we don't already have them.
+
+            ConnectAzure();
+
+            if (loadBalancer == null)
+            {
+                loadBalancer = azure.LoadBalancers.GetByResourceGroup(resourceGroup, loadbalancerName);
+            }
+
+            if (publicAddress == null)
+            {
+                publicAddress = azure.PublicIPAddresses.GetByResourceGroup(resourceGroup, publicAddressName);
+            }
+
+            // Lookup the SSH NAT rule for the node so we can identify the port.
 
             var sshNatRuleName = $"{publicSshRulePrefix}{nodeName}";
 

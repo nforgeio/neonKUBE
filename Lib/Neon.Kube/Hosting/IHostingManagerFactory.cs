@@ -54,7 +54,7 @@ namespace Neon.Kube
         /// The <see cref="HostingManager"/> or <c>null</c> if no hosting manager
         /// could be located for the specified cluster environment.
         /// </returns>
-        HostingManager GetManager(HostingEnvironments environment);
+        HostingManager GetManager(HostingEnvironment environment);
 
         /// <summary>
         /// Returns the <see cref="HostingManager"/> for provisioning a specific environment.
@@ -82,6 +82,6 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="environment">The target hosting environment.</param>
         /// <returns><c>true</c> for cloud environments.</returns>
-        bool IsCloudEnvironment(HostingEnvironments environment);
+        bool IsCloudEnvironment(HostingEnvironment environment);
     }
 }

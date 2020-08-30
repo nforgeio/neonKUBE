@@ -235,7 +235,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <b>io.neonkube/compute.cores</b> [<c>int</c>]: Specifies the number of CPU cores.
-        /// This defaults to <b>0</b> for <see cref="HostingEnvironments.Machine"/>
+        /// This defaults to <b>0</b> for <see cref="HostingEnvironment.Machine"/>
         /// and is initialized for cloud and Hypervisor based hosting environments.
         /// </summary>
         [JsonProperty(PropertyName = "ComputeCores", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
@@ -245,7 +245,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <b>io.neonkube/compute.ram_mb</b> [<c>int</c>]: Specifies the available RAM in
-        /// megabytes.  This defaults to <b>0</b> for <see cref="HostingEnvironments.Machine"/>
+        /// megabytes.  This defaults to <b>0</b> for <see cref="HostingEnvironment.Machine"/>
         /// and is initialized for cloud and Hypervisor based hosting environments.
         /// </summary>
         [JsonProperty(PropertyName = "ComputeRamMiB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]

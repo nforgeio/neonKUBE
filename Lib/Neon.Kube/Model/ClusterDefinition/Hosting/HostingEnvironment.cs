@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HostingEnvironments.cs
+// FILE:	    HostingEnvironment.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,7 +25,7 @@ namespace Neon.Kube
     /// <summary>
     /// Enumerates the possible cluster hosting environments.
     /// </summary>
-    public enum HostingEnvironments
+    public enum HostingEnvironment
     {
         /// <summary>
         /// Hosted on directly on pre-provisioned bare metal or virtual machines.

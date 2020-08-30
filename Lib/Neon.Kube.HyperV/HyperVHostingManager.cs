@@ -49,7 +49,7 @@ namespace Neon.Kube
     /// <summary>
     /// Manages cluster provisioning on remote Hyper-V servers.
     /// </summary>
-    [HostingProvider(HostingEnvironments.HyperV)]
+    [HostingProvider(HostingEnvironment.HyperV)]
     public class HyperVHostingManager : HostingManager
     {
         //---------------------------------------------------------------------
@@ -114,6 +114,7 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
         }
 
         /// <inheritdoc/>
