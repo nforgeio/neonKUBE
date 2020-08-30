@@ -60,7 +60,7 @@ namespace Neon.Kube
         /// <summary>
         /// The version of Docker to be installed.
         /// </summary>
-        public const string DockerVersion = "docker.ce-18.06.1";
+        public const string DockerVersion = "docker.ce-19.03.12";
 
         /// <summary>
         /// The version of Calico to install.

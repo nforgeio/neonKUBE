@@ -151,7 +151,7 @@ namespace Neon.Kube
                     
                 KubeCtlWindowsUri  = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.KubernetesVersion}/bin/windows/amd64/kubectl.exe",
 
-                DockerPackageUri   = $"https://s3-us-west-2.amazonaws.com/neonforge/kube/{KubeVersions.DockerVersion}-ubuntu-bionic-stable-amd64.deb",
+                DockerPackageUri   = $"https://neonkube.s3-us-west-2.amazonaws.com/docker/{KubeVersions.DockerVersion}-ubuntu-focal-stable_amd64.deb",
 
                 HelmLinuxUri       = $"https://get.helm.sh/helm-v{KubeVersions.HelmVersion}-linux-amd64.tar.gz",
                 HelmOsxUri         = $"https://get.helm.sh/helm-v{KubeVersions.HelmVersion}-darwin-amd64.tar.gz",
