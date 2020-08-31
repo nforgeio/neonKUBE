@@ -1895,7 +1895,19 @@ rm /tmp/calico.yaml
             var istioScript0 =
 $@"#!/bin/bash
 
-curl -sL https://istio.io/downloadIstioctl | sh -
+tmp=$(mktemp -d /tmp/istioctl.XXXXXX)
+cd ""$tmp"" || exit
+
+curl -fsLO {kubeSetupInfo.IstioLinuxUri}
+
+tar -xzf ""istioctl-{KubeVersions.IstioVersion}-linux-amd64.tar.gz""
+
+# setup istioctl
+cd ""$HOME"" || exit
+mkdir - p "".istioctl/bin""
+mv ""${{tmp}}/istioctl"" "".istioctl/bin/istioctl""
+chmod + x "".istioctl/bin/istioctl""
+rm - r ""${{tmp}}""
 
 export PATH=$PATH:$HOME/.istioctl/bin
 

@@ -160,7 +160,7 @@ namespace Neon.Kube
                 CalicoRbacYamlUri  = $"https://docs.projectcalico.org/v{KubeVersions.CalicoVersion}/getting-started/kubernetes/installation/hosted/rbac-kdd.yaml",
                 CalicoSetupYamlUri = $"https://docs.projectcalico.org/v{KubeVersions.CalicoVersion}/manifests/calico.yaml",
 
-                IstioLinuxUri      = $"https://github.com/istio/istio/releases/download/{KubeVersions.IstioVersion}/istio-{KubeVersions.IstioVersion}-linux.tar.gz"
+                IstioLinuxUri      = $"https://github.com/istio/istio/releases/download/{KubeVersions.IstioVersion}/istioctl-{KubeVersions.IstioVersion}-linux-amd64.tar.gz"
             };
 
             await Task.CompletedTask;
