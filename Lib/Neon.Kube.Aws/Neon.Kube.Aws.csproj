@@ -59,4 +59,9 @@
     <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.Core" Version="3.5.1.5" />
+    <PackageReference Include="AWSSDK.EC2" Version="3.5.3.1" />
+  </ItemGroup>
+
 </Project>
