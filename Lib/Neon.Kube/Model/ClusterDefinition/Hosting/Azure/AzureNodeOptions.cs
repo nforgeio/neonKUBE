@@ -33,39 +33,31 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
-using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// Azure specific options for cluster cluster node.  The default constructor
-    /// initializes reasonable defaults.
+    /// Azure specific options for a cluster node.  These options can be used to
+    /// override defaults specified by <see cref="AzureHostingOptions"/>.  The
+    /// constructor initializes reasonable values.
     /// </summary>
     public class AzureNodeOptions
     {
         /// <summary>
-        /// <para>
-        /// Specifies the Azure virtual machine size.  You the available VM sizes are listed 
+        /// Optionally specifies the Azure virtual machine size.  The available VM sizes are listed 
         /// <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/sizes-general">here</a>.
-        /// </para>
-        /// <note>
-        /// This defaults to <b>Standard_B2S</b> which should be suitable for testing purposes
-        /// as well as relatively idle clusters.  Each <b>Standard_B2S</b> VM includes 2 virtual
-        /// cores and 4 GiB RAM.  At the time this was written, the pay-as-you-go cost for this
-        /// VM is listed at $0.0416/hour or about $30/month in a USA datacenter.  <b>Bs-series</b>
-        /// VMs are available in almost all Azure datacenters.
-        /// </note>
+        /// This defaults to <see cref="AzureHostingOptions.DefaultVmSize"/>.
         /// </summary>
         [JsonProperty(PropertyName = "VmSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "vmSize", ApplyNamingConventions = false)]
-        [DefaultValue("Standard_B2S")]
-        public string VmSize { get; set; } = "Standard_B2S";
+        [DefaultValue(null)]
+        public string VmSize { get; set; } = null;
 
         /// <summary>
         /// <para>
-        /// Optionally specifies the storage type to use for any mounted drives.  This defaults to <see cref="AzureStorageTypes.Default"/>
+        /// Optionally specifies the storage type to use for any mounted drives.  This defaults to <see cref="AzureStorageType.Default"/>
         /// which indicates that <see cref="AzureHostingOptions.DefaultStorageType"/> will specify the storage type
-        /// for this node.  By default, <see cref="AzureStorageTypes.StandardSSD"/> drives will be provisioned
+        /// for this node.  By default, <see cref="AzureStorageType.StandardSSD"/> drives will be provisioned
         /// when storage type is not specified.
         /// </para>
         /// <note>
@@ -74,45 +66,49 @@ namespace Neon.Kube
         /// </summary>
         /// <remarks>
         /// <note>
-        /// All virtual machine sizes support <see cref="AzureStorageTypes.StandardHDD"/> which is why that
+        /// All virtual machine sizes support <see cref="AzureStorageType.StandardHDD"/> which is why that
         /// is the default value.  Consult the consult the Azure documentation to virtual machine size specified 
-        /// by <see cref="VmSize"/> can support <see cref="AzureStorageTypes.PremiumSSD"/>.
+        /// by <see cref="VmSize"/> can support <see cref="AzureStorageType.PremiumSSD"/>.
         /// </note>
         /// <para>
-        /// <see cref="AzureStorageTypes.StandardHDD"/> specifies relatively slow rotating hard drives,
-        /// <see cref="AzureStorageTypes.StandardSSD"/> specifies standard SSD based drives,
-        /// <see cref="AzureStorageTypes.PremiumSSD"/> specifies fast SSD based drives, and finally
-        /// <see cref="AzureStorageTypes.UltraSSD"/> specifies super fast SSD based drives.  Azure recommends that
+        /// <see cref="AzureStorageType.StandardHDD"/> specifies relatively slow rotating hard drives,
+        /// <see cref="AzureStorageType.StandardSSD"/> specifies standard SSD based drives,
+        /// <see cref="AzureStorageType.PremiumSSD"/> specifies fast SSD based drives, and finally
+        /// <see cref="AzureStorageType.UltraSSD"/> specifies super fast SSD based drives.  Azure recommends that
         /// most production VMs deploy with SSDs.
         /// </para>
         /// <note>
-        /// <see cref="AzureStorageTypes.UltraSSD"/> storage is still relatively new and your region may not be able to
+        /// <see cref="AzureStorageType.UltraSSD"/> storage is still relatively new and your region may not be able to
         /// attach ultra drives to all VM instance types.  See this <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/windows/disks-enable-ultra-ssd">note</a>
         /// for more information.
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "StorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "storageType", ApplyNamingConventions = false)]
-        [DefaultValue(AzureStorageTypes.Default)]
-        public AzureStorageTypes StorageType { get; set; } = AzureStorageTypes.Default;
+        [DefaultValue(AzureStorageType.Default)]
+        public AzureStorageType StorageType { get; set; } = AzureStorageType.Default;
 
         /// <summary>
         /// Optionally specifies the size of the mounted managed Azure disk as <see cref="ByteUnits"/>.  This
         /// defaults to <c>null</c> which indicates that <see cref="AzureHostingOptions.DefaultDiskSize"/>
-        /// will be used instead, and that defaults to <b>128 GiB</b>.
+        /// will be used, and that defaults to <b>128 GiB</b>.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <see cref="AzureStorageTypes.StandardHDD"/>, <see cref="AzureStorageTypes.StandardSSD"/>, and
-        /// <see cref="AzureStorageTypes.PremiumSSD"/> drives may be provisioned in these
+        /// <see cref="AzureStorageType.StandardHDD"/>, <see cref="AzureStorageType.StandardSSD"/>, and
+        /// <see cref="AzureStorageType.PremiumSSD"/> drives may be provisioned in these
         /// sizes: <b>4GiB</b>, <b>8GiB</b>, <b>16GiB</b>, <b>32GiB</b>, <b>64GiB</b>, <b>128GiB</b>, <b>256GiB</b>, <b>512GiB</b>,
         /// <b>1TiB</b>, <b>2TiB</b>, <b>4TiB</b>, <b>8TiB</b>, <b>16TiB</b>, or <b>32TiB</b>.
         /// </para>
         /// <para>
-        /// <see cref="AzureStorageTypes.UltraSSD"/> based drives can be provisioned in these sizes:
+        /// <see cref="AzureStorageType.UltraSSD"/> based drives can be provisioned in these sizes:
         /// <b>4 GiB</b>,<b>8 GiB</b>,<b> GiB</b>,<b>16 GiB</b>,<b>32 GiB</b>,<b>64 GiB</b>,<b>128 GiB</b>,<b>256 GiB</b>,<b>512 GiB</b>,
         /// or from <b>1 TiB</b> to <b>64TiB</b> in increments of <b>1 TiB</b>.
         /// </para>
+        /// <note>
+        /// Node disks smaller than 32 GiB are not supported by neonKUBE.  We'll automatically
+        /// upgrade the disk size when necessary.
+        /// </note>
         /// <note>
         /// This size will be rounded up to the next valid drive size for the given storage type
         /// and set to the maximum allowed size, when necessary.
@@ -168,13 +164,13 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            if (StorageType == AzureStorageTypes.Default)
+            if (StorageType == AzureStorageType.Default)
             {
                 StorageType = clusterDefinition.Hosting.Azure.DefaultStorageType;
 
-                if (StorageType == AzureStorageTypes.Default)
+                if (StorageType == AzureStorageType.Default)
                 {
-                    StorageType = AzureStorageTypes.StandardSSD;
+                    StorageType = AzureStorageType.StandardSSD;
                 }
             }
 
@@ -198,7 +194,7 @@ namespace Neon.Kube
 
             if (!ByteUnits.TryParse(this.DiskSize, out var driveSizeBytes) || driveSizeBytes <= 1)
             {
-                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(AzureHostingOptions)}.{nameof(DiskSize)}={DiskSize}] which is not valid.");
+                throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(AzureNodeOptions)}.{nameof(DiskSize)}={DiskSize}] which is not valid.");
             }
 
             var driveSizeGiB = AzureHelper.GetDiskSizeGiB(StorageType, driveSizeBytes);

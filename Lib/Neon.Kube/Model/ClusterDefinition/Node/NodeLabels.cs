@@ -562,7 +562,7 @@ namespace Neon.Kube
                         switch (label.Key)
                         {
                             case LabelAzureVmSize:          Node.Azure.VmSize = label.Value; break;
-                            case LabelAzureStorageType:     ParseCheck(label, () => { Node.Azure.StorageType = NeonHelper.ParseEnum<AzureStorageTypes>(label.Value); }); break;
+                            case LabelAzureStorageType:     ParseCheck(label, () => { Node.Azure.StorageType = NeonHelper.ParseEnum<AzureStorageType>(label.Value); }); break;
                             case LabelAzureDriveSize:       Node.Azure.DiskSize = label.Value; break;
                         }
                         break;

@@ -1182,7 +1182,7 @@ namespace Neon.Kube
                         throw new NotImplementedException();
                 }
 
-                if (node.Metadata.Azure.StorageType == AzureStorageTypes.UltraSSD)
+                if (node.Metadata.Azure.StorageType == AzureStorageType.UltraSSD)
                 {
                     if (!vmSku.Capabilities.Any(Capability => Capability.Name == "UltraSSDAvailable" && Capability.Value == "False"))
                     {
@@ -1196,7 +1196,7 @@ namespace Neon.Kube
                 node.Metadata.Labels.ComputeRam       = vmSize.MemoryInMB;
 
                 node.Metadata.Labels.StorageSize      = $"{AzureHelper.GetDiskSizeGiB(node.Metadata.Azure.StorageType, ByteUnits.Parse(node.Metadata.Azure.DiskSize))} GiB";
-                node.Metadata.Labels.StorageHDD       = node.Metadata.Azure.StorageType == AzureStorageTypes.StandardHDD;
+                node.Metadata.Labels.StorageHDD       = node.Metadata.Azure.StorageType == AzureStorageType.StandardHDD;
                 node.Metadata.Labels.StorageEphemeral = false;
                 node.Metadata.Labels.StorageLocal     = false;
                 node.Metadata.Labels.StorageRedundant = true;
@@ -1413,22 +1413,22 @@ namespace Neon.Kube
 
             switch (azureNodeOptions.StorageType)
             {
-                case AzureStorageTypes.PremiumSSD:
+                case AzureStorageType.PremiumSSD:
 
                     azureStorageType = StorageAccountTypes.PremiumLRS;
                     break;
 
-                case AzureStorageTypes.StandardHDD:
+                case AzureStorageType.StandardHDD:
 
                     azureStorageType = StorageAccountTypes.StandardLRS;
                     break;
 
-                case AzureStorageTypes.StandardSSD:
+                case AzureStorageType.StandardSSD:
 
                     azureStorageType = StorageAccountTypes.StandardSSDLRS;
                     break;
 
-                case AzureStorageTypes.UltraSSD:
+                case AzureStorageType.UltraSSD:
 
                     azureStorageType = StorageAccountTypes.UltraSSDLRS;
                     break;

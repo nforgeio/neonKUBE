@@ -258,5 +258,10 @@ namespace Neon.Kube
                 "0.1.0-alpha"
             }
             .AsReadOnly();
+
+        /// <summary>
+        /// The minimum supported cluster node disk size in GiB.
+        /// </summary>
+        public const int MinNodeDiskSizeGiB = 32;
     }
 }

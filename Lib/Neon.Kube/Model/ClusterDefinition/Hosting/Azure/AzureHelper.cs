@@ -47,7 +47,6 @@ namespace Neon.Kube
 
         /// <summary>
         /// The maximum number of hosted load balanced TCP/UDP endpoints allowed  in a cluster deployed to Azure.
-        /// This is an Azure limit.
         /// </summary>
         public const int MaxHostedEndpoints = 150;
 
@@ -58,99 +57,100 @@ namespace Neon.Kube
         /// <param name="storageType">Specifies the disk storage type.</param>
         /// <param name="driveSizeBytes">The requested size in bytes.</param>
         /// <returns>The actual Azure disk size in GiB.</returns>
-        public static decimal GetDiskSizeGiB(AzureStorageTypes storageType, decimal driveSizeBytes)
+        public static decimal GetDiskSizeGiB(AzureStorageType storageType, decimal driveSizeBytes)
         {
             var driveSizeGiB = driveSizeBytes / ByteUnits.GibiBytes;
 
             switch (storageType)
             {
-                case AzureStorageTypes.StandardHDD:
-                case AzureStorageTypes.StandardSSD:
-                case AzureStorageTypes.PremiumSSD:
+                case AzureStorageType.StandardHDD:
+                case AzureStorageType.StandardSSD:
+                case AzureStorageType.PremiumSSD:
 
                     // Azure premium disks sizes: 32GiB, 64GiB, 128GiB, 512GiB, 1TiB, 2TiB, 4TiB, 8TiB, 16TiB or 32TiB.
 
                     if (driveSizeGiB <= 32)
                     {
-                        return 32;
+                        driveSizeGiB = 32;
                     }
                     else if (driveSizeGiB <= 64)
                     {
-                        return 64;
+                        driveSizeGiB = 64;
                     }
                     else if (driveSizeGiB <= 128)
                     {
-                        return 128;
+                        driveSizeGiB = 128;
                     }
                     else if (driveSizeGiB <= 256)
                     {
-                        return 256;
+                        driveSizeGiB = 256;
                     }
                     else if (driveSizeGiB <= 512)
                     {
-                        return 512;
+                        driveSizeGiB = 512;
                     }
                     else if (driveSizeGiB <= 1024)
                     {
-                        return 1024;
+                        driveSizeGiB = 1024;
                     }
                     else if (driveSizeGiB <= 2048)
                     {
-                        return 2048;
+                        driveSizeGiB = 2048;
                     }
                     else if (driveSizeGiB <= 4096)
                     {
-                        return 4096;
+                        driveSizeGiB = 4096;
                     }
                     else if (driveSizeGiB <= 8192)
                     {
-                        return 8192;
+                        driveSizeGiB = 8192;
                     }
                     else if (driveSizeGiB <= 16314)
                     {
-                        return 16314;
+                        driveSizeGiB = 16314;
                     }
                     else
                     {
-                        return 32768;
+                        driveSizeGiB = 32768;
                     }
+                    break;
 
-                case AzureStorageTypes.UltraSSD:
+                case AzureStorageType.UltraSSD:
 
                     // Azure ultra disks sizes: 4GiB, 8GiB, 16GiB, 32GiB, 64GiB, 128GiB, 256GiB, 512GiB
                     //                          and 1TiB - 64TiB in 1TiB increments
 
                     if (driveSizeGiB < 4)
                     {
-                        return 4;
+                        driveSizeGiB = 4;
                     }
                     else if (driveSizeGiB < 8)
                     {
-                        return 8;
+                        driveSizeGiB = 8;
                     }
                     else if (driveSizeGiB < 16)
                     {
-                        return 16;
+                        driveSizeGiB = 16;
                     }
                     else if (driveSizeGiB < 32)
                     {
-                        return 32;
+                        driveSizeGiB = 32;
                     }
                     else if (driveSizeGiB < 64)
                     {
-                        return 64;
+                        driveSizeGiB = 64;
                     }
                     else if (driveSizeGiB < 128)
                     {
-                        return 128;
+                        driveSizeGiB = 128;
                     }
                     else if (driveSizeGiB < 256)
                     {
-                        return 256;
+                        driveSizeGiB = 256;
                     }
                     else if (driveSizeGiB < 512)
                     {
-                        return 512;
+                        driveSizeGiB = 512;
                     }
                     else if (driveSizeGiB < 65536)
                     {
@@ -163,17 +163,25 @@ namespace Neon.Kube
                             driveSizeTiB++;
                         }
 
-                        return driveSizeTiB * 1024;
+                        driveSizeGiB = driveSizeTiB * 1024;
                     }
                     else
                     {
-                        return 65536;
+                        driveSizeGiB = 65536;
                     }
+                    break;
 
                 default:
 
                     throw new NotImplementedException();
             }
+
+            if (driveSizeGiB < KubeConst.MinNodeDiskSizeGiB)
+            {
+                driveSizeGiB = KubeConst.MinNodeDiskSizeGiB;
+            }
+
+            return driveSizeGiB;
         }
     }
 }

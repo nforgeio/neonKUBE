@@ -84,6 +84,14 @@ namespace Neon.Kube
         public string AppPassword { get; set; }
 
         /// <summary>
+        /// Identifies the target Azure region (e.g. <b>westus</b>).
+        /// </summary>
+        [JsonProperty(PropertyName = "Region", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "region", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string Region { get; set; }
+
+        /// <summary>
         /// Azure resource group where all cluster components are to be provisioned.  This defaults
         /// to "neon-" plus the cluster name but can be customized as required.
         /// </summary>
@@ -91,14 +99,6 @@ namespace Neon.Kube
         [YamlMember(Alias = "resourceGroup", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string ResourceGroup { get; set; }
-
-        /// <summary>
-        /// Identifies the target Azure region (e.g. <b>westus</b>).
-        /// </summary>
-        [JsonProperty(PropertyName = "Region", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "region", ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string Region { get; set; }
 
         /// <summary>
         /// <para>
@@ -272,30 +272,36 @@ namespace Neon.Kube
         /// <summary>
         /// Specifies the default Azure storage type to be used when creating a
         /// node that does not specify the storage type in its <see cref="NodeOptions"/>.
-        /// This defaults to <see cref="AzureStorageTypes.StandardSSD"/>.
+        /// This defaults to <see cref="AzureStorageType.StandardSSD"/>.
         /// </summary>
         [JsonProperty(PropertyName = "DefaultStorageType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "defaultStorageType", ApplyNamingConventions = false)]
-        [DefaultValue(AzureStorageTypes.StandardSSD)]
-        public AzureStorageTypes DefaultStorageType { get; set; } = AzureStorageTypes.StandardSSD;
+        [DefaultValue(AzureStorageType.StandardSSD)]
+        public AzureStorageType DefaultStorageType { get; set; } = AzureStorageType.StandardSSD;
 
         /// <summary>
         /// Specifies the default Azure disk size to be used when creating a
         /// node that does not specify a disk size in its <see cref="NodeOptions"/>.
-        /// This defaults to <b>64 GiB</b>.
+        /// This defaults to <b>128 GiB</b>.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <see cref="AzureStorageTypes.StandardHDD"/>, <see cref="AzureStorageTypes.StandardSSD"/>, and
-        /// <see cref="AzureStorageTypes.PremiumSSD"/> disks may be provisioned in these
+        /// <see cref="AzureStorageType.StandardHDD"/>, <see cref="AzureStorageType.StandardSSD"/>, and
+        /// <see cref="AzureStorageType.PremiumSSD"/> disks may be provisioned in these
         /// sizes: <b>4GiB</b>, <b>8GiB</b>, <b>16GiB</b>, <b>32GiB</b>, <b>64GiB</b>, <b>128GiB</b>, <b>256GiB</b>, <b>512GiB</b>,
         /// <b>1TiB</b>, <b>2TiB</b>, <b>4TiB</b>, <b>8TiB</b>, <b>16TiB</b>, or <b>32TiB</b>.
         /// </para>
         /// <para>
-        /// <see cref="AzureStorageTypes.UltraSSD"/> based disks can be provisioned in these sizes:
+        /// <see cref="AzureStorageType.UltraSSD"/> based disks can be provisioned in these sizes:
         /// <b>4 GiB</b>,<b>8 GiB</b>,<b> GiB</b>,<b>16 GiB</b>,<b>32 GiB</b>,<b>64 GiB</b>,<b>128 GiB</b>,<b>256 GiB</b>,<b>512 GiB</b>,
         /// or from <b>1 TiB</b> to <b>64TiB</b> in increments of <b>1 TiB</b>.
         /// </para>
+        /// <remarks>
+        /// <note>
+        /// Node disks smaller than 32 GiB are not supported by neonKUBE.  We'll automatically
+        /// upgrade the disk size when necessary.
+        /// </note>
+        /// </remarks>
         /// <note>
         /// This size will be rounded up to the next valid disk size for the given storage type
         /// and set to the maximum allowed size, when necessary.
@@ -412,10 +418,10 @@ namespace Neon.Kube
 
             if (string.IsNullOrEmpty(DefaultDiskSize))
             {
-                DefaultDiskSize = AzureHostingOptions.defaultDiskSize;
+                DefaultDiskSize = defaultDiskSize;
             }
 
-            if (!ByteUnits.TryParse(DefaultDiskSize, out var defaultDiskSize) || defaultDiskSize <= 0)
+            if (!ByteUnits.TryParse(DefaultDiskSize, out var diskSize) || diskSize <= 0)
             {
                 throw new ClusterDefinitionException($"Azure hosting [{nameof(DefaultDiskSize)}={DefaultDiskSize}] is not valid.");
             }

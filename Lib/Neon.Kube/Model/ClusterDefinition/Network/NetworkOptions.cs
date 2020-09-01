@@ -117,7 +117,7 @@ namespace Neon.Kube
         /// </note>
         /// <note>
         /// <para>
-        /// For cloud deployments, nodes will be assigned reasolable IP addresses by default.  You may assigned specific
+        /// For cloud deployments, nodes will be assigned reasonable IP addresses by default.  You may assigned specific
         /// IP addresses to nodes within the to nodes if necessary, with a couple reservations:
         /// </para>
         /// <list type="bullet">
@@ -135,6 +135,10 @@ namespace Neon.Kube
         ///     cloud subnet.
         ///     </item>
         /// </list>
+        /// </note>
+        /// <note>
+        /// For cloud deployments, <see cref="NodeSubnet"/> may not be larger than a <b>/16</b> (64K addresses) or
+        /// smaller than a <b>/28</b> (16 addresses).
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "NodeSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -354,6 +358,16 @@ namespace Neon.Kube
                     if (!NetworkCidr.TryParse(NodeSubnet, out nodeSubnet))
                     {
                         throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodeSubnet)}={NodeSubnet}] is not a valid IPv4 subnet.");
+                    }
+
+                    if (nodeSubnet.PrefixLength > 16)
+                    {
+                        throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodeSubnet)}={NodeSubnet}] cannot be larger than [/16] (64K addresses).");
+                    }
+
+                    if (nodeSubnet.PrefixLength > 28)
+                    {
+                        throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodeSubnet)}={NodeSubnet}] cannot be smaller than [/28] (16 addresses).");
                     }
                 }
             }

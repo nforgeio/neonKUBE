@@ -51,6 +51,8 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Static members
 
+        private const string ubuntuAmi = "ami-0758470213bdd23b1";
+
         /// <summary>
         /// Ensures that the assembly hosting this hosting manager is loaded.
         /// </summary>
