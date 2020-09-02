@@ -1,0 +1,43 @@
+{{- if and .Values.serviceMonitor.enabled .Values.serviceMonitor.master.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "yugabyte.fullname" . }}-yb-master
+  labels:
+    app: "yb-master"
+    release: {{ .Release.Name | quote }}
+    chart: "{{ .Chart.Name }}"
+    component: "{{ .Values.Component }}"
+    {{- with .Values.serviceMonitor.extraLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  jobLabel: "release"
+  selector:
+    matchLabels:
+      app: "yb-master"
+      release: {{ .Release.Name | quote }}
+      service-type: "headless"
+  endpoints:
+
+  {{- with .Values.serviceMonitor.master }}
+  {{- if .enabled }}
+  - port: {{ .port }}
+    path: {{ .path }}
+    {{- if .interval }}
+    interval: {{ .interval }}
+    {{- else }}
+    interval: {{ $.Values.serviceMonitor.interval }}
+    {{- end }}
+    relabelings:
+    - targetLabel: "group"
+      replacement: "yb-master"
+    - targetLabel: "export_type"
+      replacement: "master_export"
+    - targetLabel: "node_prefix"
+      replacement: {{ $.Release.Name | quote }}
+    metricRelabelings:
+    {{- toYaml $.Values.serviceMonitor.commonMetricRelabelings | nindent 4 }}
+  {{- end }}
+  {{- end }}
+{{- end }}

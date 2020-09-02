@@ -1,0 +1,397 @@
+{{- $root := . -}}
+---
+{{- if $root.Values.tls.enabled }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: yugabyte-tls-client-cert
+  namespace: "{{ $root.Release.Namespace }}"
+  labels:
+    heritage: {{ $root.Values.helm2Legacy | ternary "Tiller" ($root.Release.Service | quote) }}
+    release: {{ $root.Release.Name | quote }}
+    chart: "{{ $root.Chart.Name }}"
+    component: "{{ $root.Values.Component }}"
+type: Opaque
+data:
+{{- $rootCAClient := buildCustomCert $root.Values.tls.rootCA.cert $root.Values.tls.rootCA.key -}}
+{{- $client := genSignedCert "yugabyte" ( default nil ) ( default nil ) 3650 $rootCAClient }}
+  root.crt: {{ $rootCAClient.Cert | b64enc }}
+  yugabytedb.crt: {{ $client.Cert | b64enc }}
+  yugabytedb.key: {{ $client.Key | b64enc }}
+---
+{{- end }}
+
+{{- range .Values.Services }}
+{{- $service := . -}}
+
+{{- if $root.Values.tls.enabled }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ $service.label }}-yugabyte-tls-cert
+  namespace: "{{ $root.Release.Namespace }}"
+  labels:
+    app: "{{ $service.label }}"
+    heritage: {{ $root.Values.helm2Legacy | ternary "Tiller" ($root.Release.Service | quote) }}
+    release: {{ $root.Release.Name | quote }}
+    chart: "{{ $root.Chart.Name }}"
+    component: "{{ $root.Values.Component }}"
+type: Opaque
+data:
+{{- $rootCA := buildCustomCert $root.Values.tls.rootCA.cert $root.Values.tls.rootCA.key -}}
+{{- $replicas := (eq .name "yb-masters") | ternary $root.Values.replicas.master $root.Values.replicas.tserver -}}
+{{- range $index := until ( int ( $replicas ) ) }}
+{{- $node := printf "%s-%d.%s.%s.svc.%s" $service.label $index $service.name $root.Release.Namespace $root.Values.domainName }}
+{{- $dns1 := printf "*.*.%s" $root.Release.Namespace }}
+{{- $dns2 := printf "%s.svc.%s" $dns1 $root.Values.domainName }}
+{{- $server := genSignedCert $node ( default nil ) (list $dns1 $dns2 ) 3650 $rootCA }}
+  node.{{$node}}.crt: {{ $server.Cert | b64enc }}
+  node.{{$node}}.key: {{ $server.Key | b64enc }}
+{{- end }}
+  ca.crt: {{ $rootCA.Cert | b64enc }}
+{{- end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .name }}"
+  labels:
+    app: "{{ .label }}"
+    heritage: {{ $root.Values.helm2Legacy | ternary "Tiller" ($root.Release.Service | quote) }}
+    release: {{ $root.Release.Name | quote }}
+    chart: "{{ $root.Chart.Name }}"
+    component: "{{ $root.Values.Component }}"
+    service-type: "headless"
+spec:
+  clusterIP: None
+  ports:
+    {{- range $label, $port := .ports }}
+    - name: {{ $label | quote }}
+      port: {{ $port }}
+    {{- end}}
+  selector:
+    app: "{{ .label }}"
+
+{{ if $root.Values.enableLoadBalancer }}
+{{- range $endpoint :=  $root.Values.serviceEndpoints }}
+{{- if eq $service.label $endpoint.app }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ $endpoint.name }}"
+  annotations:
+{{ toYaml $endpoint.annotations | indent 4 }}
+  labels:
+    app: "{{ $endpoint.app }}"
+    heritage: {{ $root.Values.helm2Legacy | ternary "Tiller" ($root.Release.Service | quote) }}
+    release: {{ $root.Release.Name | quote }}
+    chart: "{{ $root.Chart.Name }}"
+    component: "{{ $root.Values.Component }}"
+spec:
+  {{ if eq $root.Release.Service "Tiller" }}
+  clusterIP:
+  {{ else }}
+  {{ if $endpoint.clusterIP }}
+  clusterIP: {{ $endpoint.clusterIP }}
+  {{- end }}
+  {{- end }}
+  ports:
+    {{- range $label, $port := $endpoint.ports }}
+    - name: {{ $label | quote }}
+      port: {{ $port }}
+    {{- end}}
+  selector:
+    app: "{{ $endpoint.app }}"
+  type: {{ $endpoint.type }}
+{{- end}}
+{{- end}}
+{{ end }}
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: "{{ .label }}"
+  namespace: "{{ $root.Release.Namespace }}"
+  labels:
+    app: "{{ .label }}"
+    heritage: {{ $root.Values.helm2Legacy | ternary "Tiller" ($root.Release.Service | quote) }}
+    release: {{ $root.Release.Name | quote }}
+    chart: "{{ $root.Chart.Name }}"
+    component: "{{ $root.Values.Component }}"
+spec:
+  serviceName: "{{ .name }}"
+  podManagementPolicy: {{ $root.Values.PodManagementPolicy }}
+  {{ if eq .name "yb-masters" }}
+  replicas: {{ $root.Values.replicas.master }}
+  {{ else }}
+  replicas: {{ $root.Values.replicas.tserver  }}
+  {{ end }}
+  {{- $storageInfo := (eq .name "yb-masters") | ternary $root.Values.storage.master $root.Values.storage.tserver -}}
+  {{ if not $root.Values.storage.ephemeral }}
+  volumeClaimTemplates:
+    {{- range $index := until (int ($storageInfo.count )) }}
+    - metadata:
+        name: datadir{{ $index }}
+        annotations:
+          volume.beta.kubernetes.io/storage-class: {{ $storageInfo.storageClass }}
+        labels:
+          heritage: {{ $root.Values.helm2Legacy | ternary "Tiller" ($root.Release.Service | quote) }}
+          release: {{ $root.Release.Name | quote }}
+          chart: "{{ $root.Chart.Name }}"
+          component: "{{ $root.Values.Component }}"
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        {{- if $storageInfo.storageClass }}
+        storageClassName: {{ $storageInfo.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ $storageInfo.size }}
+    {{- end }}
+  {{- end }}
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      {{ if eq .name "yb-masters" }}
+      partition: {{ $root.Values.partition.master }}
+      {{ else }}
+      partition: {{ $root.Values.partition.tserver }}
+      {{ end }}
+  selector:
+    matchLabels:
+      app: "{{ .label }}"
+  template:
+    metadata:
+      {{ if $root.Values.networkAnnotation }}
+      annotations:
+{{ toYaml $root.Values.networkAnnotation | indent 8}}
+      {{ end }}
+      labels:
+        app: "{{ .label }}"
+        heritage: {{ $root.Values.helm2Legacy | ternary "Tiller" ($root.Release.Service | quote) }}
+        release: {{ $root.Release.Name | quote }}
+        chart: "{{ $root.Chart.Name }}"
+        component: "{{ $root.Values.Component }}"
+    spec:
+      {{- if $root.Values.Image.pullSecretName }}
+      imagePullSecrets:
+      - name: {{ $root.Values.Image.pullSecretName }}
+      {{ end }}
+      {{- if $root.Values.nodeSelector }}
+      nodeSelector:
+      {{ toYaml $root.Values.nodeSelector | indent 8 }}
+      {{- end }}
+      affinity:
+        # Set the anti-affinity selector scope to YB masters.
+        {{ if $root.Values.AZ }}
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: failure-domain.beta.kubernetes.io/zone
+                operator: In
+                values:
+                - {{ $root.Values.AZ }}
+        {{ end }}
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - "{{ .label }}"
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - name: "{{ .label }}"
+        image: "{{ $root.Values.Image.repository }}:{{ $root.Values.Image.tag }}"
+        imagePullPolicy: {{ $root.Values.Image.pullPolicy }}
+        lifecycle:
+          postStart:
+            exec:
+              command:
+                - "sh"
+                - "-c"
+                - >
+                  mkdir -p /mnt/disk0/cores;
+                  mkdir -p /mnt/disk0/yb-data/scripts;
+                  if [ ! -f /mnt/disk0/yb-data/scripts/log_cleanup.sh ]; then
+                    if [ -f /home/yugabyte/bin/log_cleanup.sh ]; then
+                      cp /home/yugabyte/bin/log_cleanup.sh /mnt/disk0/yb-data/scripts;
+                    fi;
+                  fi
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: HOSTNAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        resources:
+        {{ if eq .name "yb-masters" }}
+{{ toYaml $root.Values.resource.master | indent 10 }}
+        {{ else }}
+{{ toYaml $root.Values.resource.tserver | indent 10 }}
+        {{ end }}
+        # core dumps are collected to workingDir if
+        # kernel.core_pattern is set to a relative path like
+        # core.%e.%p.%t ref:
+        # https://github.com/yugabyte/charts/issues/11
+        workingDir: "/mnt/disk0"
+        command:
+        {{ if eq .name "yb-masters" }}
+          - "/home/yugabyte/bin/yb-master"
+          {{ if not $root.Values.storage.ephemeral }}
+          - "--fs_data_dirs={{ template "yugabyte.fs_data_dirs" $storageInfo }}"
+          {{ else }}
+          - "--fs_data_dirs=/var/yugabyte"
+          {{- end }}
+          - "--rpc_bind_addresses={{ printf "$(HOSTNAME).%s.$(NAMESPACE).svc.%s" .name $root.Values.domainName }}"
+          - "--server_broadcast_addresses={{ printf "$(HOSTNAME).%s.$(NAMESPACE).svc.%s" .name $root.Values.domainName }}:7100"
+          {{ if $root.Values.isMultiAz }}
+          - "--master_addresses={{ $root.Values.masterAddresses}}"
+          - "--replication_factor={{ $root.Values.replicas.totalMasters }}"
+          {{ else }}
+          - "--master_addresses={{ template "yugabyte.master_addresses" $root }}"
+          - "--replication_factor={{ $root.Values.replicas.master }}"
+          {{ end }}
+          {{ if not $root.Values.disableYsql }}
+          - "--enable_ysql=true"
+          {{ else }}
+          - "--enable_ysql=false"
+          {{ end }}
+          - "--metric_node_name=$(HOSTNAME)"
+          - "--memory_limit_hard_bytes={{ template "yugabyte.memory_hard_limit" $root.Values.resource.master }}"
+          - "--stderrthreshold=0"
+          - "--num_cpus={{ ceil $root.Values.resource.master.requests.cpu }}"
+          - "--undefok=num_cpus,enable_ysql"
+          {{- range $flag, $override := $root.Values.gflags.master }}
+          - "--{{ $flag }}={{ $override }}"
+          {{- end}}
+          {{ if $root.Values.tls.enabled }}
+          - "--certs_dir=/opt/certs/yugabyte"
+          - "--use_node_to_node_encryption=true"
+          - "--allow_insecure_connections={{ $root.Values.tls.insecure }}"
+          {{- end }}
+        {{ else }}
+          - "/home/yugabyte/bin/yb-tserver"
+          - "--fs_data_dirs={{ template "yugabyte.fs_data_dirs" $storageInfo }}"
+          - "--server_broadcast_addresses={{ printf "$(HOSTNAME).%s.$(NAMESPACE).svc.%s" .name $root.Values.domainName }}:9100"
+          - "--rpc_bind_addresses={{ printf "$(HOSTNAME).%s.$(NAMESPACE).svc.%s" .name $root.Values.domainName }}"
+          - "--cql_proxy_bind_address={{ printf "$(HOSTNAME).%s.$(NAMESPACE).svc.%s" .name $root.Values.domainName }}"
+          {{ if not $root.Values.disableYsql }}
+          - "--enable_ysql=true"
+          - "--pgsql_proxy_bind_address=0.0.0.0:5433"
+          {{ else }}
+          - "--enable_ysql=false"
+          {{ end }}
+          {{ if $root.Values.isMultiAz }}
+          - "--tserver_master_addrs={{ $root.Values.masterAddresses}}"
+          {{ else }}
+          - "--tserver_master_addrs={{ template "yugabyte.master_addresses" $root }}"
+          {{ end }}
+          - "--metric_node_name=$(HOSTNAME)"
+          - "--memory_limit_hard_bytes={{ template "yugabyte.memory_hard_limit" $root.Values.resource.tserver }}"
+          - "--stderrthreshold=0"
+          - "--num_cpus={{ ceil $root.Values.resource.tserver.requests.cpu }}"
+          - "--undefok=num_cpus,enable_ysql"
+          {{- range $flag, $override := $root.Values.gflags.tserver }}
+          - "--{{ $flag }}={{ $override }}"
+          {{- end }}
+          {{ if $root.Values.tls.enabled }}
+          - "--certs_dir=/opt/certs/yugabyte"
+          - "--use_node_to_node_encryption=true"
+          - "--allow_insecure_connections={{ $root.Values.tls.insecure }}"
+          - "--use_client_to_server_encryption=true"
+          - "--certs_for_client_dir=/opt/certs/yugabyte"
+          {{- end }}
+        {{ end }}
+        ports:
+          {{- range $label, $port := .ports }}
+          - containerPort: {{ $port }}
+            name: {{ $label | quote }}
+          {{- end}}
+        volumeMounts:
+          {{ if not $root.Values.storage.ephemeral }}
+          {{- range $index := until (int ($storageInfo.count)) }}
+          - name: datadir{{ $index }}
+            mountPath: /mnt/disk{{ $index }}
+          {{- end }}
+          {{- end }}
+          {{- if $root.Values.tls.enabled }}
+          - name: {{ .label }}-yugabyte-tls-cert
+            mountPath: /opt/certs/yugabyte
+            readOnly: true
+          - name: yugabyte-tls-client-cert
+            mountPath: /root/.yugabytedb/
+            readOnly: true
+          {{- end }}
+
+      {{ if not $root.Values.storage.ephemeral }}
+      - name: yb-cleanup
+        image: busybox:1.31
+        env:
+        - name: USER
+          value: "yugabyte"
+        command:
+          - "/bin/sh"
+          - "-c"
+          - >
+            mkdir /var/spool/cron;
+            mkdir /var/spool/cron/crontabs;
+            echo "0 * * * * /home/yugabyte/scripts/log_cleanup.sh" | tee -a /var/spool/cron/crontabs/root;
+            crond;
+            while true; do
+              sleep 86400;
+            done
+        volumeMounts:
+          - name: datadir0
+            mountPath: /home/yugabyte/
+            subPath: yb-data
+      {{- end }}
+
+      volumes:
+        {{ if not $root.Values.storage.ephemeral }}
+        {{- range $index := until (int ($storageInfo.count)) }}
+        - name: datadir{{ $index }}
+          hostPath:
+            path: /mnt/disks/ssd{{ $index }}
+        {{- end }}
+        {{- end }}
+        {{- if $root.Values.tls.enabled }}
+        - name: {{ .label }}-yugabyte-tls-cert
+          secret:
+            secretName: {{ .label }}-yugabyte-tls-cert
+            defaultMode: 256
+        - name: yugabyte-tls-client-cert
+          secret:
+            secretName: yugabyte-tls-client-cert
+            defaultMode: 256
+        {{- end }}
+{{- if eq $root.Values.isMultiAz false }}
+---
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ .label }}-pdb
+spec:
+  maxUnavailable: {{ template "yugabyte.max_unavailable_for_quorum" $root }}
+  selector:
+    matchLabels:
+      app: {{ .label }}
+{{- end }}
+{{- end }}
