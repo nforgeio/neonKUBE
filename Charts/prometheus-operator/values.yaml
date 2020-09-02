@@ -1463,13 +1463,13 @@ prometheus:
     ## The remote_read spec configuration for Prometheus.
     ## ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#remotereadspec
     remoteRead:
-      - url: "http://m3coordinator-m3db-prometheus.monitoring:7201/api/v1/prom/remote/read"
-        readRecent: true
+    - readRecent: true
+      url: http://neon-metrics-cortex:9009/api/prom/remote_read
 
     ## The remote_write spec configuration for Prometheus.
     ## ref: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#remotewritespec
     remoteWrite:
-      - url: "http://m3coordinator-m3db-prometheus.monitoring:7201/api/v1/prom/remote/write"
+    - url: http://neon-metrics-cortex:9009/api/prom/push
 
     ## Resource limits & requests
     ##
