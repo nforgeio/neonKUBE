@@ -40,6 +40,10 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Time;
 
+using Amazon;
+using Amazon.Runtime;
+using Amazon.EC2;
+
 namespace Neon.Kube
 {
     /// <summary>
@@ -65,8 +69,10 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy    cluster;
-        private KubeSetupInfo   setupInfo;
+        private ClusterProxy        cluster;
+        private KubeSetupInfo       setupInfo;
+        private AwsHostingOptions   hostingOptions;
+        private bool                isConnected = false;
 
         /// <summary>
         /// Creates an instance that is only capable of validating the hosting
@@ -92,8 +98,9 @@ namespace Neon.Kube
 
             cluster.HostingManager = this;
 
-            this.cluster   = cluster;
-            this.setupInfo = setupInfo;
+            this.cluster        = cluster;
+            this.setupInfo      = setupInfo;
+            this.hostingOptions = cluster.Definition.Hosting.Aws;
         }
 
         /// <inheritdoc/>
@@ -117,6 +124,21 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
 
             throw new NotImplementedException("$todo(jefflill): Implement this.");
+        }
+
+        /// <summary>
+        /// Establishes the necessary client connections to AWS, if they're
+        /// not already connected.
+        /// </summary>
+        private void ConnectAws()
+        {
+            if (isConnected)
+            {
+                return;
+            }
+
+            var credentials = new BasicAWSCredentials(hostingOptions.AccessKeyId, hostingOptions.SecretAccessKey);
+            var ec2         = new AmazonEC2Client(credentials);
         }
 
         /// <inheritdoc/>

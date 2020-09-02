@@ -80,6 +80,15 @@ namespace Neon.Kube
         public string Zone { get; set; }
 
         /// <summary>
+        /// Returns the AWS region where the cluster will be provisioned.  This is
+        /// derived from <see cref="Zone"/> by removing the last character, which
+        /// is the zone suffix.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        public string Region => Zone?.Substring(0, Zone.Length - 1);
+
+        /// <summary>
         /// AWS resource group where all cluster components are to be provisioned.  This defaults
         /// to "neon-" plus the cluster name but can be customized as required.
         /// </summary>
