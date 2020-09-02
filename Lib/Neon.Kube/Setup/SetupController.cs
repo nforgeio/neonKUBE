@@ -53,8 +53,10 @@ namespace Neon.Kube
             public int                                          Number;
             public string                                       Label;
             public bool                                         Quiet;
-            public Action                                       GlobalAction;
-            public Action<SshProxy<NodeMetadata>, TimeSpan>     NodeAction;
+            public Action                                       SyncGlobalAction;
+            public Func<Task>                                   AsyncGlobalAction;
+            public Action<SshProxy<NodeMetadata>, TimeSpan>     SyncNodeAction;
+            public Func<SshProxy<NodeMetadata>, TimeSpan, Task> AsyncNodeAction;
             public Func<SshProxy<NodeMetadata>, bool>           Predicate;
             public StepStatus                                   Status;
             public int                                          ParallelLimit;
@@ -157,80 +159,10 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Appends a configuration step.
+        /// Adds a synchronous global configuration step.
         /// </summary>
         /// <param name="stepLabel">Brief step summary.</param>
-        /// <param name="nodeAction">
-        /// The action to be performed on each node.  Two parameters will be passed
-        /// to this action: the node's <see cref="SshProxy{T}"/> and a <see cref="TimeSpan"/>
-        /// indicating the amount of time the action should wait before performing
-        /// the operation, if the operation hasn't already been performed.
-        /// </param>
-        /// <param name="nodePredicate">
-        /// Optional predicate used to select the nodes that participate in the step
-        /// or <c>null</c> to select all nodes.
-        /// </param>
-        /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
-        /// <param name="noParallelLimit">
-        /// Optionally ignores the global <see cref="SetupController{T}.MaxParallel"/> 
-        /// limit for the new step when greater.
-        /// </param>
-        /// <param name="stepStaggerSeconds">
-        /// Optionally specifies the time delay used to stagger execution
-        /// of the nodes executing this step.  Setting a non-zero value of
-        /// perhaps 5 seconds will help mitigate problems with multiple
-        /// accessing nodes trying to download the same files from
-        /// the Internet at the same time, potentially causing the remote
-        /// endpoint to start throttling access.
-        /// </param>
-        /// <param name="position">
-        /// Optionally specifies the zero-based index of the position where the step is
-        /// to be inserted into the step list.
-        /// </param>
-        /// <param name="parallelLimit">
-        /// Optionally specifies the maximum number of operations to be performed
-        /// in parallel for this step, overriding the controller default.
-        /// </param>
-        public void AddStep(string stepLabel,
-                            Action<SshProxy<NodeMetadata>, TimeSpan> nodeAction,
-                            Func<SshProxy<NodeMetadata>, bool> nodePredicate = null,
-                            bool quiet = false,
-                            bool noParallelLimit = false,
-                            int stepStaggerSeconds = 0,
-                            int position = -1,
-                            int parallelLimit = 0)
-        {
-            nodeAction    = nodeAction ?? new Action<SshProxy<NodeMetadata>, TimeSpan>((n, d) => { });
-            nodePredicate = nodePredicate ?? new Func<SshProxy<NodeMetadata>, bool>(n => true);
-
-            if (position < 0)
-            {
-                position = steps.Count;
-            }
-
-            var step = new Step()
-            {
-                Label = stepLabel,
-                Quiet = quiet,
-                NodeAction = nodeAction,
-                Predicate = nodePredicate,
-                ParallelLimit = noParallelLimit ? UnlimitedParallel : 0,
-                StepStagger = TimeSpan.FromSeconds(stepStaggerSeconds)
-            };
-
-            if (parallelLimit > 0)
-            {
-                step.ParallelLimit = parallelLimit;
-            }
-
-            steps.Insert(position, step);
-        }
-
-        /// <summary>
-        /// Adds a global cluster configuration step.
-        /// </summary>
-        /// <param name="stepLabel">Brief step summary.</param>
-        /// <param name="action">The global action to be performed.</param>
+        /// <param name="action">The synchronous global action to be performed.</param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
         /// <param name="position">
         /// The optional zero-based index of the position where the step is
@@ -249,13 +181,41 @@ namespace Neon.Kube
                 {
                     Label        = stepLabel,
                     Quiet        = quiet,
-                    GlobalAction = action,
+                    SyncGlobalAction = action,
                     Predicate    = n => true,
                 });
         }
 
         /// <summary>
-        /// Adds a step that waits for nodes to be online.
+        /// Adds an asynchronous global configuration step.
+        /// </summary>
+        /// <param name="stepLabel">Brief step summary.</param>
+        /// <param name="action">The asynchronous global action to be performed.</param>
+        /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
+        /// <param name="position">
+        /// The optional zero-based index of the position where the step is
+        /// to be inserted into the step list.
+        /// </param>
+        public void AddGlobalStep(string stepLabel, Func<Task> action, bool quiet = false, int position = -1)
+        {
+            if (position < 0)
+            {
+                position = steps.Count;
+            }
+
+            steps.Insert(
+                position,
+                new Step()
+                {
+                    Label             = stepLabel,
+                    Quiet             = quiet,
+                    AsyncGlobalAction = action,
+                    Predicate         = n => true,
+                });
+        }
+
+        /// <summary>
+        /// Adds a synchronous global step that waits for nodes to be online.
         /// </summary>
         /// <param name="stepLabel">Brief step summary.</param>
         /// <param name="status">The optional node status.</param>
@@ -300,7 +260,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Adds a step that waits for a specified period of time.
+        /// Adds a synchronous global step that waits for a specified period of time.
         /// </summary>
         /// <param name="stepLabel">Brief step summary.</param>
         /// <param name="delay">The amount of time to wait.</param>
@@ -317,10 +277,10 @@ namespace Neon.Kube
         public void AddDelayStep(
             string                              stepLabel, 
             TimeSpan                            delay, 
-            string                              status = null,
+            string                              status        = null,
             Func<SshProxy<NodeMetadata>, bool>  nodePredicate = null, 
-            bool                                quiet = false, 
-            int                                 position = -1)
+            bool                                quiet         = false, 
+            int                                 position      = -1)
         {
             AddStep(stepLabel,
                 (node, stepDeley) =>
@@ -333,6 +293,147 @@ namespace Neon.Kube
                 quiet,
                 noParallelLimit: true,
                 position: position);
+        }
+
+        /// <summary>
+        /// Appends a synchronous node configuration step.
+        /// </summary>
+        /// <param name="stepLabel">Brief step summary.</param>
+        /// <param name="nodeAction">
+        /// The action to be performed on each node.  Two parameters will be passed
+        /// to this action: the node's <see cref="SshProxy{T}"/> and a <see cref="TimeSpan"/>
+        /// indicating the amount of time the action should wait before performing
+        /// the operation, if the operation hasn't already been performed.
+        /// </param>
+        /// <param name="nodePredicate">
+        /// Optional predicate used to select the nodes that participate in the step
+        /// or <c>null</c> to select all nodes.
+        /// </param>
+        /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
+        /// <param name="noParallelLimit">
+        /// Optionally ignores the global <see cref="SetupController{T}.MaxParallel"/> 
+        /// limit for the new step when greater.
+        /// </param>
+        /// <param name="stepStaggerSeconds">
+        /// Optionally specifies the time delay used to stagger execution
+        /// of the nodes executing this step.  Setting a non-zero value of
+        /// perhaps 5 seconds will help mitigate problems with multiple
+        /// accessing nodes trying to download the same files from
+        /// the Internet at the same time, potentially causing the remote
+        /// endpoint to start throttling access.
+        /// </param>
+        /// <param name="position">
+        /// Optionally specifies the zero-based index of the position where the step is
+        /// to be inserted into the step list.
+        /// </param>
+        /// <param name="parallelLimit">
+        /// Optionally specifies the maximum number of operations to be performed
+        /// in parallel for this step, overriding the controller default.
+        /// </param>
+        public void AddStep(string stepLabel,
+                            Action<SshProxy<NodeMetadata>, TimeSpan>    nodeAction,
+                            Func<SshProxy<NodeMetadata>, bool>          nodePredicate      = null,
+                            bool                                        quiet              = false,
+                            bool                                        noParallelLimit    = false,
+                            int                                         stepStaggerSeconds = 0,
+                            int                                         position           = -1,
+                            int                                         parallelLimit      = 0)
+        {
+            nodeAction    = nodeAction ?? new Action<SshProxy<NodeMetadata>, TimeSpan>((n, d) => { });
+            nodePredicate = nodePredicate ?? new Func<SshProxy<NodeMetadata>, bool>(n => true);
+
+            if (position < 0)
+            {
+                position = steps.Count;
+            }
+
+            var step = new Step()
+            {
+                Label          = stepLabel,
+                Quiet          = quiet,
+                SyncNodeAction = nodeAction,
+                Predicate      = nodePredicate,
+                ParallelLimit  = noParallelLimit ? UnlimitedParallel : 0,
+                StepStagger    = TimeSpan.FromSeconds(stepStaggerSeconds)
+            };
+
+            if (parallelLimit > 0)
+            {
+                step.ParallelLimit = parallelLimit;
+            }
+
+            steps.Insert(position, step);
+        }
+
+        /// <summary>
+        /// Appends an asynchronous node configuration step.
+        /// </summary>
+        /// <param name="stepLabel">Brief step summary.</param>
+        /// <param name="nodeAction">
+        /// The action to be performed on each node.  Two parameters will be passed
+        /// to this action: the node's <see cref="SshProxy{T}"/> and a <see cref="TimeSpan"/>
+        /// indicating the amount of time the action should wait before performing
+        /// the operation, if the operation hasn't already been performed.
+        /// </param>
+        /// <param name="nodePredicate">
+        /// Optional predicate used to select the nodes that participate in the step
+        /// or <c>null</c> to select all nodes.
+        /// </param>
+        /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
+        /// <param name="noParallelLimit">
+        /// Optionally ignores the global <see cref="SetupController{T}.MaxParallel"/> 
+        /// limit for the new step when greater.
+        /// </param>
+        /// <param name="stepStaggerSeconds">
+        /// Optionally specifies the time delay used to stagger execution
+        /// of the nodes executing this step.  Setting a non-zero value of
+        /// perhaps 5 seconds will help mitigate problems with multiple
+        /// accessing nodes trying to download the same files from
+        /// the Internet at the same time, potentially causing the remote
+        /// endpoint to start throttling access.
+        /// </param>
+        /// <param name="position">
+        /// Optionally specifies the zero-based index of the position where the step is
+        /// to be inserted into the step list.
+        /// </param>
+        /// <param name="parallelLimit">
+        /// Optionally specifies the maximum number of operations to be performed
+        /// in parallel for this step, overriding the controller default.
+        /// </param>
+        public void AddStep(
+            string stepLabel,
+            Func<SshProxy<NodeMetadata>, TimeSpan, Task>    nodeAction,
+            Func<SshProxy<NodeMetadata>, bool>              nodePredicate      = null,
+            bool                                            quiet              = false,
+            bool                                            noParallelLimit    = false,
+            int                                             stepStaggerSeconds = 0,
+            int                                             position           = -1,
+            int                                             parallelLimit      = 0)
+        {
+            nodeAction    = nodeAction ?? new Func<SshProxy<NodeMetadata>, TimeSpan, Task>((n, d) => { return Task.CompletedTask; });
+            nodePredicate = nodePredicate ?? new Func<SshProxy<NodeMetadata>, bool>(n => true);
+
+            if (position < 0)
+            {
+                position = steps.Count;
+            }
+
+            var step = new Step()
+            {
+                Label           = stepLabel,
+                Quiet           = quiet,
+                AsyncNodeAction = nodeAction,
+                Predicate       = nodePredicate,
+                ParallelLimit   = noParallelLimit ? UnlimitedParallel : 0,
+                StepStagger     = TimeSpan.FromSeconds(stepStaggerSeconds)
+            };
+
+            if (parallelLimit > 0)
+            {
+                step.ParallelLimit = parallelLimit;
+            }
+
+            steps.Insert(position, step);
         }
 
         /// <summary>
@@ -361,7 +462,7 @@ namespace Neon.Kube
 
             // We don't display node status if there aren't any node specific steps.
 
-            hasNodeSteps = steps.Exists(s => s.NodeAction != null);
+            hasNodeSteps = steps.Exists(s => s.SyncNodeAction != null || s.AsyncNodeAction != null);
 
             try
             {
@@ -485,7 +586,7 @@ namespace Neon.Kube
             NeonHelper.ThreadRun(
                 () =>
                 {
-                    if (step.NodeAction != null)
+                    if (step.SyncNodeAction != null)
                     {
                         // Compute the amount of time to delay before executing
                         // the step on each node.  We're going to spread the step
@@ -514,7 +615,7 @@ namespace Neon.Kube
                             }
                         }
 
-                        // Execute the step on the nodes.
+                        // Execute the step on the selected nodes.
 
                         Parallel.ForEach(stepNodes, parallelOptions,
                             node =>
@@ -529,7 +630,7 @@ namespace Neon.Kube
                                         stepDelay = nodeDefinition.StepDelay;
                                     }
 
-                                    step.NodeAction(node, stepDelay);
+                                    step.SyncNodeAction(node, stepDelay);
 
                                     node.Status  = "[x] DONE";
                                     node.IsReady = true;
@@ -541,14 +642,132 @@ namespace Neon.Kube
                                 }
                             });
                     }
-                    else if (step.GlobalAction != null)
+                    else if (step.AsyncNodeAction != null)
+                    {
+                        // Compute the amount of time to delay before executing
+                        // the step on each node.  We're going to spread the step
+                        // delay evenly across the nodes.
+                        //
+                        // Note that this only works when [NodeMetadata==NodeDefinition]
+
+                        if (typeof(NodeMetadata) == typeof(NodeDefinition))
+                        {
+                            if (step.StepStagger <= TimeSpan.Zero || stepNodes.Count() <= 1)
+                            {
+                                foreach (var node in stepNodes)
+                                {
+                                    (node.Metadata as NodeDefinition).StepDelay = TimeSpan.Zero;
+                                }
+                            }
+                            else
+                            {
+                                var delay = TimeSpan.Zero;
+
+                                foreach (var node in stepNodes)
+                                {
+                                    (node.Metadata as NodeDefinition).StepDelay = delay;
+                                    delay += step.StepStagger;
+                                }
+                            }
+                        }
+
+                        // Execute the step on the selected nodes.
+
+                        Parallel.ForEach(stepNodes, parallelOptions,
+                            node =>
+                            {
+                                try
+                                {
+                                    var nodeDefinition = node.Metadata as NodeDefinition;
+                                    var stepDelay      = TimeSpan.Zero;
+
+                                    if (nodeDefinition != null && nodeDefinition.StepDelay > TimeSpan.Zero)
+                                    {
+                                        stepDelay = nodeDefinition.StepDelay;
+                                    }
+
+                                    var runTask = Task.Run(
+                                        async () =>
+                                        {
+                                            await step.AsyncNodeAction(node, stepDelay);
+                                        });
+
+                                    runTask.Wait();
+
+                                    node.Status  = "[x] DONE";
+                                    node.IsReady = true;
+                                }
+                                catch (Exception e)
+                                {
+                                    var aggregateException = e as AggregateException;
+
+                                    if (aggregateException != null && aggregateException.InnerExceptions.Count == 1)
+                                    {
+                                        e = aggregateException.InnerExceptions.Single();
+                                    }
+
+                                    node.Fault(NeonHelper.ExceptionError(e));
+                                    node.LogException(e);
+                                }
+                            });
+                    }
+                    else if (step.SyncGlobalAction != null)
                     {
                         try
                         {
-                            step.GlobalAction();
+                            step.SyncGlobalAction();
                         }
                         catch (Exception e)
                         {
+                            // $todo(jefflill):
+                            //
+                            // We're going to report global step exceptions as if they
+                            // happened on the first master node because there's no
+                            // other place to log this in the current design.
+                            //
+                            // I suppose we could create a [global.log] file or something
+                            // and put this there and also indicate this somewhere in
+                            // the console output, but this is not worth messing with
+                            // right now.
+
+                            if (typeof(NodeMetadata) == typeof(NodeDefinition))
+                            {
+                                var firstMaster = nodes
+                                    .Where(n => (n.Metadata as NodeDefinition).IsMaster)
+                                    .OrderBy(n => n.Name)
+                                    .First();
+
+                                firstMaster.Fault(NeonHelper.ExceptionError(e));
+                                firstMaster.LogException(e);
+                            }
+                        }
+
+                        foreach (var node in stepNodes)
+                        {
+                            node.IsReady = true;
+                        }
+                    }
+                    else if (step.AsyncGlobalAction != null)
+                    {
+                        try
+                        {
+                            var runTask = Task.Run(
+                                async () =>
+                                {
+                                    await step.AsyncGlobalAction();
+                                });
+
+                            runTask.Wait();
+                        }
+                        catch (Exception e)
+                        {
+                            var aggregateException = e as AggregateException;
+
+                            if (aggregateException != null && aggregateException.InnerExceptions.Count == 1)
+                            {
+                                e = aggregateException.InnerExceptions.Single();
+                            }
+
                             // $todo(jefflill):
                             //
                             // We're going to report global step exceptions as if they

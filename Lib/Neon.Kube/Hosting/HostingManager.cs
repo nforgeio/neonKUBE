@@ -100,7 +100,7 @@ namespace Neon.Kube
         public virtual bool GenerateSecurePassword => true;
 
         /// <inheritdoc/>
-        public abstract bool Provision(bool force, string secureSshPassword, string orgSshPassword = null);
+        public abstract Task<bool> ProvisionAsync(bool force, string secureSshPassword, string orgSshPassword = null);
 
         /// <inheritdoc/>
         public virtual void AddPostProvisionSteps(SetupController<NodeDefinition> controller)
@@ -111,18 +111,21 @@ namespace Neon.Kube
         public virtual bool CanManageRouter => false;
 
         /// <inheritdoc/>
-        public virtual void UpdatePublicIngress()
+        public virtual async Task UpdatePublicIngressAsync()
         {
+            await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
-        public virtual void EnablePublicSsh()
+        public virtual async Task EnablePublicSshAsync()
         {
+            await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
-        public virtual void DisablePublicSsh()
+        public virtual async Task DisablePublicSshAsync()
         {
+            await Task.CompletedTask;
         }
 
         /// <inheritdoc/>

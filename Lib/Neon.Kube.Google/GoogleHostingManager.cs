@@ -110,10 +110,11 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override bool Provision(bool force, string secureSshPassword, string orgSshPassword = null)
+        public override async Task<bool> ProvisionAsync(bool force, string secureSshPassword, string orgSshPassword = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
 
+            await Task.CompletedTask;
             throw new NotImplementedException("$todo(jefflill): Implement this.");
         }
 
@@ -121,21 +122,27 @@ namespace Neon.Kube
         public override bool CanManageRouter => true;
 
         /// <inheritdoc/>
-        public override void UpdatePublicIngress()
+        public override async Task UpdatePublicIngressAsync()
         {
             // $todo(jefflil): Implement this
+
+            await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
-        public override void EnablePublicSsh()
+        public override async Task EnablePublicSshAsync()
         {
             // $todo(jefflil): Implement this
+
+            await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
-        public override void DisablePublicSsh()
+        public override async Task DisablePublicSshAsync()
         {
             // $todo(jefflil): Implement this
+
+            await Task.CompletedTask;
         }
 
         /// <inheritdoc/>

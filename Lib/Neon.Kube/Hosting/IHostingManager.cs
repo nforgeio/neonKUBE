@@ -94,10 +94,10 @@ namespace Neon.Kube
         /// cloud managers  indicating that they can manage the upstream router or load balancer) 
         /// this method will leave the public SSH NAT rules in place so that cluster provisioning
         /// and setup will be able to establish SSH connections to each cluster node.  This is
-        /// equivalent to calling <see cref="EnablePublicSsh"/>.
+        /// equivalent to calling <see cref="EnablePublicSshAsync"/>.
         /// </para>
         /// </remarks>
-        bool Provision(bool force, string secureSshPassword, string orgSshPassword = null);
+        Task<bool> ProvisionAsync(bool force, string secureSshPassword, string orgSshPassword = null);
 
         /// <summary>
         /// Adds any necessary post-provisioning steps to a setup controller.
@@ -126,7 +126,7 @@ namespace Neon.Kube
         /// because we don't have the ability to manage physical routers yet.
         /// </note>
         /// </summary>
-        void UpdatePublicIngress();
+        Task UpdatePublicIngressAsync();
 
         /// <summary>
         /// <para>
@@ -147,7 +147,7 @@ namespace Neon.Kube
         /// because we don't have the ability to manage physical routers yet.
         /// </note>
         /// </summary>
-        void EnablePublicSsh();
+        Task EnablePublicSshAsync();
 
         /// <summary>
         /// <para>
@@ -161,7 +161,7 @@ namespace Neon.Kube
         /// because we don't have the ability to manage physical routers yet.
         /// </note>
         /// </summary>
-        void DisablePublicSsh();
+        Task DisablePublicSshAsync();
 
         /// <summary>
         /// Returns the FQDN or IP address (as a string) and the port to use
@@ -171,7 +171,7 @@ namespace Neon.Kube
         /// <returns>A <b>(string Address, int Port)</b> tuple.</returns>
         /// <remarks>
         /// This will return the direct private node endpoint by default.  If
-        /// <see cref="EnablePublicSsh"/> has been called and is supported by 
+        /// <see cref="EnablePublicSshAsync"/> has been called and is supported by 
         /// the hosting manager, then this returns the public address of the
         /// cluster along with the public NAT port.
         /// </remarks>

@@ -54,6 +54,7 @@ using Neon.Time;
 using INetworkSecurityGroup = Microsoft.Azure.Management.Network.Fluent.INetworkSecurityGroup;
 using SecurityRuleProtocol  = Microsoft.Azure.Management.Network.Fluent.Models.SecurityRuleProtocol;
 using TransportProtocol     = Microsoft.Azure.Management.Network.Fluent.Models.TransportProtocol;
+using Microsoft.Azure.Management.BatchAI.Fluent;
 
 namespace Neon.Kube
 {
@@ -836,7 +837,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override bool Provision(bool force, string secureSshPassword, string orgSshPassword = null)
+        public override async Task<bool> ProvisionAsync(bool force, string secureSshPassword, string orgSshPassword = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
 
@@ -911,17 +912,17 @@ namespace Neon.Kube
             if (!controller.Run(leaveNodesConnected: false))
             {
                 Console.WriteLine("*** One or more Azure provisioning steps failed.");
-                return false;
+                return await Task.FromResult(false);
             }
 
-            return true;
+            return await Task.FromResult(true);
         }
 
         /// <inheritdoc/>
         public override bool CanManageRouter => true;
 
         /// <inheritdoc/>
-        public override void UpdatePublicIngress()
+        public override async Task UpdatePublicIngressAsync()
         {
             LoadNetworkResources();
 
@@ -936,20 +937,23 @@ namespace Neon.Kube
             }
 
             UpdateNetwork(operations);
+            await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
-        public override void EnablePublicSsh()
+        public override async Task EnablePublicSshAsync()
         {
             LoadNetworkResources();
             UpdateNetwork(NetworkOperations.AddPublicSshRules);
+            await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
-        public override void DisablePublicSsh()
+        public override async Task DisablePublicSshAsync()
         {
             LoadNetworkResources();
             UpdateNetwork(NetworkOperations.RemovePublicSshRules);
+            await Task.CompletedTask;
         }
 
         /// <summary>

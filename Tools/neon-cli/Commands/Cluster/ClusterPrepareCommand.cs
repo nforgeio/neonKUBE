@@ -339,7 +339,7 @@ Server Requirements:
                     contextExtension.Save();
                 }
 
-                if (!hostingManager.Provision(force, contextExtension.SshPassword, orgSshPassword))
+                if (!hostingManager.ProvisionAsync(force, contextExtension.SshPassword, orgSshPassword).Result)
                 {
                     Program.Exit(1);
                 }
