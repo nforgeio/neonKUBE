@@ -199,6 +199,29 @@ namespace Neon.Kube
                     throw new ClusterDefinitionException(error);
                 }
             }
+
+            if (!AllowPodsOnMasters.HasValue)
+            {
+                AllowPodsOnMasters = clusterDefinition.Workers.Count() == 0;
+            }
+
+            if (!clusterDefinition.Nodes.Any(n => n.Labels.Istio))
+            {
+                if (AllowPodsOnMasters.GetValueOrDefault())
+                {
+                    foreach (var n in clusterDefinition.Nodes)
+                    {
+                        n.Labels.Istio = true;
+                    };
+                }
+                else
+                {
+                    foreach (var w in clusterDefinition.Nodes.Where(n => n.IsWorker))
+                    {
+                        w.Labels.Istio = true;
+                    }
+                }
+            }
         }
 
         /// <summary>

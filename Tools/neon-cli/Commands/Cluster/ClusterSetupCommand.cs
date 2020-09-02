@@ -1335,21 +1335,10 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     firstMaster.InvokeIdempotentAction("setup/cluster-master-pods",
                         () =>
                         {
-                            var allowPodsOnMasters = false;
-
-                            if (cluster.Definition.Kubernetes.AllowPodsOnMasters.HasValue)
-                            {
-                                allowPodsOnMasters = cluster.Definition.Kubernetes.AllowPodsOnMasters.Value;
-                            }
-                            else
-                            {
-                                allowPodsOnMasters = cluster.Definition.Workers.Count() == 0;
-                            }
-
                             // The [kubectl taint] command looks like it can return a non-zero exit code.
                             // We'll ignore this.
 
-                            if (allowPodsOnMasters)
+                            if (cluster.Definition.Kubernetes.AllowPodsOnMasters.GetValueOrDefault())
                             {
                                 firstMaster.SudoCommand(@"until [ `kubectl get nodes | grep ""NotReady"" | wc -l ` == ""0"" ]; do     sleep 1; done", firstMaster.DefaultRunOptions & ~RunOptions.FaultOnError);
                                 firstMaster.SudoCommand("kubectl taint nodes --all node-role.kubernetes.io/master-", firstMaster.DefaultRunOptions & ~RunOptions.FaultOnError);
@@ -1874,22 +1863,6 @@ rm /tmp/calico.yaml
         /// <param name="master">The master node.</param>
         private void InstallIstio(SshProxy<NodeDefinition> master)
         {
-            if (!cluster.Definition.Nodes.Any(n => n.Labels.Istio))
-            {
-                var sbScript = new StringBuilder();
-
-                sbScript.AppendLineLinux("#!/bin/bash");
-
-                foreach (var node in cluster.Definition.Nodes.Where(n => n.Name.ToLower().Contains("worker")))
-                {
-                    sbScript.AppendLine();
-                    sbScript.AppendLineLinux($"kubectl label nodes --overwrite {node.Name} {ClusterDefinition.ReservedLabelPrefix}istio=true");
-                }
-
-                master.SudoCommand(CommandBundle.FromScript(sbScript));
-
-            }
-
             master.Status = "deploy: istio";
 
             var istioScript0 =
@@ -1904,7 +1877,7 @@ tar -xzf ""istioctl-{KubeVersions.IstioVersion}-linux-amd64.tar.gz""
 
 # setup istioctl
 cd ""$HOME"" || exit
-mkdir - p "".istioctl/bin""
+mkdir -p "".istioctl/bin""
 mv ""${{tmp}}/istioctl"" "".istioctl/bin/istioctl""
 chmod + x "".istioctl/bin/istioctl""
 rm - r ""${{tmp}}""
@@ -1931,18 +1904,13 @@ spec:
     - name: istio-ingressgateway
       enabled: true
       k8s:
-        hpaSpec:
-          maxReplicas: 5
-          minReplicas: 1
-          scaleTargetRef:
-            apiVersion: apps/v1
+        overlays:
+          - apiVersion: apps/v1
             kind: Deployment
             name: istio-ingressgateway
-          metrics:
-            - type: Resource
-              resource:
-                name: cpu
-                targetAverageUtilization: 80
+            patches:
+              - path: kind
+                value: DaemonSet
         resources:
           requests:
             cpu: 100m
@@ -1964,6 +1932,8 @@ spec:
       logging:
         level: ""default:info""
       logAsJson: true
+      defaultNodeSelector: 
+        neonkube.io/istio: true
     meshConfig:
       accessLogFile: ""/dev/stdout""
       accessLogFormat: '{{   ""authority"": ""%REQ(:AUTHORITY)%"",   ""mode"": ""%PROTOCOL%"",   ""upstream_service_time"": ""%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%"",   ""upstream_local_address"": ""%UPSTREAM_LOCAL_ADDRESS%"",   ""duration"": ""%DURATION%"",   ""request_duration"": ""%REQUEST_DURATION%"",   ""response_duration"": ""%RESPONSE_DURATION%"",   ""response_tx_duration"": ""%RESPONSE_TX_DURATION%"",   ""downstream_local_address"": ""%DOWNSTREAM_LOCAL_ADDRESS%"",   ""upstream_transport_failure_reason"": ""%UPSTREAM_TRANSPORT_FAILURE_REASON%"",   ""route_name"": ""%ROUTE_NAME%"",   ""response_code"": ""%RESPONSE_CODE%"",   ""response_code_details"": ""%RESPONSE_CODE_DETAILS%"",   ""user_agent"": ""%REQ(USER-AGENT)%"",   ""response_flags"": ""%RESPONSE_FLAGS%"",   ""start_time"": ""%START_TIME(%s.%6f)%"",   ""method"": ""%REQ(:METHOD)%"",   ""host"": ""%REQ(:Host)%"",   ""referer"": ""%REQ(:Referer)%"",   ""request_id"": ""%REQ(X-REQUEST-ID)%"",   ""forwarded_host"": ""%REQ(X-FORWARDED-HOST)%"",   ""forwarded_proto"": ""%REQ(X-FORWARDED-PROTO)%"",   ""upstream_host"": ""%UPSTREAM_HOST%"",   ""downstream_local_uri_san"": ""%DOWNSTREAM_LOCAL_URI_SAN%"",   ""downstream_peer_uri_san"": ""%DOWNSTREAM_PEER_URI_SAN%"",   ""downstream_local_subject"": ""%DOWNSTREAM_LOCAL_SUBJECT%"",   ""downstream_peer_subject"": ""%DOWNSTREAM_PEER_SUBJECT%"",   ""downstream_peer_issuer"": ""%DOWNSTREAM_PEER_ISSUER%"",   ""downstream_tls_session_id"": ""%DOWNSTREAM_TLS_SESSION_ID%"",   ""downstream_tls_cipher"": ""%DOWNSTREAM_TLS_CIPHER%"",   ""downstream_tls_version"": ""%DOWNSTREAM_TLS_VERSION%"",   ""downstream_peer_serial"": ""%DOWNSTREAM_PEER_SERIAL%"",   ""downstream_peer_cert"": ""%DOWNSTREAM_PEER_CERT%"",   ""client_ip"": ""%REQ(X-FORWARDED-FOR)%"",   ""requested_server_name"": ""%REQUESTED_SERVER_NAME%"",   ""bytes_received"": ""%BYTES_RECEIVED%"",   ""bytes_sent"": ""%BYTES_SENT%"",   ""upstream_cluster"": ""%UPSTREAM_CLUSTER%"",   ""downstream_remote_address"": ""%DOWNSTREAM_REMOTE_ADDRESS%"",   ""path"": ""%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%"" }}'
@@ -1971,6 +1941,7 @@ spec:
     gateways:
       istio-ingressgateway:
         type: NodePort
+        externalTrafficPolicy: Local
         sds:
           enabled: true
         ports:
@@ -2125,27 +2096,27 @@ istioctl install -f istio-cni.yaml
 
             // Install metrics persistence if required.
 
-            if (cluster.Definition.Monitor.Prometheus.Persistence && cluster.Definition.Nodes.Any(n => n.Labels.M3DB == true))
-            {
-                // Install an Etcd cluster to the monitoring namespace
+            //if (cluster.Definition.Monitor.Prometheus.Persistence && cluster.Definition.Nodes.Any(n => n.Labels.M3DB == true))
+            //{
+            //    // Install an Etcd cluster to the monitoring namespace
 
-                firstMaster.InvokeIdempotentAction("setup/cluster-deploy-etcd",
-                    () =>
-                    {
-                        InstallEtcd(firstMaster);
-                    });
+            //    firstMaster.InvokeIdempotentAction("setup/cluster-deploy-etcd",
+            //        () =>
+            //        {
+            //            InstallEtcd(firstMaster);
+            //        });
 
-                // Install an M3DB cluster to the monitoring namespace
+            //    // Install an M3DB cluster to the monitoring namespace
 
-                firstMaster.InvokeIdempotentAction("setup/cluster-deploy-m3db",
-                    () =>
-                    {
-                        InstallM3db(firstMaster);
-                    });
+            //    firstMaster.InvokeIdempotentAction("setup/cluster-deploy-m3db",
+            //        () =>
+            //        {
+            //            InstallM3db(firstMaster);
+            //        });
 
-            }
-        
-            // Install an Prometheus cluster to the monitoring namespace
+            //}
+
+            //// Install an Prometheus cluster to the monitoring namespace
 
             firstMaster.InvokeIdempotentAction("setup/cluster-deploy-prometheus",
                 () =>
@@ -2153,7 +2124,7 @@ istioctl install -f istio-cni.yaml
                     InstallPrometheus(firstMaster);
                 });
 
-            // Install Grafana to the monitoring namespace
+            //// Install Grafana to the monitoring namespace
             firstMaster.InvokeIdempotentAction("setup/cluster-deploy-grafana",
                 () =>
                 {
@@ -2162,38 +2133,40 @@ istioctl install -f istio-cni.yaml
 
             // Install Elasticsearch.
 
-            if (cluster.Definition.Nodes.Any(n => n.Labels.Elasticsearch == true))
+            if (cluster.Definition.Monitor.Elasticsearch.Enabled)
             {
                 firstMaster.InvokeIdempotentAction("setup/cluster-deploy-elasticsearch",
                 () =>
                 {
                     InstallElasticSearch(firstMaster);
                 });
+
+                // Setup Fluentd.
+
+                firstMaster.InvokeIdempotentAction("setup/cluster-deploy-fluentd",
+                    () =>
+                    {
+                        InstallFluentd(firstMaster).Wait();
+                    });
+
+                // Setup Fluent-Bit.
+
+                firstMaster.InvokeIdempotentAction("setup/cluster-deploy-fluent-bit",
+                    () =>
+                    {
+                        InstallFluentBit(firstMaster).Wait();
+                    });
+
+                // Setup Kibana.
+
+                firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kibana",
+                    () =>
+                    {
+                        InstallKibana(firstMaster).Wait();
+                    });
             }
 
-            // Setup Fluentd.
-
-            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-fluentd",
-                () =>
-                {
-                    InstallFluentd(firstMaster).Wait();
-                });
-
-            // Setup Fluent-Bit.
-
-            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-fluent-bit",
-                () =>
-                {
-                    InstallFluentBit(firstMaster).Wait();
-                });            
-
-            // Setup Kibana.
-
-            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kibana",
-                () =>
-                {
-                    InstallKibana(firstMaster).Wait();
-                });
+            
 
             // Setup cluster-manager.
 
@@ -2357,7 +2330,7 @@ rm -rf {chartName}*
                 () =>
                 {
                     var i = 0;
-                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.M3DB == true))
+                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.M3DB))
                     {
                         var volume = new V1PersistentVolume()
                         {
@@ -2460,7 +2433,7 @@ rm -rf {chartName}*
                 () =>
                 {
                     var i = 0;
-                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.M3DB == true))
+                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.M3DB))
                     {
                         var volume = new V1PersistentVolume()
                         {
@@ -2526,7 +2499,7 @@ rm -rf {chartName}*
                     var values = new List<KeyValuePair<string, object>>();
                     var i = 0;
 
-                    foreach (var n in cluster.Definition.Nodes.Where(l => l.Labels.M3DB == true))
+                    foreach (var n in cluster.Definition.Nodes.Where(l => l.Labels.M3DB))
                     {
                         var args = new string[] { "label", "nodes", "--overwrite", n.Name, $"neonkube.io/m3db.faultdomain={i}" };
                         NeonHelper.ExecuteAsync("kubectl", args).Wait();
@@ -2610,7 +2583,7 @@ rm -rf {chartName}*
                 () =>
                 {
                     var i = 0;
-                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Elasticsearch == true))
+                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Elasticsearch))
                     {
                         var volume = new V1PersistentVolume()
                         {
@@ -2672,9 +2645,15 @@ rm -rf {chartName}*
                     var monitorOptions = cluster.Definition.Monitor;
                     var values         = new List<KeyValuePair<string, object>>();
 
-                    values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.resources.requests.storage", cluster.Definition.Monitor.Elasticsearch.DiskSize));
+                    values.Add(new KeyValuePair<string, object>("replicas", cluster.Nodes.Where(n => n.Metadata.Labels.Elasticsearch).Count()));
+                    values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.resources.requests.storage", monitorOptions.Elasticsearch.DiskSize));
                     values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
                     values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
+
+                    if (cluster.Nodes.Where(n => n.Metadata.Labels.Elasticsearch).Count() == 1)
+                    {
+                        values.Add(new KeyValuePair<string, object>("minimumMasterNodes", 1));
+                    }
 
                     if (monitorOptions.Elasticsearch.Resources != null)
                     {
@@ -2735,7 +2714,12 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: fluentd";
 
-            await InstallHelmChartAsync(master, "fluentd", @namespace: "monitoring", timeout: 300);
+            var values = new List<KeyValuePair<string, object>>();
+            values.Add(new KeyValuePair<string, object>($"autoscaling.minReplicas", (Math.Max(1, cluster.Definition.Workers.Count() % 6))));
+            values.Add(new KeyValuePair<string, object>($"autoscaling.maxReplicas", (Math.Max(1, cluster.Definition.Workers.Count()))));
+
+
+            await InstallHelmChartAsync(master, "fluentd", @namespace: "monitoring", timeout: 300, values: values);
         }
 
         /// <summary>
@@ -2804,6 +2788,10 @@ rm -rf {chartName}*
                 () =>
                 {
                     master.Status = "label: nodes";
+
+                    if (cluster.Nodes.Count() == 1)
+                    {
+                    }
 
                     try
                     {

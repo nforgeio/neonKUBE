@@ -97,7 +97,23 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"[{nameof(ElasticsearchOptions)}.{nameof(LogRetentionDays)}={LogRetentionDays}] is valid.  This must be at least one day.");
             }
 
-
+            if (!clusterDefinition.Nodes.Any(n => n.Labels.Elasticsearch))
+            {
+                if (clusterDefinition.Kubernetes.AllowPodsOnMasters.GetValueOrDefault())
+                {
+                    foreach (var n in clusterDefinition.Nodes)
+                    {
+                        n.Labels.Elasticsearch = true;
+                    }
+                }
+                else
+                {
+                    foreach (var w in clusterDefinition.Nodes.Where(n => n.IsWorker))
+                    {
+                        w.Labels.Elasticsearch = true;
+                    }
+                }
+            }
         }
     }
 }
