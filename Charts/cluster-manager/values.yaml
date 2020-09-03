@@ -10,7 +10,7 @@ image:
   pullPolicy: Always
 
 logging:
-  level: debug
+  level: info
 
 nameOverride: ""
 fullnameOverride: ""
