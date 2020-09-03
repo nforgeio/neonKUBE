@@ -147,6 +147,10 @@ spec:
       spec:
         accessModes:
           - "ReadWriteOnce"
+        {{- if $storageInfo.selector }}
+        selector: 
+          {{- toYaml $storageInfo.selector | nindent 10 }}
+        {{- end }}
         {{- if $storageInfo.storageClass }}
         storageClassName: {{ $storageInfo.storageClass }}
         {{- end }}
@@ -233,6 +237,10 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: status.podIP
+        - name: HOST_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
         - name: HOSTNAME
           valueFrom:
             fieldRef:
@@ -260,7 +268,7 @@ spec:
           {{ else }}
           - "--fs_data_dirs=/var/yugabyte"
           {{- end }}
-          - "--rpc_bind_addresses={{ printf "$(HOSTNAME).%s.$(NAMESPACE).svc.%s" .name $root.Values.domainName }}"
+          - "--rpc_bind_addresses=0.0.0.0:7100" # {{ printf "$(HOSTNAME).%s.$(NAMESPACE).svc.%s" .name $root.Values.domainName }},127.0.0.1"
           - "--server_broadcast_addresses={{ printf "$(HOSTNAME).%s.$(NAMESPACE).svc.%s" .name $root.Values.domainName }}:7100"
           {{ if $root.Values.isMultiAz }}
           - "--master_addresses={{ $root.Values.masterAddresses}}"
@@ -275,9 +283,13 @@ spec:
           - "--enable_ysql=false"
           {{ end }}
           - "--metric_node_name=$(HOSTNAME)"
+          {{ if $root.Values.resource.master }}
           - "--memory_limit_hard_bytes={{ template "yugabyte.memory_hard_limit" $root.Values.resource.master }}"
+          {{- end}}
           - "--stderrthreshold=0"
+          {{ if $root.Values.resource.master }}
           - "--num_cpus={{ ceil $root.Values.resource.master.requests.cpu }}"
+          {{- end}}
           - "--undefok=num_cpus,enable_ysql"
           {{- range $flag, $override := $root.Values.gflags.master }}
           - "--{{ $flag }}={{ $override }}"
@@ -291,8 +303,8 @@ spec:
           - "/home/yugabyte/bin/yb-tserver"
           - "--fs_data_dirs={{ template "yugabyte.fs_data_dirs" $storageInfo }}"
           - "--server_broadcast_addresses={{ printf "$(HOSTNAME).%s.$(NAMESPACE).svc.%s" .name $root.Values.domainName }}:9100"
-          - "--rpc_bind_addresses={{ printf "$(HOSTNAME).%s.$(NAMESPACE).svc.%s" .name $root.Values.domainName }}"
-          - "--cql_proxy_bind_address={{ printf "$(HOSTNAME).%s.$(NAMESPACE).svc.%s" .name $root.Values.domainName }}"
+          - "--rpc_bind_addresses=0.0.0.0:9100" # {{ printf "$(HOSTNAME).%s.$(NAMESPACE).svc.%s" .name $root.Values.domainName }},127.0.0.1"
+          - "--cql_proxy_bind_address=0.0.0.0:9042"
           {{ if not $root.Values.disableYsql }}
           - "--enable_ysql=true"
           - "--pgsql_proxy_bind_address=0.0.0.0:5433"
@@ -305,9 +317,13 @@ spec:
           - "--tserver_master_addrs={{ template "yugabyte.master_addresses" $root }}"
           {{ end }}
           - "--metric_node_name=$(HOSTNAME)"
+          {{ if $root.Values.resource.tserver }}
           - "--memory_limit_hard_bytes={{ template "yugabyte.memory_hard_limit" $root.Values.resource.tserver }}"
+          {{ end }}
           - "--stderrthreshold=0"
+          {{ if $root.Values.resource.tserver }}
           - "--num_cpus={{ ceil $root.Values.resource.tserver.requests.cpu }}"
+          {{ end }}
           - "--undefok=num_cpus,enable_ysql"
           {{- range $flag, $override := $root.Values.gflags.tserver }}
           - "--{{ $flag }}={{ $override }}"
@@ -330,6 +346,7 @@ spec:
           {{- range $index := until (int ($storageInfo.count)) }}
           - name: datadir{{ $index }}
             mountPath: /mnt/disk{{ $index }}
+            readOnly: false
           {{- end }}
           {{- end }}
           {{- if $root.Values.tls.enabled }}
@@ -362,6 +379,7 @@ spec:
           - name: datadir0
             mountPath: /home/yugabyte/
             subPath: yb-data
+            readOnly: false
       {{- end }}
 
       volumes:

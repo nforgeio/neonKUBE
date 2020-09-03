@@ -10,26 +10,33 @@ Image:
 storage:
   ephemeral: false  # will not allocate PVs when true
   master:
-    count: 2
-    size: 10Gi
-    storageClass: standard
+    count: 1
+    size: 1Gi
+    storageClass: local-storage
+    selector:
+      matchLabels:
+        neonMetrics: yb-master
   tserver:
-    count: 2
-    size: 10Gi
-    storageClass: standard
+    count: 1
+    size: 1Gi
+    storageClass: local-storage
+    selector:
+      matchLabels:
+        neonMetrics: yb-tserver
+
 
 resource:
   master:
     requests:
-      cpu: 2
-      memory: 2Gi
+      cpu: 100m
+      memory: 128Mi
     limits:
       cpu: 2
       memory: 2Gi
   tserver:
     requests:
-      cpu: 2
-      memory: 4Gi
+      cpu: 100m
+      memory: 128Mi
     limits:
       cpu: 2
       memory: 4Gi
@@ -39,8 +46,8 @@ replicas:
   tserver: 3
 
 partition:
-  master: 0
-  tserver: 0
+  master: 3
+  tserver: 3
 
 tls:
   # Set to true to enable the TLS.
@@ -67,38 +74,40 @@ domainName: "cluster.local"
 
 serviceEndpoints:
   - name: "yb-master-ui"
-    type: LoadBalancer
+    type: NodePort
     app: "yb-master"
     ports:
-      ui: "7000"
+      http-ui: "7000"
 
   - name: "yb-tserver-service"
-    type: LoadBalancer
+    type: NodePort
     app: "yb-tserver"
     ports:
-      yql-port: "9042"
-      yedis-port: "6379"
-      ysql-port: "5433"
+      tcp-yql: "9042"
+      tcp-yedis: "6379"
+      tcp-ysql: "5433"
 
 Services:
   - name: "yb-masters"
     label: "yb-master"
     memory_limit_to_ram_ratio: 0.85
     ports:
-      ui: "7000"
-      rpc-port: "7100"
+      http-ui: "7000"
+      tcp-rpc-m: "7100"
+      tcp-rpc-t: "9100"
 
   - name: "yb-tservers"
     label: "yb-tserver"
     ports:
-      ui: "9000"
-      rpc-port: "7100"
-      yql-port: "9042"
-      yedis-port: "6379"
-      ysql-port: "5433"
-      ycql-metrics: "12000"
-      yedis-metrics: "11000"
-      ysql-metrics: "13000"
+      http-ui: "9000"
+      tcp-rpc-m: "7100"
+      tcp-rpc-t: "9100"
+      tcp-yql: "9042"
+      tcp-yedis: "6379"
+      tcp-ysql: "5433"
+      http-ycql-met: "12000"
+      http-yedis-met: "11000"
+      http-ysql-met: "13000"
 
 
 serviceMonitor:
@@ -117,29 +126,29 @@ serviceMonitor:
   ## Configurations of ServiceMonitor for yb-master
   master:
     enabled: true
-    port: "ui"
+    port: "http-ui"
     interval: ""
     path: "/prometheus-metrics"
 
   ## Configurations of ServiceMonitor for yb-tserver
   tserver:
     enabled: true
-    port: "ui"
+    port: "http-ui"
     interval: ""
     path: "/prometheus-metrics"
   ycql:
     enabled: true
-    port: "ycql-metrics"
+    port: "http-ycql-met"
     interval: ""
     path: "/prometheus-metrics"
   ysql:
     enabled: true
-    port: "ysql-metrics"
+    port: "http-ysql-met"
     interval: ""
     path: "/prometheus-metrics"
   yedis:
     enabled: true
-    port: "yedis-metrics"
+    port: "http-yedis-met"
     interval: ""
     path: "/prometheus-metrics"
 
