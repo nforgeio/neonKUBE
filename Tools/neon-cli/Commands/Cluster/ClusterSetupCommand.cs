@@ -1984,6 +1984,8 @@ spec:
       excludeNamespaces:
        - istio-system
        - kube-system
+       - kube-node-lease
+       - kube-public
        - jobs
       logLevel: info
 EOF
