@@ -52,10 +52,10 @@ volumeClaimTemplate:
   storageClassName: "local-storage"
   selector:
     matchLabels:
-      etcd: monitoring
+      neonMetrics: etcd
   resources:
     requests:
-      storage: 10Gi
+      storage: 1Gi
 
 ## This is only available when persistentVolume is false:
 ## If persistentVolume is not enabled, one can choose to use memory mode for ETCD by setting memoryMode to "true".
@@ -68,7 +68,7 @@ memoryMode: false
 nodeSelector: {}
 tolerations:
   - effect: NoSchedule
-    key: neonkube.io/m3
+    key: neonkube.io/metrics
     operator: Exists
 affinity: {}
 extraEnv: []
