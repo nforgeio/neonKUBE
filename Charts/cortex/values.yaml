@@ -78,6 +78,12 @@ cortexConfig:
         period: 168h
 
   storage:
+    boltdb:
+      directory: /tmp/cortex/index
+    filesystem:
+      directory: /tmp/cortex/chunks
+    delete_store:
+      store: boltdb
     yugabyte:
       addresses: yb-tservers # configure yugabyte addresses here.
       keyspace: cortex   # configure desired keyspace here.
