@@ -59,13 +59,15 @@ metrics:
   serviceMonitor:
     enabled: true
     additionalLabels: {}
-    # namespace: monitoring
-    # interval: 30s
-    # scrapeTimeout: 10s
+    namespace: monitoring
+    interval: 30s
+    scrapeTimeout: 10s
 
 annotations:
   prometheus.io/scrape: "true"
   prometheus.io/port: "24231"
+  traffic.sidecar.istio.io/excludeInboundPorts: '24231'
+  traffic.sidecar.istio.io/excludeOutboundPorts: '24231'
 
 ingress:
   enabled: false

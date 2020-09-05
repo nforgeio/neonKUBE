@@ -172,8 +172,15 @@ spec:
       app: "{{ .label }}"
   template:
     metadata:
-      {{ if $root.Values.networkAnnotation }}
       annotations:
+      {{ if eq .name "yb-masters" }}
+        traffic.sidecar.istio.io/excludeInboundPorts: '7000'
+        traffic.sidecar.istio.io/excludeOutboundPorts: '7000'
+      {{ else }}
+        traffic.sidecar.istio.io/excludeInboundPorts: '9000,11000,12000,13000'
+        traffic.sidecar.istio.io/excludeOutboundPorts: '9000,11000,12000,13000'
+      {{ end }}
+      {{ if $root.Values.networkAnnotation }}
 {{ toYaml $root.Values.networkAnnotation | indent 8}}
       {{ end }}
       labels:

@@ -10,7 +10,7 @@ prometheus:
   scrapeInterval: 15s
 
   security:
-    enabled: true
+    enabled: false
 
   # Enabling this option will generate a Prometheus resource, causing the operator
   # to create a prometheus deployment according to the generated spec. It will also
