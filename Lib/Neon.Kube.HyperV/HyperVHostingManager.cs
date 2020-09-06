@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// $todo(jefflill): Remove this after we actually implement htis hosting manager.
+// $todo(jefflill): Remove this after we actually implement this hosting manager.
 
 #pragma warning disable CS0169
 
@@ -83,7 +83,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates an instance that is capable of provisioning the cluster.
+        /// Creates an instance that is capable of provisioning a cluster on Hyper-V servers.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
         /// <param name="setupInfo">Specifies the cluster setup information.</param>

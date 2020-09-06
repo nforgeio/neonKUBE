@@ -69,10 +69,12 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy        cluster;
-        private KubeSetupInfo       setupInfo;
-        private AwsHostingOptions   hostingOptions;
-        private bool                isConnected = false;
+        private ClusterProxy            cluster;
+        private KubeSetupInfo           setupInfo;
+        private AwsHostingOptions       hostingOptions;
+        private bool                    isConnected = false;
+        private BasicAWSCredentials     credentials;
+        private AmazonEC2Client         ec2;
 
         /// <summary>
         /// Creates an instance that is only capable of validating the hosting
@@ -83,7 +85,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates an instance that is capable of provisioning the cluster.
+        /// Creates an instance that is capable of provisioning a cluster on AWS.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
         /// <param name="setupInfo">Specifies the cluster setup information.</param>
@@ -110,6 +112,11 @@ namespace Neon.Kube
             {
                 GC.SuppressFinalize(this);
             }
+
+            isConnected = false;
+
+            ec2?.Dispose();
+            ec2 = null;
         }
 
         /// <inheritdoc/>
@@ -138,8 +145,10 @@ namespace Neon.Kube
                 return;
             }
 
-            var credentials = new BasicAWSCredentials(hostingOptions.AccessKeyId, hostingOptions.SecretAccessKey);
-            var ec2         = new AmazonEC2Client(credentials);
+            credentials = new BasicAWSCredentials(hostingOptions.AccessKeyId, hostingOptions.SecretAccessKey);
+            ec2         = new AmazonEC2Client(credentials);
+
+            isConnected = true;
         }
 
         /// <inheritdoc/>

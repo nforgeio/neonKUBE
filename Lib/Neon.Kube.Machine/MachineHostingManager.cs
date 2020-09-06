@@ -45,7 +45,7 @@ using Couchbase.IO;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Manages cluster provisioning directly on bare metal or virtual machines.
+    /// Manages cluster provisioning directly on manually provisioned machines or virtual machines.
     /// </summary>
     [HostingProvider(HostingEnvironment.Machine)]
     public partial class MachineHostingManager : HostingManager
@@ -81,7 +81,8 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates an instance that is capable of provisioning the cluster.
+        /// Creates an instance that is capable of provisioning a cluster on manually provisioned
+        /// servers or virtual machines.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
         /// <param name="setupInfo">Specifies the cluster setup information.</param>

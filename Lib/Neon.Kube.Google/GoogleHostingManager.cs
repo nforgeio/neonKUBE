@@ -75,7 +75,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates an instance that is capable of provisioning the cluster.
+        /// Creates an instance that is capable of provisioning a cluster on Google Cloud.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
         /// <param name="setupInfo">Specifies the cluster setup information.</param>
