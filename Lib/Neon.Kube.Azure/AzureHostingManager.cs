@@ -276,6 +276,7 @@ namespace Neon.Kube
             /// </summary>
             /// <param name="clusterVersion">Specifies the neonKUBE cluster version.</param>
             /// <param name="ubuntuVersion">Specifies the Ubuntu image version.</param>
+            /// <param name="ubuntuBuild">Specifies the Ubuntu build.</param>
             /// <param name="vmGen">Specifies the Azure image generation (1 or 2).</param>
             /// <param name="isPrepared">
             /// Pass <c>true</c> for Ubuntu images that have already seen basic
@@ -283,15 +284,17 @@ namespace Neon.Kube
             /// for unmodified base Ubuntu images.
             /// <param name="imageRef">Specifies the Azure VM image reference.</param>
             /// </param>
-            public AzureUbuntuImage(string clusterVersion, string ubuntuVersion, int vmGen, bool isPrepared, ImageReference imageRef)
+            public AzureUbuntuImage(string clusterVersion, string ubuntuVersion, string ubuntuBuild, int vmGen, bool isPrepared, ImageReference imageRef)
             {
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterVersion), nameof(clusterVersion));
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(ubuntuVersion), nameof(ubuntuVersion));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(ubuntuBuild), nameof(ubuntuBuild));
                 Covenant.Requires<ArgumentException>(vmGen == 1 || vmGen == 2, nameof(vmGen));
                 Covenant.Requires<ArgumentNullException>(imageRef != null, nameof(imageRef));
 
                 this.ClusterVersion = SemanticVersion.Parse(clusterVersion);
                 this.UbuntuVersion  = ubuntuVersion;
+                this.UbuntuBuild    = ubuntuBuild;
                 this.VmGen          = vmGen;
                 this.IsPrepared     = isPrepared;
                 this.ImageRef       = imageRef;
@@ -306,6 +309,11 @@ namespace Neon.Kube
             /// Returns the Ubuntu version deployed by the image.
             /// </summary>
             public string UbuntuVersion { get; private set; }
+
+            /// <summary>
+            /// Returns the Ubuntu build version.
+            /// </summary>
+            public string UbuntuBuild { get; private set; }
 
             /// <summary>
             /// <para>
@@ -366,7 +374,7 @@ namespace Neon.Kube
         private static string NodeNameTag = "neonkube.io.node.name";
 
         /// <summary>
-        /// Returns the list of supported Ubuntu images in the Azure Marketplace.
+        /// Returns the list of supported Ubuntu images from the Azure Marketplace.
         /// </summary>
         private static IReadOnlyList<AzureUbuntuImage> ubuntuImages;
 
@@ -394,7 +402,7 @@ namespace Neon.Kube
 
             ubuntuImages = new List<AzureUbuntuImage>()
             {
-                new AzureUbuntuImage("0.1.0-alpha", "20.04", vmGen: 1, isPrepared: false,
+                new AzureUbuntuImage("0.1.0-alpha", "20.04", "20.04.202007290", vmGen: 1, isPrepared: false,
                     new ImageReference()
                     {
                         Publisher = "Canonical",
@@ -403,7 +411,7 @@ namespace Neon.Kube
                         Version   = "20.04.202007290"
                     }),
 
-                new AzureUbuntuImage("0.1.0-alpha", "20.04", vmGen: 2, isPrepared: false,
+                new AzureUbuntuImage("0.1.0-alpha", "20.04", "20.04.202007290s", vmGen: 2, isPrepared: false,
                     new ImageReference()
                     {
                         Publisher = "Canonical",
@@ -533,18 +541,18 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
+        private KubeSetupInfo                           setupInfo;
         private ClusterProxy                            cluster;
         private string                                  clusterName;
         private string                                  nodeUsername;
         private string                                  nodePassword;
+        private HostingOptions                          hostingOptions;
         private CloudOptions                            cloudOptions;
         private AzureHostingOptions                     azureOptions;
-        private string                                  region;
         private AzureCredentials                        azureCredentials;
-        private string                                  resourceGroup;
-        private KubeSetupInfo                           setupInfo;
-        private HostingOptions                          hostingOptions;
         private NetworkOptions                          networkOptions;
+        private string                                  region;
+        private string                                  resourceGroup;
         private Dictionary<string, AzureNode>           azureNodes;
         private IAzure                                  azure;
 
@@ -601,17 +609,17 @@ namespace Neon.Kube
 
             cluster.HostingManager = this;
 
+            this.setupInfo                   = setupInfo;
             this.cluster                     = cluster;
             this.clusterName                 = cluster.Name;
-            this.azureOptions                = cluster.Definition.Hosting.Azure;
-            this.cloudOptions                = cluster.Definition.Hosting.Cloud;
-            this.region                      = azureOptions.Region;
-            this.resourceGroup               = azureOptions.ResourceGroup ?? $"neon-{clusterName}";
-            this.setupInfo                   = setupInfo;
             this.hostingOptions              = cluster.Definition.Hosting;
+            this.cloudOptions                = hostingOptions.Cloud;
+            this.azureOptions                = hostingOptions.Azure;
             this.cloudOptions                = hostingOptions.Cloud;
             this.networkOptions              = cluster.Definition.Network;
             this.nameToAvailabilitySet       = new Dictionary<string, IAvailabilitySet>(StringComparer.InvariantCultureIgnoreCase);
+            this.region                      = azureOptions.Region;
+            this.resourceGroup               = azureOptions.ResourceGroup ?? $"neon-{clusterName}";
 
             // Initialize the component names as they will be deployed to Azure.  Note that we're
             // going to prefix each name with the Azure item type convention described here:
@@ -735,105 +743,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            var networkOptions = clusterDefinition.Network;
-
-            // Ensure that any explicit node IP address assignments are located
-            // within the nodes subnet and do not conflict with any of the addresses
-            // reserved by the cloud provider or neonKUBE.  We're also going to 
-            // require that the nodes subnet have at least 256 addresses.
-
-            var nodeSubnet = NetworkCidr.Parse(networkOptions.NodeSubnet);
-
-            if (nodeSubnet.AddressCount < 256)
-            {
-                throw new ClusterDefinitionException($"[{nameof(networkOptions.NodeSubnet)}={networkOptions.NodeSubnet}] is too small.  Cloud subnets must include at least 256 addresses (at least a /24 network).");
-            }
-
-            const int reservedCount = KubeConst.CloudVNetStartReservedIPs + KubeConst.CloudVNetEndReservedIPs;
-
-            if (clusterDefinition.Nodes.Count() > nodeSubnet.AddressCount - reservedCount)
-            {
-                throw new ClusterDefinitionException($"The cluster includes [{clusterDefinition.Nodes.Count()}] which will not fit within the [{nameof(networkOptions.NodeSubnet)}={networkOptions.NodeSubnet}] after accounting for [{reservedCount}] reserved addresses.");
-            }
-
-            var firstValidAddressUint = NetHelper.AddressToUint(nodeSubnet.FirstAddress) + KubeConst.CloudVNetStartReservedIPs;
-            var firstValidAddress     = NetHelper.UintToAddress(firstValidAddressUint);
-            var lastValidAddressUint  = NetHelper.AddressToUint(nodeSubnet.LastAddress) - KubeConst.CloudVNetEndReservedIPs;
-            var lastValidAddress      = NetHelper.UintToAddress(lastValidAddressUint);
-
-            foreach (var node in clusterDefinition.SortedNodes.OrderBy(node => node.Name))
-            {
-                if (string.IsNullOrEmpty(node.Address))
-                {
-                    // Ignore nodes with unassigned addresses.
-
-                    continue;
-                }
-
-                var address = IPAddress.Parse(node.Address);
-
-                if (!nodeSubnet.Contains(address))
-                {
-                    throw new ClusterDefinitionException($"Node [{node.Name}] is assigned [{node.Address}={node.Address}] which is outside of [{nameof(networkOptions.NodeSubnet)}={networkOptions.NodeSubnet}].");
-                }
-
-                var addressUint = NetHelper.AddressToUint(address);
-
-                if (addressUint < firstValidAddressUint)
-                {
-                    throw new ClusterDefinitionException($"Node [{node.Name}] defines IP address [{node.Address}={node.Address}] which is reserved.  The first valid node address [{nameof(networkOptions.NodeSubnet)}={networkOptions.NodeSubnet}] is [{firstValidAddress}].");
-                }
-
-                if (addressUint > lastValidAddressUint)
-                {
-                    throw new ClusterDefinitionException($"Node [{node.Name}] defines IP address [{node.Address}={node.Address}] which is reserved.  The last valid node address [{nameof(networkOptions.NodeSubnet)}={networkOptions.NodeSubnet}] is [{lastValidAddress}].");
-                }
-            }
-
-            //-----------------------------------------------------------------
-            // Automatically assign unused IP addresses within the subnet to nodes that 
-            // were not explicitly assigned an address in the cluster definition.
-
-            // Add any explicitly assigned addresses to a HashSet so we won't reuse any.
-
-            var assignedAddresses = new HashSet<uint>();
-
-            foreach (var node in clusterDefinition.SortedNodes)
-            {
-                if (string.IsNullOrEmpty(node.Address))
-                {
-                    continue;
-                }
-
-                var address     = IPAddress.Parse(node.Address);
-                var addressUint = NetHelper.AddressToUint(address);
-
-                if (!assignedAddresses.Contains(addressUint))
-                {
-                    assignedAddresses.Add(addressUint);
-                }
-            }
-
-            // Assign subnet addresses to the nodes, assigning master nodes first.
-
-            foreach (var azureNode in clusterDefinition.SortedMasterThenWorkerNodes)
-            {
-                if (!string.IsNullOrEmpty(azureNode.Address))
-                {
-                    continue;
-                }
-
-                for (var addressUint = firstValidAddressUint; addressUint <= lastValidAddressUint; addressUint++)
-                {
-                    if (!assignedAddresses.Contains(addressUint))
-                    {
-                        azureNode.Address = NetHelper.UintToAddress(addressUint).ToString();
-
-                        assignedAddresses.Add(addressUint);
-                        break;
-                    }
-                }
-            }
+            AssignNodeAddresses(clusterDefinition);
         }
 
         /// <inheritdoc/>
@@ -856,7 +766,7 @@ namespace Neon.Kube
                 MaxParallel = int.MaxValue       // There's no reason to constrain this
             };
 
-            controller.AddGlobalStep("azure connect", () => ConnectAzure());
+            controller.AddGlobalStep("Azure connect", () => ConnectAzure());
             controller.AddGlobalStep("region check", () => VerifyRegionAndVmSizes());
             controller.AddGlobalStep("resource group", () => CreateResourceGroup());
             controller.AddGlobalStep("availability sets", () => CreateAvailabilitySets());

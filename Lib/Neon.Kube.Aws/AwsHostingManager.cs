@@ -43,6 +43,7 @@ using Neon.Time;
 using Amazon;
 using Amazon.Runtime;
 using Amazon.EC2;
+using Amazon.EC2.Model;
 
 namespace Neon.Kube
 {
@@ -53,9 +54,86 @@ namespace Neon.Kube
     public class AwsHostingManager : HostingManager
     {
         //---------------------------------------------------------------------
+        // 
+
+        /// <summary>
+        /// Describes an Ubuntu ami from the AWS Marketplace.
+        /// </summary>
+        private class AwsUbuntuImage
+        {
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="clusterVersion">Specifies the neonKUBE cluster version.</param>
+            /// <param name="ubuntuVersion">Specifies the Ubuntu image version.</param>
+            /// <param name="ubuntuBuild">Specifies the Ubuntu build.</param>
+            /// <param name="isPrepared">
+            /// Pass <c>true</c> for Ubuntu images that have already seen basic
+            /// preparation for inclusion into a neonKUBE cluster, or <c>false</c>
+            /// for unmodified base Ubuntu images.
+            /// <param name="ami">Specifies the AWS VM image ami.</param>
+            /// </param>
+            public AwsUbuntuImage(string clusterVersion, string ubuntuVersion, string ubuntuBuild, bool isPrepared, string ami)
+            {
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterVersion), nameof(clusterVersion));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(ubuntuVersion), nameof(ubuntuVersion));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(ubuntuBuild), nameof(ubuntuBuild));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(ami), nameof(ami));
+
+                this.ClusterVersion = SemanticVersion.Parse(clusterVersion);
+                this.UbuntuVersion  = ubuntuVersion;
+                this.UbuntuBuild    = ubuntuBuild;
+                this.IsPrepared     = isPrepared;
+                this.Ami            = ami;
+            }
+
+            /// <summary>
+            /// Returns the neonKUBE cluster version.
+            /// </summary>
+            public SemanticVersion ClusterVersion { get; private set; }
+
+            /// <summary>
+            /// Returns the Ubuntu version deployed by the image.
+            /// </summary>
+            public string UbuntuVersion { get; private set; }
+
+            /// <summary>
+            /// Returns the Ubuntu build version.
+            /// </summary>
+            public string UbuntuBuild { get; private set; }
+
+            /// <summary>
+            /// Returns <c>true</c> for Ubuntu images that have already seen basic
+            /// preparation for inclusion into a neonKUBE cluster.  This will be
+            /// <c>false</c> for unmodified base Ubuntu images.
+            /// </summary>
+            public bool IsPrepared { get; private set; }
+
+            /// <summary>
+            /// Returns the AWS image ami.
+            /// </summary>
+            public string Ami { get; private set; }
+        }
+
+        //---------------------------------------------------------------------
         // Static members
 
-        private const string ubuntuAmi = "ami-0758470213bdd23b1";
+        /// <summary>
+        /// Returns the list of supported Ubuntu images from the AWS Marketplace.
+        /// </summary>
+        private static IReadOnlyList<AwsUbuntuImage> ubuntuImages;
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static AwsHostingManager()
+        {
+            ubuntuImages = new List<AwsUbuntuImage>()
+            {
+                new AwsUbuntuImage("0.1.0-alpha", "20.04", "20.04.20200729", isPrepared: false, ami: "ami-056cb9ae6e2df09e8")
+            }
+            .AsReadOnly();
+        }
 
         /// <summary>
         /// Ensures that the assembly hosting this hosting manager is loaded.
@@ -69,11 +147,17 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy            cluster;
         private KubeSetupInfo           setupInfo;
-        private AwsHostingOptions       hostingOptions;
-        private bool                    isConnected = false;
-        private BasicAWSCredentials     credentials;
+        private ClusterProxy            cluster;
+        private string                  clusterName;
+        private HostingOptions          hostingOptions;
+        private CloudOptions            cloudOptions;
+        private AwsHostingOptions       awsOptions;
+        private NetworkOptions          networkOptions;
+        private BasicAWSCredentials     awsCredentials;
+        private string                  region;
+        private string                  resourceGroup;
+        private Region                  awsRegion;
         private AmazonEC2Client         ec2;
 
         /// <summary>
@@ -100,9 +184,15 @@ namespace Neon.Kube
 
             cluster.HostingManager = this;
 
-            this.cluster        = cluster;
             this.setupInfo      = setupInfo;
-            this.hostingOptions = cluster.Definition.Hosting.Aws;
+            this.cluster        = cluster;
+            this.clusterName    = cluster.Name;
+            this.hostingOptions = cluster.Definition.Hosting;
+            this.cloudOptions   = hostingOptions.Cloud;
+            this.awsOptions     = hostingOptions.Aws;
+            this.networkOptions = cluster.Definition.Network;
+            this.region         = awsOptions.Region;
+            this.resourceGroup  = awsOptions.ResourceGroup;
         }
 
         /// <inheritdoc/>
@@ -113,16 +203,21 @@ namespace Neon.Kube
                 GC.SuppressFinalize(this);
             }
 
-            isConnected = false;
-
             ec2?.Dispose();
             ec2 = null;
         }
+
+        /// <summary>
+        /// Indicates when an AWS connection is established.
+        /// </summary>
+        private bool isConnected => ec2 != null;
 
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            AssignNodeAddresses(clusterDefinition);
         }
 
         /// <inheritdoc/>
@@ -130,25 +225,56 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
 
-            await Task.CompletedTask;
-            throw new NotImplementedException("$todo(jefflill): Implement this.");
+            var operation  = $"Provisioning [{cluster.Definition.Name}] on AWS [{region}/{resourceGroup}]";
+            var controller = new SetupController<NodeDefinition>(operation, cluster.Nodes)
+            {
+                ShowStatus     = this.ShowStatus,
+                ShowNodeStatus = true,
+                MaxParallel    = int.MaxValue       // There's no reason to constrain this
+            };
+
+            controller.AddGlobalStep("AWS connect", ConnectAwsAsync);
+
+            if (!controller.Run(leaveNodesConnected: false))
+            {
+                Console.WriteLine("*** One or more AWS provisioning steps failed.");
+                return await Task.FromResult(false);
+            }
+
+            return await Task.FromResult(true);
         }
 
         /// <summary>
-        /// Establishes the necessary client connections to AWS, if they're
-        /// not already connected.
+        /// Establishes the necessary client connections to AWS and validates the credentials,
+        /// when a connection has not been established yet.
         /// </summary>
-        private void ConnectAws()
+        private async Task ConnectAwsAsync()
         {
             if (isConnected)
             {
                 return;
             }
 
-            credentials = new BasicAWSCredentials(hostingOptions.AccessKeyId, hostingOptions.SecretAccessKey);
-            ec2         = new AmazonEC2Client(credentials);
+            // Initialize the credentials and clients and retrieve the list of
+            // AWS regions to verify that we can connect and perform operations
+            // as well as to verify the target region.  We'll then create new
+            // client(s) for the target region.
 
-            isConnected = true;
+            awsCredentials = new BasicAWSCredentials(awsOptions.AccessKeyId, awsOptions.SecretAccessKey);
+
+            using (var ec2 = new AmazonEC2Client(awsCredentials, RegionEndpoint.USEast1))
+            {
+                var awsRegions = (await ec2.DescribeRegionsAsync()).Regions;
+
+                awsRegion = awsRegions.SingleOrDefault(r => r.RegionName.Equals(region, StringComparison.InvariantCultureIgnoreCase));
+
+                if (awsRegion == null)
+                {
+                    throw new KubeException($"AWS region [{region}] does not exist or is not available to your AWS account.");
+                }
+            }
+
+            ec2 = new AmazonEC2Client(awsCredentials, RegionEndpoint.GetBySystemName(region));
         }
 
         /// <inheritdoc/>

@@ -31,7 +31,7 @@ STOPSIGNAL  SIGTERM
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y \
-    && apt-get install -yq unzip curl less groff \
+    && apt-get install -yq unzip curl \
     && curl https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o awscliv2.zip \
     && unzip awscliv2.zip \
     && ./aws/install \
