@@ -209,5 +209,3 @@ Follow the steps below to configure a development or test workstation:
       * Click **Next** and **Close**.  Don't install the Visual Studio Spell Checker.
 
 31. *Optional*: Create the **EDITOR** environment variable and point it to `C:\Program Files\Notepad++\notepad++.exe` or your favorite text editor executable.
-
-32: *Optional:* Install the **AWS client version 2** from: [here](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-windows.html)
