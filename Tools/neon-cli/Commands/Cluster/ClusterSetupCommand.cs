@@ -668,17 +668,6 @@ OPTIONS:
                     }
 
                     node.SudoCommand(CommandBundle.FromScript(sbVolumesScript));
-
-                    node.Status = "setup: configure /etc/sysctl";
-
-                    var helmInstallScript =
-$@"#!/bin/bash
-sed -ir 's/.*vm.max_map_count.*/vm.max_map_count = 3000000/g' /etc/sysctl.conf
-sed -ir 's/.*fs.file-max.*/fs.file-max = 3000000/g' /etc/sysctl.conf
-echo ""fs.nr_open = 3000000"" >> /etc/sysctl.conf
-echo ""vm.swappiness = 1"" >> /etc/sysctl.conf
-";
-                    node.SudoCommand(CommandBundle.FromScript(helmInstallScript));
                 });
         }
 
