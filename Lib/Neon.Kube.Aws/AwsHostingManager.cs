@@ -54,6 +54,8 @@ namespace Neon.Kube
     public class AwsHostingManager : HostingManager
     {
         //---------------------------------------------------------------------
+        // IMPLENTATION NOTE:
+        //
         // 
 
         /// <summary>
@@ -117,6 +119,11 @@ namespace Neon.Kube
 
         //---------------------------------------------------------------------
         // Static members
+
+        /// <summary>
+        /// Specifies the ID to use when querying for Canonical images 
+        /// </summary>
+        private const string canonicalOwnerId = "099720109477";
 
         /// <summary>
         /// Returns the list of supported Ubuntu images from the AWS Marketplace.
