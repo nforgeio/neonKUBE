@@ -54,7 +54,6 @@ using Neon.Time;
 using INetworkSecurityGroup = Microsoft.Azure.Management.Network.Fluent.INetworkSecurityGroup;
 using SecurityRuleProtocol  = Microsoft.Azure.Management.Network.Fluent.Models.SecurityRuleProtocol;
 using TransportProtocol     = Microsoft.Azure.Management.Network.Fluent.Models.TransportProtocol;
-using Microsoft.Azure.Management.BatchAI.Fluent;
 
 namespace Neon.Kube
 {
@@ -78,7 +77,7 @@ namespace Neon.Kube
         // A neonKUBE Azure cluster will require provisioning these things:
         //
         //      * VNET
-        //      * VMs & Drives
+        //      * VMs & Disks
         //      * Load balancer with public IP
         //
         // In the future, we may relax the public load balancer requirement so
@@ -97,7 +96,7 @@ namespace Neon.Kube
         // this placement groups via [AzureOptions.DisableProximityPlacement].
         //
         // The VNET will be configured using the cluster definition's [NetworkOptions],
-        // with [NetworkOptions.NodeSubnet] used to configure the VNET'sa subnet.
+        // with [NetworkOptions.NodeSubnet] used to configure the subnet.
         // Node IP addresses will be automatically assigned by default, but this
         // can be customized via the cluster definition when necessary.
         //
@@ -119,7 +118,7 @@ namespace Neon.Kube
         // from specific source IP addresses and/or subnets.
         //
         // NOTE: Only TCP connections are supported at this time because Istio
-        //       doesn't support anything like UDP, ICMP, etc. at this time.
+        //       doesn't support UDP, ICMP, etc. at this time.
         //
         // A network security group will be created and assigned to the subnet.
         // This will include ingress rules constructed from [NetworkOptions.IngressRules]
@@ -128,7 +127,7 @@ namespace Neon.Kube
         // Azure VM NICs will be configured with each node's IP address.  We are not
         // currently assigning network security groups to these NICs.
         //
-        // VMs are currently based on the Ubuntu-20.04 Server image provided by 
+        // VMs are currently based on the Ubuntu-20.04 Server image provided  
         // published to the marketplace by Canonical.  They publish Gen1 and Gen2
         // images.  I believe Gen2 images will work on Azure Gen1 & Gen2 instances
         // so our images will be Gen2 based as well.
@@ -292,7 +291,7 @@ namespace Neon.Kube
                 Covenant.Requires<ArgumentException>(vmGen == 1 || vmGen == 2, nameof(vmGen));
                 Covenant.Requires<ArgumentNullException>(imageRef != null, nameof(imageRef));
 
-                this.ClusterVersion = SemanticVersion.Parse(clusterVersion);
+                this.ClusterVersion = clusterVersion;
                 this.UbuntuVersion  = ubuntuVersion;
                 this.UbuntuBuild    = ubuntuBuild;
                 this.VmGen          = vmGen;
@@ -303,7 +302,7 @@ namespace Neon.Kube
             /// <summary>
             /// Returns the neonKUBE cluster version.
             /// </summary>
-            public SemanticVersion ClusterVersion { get; private set; }
+            public string ClusterVersion { get; private set; }
 
             /// <summary>
             /// Returns the Ubuntu version deployed by the image.
@@ -484,10 +483,9 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterVersion), nameof(clusterVersion));
             Covenant.Requires<ArgumentException>(vmGen == 1 || vmGen == 2, nameof(vmGen));
 
-            var clusterSematicVersion = SemanticVersion.Parse(clusterVersion);
-            var image                 = ubuntuImages.SingleOrDefault(img => img.ClusterVersion == clusterSematicVersion &&
-                                                                            !img.IsPrepared &&
-                                                                            img.VmGen == vmGen);
+            var image = ubuntuImages.SingleOrDefault(img => img.ClusterVersion == clusterVersion &&
+                                                           !img.IsPrepared &&
+                                                           img.VmGen == vmGen);
             if (image == null)
             {
                 throw new KeyNotFoundException($"Cannot locate a base Azure Ubuntu image for cluster version [{clusterVersion}].");
@@ -742,6 +740,16 @@ namespace Neon.Kube
         public override void Validate(ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+
+            if (string.IsNullOrEmpty(clusterDefinition.Hosting.Azure.AppId))
+            {
+                throw new ClusterDefinitionException($"{nameof(AzureHostingOptions)}.{nameof(AzureHostingOptions.AppId)}] must be specified for Azure clusters.");
+            }
+
+            if (string.IsNullOrEmpty(clusterDefinition.Hosting.Azure.AppPassword))
+            {
+                throw new ClusterDefinitionException($"{nameof(AzureHostingOptions)}.{nameof(AzureHostingOptions.AppPassword)}] must be specified for Azure clusters.");
+            }
 
             AssignNodeAddresses(clusterDefinition);
         }
