@@ -205,6 +205,14 @@ namespace Neon.Kube
         public AzureNodeOptions Azure { get; set; }
 
         /// <summary>
+        /// AWS provisioning options for this node, or <c>null</c> to use reasonable defaults.
+        /// </summary>
+        [JsonProperty(PropertyName = "Aws")]
+        [YamlMember(Alias = "aws", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public AwsNodeOptions Aws { get; set; }
+
+        /// <summary>
         /// <b>HACK:</b> This used by <see cref="SetupController{T}"/> to introduce a delay for this
         /// node when executing the next setup step.
         /// </summary>
@@ -280,7 +288,8 @@ namespace Neon.Kube
             {
                 case HostingEnvironment.Aws:
 
-                    // $todo(jefflill: Implement this
+                    Aws = Aws ?? new AwsNodeOptions();
+                    Aws.Validate(clusterDefinition, this.Name);
                     break;
 
                 case HostingEnvironment.Azure:
@@ -296,7 +305,7 @@ namespace Neon.Kube
 
                 case HostingEnvironment.Machine:
 
-                    // No machine options to check at this point in time.
+                    // No machine options to check at this time.
                     break;
 
                 case HostingEnvironment.HyperV:

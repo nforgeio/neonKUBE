@@ -165,9 +165,9 @@ namespace Neon.Kube
         // Private types
 
         /// <summary>
-        /// Relates hive node information with Azure VM information.
+        /// Relates cluster node information to an Azure VM.
         /// </summary>
-        private class AzureNode
+        private class AzureVm
         {
             private AzureHostingManager hostingManager;
 
@@ -176,7 +176,7 @@ namespace Neon.Kube
             /// </summary>
             /// <param name="node">The associated node proxy.</param>
             /// <param name="hostingManager">The parent hosting manager.</param>
-            public AzureNode(SshProxy<NodeDefinition> node, AzureHostingManager hostingManager)
+            public AzureVm(SshProxy<NodeDefinition> node, AzureHostingManager hostingManager)
             {
                 Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
 
@@ -222,18 +222,12 @@ namespace Neon.Kube
             /// <summary>
             /// Returns <c>true</c> if the node is a master.
             /// </summary>
-            public bool IsMaster
-            {
-                get { return Proxy.Metadata.Role == NodeRole.Master; }
-            }
+            public bool IsMaster => Proxy.Metadata.Role == NodeRole.Master;
 
             /// <summary>
             /// Returns <c>true</c> if the node is a worker.
             /// </summary>
-            public bool IsWorker
-            {
-                get { return Proxy.Metadata.Role == NodeRole.Worker; }
-            }
+            public bool IsWorker => Proxy.Metadata.Role == NodeRole.Worker;
 
             /// <summary>
             /// The Azure availability set hosting this node.
@@ -551,7 +545,7 @@ namespace Neon.Kube
         private NetworkOptions                          networkOptions;
         private string                                  region;
         private string                                  resourceGroup;
-        private Dictionary<string, AzureNode>           azureNodes;
+        private Dictionary<string, AzureVm>             nameToVm;
         private IAzure                                  azure;
 
         // Azure requires that the various components that need to be provisioned
@@ -635,19 +629,17 @@ namespace Neon.Kube
             this.loadbalancerFrontendName    = "ingress";
             this.loadbalancerBackendName     = "ingress";
 
-            // Initialize the node mapping dictionary and also ensure
-            // that each node has Azure reasonable Azure node options.
+            // Initialize the vm/node mapping dictionary and also ensure
+            // that each node has reasonable Azure node options.
 
-            this.azureNodes = new Dictionary<string, AzureNode>(StringComparer.InvariantCultureIgnoreCase);
+            this.nameToVm = new Dictionary<string, AzureVm>(StringComparer.InvariantCultureIgnoreCase);
 
             foreach (var node in cluster.Nodes)
             {
-                azureNodes.Add(node.Name, new AzureNode(node, this));
+                nameToVm.Add(node.Name, new AzureVm(node, this));
 
                 if (node.Metadata.Azure == null)
                 {
-                    // Initialize reasonable defaults.
-
                     node.Metadata.Azure = new AzureNodeOptions();
                 }
             }
@@ -674,41 +666,47 @@ namespace Neon.Kube
         /// <summary>
         /// Enumerates the cluster nodes in no particular order.
         /// </summary>
-        private IEnumerable<AzureNode> Nodes => azureNodes.Values;
+        private IEnumerable<AzureVm> Nodes => nameToVm.Values;
 
         /// <summary>
         /// Enumerates the cluster nodes in ascending order by name.
         /// </summary>
-        private IEnumerable<AzureNode> SortedNodes => Nodes.OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase);
+        private IEnumerable<AzureVm> SortedNodes => Nodes.OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// Enumerates the cluster master nodes in no particular order.
         /// </summary>
-        private IEnumerable<AzureNode> MasterNodes => Nodes.Where(node => node.IsMaster);
+        private IEnumerable<AzureVm> MasterNodes => Nodes.Where(node => node.IsMaster);
 
         /// <summary>
         /// Enumerates the cluster master nodes in ascending order by name.
         /// </summary>
-        private IEnumerable<AzureNode> SortedMasterNodes => Nodes.Where(node => node.IsMaster).OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase);
+        private IEnumerable<AzureVm> SortedMasterNodes => Nodes.Where(node => node.IsMaster).OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// Enumerates the cluster worker nodes in no particular order.
         /// </summary>
-        private IEnumerable<AzureNode> WorkerNodes => Nodes.Where(node => node.IsMaster);
+        private IEnumerable<AzureVm> WorkerNodes => Nodes.Where(node => node.IsMaster);
 
         /// <summary>
         /// Enumerates the cluster worker nodes in ascending order by name.
         /// </summary>
-        private IEnumerable<AzureNode> SorteWorkerNodes => Nodes.Where(node => node.IsWorker).OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase);
+        private IEnumerable<AzureVm> SorteWorkerNodes => Nodes.Where(node => node.IsWorker).OrderBy(node => node.Name, StringComparer.InvariantCultureIgnoreCase);
 
         /// <summary>
         /// Enumerates the cluster worker nodes in ascending order by name followed by the sorted worker nodes.
         /// </summary>
-        private IEnumerable<AzureNode> SortedMasterThenWorkerNodes => SortedMasterNodes.Union(SorteWorkerNodes);
+        private IEnumerable<AzureVm> SortedMasterThenWorkerNodes => SortedMasterNodes.Union(SorteWorkerNodes);
 
         /// <summary>
+        /// <para>
         /// Returns the name to use for a cluster related resource based on the standard Azure resource type
-        /// prefix, the cluster name (if enabled) and the base resource name.
+        /// prefix, the cluster name (if enabled) and the base resource name.  This is based on Azure naming
+        /// conventions:
+        /// </para>
+        /// <para>
+        /// <a href="https://docs.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/naming-and-tagging">Recommended naming and tagging conventions</a>
+        /// </para>
         /// </summary>
         /// <param name="resourceTypePrefix">The Azure resource type prefix (like "pip" for public IP address).</param>
         /// <param name="resourceName">The base resource name.</param>
@@ -796,7 +794,7 @@ namespace Neon.Kube
                             break;  // Not a cluster VM
                         }
 
-                        if (!azureNodes.TryGetValue(nodeName, out var azureNode))
+                        if (!nameToVm.TryGetValue(nodeName, out var azureNode))
                         {
                             // $todo(jefflill):
                             //
@@ -1020,7 +1018,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Verify that the requested Azure region exists, supports the requested VM sizes,
+        /// Verifies that the requested Azure region exists, supports the requested VM sizes,
         /// and that VMs for nodes that specify UltraSSD actually support UltraSSD.  We'll also
         /// verify that the requested VMs have the minimum required number or cores and RAM.
         /// </para>
@@ -1030,17 +1028,17 @@ namespace Neon.Kube
         /// </summary>
         private void VerifyRegionAndVmSizes()
         {
-            var region       = cluster.Definition.Hosting.Azure.Region;
-            var vmSizes      = azure.VirtualMachines.Sizes.ListByRegion(region);
+            var regionName   = cluster.Definition.Hosting.Azure.Region;
+            var vmSizes      = azure.VirtualMachines.Sizes.ListByRegion(regionName);
             var nameToVmSize = new Dictionary<string, IVirtualMachineSize>(StringComparer.InvariantCultureIgnoreCase);
             var nameToVmSku  = new Dictionary<string, IComputeSku>(StringComparer.InvariantCultureIgnoreCase);
 
-            foreach (var vmSize in azure.VirtualMachines.Sizes.ListByRegion(region))
+            foreach (var vmSize in azure.VirtualMachines.Sizes.ListByRegion(regionName))
             {
                 nameToVmSize[vmSize.Name] = vmSize;
             }
 
-            foreach (var vmSku in azure.ComputeSkus.ListByRegion(region))
+            foreach (var vmSku in azure.ComputeSkus.ListByRegion(regionName))
             {
                 nameToVmSku[vmSku.Name.Value] = vmSku;
             }
@@ -1051,14 +1049,14 @@ namespace Neon.Kube
 
                 if (!nameToVmSize.TryGetValue(vmSizeName, out var vmSize))
                 {
-                    throw new KubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSizeName}].  This is not available in the [{region}] Azure region.");
+                    throw new KubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSizeName}].  This is not available in the [{regionName}] Azure region.");
                 }
 
                 if (!nameToVmSku.TryGetValue(vmSizeName, out var vmSku))
                 {
                     // This should never happen, right?
 
-                    throw new KubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSizeName}].  This is not available in the [{region}] Azure region.");
+                    throw new KubeException($"Node [{node.Name}] requests [{nameof(node.Metadata.Azure.VmSize)}={vmSizeName}].  This is not available in the [{regionName}] Azure region.");
                 }
 
                 switch (node.Metadata.Role)
@@ -1108,7 +1106,7 @@ namespace Neon.Kube
                 {
                     if (!vmSku.Capabilities.Any(Capability => Capability.Name == "UltraSSDAvailable" && Capability.Value == "False"))
                     {
-                        throw new KubeException($"Node [{node.Name}] requests an UltraSSD disk.  This is not available in the [{region}] Azure region and/or the [{vmSize}] VM Size.");
+                        throw new KubeException($"Node [{node.Name}] requests an UltraSSD disk.  This is not available in the [{regionName}] Azure region and/or the [{vmSize}] VM Size.");
                     }
                 }
 
@@ -1156,7 +1154,7 @@ namespace Neon.Kube
                 nameToAvailabilitySet.Add(existingAvailablitySet.Name, existingAvailablitySet);
             }
 
-            foreach (var azureNode in azureNodes.Values)
+            foreach (var azureNode in nameToVm.Values)
             {
                 azureNode.AvailabilitySetName = GetResourceName("avail", azureNode.Metadata.Labels.PhysicalAvailabilitySet);
 
@@ -1308,7 +1306,7 @@ namespace Neon.Kube
         /// <param name="stepDelay">The step delay.</param>
         private void CreateVm(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
-            var azureNode = azureNodes[node.Name];
+            var azureNode = nameToVm[node.Name];
 
             if (azureNode.Vm != null)
             {
@@ -1467,7 +1465,7 @@ namespace Neon.Kube
 
             backendUpdater.WithoutExistingVirtualMachines();
 
-            foreach (var ingressNode in azureNodes.Values.Where(node => node.Metadata.Ingress))
+            foreach (var ingressNode in nameToVm.Values.Where(node => node.Metadata.Ingress))
             {
                 backendUpdater.WithExistingVirtualMachines(new IHasNetworkInterfaces[] { ingressNode.Vm });
             }
