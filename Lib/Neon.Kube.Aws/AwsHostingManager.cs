@@ -45,6 +45,7 @@ using Amazon;
 using Amazon.EC2;
 using Amazon.EC2.Model;
 using Amazon.ElasticLoadBalancingV2;
+using Amazon.ElasticLoadBalancingV2.Model;
 using Amazon.ResourceGroups;
 using Amazon.ResourceGroups.Model;
 using Amazon.Runtime;
@@ -269,6 +270,69 @@ namespace Neon.Kube
             public bool IsPrepared { get; private set; }
         }
 
+        /// <summary>
+        /// <para>
+        /// Abstracts the multiple AWS tag implementations into a single common
+        /// implementation.
+        /// </para>
+        /// <para>
+        /// Unforuntately, AWS defines multiple <c>Tag</c> classes within their
+        /// various "Model" assemblies.  This makes it hard to implement common
+        /// resource tagging code.
+        /// </para>
+        /// <para>
+        /// We're going to handle this by implementing our own command tag class
+        /// that is parameterized by the desired AWS tag type.  This code assumes
+        /// that all of the AWS tag implementations have a public default constructor
+        /// as well as read/write Key/Value string properties.
+        /// </para>
+        /// </summary>
+        /// <typeparam name="T">The desired AWS tag type.</typeparam>
+        private class Tag<T>
+        {
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="key">Specifies the tag key.</param>
+            /// <param name="value">Optionally specifies the tag value.</param>
+            public Tag(string key, string value = null)
+            {
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key), nameof(key));
+
+                this.Key   = key;
+                this.Value = value ?? string.Empty;
+            }
+
+            /// <summary>
+            /// Returns the tag's key.
+            /// </summary>
+            public string Key { get; private set; }
+
+            /// <summary>
+            /// Returns the tag's value.
+            /// </summary>
+            public string Value { get; private set; }
+
+            /// <summary>
+            /// Converts the tag into the AWS tag type <typeparamref name="T"/>.
+            /// </summary>
+            /// <returns>The AWS tag.</returns>
+            public T ToAws()
+            {
+                // Some low-level reflection magic.
+
+                var tagType       = typeof(T);
+                var rawTag        = Activator.CreateInstance(tagType);
+                var keyProperty   = tagType.GetProperty("Key");
+                var valueProperty = tagType.GetProperty("Value");
+
+                keyProperty.SetValue(rawTag, Key);
+                valueProperty.SetValue(rawTag, Value);
+
+                return (T)rawTag;
+            }
+        }
+
         //---------------------------------------------------------------------
         // Static members
 
@@ -329,8 +393,11 @@ namespace Neon.Kube
         private AmazonResourceGroupsClient          rgClient;
         private string                              ami;
         private string                              addressId;
+        private DhcpOptions                         dhcpOptions;
         private Vpc                                 vpc;
         private Subnet                              subnet;
+        private InternetGateway                     gateway;
+        private LoadBalancer                        loadbalancer;
 
         /// <summary>
         /// Table mapping a cluster node name to its AWS VM instance information.
@@ -504,41 +571,42 @@ namespace Neon.Kube
         /// Creates the tags for a resource including the resource name, cluster details,
         /// as well as optional tags.
         /// </summary>
+        /// <typeparam name="T">Specifies the desired AWS tag type.</typeparam>
         /// <param name="name">The resource name.</param>
         /// <param name="tags">The optional tags.</param>
         /// <returns>The <see cref="TagSpecification"/> list with a single element.</returns>
-        private List<Tag> GetTags(string name, params Tag[] tags)
+        private List<T> GetTags<T>(string name, params KeyValuePair<string, string>[] tags)
         {
-            var tagList = new List<Tag>();
+            var tagList = new List<T>();
 
-            tagList.Add(new Tag("Name", name));
-            tagList.Add(new Tag($"{neonTagPrefix}:Cluster", clusterName));
-            tagList.Add(new Tag($"{neonTagPrefix}:Environment", NeonHelper.EnumToString(cluster.Definition.Environment)));
+            tagList.Add(new Tag<T>("Name", name).ToAws());
+            tagList.Add(new Tag<T>($"{neonTagPrefix}:Cluster", clusterName).ToAws());
+            tagList.Add(new Tag<T>($"{neonTagPrefix}:Environment", NeonHelper.EnumToString(cluster.Definition.Environment)).ToAws());
 
             foreach (var tag in tags)
             {
-                tagList.Add(tag);
+                tagList.Add(new Tag<T>(tag.Key, tag.Value).ToAws());
             }
 
             return tagList;
         }
 
         /// <summary>
-        /// Creates a tag specification for a resource including the resource name, additional
-        /// cluster details as well as optional tags.
+        /// Creates a tag specification for an EC2 resource including the resource name, 
+        /// additional cluster details as well as optional tags.
         /// </summary>
         /// <param name="name">The resource name.</param>
         /// <param name="resourceType">The fully qualified resource type.</param>
         /// <param name="tags">The optional tags.</param>
         /// <returns>The <see cref="TagSpecification"/> list with a single element.</returns>
-        private List<TagSpecification> GetTagSpecifications(string name, ResourceType resourceType, params Tag[] tags)
+        private List<TagSpecification> GetTagSpecifications(string name, ResourceType resourceType, params KeyValuePair<string, string>[] tags)
         {
             return new List<TagSpecification>()
             {
                 new TagSpecification()
                 {
                     ResourceType = resourceType,
-                    Tags         = GetTags(name, tags)
+                    Tags         = GetTags<Amazon.EC2.Model.Tag>(name, tags)
                 }
             };
         }
@@ -580,6 +648,7 @@ namespace Neon.Kube
             controller.AddGlobalStep("create resource group", CreateResourceGroupAsync);
             controller.AddGlobalStep("create elastic ip", CreateElasticIpAsync);
             controller.AddGlobalStep("create vpc/subnet", CreateVpcSubnetAsync);
+            controller.AddGlobalStep("create load balancer", CreateLoadbalancerAsync);
             controller.AddStep("create node instances", CreateInstanceAsync);
 
             if (!controller.Run(leaveNodesConnected: false))
@@ -918,7 +987,7 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateElasticIpAsync()
         {
-            var addressName     = GetResourceName("eip", "address");
+            var addressName     = GetResourceName("eip", "cluster");
             var addressResponse = await ec2Client.DescribeAddressesAsync();
             var address         = (Address)null;
 
@@ -946,7 +1015,7 @@ namespace Neon.Kube
                     new CreateTagsRequest()
                     {
                         Resources = new List<string>() { addressId },
-                        Tags      = GetTags(addressName)
+                        Tags      = GetTags<Amazon.EC2.Model.Tag>(addressName)
                     });
             }
         }
@@ -957,56 +1026,154 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateVpcSubnetAsync()
         {
-            // Create the VPC
+            // Create the VPC if it doesn't already exist.
 
-            var createVpcResponse = await ec2Client.CreateVpcAsync(
-                new CreateVpcRequest()
+            var vpcName      = GetResourceName("vpc", "cluster");
+            var vpcPaginator = ec2Client.Paginators.DescribeVpcs(new DescribeVpcsRequest());
+
+            await foreach (var vpcItem in vpcPaginator.Vpcs)
+            {
+                if (vpcItem.Tags.Any(tag => tag.Key == "Name" && tag.Value == vpcName))
                 {
-                    CidrBlock         = networkOptions.NodeSubnet,
-                    TagSpecifications = GetTagSpecifications(GetResourceName("vpc", clusterName), ResourceType.Vpc)
-                });
-            
-            vpc = createVpcResponse.Vpc;
+                    vpc = vpcItem;
+                    break;
+                }
+            }
+
+            if (vpc == null)
+            {
+                var vpcResponse = await ec2Client.CreateVpcAsync(
+                    new CreateVpcRequest()
+                    {
+                        CidrBlock         = networkOptions.NodeSubnet,
+                        TagSpecifications = GetTagSpecifications(vpcName, ResourceType.Vpc)
+                    });
+
+                vpc = vpcResponse.Vpc;
+            }
 
             // Override the default AWS DNS servers if the user has specified 
             // custom nameservers in the cluster definition.  We'll accomplish
             // this by creating DHCP options and associating them with the VPC.
 
+            var dhcpOptionName = GetResourceName("dopt", "cluster");
+
             if (networkOptions.Nameservers != null && networkOptions.Nameservers.Count > 0)
             {
-                var sbNameservers = new StringBuilder();
+                // Create the DHCP option configuration if it disn't already exist.
 
-                foreach (var nameserver in networkOptions.Nameservers)
+                var dhcpPaginator = ec2Client.Paginators.DescribeDhcpOptions(new DescribeDhcpOptionsRequest());
+
+                await foreach (var dhcpItem in dhcpPaginator.DhcpOptions)
                 {
-                    sbNameservers.AppendWithSeparator(nameserver, ",");
+                    if (dhcpItem.Tags.Any(tag => tag.Key == "Name" && tag.Value == dhcpOptionName))
+                    {
+                        dhcpOptions = dhcpItem;
+                        break;
+                    }
                 }
 
-                var dhcpConfigurations = new List<DhcpConfiguration>()
+                if (dhcpOptions == null)
                 {
-                    new DhcpConfiguration() { Key = "domain-name-servers", Values = new List<string> { sbNameservers.ToString() } }
-                };
+                    var sbNameservers = new StringBuilder();
 
-                var createDhcpOptionsResponse = await ec2Client.CreateDhcpOptionsAsync(
-                    new CreateDhcpOptionsRequest(dhcpConfigurations)
+                    foreach (var nameserver in networkOptions.Nameservers)
                     {
-                        TagSpecifications = GetTagSpecifications(GetResourceName("dopt", clusterName), ResourceType.DhcpOptions)
-                    });
+                        sbNameservers.AppendWithSeparator(nameserver, ",");
+                    }
+
+                    var dhcpConfigurations = new List<DhcpConfiguration>()
+                    {
+                        new DhcpConfiguration() { Key = "domain-name-servers", Values = new List<string> { sbNameservers.ToString() } }
+                    };
+
+                    var dhcpOptionsResponse = await ec2Client.CreateDhcpOptionsAsync(
+                        new CreateDhcpOptionsRequest(dhcpConfigurations)
+                        {
+                            TagSpecifications = GetTagSpecifications(dhcpOptionName, ResourceType.DhcpOptions)
+                        });
+
+                    dhcpOptions = dhcpOptionsResponse.DhcpOptions;
+                }
+
+                // Associate the DHCP options with the VPC.
 
                 await ec2Client.AssociateDhcpOptionsAsync(
                     new AssociateDhcpOptionsRequest()
                     {
                         VpcId         = vpc.VpcId,
-                        DhcpOptionsId = createDhcpOptionsResponse.DhcpOptions.DhcpOptionsId
+                        DhcpOptionsId = dhcpOptions.DhcpOptionsId
                     });
             }
 
-            var createSubnetResponse = await ec2Client.CreateSubnetAsync(
-                new CreateSubnetRequest(vpc.VpcId, networkOptions.NodeSubnet)
-                {
-                    TagSpecifications = GetTagSpecifications(GetResourceName("subnet", clusterName), ResourceType.Subnet)
-                });
+            // Create the subnet and associate it with the VPC if the subnet doesn't already exist.
 
-            subnet = createSubnetResponse.Subnet;
+            var subnetName      = GetResourceName("subnet", "cluster");
+            var subnetPaginator = ec2Client.Paginators.DescribeSubnets(new DescribeSubnetsRequest());
+
+            await foreach (var subnetItem in subnetPaginator.Subnets)
+            {
+                if (subnetItem.Tags.Any(tag => tag.Key == "Name" && tag.Value == subnetName))
+                {
+                    subnet = subnetItem;
+                    break;
+                }
+            }
+
+            if (subnet == null)
+            {
+                var subnetResponse = await ec2Client.CreateSubnetAsync(
+                    new CreateSubnetRequest(vpc.VpcId, networkOptions.NodeSubnet)
+                    {
+                        VpcId             = vpc.VpcId,
+                        TagSpecifications = GetTagSpecifications(subnetName, ResourceType.Subnet)
+                    });
+
+                subnet = subnetResponse.Subnet;
+            }
+
+            // Create the Internet gateway if it doesn't already exist.
+
+            var gatewayName      = GetResourceName("egw", "cluster");
+            var gatewayPaginator = ec2Client.Paginators.DescribeInternetGateways(new DescribeInternetGatewaysRequest());
+        }
+
+        /// <summary>
+        /// Creates the cluster's (classic) load balancer.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task CreateLoadbalancerAsync()
+        {
+            //var loadbalancerName = GetResourceName("elb", "load-balancer");
+            var loadbalancerName = "load-balancer";
+
+            // Create cluster load balancer if it doesn't already exist.
+
+            var loadbalancerPaginator = elbClient.Paginators.DescribeLoadBalancers(new DescribeLoadBalancersRequest());
+
+            await foreach (var lbItem in loadbalancerPaginator.LoadBalancers)
+            {
+                if (lbItem.LoadBalancerName == loadbalancerName)
+                {
+                    loadbalancer = lbItem;
+                    break;
+                }
+            }
+
+            //if (loadbalancer == null)
+            //{
+            //    var loadbalancerResponse = await elbClient.CreateLoadBalancerAsync(
+            //        new CreateLoadBalancerRequest()
+            //        {
+            //            Name          = loadbalancerName,
+            //            IpAddressType = IpAddressType.Ipv4,
+            //            Subnets       = new List<string>() { subnet.SubnetId },
+            //            Type          = LoadBalancerTypeEnum.Network,
+            //            Tags          = GetTags<Amazon.ElasticLoadBalancingV2.Model.Tag>(loadbalancerName)
+            //        });
+
+            //    loadbalancer = loadbalancerResponse.LoadBalancers.Single();
+            //}
         }
 
         /// <summary>
@@ -1017,21 +1184,51 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateInstanceAsync(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
-            node.Status = "create instance";
+            // Create the instance if it doesn't already exist.
 
-            var launchResponse = await ec2Client.RunInstancesAsync(
-                new RunInstancesRequest()
+            node.Status = "checking";
+
+            var instanceName      = GetResourceName("i", node.Name);
+            var instancePaginator = ec2Client.Paginators.DescribeInstances(new DescribeInstancesRequest());
+            var instance          = (Instance)null;
+
+            await foreach (var reservation in instancePaginator.Reservations)
+            {
+                foreach (var instanceItem in reservation.Instances)
                 {
-                    ImageId           = ami,
-                    InstanceType      = InstanceType.FindValue(node.Metadata.Aws.InstanceType),
-                    MinCount          = 1,
-                    MaxCount          = 1,
-                    SubnetId          = subnet.SubnetId,
-                    PrivateIpAddress  = node.Address.ToString(),
-                    TagSpecifications = GetTagSpecifications(GetResourceName("i", node.Name), ResourceType.Instance)
-                });
+                    if (instance.Tags.Any(tag => tag.Key == "Name" && tag.Value == instanceName))
+                    {
+                        instance = instanceItem;
+                        break;
+                    }
+                }
 
-            nameToInstance[node.Name].Instance = launchResponse.Reservation.Instances.Single();
+                if (instance != null)
+                {
+                    break;
+                }
+            }
+
+            if (instance == null)
+            {
+                node.Status = "create instance";
+
+                var runResponse = await ec2Client.RunInstancesAsync(
+                    new RunInstancesRequest()
+                    {
+                        ImageId           = ami,
+                        InstanceType      = InstanceType.FindValue(node.Metadata.Aws.InstanceType),
+                        MinCount          = 1,
+                        MaxCount          = 1,
+                        SubnetId          = subnet.SubnetId,
+                        PrivateIpAddress  = node.Address.ToString(),
+                        TagSpecifications = GetTagSpecifications(instanceName, ResourceType.Instance)
+                    });
+
+                instance = runResponse.Reservation.Instances.Single();
+            }
+
+            nameToInstance[node.Name].Instance = instance;
         }
     }
 }
