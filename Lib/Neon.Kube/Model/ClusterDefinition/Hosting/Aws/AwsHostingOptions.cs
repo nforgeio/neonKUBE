@@ -128,8 +128,8 @@ namespace Neon.Kube
         /// upgrade the disk size when necessary.
         /// </note>
         /// </remarks>
-        [JsonProperty(PropertyName = "DefaultVolumekSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "defaultVolumekSize", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "DefaultVolumeSize", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultVolumeSize", ApplyNamingConventions = false)]
         [DefaultValue(defaultVolumeSize)]
         public string DefaultVolumeSize { get; set; } = defaultVolumeSize;
 
