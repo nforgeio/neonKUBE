@@ -540,6 +540,7 @@ namespace Neon.Kube
         private string                                  nodePassword;
         private HostingOptions                          hostingOptions;
         private CloudOptions                            cloudOptions;
+        private bool                                    prefixResourceNames;
         private AzureHostingOptions                     azureOptions;
         private AzureCredentials                        azureCredentials;
         private NetworkOptions                          networkOptions;
@@ -601,17 +602,38 @@ namespace Neon.Kube
 
             cluster.HostingManager = this;
 
-            this.setupInfo                   = setupInfo;
-            this.cluster                     = cluster;
-            this.clusterName                 = cluster.Name;
-            this.hostingOptions              = cluster.Definition.Hosting;
-            this.cloudOptions                = hostingOptions.Cloud;
-            this.azureOptions                = hostingOptions.Azure;
-            this.cloudOptions                = hostingOptions.Cloud;
-            this.networkOptions              = cluster.Definition.Network;
-            this.nameToAvailabilitySet       = new Dictionary<string, IAvailabilitySet>(StringComparer.InvariantCultureIgnoreCase);
-            this.region                      = azureOptions.Region;
-            this.resourceGroup               = azureOptions.ResourceGroup ?? $"neon-{clusterName}";
+            this.setupInfo             = setupInfo;
+            this.cluster               = cluster;
+            this.clusterName           = cluster.Name;
+            this.hostingOptions        = cluster.Definition.Hosting;
+            this.cloudOptions          = hostingOptions.Cloud;
+            this.azureOptions          = hostingOptions.Azure;
+            this.cloudOptions          = hostingOptions.Cloud;
+            this.networkOptions        = cluster.Definition.Network;
+            this.nameToAvailabilitySet = new Dictionary<string, IAvailabilitySet>(StringComparer.InvariantCultureIgnoreCase);
+            this.region                = azureOptions.Region;
+            this.resourceGroup         = azureOptions.ResourceGroup ?? $"neon-{clusterName}";
+
+            switch (cloudOptions.PrefixResourceNames)
+            {
+                case TriState.Default:
+
+                    // Default to FALSE for Azure because all resource names
+                    // will be scoped to a resource group.
+
+                    this.prefixResourceNames = true;
+                    break;
+
+                case TriState.True:
+
+                    this.prefixResourceNames = true;
+                    break;
+
+                case TriState.False:
+
+                    this.prefixResourceNames = false;
+                    break;
+            }
 
             // Initialize the component names as they will be deployed to Azure.  Note that we're
             // going to prefix each name with the Azure item type convention described here:
@@ -710,14 +732,14 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="resourceTypePrefix">The Azure resource type prefix (like "pip" for public IP address).</param>
         /// <param name="resourceName">The base resource name.</param>
-        /// <param name="omitResourceNameWhenPrefixed">Optionall omit <paramref name="resourceName"/> when resource names include the cluster name.</param>
-        /// <returns>The full resource name.</returns>
+        /// <param name="omitResourceNameWhenPrefixed">Optionally omit <paramref name="resourceName"/> when resource names include the cluster name.</param>
+        /// <returns>The fully qualified resource name.</returns>
         private string GetResourceName(string resourceTypePrefix, string resourceName, bool omitResourceNameWhenPrefixed = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(resourceTypePrefix), nameof(resourceTypePrefix));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(resourceName), nameof(resourceName));
 
-            if (cloudOptions.PrefixResourceNames)
+            if (prefixResourceNames)
             {
                 if (omitResourceNameWhenPrefixed)
                 {

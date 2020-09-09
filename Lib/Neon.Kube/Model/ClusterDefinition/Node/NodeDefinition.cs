@@ -34,7 +34,6 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
-using System.Xml;
 
 namespace Neon.Kube
 {

@@ -58,8 +58,8 @@ namespace Neon.Kube
         /// to <see cref="AwsVolumeType.Default"/> which indicates that <see cref="AwsHostingOptions.DefaultInstanceType"/>
         /// will specify the volume type for the node.
         /// </summary>
-        [JsonProperty(PropertyName = "InstanceType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "instanceType", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "VolumeType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "volumeType", ApplyNamingConventions = false)]
         [DefaultValue(AwsVolumeType.Default)]
         public AwsVolumeType VolumeType { get; set; } = AwsVolumeType.Default;
 
