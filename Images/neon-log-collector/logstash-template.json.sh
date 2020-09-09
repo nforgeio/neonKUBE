@@ -69,7 +69,7 @@ cat <<EOF > /etc/fluentd/template/logstash-template.json
         "properties": {
           "coordinates": {
             "type": "geo_point"
-          }
+          },
           "metro_code": {
             "type": "integer"
           },
@@ -331,7 +331,6 @@ cat <<EOF > /etc/fluentd/template/logstash-template.json
         }
       }
     }
-
   }
 }
 EOF
