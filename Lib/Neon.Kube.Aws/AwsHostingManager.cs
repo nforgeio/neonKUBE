@@ -163,7 +163,8 @@ namespace Neon.Kube
         /// </summary>
         private class AwsInstance
         {
-            private AwsHostingManager hostingManager;
+            private AwsHostingManager   hostingManager;
+            private string              instanceName;
 
             /// <summary>
             /// Constructor.
@@ -201,7 +202,20 @@ namespace Neon.Kube
             /// <summary>
             /// Returns the name of the AWS instance VM for this node.
             /// </summary>
-            public string InstanceName => hostingManager.GetResourceName("vm", Proxy.Name);
+            public string InstanceName
+            {
+                get
+                {
+                    // Cache the result so we won't regenerate the name on every call.
+
+                    if (instanceName != null)
+                    {
+                        return instanceName;
+                    }
+
+                    return instanceName = hostingManager.GetResourceName("node", Proxy.Name);
+                }
+            }
 
             /// <summary>
             /// Returns the IP address of the node.
@@ -342,9 +356,24 @@ namespace Neon.Kube
         private const string canonicalOwnerId = "099720109477";
 
         /// <summary>
-        /// String used to prefix AWS resource tags.
+        /// Neon specific namespace prefix AWS resource tags.
         /// </summary>
         private const string neonTagPrefix = "NEON";
+
+        /// <summary>
+        /// AWS generic name tag.
+        /// </summary>
+        private const string nameTag = "Name";
+
+        /// <summary>
+        /// Neon specific cluster tag name.
+        /// </summary>
+        private const string neonClusterTag = neonTagPrefix + ":Cluster";
+
+        /// <summary>
+        /// Neon specific environment tag name.
+        /// </summary>
+        private const string neonEnvironmentTag = neonTagPrefix + ":Environment";
 
         /// <summary>
         /// Returns the list of supported Ubuntu images from the AWS Marketplace.
@@ -385,24 +414,39 @@ namespace Neon.Kube
         private NetworkOptions                      networkOptions;
         private BasicAWSCredentials                 awsCredentials;
         private string                              region;
-        private string                              resourceGroup;
+        private string                              resourceGroupName;
         private Region                              awsRegion;
         private RegionEndpoint                      regionEndpoint;
         private AmazonEC2Client                     ec2Client;
         private AmazonElasticLoadBalancingV2Client  elbClient;
         private AmazonResourceGroupsClient          rgClient;
         private string                              ami;
-        private string                              addressId;
-        private DhcpOptions                         dhcpOptions;
+        private Group                               resourceGroup;
+        private Address                             elasticIp;
         private Vpc                                 vpc;
+        private DhcpOptions                         dhcpOptions;
         private Subnet                              subnet;
-        private InternetGateway                     gateway;
         private LoadBalancer                        loadbalancer;
+        private InternetGateway                     gateway;
+
+        // These are the names we'll use for cluster AWS resources.
+
+        private string                              elasticIpName;
+        private string                              subnetName;
+        private string                              dhcpOptionName;
+        private string                              vpcName;
+        private string                              gatewayName;
+        private string                              loadbalancerName;
 
         /// <summary>
         /// Table mapping a cluster node name to its AWS VM instance information.
         /// </summary>
-        private Dictionary<string, AwsInstance> nameToInstance;
+        private Dictionary<string, AwsInstance> nodeNameToInstance;
+
+        /// <summary>
+        /// Table mapping a cluster AWS instance name to its AWS VM instance information.
+        /// </summary>
+        private Dictionary<string, AwsInstance> instanceNameToInstance;
 
         /// <summary>
         /// Creates an instance that is only capable of validating the hosting
@@ -436,7 +480,7 @@ namespace Neon.Kube
             this.awsOptions     = hostingOptions.Aws;
             this.networkOptions = cluster.Definition.Network;
             this.region         = awsOptions.Region;
-            this.resourceGroup  = awsOptions.ResourceGroup;
+            this.resourceGroupName  = awsOptions.ResourceGroup;
 
             switch (cloudOptions.PrefixResourceNames)
             {
@@ -459,19 +503,35 @@ namespace Neon.Kube
                     break;
             }
 
-            // Initialize the instance/node mapping dictionary and also ensure
+            // Initialize the cluster resource names.
+
+            elasticIpName    = GetResourceName("eip", "cluster");
+            subnetName       = GetResourceName("subnet", "cluster");
+            dhcpOptionName   = GetResourceName("dopt", "cluster");
+            vpcName          = GetResourceName("vpc", "cluster");
+            gatewayName      = GetResourceName("igw", "cluster");
+            loadbalancerName = GetResourceName("lb", "cluster");
+
+            // Initialize the instance/node mapping dictionaries and also ensure
             // that each node has reasonable AWS node options.
 
-            this.nameToInstance = new Dictionary<string, AwsInstance>(StringComparer.InvariantCultureIgnoreCase);
+            this.nodeNameToInstance = new Dictionary<string, AwsInstance>(StringComparer.InvariantCultureIgnoreCase);
 
             foreach (var node in cluster.Nodes)
             {
-                nameToInstance.Add(node.Name, new AwsInstance(node, this));
+                nodeNameToInstance.Add(node.Name, new AwsInstance(node, this));
 
                 if (node.Metadata.Aws == null)
                 {
                     node.Metadata.Aws = new AwsNodeOptions();
                 }
+            }
+
+            this.instanceNameToInstance = new Dictionary<string, AwsInstance>();
+
+            foreach (var instanceInfo in nodeNameToInstance.Values)
+            {
+                instanceNameToInstance.Add(instanceInfo.InstanceName, instanceInfo);
             }
 
             // This identifies the cluster manager instance with the cluster proxy
@@ -507,7 +567,7 @@ namespace Neon.Kube
         /// <summary>
         /// Enumerates the cluster nodes in no particular order.
         /// </summary>
-        private IEnumerable<AwsInstance> Nodes => nameToInstance.Values;
+        private IEnumerable<AwsInstance> Nodes => nodeNameToInstance.Values;
 
         /// <summary>
         /// Enumerates the cluster nodes in ascending order by name.
@@ -579,9 +639,9 @@ namespace Neon.Kube
         {
             var tagList = new List<T>();
 
-            tagList.Add(new Tag<T>("Name", name).ToAws());
-            tagList.Add(new Tag<T>($"{neonTagPrefix}:Cluster", clusterName).ToAws());
-            tagList.Add(new Tag<T>($"{neonTagPrefix}:Environment", NeonHelper.EnumToString(cluster.Definition.Environment)).ToAws());
+            tagList.Add(new Tag<T>(nameTag, name).ToAws());
+            tagList.Add(new Tag<T>(neonClusterTag, clusterName).ToAws());
+            tagList.Add(new Tag<T>(neonEnvironmentTag, NeonHelper.EnumToString(cluster.Definition.Environment)).ToAws());
 
             foreach (var tag in tags)
             {
@@ -634,7 +694,7 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
 
-            var operation  = $"Provisioning [{cluster.Definition.Name}] on AWS [{region}/{resourceGroup}]";
+            var operation  = $"Provisioning [{cluster.Definition.Name}] on AWS [{region}/{resourceGroupName}]";
             var controller = new SetupController<NodeDefinition>(operation, cluster.Nodes)
             {
                 ShowStatus     = this.ShowStatus,
@@ -745,6 +805,141 @@ namespace Neon.Kube
             ec2Client      = new AmazonEC2Client(awsCredentials, regionEndpoint);
             elbClient      = new AmazonElasticLoadBalancingV2Client(awsCredentials, regionEndpoint);
             rgClient       = new AmazonResourceGroupsClient(awsCredentials, regionEndpoint);
+
+            // Load information about any existing cluster resources.
+
+            await GetResourcesAsync();
+        }
+
+        /// <summary>
+        /// Loads information about cluster related resources already provisioned to AWS.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task GetResourcesAsync()
+        {
+            // Resource group
+
+            try
+            {
+                var groupResponse = await rgClient.GetGroupAsync(
+                    new GetGroupRequest()
+                    {
+                        Group = resourceGroupName
+                    });
+
+                resourceGroup = groupResponse.Group;
+            }
+            catch (NotFoundException)
+            {
+                resourceGroup = null;
+            }
+
+            if (resourceGroup != null)
+            {
+                // Ensure that the group was created for the cluster.
+                //
+                // For AWS, we're going to require that the resource group be restricted
+                // to just cluster resources.  This is different from what we do for Azure
+                // to reduce complexity and because there's less of a need for including
+                // non-cluster resources in the group because AWS supports nested resource
+                // groups.
+
+                var groupQueryResponse = await rgClient.GetGroupQueryAsync(
+                    new GetGroupQueryRequest()
+                    {
+                        Group = resourceGroupName
+                    });
+
+                var groupQuery = groupQueryResponse.GroupQuery;
+
+                if (groupQuery.ResourceQuery.Type != QueryType.TAG_FILTERS_1_0 ||
+                    groupQuery.ResourceQuery.Query != $"{{\"ResourceTypeFilters\":[\"AWS::AllSupported\"],\"TagFilters\":[{{\"Key\":\"NEON:Cluster\",\"Values\":[\"{clusterName}\"]}}]}}")
+                {
+                    throw new KubeException($"]{resourceGroup}] resource was not created exclusively for the [{clusterName}] neonKUBE cluster.");
+                }
+            }
+
+            // Elastic IP
+
+            var addressResponse = await ec2Client.DescribeAddressesAsync();
+
+            foreach (var addr in addressResponse.Addresses)
+            {
+                if (addr.Tags.Any(tag => tag.Key == nameTag && tag.Value == elasticIpName) &&
+                    addr.Tags.Any(tag => tag.Key == neonClusterTag && tag.Value == clusterName))
+                {
+                    elasticIp = addr;
+                    break;
+                }
+            }
+
+            // VPC
+
+            var vpcPaginator = ec2Client.Paginators.DescribeVpcs(new DescribeVpcsRequest());
+
+            await foreach (var vpcItem in vpcPaginator.Vpcs)
+            {
+                if (vpcItem.Tags.Any(tag => tag.Key == nameTag && tag.Value == vpcName) &&
+                    vpcItem.Tags.Any(tag => tag.Key == neonClusterTag && tag.Value == clusterName))
+                {
+                    vpc = vpcItem;
+                    break;
+                }
+            }
+
+            // DHCP options
+
+            var dhcpPaginator = ec2Client.Paginators.DescribeDhcpOptions(new DescribeDhcpOptionsRequest());
+
+            await foreach (var dhcpItem in dhcpPaginator.DhcpOptions)
+            {
+                if (dhcpItem.Tags.Any(tag => tag.Key == nameTag && tag.Value == dhcpOptionName) &&
+                    dhcpItem.Tags.Any(tag => tag.Key == neonClusterTag && tag.Value == clusterName))
+                {
+                    dhcpOptions = dhcpItem;
+                    break;
+                }
+            }
+
+            // Subnet
+
+            var subnetPaginator = ec2Client.Paginators.DescribeSubnets(new DescribeSubnetsRequest());
+
+            await foreach (var subnetItem in subnetPaginator.Subnets)
+            {
+                if (subnetItem.Tags.Any(tag => tag.Key == nameTag && tag.Value == subnetName) &&
+                    subnetItem.Tags.Any(tag => tag.Key == neonClusterTag && tag.Value == clusterName))
+                {
+                    subnet = subnetItem;
+                    break;
+                }
+            }
+
+            // Gateway
+
+            // $todo(jefflill): IMPLEMENT THIS!
+
+            // Load Balancer
+
+            // $todo(jefflill): IMPLEMENT THIS!
+
+            // Instances
+
+            var instancePaginator = ec2Client.Paginators.DescribeInstances(new DescribeInstancesRequest());
+
+            await foreach (var reservation in instancePaginator.Reservations)
+            {
+                foreach (var instance in reservation.Instances)
+                {
+                    var name    = instance.Tags.SingleOrDefault(tag => tag.Key == nameTag)?.Value;
+                    var cluster = instance.Tags.SingleOrDefault(tag => tag.Key == neonClusterTag)?.Value;
+
+                    if (name != null && cluster == clusterName && instanceNameToInstance.TryGetValue(name, out var instanceInfo))
+                    {
+                        instanceInfo.Instance = instance;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -922,7 +1117,7 @@ namespace Neon.Kube
                 var groupResponse = await rgClient.GetGroupAsync(
                     new GetGroupRequest()
                     {
-                        Group = resourceGroup
+                        Group = resourceGroupName
                     });
 
                 group = groupResponse.Group;
@@ -939,16 +1134,16 @@ namespace Neon.Kube
                 await rgClient.CreateGroupAsync(
                     new CreateGroupRequest()
                     {
-                        Name          = resourceGroup,
+                        Name          = resourceGroupName,
                         Description   = $"Identifies the resources for the {clusterName} neonKUBE cluster",
                         Tags          = new Dictionary<string, string>()
                         {
-                            {  $"{neonTagPrefix}:Cluster", clusterName },
-                            {  $"{neonTagPrefix}:Environment", NeonHelper.EnumToString(cluster.Definition.Environment) },
+                            {  neonClusterTag, clusterName },
+                            {  neonEnvironmentTag, NeonHelper.EnumToString(cluster.Definition.Environment) },
                         },
                         ResourceQuery = new ResourceQuery()
                         {
-                            Query = $"{{\"ResourceTypeFilters\":[\"AWS::AllSupported\"],\"TagFilters\":[{{\"Key\":\"{neonTagPrefix}:Cluster\",\"Values\":[\"{clusterName}\"]}}]}}",
+                            Query = $"{{\"ResourceTypeFilters\":[\"AWS::AllSupported\"],\"TagFilters\":[{{\"Key\":\"{neonClusterTag}\",\"Values\":[\"{clusterName}\"]}}]}}",
                             Type  = QueryType.TAG_FILTERS_1_0
                         }
                     });
@@ -968,7 +1163,7 @@ namespace Neon.Kube
                 var groupQueryResponse = await rgClient.GetGroupQueryAsync(
                     new GetGroupQueryRequest()
                     {
-                        Group = resourceGroup
+                        Group = resourceGroupName
                     });
 
                 var groupQuery = groupQueryResponse.GroupQuery;
@@ -976,7 +1171,7 @@ namespace Neon.Kube
                 if (groupQuery.ResourceQuery.Type != QueryType.TAG_FILTERS_1_0 ||
                     groupQuery.ResourceQuery.Query != $"{{\"ResourceTypeFilters\":[\"AWS::AllSupported\"],\"TagFilters\":[{{\"Key\":\"NEON:Cluster\",\"Values\":[\"{clusterName}\"]}}]}}")
                 {
-                    throw new KubeException($"{resourceGroup} - neonKUBE cluster related resources");
+                    throw new KubeException($"{resourceGroupName} - neonKUBE cluster related resources");
                 }
             }
         }
@@ -987,36 +1182,32 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateElasticIpAsync()
         {
-            var addressName     = GetResourceName("eip", "cluster");
-            var addressResponse = await ec2Client.DescribeAddressesAsync();
-            var address         = (Address)null;
-
-            // Look for an existing address with the expected name and cluster tag.
-
-            foreach (var addr in addressResponse.Addresses)
+            if (elasticIp == null)
             {
-                if (addr.Tags.Any(tag => tag.Key == "Name" && tag.Value == addressName) &&
-                    addr.Tags.Any(tag => tag.Key == $"{neonTagPrefix}:Cluster" && tag.Value == clusterName))
-                {
-                    address = addr;
-                    break;
-                }
-            }
-
-            if (address == null)
-            {
-                // There is no existing address so create one.
-
                 var allocateResponse = await ec2Client.AllocateAddressAsync();
                 
-                addressId = allocateResponse.AllocationId;
+                var addressId = allocateResponse.AllocationId;
 
                 await ec2Client.CreateTagsAsync(
                     new CreateTagsRequest()
                     {
                         Resources = new List<string>() { addressId },
-                        Tags      = GetTags<Amazon.EC2.Model.Tag>(addressName)
+                        Tags      = GetTags<Amazon.EC2.Model.Tag>(elasticIpName)
                     });
+
+                // Retrieve the elastic IP resource.
+
+                var addressResponse = await ec2Client.DescribeAddressesAsync();
+
+                foreach (var addr in addressResponse.Addresses)
+                {
+                    if (addr.Tags.Any(tag => tag.Key == nameTag && tag.Value == elasticIpName) &&
+                        addr.Tags.Any(tag => tag.Key == neonClusterTag && tag.Value == clusterName))
+                    {
+                        elasticIp = addr;
+                        break;
+                    }
+                }
             }
         }
 
@@ -1026,20 +1217,6 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateVpcSubnetAsync()
         {
-            // Create the VPC if it doesn't already exist.
-
-            var vpcName      = GetResourceName("vpc", "cluster");
-            var vpcPaginator = ec2Client.Paginators.DescribeVpcs(new DescribeVpcsRequest());
-
-            await foreach (var vpcItem in vpcPaginator.Vpcs)
-            {
-                if (vpcItem.Tags.Any(tag => tag.Key == "Name" && tag.Value == vpcName))
-                {
-                    vpc = vpcItem;
-                    break;
-                }
-            }
-
             if (vpc == null)
             {
                 var vpcResponse = await ec2Client.CreateVpcAsync(
@@ -1056,23 +1233,8 @@ namespace Neon.Kube
             // custom nameservers in the cluster definition.  We'll accomplish
             // this by creating DHCP options and associating them with the VPC.
 
-            var dhcpOptionName = GetResourceName("dopt", "cluster");
-
             if (networkOptions.Nameservers != null && networkOptions.Nameservers.Count > 0)
             {
-                // Create the DHCP option configuration if it disn't already exist.
-
-                var dhcpPaginator = ec2Client.Paginators.DescribeDhcpOptions(new DescribeDhcpOptionsRequest());
-
-                await foreach (var dhcpItem in dhcpPaginator.DhcpOptions)
-                {
-                    if (dhcpItem.Tags.Any(tag => tag.Key == "Name" && tag.Value == dhcpOptionName))
-                    {
-                        dhcpOptions = dhcpItem;
-                        break;
-                    }
-                }
-
                 if (dhcpOptions == null)
                 {
                     var sbNameservers = new StringBuilder();
@@ -1108,18 +1270,6 @@ namespace Neon.Kube
 
             // Create the subnet and associate it with the VPC if the subnet doesn't already exist.
 
-            var subnetName      = GetResourceName("subnet", "cluster");
-            var subnetPaginator = ec2Client.Paginators.DescribeSubnets(new DescribeSubnetsRequest());
-
-            await foreach (var subnetItem in subnetPaginator.Subnets)
-            {
-                if (subnetItem.Tags.Any(tag => tag.Key == "Name" && tag.Value == subnetName))
-                {
-                    subnet = subnetItem;
-                    break;
-                }
-            }
-
             if (subnet == null)
             {
                 var subnetResponse = await ec2Client.CreateSubnetAsync(
@@ -1132,10 +1282,9 @@ namespace Neon.Kube
                 subnet = subnetResponse.Subnet;
             }
 
-            // Create the Internet gateway if it doesn't already exist.
+            // Create the Internet gateway
 
-            var gatewayName      = GetResourceName("egw", "cluster");
-            var gatewayPaginator = ec2Client.Paginators.DescribeInternetGateways(new DescribeInternetGatewaysRequest());
+            // $todo(jefflill): IMPLEMENT THIS!
         }
 
         /// <summary>
@@ -1144,22 +1293,6 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateLoadbalancerAsync()
         {
-            //var loadbalancerName = GetResourceName("elb", "load-balancer");
-            var loadbalancerName = "load-balancer";
-
-            // Create cluster load balancer if it doesn't already exist.
-
-            var loadbalancerPaginator = elbClient.Paginators.DescribeLoadBalancers(new DescribeLoadBalancersRequest());
-
-            await foreach (var lbItem in loadbalancerPaginator.LoadBalancers)
-            {
-                if (lbItem.LoadBalancerName == loadbalancerName)
-                {
-                    loadbalancer = lbItem;
-                    break;
-                }
-            }
-
             //if (loadbalancer == null)
             //{
             //    var loadbalancerResponse = await elbClient.CreateLoadBalancerAsync(
@@ -1188,7 +1321,7 @@ namespace Neon.Kube
 
             node.Status = "checking";
 
-            var instanceName      = GetResourceName("i", node.Name);
+            var instanceName      = nodeNameToInstance[node.Name].InstanceName;
             var instancePaginator = ec2Client.Paginators.DescribeInstances(new DescribeInstancesRequest());
             var instance          = (Instance)null;
 
@@ -1196,7 +1329,7 @@ namespace Neon.Kube
             {
                 foreach (var instanceItem in reservation.Instances)
                 {
-                    if (instance.Tags.Any(tag => tag.Key == "Name" && tag.Value == instanceName))
+                    if (instance.Tags.Any(tag => tag.Key == nameTag && tag.Value == instanceName))
                     {
                         instance = instanceItem;
                         break;
@@ -1228,7 +1361,7 @@ namespace Neon.Kube
                 instance = runResponse.Reservation.Instances.Single();
             }
 
-            nameToInstance[node.Name].Instance = instance;
+            nodeNameToInstance[node.Name].Instance = instance;
         }
     }
 }
