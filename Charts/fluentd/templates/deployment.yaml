@@ -30,7 +30,6 @@ spec:
         app: {{ template "fluentd.name" . }}
         release: {{ .Release.Name }}
       annotations:
-        checksum/configmap: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
         fluentbit.io/exclude: 'true'
         {{- if .Values.annotations }}
         {{- toYaml .Values.annotations | nindent 8 }}
@@ -96,16 +95,10 @@ spec:
           initialDelaySeconds: 5
           timeoutSeconds: 1
         volumeMounts:
-        - name: config-volume-{{ template "fluentd.fullname" . }}
-          mountPath: /etc/fluent/config.d
         - name: buffer
           mountPath: "/var/log/fluentd-buffers"
       serviceAccountName: {{ template "fluentd.fullname" . }}
       volumes:
-        - name: config-volume-{{ template "fluentd.fullname" . }}
-          configMap:
-            name: {{ template "fluentd.fullname" . }}
-            defaultMode: 0777
         {{- if and .Values.persistence.enabled (not .Values.autoscaling.enabled) }}
         - name: buffer          
           persistentVolumeClaim:
