@@ -1730,7 +1730,7 @@ namespace Neon.Kube
             loadBalancer        = loadBalancerUpdater.Apply();
             loadBalancerUpdater = loadBalancer.Update();
 
-            // Add the SSH NAT rules for each node.  Note that we need to do this in two steps:
+            // Add the SSH NAT rules for each node.  Note that we need to do this in three steps:
             //
             //      1. Add the NAT rule to the load balancer
             //      2. Enable TCP Reset for connections that are idle for too long
@@ -1753,7 +1753,7 @@ namespace Neon.Kube
             loadBalancerUpdater = loadBalancer.Update();
 
             // We need to set [EnableTcpReset] for the load balancer rules separately because
-            // the Fluent API doesn't support the property yet.
+            // the Fluent API doesn't support the property (yet?).
 
             foreach (var azureNode in SortedMasterThenWorkerNodes)
             {
@@ -1776,7 +1776,7 @@ namespace Neon.Kube
                     .Apply();
             }
 
-            // Add the NSG rules so that the public SSH NAT rules will actually work.
+            // Add NSG rules so that the public SSH NAT rules can actually route traffic to the nodes.
             //
             // To keep things simple, we're going to generate a separate rule for each source address
             // restriction.  In theory, we could have tried collecting allow and deny rules 
