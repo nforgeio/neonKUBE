@@ -100,12 +100,12 @@ strategy:
 
 annotations: {}
 nodeSelector:
-  neonkube.io/monitor.cortex: 'true'
+  neonkube.io/monitor.metrics: 'true'
 
 affinity: {}
 
 tolerations:
-  - key: "neonkube.io/cortex"
+  - key: "neonkube.io/metrics"
     operator: Exists
     effect: NoSchedule
 
