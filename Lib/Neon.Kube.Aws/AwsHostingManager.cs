@@ -49,6 +49,7 @@ using Amazon.ElasticLoadBalancingV2.Model;
 using Amazon.ResourceGroups;
 using Amazon.ResourceGroups.Model;
 using Amazon.Runtime;
+using System.Runtime.InteropServices;
 
 namespace Neon.Kube
 {
@@ -213,7 +214,7 @@ namespace Neon.Kube
                         return instanceName;
                     }
 
-                    return instanceName = hostingManager.GetResourceName("node", Proxy.Name);
+                    return instanceName = hostingManager.GetResourceName($"{Proxy.Name}");
                 }
             }
 
@@ -371,11 +372,6 @@ namespace Neon.Kube
         private const string neonClusterTag = neonTagPrefix + ":Cluster";
 
         /// <summary>
-        /// Neon specific environment tag name.
-        /// </summary>
-        private const string neonEnvironmentTag = neonTagPrefix + ":Environment";
-
-        /// <summary>
         /// Returns the list of supported Ubuntu images from the AWS Marketplace.
         /// </summary>
         private static IReadOnlyList<AwsUbuntuImage> ubuntuImages;
@@ -424,17 +420,18 @@ namespace Neon.Kube
         private Group                               resourceGroup;
         private Address                             elasticIp;
         private Vpc                                 vpc;
+        private NetworkAcl                          networkAcl;
         private DhcpOptions                         dhcpOptions;
         private Subnet                              subnet;
-        private LoadBalancer                        loadbalancer;
         private InternetGateway                     gateway;
+        private LoadBalancer                        loadbalancer;
 
         // These are the names we'll use for cluster AWS resources.
 
         private string                              elasticIpName;
-        private string                              subnetName;
-        private string                              dhcpOptionName;
         private string                              vpcName;
+        private string                              dhcpOptionName;
+        private string                              subnetName;
         private string                              gatewayName;
         private string                              loadbalancerName;
 
@@ -472,45 +469,30 @@ namespace Neon.Kube
 
             cluster.HostingManager = this;
 
-            this.setupInfo      = setupInfo;
-            this.cluster        = cluster;
-            this.clusterName    = cluster.Name;
-            this.hostingOptions = cluster.Definition.Hosting;
-            this.cloudOptions   = hostingOptions.Cloud;
-            this.awsOptions     = hostingOptions.Aws;
-            this.networkOptions = cluster.Definition.Network;
-            this.region         = awsOptions.Region;
-            this.resourceGroupName  = awsOptions.ResourceGroup;
+            this.setupInfo         = setupInfo;
+            this.cluster           = cluster;
+            this.clusterName       = cluster.Name;
+            this.hostingOptions    = cluster.Definition.Hosting;
+            this.cloudOptions      = hostingOptions.Cloud;
+            this.awsOptions        = hostingOptions.Aws;
+            this.networkOptions    = cluster.Definition.Network;
+            this.region            = awsOptions.Region;
+            this.resourceGroupName = awsOptions.ResourceGroup;
 
-            switch (cloudOptions.PrefixResourceNames)
-            {
-                case TriState.Default:
+            // We're always going to prefix AWS resource names with the cluster name because
+            // AWS resource names have scope and because load balancer names need to be unique
+            // within an AWS account and region.
 
-                    // Default to TRUE for AWS because all resource names have
-                    // global scope.
-
-                    this.prefixResourceNames = true;
-                    break;
-
-                case TriState.True:
-
-                    this.prefixResourceNames = true;
-                    break;
-
-                case TriState.False:
-
-                    this.prefixResourceNames = false;
-                    break;
-            }
+            this.prefixResourceNames = true;
 
             // Initialize the cluster resource names.
 
-            elasticIpName    = GetResourceName("eip", "cluster");
-            subnetName       = GetResourceName("subnet", "cluster");
-            dhcpOptionName   = GetResourceName("dopt", "cluster");
-            vpcName          = GetResourceName("vpc", "cluster");
-            gatewayName      = GetResourceName("igw", "cluster");
-            loadbalancerName = GetResourceName("lb", "cluster");
+            elasticIpName    = GetResourceName("elastic-ip");
+            vpcName          = GetResourceName("vpc");
+            dhcpOptionName   = GetResourceName("dhcp-opt");
+            subnetName       = GetResourceName("subnet");
+            gatewayName      = GetResourceName("internet-gateway");
+            loadbalancerName = GetResourceName("load-balancer");
 
             // Initialize the instance/node mapping dictionaries and also ensure
             // that each node has reasonable AWS node options.
@@ -609,21 +591,23 @@ namespace Neon.Kube
         /// <a href="https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html">AWS Tagging Best Practices</a>
         /// </para>
         /// </summary>
-        /// <param name="resourceTypeSuffix">The AWS resource type prefix (like "vm" for instance or "vpc" for virtual private cloud).</param>
         /// <param name="resourceName">The base resource name.</param>
         /// <returns>The fully quallified resource name.</returns>
-        private string GetResourceName(string resourceTypeSuffix, string resourceName)
+        private string GetResourceName(string resourceName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(resourceTypeSuffix), nameof(resourceTypeSuffix));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(resourceName), nameof(resourceName));
+
+            // Note that AWS load balancers don't allow periods in their names but neonKUBE'
+            // allows cluster names to include in addition to alphnums and dashes.  We're 
+            // going to convert any periods to dashes in the resource names we generate.
 
             if (prefixResourceNames)
             {
-                return $"{clusterName}.{resourceName}.{resourceTypeSuffix}";
+                return $"{clusterName}-{resourceName}".Replace('.', '-');
             }
             else
             {
-                return $"{resourceName}.{resourceTypeSuffix}";
+                return $"{resourceName}".Replace('.', '-');
             }
         }
 
@@ -641,7 +625,6 @@ namespace Neon.Kube
 
             tagList.Add(new Tag<T>(nameTag, name).ToAws());
             tagList.Add(new Tag<T>(neonClusterTag, clusterName).ToAws());
-            tagList.Add(new Tag<T>(neonEnvironmentTag, NeonHelper.EnumToString(cluster.Definition.Environment)).ToAws());
 
             foreach (var tag in tags)
             {
@@ -705,11 +688,11 @@ namespace Neon.Kube
             controller.AddGlobalStep("AWS connect", ConnectAwsAsync);
             controller.AddGlobalStep("region check", () => VerifyRegionAndInstanceTypesAsync());
             controller.AddGlobalStep("locate ami", LocateAmiAsync);
-            controller.AddGlobalStep("create resource group", CreateResourceGroupAsync);
-            controller.AddGlobalStep("create elastic ip", CreateElasticIpAsync);
-            controller.AddGlobalStep("create vpc/subnet", CreateVpcSubnetAsync);
-            controller.AddGlobalStep("create load balancer", CreateLoadbalancerAsync);
-            controller.AddStep("create node instances", CreateInstanceAsync);
+            controller.AddGlobalStep("resource group", CreateResourceGroupAsync);
+            controller.AddGlobalStep("elastic ip", CreateElasticIpAsync);
+            controller.AddGlobalStep("network", ConfigureNetworkAsync);
+            controller.AddGlobalStep("load balancer", CreateLoadbalancerAsync);
+            controller.AddStep("node instances", CreateInstanceAsync);
 
             if (!controller.Run(leaveNodesConnected: false))
             {
@@ -863,17 +846,17 @@ namespace Neon.Kube
 
             var addressResponse = await ec2Client.DescribeAddressesAsync();
 
-            foreach (var addr in addressResponse.Addresses)
+            foreach (var addressItem in addressResponse.Addresses)
             {
-                if (addr.Tags.Any(tag => tag.Key == nameTag && tag.Value == elasticIpName) &&
-                    addr.Tags.Any(tag => tag.Key == neonClusterTag && tag.Value == clusterName))
+                if (addressItem.Tags.Any(tag => tag.Key == nameTag && tag.Value == elasticIpName) &&
+                    addressItem.Tags.Any(tag => tag.Key == neonClusterTag && tag.Value == clusterName))
                 {
-                    elasticIp = addr;
+                    elasticIp = addressItem;
                     break;
                 }
             }
 
-            // VPC
+            // VPC and it's default network ACL.
 
             var vpcPaginator = ec2Client.Paginators.DescribeVpcs(new DescribeVpcsRequest());
 
@@ -885,6 +868,11 @@ namespace Neon.Kube
                     vpc = vpcItem;
                     break;
                 }
+            }
+
+            if (vpc != null)
+            {
+                networkAcl = await GetNetworkAclAsync(vpc);
             }
 
             // DHCP options
@@ -917,11 +905,30 @@ namespace Neon.Kube
 
             // Gateway
 
-            // $todo(jefflill): IMPLEMENT THIS!
+            var gatewayPaginator = ec2Client.Paginators.DescribeInternetGateways(new DescribeInternetGatewaysRequest());
+
+            await foreach (var gatewayItem in gatewayPaginator.InternetGateways)
+            {
+                if (gatewayItem.Tags.Any(tag => tag.Key == nameTag && tag.Value == gatewayName) &&
+                    gatewayItem.Tags.Any(tag => tag.Key == neonClusterTag && tag.Value == clusterName))
+                {
+                    gateway = gatewayItem;
+                    break;
+                }
+            }
 
             // Load Balancer
 
-            // $todo(jefflill): IMPLEMENT THIS!
+            var loadbalancerPaginator = elbClient.Paginators.DescribeLoadBalancers(new DescribeLoadBalancersRequest());
+
+            await foreach (var loadbalancerItem in loadbalancerPaginator.LoadBalancers)
+            {
+                if (loadbalancerItem.LoadBalancerName == loadbalancerName)
+                {
+                    loadbalancer = loadbalancerItem;
+                    break;
+                }
+            }
 
             // Instances
 
@@ -940,6 +947,38 @@ namespace Neon.Kube
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns the network ACL currently assigned to a VPC.
+        /// </summary>
+        /// <param name="vpc">The VPC.</param>
+        /// <returns>The network ACL.</returns>
+        private async Task<NetworkAcl> GetNetworkAclAsync(Vpc vpc)
+        {
+            Covenant.Requires<ArgumentNullException>(vpc != null, nameof(vpc));
+
+            var associationPaginator = ec2Client.Paginators.DescribeNetworkAcls(new DescribeNetworkAclsRequest());
+
+            await foreach (var association in associationPaginator.NetworkAcls)
+            {
+                if (association.VpcId == vpc.VpcId && association.IsDefault)
+                {
+                    var networkAclPaginator = ec2Client.Paginators.DescribeNetworkAcls(
+                        new DescribeNetworkAclsRequest()
+                        {
+                            NetworkAclIds = new List<string>() { association.NetworkAclId }
+                        });
+
+                    await foreach (var networkAclItem in networkAclPaginator.NetworkAcls)
+                    {
+                        return networkAclItem;
+                    }
+                }
+            }
+
+            Covenant.Assert(false, "There should always be an network ACL assigned to the VPC.");
+            return null;
         }
 
         /// <summary>
@@ -1134,12 +1173,11 @@ namespace Neon.Kube
                 await rgClient.CreateGroupAsync(
                     new CreateGroupRequest()
                     {
-                        Name          = resourceGroupName,
-                        Description   = $"Identifies the resources for the {clusterName} neonKUBE cluster",
-                        Tags          = new Dictionary<string, string>()
+                        Name        = resourceGroupName,
+                        Description = $"Identifies the resources for the {clusterName} neonKUBE cluster",
+                        Tags        = new Dictionary<string, string>()
                         {
-                            {  neonClusterTag, clusterName },
-                            {  neonEnvironmentTag, NeonHelper.EnumToString(cluster.Definition.Environment) },
+                            {  neonClusterTag, clusterName }
                         },
                         ResourceQuery = new ResourceQuery()
                         {
@@ -1212,11 +1250,14 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates the cluster VPC (aka VNET) and its subnet.
+        /// Creates the cluster networking components including the VPC, subnet, internet gateway
+        /// and network ACL.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task CreateVpcSubnetAsync()
+        private async Task ConfigureNetworkAsync()
         {
+            // Create the VPC.
+
             if (vpc == null)
             {
                 var vpcResponse = await ec2Client.CreateVpcAsync(
@@ -1228,6 +1269,8 @@ namespace Neon.Kube
 
                 vpc = vpcResponse.Vpc;
             }
+
+            networkAcl = await GetNetworkAclAsync(vpc);
 
             // Override the default AWS DNS servers if the user has specified 
             // custom nameservers in the cluster definition.  We'll accomplish
@@ -1282,9 +1325,29 @@ namespace Neon.Kube
                 subnet = subnetResponse.Subnet;
             }
 
-            // Create the Internet gateway
+            // Create the Internet gateway and attach it to the VPC if it's
+            // not already attached.
 
-            // $todo(jefflill): IMPLEMENT THIS!
+            if (gateway == null)
+            {
+                var gatewayResponse = await ec2Client.CreateInternetGatewayAsync(
+                    new CreateInternetGatewayRequest()
+                    {
+                        TagSpecifications = GetTagSpecifications(gatewayName, ResourceType.InternetGateway)
+                    });
+
+                gateway = gatewayResponse.InternetGateway;
+            }
+
+            if (!gateway.Attachments.Any(association => association.VpcId == vpc.VpcId))
+            {
+                await ec2Client.AttachInternetGatewayAsync(
+                    new AttachInternetGatewayRequest()
+                    {
+                        VpcId             = vpc.VpcId,
+                        InternetGatewayId = gateway.InternetGatewayId
+                    });
+            }
         }
 
         /// <summary>
@@ -1293,20 +1356,21 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateLoadbalancerAsync()
         {
-            //if (loadbalancer == null)
-            //{
-            //    var loadbalancerResponse = await elbClient.CreateLoadBalancerAsync(
-            //        new CreateLoadBalancerRequest()
-            //        {
-            //            Name          = loadbalancerName,
-            //            IpAddressType = IpAddressType.Ipv4,
-            //            Subnets       = new List<string>() { subnet.SubnetId },
-            //            Type          = LoadBalancerTypeEnum.Network,
-            //            Tags          = GetTags<Amazon.ElasticLoadBalancingV2.Model.Tag>(loadbalancerName)
-            //        });
+            if (loadbalancer == null)
+            {
+                var loadbalancerResponse = await elbClient.CreateLoadBalancerAsync(
+                    new CreateLoadBalancerRequest()
+                    {
+                        Name          = loadbalancerName,
+                        IpAddressType = IpAddressType.Ipv4,
+                        Scheme        = LoadBalancerSchemeEnum.InternetFacing,
+                        Subnets       = new List<string>() { subnet.SubnetId },
+                        Type          = LoadBalancerTypeEnum.Network,
+                        Tags          = GetTags<Amazon.ElasticLoadBalancingV2.Model.Tag>(loadbalancerName)
+                    });
 
-            //    loadbalancer = loadbalancerResponse.LoadBalancers.Single();
-            //}
+                loadbalancer = loadbalancerResponse.LoadBalancers.Single();
+            }
         }
 
         /// <summary>
@@ -1344,7 +1408,7 @@ namespace Neon.Kube
 
             if (instance == null)
             {
-                node.Status = "create instance";
+                node.Status = "creating instance";
 
                 var runResponse = await ec2Client.RunInstancesAsync(
                     new RunInstancesRequest()

@@ -65,18 +65,17 @@ namespace Neon.Kube
         /// <item>
         ///     <term><b>AWS</b></term>
         ///     <description>
-        ///     For AWS, we'll prefix the resource names by default.  This makes sense because
-        ///     all AWS resource names are globally scoped so doing this will avoid conflicts 
-        ///     and avoid having multiple resources like instances from different clusters having
-        ///     the same name like <b>master-0</b>.
+        ///     Resource names are <b>always</b> prefixed for AWS deployments.  This makes sense because
+        ///     AWS resource names are globally scoped and also because load balancer names are
+        ///     required to be unique within an AWS account and region.
         ///     </description>
         /// </item>
         /// <item>
         ///     <term><b>Azure</b></term>
         ///     <description>
-        ///     For Azure, resource names are not prefixed by default.  neonKUBE clusters deployed
-        ///     to Azure are always created in a resource group and Azure scopes resources names to 
-        ///     the group.  This means that the prefix really isn't necessary. 
+        ///     Resource names are not prefixed by default.  neonKUBE clusters deployed to Azure
+        ///     are always created in a resource group and Azure scopes resource names to the group.
+        ///     This means that the prefix really isn't necessary. 
         ///     </description>
         /// </item>
         /// <item>
