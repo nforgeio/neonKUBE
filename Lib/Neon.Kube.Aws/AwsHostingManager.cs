@@ -163,6 +163,15 @@ namespace Neon.Kube
         // Note that we also support source address white/black listing for both
         // ingress and SSH rules and as well as destination address white/black
         // listing for general outbound cluster traffic.
+        //
+        // Managing the AWS load balancer is a bit more challenging than doing 
+        // the same for Azure.  Azure allows us to reconfigure the load balancer
+        // and security rules and them update these atomically in one operation
+        // for each of the load balancer and security rules.  AWS on the other 
+        // hand, requires each load balancer or security rule addition or deletion
+        // to be performed individually.  This means that we can't just clear
+        // and rebuild all of the rules like we do for Azure without potentially
+        // blocking some network traffic while we're applying the updates.
 
         /// <summary>
         /// Relates cluster node information to an AWS VM instance.
@@ -386,19 +395,29 @@ namespace Neon.Kube
         private const string canonicalOwnerId = "099720109477";
 
         /// <summary>
-        /// Neon specific namespace prefix AWS resource tags.
-        /// </summary>
-        private const string neonTagPrefix = "NEON";
-
-        /// <summary>
         /// AWS generic name tag.
         /// </summary>
         private const string nameTag = "Name";
 
         /// <summary>
-        /// Neon specific cluster tag name.
+        /// The (namespace) prefix used for neonKUBE related Azure resource tags.
         /// </summary>
-        private const string neonClusterTag = neonTagPrefix + ":Cluster";
+        private const string neonTagPrefix = "neon:";
+
+        /// <summary>
+        /// Used to tag resources with the cluster name.
+        /// </summary>
+        private const string neonClusterTag = neonTagPrefix + "cluster";
+
+        /// <summary>
+        /// Used to tag resources with the cluster environment.
+        /// </summary>
+        private const string neonEnvironmentTag = neonTagPrefix + "environment";
+
+        /// <summary>
+        /// Used to tag instances resources with the cluster node name.
+        /// </summary>
+        private const string neonNodeNameTag = neonTagPrefix + "node.name";
 
         /// <summary>
         /// The default deny everything network ACL rule number.
@@ -447,6 +466,7 @@ namespace Neon.Kube
         private KubeSetupInfo                       setupInfo;
         private ClusterProxy                        cluster;
         private string                              clusterName;
+        private string                              clusterEnvironment;
         private HostingOptions                      hostingOptions;
         private CloudOptions                        cloudOptions;
         private bool                                prefixResourceNames;
@@ -517,17 +537,18 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
             Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
 
-            cluster.HostingManager = this;
+            cluster.HostingManager  = this;
 
-            this.setupInfo         = setupInfo;
-            this.cluster           = cluster;
-            this.clusterName       = cluster.Name;
-            this.hostingOptions    = cluster.Definition.Hosting;
-            this.cloudOptions      = hostingOptions.Cloud;
-            this.awsOptions        = hostingOptions.Aws;
-            this.networkOptions    = cluster.Definition.Network;
-            this.region            = awsOptions.Region;
-            this.resourceGroupName = awsOptions.ResourceGroup;
+            this.setupInfo          = setupInfo;
+            this.cluster            = cluster;
+            this.clusterName        = cluster.Name;
+            this.clusterEnvironment = NeonHelper.EnumToString(cluster.Definition.Environment);
+            this.hostingOptions     = cluster.Definition.Hosting;
+            this.cloudOptions       = hostingOptions.Cloud;
+            this.awsOptions         = hostingOptions.Aws;
+            this.networkOptions     = cluster.Definition.Network;
+            this.region             = awsOptions.Region;
+            this.resourceGroupName  = awsOptions.ResourceGroup;
 
             // We're always going to prefix AWS resource names with the cluster name because
             // AWS resource names have scope and because load balancer names need to be unique
@@ -671,6 +692,7 @@ namespace Neon.Kube
 
             tagList.Add(new Tag<T>(nameTag, name).ToAws());
             tagList.Add(new Tag<T>(neonClusterTag, clusterName).ToAws());
+            tagList.Add(new Tag<T>(neonEnvironmentTag, clusterEnvironment).ToAws());
 
             foreach (var tag in tags)
             {
@@ -1450,7 +1472,7 @@ namespace Neon.Kube
             var instance     = nodeNameToInstance[node.Name];
             var instanceName = instance.InstanceName;
 
-            if (instance == null)
+            if (instance.Instance == null)
             {
                 node.Status = "create instance";
 
@@ -1463,7 +1485,7 @@ namespace Neon.Kube
                         MaxCount          = 1,
                         SubnetId          = subnet.SubnetId,
                         PrivateIpAddress  = node.Address.ToString(),
-                        TagSpecifications = GetTagSpecifications(instanceName, ResourceType.Instance)
+                        TagSpecifications = GetTagSpecifications(instanceName, ResourceType.Instance, new KeyValuePair<string, string>(neonNodeNameTag, node.Name))
                     });
 
                 instance.Instance = runResponse.Reservation.Instances.Single();

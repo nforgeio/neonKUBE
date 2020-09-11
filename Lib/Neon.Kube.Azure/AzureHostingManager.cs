@@ -366,9 +366,24 @@ namespace Neon.Kube
         private const string publicSshRulePrefix = "public-ssh-";
 
         /// <summary>
-        /// Used to tag VMs with the cluster node name.
+        /// The (namespace) prefix used for neonKUBE related Azure resource tags.
         /// </summary>
-        private static string NodeNameTag = "neonkube.io.node.name";
+        private const string neonTagPrefix = "neon:";
+
+        /// <summary>
+        /// Used to tag resources with the cluster name.
+        /// </summary>
+        private const string neonClusterTag = neonTagPrefix + "cluster";
+
+        /// <summary>
+        /// Used to tag resources with the cluster environment.
+        /// </summary>
+        private const string neonEnvironmentTag = neonTagPrefix + "environment";
+
+        /// <summary>
+        /// Used to tag VM resources with the cluster node name.
+        /// </summary>
+        private const string neonNodeNameTag = neonTagPrefix + "node.name";
 
         /// <summary>
         /// Returns the list of supported Ubuntu images from the Azure Marketplace.
@@ -540,6 +555,7 @@ namespace Neon.Kube
         private KubeSetupInfo                           setupInfo;
         private ClusterProxy                            cluster;
         private string                                  clusterName;
+        private string                                  clusterEnvironment;
         private string                                  nodeUsername;
         private string                                  nodePassword;
         private HostingOptions                          hostingOptions;
@@ -609,6 +625,7 @@ namespace Neon.Kube
             this.setupInfo             = setupInfo;
             this.cluster               = cluster;
             this.clusterName           = cluster.Name;
+            this.clusterEnvironment    = NeonHelper.EnumToString(cluster.Definition.Environment);
             this.hostingOptions        = cluster.Definition.Hosting;
             this.cloudOptions          = hostingOptions.Cloud;
             this.azureOptions          = hostingOptions.Azure;
@@ -815,7 +832,7 @@ namespace Neon.Kube
 
                     foreach (var vm in azure.VirtualMachines.ListByResourceGroup(resourceGroup))
                     {
-                        if (!vm.Tags.TryGetValue(NodeNameTag, out var nodeName))
+                        if (!vm.Tags.TryGetValue(neonNodeNameTag, out var nodeName))
                         {
                             break;  // Not a cluster VM
                         }
@@ -1421,7 +1438,7 @@ namespace Neon.Kube
                 .WithNewDataDisk((int)(ByteUnits.Parse(node.Metadata.Azure.DiskSize) / ByteUnits.GibiBytes))
                 .WithSize(node.Metadata.Azure.VmSize)
                 .WithExistingAvailabilitySet(nameToAvailabilitySet[azureNode.AvailabilitySetName])
-                .WithTag(NodeNameTag, azureNode.Metadata.Name)
+                .WithTag(neonNodeNameTag, azureNode.Metadata.Name)
                 .Create();
         }
 
