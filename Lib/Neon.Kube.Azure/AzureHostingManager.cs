@@ -121,11 +121,13 @@ namespace Neon.Kube
         //       doesn't support UDP, ICMP, etc. at this time.
         //
         // A network security group will be created and assigned to the subnet.
-        // This will include ingress rules constructed from [NetworkOptions.IngressRules]
-        // and egress rules constructed from [NetworkOptions.EgressAddressRules].
+        // This will include ingress rules constructed from [NetworkOptions.IngressRules],
+        // any temporary SSH related rules as well as egress rules constructed from
+        // [NetworkOptions.EgressAddressRules].
         //
         // Azure VM NICs will be configured with each node's IP address.  We are not
-        // currently assigning network security groups to these NICs.
+        // currently assigning network security groups to these NICs.  The provisioner 
+        // assigns these addresses automatically.
         //
         // VMs are currently based on the Ubuntu-20.04 Server image provided  
         // published to the marketplace by Canonical.  They publish Gen1 and Gen2
@@ -152,14 +154,16 @@ namespace Neon.Kube
         // Azure disk size greater than or equal to the requested size.
         //
         // We'll be managing cluster node setup and maintenance remotely via
-        // SSH cconnections and the cluster reserves 1000 external load balancer
+        // SSH connections and the cluster reserves 1000 external load balancer
         // ports (by default) to accomplish this.  When we need an external SSH
-        // connection to a specific cluster node, the hosting manager will allocate
-        // a reserved port and then add a NAT rule to the load balancer that
-        // routes traffic from the external port to SSH port 22 on the target node
-        // in addition to adding a rule to the network security group enabling
-        // the traffic.  [NetworkOptions.ManagementAddressRules] can be used to
-        // restrict where this management traffic may come from.
+        // connection to any cluster node, the hosting manager will add one or
+        // more rules to allow traffic to the range of external SSH ports assigned to
+        // the cluster nodes.  NAT rules will be added to the to the load balancer that
+        // route traffic from the external port to SSH port 22 on the target node.
+        //
+        // Note that we also support source address white/black listing for both
+        // ingress and SSH rules and as well as destination address white/black
+        // listing for general outbound cluster traffic.
 
         //---------------------------------------------------------------------
         // Private types
@@ -236,27 +240,27 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Flags used to customize how the cluster network is updated.
+        /// Flags used to control how the cluster network is updated.
         /// </summary>
         [Flags]
         private enum NetworkOperations
         {
             /// <summary>
-            /// Update the cluster's ingress rules.
+            /// Update the cluster's ingress/egress rules.
             /// </summary>
-            UpdateIngressRules = 0x0001,
+            UpdateIngressEgressRules = 0x0001,
 
             /// <summary>
             /// Add public SSH NAT rules for every node in the cluster.
-            /// These are used by neonKUBE related tools for provisioning, setting up, and
-            /// managing clusters.
+            /// These are used by neonKUBE related tools for provisioning, 
+            /// setting up, and managing clusters.
             /// </summary>
-            AddPublicSshRules = 0x0002,
+            AddSshRules = 0x0002,
 
             /// <summary>
-            /// Remove all related SSH NAT rules.
+            /// Remove all SSH NAT rules.
             /// </summary>
-            RemovePublicSshRules = 0x0004,
+            RemoveSshRules = 0x0004,
         }
 
         /// <summary>
@@ -346,9 +350,9 @@ namespace Neon.Kube
         private const int firstIngressNsgRulePriority = 1000;
 
         /// <summary>
-        /// The first NSG rule priority to use for temporary management SSH rules.
+        /// The first NSG rule priority to use for temporary SSH rules.
         /// </summary>
-        private const int firstNeonNsgRulePriority = 2000;
+        private const int firstSshNsgRulePriority = 2000;
 
         /// <summary>
         /// The name prefix for user related defined ingress rules (from the cluster configuration).
@@ -844,7 +848,7 @@ namespace Neon.Kube
                 },
                 quiet: true);
             controller.AddStep("virtual machines", CreateVm);
-            controller.AddGlobalStep("ingress/security rules", () => UpdateNetwork(NetworkOperations.UpdateIngressRules | NetworkOperations.AddPublicSshRules));
+            controller.AddGlobalStep("ingress/security rules", () => UpdateNetwork(NetworkOperations.UpdateIngressEgressRules | NetworkOperations.AddSshRules));
             controller.AddStep("configure nodes", Configure);
 
             if (!controller.Run(leaveNodesConnected: false))
@@ -864,14 +868,14 @@ namespace Neon.Kube
         {
             LoadNetworkResources();
 
-            var operations = NetworkOperations.UpdateIngressRules;
+            var operations = NetworkOperations.UpdateIngressEgressRules;
 
             if (loadBalancer.InboundNatRules.Values.Any(rule => rule.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 // It looks like SSH NAT rules are enabled so we'll update
                 // those as well.
 
-                operations |= NetworkOperations.AddPublicSshRules;
+                operations |= NetworkOperations.AddSshRules;
             }
 
             UpdateNetwork(operations);
@@ -882,7 +886,7 @@ namespace Neon.Kube
         public override async Task EnablePublicSshAsync()
         {
             LoadNetworkResources();
-            UpdateNetwork(NetworkOperations.AddPublicSshRules);
+            UpdateNetwork(NetworkOperations.AddSshRules);
             await Task.CompletedTask;
         }
 
@@ -890,7 +894,7 @@ namespace Neon.Kube
         public override async Task DisablePublicSshAsync()
         {
             LoadNetworkResources();
-            UpdateNetwork(NetworkOperations.RemovePublicSshRules);
+            UpdateNetwork(NetworkOperations.RemoveSshRules);
             await Task.CompletedTask;
         }
 
@@ -1441,19 +1445,19 @@ namespace Neon.Kube
         /// <param name="operations">Flags that control how the load balancer and related security rules are updated.</param>
         private void UpdateNetwork(NetworkOperations operations)
         {
-            if ((operations & NetworkOperations.UpdateIngressRules) != 0)
+            if ((operations & NetworkOperations.UpdateIngressEgressRules) != 0)
             {
-                UpdateNetworkIngress();
+                UpdateIngressEgressRules();
             }
 
-            if ((operations & NetworkOperations.AddPublicSshRules) != 0)
+            if ((operations & NetworkOperations.AddSshRules) != 0)
             {
-                AddNeonSshRules();
+                AddSshRules();
             }
 
-            if ((operations & NetworkOperations.RemovePublicSshRules) != 0)
+            if ((operations & NetworkOperations.RemoveSshRules) != 0)
             {
-                RemoveNeonSshRules();
+                RemoveSshRules();
             }
         }
 
@@ -1462,7 +1466,7 @@ namespace Neon.Kube
         /// This also ensures that some nodes are marked for ingress when the cluster has one or more
         /// ingress rules and that nodes marked for ingress are in the load balancer's backend pool.
         /// </summary>
-        private void UpdateNetworkIngress()
+        private void UpdateIngressEgressRules()
         {
             var loadBalancerUpdater = loadBalancer.Update();
             var subnetNsgUpdater    = subnetNsg.Update();
@@ -1694,11 +1698,11 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Adds public SSH NAT rules for every node in the cluster.
+        /// Adds public SSH NAT and security rules for every node in the cluster.
         /// These are used by neonKUBE tools for provisioning, setting up, and
         /// managing clusters.  Related NSG rules will also be created. 
         /// </summary>
-        private void AddNeonSshRules()
+        private void AddSshRules()
         {
             var loadBalancerUpdater = loadBalancer.Update();
             var subnetNsgUpdater    = subnetNsg.Update();
@@ -1787,7 +1791,7 @@ namespace Neon.Kube
             // We may need to revisit this if we approach Azure rule count limits (currently 1000
             // rules per NSG).  That would also be a good time to support port ranges as well.
 
-            var priority = firstNeonNsgRulePriority;
+            var priority = firstSshNsgRulePriority;
 
             foreach (var azureNode in SortedMasterThenWorkerNodes)
             {
@@ -1893,11 +1897,11 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Removes public SSH NAT rules for every node in the cluster.
+        /// Removes public SSH NAT and security rules for every node in the cluster.
         /// These are used by neonKUBE related tools for provisioning, setting up, and
         /// managing clusters.  Related NSG rules will also be removed. 
         /// </summary>
-        private void RemoveNeonSshRules()
+        private void RemoveSshRules()
         {
             var loadBalancerUpdater = loadBalancer.Update();
             var subnetNsgUpdater    = subnetNsg.Update();

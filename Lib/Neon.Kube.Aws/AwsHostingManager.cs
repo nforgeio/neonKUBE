@@ -88,8 +88,8 @@ namespace Neon.Kube
         // Node IP addresses will be automatically assigned by default, but this
         // can be customized via the cluster definition when necessary.
         //
-        // The load balancer will be created using a public IP address to balance
-        // inbound traffic across a backend pool including the instances designated 
+        // The load balancer will be created using a public Elastic IP address to balance
+        // inbound traffic across a backend target including the instances designated 
         // to accept ingress traffic into the cluster.  These nodes are identified 
         // by the presence of a [neonkube.io/node.ingress=true] label which can be
         // set explicitly.  neonKUBE will default to reasonable ingress nodes when
@@ -108,11 +108,13 @@ namespace Neon.Kube
         // NOTE: Only TCP connections are supported at this time because Istio
         //       doesn't support UDP, ICMP, etc. at this time.
         //
-        // A network ACL will be created and assigned to the subnet.  This will 
-        // include ingress rules constructed from [NetworkOptions.IngressRules]
-        // and egress rules constructed from [NetworkOptions.EgressAddressRules].
+        // Thye default VPC network ACL will be used to manage network security
+        // and will include ingress rules constructed from [NetworkOptions.IngressRules],
+        // any temporary SSH related rules as well as egress rules constructed from
+        // [NetworkOptions.EgressAddressRules].
         //
-        // AWS instance NICs will be configured with each node's IP address.
+        // AWS instances will be configured with each node's private IP address
+        // within the subnet.  The provisioner assigns these addresses automatically.
         //
         // VMs are currently based on the Ubuntu-20.04 Server AMIs published to the
         // AWS regions by Canonical.  Note that AWS VM images work differently from
@@ -150,14 +152,17 @@ namespace Neon.Kube
         // actually available in the target AWS region.
         //
         // We'll be managing cluster node setup and maintenance remotely via
-        // SSH cconnections and the cluster reserves 1000 external load balancer
+        // SSH connections and the cluster reserves 1000 external load balancer
         // ports (by default) to accomplish this.  When we need an external SSH
-        // connection to a specific cluster node, the hosting manager will allocate
-        // a reserved port and then add a NAT rule to the load balancer that
-        // routes traffic from the external port to SSH port 22 on the target node
-        // in addition to adding a rule to the network security group enabling
-        // the traffic.  [NetworkOptions.ManagementAddressRules] can be used to
-        // restrict where this management traffic may come from.
+        // connection to any cluster node, the hosting manager will add one or
+        // more rules to allow traffic to the range of external SSH ports assigned to
+        // the cluster nodes.  Load balancer rules will also be created to 
+        // effectively port forward traffic from the external SSH port to 
+        // port 22 on the nodes.
+        //
+        // Note that we also support source address white/black listing for both
+        // ingress and SSH rules and as well as destination address white/black
+        // listing for general outbound cluster traffic.
 
         /// <summary>
         /// Relates cluster node information to an AWS VM instance.
@@ -232,6 +237,30 @@ namespace Neon.Kube
             /// Returns <c>true</c> if the node is a worker.
             /// </summary>
             public bool IsWorker => Proxy.Metadata.Role == NodeRole.Worker;
+        }
+
+        /// <summary>
+        /// Flags used to control how the cluster network is updated.
+        /// </summary>
+        [Flags]
+        private enum NetworkOperations
+        {
+            /// <summary>
+            /// Update the cluster's ingress/egress rules.
+            /// </summary>
+            UpdateIngressEgressRules = 0x0001,
+
+            /// <summary>
+            /// Add public SSH NAT rules for every node in the cluster.
+            /// These are used by neonKUBE related tools for provisioning, 
+            /// setting up, and managing clusters.
+            /// </summary>
+            AddSshRules = 0x0002,
+
+            /// <summary>
+            /// Remove all SSH NAT rules.
+            /// </summary>
+            RemoveshRules = 0x0004,
         }
 
         /// <summary>
@@ -372,6 +401,21 @@ namespace Neon.Kube
         private const string neonClusterTag = neonTagPrefix + ":Cluster";
 
         /// <summary>
+        /// The default deny everything network ACL rule number.
+        /// </summary>
+        private const int aclDenyAllRuleNumber = 32767;
+
+        /// <summary>
+        /// The first NSG rule priority to use for ingress rules.
+        /// </summary>
+        private const int firstIngressAclRuleNumber = 1000;
+
+        /// <summary>
+        /// The first NSG rule priority to use for temporary SSH rules.
+        /// </summary>
+        private const int firstSshAclRuleNumber = 2000;
+
+        /// <summary>
         /// Returns the list of supported Ubuntu images from the AWS Marketplace.
         /// </summary>
         private static IReadOnlyList<AwsUbuntuImage> ubuntuImages;
@@ -424,7 +468,7 @@ namespace Neon.Kube
         private DhcpOptions                         dhcpOptions;
         private Subnet                              subnet;
         private InternetGateway                     gateway;
-        private LoadBalancer                        loadbalancer;
+        private LoadBalancer                        loadBalancer;
 
         // These are the names we'll use for cluster AWS resources.
 
@@ -433,15 +477,21 @@ namespace Neon.Kube
         private string                              dhcpOptionName;
         private string                              subnetName;
         private string                              gatewayName;
-        private string                              loadbalancerName;
+        private string                              loadBalancerName;
 
         /// <summary>
         /// Table mapping a cluster node name to its AWS VM instance information.
+        /// Note that <see cref="nodeNameToInstance"/> and <see cref="instanceNameToInstance"/>
+        /// both refer to the same <see cref="AwsInstance"/> so a change to one value
+        /// will be reflected in the other table.
         /// </summary>
         private Dictionary<string, AwsInstance> nodeNameToInstance;
 
         /// <summary>
         /// Table mapping a cluster AWS instance name to its AWS VM instance information.
+        /// Note that <see cref="nodeNameToInstance"/> and <see cref="instanceNameToInstance"/>
+        /// both refer to the same <see cref="AwsInstance"/> so a change to one value
+        /// will be reflected in the other table.
         /// </summary>
         private Dictionary<string, AwsInstance> instanceNameToInstance;
 
@@ -492,7 +542,7 @@ namespace Neon.Kube
             dhcpOptionName   = GetResourceName("dhcp-opt");
             subnetName       = GetResourceName("subnet");
             gatewayName      = GetResourceName("internet-gateway");
-            loadbalancerName = GetResourceName("load-balancer");
+            loadBalancerName = GetResourceName("load-balancer");
 
             // Initialize the instance/node mapping dictionaries and also ensure
             // that each node has reasonable AWS node options.
@@ -597,17 +647,13 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(resourceName), nameof(resourceName));
 
-            // Note that AWS load balancers don't allow periods in their names but neonKUBE'
-            // allows cluster names to include in addition to alphnums and dashes.  We're 
-            // going to convert any periods to dashes in the resource names we generate.
-
             if (prefixResourceNames)
             {
-                return $"{clusterName}-{resourceName}".Replace('.', '-');
+                return $"{clusterName}-{resourceName}";
             }
             else
             {
-                return $"{resourceName}".Replace('.', '-');
+                return $"{resourceName}";
             }
         }
 
@@ -709,25 +755,31 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task UpdatePublicIngressAsync()
         {
-            // $todo(jefflil): Implement this
+            var operations = NetworkOperations.UpdateIngressEgressRules;
+            
+            // $todo(jefflill): IMPLEMENT THIS!
 
-            await Task.CompletedTask;
+            //if (loadBalancer.InboundNatRules.Values.Any(rule => rule.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
+            //{
+            //    // It looks like SSH NAT rules are enabled so we'll update
+            //    // those as well.
+
+            //    operations |= NetworkOperations.AddPublicSshRules;
+            //}
+
+            await UpdateNetworkAsync(operations);
         }
 
         /// <inheritdoc/>
         public override async Task EnablePublicSshAsync()
         {
-            // $todo(jefflil): Implement this
-
-            await Task.CompletedTask;
+            await UpdateNetworkAsync(NetworkOperations.AddSshRules);
         }
 
         /// <inheritdoc/>
         public override async Task DisablePublicSshAsync()
         {
-            // $todo(jefflil): Implement this
-
-            await Task.CompletedTask;
+            await UpdateNetworkAsync(NetworkOperations.RemoveshRules);
         }
 
         /// <inheritdoc/>
@@ -920,12 +972,13 @@ namespace Neon.Kube
             // Load Balancer
 
             var loadbalancerPaginator = elbClient.Paginators.DescribeLoadBalancers(new DescribeLoadBalancersRequest());
+            var loadbalancerName      = this.loadBalancerName.Replace('.', '-');    // AWS doesn't allow periods in LB names
 
             await foreach (var loadbalancerItem in loadbalancerPaginator.LoadBalancers)
             {
                 if (loadbalancerItem.LoadBalancerName == loadbalancerName)
                 {
-                    loadbalancer = loadbalancerItem;
+                    loadBalancer = loadbalancerItem;
                     break;
                 }
             }
@@ -1079,11 +1132,8 @@ namespace Neon.Kube
             // happens.  Here's how we're going to accomplish this:
             //
             //      * Filter for Cannonical owned images
-            //
             //      * Filter for x86_64 architecture
-            //
             //      * Filter for machine images
-            //
             //      * Filter the description for Ubuntu 20.04 images
             //
             //      * Filter out images with "UNSUPPORTED" in the description (daily builds)
@@ -1270,7 +1320,21 @@ namespace Neon.Kube
                 vpc = vpcResponse.Vpc;
             }
 
+            // Clear the network ACL by deleting all inbound and outbound rules except
+            // for the default DENY rule.
+
             networkAcl = await GetNetworkAclAsync(vpc);
+
+            foreach (var entry in networkAcl.Entries.Where(entry => entry.RuleNumber != aclDenyAllRuleNumber))
+            {
+                await ec2Client.DeleteNetworkAclEntryAsync(
+                    new DeleteNetworkAclEntryRequest()
+                    {
+                        NetworkAclId = networkAcl.NetworkAclId,
+                        RuleNumber   = entry.RuleNumber,
+                        Egress       = entry.Egress
+                    });
+            }
 
             // Override the default AWS DNS servers if the user has specified 
             // custom nameservers in the cluster definition.  We'll accomplish
@@ -1356,20 +1420,20 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task CreateLoadbalancerAsync()
         {
-            if (loadbalancer == null)
+            if (loadBalancer == null)
             {
                 var loadbalancerResponse = await elbClient.CreateLoadBalancerAsync(
                     new CreateLoadBalancerRequest()
                     {
-                        Name          = loadbalancerName,
+                        Name          = loadBalancerName.Replace('.', '-'),     // AWS doesn't allow periods in LB names
                         IpAddressType = IpAddressType.Ipv4,
                         Scheme        = LoadBalancerSchemeEnum.InternetFacing,
                         Subnets       = new List<string>() { subnet.SubnetId },
                         Type          = LoadBalancerTypeEnum.Network,
-                        Tags          = GetTags<Amazon.ElasticLoadBalancingV2.Model.Tag>(loadbalancerName)
+                        Tags          = GetTags<Amazon.ElasticLoadBalancingV2.Model.Tag>(loadBalancerName)
                     });
 
-                loadbalancer = loadbalancerResponse.LoadBalancers.Single();
+                loadBalancer = loadbalancerResponse.LoadBalancers.Single();
             }
         }
 
@@ -1383,32 +1447,12 @@ namespace Neon.Kube
         {
             // Create the instance if it doesn't already exist.
 
-            node.Status = "checking";
-
-            var instanceName      = nodeNameToInstance[node.Name].InstanceName;
-            var instancePaginator = ec2Client.Paginators.DescribeInstances(new DescribeInstancesRequest());
-            var instance          = (Instance)null;
-
-            await foreach (var reservation in instancePaginator.Reservations)
-            {
-                foreach (var instanceItem in reservation.Instances)
-                {
-                    if (instance.Tags.Any(tag => tag.Key == nameTag && tag.Value == instanceName))
-                    {
-                        instance = instanceItem;
-                        break;
-                    }
-                }
-
-                if (instance != null)
-                {
-                    break;
-                }
-            }
+            var instance     = nodeNameToInstance[node.Name];
+            var instanceName = instance.InstanceName;
 
             if (instance == null)
             {
-                node.Status = "creating instance";
+                node.Status = "create instance";
 
                 var runResponse = await ec2Client.RunInstancesAsync(
                     new RunInstancesRequest()
@@ -1422,10 +1466,61 @@ namespace Neon.Kube
                         TagSpecifications = GetTagSpecifications(instanceName, ResourceType.Instance)
                     });
 
-                instance = runResponse.Reservation.Instances.Single();
+                instance.Instance = runResponse.Reservation.Instances.Single();
+            }
+        }
+
+        /// <summary>
+        /// Updates the load balancer and related security rules based on the operation flags passed.
+        /// </summary>
+        /// <param name="operations">Flags that control how the load balancer and related security rules are updated.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task UpdateNetworkAsync(NetworkOperations operations)
+        {
+            if ((operations & NetworkOperations.UpdateIngressEgressRules) != 0)
+            {
+                await UpdateIngressEgressRulesAsync();
             }
 
-            nodeNameToInstance[node.Name].Instance = instance;
+            if ((operations & NetworkOperations.AddSshRules) != 0)
+            {
+                await AddSshRulesAsync();
+            }
+
+            if ((operations & NetworkOperations.RemoveshRules) != 0)
+            {
+                await RemoveSshRulesAsync();
+            }
+        }
+
+        /// <summary>
+        /// Updates the load balancer and network security rules to match the current cluster definition.
+        /// This also ensures that some nodes are marked for ingress when the cluster has one or more
+        /// ingress rules and that nodes marked for ingress are in the load balancer's backend pool.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task UpdateIngressEgressRulesAsync()
+        {
+        }
+
+        /// <summary>
+        /// Adds public SSH NAT and security rules for every node in the cluster.
+        /// These are used by neonKUBE tools for provisioning, setting up, and
+        /// managing clusters.  Related NSG rules will also be created. 
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task AddSshRulesAsync()
+        {
+        }
+
+        /// <summary>
+        /// Removes public SSH NAT and security rules for every node in the cluster.
+        /// These are used by neonKUBE related tools for provisioning, setting up, and
+        /// managing clusters.  Related NSG rules will also be removed. 
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task RemoveSshRulesAsync()
+        {
         }
     }
 }
