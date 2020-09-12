@@ -164,14 +164,20 @@ namespace Neon.Kube
         // ingress and SSH rules and as well as destination address white/black
         // listing for general outbound cluster traffic.
         //
-        // Managing the AWS load balancer is a bit more challenging than doing 
-        // the same for Azure.  Azure allows us to reconfigure the load balancer
-        // and security rules and them update these atomically in one operation
-        // for each of the load balancer and security rules.  AWS on the other 
-        // hand, requires each load balancer or security rule addition or deletion
-        // to be performed individually.  This means that we can't just clear
-        // and rebuild all of the rules like we do for Azure without potentially
-        // blocking some network traffic while we're applying the updates.
+        // Managing the network load balancer and ACL rules:
+        // -------------------------------------------------
+        // AWS VPCs come with a default network ACL that allows all ingress/egress
+        // traffic.  We're going to remove the allow rules, leaving just the deny-all
+        // rules for each direction.  We're not going to rely on the default VPC rule
+        // in favor of rules we'll associate with the subnet.
+        //
+        // We're going to create two independent network ACLs and use these to control
+        // traffic entering and leaving the subnet (and by extension, the cluster).
+        // The idea is that we'll alternate associating one of these rules with the
+        // subnet.  This way we can perform potentially multiple operations to update
+        // the network ACL not currently in use and then atomically replace the existing
+        // ACL in one go.  This is much better than modifying the live ACL because that
+        // could temporarily disrupt network traffic.
 
         /// <summary>
         /// Relates cluster node information to an AWS VM instance.
@@ -430,6 +436,11 @@ namespace Neon.Kube
         private const int firstIngressAclRuleNumber = 1000;
 
         /// <summary>
+        /// The first NSG rule priority to use for egress rules.
+        /// </summary>
+        private const int firstEgressAclRuleNumber = 1000;
+
+        /// <summary>
         /// The first NSG rule priority to use for temporary SSH rules.
         /// </summary>
         private const int firstSshAclRuleNumber = 2000;
@@ -460,6 +471,34 @@ namespace Neon.Kube
             // as a byproduct of calling this method.
         }
 
+        /// <summary>
+        /// <para>
+        /// Converts an <see cref="IngressProtocol"/> into the corresponding string AWS
+        /// uses to identify the protocol for a network ACL entry.
+        /// </para>
+        /// <note>
+        /// The values returned are internet protocol numbers as strings.  AWS also supports
+        ///<b> "-1"</b> which means <b>any</b> protocol, but we don't use that.
+        /// </note>
+        /// </summary>
+        /// <param name="protocol">The input protocol.</param>
+        /// <returns>The corresponding AWS protocol string.</returns>
+        private static string ToNetworkAclEntryProtocol(IngressProtocol protocol)
+        {
+            switch (protocol)
+            {
+                case IngressProtocol.Http:
+                case IngressProtocol.Https:
+                case IngressProtocol.Tcp:
+
+                    return "6";     // TCP
+
+                default:
+
+                    throw new NotImplementedException();
+            }
+        }
+
         //---------------------------------------------------------------------
         // Instance members
 
@@ -484,7 +523,9 @@ namespace Neon.Kube
         private Group                               resourceGroup;
         private Address                             elasticIp;
         private Vpc                                 vpc;
-        private NetworkAcl                          networkAcl;
+        private NetworkAcl                          defaultNetworkAcl;
+        private NetworkAcl                          networkAcl1;
+        private NetworkAcl                          networkAcl2;
         private DhcpOptions                         dhcpOptions;
         private Subnet                              subnet;
         private InternetGateway                     gateway;
@@ -496,6 +537,8 @@ namespace Neon.Kube
         private string                              vpcName;
         private string                              dhcpOptionName;
         private string                              subnetName;
+        private String                              networkAclName1;
+        private String                              networkAclName2;
         private string                              gatewayName;
         private string                              loadBalancerName;
 
@@ -562,6 +605,8 @@ namespace Neon.Kube
             vpcName          = GetResourceName("vpc");
             dhcpOptionName   = GetResourceName("dhcp-opt");
             subnetName       = GetResourceName("subnet");
+            networkAclName1  = GetResourceName("networkAcl1");
+            networkAclName2  = GetResourceName("networkAcl2");
             gatewayName      = GetResourceName("internet-gateway");
             loadBalancerName = GetResourceName("load-balancer");
 
@@ -759,7 +804,6 @@ namespace Neon.Kube
             controller.AddGlobalStep("resource group", CreateResourceGroupAsync);
             controller.AddGlobalStep("elastic ip", CreateElasticIpAsync);
             controller.AddGlobalStep("network", ConfigureNetworkAsync);
-            controller.AddGlobalStep("load balancer", CreateLoadbalancerAsync);
             controller.AddStep("node instances", CreateInstanceAsync);
 
             if (!controller.Run(leaveNodesConnected: false))
@@ -775,7 +819,7 @@ namespace Neon.Kube
         public override bool CanManageRouter => true;
 
         /// <inheritdoc/>
-        public override async Task UpdatePublicIngressAsync()
+        public override async Task UpdateInternetRoutingAsync()
         {
             var operations = NetworkOperations.UpdateIngressEgressRules;
             
@@ -793,13 +837,13 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task EnablePublicSshAsync()
+        public override async Task EnableInternetSshAsync()
         {
             await UpdateNetworkAsync(NetworkOperations.AddSshRules);
         }
 
         /// <inheritdoc/>
-        public override async Task DisablePublicSshAsync()
+        public override async Task DisableInternetSshAsync()
         {
             await UpdateNetworkAsync(NetworkOperations.RemoveshRules);
         }
@@ -946,7 +990,7 @@ namespace Neon.Kube
 
             if (vpc != null)
             {
-                networkAcl = await GetNetworkAclAsync(vpc);
+                defaultNetworkAcl = await GetDefaultNetworkAclAsync(vpc);
             }
 
             // DHCP options
@@ -974,6 +1018,27 @@ namespace Neon.Kube
                 {
                     subnet = subnetItem;
                     break;
+                }
+            }
+
+            // Network ACLs
+
+            var networkAclPagenator = ec2Client.Paginators.DescribeNetworkAcls(new DescribeNetworkAclsRequest());
+
+            await foreach (var networkAclItem in networkAclPagenator.NetworkAcls)
+            {
+                if (!networkAclItem.Tags.Any(tag => tag.Key == neonClusterTag && tag.Value == clusterName))
+                {
+                    continue;   // ACL doesn't belong to the cluster.
+                }
+
+                if (networkAclItem.Tags.Any(tag => tag.Key == nameTag && tag.Value == networkAclName1))
+                {
+                    networkAcl1 = networkAclItem;
+                }
+                else if (networkAclItem.Tags.Any(tag => tag.Key == nameTag && tag.Value == networkAclName2))
+                {
+                    networkAcl2 = networkAclItem;
                 }
             }
 
@@ -1025,11 +1090,11 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the network ACL currently assigned to a VPC.
+        /// Returns the VPC's network ACL.
         /// </summary>
         /// <param name="vpc">The VPC.</param>
         /// <returns>The network ACL.</returns>
-        private async Task<NetworkAcl> GetNetworkAclAsync(Vpc vpc)
+        private async Task<NetworkAcl> GetDefaultNetworkAclAsync(Vpc vpc)
         {
             Covenant.Requires<ArgumentNullException>(vpc != null, nameof(vpc));
 
@@ -1323,7 +1388,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Creates the cluster networking components including the VPC, subnet, internet gateway
-        /// and network ACL.
+        /// and network ACLs.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ConfigureNetworkAsync()
@@ -1342,17 +1407,17 @@ namespace Neon.Kube
                 vpc = vpcResponse.Vpc;
             }
 
-            // Clear the network ACL by deleting all inbound and outbound rules except
-            // for the default DENY rule.
+            // Clear the VPC's default network ACL by deleting all inbound and outbound 
+            // rules except for the default DENY rule for both directions.
 
-            networkAcl = await GetNetworkAclAsync(vpc);
+            defaultNetworkAcl = await GetDefaultNetworkAclAsync(vpc);
 
-            foreach (var entry in networkAcl.Entries.Where(entry => entry.RuleNumber != aclDenyAllRuleNumber))
+            foreach (var entry in defaultNetworkAcl.Entries.Where(entry => entry.RuleNumber != aclDenyAllRuleNumber))
             {
                 await ec2Client.DeleteNetworkAclEntryAsync(
                     new DeleteNetworkAclEntryRequest()
                     {
-                        NetworkAclId = networkAcl.NetworkAclId,
+                        NetworkAclId = defaultNetworkAcl.NetworkAclId,
                         RuleNumber   = entry.RuleNumber,
                         Egress       = entry.Egress
                     });
@@ -1411,6 +1476,26 @@ namespace Neon.Kube
                 subnet = subnetResponse.Subnet;
             }
 
+            // Create the two network ACLs we'll use for securing the subnet.
+            // We won't attach either of these to the subnet here; we'll defer
+            // that until we update the network.
+
+            var networkAclResponse = await ec2Client.CreateNetworkAclAsync(
+                new CreateNetworkAclRequest()
+                {
+                    TagSpecifications = GetTagSpecifications(networkAclName1, ResourceType.NetworkAcl)
+                });
+
+            networkAcl1 = networkAclResponse.NetworkAcl;
+
+            networkAclResponse = await ec2Client.CreateNetworkAclAsync(
+                new CreateNetworkAclRequest()
+                {
+                    TagSpecifications = GetTagSpecifications(networkAclName2, ResourceType.NetworkAcl)
+                });
+
+            networkAcl2 = networkAclResponse.NetworkAcl;
+
             // Create the Internet gateway and attach it to the VPC if it's
             // not already attached.
 
@@ -1434,14 +1519,9 @@ namespace Neon.Kube
                         InternetGatewayId = gateway.InternetGatewayId
                     });
             }
-        }
 
-        /// <summary>
-        /// Creates the cluster's (classic) load balancer.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task CreateLoadbalancerAsync()
-        {
+            // Create the load balancer if it doesn't already exist.
+
             if (loadBalancer == null)
             {
                 var loadbalancerResponse = await elbClient.CreateLoadBalancerAsync(
@@ -1457,6 +1537,10 @@ namespace Neon.Kube
 
                 loadBalancer = loadbalancerResponse.LoadBalancers.Single();
             }
+
+            // Configure the ingress/egress rules as well as enable the SSH port forwarding.
+
+            await UpdateNetworkAsync(NetworkOperations.UpdateIngressEgressRules | NetworkOperations.AddSshRules);
         }
 
         /// <summary>
@@ -1516,33 +1600,191 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Updates the load balancer and network security rules to match the current cluster definition.
+        /// Updates the load balancer and network ACLs to match the current cluster definition.
         /// This also ensures that some nodes are marked for ingress when the cluster has one or more
         /// ingress rules and that nodes marked for ingress are in the load balancer's backend pool.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task UpdateIngressEgressRulesAsync()
         {
+            KubeHelper.EnsureIngressNodes(cluster.Definition);
+
+            // Determine whether either of the two network ACLs are associated with
+            // the subnet.  If one is assigned, then we'll modify the other one and
+            // then associate that one with the subnet to complete the operation.
+            // If neither ACL is currently assigned, we'll use [networkAcl1].
+            //
+            // The idea here is that we're going to alternate between assigning
+            // the two ACLs so we can make a bunch of effective rule changes in
+            // one atomic operation.
+
+            NetworkAcl              updateAcl;
+            NetworkAclAssociation   association;
+
+            association = networkAcl1.Associations.SingleOrDefault(association => association.SubnetId == subnet.SubnetId);
+
+            if (association != null)
+            {
+                updateAcl = networkAcl1;
+            }
+            else
+            {
+                association = networkAcl2.Associations.SingleOrDefault(association => association.SubnetId == subnet.SubnetId);
+
+                if (association != null)
+                {
+                    updateAcl = networkAcl2;
+                }
+                else
+                {
+                    // Use the first network ACL when the subnet has no ACL yet.
+
+                    updateAcl   = networkAcl1;
+                    association = null;
+                }
+            }
+
+            // Remove any existing entries from the ACL we'll be assigning next.
+
+            var entries = updateAcl.Entries.ToList();
+
+            foreach (var entry in entries)
+            {
+                await ec2Client.DeleteNetworkAclEntryAsync(
+                    new DeleteNetworkAclEntryRequest()
+                    {
+                        NetworkAclId = updateAcl.NetworkAclId,
+                        RuleNumber   = entry.RuleNumber,
+                        Egress       = entry.Egress
+                    });
+            }
+
+            // Add any ingress rules from the cluster definition.
+
+            var ingressRuleNumber = firstIngressAclRuleNumber;
+
+            foreach (var ingressRule in networkOptions.IngressRules)
+            {
+                if (ingressRule.AddressRules.Count() == 0)
+                {
+                    // The ingress rule has no source address constraints.
+
+                    await ec2Client.CreateNetworkAclEntryAsync(
+                        new CreateNetworkAclEntryRequest()
+                        {
+                            RuleNumber = ingressRuleNumber++,
+                            Protocol   = ToNetworkAclEntryProtocol(ingressRule.Protocol),
+                            Egress     = false,
+                            PortRange  = new PortRange() { From = ingressRule.ExternalPort, To = ingressRule.ExternalPort },
+                            RuleAction = RuleAction.Allow
+                        });
+                }
+                else
+                {
+                    // The ingress rule has source address constraints, so we'll 
+                    // create a new network ACL entry for each address constraint.
+
+                    foreach (var addressRule in ingressRule.AddressRules)
+                    {
+                        var sourceCidr = (string)null;
+
+                        if (addressRule.IsAny)
+                        {
+                            sourceCidr = "0.0.0.0/0";
+                        }
+                        else
+                        {
+                            sourceCidr = addressRule.AddressOrSubnet;
+
+                            if (!sourceCidr.Contains('/'))
+                            {
+                                // Convert a single IP address into a one address CIDR.
+
+                                sourceCidr += "/32";
+                            }
+                        }
+
+                        await ec2Client.CreateNetworkAclEntryAsync(
+                            new CreateNetworkAclEntryRequest()
+                            {
+                                RuleNumber = ingressRuleNumber++,
+                                Protocol   = ToNetworkAclEntryProtocol(ingressRule.Protocol),
+                                Egress     = false,
+                                PortRange  = new PortRange() { From = ingressRule.ExternalPort, To = ingressRule.ExternalPort },
+                                CidrBlock  = sourceCidr,
+                                RuleAction = addressRule.Action == AddressRuleAction.Allow ? RuleAction.Allow : RuleAction.Deny
+                            });
+                    }
+                }
+            }
+
+            // Add any egress related destination address rules.
+
+            var egressRuleNumber = firstIngressAclRuleNumber;
+
+            foreach (var egressAddressRule in networkOptions.EgressAddressRules)
+            {
+                var destinationCidr = (string)null;
+
+                if (egressAddressRule.IsAny)
+                {
+                    destinationCidr = "0.0.0.0/0";
+                }
+                else
+                {
+                    destinationCidr = egressAddressRule.AddressOrSubnet;
+
+                    if (!destinationCidr.Contains('/'))
+                    {
+                        // Convert a single IP address into a one address CIDR.
+
+                        destinationCidr += "/32";
+                    }
+                }
+
+                await ec2Client.CreateNetworkAclEntryAsync(
+                    new CreateNetworkAclEntryRequest()
+                    {
+                        RuleNumber = egressRuleNumber++,
+                        Protocol   = "-1",      // "-1" means any protocol
+                        Egress     = true,
+                        PortRange  = new PortRange() { From = 1, To = ushort.MaxValue },
+                        CidrBlock  = destinationCidr,
+                        RuleAction = egressAddressRule.Action == AddressRuleAction.Allow ? RuleAction.Allow : RuleAction.Deny
+                    });
+            }
+
+            // The new network ACL is ready so associate it with the subnet, replacing
+            // the previous ACL (if any).
+
+            await ec2Client.ReplaceNetworkAclAssociationAsync(
+                new ReplaceNetworkAclAssociationRequest()
+                {
+                    AssociationId = association?.NetworkAclAssociationId,
+                    NetworkAclId  = updateAcl.NetworkAclId
+                });
         }
 
         /// <summary>
         /// Adds public SSH NAT and security rules for every node in the cluster.
         /// These are used by neonKUBE tools for provisioning, setting up, and
-        /// managing clusters.  Related NSG rules will also be created. 
+        /// managing cluster nodes.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task AddSshRulesAsync()
         {
+            // $todo(jefflill): IMPLEMENT THIS!
         }
 
         /// <summary>
         /// Removes public SSH NAT and security rules for every node in the cluster.
         /// These are used by neonKUBE related tools for provisioning, setting up, and
-        /// managing clusters.  Related NSG rules will also be removed. 
+        /// managing cluster nodes.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task RemoveSshRulesAsync()
         {
+            // $todo(jefflill): IMPLEMENT THIS!
         }
     }
 }

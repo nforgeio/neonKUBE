@@ -111,19 +111,19 @@ namespace Neon.Kube
         public virtual bool CanManageRouter => false;
 
         /// <inheritdoc/>
-        public virtual async Task UpdatePublicIngressAsync()
+        public virtual async Task UpdateInternetRoutingAsync()
         {
             await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
-        public virtual async Task EnablePublicSshAsync()
+        public virtual async Task EnableInternetSshAsync()
         {
             await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
-        public virtual async Task DisablePublicSshAsync()
+        public virtual async Task DisableInternetSshAsync()
         {
             await Task.CompletedTask;
         }

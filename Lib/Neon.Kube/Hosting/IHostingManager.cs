@@ -94,7 +94,7 @@ namespace Neon.Kube
         /// cloud managers  indicating that they can manage the upstream router or load balancer) 
         /// this method will leave the public SSH NAT rules in place so that cluster provisioning
         /// and setup will be able to establish SSH connections to each cluster node.  This is
-        /// equivalent to calling <see cref="EnablePublicSshAsync"/>.
+        /// equivalent to calling <see cref="EnableInternetSshAsync"/>.
         /// </para>
         /// </remarks>
         Task<bool> ProvisionAsync(bool force, string secureSshPassword, string orgSshPassword = null);
@@ -116,9 +116,8 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Updates the cluster's load balancer or router to use the current set of
-        /// ingress rules defined by <see cref="NetworkOptions.IngressRules"/>.  This
-        /// also updates <see cref="NetworkOptions.EgressAddressRules"/> and public 
-        /// SSH NAT mappings if those are currently enabled.
+        /// ingress rules defined by <see cref="NetworkOptions.IngressRules"/> and the
+        /// egress rules defined by <see cref="NetworkOptions.EgressAddressRules"/>.
         /// </para>
         /// <note>
         /// This currently supported only by cloud hosting managers like for Azure,
@@ -126,7 +125,7 @@ namespace Neon.Kube
         /// because we don't have the ability to manage physical routers yet.
         /// </note>
         /// </summary>
-        Task UpdatePublicIngressAsync();
+        Task UpdateInternetRoutingAsync();
 
         /// <summary>
         /// <para>
@@ -147,7 +146,7 @@ namespace Neon.Kube
         /// because we don't have the ability to manage physical routers yet.
         /// </note>
         /// </summary>
-        Task EnablePublicSshAsync();
+        Task EnableInternetSshAsync();
 
         /// <summary>
         /// <para>
@@ -161,7 +160,7 @@ namespace Neon.Kube
         /// because we don't have the ability to manage physical routers yet.
         /// </note>
         /// </summary>
-        Task DisablePublicSshAsync();
+        Task DisableInternetSshAsync();
 
         /// <summary>
         /// Returns the FQDN or IP address (as a string) and the port to use
@@ -171,7 +170,7 @@ namespace Neon.Kube
         /// <returns>A <b>(string Address, int Port)</b> tuple.</returns>
         /// <remarks>
         /// This will return the direct private node endpoint by default.  If
-        /// <see cref="EnablePublicSshAsync"/> has been called and is supported by 
+        /// <see cref="EnableInternetSshAsync"/> has been called and is supported by 
         /// the hosting manager, then this returns the public address of the
         /// cluster along with the public NAT port.
         /// </remarks>

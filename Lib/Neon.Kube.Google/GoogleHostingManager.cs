@@ -122,7 +122,7 @@ namespace Neon.Kube
         public override bool CanManageRouter => true;
 
         /// <inheritdoc/>
-        public override async Task UpdatePublicIngressAsync()
+        public override async Task UpdateInternetRoutingAsync()
         {
             // $todo(jefflil): Implement this
 
@@ -130,7 +130,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task EnablePublicSshAsync()
+        public override async Task EnableInternetSshAsync()
         {
             // $todo(jefflil): Implement this
 
@@ -138,7 +138,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task DisablePublicSshAsync()
+        public override async Task DisableInternetSshAsync()
         {
             // $todo(jefflil): Implement this
 

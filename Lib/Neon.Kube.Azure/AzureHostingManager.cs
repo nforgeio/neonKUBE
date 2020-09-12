@@ -350,6 +350,11 @@ namespace Neon.Kube
         private const int firstIngressNsgRulePriority = 1000;
 
         /// <summary>
+        /// The first NSG rule priority to use for egress rules.
+        /// </summary>
+        private const int firstEgressNsgRulePriority = 1000;
+
+        /// <summary>
         /// The first NSG rule priority to use for temporary SSH rules.
         /// </summary>
         private const int firstSshNsgRulePriority = 2000;
@@ -881,7 +886,7 @@ namespace Neon.Kube
         public override bool CanManageRouter => true;
 
         /// <inheritdoc/>
-        public override async Task UpdatePublicIngressAsync()
+        public override async Task UpdateInternetRoutingAsync()
         {
             LoadNetworkResources();
 
@@ -900,7 +905,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task EnablePublicSshAsync()
+        public override async Task EnableInternetSshAsync()
         {
             LoadNetworkResources();
             UpdateNetwork(NetworkOperations.AddSshRules);
@@ -908,7 +913,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task DisablePublicSshAsync()
+        public override async Task DisableInternetSshAsync()
         {
             LoadNetworkResources();
             UpdateNetwork(NetworkOperations.RemoveSshRules);
@@ -1717,7 +1722,7 @@ namespace Neon.Kube
         /// <summary>
         /// Adds public SSH NAT and security rules for every node in the cluster.
         /// These are used by neonKUBE tools for provisioning, setting up, and
-        /// managing clusters.  Related NSG rules will also be created. 
+        /// managing cluster nodes.
         /// </summary>
         private void AddSshRules()
         {
@@ -1916,7 +1921,7 @@ namespace Neon.Kube
         /// <summary>
         /// Removes public SSH NAT and security rules for every node in the cluster.
         /// These are used by neonKUBE related tools for provisioning, setting up, and
-        /// managing clusters.  Related NSG rules will also be removed. 
+        /// managing cluster nodes. 
         /// </summary>
         private void RemoveSshRules()
         {
