@@ -229,9 +229,9 @@ namespace Neon.Kube
              
             controller.AddWaitUntilOnlineStep();
 
-            controller.AddStep("verify readiness", (node, stepDelay) => VerifyReady(node));
-            controller.AddStep("virtual machine template", (node, stepDelay) => CheckVmTemplate(node));
-            controller.AddStep("create virtual machines", (node, stepDelay) => ProvisionVirtualMachines(node));
+            controller.AddNodeStep("verify readiness", (node, stepDelay) => VerifyReady(node));
+            controller.AddNodeStep("virtual machine template", (node, stepDelay) => CheckVmTemplate(node));
+            controller.AddNodeStep("create virtual machines", (node, stepDelay) => ProvisionVirtualMachines(node));
             controller.AddGlobalStep(string.Empty, () => Finish(), quiet: true);
 
             if (!controller.Run())

@@ -143,16 +143,16 @@ namespace Neon.Kube
                 MaxParallel = this.MaxParallel
             };
 
-            controller.AddStep("connect nodes", (node, stepDelay) => Connect(node));
-            controller.AddStep("verify OS", (node, stepDelay) => KubeHelper.VerifyNodeOs(node));
-            controller.AddStep("configure nodes", (node, stepDelay) => Congfigure(node));
+            controller.AddNodeStep("connect nodes", (node, stepDelay) => Connect(node));
+            controller.AddNodeStep("verify OS", (node, stepDelay) => KubeHelper.VerifyNodeOs(node));
+            controller.AddNodeStep("configure nodes", (node, stepDelay) => Congfigure(node));
 
             if (secureSshPassword != orgSshPassword)
             {
-                controller.AddStep("secure node passwords", (node, stepDelay) => SetSecurePassword(node));
+                controller.AddNodeStep("secure node passwords", (node, stepDelay) => SetSecurePassword(node));
             }
 
-            controller.AddStep("detect node labels", (node, stepDelay) => DetectLabels(node));
+            controller.AddNodeStep("detect node labels", (node, stepDelay) => DetectLabels(node));
 
             if (!controller.Run())
             {

@@ -409,9 +409,9 @@ Server Requirements:
 
                 controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
                 hostingManager.AddPostProvisionSteps(controller);
-                controller.AddStep("verify OS", CommonSteps.VerifyOS);
+                controller.AddNodeStep("verify OS", CommonSteps.VerifyOS);
 
-                controller.AddStep("prepare", 
+                controller.AddNodeStep("prepare", 
                     (node, stepDelay) =>
                     {
                         Thread.Sleep(stepDelay);

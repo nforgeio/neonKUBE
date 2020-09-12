@@ -804,7 +804,7 @@ namespace Neon.Kube
             controller.AddGlobalStep("resource group", CreateResourceGroupAsync);
             controller.AddGlobalStep("elastic ip", CreateElasticIpAsync);
             controller.AddGlobalStep("network", ConfigureNetworkAsync);
-            controller.AddStep("node instances", CreateInstanceAsync);
+            controller.AddNodeStep("node instances", CreateInstanceAsync);
 
             if (!controller.Run(leaveNodesConnected: false))
             {

@@ -246,7 +246,7 @@ namespace Neon.Kube
                 position = steps.Count;
             }
 
-            AddStep(stepLabel,
+            AddNodeStep(stepLabel,
                 (node, stepDelay) =>
                 {
                     node.Status = status ?? "connecting...";
@@ -282,7 +282,7 @@ namespace Neon.Kube
             bool                                quiet         = false, 
             int                                 position      = -1)
         {
-            AddStep(stepLabel,
+            AddNodeStep(stepLabel,
                 (node, stepDeley) =>
                 {
                     node.Status = status ?? $"delay: [{delay.TotalSeconds}] seconds";
@@ -330,14 +330,15 @@ namespace Neon.Kube
         /// Optionally specifies the maximum number of operations to be performed
         /// in parallel for this step, overriding the controller default.
         /// </param>
-        public void AddStep(string stepLabel,
-                            Action<SshProxy<NodeMetadata>, TimeSpan>    nodeAction,
-                            Func<SshProxy<NodeMetadata>, bool>          nodePredicate      = null,
-                            bool                                        quiet              = false,
-                            bool                                        noParallelLimit    = false,
-                            int                                         stepStaggerSeconds = 0,
-                            int                                         position           = -1,
-                            int                                         parallelLimit      = 0)
+        public void AddNodeStep(
+            string stepLabel,
+            Action<SshProxy<NodeMetadata>, TimeSpan>    nodeAction,
+            Func<SshProxy<NodeMetadata>, bool>          nodePredicate      = null,
+            bool                                        quiet              = false,
+            bool                                        noParallelLimit    = false,
+            int                                         stepStaggerSeconds = 0,
+            int                                         position           = -1,
+            int                                         parallelLimit      = 0)
         {
             nodeAction    = nodeAction ?? new Action<SshProxy<NodeMetadata>, TimeSpan>((n, d) => { });
             nodePredicate = nodePredicate ?? new Func<SshProxy<NodeMetadata>, bool>(n => true);
@@ -400,7 +401,7 @@ namespace Neon.Kube
         /// Optionally specifies the maximum number of operations to be performed
         /// in parallel for this step, overriding the controller default.
         /// </param>
-        public void AddStep(
+        public void AddNodeStep(
             string stepLabel,
             Func<SshProxy<NodeMetadata>, TimeSpan, Task>    nodeAction,
             Func<SshProxy<NodeMetadata>, bool>              nodePredicate      = null,

@@ -861,7 +861,7 @@ namespace Neon.Kube
                     }
                 },
                 quiet: true);
-            controller.AddStep("credentials",
+            controller.AddNodeStep("credentials",
                 (node, stepDelay) =>
                 {
                     // Update the node SSH proxies to use the secure SSH password.
@@ -869,9 +869,9 @@ namespace Neon.Kube
                     node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, secureSshPassword));
                 },
                 quiet: true);
-            controller.AddStep("virtual machines", CreateVm);
+            controller.AddNodeStep("virtual machines", CreateVm);
             controller.AddGlobalStep("ingress/security rules", () => UpdateNetwork(NetworkOperations.UpdateIngressEgressRules | NetworkOperations.AddSshRules));
-            controller.AddStep("configure nodes", Configure);
+            controller.AddNodeStep("configure nodes", Configure);
 
             if (!controller.Run(leaveNodesConnected: false))
             {
