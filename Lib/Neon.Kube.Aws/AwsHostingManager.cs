@@ -44,11 +44,13 @@ using Neon.Time;
 using Amazon;
 using Amazon.EC2;
 using Amazon.EC2.Model;
-using Amazon.ElasticLoadBalancingV2;
-using Amazon.ElasticLoadBalancingV2.Model;
+using Amazon.ElasticLoadBalancing;
+using Amazon.ElasticLoadBalancing.Model;
 using Amazon.ResourceGroups;
 using Amazon.ResourceGroups.Model;
 using Amazon.Runtime;
+
+using Ec2Instance = Amazon.EC2.Model.Instance;
 
 namespace Neon.Kube
 {
@@ -177,6 +179,29 @@ namespace Neon.Kube
         // the network ACL not currently in use and then atomically replace the existing
         // ACL in one go.  This is much better than modifying the live ACL because that
         // could temporarily disrupt network traffic.
+        //
+        // Regions, Availability Zones and Placement Groups
+        // ------------------------------------------------
+        // neonKUBE clusters are currently deployed to a single AWS region and availability
+        // zone within the region to ensure that internode communication will have low
+        // latency.  Both of these are specified in the AWS cloud options.
+        //
+        // In theory we could allow users to distribute instances across availability
+        // zones for better fault tolerance, but we're not going to support this now
+        // and probably ever.  The logic is that if you need more resilence, just deploy
+        // another cluster in another availability zone or region and load balance
+        // traffic between them.  I believe that will address most reasonable scenarios
+        // and this will be easy to implement and test.
+        //
+        // AWS supports three types of placement groups: cluster, partition, and spread:
+        //
+        //      https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html
+        //
+        // neonKUBE will be deployed using a partition placement groups for each master node
+        // by default, but users can change this via the cluster definition.  Unlike Azure,
+        // AWS allows instances to started in specific partitions which could be useful
+        // advanced user scenarios (like clustered databases).  We're not going to support 
+        // user assignment of nodes to partitions right now; perhaps something for the future.
 
         /// <summary>
         /// Relates cluster node information to an AWS VM instance.
@@ -195,7 +220,7 @@ namespace Neon.Kube
             {
                 Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
 
-                this.Proxy = node;
+                this.Proxy          = node;
                 this.hostingManager = hostingManager;
             }
 
@@ -217,7 +242,7 @@ namespace Neon.Kube
             /// <summary>
             /// Returns AWS instance information for the node.
             /// </summary>
-            public Instance Instance { get; set; }
+            public Ec2Instance Instance { get; set; }
 
             /// <summary>
             /// Returns the name of the AWS instance VM for this node.
@@ -571,7 +596,7 @@ namespace Neon.Kube
         private Region                              awsRegion;
         private RegionEndpoint                      regionEndpoint;
         private AmazonEC2Client                     ec2Client;
-        private AmazonElasticLoadBalancingV2Client  elbClient;
+        private AmazonElasticLoadBalancingClient    elbClient;
         private AmazonResourceGroupsClient          rgClient;
         private string                              ami;
         private Group                               resourceGroup;
@@ -583,7 +608,8 @@ namespace Neon.Kube
         private DhcpOptions                         dhcpOptions;
         private Subnet                              subnet;
         private InternetGateway                     gateway;
-        private LoadBalancer                        loadBalancer;
+        private LoadBalancerDescription             loadBalancer;
+        private PlacementGroup                      placementGroup;
 
         // These are the names we'll use for cluster AWS resources.
 
@@ -596,8 +622,12 @@ namespace Neon.Kube
         private string                              gatewayName;
         private string                              loadBalancerName;
         private string                              elbName;
+        private string                              placementGroupName;
 
-        //private Dictionary<string, TargetGroup> nameToElbTargetGroup;
+        /// <summary>
+        /// Table mapping a ELB target group name to the group.
+        /// </summary>
+        private Dictionary<string, TargetGroup> nameToElbTargetGroup;
 
         /// <summary>
         /// Table mapping a cluster node name to its AWS VM instance information.
@@ -658,15 +688,16 @@ namespace Neon.Kube
 
             // Initialize the cluster resource names.
 
-            elasticIpName    = GetResourceName("elastic-ip");
-            vpcName          = GetResourceName("vpc");
-            dhcpOptionName   = GetResourceName("dhcp-opt");
-            subnetName       = GetResourceName("subnet");
-            networkAclName1  = GetResourceName("network-acl-1");
-            networkAclName2  = GetResourceName("network-acl-2");
-            gatewayName      = GetResourceName("internet-gateway");
-            loadBalancerName = GetResourceName("load-balancer");
-            elbName          = GetElbName(clusterName, "elb");
+            elasticIpName      = GetResourceName("elastic-ip");
+            vpcName            = GetResourceName("vpc");
+            dhcpOptionName     = GetResourceName("dhcp-opt");
+            subnetName         = GetResourceName("subnet");
+            networkAclName1    = GetResourceName("network-acl-1");
+            networkAclName2    = GetResourceName("network-acl-2");
+            gatewayName        = GetResourceName("internet-gateway");
+            loadBalancerName   = GetResourceName("load-balancer");
+            elbName            = GetElbName(clusterName, "elb");
+            placementGroupName = GetResourceName("placement-group");
 
             // Initialize the instance/node mapping dictionaries and also ensure
             // that each node has reasonable AWS node options.
@@ -773,7 +804,7 @@ namespace Neon.Kube
 
             if (prefixResourceNames)
             {
-                return $"{clusterName}-{resourceName}";
+                return $"{clusterName}.{resourceName}";
             }
             else
             {
@@ -862,6 +893,7 @@ namespace Neon.Kube
             controller.AddGlobalStep("resource group", CreateResourceGroupAsync);
             controller.AddGlobalStep("elastic ip", CreateElasticIpAsync);
             controller.AddGlobalStep("network", ConfigureNetworkAsync);
+            controller.AddGlobalStep("placement group", ConfigurePlacementGroupAsync);
             controller.AddNodeStep("node instances", CreateInstanceAsync);
 
             if (!controller.Run(leaveNodesConnected: false))
@@ -962,7 +994,7 @@ namespace Neon.Kube
 
             regionEndpoint = RegionEndpoint.GetBySystemName(region);
             ec2Client      = new AmazonEC2Client(awsCredentials, regionEndpoint);
-            elbClient      = new AmazonElasticLoadBalancingV2Client(awsCredentials, regionEndpoint);
+            elbClient      = new AmazonElasticLoadBalancingClient(awsCredentials, regionEndpoint);
             rgClient       = new AmazonResourceGroupsClient(awsCredentials, regionEndpoint);
 
             // Load information about any existing cluster resources.
@@ -1102,13 +1134,17 @@ namespace Neon.Kube
 
             // Load Balancer
 
-            var loadBalancerPaginator = elbClient.Paginators.DescribeLoadBalancers(new DescribeLoadBalancersRequest());
+            loadBalancer = await GetLoadBalancerAsync();
 
-            await foreach (var loadBalancerItem in loadBalancerPaginator.LoadBalancers)
+            // Placement group
+
+            var placementGroupPaginator = await ec2Client.DescribePlacementGroupsAsync(new DescribePlacementGroupsRequest());
+
+            foreach (var placementGroupItem in placementGroupPaginator.PlacementGroups)
             {
-                if (loadBalancerItem.LoadBalancerName == elbName)
+                if (placementGroupItem.GroupName == placementGroupName)
                 {
-                    loadBalancer = loadBalancerItem;
+                    placementGroup = placementGroupItem;
                     break;
                 }
             }
@@ -1174,6 +1210,25 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Attempts to locate the cluster load balancer.
+        /// </summary>
+        /// <returns>The load balancer or <c>null</c>.</returns>
+        private async Task<LoadBalancerDescription> GetLoadBalancerAsync()
+        {
+            var loadBalancerPaginator = elbClient.Paginators.DescribeLoadBalancers(new DescribeLoadBalancersRequest());
+
+            await foreach (var loadBalancerItem in loadBalancerPaginator.LoadBalancerDescriptions)
+            {
+                if (loadBalancerItem.LoadBalancerName == elbName)
+                {
+                    return loadBalancerItem;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Returns the <see cref="NetworkAcl"/> with the specified ID.
         /// </summary>
         /// <param name="networkAclId">The target network ACL ID.</param>
@@ -1230,9 +1285,9 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Verifies that the requested AWS region exists and supports the requested VM sizes.  
-        /// We'll also verify that the requested VMs have the minimum required number or cores 
-        /// and RAM.
+        /// Verifies that the requested AWS region and availability mzone exists and supports 
+        /// the requested VM sizes.  We'll also verify that the requested VMs have the minimum 
+        /// required number or cores and RAM.
         /// </para>
         /// <para>
         /// This also updates the node labels to match the capabilities of their VMs.
@@ -1241,7 +1296,20 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task VerifyRegionAndInstanceTypesAsync()
         {
-            var regionName             = awsOptions.Region;
+            var regionName = awsOptions.Region;
+            var zoneName   = awsOptions.AvailabilityZone;
+
+            // Verify that the zone and (implicitly the region) exist.
+
+            var regionsResponse = await ec2Client.DescribeRegionsAsync(new DescribeRegionsRequest());
+
+            if (!regionsResponse.Regions.Any(region => region.RegionName.Equals(regionName, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                throw new KubeException($"The AWS [{nameof(AwsHostingOptions)}.{nameof(AwsHostingOptions.AvailabilityZone)}={zoneName}] does not exist.");
+            }
+
+            // Verify that the instance types required by the cluster are available in the region.
+
             var nameToInstanceTypeInfo = new Dictionary<string, InstanceTypeInfo>(StringComparer.InvariantCultureIgnoreCase);
             var instanceTypePaginator  = ec2Client.Paginators.DescribeInstanceTypes(new DescribeInstanceTypesRequest());
 
@@ -1577,13 +1645,16 @@ namespace Neon.Kube
                     new CreateSubnetRequest(vpc.VpcId, networkOptions.NodeSubnet)
                     {
                         VpcId             = vpc.VpcId,
+                        AvailabilityZone  = awsOptions.AvailabilityZone,
                         TagSpecifications = GetTagSpecifications(subnetName, ResourceType.Subnet)
                     });
 
                 subnet = subnetResponse.Subnet;
             }
 
-            // Create the two network ACLs we'll use for securing the subnet.
+            // Identify/create the two network ACLs we'll use for securing the subnet.
+
+            await IdentifyNetworkAclsAsync();
 
             if (networkAcl1 == null)
             {
@@ -1635,25 +1706,45 @@ namespace Neon.Kube
 
             // Create the load balancer if it doesn't already exist.
 
+#if TODO
             if (loadBalancer == null)
             {
-                var loadBalancerResponse = await elbClient.CreateLoadBalancerAsync(
+                await elbClient.CreateLoadBalancerAsync(
                     new CreateLoadBalancerRequest()
-                    {
-                        Name          = elbName,
-                        IpAddressType = IpAddressType.Ipv4,
-                        Scheme        = LoadBalancerSchemeEnum.InternetFacing,
-                        Subnets       = new List<string>() { subnet.SubnetId },
-                        Type          = LoadBalancerTypeEnum.Network,
-                        Tags          = GetTags<Amazon.ElasticLoadBalancingV2.Model.Tag>(loadBalancerName)
+                    { 
+                        LoadBalancerName  = elbName,
+                        Listeners         = new List<Listener>(),
+                        AvailabilityZones = new List<string>(),      
+                        SecurityGroups    = new List<string>(),
+                        Subnets           = new List<string>() { subnet.SubnetId }
                     });
 
-                loadBalancer = loadBalancerResponse.LoadBalancers.Single();
+                loadBalancer = await GetLoadBalancerAsync();
             }
+#endif
 
             // Configure the ingress/egress rules as well as enable the SSH port forwarding.
 
             await UpdateNetworkAsync(NetworkOperations.UpdateIngressEgressRules | NetworkOperations.AddSshRules);
+        }
+
+        /// <summary>
+        /// Creates the the placement group used to provision the cluster nodes.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task ConfigurePlacementGroupAsync()
+        {
+            if (placementGroup == null)
+            {
+                var partitionGroupResponse = await ec2Client.CreatePlacementGroupAsync(
+                    new CreatePlacementGroupRequest(placementGroupName, PlacementStrategy.Partition)
+                    {
+                        PartitionCount    = awsOptions.PlacementPartitions,
+                        TagSpecifications = GetTagSpecifications(placementGroupName, ResourceType.PlacementGroup)
+                    });
+
+                placementGroup = partitionGroupResponse.PlacementGroup;
+            }
         }
 
         /// <summary>
@@ -1673,6 +1764,51 @@ namespace Neon.Kube
             {
                 node.Status = "create instance";
 
+                // Determine the placement group (1-based) partition number for the node.
+
+                var partitionNumber = -1;
+
+                if (awsOptions.PlacementPartitions <= 1)
+                {
+                    // No effective partitioning.
+
+                    partitionNumber = 1;
+                }
+                else if (node.Metadata.IsMaster)
+                {
+                    var masters = cluster.Definition.SortedMasterNodes.ToList();
+
+                    for (int index = 0; index < masters.Count; index++)
+                    {
+                        if (masters[index].Name == node.Name)
+                        {
+                            partitionNumber = (index % awsOptions.PlacementPartitions) + 1;
+                            break;
+                        }
+                    }
+                }
+                else if (node.Metadata.IsWorker)
+                {
+                    var workers = cluster.Definition.SortedWorkerNodes.ToList();
+
+                    for (int index = 0; index < workers.Count; index++)
+                    {
+                        if (workers[index].Name == node.Name)
+                        {
+                            partitionNumber = (index % awsOptions.PlacementPartitions) + 1;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    Covenant.Assert(false);
+                }
+
+                Covenant.Assert(partitionNumber > 0);
+
+                // Create the instance.
+
                 var runResponse = await ec2Client.RunInstancesAsync(
                     new RunInstancesRequest()
                     {
@@ -1682,6 +1818,12 @@ namespace Neon.Kube
                         MaxCount          = 1,
                         SubnetId          = subnet.SubnetId,
                         PrivateIpAddress  = node.Address.ToString(),
+                        Placement         = new Placement()
+                        {
+                            AvailabilityZone = awsOptions.AvailabilityZone,
+                            GroupName        = placementGroupName,
+                            PartitionNumber  = partitionNumber
+                        },
                         TagSpecifications = GetTagSpecifications(instanceName, ResourceType.Instance, new KeyValuePair<string, string>(neonNodeNameTag, node.Name))
                     });
 

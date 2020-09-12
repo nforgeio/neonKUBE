@@ -72,21 +72,48 @@ namespace Neon.Kube
         public string SecretAccessKey { get; set; }
 
         /// <summary>
-        /// Specifies the AWS zone where the cluster will be provisioned.
+        /// Specifies the AWS zone where the cluster will be provisioned.  This is required.
         /// </summary>
-        [JsonProperty(PropertyName = "Zone", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "zone", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "AvailabilityZone", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "availabilityZone", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string Zone { get; set; }
+        public string AvailabilityZone { get; set; }
 
         /// <summary>
         /// Returns the AWS region where the cluster will be provisioned.  This is
-        /// derived from <see cref="Zone"/> by removing the last character, which
+        /// derived from <see cref="AvailabilityZone"/> by removing the last character, which
         /// is the zone suffix.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public string Region => Zone?.Substring(0, Zone.Length - 1);
+        public string Region => AvailabilityZone?.Substring(0, AvailabilityZone.Length - 1);
+
+        /// <summary>
+        /// <para>
+        /// Specifies the number of partition group partitions the cluster instances will be
+        /// deployed to.  This defaults to <b>-1</b> which means that the number of partitions
+        /// will equal the number of master nodes.  AWS supports a maximum of 7 partitions.
+        /// </para>
+        /// <para>
+        /// <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html">AWS Placement groups</a>
+        /// </para>
+        /// <para>
+        /// neonKUBE provisions using partition placement groups to try to ensure that the 
+        /// master nodes are provisioned in separate racks and also that the other nodes
+        /// are also widely distributed for hardware fault tolerance.  In general, the
+        /// number of partitions should be no less than the number of cluster master nodes.
+        /// </para>
+        /// <para>
+        /// Unfortunately, AWS may not have enough distinct hardware available to satisfy 
+        /// your requirements.  In this case, we recommend that you try another availability
+        /// zone first and if that doesn't work try reducing the number of partitions which
+        /// can be as low as 1 partition.  
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "PlacementPartitions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "placementPartitions", ApplyNamingConventions = false)]
+        [DefaultValue(-1)]
+        public int PlacementPartitions { get; set; } = -1;
 
         /// <summary>
         /// AWS resource group where all cluster components are to be provisioned.  This defaults
@@ -156,17 +183,17 @@ namespace Neon.Kube
 
             if (string.IsNullOrEmpty(AccessKeyId))
             {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(AccessKeyId)}] cannot be empty.");
+                throw new ClusterDefinitionException($"AWS hosting [{nameof(AccessKeyId)}] is required.");
             }
 
             if (string.IsNullOrEmpty(SecretAccessKey))
             {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(SecretAccessKey)}] cannot be empty.");
+                throw new ClusterDefinitionException($"AWS hosting [{nameof(SecretAccessKey)}] is required.");
             }
 
-            if (string.IsNullOrEmpty(Zone))
+            if (string.IsNullOrEmpty(AvailabilityZone))
             {
-                throw new ClusterDefinitionException($"AWS hosting [{nameof(Zone)}] cannot be empty.");
+                throw new ClusterDefinitionException($"AWS hosting [{nameof(AvailabilityZone)}] is required.");
             }
 
             // Verify [ResourceGroup].
@@ -196,6 +223,24 @@ namespace Neon.Kube
                 if (!(char.IsLetterOrDigit(ch) || ch == '_' || ch == '-'))
                 {
                     throw new ClusterDefinitionException($"AWS hosting [{nameof(ResourceGroup)}={ResourceGroup}] includes characters other than letters, digits, dashes and underscores.");
+                }
+            }
+
+            // Verify [PlacementPartitions]
+
+            if (PlacementPartitions < 0)
+            {
+                PlacementPartitions = Math.Min(7, clusterDefinition.Masters.Count());
+            }
+            else
+            {
+                if (PlacementPartitions == 0)
+                {
+                    throw new ClusterDefinitionException($"AWS hosting [{nameof(PlacementPartitions)}={PlacementPartitions}] cannot be [0].");
+                }
+                else if (PlacementPartitions > 7)
+                {
+                    throw new ClusterDefinitionException($"AWS hosting [{nameof(PlacementPartitions)}={PlacementPartitions}] cannot be greaterh than [7].");
                 }
             }
 
