@@ -395,9 +395,9 @@ namespace Neon.Kube
         public const string LabelElasticsearch = ClusterDefinition.ReservedLabelPrefix + "monitor.elasticsearch";
 
         /// <summary>
-        /// Reserved label name for <see cref="M3DB"/>.
+        /// Reserved label name for <see cref="Metrics"/>.
         /// </summary>
-        public const string LabelM3DB = ClusterDefinition.ReservedLabelPrefix + "monitor.m3db";
+        public const string LabelMetrics = ClusterDefinition.ReservedLabelPrefix + "monitor.metrics";
 
         /// <summary>
         /// <b>io.neonkube.monitor.elasticsearch</b> [<c>bool</c>]: Indicates that Elasticsearch 
@@ -410,14 +410,14 @@ namespace Neon.Kube
         public bool Elasticsearch { get; set; } = false;
 
         /// <summary>
-        /// <b>io.neonkube.monitor.m3db</b> [<c>bool</c>]: Indicates that M3DB 
+        /// <b>io.neonkube.monitor.metrics</b> [<c>bool</c>]: Indicates that Metrics 
         /// will be deployed to this node if <see cref="PrometheusOptions.Enabled"/> is <c>true</c>.  
         /// This defaults to <c>false</c>.
         /// </summary>
-        [JsonProperty(PropertyName = "M3DB", Required = Required.Default)]
-        [YamlMember(Alias = "m3db", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Metrics", Required = Required.Default)]
+        [YamlMember(Alias = "metrics", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool M3DB { get; set; } = false;
+        public bool Metrics { get; set; } = false;
 
         //---------------------------------------------------------------------
         // Custom labels
@@ -488,7 +488,7 @@ namespace Neon.Kube
 
                 list.Add(new KeyValuePair<string, object>(LabelElasticsearch,               NeonHelper.ToBoolString(Elasticsearch)));
 
-                list.Add(new KeyValuePair<string, object>(LabelM3DB,                        NeonHelper.ToBoolString(M3DB)));
+                list.Add(new KeyValuePair<string, object>(LabelMetrics,                        NeonHelper.ToBoolString(Metrics)));
 
                 return list;
             }
