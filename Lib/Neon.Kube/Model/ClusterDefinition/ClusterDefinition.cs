@@ -38,6 +38,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
+using Remotion.Linq.Parsing;
 
 namespace Neon.Kube
 {
@@ -208,13 +209,16 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// <para>
         /// The cluster name.
-        /// </summary>
-        /// <remarks>
+        /// </para>
         /// <note>
-        /// The name may include only letters, numbers, periods, dashes, and underscores.
+        /// The name may include only letters, numbers, periods, dashes, and underscores and
+        /// may be up to 20 characters long.  Some hosting environments enforce length limits
+        /// on resource names that we derive from the cluster name, so please limit your
+        /// cluster name to 20 characters.
         /// </note>
-        /// </remarks>
+        /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Always)]
         [YamlMember(Alias = "name", ApplyNamingConventions = false)]
         public string Name { get; set; }
@@ -626,6 +630,11 @@ namespace Neon.Kube
             if (!IsValidName(Name))
             {
                 throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
+            }
+
+            if (Name.Length > 20)
+            {
+                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(Name)}={Name}] has more than 20 characters.  Some hosting environments enforce name length limits so please trim your cluster name.");
             }
 
             if (Datacenter == null)

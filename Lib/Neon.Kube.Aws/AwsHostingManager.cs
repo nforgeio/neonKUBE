@@ -49,7 +49,6 @@ using Amazon.ElasticLoadBalancingV2.Model;
 using Amazon.ResourceGroups;
 using Amazon.ResourceGroups.Model;
 using Amazon.Runtime;
-using System.Runtime.InteropServices;
 
 namespace Neon.Kube
 {
@@ -499,6 +498,61 @@ namespace Neon.Kube
             }
         }
 
+        /// <summary>
+        /// Constructs a name suitable for a load balancer or load balancer related resource
+        /// by combining the cluster name with the resource name.
+        /// </summary>
+        /// <param name="clusterName">The cluster name.</param>
+        /// <param name="resourceName">The resource name.</param>
+        /// <returns>The composed resource name.</returns>
+        /// <remarks>
+        /// <para>
+        /// AWS Elastic Load Balancers and Target Groups need to have unique names for the
+        /// account and region where the cluster is deployed.  These names are in addition
+        /// and independent of any name specified by the the resource tags.
+        /// </para>
+        /// <para>
+        /// AWS places additional constraints on these unique names: only alphanumeric and
+        /// dash characters are allowed and names may be up to 32 characters long.
+        /// </para>
+        /// <para>
+        /// The problem is that neonKUBE cluster names may also include periods and underscores.
+        /// This method converts any periods and underscores in the cluster name into dashes,
+        /// appends the <paramref name="resourceName"/> with a leading dash and ensures that
+        /// the combined name includes 32 characters or fewer.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// It's possible but very unlikely for a user to try to deploy two clusters to the
+        /// same region who's cluster names differ only by a period and underscore.  For example
+        /// <b>my.cluster</b> and <b>my_cluster</b>.  The period and underscore will bot be 
+        /// converted to a dash which means that both clusters will try to provision ELB
+        /// resources with the same <b>my-cluster</b> name prefix.  The second cluster deployment
+        /// will fail with resource name conflicts.
+        /// </para>
+        /// <para>
+        /// We're not going to worry about this.
+        /// </para>
+        /// </note>
+        /// </remarks>
+        private static string GetElbName(string clusterName, string resourceName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName), nameof(clusterName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(resourceName), nameof(resourceName));
+
+            clusterName = clusterName.Replace('.', '-');
+            clusterName = clusterName.Replace('_', '-');
+
+            var name = $"{clusterName}-{resourceName}";
+
+            if (name.Length > 32)
+            {
+                throw new KubeException($"Generated ELB related resource name [{name}] exceeds the 32 character AWS limit.");
+            }
+
+            return name;
+        }
+
         //---------------------------------------------------------------------
         // Instance members
 
@@ -541,6 +595,9 @@ namespace Neon.Kube
         private String                              networkAclName2;
         private string                              gatewayName;
         private string                              loadBalancerName;
+        private string                              elbName;
+
+        //private Dictionary<string, TargetGroup> nameToElbTargetGroup;
 
         /// <summary>
         /// Table mapping a cluster node name to its AWS VM instance information.
@@ -609,6 +666,7 @@ namespace Neon.Kube
             networkAclName2  = GetResourceName("network-acl-2");
             gatewayName      = GetResourceName("internet-gateway");
             loadBalancerName = GetResourceName("load-balancer");
+            elbName          = GetElbName(clusterName, "elb");
 
             // Initialize the instance/node mapping dictionaries and also ensure
             // that each node has reasonable AWS node options.
@@ -1044,14 +1102,13 @@ namespace Neon.Kube
 
             // Load Balancer
 
-            var loadbalancerPaginator = elbClient.Paginators.DescribeLoadBalancers(new DescribeLoadBalancersRequest());
-            var loadbalancerName      = this.loadBalancerName.Replace('.', '-');    // AWS doesn't allow periods in LB names
+            var loadBalancerPaginator = elbClient.Paginators.DescribeLoadBalancers(new DescribeLoadBalancersRequest());
 
-            await foreach (var loadbalancerItem in loadbalancerPaginator.LoadBalancers)
+            await foreach (var loadBalancerItem in loadBalancerPaginator.LoadBalancers)
             {
-                if (loadbalancerItem.LoadBalancerName == loadbalancerName)
+                if (loadBalancerItem.LoadBalancerName == elbName)
                 {
-                    loadBalancer = loadbalancerItem;
+                    loadBalancer = loadBalancerItem;
                     break;
                 }
             }
@@ -1076,7 +1133,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Attempts to identify the two network ACLs we'll be using to for the subnet.
+        /// Attempts to identify the two network ACLs we'll be using to secure the subnet.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task IdentifyNetworkAclsAsync()
@@ -1123,7 +1180,7 @@ namespace Neon.Kube
         /// <returns>The <see cref="NetworkAcl"/>.</returns>
         private async Task<NetworkAcl> GetNetworkAclAsync(string networkAclId)
         {
-            // $todo(jefflill): This would be more efficient using a filter.
+            // $todo(jefflill): This would be more efficient with a filter.
 
             var networkAclPagenator = ec2Client.Paginators.DescribeNetworkAcls(new DescribeNetworkAclsRequest());
 
@@ -1173,9 +1230,9 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
-        /// Verifies that the requested AWS region exists, supports the requested VM sizes,
-        /// and that VMs for nodes that specify UltraSSD actually support UltraSSD.  We'll also
-        /// verify that the requested VMs have the minimum required number or cores and RAM.
+        /// Verifies that the requested AWS region exists and supports the requested VM sizes.  
+        /// We'll also verify that the requested VMs have the minimum required number or cores 
+        /// and RAM.
         /// </para>
         /// <para>
         /// This also updates the node labels to match the capabilities of their VMs.
@@ -1578,13 +1635,12 @@ namespace Neon.Kube
 
             // Create the load balancer if it doesn't already exist.
 
-#if TODO
             if (loadBalancer == null)
             {
-                var loadbalancerResponse = await elbClient.CreateLoadBalancerAsync(
+                var loadBalancerResponse = await elbClient.CreateLoadBalancerAsync(
                     new CreateLoadBalancerRequest()
                     {
-                        Name          = loadBalancerName.Replace('.', '-'),     // AWS doesn't allow periods in LB names
+                        Name          = elbName,
                         IpAddressType = IpAddressType.Ipv4,
                         Scheme        = LoadBalancerSchemeEnum.InternetFacing,
                         Subnets       = new List<string>() { subnet.SubnetId },
@@ -1592,9 +1648,8 @@ namespace Neon.Kube
                         Tags          = GetTags<Amazon.ElasticLoadBalancingV2.Model.Tag>(loadBalancerName)
                     });
 
-                loadBalancer = loadbalancerResponse.LoadBalancers.Single();
+                loadBalancer = loadBalancerResponse.LoadBalancers.Single();
             }
-#endif
 
             // Configure the ingress/egress rules as well as enable the SSH port forwarding.
 

@@ -218,7 +218,7 @@ namespace Neon.Kube
         /// when the property is <c>null</c> or empty.
         /// </para>
         /// <note>
-        /// Address rules are processed in order, from first to last so you may consider
+        /// Address rules are processed in order from first to last, so you may consider
         /// putting your blacklist rules before your whitelist rules.
         /// </note>
         /// <note>
@@ -237,7 +237,7 @@ namespace Neon.Kube
         /// from anywhere when the property is <c>null</c> or empty.
         /// </para>
         /// <note>
-        /// Address rules are processed in order, from first to last so you may consider
+        /// Address rules are processed in order from first to last, so you may consider
         /// putting your blacklist rules before your whitelist rules.
         /// </note>
         /// </summary>
