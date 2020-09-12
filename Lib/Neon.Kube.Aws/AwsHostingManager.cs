@@ -44,13 +44,14 @@ using Neon.Time;
 using Amazon;
 using Amazon.EC2;
 using Amazon.EC2.Model;
-using Amazon.ElasticLoadBalancing;
-using Amazon.ElasticLoadBalancing.Model;
+using Amazon.ElasticLoadBalancingV2;
+using Amazon.ElasticLoadBalancingV2.Model;
 using Amazon.ResourceGroups;
 using Amazon.ResourceGroups.Model;
 using Amazon.Runtime;
 
-using Ec2Instance = Amazon.EC2.Model.Instance;
+using Ec2Instance    = Amazon.EC2.Model.Instance;
+using ElbTargetGroup = Amazon.ElasticLoadBalancingV2.Model.TargetGroup;
 
 namespace Neon.Kube
 {
@@ -457,17 +458,17 @@ namespace Neon.Kube
         /// <summary>
         /// The first NSG rule priority to use for ingress rules.
         /// </summary>
-        private const int firstIngressAclRuleNumber = 1000;
+        private const int firstIngressRuleNumber = 1000;
 
         /// <summary>
         /// The first NSG rule priority to use for egress rules.
         /// </summary>
-        private const int firstEgressAclRuleNumber = 1000;
+        private const int firstEgressRuleNumber = 1000;
 
         /// <summary>
         /// The first NSG rule priority to use for temporary SSH rules.
         /// </summary>
-        private const int firstSshAclRuleNumber = 2000;
+        private const int firstSshRuleNumber = 2000;
 
         /// <summary>
         /// Returns the list of supported Ubuntu images from the AWS Marketplace.
@@ -546,6 +547,10 @@ namespace Neon.Kube
         /// appends the <paramref name="resourceName"/> with a leading dash and ensures that
         /// the combined name includes 32 characters or fewer.
         /// </para>
+        /// <para>
+        /// AWS also doesn't allow load balancer names to start with "internal-".  We're going
+        /// to change this prefix to "x-internal-" in this case.
+        /// </para>
         /// <note>
         /// <para>
         /// It's possible but very unlikely for a user to try to deploy two clusters to the
@@ -569,6 +574,11 @@ namespace Neon.Kube
             clusterName = clusterName.Replace('_', '-');
 
             var name = $"{clusterName}-{resourceName}";
+
+            if (name.StartsWith("internal-"))
+            {
+                name = "x-internal" + name.Substring("internal-".Length);
+            }
 
             if (name.Length > 32)
             {
@@ -596,19 +606,20 @@ namespace Neon.Kube
         private Region                              awsRegion;
         private RegionEndpoint                      regionEndpoint;
         private AmazonEC2Client                     ec2Client;
-        private AmazonElasticLoadBalancingClient    elbClient;
+        private AmazonElasticLoadBalancingV2Client  elbClient;
         private AmazonResourceGroupsClient          rgClient;
         private string                              ami;
         private Group                               resourceGroup;
         private Address                             elasticIp;
         private Vpc                                 vpc;
+        private DhcpOptions                         dhcpOptions;
+        private SecurityGroup                       sgAllowAll;
+        private Subnet                              subnet;
         private NetworkAcl                          defaultNetworkAcl;
         private NetworkAcl                          networkAcl1;
         private NetworkAcl                          networkAcl2;
-        private DhcpOptions                         dhcpOptions;
-        private Subnet                              subnet;
         private InternetGateway                     gateway;
-        private LoadBalancerDescription             loadBalancer;
+        private LoadBalancer                        loadBalancer;
         private PlacementGroup                      placementGroup;
 
         // These are the names we'll use for cluster AWS resources.
@@ -616,6 +627,7 @@ namespace Neon.Kube
         private string                              elasticIpName;
         private string                              vpcName;
         private string                              dhcpOptionName;
+        private string                              sgAllowAllName;
         private string                              subnetName;
         private String                              networkAclName1;
         private String                              networkAclName2;
@@ -627,7 +639,7 @@ namespace Neon.Kube
         /// <summary>
         /// Table mapping a ELB target group name to the group.
         /// </summary>
-        private Dictionary<string, TargetGroup> nameToElbTargetGroup;
+        private Dictionary<string, ElbTargetGroup> nameToTargetGroup;
 
         /// <summary>
         /// Table mapping a cluster node name to its AWS VM instance information.
@@ -691,6 +703,7 @@ namespace Neon.Kube
             elasticIpName      = GetResourceName("elastic-ip");
             vpcName            = GetResourceName("vpc");
             dhcpOptionName     = GetResourceName("dhcp-opt");
+            sgAllowAllName     = GetResourceName("sg-allow-all");
             subnetName         = GetResourceName("subnet");
             networkAclName1    = GetResourceName("network-acl-1");
             networkAclName2    = GetResourceName("network-acl-2");
@@ -698,6 +711,11 @@ namespace Neon.Kube
             loadBalancerName   = GetResourceName("load-balancer");
             elbName            = GetElbName(clusterName, "elb");
             placementGroupName = GetResourceName("placement-group");
+
+            // Initialize the dictionary we'll use for mapping ELB target group
+            // names to the specific target group.
+
+            this.nameToTargetGroup = new Dictionary<string, ElbTargetGroup>();
 
             // Initialize the instance/node mapping dictionaries and also ensure
             // that each node has reasonable AWS node options.
@@ -994,7 +1012,7 @@ namespace Neon.Kube
 
             regionEndpoint = RegionEndpoint.GetBySystemName(region);
             ec2Client      = new AmazonEC2Client(awsCredentials, regionEndpoint);
-            elbClient      = new AmazonElasticLoadBalancingClient(awsCredentials, regionEndpoint);
+            elbClient      = new AmazonElasticLoadBalancingV2Client(awsCredentials, regionEndpoint);
             rgClient       = new AmazonResourceGroupsClient(awsCredentials, regionEndpoint);
 
             // Load information about any existing cluster resources.
@@ -1097,6 +1115,20 @@ namespace Neon.Kube
                 }
             }
 
+            // Security Groups
+
+            var securityGroupPagenator = ec2Client.Paginators.DescribeSecurityGroups(new DescribeSecurityGroupsRequest());
+
+            await foreach (var securityGroupItem in securityGroupPagenator.SecurityGroups)
+            {
+                if (securityGroupItem.Tags.Any(tag => tag.Key == nameTag && tag.Value == sgAllowAllName) &&
+                    securityGroupItem.Tags.Any(tag => tag.Key == neonClusterTag && tag.Value == clusterName))
+                {
+                    sgAllowAll = securityGroupItem;
+                    break;
+                }
+            }
+
             // Subnet
 
             var subnetPaginator = ec2Client.Paginators.DescribeSubnets(new DescribeSubnetsRequest());
@@ -1135,6 +1167,10 @@ namespace Neon.Kube
             // Load Balancer
 
             loadBalancer = await GetLoadBalancerAsync();
+
+            // Load balancer target groups.
+
+            await LoadTargetGroupsAsync();
 
             // Placement group
 
@@ -1213,11 +1249,11 @@ namespace Neon.Kube
         /// Attempts to locate the cluster load balancer.
         /// </summary>
         /// <returns>The load balancer or <c>null</c>.</returns>
-        private async Task<LoadBalancerDescription> GetLoadBalancerAsync()
+        private async Task<LoadBalancer> GetLoadBalancerAsync()
         {
             var loadBalancerPaginator = elbClient.Paginators.DescribeLoadBalancers(new DescribeLoadBalancersRequest());
 
-            await foreach (var loadBalancerItem in loadBalancerPaginator.LoadBalancerDescriptions)
+            await foreach (var loadBalancerItem in loadBalancerPaginator.LoadBalancers)
             {
                 if (loadBalancerItem.LoadBalancerName == elbName)
                 {
@@ -1226,6 +1262,31 @@ namespace Neon.Kube
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Loads information about any load balancer target groups into
+        /// <see cref="nameToTargetGroup"/>.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task LoadTargetGroupsAsync()
+        {
+            nameToTargetGroup.Clear();
+
+            if (vpc == null)
+            {
+                return; // There can't be any target groups without a VPC.
+            }
+
+            var targetGroupPagenator = elbClient.Paginators.DescribeTargetGroups(new DescribeTargetGroupsRequest());
+
+            await foreach (var targetGroup in targetGroupPagenator.TargetGroups)
+            {
+                if (targetGroup.VpcId == vpc.VpcId)
+                {
+                    nameToTargetGroup.Add(targetGroup.TargetGroupName, targetGroup);
+                }
+            }
         }
 
         /// <summary>
@@ -1637,6 +1698,65 @@ namespace Neon.Kube
                     });
             }
 
+
+            // Create the ALLOW-ALL security group if it doesn't exist.
+
+            if (sgAllowAll == null)
+            {
+                var securityGroupResponse = await ec2Client.CreateSecurityGroupAsync(
+                    new CreateSecurityGroupRequest()
+                    {
+                        GroupName         = sgAllowAllName,
+                        Description       = "Allow all traffic in both directions",
+                        VpcId             = vpc.VpcId,
+                        TagSpecifications = GetTagSpecifications(sgAllowAllName, ResourceType.SecurityGroup)
+                    });
+
+                var securityGroupId = securityGroupResponse.GroupId;
+                var securityGroupPagenator = ec2Client.Paginators.DescribeSecurityGroups(new DescribeSecurityGroupsRequest());
+
+                await foreach (var securityGroupItem in securityGroupPagenator.SecurityGroups)
+                {
+                    if (securityGroupItem.GroupId == securityGroupId)
+                    {
+                        sgAllowAll = securityGroupItem;
+                        break;
+                    }
+                }
+
+                Covenant.Assert(sgAllowAll != null);
+
+                // Security groups are created with an ALLOW-ALL egress rule.  We need to add
+                // the same for ingress.   Note that this is not a security vulnerablity because
+                // the load balancer only forwards traffic for explicit listeners and we also
+                // use network ACLs to secure the network.
+
+                if (sgAllowAll.IpPermissions.Count == 0)
+                {
+                    await ec2Client.AuthorizeSecurityGroupIngressAsync(
+                        new AuthorizeSecurityGroupIngressRequest()
+                        {
+                            GroupId = sgAllowAll.GroupId,
+                            IpPermissions = new List<IpPermission>
+                            {
+                                new IpPermission()
+                                {
+                                    IpProtocol = "-1",      // All protocols
+                                    FromPort   = 1,
+                                    ToPort     = ushort.MaxValue,
+                                    Ipv4Ranges = new List<IpRange>()
+                                    {
+                                        new IpRange()
+                                        {
+                                            CidrIp = "0.0.0.0/0"
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                }
+            }
+
             // Create the subnet and associate it with the VPC if the subnet doesn't already exist.
 
             if (subnet == null)
@@ -1706,24 +1826,30 @@ namespace Neon.Kube
 
             // Create the load balancer if it doesn't already exist.
 
-#if TODO
             if (loadBalancer == null)
             {
                 await elbClient.CreateLoadBalancerAsync(
                     new CreateLoadBalancerRequest()
-                    { 
-                        LoadBalancerName  = elbName,
-                        Listeners         = new List<Listener>(),
-                        AvailabilityZones = new List<string>(),      
-                        SecurityGroups    = new List<string>(),
-                        Subnets           = new List<string>() { subnet.SubnetId }
+                    {
+                        Name           = elbName,
+                        Type           = LoadBalancerTypeEnum.Network,
+                        Scheme         = LoadBalancerSchemeEnum.InternetFacing,
+                        IpAddressType  = IpAddressType.Ipv4,
+                        SubnetMappings = new List<SubnetMapping>()
+                        {
+                            new SubnetMapping()
+                            {
+                                AllocationId = elasticIp.AllocationId,
+                                SubnetId     = subnet.SubnetId
+                            }
+                        },
+                        Tags = GetTags<Amazon.ElasticLoadBalancingV2.Model.Tag>("load-balancer"),
                     });
 
                 loadBalancer = await GetLoadBalancerAsync();
             }
-#endif
 
-            // Configure the ingress/egress rules as well as enable the SSH port forwarding.
+            // Configure the ingress/egress listeners and target groups.
 
             await UpdateNetworkAsync(NetworkOperations.UpdateIngressEgressRules | NetworkOperations.AddSshRules);
         }
@@ -1916,7 +2042,7 @@ namespace Neon.Kube
 
             // Add any ingress rules from the cluster definition.
 
-            var ingressRuleNumber = firstIngressAclRuleNumber;
+            var ingressRuleNumber = firstIngressRuleNumber;
 
             foreach (var ingressRule in networkOptions.IngressRules)
             {
@@ -1981,7 +2107,7 @@ namespace Neon.Kube
 
             if (networkOptions.EgressAddressRules.Count() > 0)
             {
-                var egressRuleNumber = firstIngressAclRuleNumber;
+                var egressRuleNumber = firstIngressRuleNumber;
 
                 foreach (var egressAddressRule in networkOptions.EgressAddressRules)
                 {
@@ -2024,7 +2150,7 @@ namespace Neon.Kube
                     new CreateNetworkAclEntryRequest()
                     {
                         NetworkAclId = updateAcl.NetworkAclId,
-                        RuleNumber   = firstIngressAclRuleNumber,
+                        RuleNumber   = firstIngressRuleNumber,
                         Protocol     = "-1",      // "-1" means any protocol
                         Egress       = true,
                         PortRange    = new PortRange() { From = 1, To = ushort.MaxValue },

@@ -647,7 +647,6 @@ namespace Neon.Kube
                 throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(Datacenter)}={Datacenter}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
-
             // Validate the Linux distribution.
 
             var distribution = LinuxDistribution ?? defaultLinuxDistribution;
