@@ -629,8 +629,8 @@ namespace Neon.Kube
         private string                              dhcpOptionName;
         private string                              sgAllowAllName;
         private string                              subnetName;
-        private String                              networkAclName1;
-        private String                              networkAclName2;
+        private string                              networkAclName1;
+        private string                              networkAclName2;
         private string                              gatewayName;
         private string                              loadBalancerName;
         private string                              elbName;
@@ -1191,7 +1191,11 @@ namespace Neon.Kube
 
             await foreach (var reservation in instancePaginator.Reservations)
             {
-                foreach (var instance in reservation.Instances)
+                // Note that terminated instances will show up for a while, so we
+                // need to ignore them.
+
+                foreach (var instance in reservation.Instances
+                    .Where(instance => instance.State.Name.Value != InstanceStateName.Terminated))
                 {
                     var name    = instance.Tags.SingleOrDefault(tag => tag.Key == nameTag)?.Value;
                     var cluster = instance.Tags.SingleOrDefault(tag => tag.Key == neonClusterTag)?.Value;
@@ -1698,7 +1702,6 @@ namespace Neon.Kube
                     });
             }
 
-
             // Create the ALLOW-ALL security group if it doesn't exist.
 
             if (sgAllowAll == null)
@@ -1944,6 +1947,7 @@ namespace Neon.Kube
                         MaxCount          = 1,
                         SubnetId          = subnet.SubnetId,
                         PrivateIpAddress  = node.Address.ToString(),
+                        SecurityGroupIds  = new List<string>() { sgAllowAll.GroupId },
                         Placement         = new Placement()
                         {
                             AvailabilityZone = awsOptions.AvailabilityZone,
