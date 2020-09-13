@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HealthCheck.cs
+// FILE:	    HealthCheckOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -79,7 +79,7 @@ namespace Neon.Kube
     /// stop sending traffic to unhealthy node endpoints until they become healthy again.
     /// </para>
     /// </remarks>
-    public class HealthCheck
+    public class HealthCheckOptions
     {
         /// <summary>
         /// Specifies the interval in seconds between load balancer health checks.  This 
@@ -124,17 +124,17 @@ namespace Neon.Kube
 
             if (IntervalSeconds < 5 || 300 < IntervalSeconds)
             {
-                throw new ClusterDefinitionException($"[{nameof(HealthCheck)}.{nameof(HealthCheck.IntervalSeconds)}={IntervalSeconds}] from [{name}] is outside the range of supported values [5...300].");
+                throw new ClusterDefinitionException($"[{nameof(HealthCheckOptions)}.{nameof(HealthCheckOptions.IntervalSeconds)}={IntervalSeconds}] from [{name}] is outside the range of supported values [5...300].");
             }
 
             if (TimeoutSeconds < 2 || 60 < TimeoutSeconds)
             {
-                throw new ClusterDefinitionException($"[{nameof(HealthCheck)}.{nameof(HealthCheck.TimeoutSeconds)}={TimeoutSeconds}] is [{name}] outside the range of supported values [2...60].");
+                throw new ClusterDefinitionException($"[{nameof(HealthCheckOptions)}.{nameof(HealthCheckOptions.TimeoutSeconds)}={TimeoutSeconds}] is [{name}] outside the range of supported values [2...60].");
             }
 
             if (ThresholdCount < 2 || 10 < ThresholdCount)
             {
-                throw new ClusterDefinitionException($"[{nameof(HealthCheck)}.{nameof(HealthCheck.ThresholdCount)}={ThresholdCount}] is [{name}] outside the range of supported values [2...10].");
+                throw new ClusterDefinitionException($"[{nameof(HealthCheckOptions)}.{nameof(HealthCheckOptions.ThresholdCount)}={ThresholdCount}] is [{name}] outside the range of supported values [2...10].");
             }
         }
     }

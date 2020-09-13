@@ -1607,7 +1607,7 @@ namespace Neon.Kube
 
             // Add the load balancer ingress rules and health probes.
 
-            var defaultHealthCheck = networkOptions.IngressHealthCheck ?? new HealthCheck();
+            var defaultHealthCheck = networkOptions.IngressHealthCheck ?? new HealthCheckOptions();
 
             foreach (var ingressRule in ingressRules)
             {

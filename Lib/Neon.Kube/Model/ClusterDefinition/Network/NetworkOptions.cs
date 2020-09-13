@@ -221,7 +221,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "IngressHealthCheck", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "ingressHealthCheck", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public HealthCheck IngressHealthCheck { get; set; } = null;
+        public HealthCheckOptions IngressHealthCheck { get; set; } = null;
 
         /// <summary>
         /// <para>

@@ -52,6 +52,7 @@ using Amazon.Runtime;
 
 using Ec2Instance    = Amazon.EC2.Model.Instance;
 using ElbTargetGroup = Amazon.ElasticLoadBalancingV2.Model.TargetGroup;
+using System.Runtime.Serialization;
 
 namespace Neon.Kube
 {
@@ -522,7 +523,34 @@ namespace Neon.Kube
                 case IngressProtocol.Https:
                 case IngressProtocol.Tcp:
 
+                    // We're deploying a network load balancer, so all of these
+                    // protocols map to TCP.
+
                     return "6";     // TCP
+
+                default:
+
+                    throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// Converts an <see cref="IngressProtocol"/> value into a <see cref="ProtocolEnum"/>.
+        /// </summary>
+        /// <param name="protocol">The ingress protocol.</param>
+        /// <returns>The corresponding <see cref="ProtocolEnum"/>.</returns>
+        private static ProtocolEnum ToTargetGroupProtocol(IngressProtocol protocol)
+        {
+            switch (protocol)
+            {
+                case IngressProtocol.Http:
+                case IngressProtocol.Https:
+                case IngressProtocol.Tcp:
+
+                    // We're deploying a network load balancer, so all of these
+                    // protocols map to TCP.
+
+                    return ProtocolEnum.TCP;
 
                 default:
 
@@ -541,7 +569,7 @@ namespace Neon.Kube
         /// <para>
         /// AWS Elastic Load Balancers and Target Groups need to have unique names for the
         /// account and region where the cluster is deployed.  These names are in addition
-        /// and independent of any name specified by the the resource tags.
+        /// to and independent of any name specified by the the resource tags.
         /// </para>
         /// <para>
         /// AWS places additional constraints on these unique names: only alphanumeric and
@@ -1176,7 +1204,7 @@ namespace Neon.Kube
 
             // Load balancer target groups.
 
-            await LoadTargetGroupsAsync();
+            await LoadElbTargetGroupsAsync();
 
             // Placement group
 
@@ -1279,7 +1307,7 @@ namespace Neon.Kube
         /// <see cref="nameToTargetGroup"/>.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task LoadTargetGroupsAsync()
+        private async Task LoadElbTargetGroupsAsync()
         {
             nameToTargetGroup.Clear();
 
@@ -1968,6 +1996,42 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Constructs a target group name by appending the protocol, port and target group type 
+        /// to the base name passed.
+        /// </summary>
+        /// <param name="ingressTarget">The neonKUBE target group type.</param>
+        /// <param name="baseName">The base name for the target group.</param>
+        /// <param name="protocol">The ingress protocol.</param>
+        /// <param name="port">The ingress port.</param>
+        /// <returns>The fully qualified target group name.</returns>
+        private string GetTargetGroupName(IngressRuleTarget ingressTarget, string baseName, IngressProtocol protocol, int port)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(baseName), nameof(baseName));
+
+            var protocolString = NeonHelper.EnumToString(protocol);
+            var typeString     = NeonHelper.EnumToString(ingressTarget);
+
+            Covenant.Assert(!typeString.Contains('-'), $"Serialized [{nameof(IngressRuleTarget)}.{ingressTarget}={typeString}] must not include a dash.");
+
+            return $"{typeString}-{baseName}-{protocolString}-{port}";
+        }
+
+        /// <summary>
+        /// Parses the target group name to determine the target group type.
+        /// </summary>
+        /// <param name="targetGroup">The target group.</param>
+        /// <returns>The target group's <see cref="IngressRuleTarget"/>.</returns>
+        private IngressRuleTarget GetTargetGroupType(ElbTargetGroup targetGroup)
+        {
+            Covenant.Requires<ArgumentNullException>(targetGroup != null, nameof(targetGroup));
+
+            var dashPos    = targetGroup.TargetGroupName.IndexOf('-');
+            var typeString = targetGroup.TargetGroupName.Substring(0, dashPos);
+
+            return NeonHelper.ParseEnum<IngressRuleTarget>(typeString);
+        }
+
+        /// <summary>
         /// Updates the load balancer and related security rules based on the operation flags passed.
         /// </summary>
         /// <param name="operations">Flags that control how the load balancer and related security rules are updated.</param>
@@ -1999,6 +2063,29 @@ namespace Neon.Kube
         private async Task UpdateIngressEgressRulesAsync()
         {
             KubeHelper.EnsureIngressNodes(cluster.Definition);
+
+            // We need to add a special ingress rule for the Kubernetes API on port 6443 and
+            // load balance this traffic to the master nodes.
+
+            var clusterRules = new IngressRule[]
+                {
+                    new IngressRule()
+                    {
+                        Name                  = "kubernetes-api",
+                        Protocol              = IngressProtocol.Tcp,
+                        ExternalPort          = NetworkPorts.KubernetesApi,
+                        NodePort              = NetworkPorts.KubernetesApi,
+                        Target                = IngressRuleTarget.KubeApi,
+                        AddressRules          = networkOptions.ManagementAddressRules,
+                        IdleTcpReset          = true,
+                        TcpIdleTimeoutMinutes = 5
+                    }
+                };
+
+            var ingressRules = networkOptions.IngressRules.Union(clusterRules).ToArray();
+
+            //-----------------------------------------------------------------
+            // Update the subnet network ACL.
 
             // Determine whether either of the two network ACLs are associated with
             // the subnet.  If one is assigned, then we'll modify the other one and
@@ -2035,7 +2122,7 @@ namespace Neon.Kube
             }
 
             // Remove any existing entries from the ACL we'll be assigning next.  Note
-            // that we need to leave the last DENY-ALL entries alone.
+            // that we need to leave the last ingress/egress DENY-ALL entries alone.
 
             var existingEntries = updateAcl.Entries.Where(entry => entry.RuleNumber != aclDenyAllRuleNumber).ToList();
 
@@ -2050,11 +2137,11 @@ namespace Neon.Kube
                     });
             }
 
-            // Add any ingress rules from the cluster definition.
+            // Add any network ACLs related to ingress rules from the cluster definition.
 
             var ingressRuleNumber = firstIngressRuleNumber;
 
-            foreach (var ingressRule in networkOptions.IngressRules)
+            foreach (var ingressRule in ingressRules)
             {
                 if (ingressRule.AddressRules.Count() == 0)
                 {
@@ -2154,7 +2241,7 @@ namespace Neon.Kube
             }
             else
             {
-                // Insert an ALLOW-ALL rule.
+                // Insert an ALLOW-ALL rule when the user defines no egress rules.
 
                 await ec2Client.CreateNetworkAclEntryAsync(
                     new CreateNetworkAclEntryRequest()
@@ -2183,6 +2270,36 @@ namespace Neon.Kube
 
             networkAcl1 = await GetNetworkAclAsync(networkAcl1.NetworkAclId);
             networkAcl2 = await GetNetworkAclAsync(networkAcl2.NetworkAclId);
+
+            //-----------------------------------------------------------------
+            // Ensure that all of the required target groups exist but don't
+            // worry about registering the target instances just yet.
+
+            var defaultHealthCheck = networkOptions.IngressHealthCheck ?? new HealthCheckOptions();
+
+            foreach (var ingressRule in ingressRules)
+            {
+                var targetGroupName = GetTargetGroupName(ingressRule.Target, ingressRule.Name, ingressRule.Protocol, ingressRule.ExternalPort);
+                var healthCheck     = ingressRule.IngressHealthCheck ?? defaultHealthCheck;
+
+                if (!nameToTargetGroup.ContainsKey(targetGroupName))
+                {
+                    var targetGroupResponse = await elbClient.CreateTargetGroupAsync(
+                        new CreateTargetGroupRequest()
+                        {
+                            VpcId                      = vpc.VpcId,
+                            Name                       = targetGroupName,
+                            Protocol                   = ToTargetGroupProtocol(ingressRule.Protocol),
+                            TargetType                 = TargetTypeEnum.Ip,
+                            Port                       = ingressRule.NodePort,
+                            HealthCheckEnabled         = true,
+                            HealthCheckProtocol        = ProtocolEnum.TCP,
+                            HealthCheckIntervalSeconds = healthCheck.IntervalSeconds,
+                            HealthCheckTimeoutSeconds  = healthCheck.TimeoutSeconds,
+                            HealthyThresholdCount      = healthCheck.ThresholdCount
+                        });
+                }
+            }
         }
 
         /// <summary>
