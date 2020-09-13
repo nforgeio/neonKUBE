@@ -203,6 +203,12 @@ namespace Neon.Kube
         // AWS allows instances to started in specific partitions which could be useful
         // advanced user scenarios (like clustered databases).  We're not going to support 
         // user assignment of nodes to partitions right now; perhaps something for the future.
+        //
+        // Idempotent Implementation
+        // -------------------------
+        // The AWS hosting manager is designed to be able to be interrupted and restarted
+        // for cluster creation as well as management of the cluster afterwards.  This works
+        // by reading the current state of the cluster resources.
 
         /// <summary>
         /// Relates cluster node information to an AWS VM instance.

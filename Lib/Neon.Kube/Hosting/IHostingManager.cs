@@ -130,7 +130,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Enables public SSH access for every node in the cluster, honoring source
-        /// address limitations specified by <see cref="NetworkOptions.SshAddressRules"/>
+        /// address limitations specified by <see cref="NetworkOptions.ManagementAddressRules"/>
         /// in the cluster definition.
         /// </para>
         /// <para>
@@ -151,7 +151,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Disables public SSH access for every node in the cluster, honoring source
-        /// address limitations specified by <see cref="NetworkOptions.SshAddressRules"/>
+        /// address limitations specified by <see cref="NetworkOptions.ManagementAddressRules"/>
         /// in the cluster definition.
         /// </para>
         /// <note>

@@ -164,6 +164,12 @@ namespace Neon.Kube
         // Note that we also support source address white/black listing for both
         // ingress and SSH rules and as well as destination address white/black
         // listing for general outbound cluster traffic.
+        //
+        // Idempotent Implementation
+        // -------------------------
+        // The AWS hosting manager is designed to be able to be interrupted and restarted
+        // for cluster creation as well as management of the cluster afterwards.  This works
+        // by reading the current state of the cluster resources.
 
         //---------------------------------------------------------------------
         // Private types
@@ -1509,7 +1515,7 @@ namespace Neon.Kube
                         ExternalPort          = NetworkPorts.KubernetesApi,
                         NodePort              = NetworkPorts.KubernetesApi,
                         Target                = IngressRuleTarget.MasterNodes,
-                        AddressRules          = networkOptions.SshAddressRules,
+                        AddressRules          = networkOptions.ManagementAddressRules,
                         IdleTcpReset          = true,
                         TcpIdleTimeoutMinutes = 5
                     }
@@ -1874,7 +1880,7 @@ namespace Neon.Kube
 
             foreach (var azureNode in SortedMasterThenWorkerNodes)
             {
-                if (networkOptions.SshAddressRules == null || networkOptions.SshAddressRules.Count == 0)
+                if (networkOptions.ManagementAddressRules == null || networkOptions.ManagementAddressRules.Count == 0)
                 {
                     // Default to allowing all source addresses when no address rules are specified.
 
@@ -1898,9 +1904,9 @@ namespace Neon.Kube
 
                     var addressRuleIndex = 0;
 
-                    foreach (var addressRule in networkOptions.SshAddressRules)
+                    foreach (var addressRule in networkOptions.ManagementAddressRules)
                     {
-                        var multipleAddresses = networkOptions.SshAddressRules.Count > 1;
+                        var multipleAddresses = networkOptions.ManagementAddressRules.Count > 1;
                         var ruleName          = multipleAddresses ? $"{publicSshRulePrefix}{azureNode.Name}-{addressRuleIndex++}"
                                                                   : $"{publicSshRulePrefix}{azureNode.Name}";
                         switch (addressRule.Action)

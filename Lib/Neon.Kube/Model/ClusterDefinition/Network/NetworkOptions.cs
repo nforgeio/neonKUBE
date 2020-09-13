@@ -233,7 +233,8 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Optionally specifies whitelisted and/or blacklisted external addresses for
-        /// node management via SSH NAT rules.  This defaults to allowing inbound traffic 
+        /// node management via SSH NAT rules as well as cluster management via the 
+        /// Kubernetes API via port 6443.  This defaults to allowing inbound traffic 
         /// from anywhere when the property is <c>null</c> or empty.
         /// </para>
         /// <note>
@@ -241,10 +242,10 @@ namespace Neon.Kube
         /// putting your blacklist rules before your whitelist rules.
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "SshAddressRules", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "sshAddressRules", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "ManagementAddressRules", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "managementAddressRules", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public List<AddressRule> SshAddressRules { get; set; } = new List<AddressRule>();
+        public List<AddressRule> ManagementAddressRules { get; set; } = new List<AddressRule>();
 
         /// <summary>
         /// <para>
@@ -479,11 +480,11 @@ namespace Neon.Kube
 
             // Verify [SshAddressRules].
 
-            SshAddressRules = SshAddressRules ?? new List<AddressRule>();
+            ManagementAddressRules = ManagementAddressRules ?? new List<AddressRule>();
 
-            foreach (var rule in SshAddressRules)
+            foreach (var rule in ManagementAddressRules)
             {
-                rule.Validate(clusterDefinition, nameof(SshAddressRules));
+                rule.Validate(clusterDefinition, nameof(ManagementAddressRules));
             }
 
             // Verify that the [ReservedIngressStartPort...ReservedIngressEndPort] range doesn't 
