@@ -591,7 +591,8 @@ namespace Neon.Kube
         private string                                  proximityPlacementGroupName;
         private string                                  loadbalancerName;
         private string                                  loadbalancerFrontendName;
-        private string                                  loadbalancerBackendName;
+        private string                                  loadbalancerIngressBackendName;
+        private string                                  loadbalancerMasterBackendName;
         private string                                  subnetNsgName;
 
         // These fields hold various Azure components while provisioning is in progress.
@@ -668,14 +669,15 @@ namespace Neon.Kube
             //
             // optionally combined with the cluster name.
 
-            this.publicAddressName           = GetResourceName("pip", "cluster", true);
-            this.vnetName                    = GetResourceName("vnet", "cluster", true);
-            this.subnetName                  = GetResourceName("snet", "cluster", true);
-            this.proximityPlacementGroupName = GetResourceName("ppg", "cluster", true);
-            this.loadbalancerName            = GetResourceName("lbe", "cluster", true);
-            this.subnetNsgName               = GetResourceName("nsg", "subnet");
-            this.loadbalancerFrontendName    = "ingress";
-            this.loadbalancerBackendName     = "ingress";
+            this.publicAddressName              = GetResourceName("pip", "cluster", true);
+            this.vnetName                       = GetResourceName("vnet", "cluster", true);
+            this.subnetName                     = GetResourceName("snet", "cluster", true);
+            this.proximityPlacementGroupName    = GetResourceName("ppg", "cluster", true);
+            this.loadbalancerName               = GetResourceName("lbe", "cluster", true);
+            this.subnetNsgName                  = GetResourceName("nsg", "subnet");
+            this.loadbalancerFrontendName       = "ingress";
+            this.loadbalancerIngressBackendName = "ingress-nodes";
+            this.loadbalancerMasterBackendName  = "master-nodes";
 
             // Initialize the vm/node mapping dictionary and also ensure
             // that each node has reasonable Azure node options.
@@ -1331,13 +1333,15 @@ namespace Neon.Kube
                     .WithProtocol(TransportProtocol.Tcp)
                     .FromFrontend(loadbalancerFrontendName)
                     .FromFrontendPort(10000)
-                    .ToBackend(loadbalancerBackendName)
+                    .ToBackend(loadbalancerIngressBackendName)
                     .ToBackendPort(10000)
                     .Attach()
                 .DefinePublicFrontend(loadbalancerFrontendName)
                     .WithExistingPublicIPAddress(publicAddress)
                     .Attach()
-                .DefineBackend(loadbalancerBackendName)
+                .DefineBackend(loadbalancerMasterBackendName)
+                    .Attach()
+                .DefineBackend(loadbalancerIngressBackendName)
                     .Attach()
                 .WithSku(LoadBalancerSkuType.Standard)
                 .Create();
@@ -1493,8 +1497,28 @@ namespace Neon.Kube
             var loadBalancerUpdater = loadBalancer.Update();
             var subnetNsgUpdater    = subnetNsg.Update();
 
+            // We need to add a special ingress rule for the Kubernetes API on port 6443 and
+            // load balance this traffic to the master nodes.
+
+            var clusterRules = new IngressRule[]
+                {
+                    new IngressRule()
+                    {
+                        Name                  = "kubernetes-api",
+                        Protocol              = IngressProtocol.Tcp,
+                        ExternalPort          = NetworkPorts.KubernetesApi,
+                        NodePort              = NetworkPorts.KubernetesApi,
+                        Target                = IngressRuleTarget.MasterNodes,
+                        AddressRules          = networkOptions.SshAddressRules,
+                        IdleTcpReset          = true,
+                        TcpIdleTimeoutMinutes = 5
+                    }
+                };
+
+            var ingressRules = networkOptions.IngressRules.Union(clusterRules).ToArray();
+
             //-----------------------------------------------------------------
-            // Backend pool:
+            // Backend pools:
 
             // Ensure that we actually have some nodes marked for ingress when the cluster
             // defines some ingress rules and then ensure that the load balancer's backend
@@ -1502,14 +1526,14 @@ namespace Neon.Kube
 
             KubeHelper.EnsureIngressNodes(cluster.Definition);
 
-            // Rebuild the backend pool. 
+            // Rebuild the [ingress-nodes] backend pool. 
             //
             // Note that we're going to add these VMs to the backend set one at a time
             // because the API only works when the VMs being added in a batch are in 
             // the same availability set.  Masters and workers are located within
             // different sets by default.
 
-            var backendUpdater = loadBalancerUpdater.UpdateBackend(loadbalancerBackendName);
+            var backendUpdater = loadBalancerUpdater.UpdateBackend(loadbalancerIngressBackendName);
 
             backendUpdater.WithoutExistingVirtualMachines();
 
@@ -1522,8 +1546,23 @@ namespace Neon.Kube
             loadBalancer        = loadBalancerUpdater.Apply();
             loadBalancerUpdater = loadBalancer.Update();
 
+            // Rebuild the [master-nodes] backend pool.
+
+            backendUpdater = loadBalancerUpdater.UpdateBackend(loadbalancerMasterBackendName);
+
+            backendUpdater.WithoutExistingVirtualMachines();
+
+            foreach (var masterNode in nameToVm.Values.Where(node => node.Metadata.IsMaster))
+            {
+                backendUpdater.WithExistingVirtualMachines(new IHasNetworkInterfaces[] { masterNode.Vm });
+            }
+
+            loadBalancerUpdater = backendUpdater.Parent();
+            loadBalancer        = loadBalancerUpdater.Apply();
+            loadBalancerUpdater = loadBalancer.Update();
+
             //-----------------------------------------------------------------
-            // Ingress load balancing rules
+            // Cluster ingress load balancing rules
 
             // Remove all existing cluster ingress rules.
 
@@ -1560,9 +1599,9 @@ namespace Neon.Kube
                 loadBalancerUpdater.WithoutProbe(probe.Name);
             }
 
-            // Add the load balancer ingress rules and probes.
+            // Add the load balancer ingress/cluster rules and probes.
 
-            foreach (var ingressRule in networkOptions.IngressRules)
+            foreach (var ingressRule in ingressRules)
             {
                 var probeName = $"{ingressRulePrefix}{ingressRule.Name}";
 
@@ -1570,14 +1609,32 @@ namespace Neon.Kube
                     .WithPort(ingressRule.NodePort)
                     .Attach();
 
-                var ruleName   = $"{ingressRulePrefix}{ingressRule.Name}";
-                var tcpTimeout = Math.Min(Math.Max(4, ingressRule.TcpIdleTimeoutMinutes), 30);  // Azure allowed timeout range is [4..30] minutes
+                var ruleName    = $"{ingressRulePrefix}{ingressRule.Name}";
+                var tcpTimeout  = Math.Min(Math.Max(4, ingressRule.TcpIdleTimeoutMinutes), 30);  // Azure allowed timeout range is [4..30] minutes
+                var backendName = (string)null;
+
+                switch (ingressRule.Target)
+                {
+                    case IngressRuleTarget.IngressNodes:
+
+                        backendName = loadbalancerIngressBackendName;
+                        break;
+
+                    case IngressRuleTarget.MasterNodes:
+
+                        backendName = loadbalancerMasterBackendName;
+                        break;
+
+                    default:
+
+                        throw new NotImplementedException();
+                }
 
                 loadBalancerUpdater.DefineLoadBalancingRule(ruleName)
                     .WithProtocol(ToTransportProtocol(ingressRule.Protocol))
                     .FromExistingPublicIPAddress(publicAddress)
                     .FromFrontendPort(ingressRule.ExternalPort)
-                    .ToBackend(loadbalancerBackendName)
+                    .ToBackend(backendName)
                     .ToBackendPort(ingressRule.NodePort)
                     .WithProbe(probeName)
                     .WithIdleTimeoutInMinutes(tcpTimeout)
@@ -1590,7 +1647,7 @@ namespace Neon.Kube
             // We need to set [EnableTcpReset] for the load balancer rules separately because
             // the Fluent API doesn't support the property yet.
 
-            foreach (var ingressRule in networkOptions.IngressRules)
+            foreach (var ingressRule in ingressRules)
             {
                 var ruleName = $"{ingressRulePrefix}{ingressRule.Name}";
                 var lbRule   = loadBalancer.Inner.LoadBalancingRules.Single(rule => rule.Name.Equals(ruleName, StringComparison.InvariantCultureIgnoreCase));
@@ -1614,7 +1671,7 @@ namespace Neon.Kube
 
             var priority = firstIngressNsgRulePriority;
 
-            foreach (var ingressRule in networkOptions.IngressRules)
+            foreach (var ingressRule in ingressRules)
             {
                 var ruleProtocol = ToSecurityRuleProtocol(ingressRule.Protocol);
 
@@ -1797,7 +1854,7 @@ namespace Neon.Kube
                 var ruleName = $"{publicSshRulePrefix}{azureNode.Name}";
 
                 azureNode.Nic = azureNode.Nic.Update()
-                    .WithExistingLoadBalancerBackend(loadBalancer, loadbalancerBackendName)
+                    .WithExistingLoadBalancerBackend(loadBalancer, loadbalancerIngressBackendName)
                     .WithExistingLoadBalancerInboundNatRule(loadBalancer, ruleName)
                     .Apply();
             }

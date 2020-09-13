@@ -77,6 +77,14 @@ namespace Neon.Kube
         public int NodePort { get; set; }
 
         /// <summary>
+        /// Identifies which group of cluster nodes will receive the network traffic
+        /// from this rule.  This defaults to <see cref="IngressRuleTarget.IngressNodes"/>.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        internal IngressRuleTarget Target { get; set; } = IngressRuleTarget.IngressNodes;
+
+        /// <summary>
         /// <para>
         /// Optionally specifies whitelisted and/or blacklisted external addresses for
         /// inbound traffic.  This defaults to allowing inbound traffic from anywhere 

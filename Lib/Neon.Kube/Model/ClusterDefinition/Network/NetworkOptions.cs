@@ -485,6 +485,24 @@ namespace Neon.Kube
             {
                 rule.Validate(clusterDefinition, nameof(SshAddressRules));
             }
+
+            // Verify that the [ReservedIngressStartPort...ReservedIngressEndPort] range doesn't 
+            // include common reserved ports.
+
+            var reservedPorts = new int[]
+                {
+                    NetworkPorts.HTTP,
+                    NetworkPorts.HTTPS,
+                    NetworkPorts.KubernetesApi
+                };
+
+            foreach (int reservedPort in reservedPorts)
+            {
+                if (ReservedIngressStartPort <= reservedPort && reservedPort <= ReservedIngressEndPort)
+                {
+                    throw new ClusterDefinitionException($"The reserved ingress port range of [{ReservedIngressStartPort}...{ReservedIngressEndPort}] cannot include the common reserved port [{reservedPort}].");
+                }
+            }
         }
 
         /// <summary>
