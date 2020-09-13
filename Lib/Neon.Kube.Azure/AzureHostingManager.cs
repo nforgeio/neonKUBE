@@ -1514,7 +1514,7 @@ namespace Neon.Kube
                         Protocol              = IngressProtocol.Tcp,
                         ExternalPort          = NetworkPorts.KubernetesApi,
                         NodePort              = NetworkPorts.KubernetesApi,
-                        Target                = IngressRuleTarget.MasterNodes,
+                        Target                = IngressRuleTarget.KubeApi,
                         AddressRules          = networkOptions.ManagementAddressRules,
                         IdleTcpReset          = true,
                         TcpIdleTimeoutMinutes = 5
@@ -1605,14 +1605,19 @@ namespace Neon.Kube
                 loadBalancerUpdater.WithoutProbe(probe.Name);
             }
 
-            // Add the load balancer ingress/cluster rules and probes.
+            // Add the load balancer ingress rules and health probes.
+
+            var defaultHealthCheck = networkOptions.IngressHealthCheck ?? new HealthCheck();
 
             foreach (var ingressRule in ingressRules)
             {
-                var probeName = $"{ingressRulePrefix}{ingressRule.Name}";
+                var probeName   = $"{ingressRulePrefix}{ingressRule.Name}";
+                var healthCheck = ingressRule.IngressHealthCheck ?? defaultHealthCheck;
 
                 loadBalancerUpdater.DefineTcpProbe(probeName)
                     .WithPort(ingressRule.NodePort)
+                    .WithIntervalInSeconds(healthCheck.IntervalSeconds)
+                    .WithNumberOfProbes(healthCheck.ThresholdCount)
                     .Attach();
 
                 var ruleName    = $"{ingressRulePrefix}{ingressRule.Name}";
@@ -1621,12 +1626,12 @@ namespace Neon.Kube
 
                 switch (ingressRule.Target)
                 {
-                    case IngressRuleTarget.IngressNodes:
+                    case IngressRuleTarget.User:
 
                         backendName = loadbalancerIngressBackendName;
                         break;
 
-                    case IngressRuleTarget.MasterNodes:
+                    case IngressRuleTarget.KubeApi:
 
                         backendName = loadbalancerMasterBackendName;
                         break;

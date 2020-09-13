@@ -213,6 +213,18 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
+        /// Optionally specifies the default cluster load balancer health check settings
+        /// for the <see cref="IngressRules"/>.  This defaults to reasonable values and
+        /// can be overriden for specific rules.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "IngressHealthCheck", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ingressHealthCheck", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public HealthCheck IngressHealthCheck { get; set; } = null;
+
+        /// <summary>
+        /// <para>
         /// Optionally specifies whitelisted and/or blacklisted external addresses for
         /// outbound traffic.  This defaults to allowing outbound traffic to anywhere 
         /// when the property is <c>null</c> or empty.
@@ -542,6 +554,8 @@ namespace Neon.Kube
             {
                 throw new ClusterDefinitionException($"[{nameof(ReservedIngressStartPort)}]-[{nameof(ReservedIngressEndPort)}] range is not large enough to support [{clusterDefinition.Nodes.Count()}] cluster nodes in addition to [{additionalReservedPorts}] additional reserved ports.");
             }
+
+            IngressHealthCheck?.Validate(clusterDefinition, nameof(NetworkOptions));
         }
     }
 }

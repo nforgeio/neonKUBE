@@ -16,6 +16,7 @@
 // limitations under the License.
 
 using System;
+using System.Runtime.Serialization;
 
 namespace Neon.Kube
 {
@@ -24,14 +25,32 @@ namespace Neon.Kube
     /// </summary>
     internal enum IngressRuleTarget
     {
-        /// <summary>
-        /// Send traffic to the cluster nodes with the <b>ingress</b> label.
-        /// </summary>
-        IngressNodes,
+        // WARNING: Don't add dashes to any future [EnumMember] attributes because
+        //          some of the hosting managers (like AWS) extract the target from
+        //          an environment resource name by assuming that a dash terminates
+        //          the rule target string.
 
         /// <summary>
-        /// Send traffic to the cluster master nodes.
+        /// Provisioned for required cluster ingress ports, like the Kubernetes API
+        /// port 6443.  This traffic will be routed to the cluster master nodes.
         /// </summary>
-        MasterNodes
+        [EnumMember(Value = "kubeapi")]
+        KubeApi,
+
+        /// <summary>
+        /// Provisioned for user-define ingress rules.  These groups include all
+        /// cluster nodes with the <b>ingress</b> label.  This traffic will be
+        /// routed to the ingress nodes.
+        /// </summary>
+        [EnumMember(Value = "user")]
+        User,
+
+        /// <summary>
+        /// Provisioned for SSH management.  A group will be created for each node
+        /// in the cluster and traffic will be routed directly to the associated
+        /// cluster node.
+        /// </summary>
+        [EnumMember(Value = "ssh")]
+        Ssh
     }
 }

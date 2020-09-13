@@ -63,9 +63,15 @@ namespace Neon.Kube
         Https,
 
         /// <summary>
-        /// Basic TCP
+        /// TCP
         /// </summary>
         [EnumMember(Value = "tcp")]
-        Tcp
+        Tcp,
+
+        /// <summary>
+        /// UDP
+        /// </summary>
+        [EnumMember(Value = "udp")]
+        Udp
     }
 }

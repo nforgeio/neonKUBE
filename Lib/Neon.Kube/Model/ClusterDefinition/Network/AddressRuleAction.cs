@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -35,7 +36,6 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
-using System.Runtime.Serialization;
 
 namespace Neon.Kube
 {
