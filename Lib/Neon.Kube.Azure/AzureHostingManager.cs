@@ -190,34 +190,34 @@ namespace Neon.Kube
             {
                 Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
 
-                this.Proxy          = node;
+                this.Node           = node;
                 this.hostingManager = hostingManager;
             }
 
             /// <summary>
             /// Returns the associated node proxy.
             /// </summary>
-            public SshProxy<NodeDefinition> Proxy { get; private set; }
+            public SshProxy<NodeDefinition> Node { get; private set; }
 
             /// <summary>
             /// Returns the node metadata (AKA its definition).
             /// </summary>
-            public NodeDefinition Metadata => Proxy.Metadata;
+            public NodeDefinition Metadata => Node.Metadata;
 
             /// <summary>
             /// Returns the name of the node as defined in the cluster definition.
             /// </summary>
-            public string Name => Proxy.Metadata.Name;
+            public string Name => Node.Metadata.Name;
 
             /// <summary>
             /// Returns the name of the Azure VM for this node.
             /// </summary>
-            public string VmName => hostingManager.GetResourceName("vm", Proxy.Name);
+            public string VmName => hostingManager.GetResourceName("vm", Node.Name);
 
             /// <summary>
             /// Returns the IP address of the node.
             /// </summary>
-            public string Address => Proxy.Address.ToString();
+            public string Address => Node.Address.ToString();
 
             /// <summary>
             /// The associated Azure VM.
@@ -232,12 +232,12 @@ namespace Neon.Kube
             /// <summary>
             /// Returns <c>true</c> if the node is a master.
             /// </summary>
-            public bool IsMaster => Proxy.Metadata.Role == NodeRole.Master;
+            public bool IsMaster => Node.Metadata.Role == NodeRole.Master;
 
             /// <summary>
             /// Returns <c>true</c> if the node is a worker.
             /// </summary>
-            public bool IsWorker => Proxy.Metadata.Role == NodeRole.Worker;
+            public bool IsWorker => Node.Metadata.Role == NodeRole.Worker;
 
             /// <summary>
             /// The Azure availability set hosting this node.
@@ -1376,7 +1376,7 @@ namespace Neon.Kube
             node.Status = "create: NIC";
 
             azureNode.Nic = azure.NetworkInterfaces
-                .Define(GetResourceName("nic",azureNode.Proxy.Name))
+                .Define(GetResourceName("nic",azureNode.Node.Name))
                 .WithRegion(azureOptions.Region)
                 .WithExistingResourceGroup(resourceGroup)
                 .WithExistingPrimaryNetwork(vnet)
@@ -1386,7 +1386,7 @@ namespace Neon.Kube
 
             node.Status = "create: virtual machine";
 
-            var azureNodeOptions = azureNode.Proxy.Metadata.Azure;
+            var azureNodeOptions = azureNode.Node.Metadata.Azure;
             var azureStorageType = StorageAccountTypes.StandardSSDLRS;
 
             switch (azureNodeOptions.StorageType)
@@ -1814,7 +1814,7 @@ namespace Neon.Kube
             // Assign unique port to each node that will be used to NAT external
             // SSH traffic to the node.
 
-            var nextPort = networkOptions.FirstSshManagementPort;
+            var nextPort = networkOptions.FirstExternalSshPort;
 
             foreach (var azureNode in cluster.Definition.SortedMasterThenWorkerNodes)
             {

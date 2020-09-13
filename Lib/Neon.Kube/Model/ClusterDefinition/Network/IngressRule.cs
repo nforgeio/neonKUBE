@@ -82,7 +82,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        internal IngressRuleTarget Target { get; set; } = IngressRuleTarget.KubeApi;
+        internal IngressRuleTarget Target { get; set; } = IngressRuleTarget.User;
 
         /// <summary>
         /// <para>

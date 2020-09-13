@@ -51,8 +51,8 @@ using Amazon.ResourceGroups.Model;
 using Amazon.Runtime;
 
 using Ec2Instance    = Amazon.EC2.Model.Instance;
+using ElbAction      = Amazon.ElasticLoadBalancingV2.Model.Action;
 using ElbTargetGroup = Amazon.ElasticLoadBalancingV2.Model.TargetGroup;
-using System.Runtime.Serialization;
 
 namespace Neon.Kube
 {
@@ -228,24 +228,29 @@ namespace Neon.Kube
             {
                 Covenant.Requires<ArgumentNullException>(hostingManager != null, nameof(hostingManager));
 
-                this.Proxy          = node;
+                this.Node           = node;
                 this.hostingManager = hostingManager;
             }
 
             /// <summary>
             /// Returns the associated node proxy.
             /// </summary>
-            public SshProxy<NodeDefinition> Proxy { get; private set; }
+            public SshProxy<NodeDefinition> Node { get; private set; }
 
             /// <summary>
             /// Returns the node metadata (AKA its definition).
             /// </summary>
-            public NodeDefinition Metadata => Proxy.Metadata;
+            public NodeDefinition Metadata => Node.Metadata;
 
             /// <summary>
             /// Returns the name of the node as defined in the cluster definition.
             /// </summary>
-            public string Name => Proxy.Metadata.Name;
+            public string Name => Node.Metadata.Name;
+
+            /// <summary>
+            /// Returns the AWS instance ID.
+            /// </summary>
+            public string InstanceId => Instance?.InstanceId;
 
             /// <summary>
             /// Returns AWS instance information for the node.
@@ -266,24 +271,31 @@ namespace Neon.Kube
                         return instanceName;
                     }
 
-                    return instanceName = hostingManager.GetResourceName($"{Proxy.Name}");
+                    return instanceName = hostingManager.GetResourceName($"{Node.Name}");
                 }
             }
 
             /// <summary>
             /// Returns the IP address of the node.
             /// </summary>
-            public string Address => Proxy.Address.ToString();
+            public string Address => Node.Address.ToString();
 
             /// <summary>
             /// Returns <c>true</c> if the node is a master.
             /// </summary>
-            public bool IsMaster => Proxy.Metadata.Role == NodeRole.Master;
+            public bool IsMaster => Node.Metadata.Role == NodeRole.Master;
 
             /// <summary>
             /// Returns <c>true</c> if the node is a worker.
             /// </summary>
-            public bool IsWorker => Proxy.Metadata.Role == NodeRole.Worker;
+            public bool IsWorker => Node.Metadata.Role == NodeRole.Worker;
+
+            /// <summary>
+            /// The external SSH port assigned to the instance.  This port is
+            /// allocated from the range of external SSH ports configured for
+            /// the cluster and is persisted as tag for each AWS instance.
+            /// </summary>
+            public int ExternalSshPort { get; set; }
         }
 
         /// <summary>
@@ -298,16 +310,14 @@ namespace Neon.Kube
             UpdateIngressEgressRules = 0x0001,
 
             /// <summary>
-            /// Add public SSH NAT rules for every node in the cluster.
-            /// These are used by neonKUBE related tools for provisioning, 
-            /// setting up, and managing clusters.
+            /// Enable external SSH to the cluster nodes.
             /// </summary>
-            AddSshRules = 0x0002,
+            EnableSsh = 0x0002,
 
             /// <summary>
-            /// Remove all SSH NAT rules.
+            /// Disable external SSH to the cluster nodes.
             /// </summary>
-            RemoveshRules = 0x0004,
+            DisableSsh = 0x0004,
         }
 
         /// <summary>
@@ -458,6 +468,12 @@ namespace Neon.Kube
         private const string neonNodeNameTag = neonTagPrefix + "node.name";
 
         /// <summary>
+        /// Used to tag instances resources with the external SSH port to be used to 
+        /// establish an SSH connection to the instance.
+        /// </summary>
+        private const string neonNodeExternalSshTag = neonTagPrefix + "node.ssh-port";
+
+        /// <summary>
         /// The default deny everything network ACL rule number.
         /// </summary>
         private const int aclDenyAllRuleNumber = 32767;
@@ -539,7 +555,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="protocol">The ingress protocol.</param>
         /// <returns>The corresponding <see cref="ProtocolEnum"/>.</returns>
-        private static ProtocolEnum ToTargetGroupProtocol(IngressProtocol protocol)
+        private static ProtocolEnum ToElbProtocol(IngressProtocol protocol)
         {
             switch (protocol)
             {
@@ -599,7 +615,7 @@ namespace Neon.Kube
         /// </para>
         /// </note>
         /// </remarks>
-        private static string GetElbName(string clusterName, string resourceName)
+        private static string GetLoadBalancerName(string clusterName, string resourceName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName), nameof(clusterName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(resourceName), nameof(resourceName));
@@ -677,19 +693,19 @@ namespace Neon.Kube
 
         /// <summary>
         /// Table mapping a cluster node name to its AWS VM instance information.
-        /// Note that <see cref="nodeNameToInstance"/> and <see cref="instanceNameToInstance"/>
+        /// Note that <see cref="nodeNameToAwsInstance"/> and <see cref="instanceNameToAwsInstance"/>
         /// both refer to the same <see cref="AwsInstance"/> so a change to one value
         /// will be reflected in the other table.
         /// </summary>
-        private Dictionary<string, AwsInstance> nodeNameToInstance;
+        private Dictionary<string, AwsInstance> nodeNameToAwsInstance;
 
         /// <summary>
         /// Table mapping a cluster AWS instance name to its AWS VM instance information.
-        /// Note that <see cref="nodeNameToInstance"/> and <see cref="instanceNameToInstance"/>
+        /// Note that <see cref="nodeNameToAwsInstance"/> and <see cref="instanceNameToAwsInstance"/>
         /// both refer to the same <see cref="AwsInstance"/> so a change to one value
         /// will be reflected in the other table.
         /// </summary>
-        private Dictionary<string, AwsInstance> instanceNameToInstance;
+        private Dictionary<string, AwsInstance> instanceNameToAwsInstance;
 
         /// <summary>
         /// Creates an instance that is only capable of validating the hosting
@@ -743,7 +759,7 @@ namespace Neon.Kube
             networkAclName2    = GetResourceName("network-acl-2");
             gatewayName        = GetResourceName("internet-gateway");
             loadBalancerName   = GetResourceName("load-balancer");
-            elbName            = GetElbName(clusterName, "elb");
+            elbName            = GetLoadBalancerName(clusterName, "elb");
             placementGroupName = GetResourceName("placement-group");
 
             // Initialize the dictionary we'll use for mapping ELB target group
@@ -754,11 +770,11 @@ namespace Neon.Kube
             // Initialize the instance/node mapping dictionaries and also ensure
             // that each node has reasonable AWS node options.
 
-            this.nodeNameToInstance = new Dictionary<string, AwsInstance>(StringComparer.InvariantCultureIgnoreCase);
+            this.nodeNameToAwsInstance = new Dictionary<string, AwsInstance>(StringComparer.InvariantCultureIgnoreCase);
 
             foreach (var node in cluster.Nodes)
             {
-                nodeNameToInstance.Add(node.Name, new AwsInstance(node, this));
+                nodeNameToAwsInstance.Add(node.Name, new AwsInstance(node, this));
 
                 if (node.Metadata.Aws == null)
                 {
@@ -766,11 +782,11 @@ namespace Neon.Kube
                 }
             }
 
-            this.instanceNameToInstance = new Dictionary<string, AwsInstance>();
+            this.instanceNameToAwsInstance = new Dictionary<string, AwsInstance>();
 
-            foreach (var instanceInfo in nodeNameToInstance.Values)
+            foreach (var instanceInfo in nodeNameToAwsInstance.Values)
             {
-                instanceNameToInstance.Add(instanceInfo.InstanceName, instanceInfo);
+                instanceNameToAwsInstance.Add(instanceInfo.InstanceName, instanceInfo);
             }
 
             // This identifies the cluster manager instance with the cluster proxy
@@ -806,7 +822,7 @@ namespace Neon.Kube
         /// <summary>
         /// Enumerates the cluster nodes in no particular order.
         /// </summary>
-        private IEnumerable<AwsInstance> Nodes => nodeNameToInstance.Values;
+        private IEnumerable<AwsInstance> Nodes => nodeNameToAwsInstance.Values;
 
         /// <summary>
         /// Enumerates the cluster nodes in ascending order by name.
@@ -940,12 +956,13 @@ namespace Neon.Kube
             };
 
             controller.AddGlobalStep("AWS connect", ConnectAwsAsync);
-            controller.AddGlobalStep("region check", () => VerifyRegionAndInstanceTypesAsync());
+            controller.AddGlobalStep("region check", VerifyRegionAndInstanceTypesAsync);
             controller.AddGlobalStep("locate ami", LocateAmiAsync);
             controller.AddGlobalStep("resource group", CreateResourceGroupAsync);
             controller.AddGlobalStep("elastic ip", CreateElasticIpAsync);
             controller.AddGlobalStep("network", ConfigureNetworkAsync);
             controller.AddGlobalStep("placement group", ConfigurePlacementGroupAsync);
+            controller.AddGlobalStep("external ssh ports", AssignExternalSshPorts, quiet: true);
             controller.AddNodeStep("node instances", CreateInstanceAsync);
 
             if (!controller.Run(leaveNodesConnected: false))
@@ -981,19 +998,26 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task EnableInternetSshAsync()
         {
-            await UpdateNetworkAsync(NetworkOperations.AddSshRules);
+            await UpdateNetworkAsync(NetworkOperations.EnableSsh);
         }
 
         /// <inheritdoc/>
         public override async Task DisableInternetSshAsync()
         {
-            await UpdateNetworkAsync(NetworkOperations.RemoveshRules);
+            await UpdateNetworkAsync(NetworkOperations.DisableSsh);
         }
 
         /// <inheritdoc/>
         public override (string Address, int Port) GetSshEndpoint(string nodeName)
         {
-            return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: NetworkPorts.SSH);
+            if (!nodeNameToAwsInstance.TryGetValue(nodeName, out var awsInstance))
+            {
+                throw new KubeException($"Node [{nodeName}] does not exist.");
+            }
+
+            Covenant.Assert(awsInstance.ExternalSshPort != 0, $"Node [{nodeName}] does not have an external SSH port assignment.");
+
+            return (Address: cluster.GetNode(nodeName).Address.ToString(), Port: awsInstance.ExternalSshPort);
         }
 
         /// <inheritdoc/>
@@ -1231,12 +1255,26 @@ namespace Neon.Kube
                 foreach (var instance in reservation.Instances
                     .Where(instance => instance.State.Name.Value != InstanceStateName.Terminated))
                 {
-                    var name    = instance.Tags.SingleOrDefault(tag => tag.Key == nameTag)?.Value;
-                    var cluster = instance.Tags.SingleOrDefault(tag => tag.Key == neonClusterTag)?.Value;
+                    var name        = instance.Tags.SingleOrDefault(tag => tag.Key == nameTag)?.Value;
+                    var cluster     = instance.Tags.SingleOrDefault(tag => tag.Key == neonClusterTag)?.Value;
+                    var awsInstance = (AwsInstance)null;
 
-                    if (name != null && cluster == clusterName && instanceNameToInstance.TryGetValue(name, out var instanceInfo))
+                    if (name != null && cluster == clusterName && instanceNameToAwsInstance.TryGetValue(name, out awsInstance))
                     {
-                        instanceInfo.Instance = instance;
+                        awsInstance.Instance = instance;
+                    }
+
+                    // Retrieve the external SSH port for the instance from the instance tag.
+
+                    var sshExternalPortTag = instance.Tags.SingleOrDefault(tag => tag.Key == neonNodeExternalSshTag)?.Value;
+
+                    if (!string.IsNullOrEmpty(sshExternalPortTag) && int.TryParse(sshExternalPortTag, out var sshExternalPort) && NetHelper.IsValidPort(sshExternalPort))
+                    {
+                        awsInstance.ExternalSshPort = sshExternalPort;
+                    }
+                    else
+                    {
+                        throw new KubeException($"AWS instance [{name}] has a missing or invalid [{neonNodeExternalSshTag}] tag.");
                     }
                 }
             }
@@ -1888,7 +1926,7 @@ namespace Neon.Kube
 
             // Configure the ingress/egress listeners and target groups.
 
-            await UpdateNetworkAsync(NetworkOperations.UpdateIngressEgressRules | NetworkOperations.AddSshRules);
+            await UpdateNetworkAsync(NetworkOperations.UpdateIngressEgressRules | NetworkOperations.EnableSsh);
         }
 
         /// <summary>
@@ -1911,6 +1949,44 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Assigns external SSH ports to AWS instance records that don't already have them.  Note
+        /// that we're not actually going to write the instance tags here; we'll do that when we
+        /// actually create any new instances.
+        /// </summary>
+        private void AssignExternalSshPorts()
+        {
+            // Create a table with the currently allocated external SSH ports.
+
+            var allocatedPorts = new HashSet<int>();
+
+            foreach (var instance in instanceNameToAwsInstance.Values.Where(awsInstance => awsInstance.ExternalSshPort != 0))
+            {
+                allocatedPorts.Add(instance.ExternalSshPort);
+            }
+
+            // Create a list of unallocated external SSH ports.
+
+            var unallocatedPorts = new List<int>();
+
+            for (int port = networkOptions.FirstExternalSshPort; port <= networkOptions.ReservedIngressEndPort; port++)
+            {
+                if (!allocatedPorts.Contains(port))
+                {
+                    unallocatedPorts.Add(port);
+                }
+            }
+
+            // Assign unallocated external SSH ports to nodes that don't already have one.
+
+            var nextUnallocatedPortIndex = 0;
+
+            foreach (var awsInstance in SortedMasterThenWorkerNodes.Where(awsInstance => awsInstance.ExternalSshPort == 0))
+            {
+                awsInstance.ExternalSshPort = unallocatedPorts[nextUnallocatedPortIndex++];
+            }
+        }
+
+        /// <summary>
         /// Creates the AWS instance for a node.
         /// </summary>
         /// <param name="node">The target node.</param>
@@ -1920,7 +1996,7 @@ namespace Neon.Kube
         {
             // Create the instance if it doesn't already exist.
 
-            var instance     = nodeNameToInstance[node.Name];
+            var instance     = nodeNameToAwsInstance[node.Name];
             var instanceName = instance.InstanceName;
 
             if (instance.Instance == null)
@@ -2043,14 +2119,14 @@ namespace Neon.Kube
                 await UpdateIngressEgressRulesAsync();
             }
 
-            if ((operations & NetworkOperations.AddSshRules) != 0)
+            if ((operations & NetworkOperations.EnableSsh) != 0)
             {
-                await AddSshRulesAsync();
+                await AddSshListenersAsync();
             }
 
-            if ((operations & NetworkOperations.RemoveshRules) != 0)
+            if ((operations & NetworkOperations.DisableSsh) != 0)
             {
-                await RemoveSshRulesAsync();
+                await RemoveSshListenersAsync();
             }
         }
 
@@ -2248,7 +2324,7 @@ namespace Neon.Kube
                     {
                         NetworkAclId = updateAcl.NetworkAclId,
                         RuleNumber   = firstIngressRuleNumber,
-                        Protocol     = "-1",      // "-1" means any protocol
+                        Protocol     = "-1",      // "-1" means ANY protocol
                         Egress       = true,
                         PortRange    = new PortRange() { From = 1, To = ushort.MaxValue },
                         CidrBlock    = "0.0.0.0/0",
@@ -2272,15 +2348,27 @@ namespace Neon.Kube
             networkAcl2 = await GetNetworkAclAsync(networkAcl2.NetworkAclId);
 
             //-----------------------------------------------------------------
-            // Ensure that all of the required target groups exist but don't
-            // worry about registering the target instances just yet.
+            // Load target groups.
 
             var defaultHealthCheck = networkOptions.IngressHealthCheck ?? new HealthCheckOptions();
+
+            var targetMasterNodes = SortedMasterNodes
+                .Select(awsInstance => new TargetDescription() { Id = awsInstance.InstanceId })
+                .ToList();
+
+            var targetIngressNodes = SortedMasterThenWorkerNodes
+                .Where(awsInstance => awsInstance.Node.Metadata.Ingress)
+                .Select(awsInstance => new TargetDescription() { Id = awsInstance.InstanceId })
+                .ToList();
+
+            // Ensure that all of the required ingress rule related target groups exist 
+            // and that they forward traffic to the correct nodes.
 
             foreach (var ingressRule in ingressRules)
             {
                 var targetGroupName = GetTargetGroupName(ingressRule.Target, ingressRule.Name, ingressRule.Protocol, ingressRule.ExternalPort);
                 var healthCheck     = ingressRule.IngressHealthCheck ?? defaultHealthCheck;
+                var targetGroup     = (ElbTargetGroup)null;
 
                 if (!nameToTargetGroup.ContainsKey(targetGroupName))
                 {
@@ -2289,8 +2377,8 @@ namespace Neon.Kube
                         {
                             VpcId                      = vpc.VpcId,
                             Name                       = targetGroupName,
-                            Protocol                   = ToTargetGroupProtocol(ingressRule.Protocol),
-                            TargetType                 = TargetTypeEnum.Ip,
+                            Protocol                   = ToElbProtocol(ingressRule.Protocol),
+                            TargetType                 = TargetTypeEnum.Instance,
                             Port                       = ingressRule.NodePort,
                             HealthCheckEnabled         = true,
                             HealthCheckProtocol        = ProtocolEnum.TCP,
@@ -2298,30 +2386,232 @@ namespace Neon.Kube
                             HealthCheckTimeoutSeconds  = healthCheck.TimeoutSeconds,
                             HealthyThresholdCount      = healthCheck.ThresholdCount
                         });
+
+                    targetGroup = targetGroupResponse.TargetGroups.Single();
+                    nameToTargetGroup.Add(targetGroupName, targetGroup);
+                }
+
+                // We're going to reregister the targets every time in case nodes
+                // have been added or removed from the cluster or the set of nodes
+                // marked for ingress has changed.
+
+                var targetNodes = (List<TargetDescription>)null;
+
+                switch (ingressRule.Target)
+                {
+                    case IngressRuleTarget.KubeApi:
+
+                        targetNodes = targetMasterNodes;
+                        break;
+
+                    case IngressRuleTarget.User:
+
+                        targetNodes = targetIngressNodes;
+                        break;
+
+                    case IngressRuleTarget.Ssh:
+
+                        throw new InvalidOperationException($"[Target={ingressRule.Target}] cannot be used for a cluster ingress rule.");
+
+                    default:
+
+                        throw new NotImplementedException($"[Target={ingressRule.Target}] is not implemented.");
+                }
+
+                await elbClient.RegisterTargetsAsync(
+                    new RegisterTargetsRequest()
+                    {
+                        TargetGroupArn = targetGroup.TargetGroupArn,
+                        Targets        = targetNodes
+                    });
+            }
+
+            // Ensure that we have an external SSH target group that forwards traffic to each node.
+            // We'll enable/disable external SSH access by creating or removing the listeners
+            // in the methods further below.
+
+            foreach (var awsInstance in SortedMasterThenWorkerNodes)
+            {
+                Covenant.Assert(awsInstance.ExternalSshPort != 0, $"Node [{awsInstance.Name}] does not have an external SSH port assignment.");
+
+                var targetGroupName = GetTargetGroupName(IngressRuleTarget.Ssh, awsInstance.Name, IngressProtocol.Tcp, awsInstance.ExternalSshPort);
+                var targetGroup     = (ElbTargetGroup)null;
+
+                if (!nameToTargetGroup.ContainsKey(targetGroupName))
+                {
+                    var targetGroupResponse = await elbClient.CreateTargetGroupAsync(
+                        new CreateTargetGroupRequest()
+                        {
+                            VpcId                      = vpc.VpcId,
+                            Name                       = targetGroupName,
+                            Protocol                   = ToElbProtocol(IngressProtocol.Tcp),
+                            TargetType                 = TargetTypeEnum.Ip,
+                            Port                       = NetworkPorts.SSH,
+                            HealthCheckEnabled         = true,
+                            HealthCheckProtocol        = ProtocolEnum.TCP,
+                            HealthCheckIntervalSeconds = defaultHealthCheck.IntervalSeconds,
+                            HealthCheckTimeoutSeconds  = defaultHealthCheck.TimeoutSeconds,
+                            HealthyThresholdCount      = defaultHealthCheck.ThresholdCount
+                        });
+
+                    targetGroup = targetGroupResponse.TargetGroups.Single();
+                    nameToTargetGroup.Add(targetGroupName, targetGroup);
+                }
+
+                // Register the target node.
+
+                await elbClient.RegisterTargetsAsync(
+                    new RegisterTargetsRequest()
+                    { 
+                        TargetGroupArn = targetGroup.TargetGroupArn,
+                        Targets        = new List<TargetDescription>()
+                        {
+                            new TargetDescription() { Id = awsInstance.InstanceId }
+                        }
+                    });
+            }
+
+            // Add load balancer listeners for cluster ingress rules as required.
+
+            var listenerPagenator = elbClient.Paginators.DescribeListeners(
+                new DescribeListenersRequest()
+                {
+                    LoadBalancerArn = loadBalancer.LoadBalancerArn
+                });
+
+            var portToListener = new Dictionary<int, Listener>();
+
+            await foreach (var listener in listenerPagenator.Listeners)
+            {
+                portToListener.Add(listener.Port, listener);
+            }
+
+            foreach (var ingressRule in ingressRules)
+            {
+                ElbTargetGroup targetGroup;
+
+                switch (ingressRule.Target)
+                {
+                    case IngressRuleTarget.KubeApi:
+                    case IngressRuleTarget.User:
+
+                        targetGroup = nameToTargetGroup[GetTargetGroupName(ingressRule.Target, ingressRule.Name, ingressRule.Protocol, ingressRule.ExternalPort)];
+                        break;
+
+                    case IngressRuleTarget.Ssh:
+
+                        throw new InvalidOperationException($"[Target={ingressRule.Target}] cannot be used for a cluster ingress rule.");
+
+                    default:
+
+                        throw new NotImplementedException($"[Target={ingressRule.Target}] is not implemented.");
+                }
+
+                if (!portToListener.TryGetValue(ingressRule.ExternalPort, out var listener))
+                {
+                    // A listener doesn't exist for this rule's port so create one.
+
+                    await elbClient.CreateListenerAsync(
+                        new CreateListenerRequest()
+                        {
+                             LoadBalancerArn = loadBalancer.LoadBalancerArn,
+                             Port            = ingressRule.ExternalPort,
+                             Protocol        = ToElbProtocol(ingressRule.Protocol),
+                             DefaultActions  = new List<ElbAction>()
+                             {
+                                 new ElbAction()
+                                 {
+                                      TargetGroupArn = targetGroup.TargetGroupArn
+                                 }
+                             }
+                        });
+                }
+            }
+
+            // Remove any load balancer listeners for external ports that are not in the reserved 
+            // SSH port range and do not correspond to the external port of a cluster ingress rule.
+
+            var ingressRulePorts = new HashSet<int>();
+
+            foreach (var ingressRule in ingressRules)
+            {
+                ingressRulePorts.Add(ingressRule.ExternalPort);
+            }
+
+            foreach (var listener in portToListener.Values.Where(listener => !networkOptions.IsExternalSshPort(listener.Port)))
+            {
+                if (!ingressRulePorts.Contains(listener.Port))
+                {
+                    await elbClient.DeleteListenerAsync(
+                        new DeleteListenerRequest()
+                        {
+                            ListenerArn = listener.ListenerArn
+                        });
                 }
             }
         }
 
         /// <summary>
-        /// Adds public SSH NAT and security rules for every node in the cluster.
-        /// These are used by neonKUBE tools for provisioning, setting up, and
-        /// managing cluster nodes.
+        /// Enables external SSH node access by adding the listeners to the load balancer.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task AddSshRulesAsync()
+        private async Task AddSshListenersAsync()
         {
-            // $todo(jefflill): IMPLEMENT THIS!
+            await ConnectAwsAsync();
+            AssignExternalSshPorts();
+
+            foreach (var awsInstance in nodeNameToAwsInstance.Values)
+            {
+                var targetGroupName = GetTargetGroupName(IngressRuleTarget.Ssh, awsInstance.Name, IngressProtocol.Tcp, awsInstance.ExternalSshPort);
+                var targetGroup     = nameToTargetGroup[targetGroupName];
+
+                await elbClient.CreateListenerAsync(
+                    new CreateListenerRequest()
+                    {
+                         LoadBalancerArn = loadBalancer.LoadBalancerArn,
+                         Port            = awsInstance.ExternalSshPort,
+                         Protocol        = ProtocolEnum.TCP,
+                         DefaultActions  = new List<ElbAction>()
+                         {
+                             new ElbAction()
+                             {
+                                  TargetGroupArn = targetGroup.TargetGroupArn
+                             }
+                         }
+                    });
+            }
         }
 
         /// <summary>
-        /// Removes public SSH NAT and security rules for every node in the cluster.
-        /// These are used by neonKUBE related tools for provisioning, setting up, and
-        /// managing cluster nodes.
+        /// Disables external SSH node access by removing the SSH listeners from the load balancer.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task RemoveSshRulesAsync()
+        private async Task RemoveSshListenersAsync()
         {
-            // $todo(jefflill): IMPLEMENT THIS!
+            await ConnectAwsAsync();
+            AssignExternalSshPorts();
+
+            var listenerPagenator = elbClient.Paginators.DescribeListeners(
+                new DescribeListenersRequest()
+                {
+                    LoadBalancerArn = loadBalancer.LoadBalancerArn
+                });
+
+            var listeners = new List<Listener>();
+
+            await foreach (var listener in listenerPagenator.Listeners)
+            {
+                listeners.Add(listener);
+            }
+
+            foreach (var listener in listeners.Where(listener => networkOptions.IsExternalSshPort(listener.Port)))
+            {
+                await elbClient.DeleteListenerAsync(
+                    new DeleteListenerRequest()
+                    {
+                        ListenerArn = listener.ListenerArn
+                    });
+            }
         }
     }
 }

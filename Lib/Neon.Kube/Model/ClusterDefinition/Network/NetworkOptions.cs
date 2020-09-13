@@ -311,7 +311,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public int FirstSshManagementPort => ReservedIngressStartPort + additionalReservedPorts;
+        public int FirstExternalSshPort => ReservedIngressStartPort + additionalReservedPorts;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -516,6 +516,16 @@ namespace Neon.Kube
                     throw new ClusterDefinitionException($"The reserved ingress port range of [{ReservedIngressStartPort}...{ReservedIngressEndPort}] cannot include the common reserved port [{reservedPort}].");
                 }
             }
+        }
+
+        /// <summary>
+        /// Determines whether a port is within the external SSH network port range.
+        /// </summary>
+        /// <param name="port">The port being tested.</param>
+        /// <returns><c>true</c> for external SSH ports.</returns>
+        internal bool IsExternalSshPort(int port)
+        {
+            return FirstExternalSshPort <= port && port <= ReservedIngressEndPort;
         }
 
         /// <summary>
