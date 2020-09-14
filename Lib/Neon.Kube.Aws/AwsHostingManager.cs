@@ -51,7 +51,9 @@ using Amazon.ResourceGroups.Model;
 using Amazon.Runtime;
 
 using Ec2Instance    = Amazon.EC2.Model.Instance;
+using Ec2Tag         = Amazon.EC2.Model.Tag;
 using ElbAction      = Amazon.ElasticLoadBalancingV2.Model.Action;
+using ElbTag         = Amazon.ElasticLoadBalancingV2.Model.Tag;
 using ElbTargetGroup = Amazon.ElasticLoadBalancingV2.Model.TargetGroup;
 
 namespace Neon.Kube
@@ -73,18 +75,6 @@ namespace Neon.Kube
         //
         // In the future, we may relax the public load balancer requirement so
         // that virtual air-gapped clusters can be supported (more on that below).
-        //
-        // Nodes will be deployed in two AWS availability sets, one set for the         <<< EDIT THIS PARAGRAPH!
-        // masters and the other one for the workers.  We're doing this to ensure
-        // that there will always be a quorum of masters available during planned
-        // Azure maintenance.
-        //
-        // By default, we're also going to create an Azure proximity placement group    <<< EDIT THIS PARAGRAPH!
-        // for the cluster and then add both the master and worker availability sets
-        // to the proximity group.  This ensures the shortest possible network latency
-        // between all of the cluster nodes but with the increased chance that Azure
-        // won't be able to satisfy the deployment constraints.  The user can disable
-        // this placement groups via [AzureOptions.DisableProximityPlacement].
         //
         // The VPC will be configured using the cluster definition's [NetworkOptions],
         // with [NetworkOptions.NodeSubnet] used to configure the subnet.
@@ -190,7 +180,7 @@ namespace Neon.Kube
         //
         // In theory we could allow users to distribute instances across availability
         // zones for better fault tolerance, but we're not going to support this now
-        // and probably ever.  The logic is that if you need more resilence, just deploy
+        // and probably never.  The logic is that if you need more resilence, just deploy
         // another cluster in another availability zone or region and load balance
         // traffic between them.  I believe that will address most reasonable scenarios
         // and this will be easy to implement and test.
@@ -199,11 +189,18 @@ namespace Neon.Kube
         //
         //      https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html
         //
-        // neonKUBE will be deployed using a partition placement groups for each master node
-        // by default, but users can change this via the cluster definition.  Unlike Azure,
-        // AWS allows instances to started in specific partitions which could be useful
-        // advanced user scenarios (like clustered databases).  We're not going to support 
-        // user assignment of nodes to partitions right now; perhaps something for the future.
+        // neonKUBE will be deployed using two partition placement groups, one for master
+        // nodes and the other for workers.  The number of master placement partitions is
+        // controlled by [AwsHostingOptions.MasterPlacementPartitions] which defaults to
+        // the number of master nodes in the cluster.  Doing this helps to avoid losing
+        // a majority of the master nodes which would dramatically impact cluster functionality.
+        //
+        // Worker placement partitions are controlled by [AwsOptions.WorkerPlacementGroups].
+        // This defaults to one partition, which means that potentially all of the workers
+        // could be impacted due to a single hardware failure but it will be much more
+        // likely that AWS will be able to satisfy the conditions and acutally provision
+        // all of the nodes.  Users can increase the number of partitions and also optionally
+        // assign worker nodes to specific partitions using [AwsNodeOptions.PlacementPartition].
         //
         // Idempotent Implementation
         // -------------------------
@@ -432,6 +429,46 @@ namespace Neon.Kube
 
                 return (T)rawTag;
             }
+        }
+
+        /// <summary>
+        /// Enumerates the possible AWS instance status codes.  AWS doesn't seem
+        /// to define an enumeration for this so we'll roll our own.  Note that
+        /// the high byte of the 16-bit status code returned by the AWS API is
+        /// for internal AWS use only and must be cleared before comparing the
+        /// status to one of these values.
+        /// </summary>
+        private static class InstanceStatusCodes
+        {
+            /// <summary>
+            /// The instance is provisioning or starting.
+            /// </summary>
+            public static readonly int Pending = 0;
+
+            /// <summary>
+            /// The instance is running.
+            /// </summary>
+            public static readonly int Running = 16;
+
+            /// <summary>
+            /// The instance is shutting down.
+            /// </summary>
+            public static readonly int ShuttingDown = 32;
+
+            /// <summary>
+            /// The instance has been terminated.
+            /// </summary>
+            public static readonly int Terminated = 48;
+
+            /// <summary>
+            /// The instance is stopping.
+            /// </summary>
+            public static readonly int Stopping = 64;
+
+            /// <summary>
+            /// The instance has been stopped.
+            /// </summary>
+            public static readonly int Stopped = 80;
         }
 
         //---------------------------------------------------------------------
@@ -670,7 +707,8 @@ namespace Neon.Kube
         private NetworkAcl                          networkAcl2;
         private InternetGateway                     gateway;
         private LoadBalancer                        loadBalancer;
-        private PlacementGroup                      placementGroup;
+        private PlacementGroup                      masterPlacementGroup;
+        private PlacementGroup                      workerPlacementGroup;
 
         // These are the names we'll use for cluster AWS resources.
 
@@ -684,7 +722,8 @@ namespace Neon.Kube
         private string                              gatewayName;
         private string                              loadBalancerName;
         private string                              elbName;
-        private string                              placementGroupName;
+        private string                              masterPlacementGroupName;
+        private string                              workerPlacementGroupName;
 
         /// <summary>
         /// Table mapping a ELB target group name to the group.
@@ -750,17 +789,18 @@ namespace Neon.Kube
 
             // Initialize the cluster resource names.
 
-            elasticIpName      = GetResourceName("elastic-ip");
-            vpcName            = GetResourceName("vpc");
-            dhcpOptionName     = GetResourceName("dhcp-opt");
-            sgAllowAllName     = GetResourceName("sg-allow-all");
-            subnetName         = GetResourceName("subnet");
-            networkAclName1    = GetResourceName("network-acl-1");
-            networkAclName2    = GetResourceName("network-acl-2");
-            gatewayName        = GetResourceName("internet-gateway");
-            loadBalancerName   = GetResourceName("load-balancer");
-            elbName            = GetLoadBalancerName(clusterName, "elb");
-            placementGroupName = GetResourceName("placement-group");
+            elasticIpName            = GetResourceName("elastic-ip");
+            vpcName                  = GetResourceName("vpc");
+            dhcpOptionName           = GetResourceName("dhcp-opt");
+            sgAllowAllName           = GetResourceName("sg-allow-all");
+            subnetName               = GetResourceName("subnet");
+            networkAclName1          = GetResourceName("network-acl-1");
+            networkAclName2          = GetResourceName("network-acl-2");
+            gatewayName              = GetResourceName("internet-gateway");
+            loadBalancerName         = GetResourceName("load-balancer");
+            elbName                  = GetLoadBalancerName(clusterName, "elb");
+            masterPlacementGroupName = GetResourceName("master-placement");
+            workerPlacementGroupName = GetResourceName("worker-placement");
 
             // Initialize the dictionary we'll use for mapping ELB target group
             // names to the specific target group.
@@ -919,7 +959,7 @@ namespace Neon.Kube
                 new TagSpecification()
                 {
                     ResourceType = resourceType,
-                    Tags         = GetTags<Amazon.EC2.Model.Tag>(name, tags)
+                    Tags         = GetTags<Ec2Tag>(name, tags)
                 }
             };
         }
@@ -960,10 +1000,11 @@ namespace Neon.Kube
             controller.AddGlobalStep("locate ami", LocateAmiAsync);
             controller.AddGlobalStep("resource group", CreateResourceGroupAsync);
             controller.AddGlobalStep("elastic ip", CreateElasticIpAsync);
-            controller.AddGlobalStep("network", ConfigureNetworkAsync);
-            controller.AddGlobalStep("placement group", ConfigurePlacementGroupAsync);
+            controller.AddGlobalStep("placement groups", ConfigurePlacementGroupAsync);
             controller.AddGlobalStep("external ssh ports", AssignExternalSshPorts, quiet: true);
+            controller.AddGlobalStep("network", ConfigureNetworkAsync);
             controller.AddNodeStep("node instances", CreateInstanceAsync);
+            controller.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
 
             if (!controller.Run(leaveNodesConnected: false))
             {
@@ -1230,16 +1271,24 @@ namespace Neon.Kube
 
             await LoadElbTargetGroupsAsync();
 
-            // Placement group
+            // Placement groups
 
             var placementGroupPaginator = await ec2Client.DescribePlacementGroupsAsync(new DescribePlacementGroupsRequest());
 
             foreach (var placementGroupItem in placementGroupPaginator.PlacementGroups)
             {
-                if (placementGroupItem.GroupName == placementGroupName)
+                if (placementGroupItem.GroupName == masterPlacementGroupName)
                 {
-                    placementGroup = placementGroupItem;
-                    break;
+                    masterPlacementGroup = placementGroupItem;
+                }
+                else if (placementGroupItem.GroupName == workerPlacementGroupName)
+                {
+                    workerPlacementGroup = placementGroupItem;
+                }
+
+                if (masterPlacementGroup != null && workerPlacementGroup != null)
+                {
+                    break;  // We have both groups.
                 }
             }
 
@@ -1272,10 +1321,6 @@ namespace Neon.Kube
                     {
                         awsInstance.ExternalSshPort = sshExternalPort;
                     }
-                    else
-                    {
-                        throw new KubeException($"AWS instance [{name}] has a missing or invalid [{neonNodeExternalSshTag}] tag.");
-                    }
                 }
             }
         }
@@ -1286,38 +1331,125 @@ namespace Neon.Kube
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task IdentifyNetworkAclsAsync()
         {
+            if (vpc == null)
+            {
+                // There can't be any network ACLs until the VPC exists.
+
+                return;
+            }
+
+retry:
             var networkAclPagenator = ec2Client.Paginators.DescribeNetworkAcls(new DescribeNetworkAclsRequest());
+            var networkAcls         = new List<NetworkAcl>();
+            var haveSubnetAcl       = false;
 
             await foreach (var networkAclItem in networkAclPagenator.NetworkAcls)
             {
-                if (!networkAclItem.Tags.Any(tag => tag.Key == neonClusterTag && tag.Value == clusterName))
+                if (networkAclItem.VpcId == vpc.VpcId)
                 {
-                    if (networkAclItem.Associations.Any(association => association.SubnetId == subnet.SubnetId))
-                    {
-                        // This must be the default ACL assigned to the subnet.  We'll rename
-                        // this to be [networkAcl1]. 
+                    networkAcls.Add(networkAclItem);
+                }
+            }
 
+            foreach (var networkAclItem in networkAcls)
+            {
+                if (networkAclItem.Associations.Any(association => association.SubnetId == subnet.SubnetId))
+                {
+                    haveSubnetAcl = true;
+
+                    // This must be the default ACL assigned to the subnet.  We'll rename
+                    // this to be [networkAcl1] if it's not already assigned a name. 
+
+                    var aclName = networkAclItem.Tags.FirstOrDefault(tag => tag.Key == nameTag)?.Value;
+
+                    if (aclName != networkAclName1 && aclName != networkAclName2)
+                    {
                         await ec2Client.CreateTagsAsync(
                             new CreateTagsRequest()
                             {
                                 Resources = new List<string>() { networkAclItem.NetworkAclId },
-                                Tags      = GetTags<Amazon.EC2.Model.Tag>(networkAclName1)
+                                Tags      = GetTags<Ec2Tag>(networkAclName1)
                             });
 
                         networkAcl1 = await GetNetworkAclAsync(networkAclItem.NetworkAclId);
+
+                        continue;
                     }
-
-                    continue;
                 }
 
-                if (networkAclItem.Tags.Any(tag => tag.Key == nameTag && tag.Value == networkAclName1))
+                if (networkAclItem.Tags.Any(tag => tag.Key == neonClusterTag && tag.Value == clusterName))
                 {
-                    networkAcl1 = networkAclItem;
+                    if (networkAclItem.Tags.Any(tag => tag.Key == neonClusterTag && tag.Value == clusterName))
+                    {
+                        if (networkAclItem.Tags.Any(tag => tag.Key == nameTag && tag.Value == networkAclName1))
+                        {
+                            networkAcl1 = networkAclItem;
+                        }
+                        else if (networkAclItem.Tags.Any(tag => tag.Key == nameTag && tag.Value == networkAclName2))
+                        {
+                            networkAcl2 = networkAclItem;
+                        }
+                    }
                 }
-                else if (networkAclItem.Tags.Any(tag => tag.Key == nameTag && tag.Value == networkAclName2))
+            }
+
+            // Note that one of the network ACLs must be associated with the subnet.  This may not be the
+            // case if the subnet for a previous cluster with the same name was deleted but the network
+            // ACLs were not.  This shouldn't really happen in production if the cluster was deprovisioned
+            // via the hosting manager but may happen when testing and debugging.
+            //
+            // We're going to address this situation by removing both network ACLs and then looping to
+            // relocate the subnet associated ACL.
+
+            if (!haveSubnetAcl)
+            {
+                // Delete both ACLs (if they exist) and try to locate the default subnet ACL again.
+
+                if (networkAcl1 != null)
                 {
-                    networkAcl2 = networkAclItem;
+                    await ec2Client.DeleteNetworkAclAsync(
+                        new DeleteNetworkAclRequest()
+                        {
+                            NetworkAclId = networkAcl1.NetworkAclId
+                        });
                 }
+
+                if (networkAcl2 != null)
+                {
+                    await ec2Client.DeleteNetworkAclAsync(
+                        new DeleteNetworkAclRequest()
+                        {
+                            NetworkAclId = networkAcl2.NetworkAclId
+                        });
+                }
+
+                goto retry;     // YAY: A GOTO!  I haven't coded one of those for a while.
+            }
+
+            // Ensure that both ACLs exist.
+
+            if (networkAcl1 == null)
+            {
+                var networkAclResponse = await ec2Client.CreateNetworkAclAsync(
+                    new CreateNetworkAclRequest()
+                    {
+                         VpcId             = vpc.VpcId,
+                         TagSpecifications = GetTagSpecifications(networkAclName1, ResourceType.NetworkAcl)
+                    });
+
+                networkAcl1 = networkAclResponse.NetworkAcl;
+            }
+
+            if (networkAcl2 == null)
+            {
+                var networkAclResponse = await ec2Client.CreateNetworkAclAsync(
+                    new CreateNetworkAclRequest()
+                    {
+                         VpcId             = vpc.VpcId,
+                         TagSpecifications = GetTagSpecifications(networkAclName2, ResourceType.NetworkAcl)
+                    });
+
+                networkAcl2 = networkAclResponse.NetworkAcl;
             }
         }
 
@@ -1664,6 +1796,37 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Creates the the master and worker placement groups used to provision the cluster node instances.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task ConfigurePlacementGroupAsync()
+        {
+            if (masterPlacementGroup == null)
+            {
+                var partitionGroupResponse = await ec2Client.CreatePlacementGroupAsync(
+                    new CreatePlacementGroupRequest(masterPlacementGroupName, PlacementStrategy.Partition)
+                    {
+                        PartitionCount    = awsOptions.MasterPlacementPartitions,
+                        TagSpecifications = GetTagSpecifications(masterPlacementGroupName, ResourceType.PlacementGroup)
+                    });
+
+                masterPlacementGroup = partitionGroupResponse.PlacementGroup;
+            }
+
+            if (workerPlacementGroup == null)
+            {
+                var partitionGroupResponse = await ec2Client.CreatePlacementGroupAsync(
+                    new CreatePlacementGroupRequest(workerPlacementGroupName, PlacementStrategy.Partition)
+                    {
+                        PartitionCount    = awsOptions.WorkerPlacementPartitions,
+                        TagSpecifications = GetTagSpecifications(workerPlacementGroupName, ResourceType.PlacementGroup)
+                    });
+
+                workerPlacementGroup = partitionGroupResponse.PlacementGroup;
+            }
+        }
+
+        /// <summary>
         /// Creates the elastic IP address for the cluster if it doesn't already exist.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -1679,7 +1842,7 @@ namespace Neon.Kube
                     new CreateTagsRequest()
                     {
                         Resources = new List<string>() { addressId },
-                        Tags      = GetTags<Amazon.EC2.Model.Tag>(elasticIpName)
+                        Tags      = GetTags<Ec2Tag>(elasticIpName)
                     });
 
                 // Retrieve the elastic IP resource.
@@ -1695,6 +1858,44 @@ namespace Neon.Kube
                         break;
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Assigns external SSH ports to AWS instance records that don't already have them.  Note
+        /// that we're not actually going to write the instance tags here; we'll do that when we
+        /// actually create any new instances.
+        /// </summary>
+        private void AssignExternalSshPorts()
+        {
+            // Create a table with the currently allocated external SSH ports.
+
+            var allocatedPorts = new HashSet<int>();
+
+            foreach (var instance in instanceNameToAwsInstance.Values.Where(awsInstance => awsInstance.ExternalSshPort != 0))
+            {
+                allocatedPorts.Add(instance.ExternalSshPort);
+            }
+
+            // Create a list of unallocated external SSH ports.
+
+            var unallocatedPorts = new List<int>();
+
+            for (int port = networkOptions.FirstExternalSshPort; port <= networkOptions.ReservedIngressEndPort; port++)
+            {
+                if (!allocatedPorts.Contains(port))
+                {
+                    unallocatedPorts.Add(port);
+                }
+            }
+
+            // Assign unallocated external SSH ports to nodes that don't already have one.
+
+            var nextUnallocatedPortIndex = 0;
+
+            foreach (var awsInstance in SortedMasterThenWorkerNodes.Where(awsInstance => awsInstance.ExternalSshPort == 0))
+            {
+                awsInstance.ExternalSshPort = unallocatedPorts[nextUnallocatedPortIndex++];
             }
         }
 
@@ -1898,7 +2099,14 @@ namespace Neon.Kube
                         InternetGatewayId = gateway.InternetGatewayId
                     });
             }
+        }
 
+        /// <summary>
+        /// Configures the load balancer.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task ConfigureLoadBalancerAsync()
+        {
             // Create the load balancer if it doesn't already exist.
 
             if (loadBalancer == null)
@@ -1918,7 +2126,7 @@ namespace Neon.Kube
                                 SubnetId     = subnet.SubnetId
                             }
                         },
-                        Tags = GetTags<Amazon.ElasticLoadBalancingV2.Model.Tag>("load-balancer"),
+                        Tags = GetTags<ElbTag>("load-balancer"),
                     });
 
                 loadBalancer = await GetLoadBalancerAsync();
@@ -1927,63 +2135,6 @@ namespace Neon.Kube
             // Configure the ingress/egress listeners and target groups.
 
             await UpdateNetworkAsync(NetworkOperations.UpdateIngressEgressRules | NetworkOperations.EnableSsh);
-        }
-
-        /// <summary>
-        /// Creates the the placement group used to provision the cluster nodes.
-        /// </summary>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ConfigurePlacementGroupAsync()
-        {
-            if (placementGroup == null)
-            {
-                var partitionGroupResponse = await ec2Client.CreatePlacementGroupAsync(
-                    new CreatePlacementGroupRequest(placementGroupName, PlacementStrategy.Partition)
-                    {
-                        PartitionCount    = awsOptions.PlacementPartitions,
-                        TagSpecifications = GetTagSpecifications(placementGroupName, ResourceType.PlacementGroup)
-                    });
-
-                placementGroup = partitionGroupResponse.PlacementGroup;
-            }
-        }
-
-        /// <summary>
-        /// Assigns external SSH ports to AWS instance records that don't already have them.  Note
-        /// that we're not actually going to write the instance tags here; we'll do that when we
-        /// actually create any new instances.
-        /// </summary>
-        private void AssignExternalSshPorts()
-        {
-            // Create a table with the currently allocated external SSH ports.
-
-            var allocatedPorts = new HashSet<int>();
-
-            foreach (var instance in instanceNameToAwsInstance.Values.Where(awsInstance => awsInstance.ExternalSshPort != 0))
-            {
-                allocatedPorts.Add(instance.ExternalSshPort);
-            }
-
-            // Create a list of unallocated external SSH ports.
-
-            var unallocatedPorts = new List<int>();
-
-            for (int port = networkOptions.FirstExternalSshPort; port <= networkOptions.ReservedIngressEndPort; port++)
-            {
-                if (!allocatedPorts.Contains(port))
-                {
-                    unallocatedPorts.Add(port);
-                }
-            }
-
-            // Assign unallocated external SSH ports to nodes that don't already have one.
-
-            var nextUnallocatedPortIndex = 0;
-
-            foreach (var awsInstance in SortedMasterThenWorkerNodes.Where(awsInstance => awsInstance.ExternalSshPort == 0))
-            {
-                awsInstance.ExternalSshPort = unallocatedPorts[nextUnallocatedPortIndex++];
-            }
         }
 
         /// <summary>
@@ -2005,37 +2156,92 @@ namespace Neon.Kube
 
                 // Determine the placement group (1-based) partition number for the node.
 
-                var partitionNumber = -1;
+                var placementGroupName = (string)null;
+                var partitionNumber    = -1;
 
-                if (awsOptions.PlacementPartitions <= 1)
+                if (node.Metadata.IsMaster)
                 {
-                    // No effective partitioning.
+                    placementGroupName = masterPlacementGroupName;
 
-                    partitionNumber = 1;
-                }
-                else if (node.Metadata.IsMaster)
-                {
-                    var masters = cluster.Definition.SortedMasterNodes.ToList();
-
-                    for (int index = 0; index < masters.Count; index++)
+                    if (awsOptions.MasterPlacementPartitions <= 1)
                     {
-                        if (masters[index].Name == node.Name)
+                        // No effective partitioning.
+
+                        partitionNumber = 1;
+                    }
+                    else
+                    {
+                        // Spread the master instances across the partitions while honoring
+                        // node specific partition settings.
+
+                        var partitionAssignmentCounts = new List<int>();
+
+                        for (int i = 1; i < awsOptions.MasterPlacementPartitions; i++)
                         {
-                            partitionNumber = (index % awsOptions.PlacementPartitions) + 1;
-                            break;
+                            partitionAssignmentCounts.Add(0);
+                        }
+
+                        foreach (var master in cluster.Definition.SortedMasterNodes.ToList())
+                        {
+                            if (master.Aws.PlacementPartition > 0)
+                            {
+                                // User explicitly specified the partition.
+
+                                partitionNumber = master.Aws.PlacementPartition;
+                            }
+                            else
+                            {
+                                // Assign the node to a partition with the fewest nodes.
+
+                                var minPartitionNodeCount = partitionAssignmentCounts.Min();
+
+                                partitionNumber = partitionAssignmentCounts.IndexOf(minPartitionNodeCount) + 1;
+                            }
+
+                            partitionAssignmentCounts[partitionNumber - 1]++;
                         }
                     }
                 }
                 else if (node.Metadata.IsWorker)
                 {
-                    var workers = cluster.Definition.SortedWorkerNodes.ToList();
+                    placementGroupName = workerPlacementGroupName;
 
-                    for (int index = 0; index < workers.Count; index++)
+                    if (awsOptions.WorkerPlacementPartitions <= 1)
                     {
-                        if (workers[index].Name == node.Name)
+                        // No effective partitioning.
+
+                        partitionNumber = 1;
+                    }
+                    else
+                    {
+                        // Spread the worker instances across the partitions while honoring
+                        // node specific partition settings.
+
+                        var partitionAssignmentCounts = new List<int>();
+
+                        for (int i = 1; i < awsOptions.WorkerPlacementPartitions; i++)
                         {
-                            partitionNumber = (index % awsOptions.PlacementPartitions) + 1;
-                            break;
+                            partitionAssignmentCounts.Add(0);
+                        }
+
+                        foreach (var worker in cluster.Definition.SortedWorkerNodes.ToList())
+                        {
+                            if (worker.Aws.PlacementPartition > 0)
+                            {
+                                // User explicitly specified the partition.
+
+                                partitionNumber = worker.Aws.PlacementPartition;
+                            }
+                            else
+                            {
+                                // Assign the node to a partition with the fewest nodes.
+
+                                var minPartitionNodeCount = partitionAssignmentCounts.Min();
+
+                                partitionNumber = partitionAssignmentCounts.IndexOf(minPartitionNodeCount) + 1;
+                            }
+
+                            partitionAssignmentCounts[partitionNumber - 1]++;
                         }
                     }
                 }
@@ -2044,9 +2250,8 @@ namespace Neon.Kube
                     Covenant.Assert(false);
                 }
 
+                Covenant.Assert(!string.IsNullOrEmpty(placementGroupName));
                 Covenant.Assert(partitionNumber > 0);
-
-                // Create the instance.
 
                 var runResponse = await ec2Client.RunInstancesAsync(
                     new RunInstancesRequest()
@@ -2068,6 +2273,46 @@ namespace Neon.Kube
                     });
 
                 instance.Instance = runResponse.Reservation.Instances.Single();
+
+                // Wait for the instance to indicate that it's running.
+
+                node.Status = "starting...";
+
+                var invalidStates = new HashSet<int>
+                {
+                    InstanceStatusCodes.ShuttingDown,
+                    InstanceStatusCodes.Stopped,
+                    InstanceStatusCodes.Stopping,
+                    InstanceStatusCodes.Terminated
+                };
+
+                await NeonHelper.WaitForAsync(
+                    async () =>
+                    {
+                        var statusResponse = await ec2Client.DescribeInstanceStatusAsync(
+                            new DescribeInstanceStatusRequest()
+                            {
+                                InstanceIds = new List<string>() { instance.InstanceId }
+                            });
+
+                        var status = statusResponse.InstanceStatuses.SingleOrDefault();
+
+                        if (status == null)
+                        {
+                            return false;       // The instance provisioning operation must still be pending.
+                        }
+
+                        var state = status.InstanceState.Code & 0x00FF;        // Clear the internal AWS status code bits
+
+                        if (invalidStates.Contains(state))
+                        {
+                            throw new KubeException($"Cluster instance [id={instance.InstanceId}] is in an unexpected state [{status.InstanceState.Name}].");
+                        }
+
+                        return state == InstanceStatusCodes.Running;
+                    },
+                    timeout: TimeSpan.FromDays(1),
+                    pollTime: TimeSpan.FromSeconds(5));
             }
         }
 
@@ -2076,20 +2321,26 @@ namespace Neon.Kube
         /// to the base name passed.
         /// </summary>
         /// <param name="ingressTarget">The neonKUBE target group type.</param>
-        /// <param name="baseName">The base name for the target group.</param>
         /// <param name="protocol">The ingress protocol.</param>
         /// <param name="port">The ingress port.</param>
         /// <returns>The fully qualified target group name.</returns>
-        private string GetTargetGroupName(IngressRuleTarget ingressTarget, string baseName, IngressProtocol protocol, int port)
+        private string GetTargetGroupName(IngressRuleTarget ingressTarget, IngressProtocol protocol, int port)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(baseName), nameof(baseName));
+            if (protocol == IngressProtocol.Http || protocol == IngressProtocol.Https)
+            {
+                // We don't actually support HTTP/HTTPS at the load balancer.
+
+                protocol = IngressProtocol.Tcp;
+            }
 
             var protocolString = NeonHelper.EnumToString(protocol);
             var typeString     = NeonHelper.EnumToString(ingressTarget);
 
             Covenant.Assert(!typeString.Contains('-'), $"Serialized [{nameof(IngressRuleTarget)}.{ingressTarget}={typeString}] must not include a dash.");
 
-            return $"{typeString}-{baseName}-{protocolString}-{port}";
+            // Note that we need to replace any periods added by [GetResourceName()] with dashes.
+
+            return $"{typeString}-{protocolString}-{port}";
         }
 
         /// <summary>
@@ -2147,11 +2398,11 @@ namespace Neon.Kube
                 {
                     new IngressRule()
                     {
-                        Name                  = "kubernetes-api",
+                        Name                  = "kubeapi",
                         Protocol              = IngressProtocol.Tcp,
                         ExternalPort          = NetworkPorts.KubernetesApi,
                         NodePort              = NetworkPorts.KubernetesApi,
-                        Target                = IngressRuleTarget.KubeApi,
+                        Target                = IngressRuleTarget.Cluster,
                         AddressRules          = networkOptions.ManagementAddressRules,
                         IdleTcpReset          = true,
                         TcpIdleTimeoutMinutes = 5
@@ -2230,6 +2481,7 @@ namespace Neon.Kube
                             RuleNumber   = ingressRuleNumber++,
                             Protocol     = ToNetworkAclEntryProtocol(ingressRule.Protocol),
                             Egress       = false,
+                            CidrBlock    = "0.0.0.0/0",
                             PortRange    = new PortRange() { From = ingressRule.ExternalPort, To = ingressRule.ExternalPort },
                             RuleAction   = RuleAction.Allow
                         });
@@ -2366,11 +2618,10 @@ namespace Neon.Kube
 
             foreach (var ingressRule in ingressRules)
             {
-                var targetGroupName = GetTargetGroupName(ingressRule.Target, ingressRule.Name, ingressRule.Protocol, ingressRule.ExternalPort);
+                var targetGroupName = GetTargetGroupName(ingressRule.Target, ingressRule.Protocol, ingressRule.ExternalPort);
                 var healthCheck     = ingressRule.IngressHealthCheck ?? defaultHealthCheck;
-                var targetGroup     = (ElbTargetGroup)null;
 
-                if (!nameToTargetGroup.ContainsKey(targetGroupName))
+                if (!nameToTargetGroup.TryGetValue(targetGroupName, out var targetGroup))
                 {
                     var targetGroupResponse = await elbClient.CreateTargetGroupAsync(
                         new CreateTargetGroupRequest()
@@ -2383,12 +2634,21 @@ namespace Neon.Kube
                             HealthCheckEnabled         = true,
                             HealthCheckProtocol        = ProtocolEnum.TCP,
                             HealthCheckIntervalSeconds = healthCheck.IntervalSeconds,
-                            HealthCheckTimeoutSeconds  = healthCheck.TimeoutSeconds,
-                            HealthyThresholdCount      = healthCheck.ThresholdCount
+                            HealthyThresholdCount      = healthCheck.ThresholdCount,
+                            UnhealthyThresholdCount    = healthCheck.ThresholdCount
                         });
 
                     targetGroup = targetGroupResponse.TargetGroups.Single();
                     nameToTargetGroup.Add(targetGroupName, targetGroup);
+
+                    // Add tags as well.
+
+                    await elbClient.AddTagsAsync(
+                        new AddTagsRequest()
+                        {
+                             ResourceArns = new List<string>() { targetGroup.TargetGroupArn },
+                             Tags         = GetTags<ElbTag>(GetResourceName(targetGroupName))
+                        });
                 }
 
                 // We're going to reregister the targets every time in case nodes
@@ -2399,7 +2659,7 @@ namespace Neon.Kube
 
                 switch (ingressRule.Target)
                 {
-                    case IngressRuleTarget.KubeApi:
+                    case IngressRuleTarget.Cluster:
 
                         targetNodes = targetMasterNodes;
                         break;
@@ -2428,16 +2688,15 @@ namespace Neon.Kube
 
             // Ensure that we have an external SSH target group that forwards traffic to each node.
             // We'll enable/disable external SSH access by creating or removing the listeners
-            // in the methods further below.
+            // further below.
 
             foreach (var awsInstance in SortedMasterThenWorkerNodes)
             {
                 Covenant.Assert(awsInstance.ExternalSshPort != 0, $"Node [{awsInstance.Name}] does not have an external SSH port assignment.");
 
-                var targetGroupName = GetTargetGroupName(IngressRuleTarget.Ssh, awsInstance.Name, IngressProtocol.Tcp, awsInstance.ExternalSshPort);
-                var targetGroup     = (ElbTargetGroup)null;
+                var targetGroupName = GetTargetGroupName(IngressRuleTarget.Ssh, IngressProtocol.Tcp, awsInstance.ExternalSshPort);
 
-                if (!nameToTargetGroup.ContainsKey(targetGroupName))
+                if (!nameToTargetGroup.TryGetValue(targetGroupName, out var targetGroup))
                 {
                     var targetGroupResponse = await elbClient.CreateTargetGroupAsync(
                         new CreateTargetGroupRequest()
@@ -2445,13 +2704,13 @@ namespace Neon.Kube
                             VpcId                      = vpc.VpcId,
                             Name                       = targetGroupName,
                             Protocol                   = ToElbProtocol(IngressProtocol.Tcp),
-                            TargetType                 = TargetTypeEnum.Ip,
+                            TargetType                 = TargetTypeEnum.Instance,
                             Port                       = NetworkPorts.SSH,
                             HealthCheckEnabled         = true,
                             HealthCheckProtocol        = ProtocolEnum.TCP,
                             HealthCheckIntervalSeconds = defaultHealthCheck.IntervalSeconds,
-                            HealthCheckTimeoutSeconds  = defaultHealthCheck.TimeoutSeconds,
-                            HealthyThresholdCount      = defaultHealthCheck.ThresholdCount
+                            HealthyThresholdCount      = defaultHealthCheck.ThresholdCount,
+                            UnhealthyThresholdCount    = defaultHealthCheck.ThresholdCount
                         });
 
                     targetGroup = targetGroupResponse.TargetGroups.Single();
@@ -2492,10 +2751,10 @@ namespace Neon.Kube
 
                 switch (ingressRule.Target)
                 {
-                    case IngressRuleTarget.KubeApi:
+                    case IngressRuleTarget.Cluster:
                     case IngressRuleTarget.User:
 
-                        targetGroup = nameToTargetGroup[GetTargetGroupName(ingressRule.Target, ingressRule.Name, ingressRule.Protocol, ingressRule.ExternalPort)];
+                        targetGroup = nameToTargetGroup[GetTargetGroupName(ingressRule.Target, ingressRule.Protocol, ingressRule.ExternalPort)];
                         break;
 
                     case IngressRuleTarget.Ssh:
@@ -2521,6 +2780,7 @@ namespace Neon.Kube
                              {
                                  new ElbAction()
                                  {
+                                      Type           = ActionTypeEnum.Forward,
                                       TargetGroupArn = targetGroup.TargetGroupArn
                                  }
                              }
@@ -2562,7 +2822,7 @@ namespace Neon.Kube
 
             foreach (var awsInstance in nodeNameToAwsInstance.Values)
             {
-                var targetGroupName = GetTargetGroupName(IngressRuleTarget.Ssh, awsInstance.Name, IngressProtocol.Tcp, awsInstance.ExternalSshPort);
+                var targetGroupName = GetTargetGroupName(IngressRuleTarget.Ssh, IngressProtocol.Tcp, awsInstance.ExternalSshPort);
                 var targetGroup     = nameToTargetGroup[targetGroupName];
 
                 await elbClient.CreateListenerAsync(
@@ -2575,7 +2835,8 @@ namespace Neon.Kube
                          {
                              new ElbAction()
                              {
-                                  TargetGroupArn = targetGroup.TargetGroupArn
+                                Type           = ActionTypeEnum.Forward,
+                                TargetGroupArn = targetGroup.TargetGroupArn
                              }
                          }
                     });

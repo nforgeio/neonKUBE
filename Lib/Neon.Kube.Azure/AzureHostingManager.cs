@@ -1514,7 +1514,7 @@ namespace Neon.Kube
                         Protocol              = IngressProtocol.Tcp,
                         ExternalPort          = NetworkPorts.KubernetesApi,
                         NodePort              = NetworkPorts.KubernetesApi,
-                        Target                = IngressRuleTarget.KubeApi,
+                        Target                = IngressRuleTarget.Cluster,
                         AddressRules          = networkOptions.ManagementAddressRules,
                         IdleTcpReset          = true,
                         TcpIdleTimeoutMinutes = 5
@@ -1631,7 +1631,7 @@ namespace Neon.Kube
                         backendName = loadbalancerIngressBackendName;
                         break;
 
-                    case IngressRuleTarget.KubeApi:
+                    case IngressRuleTarget.Cluster:
 
                         backendName = loadbalancerMasterBackendName;
                         break;

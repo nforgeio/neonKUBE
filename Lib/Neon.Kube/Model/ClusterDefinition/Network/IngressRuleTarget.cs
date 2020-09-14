@@ -25,17 +25,17 @@ namespace Neon.Kube
     /// </summary>
     internal enum IngressRuleTarget
     {
-        // WARNING: Don't add dashes to any future [EnumMember] attributes because
-        //          some of the hosting managers (like AWS) extract the target from
-        //          an environment resource name by assuming that a dash terminates
-        //          the rule target string.
+        // WARNING: 
+        //
+        // The [EnumMember] values may only include alphanumeric characters and
+        // dashes.
 
         /// <summary>
         /// Provisioned for required cluster ingress ports, like the Kubernetes API
         /// port 6443.  This traffic will be routed to the cluster master nodes.
         /// </summary>
-        [EnumMember(Value = "kubeapi")]
-        KubeApi,
+        [EnumMember(Value = "cluster")]
+        Cluster,
 
         /// <summary>
         /// Provisioned for user-define ingress rules.  These groups include all

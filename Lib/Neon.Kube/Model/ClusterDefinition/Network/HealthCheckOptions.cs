@@ -63,15 +63,10 @@ namespace Neon.Kube
     /// or you can override default options for specific <see cref="IngressRule"/> rules.
     /// </para>
     /// <para>
-    /// Load balancers perform health checks at the specified <see cref="IntervalSeconds"/>, 
-    /// which defaults to <b>5 seconds</b>.  The health check method is simple: the load balancer
+    /// Load balancers perform health checks at the interval specified by <see cref="IntervalSeconds"/>, 
+    /// which defaults to <b>10 seconds</b>.  The health check method is simple: the load balancer
     /// simply tries to establish a TCP connection at the target port on the node.  The application
     /// is considered healthy when a connection can be established.
-    /// </para>
-    /// <para>
-    /// The load balancer will wait up to <see cref="TimeoutSeconds"/> for the target node
-    /// to acknowledge the connection before considering the health check to have failed.
-    /// This defaults <b>2 seconds</b>.
     /// </para>
     /// <para>
     /// The load balancer considers a node endpoint to be unhealthy when at least <see cref="ThresholdCount"/> 
@@ -83,23 +78,13 @@ namespace Neon.Kube
     {
         /// <summary>
         /// Specifies the interval in seconds between load balancer health checks.  This 
-        /// defaults to <b>5 seconds</b> and must be in the range of <b>5...300</b>
+        /// defaults to <b>10 seconds</b> and must be in the range of <b>10...300</b>
         /// seconds.
         /// </summary>
         [JsonProperty(PropertyName = "IntervalSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "intervalSeconds", ApplyNamingConventions = false)]
-        [DefaultValue(5)]
-        public int IntervalSeconds { get; set; } = 5;
-
-        /// <summary>
-        /// Specifies the maximum time the load balancer will wait before considering a
-        /// health check to have failed.  This defaults to <b>2 seconds</b> and must be
-        /// in the range of <b>2...60</b> seconds.
-        /// </summary>
-        [JsonProperty(PropertyName = "TimeoutSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "timeoutSeconds", ApplyNamingConventions = false)]
-        [DefaultValue(2)]
-        public int TimeoutSeconds { get; set; } = 2;
+        [DefaultValue(10)]
+        public int IntervalSeconds { get; set; } = 10;
 
         /// <summary>
         /// Specifies the number of consecutive failed health checks before the load balancer
@@ -122,19 +107,14 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name), nameof(name));
 
-            if (IntervalSeconds < 5 || 300 < IntervalSeconds)
+            if (IntervalSeconds < 10 || 300 < IntervalSeconds)
             {
-                throw new ClusterDefinitionException($"[{nameof(HealthCheckOptions)}.{nameof(HealthCheckOptions.IntervalSeconds)}={IntervalSeconds}] from [{name}] is outside the range of supported values [5...300].");
-            }
-
-            if (TimeoutSeconds < 2 || 60 < TimeoutSeconds)
-            {
-                throw new ClusterDefinitionException($"[{nameof(HealthCheckOptions)}.{nameof(HealthCheckOptions.TimeoutSeconds)}={TimeoutSeconds}] is [{name}] outside the range of supported values [2...60].");
+                throw new ClusterDefinitionException($"[{nameof(HealthCheckOptions)}.{nameof(HealthCheckOptions.IntervalSeconds)}={IntervalSeconds}] from [{name}] is outside the range of supported values [10...300] seconds.");
             }
 
             if (ThresholdCount < 2 || 10 < ThresholdCount)
             {
-                throw new ClusterDefinitionException($"[{nameof(HealthCheckOptions)}.{nameof(HealthCheckOptions.ThresholdCount)}={ThresholdCount}] is [{name}] outside the range of supported values [2...10].");
+                throw new ClusterDefinitionException($"[{nameof(HealthCheckOptions)}.{nameof(HealthCheckOptions.ThresholdCount)}={ThresholdCount}] is [{name}] outside the range of supported values [2...10] seconds.");
             }
         }
     }

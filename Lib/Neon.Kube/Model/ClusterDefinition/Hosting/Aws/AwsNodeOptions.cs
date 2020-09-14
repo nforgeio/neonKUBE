@@ -54,6 +54,36 @@ namespace Neon.Kube
         public string InstanceType { get; set; } = null;
 
         /// <summary>
+        /// Optionally specifies the AWS placement group partition the node will be provisioned
+        /// within.  This is a <b>1-based</b> partition index which <b>defaults to 0</b>, indicating
+        /// that node placement will be handled automatically.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// You generally don't need to customize this for master nodes since there will generally
+        /// be a separate partition available for each master and AWS will spread the instances
+        /// across these automatically.  When you specify this for master nodes, the partition index
+        /// must be in the range of [1...<see cref="AwsHostingOptions.MasterPlacementPartitions"/>].
+        /// </para>
+        /// <para>
+        /// For some cluster scenarios like a noSQL database cluster, you may wish to explicitly
+        /// control the partition where specific worker nodes are provisioned.  For example, if
+        /// your database replcates data across multiple worker nodes, you'd like to have the
+        /// workers hosting the same data be provisioned to different partitions such that if
+        /// the workers in one partition are lost then the workers in the remaining partitions
+        /// will still be able to serve the data.  
+        /// </para>
+        /// <para>
+        /// When you specify this for worker nodes, the partition index must be in the range 
+        /// of [1...<see cref="AwsHostingOptions.WorkerPlacementPartitions"/>].
+        /// </para>
+        /// </remarks>
+        [JsonProperty(PropertyName = "PlacementPartition", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "placementPartition", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public int PlacementPartition { get; set; } = 0;
+
+        /// <summary>
         /// Optionally specifies the type of volume to attach to the cluster node.  This defaults
         /// to <see cref="AwsVolumeType.Default"/> which indicates that <see cref="AwsHostingOptions.DefaultInstanceType"/>
         /// will specify the volume type for the node.
@@ -90,6 +120,9 @@ namespace Neon.Kube
         public void Validate(ClusterDefinition clusterDefinition, string nodeName)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
+
+            var node = clusterDefinition.NodeDefinitions[nodeName];
 
             if (VolumeType == AwsVolumeType.Default)
             {
@@ -111,6 +144,48 @@ namespace Neon.Kube
             }
 
             this.InstanceType = instanceType;
+
+            // Validate the placement partition index.
+
+            if (PlacementPartition > 0)
+            {
+                if (node.IsMaster)
+                {
+                    var masterNodeCount = clusterDefinition.Masters.Count();
+                    var partitionCount  = 0;
+
+                    if (clusterDefinition.Hosting.Aws.MasterPlacementPartitions == -1)
+                    {
+                        partitionCount = masterNodeCount;
+                    }
+                    else
+                    {
+                        partitionCount = clusterDefinition.Hosting.Aws.MasterPlacementPartitions;
+                    }
+
+                    partitionCount = Math.Min(partitionCount, AwsHostingOptions.MaxPlacementPartitions);
+
+                    if (PlacementPartition > partitionCount)
+                    {
+                        throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(AwsNodeOptions)}.{nameof(PlacementPartition)}={PlacementPartition}] which is outside the valid range of [1...{partitionCount}].");
+                    }
+                }
+                else if (node.IsWorker)
+                {
+                    var partitionCount = clusterDefinition.Hosting.Aws.WorkerPlacementPartitions;
+
+                    partitionCount = Math.Min(partitionCount, AwsHostingOptions.MaxPlacementPartitions);
+
+                    if (PlacementPartition > partitionCount)
+                    {
+                        throw new ClusterDefinitionException($"cluster node [{nodeName}] configures [{nameof(AwsNodeOptions)}.{nameof(PlacementPartition)}={PlacementPartition}] which is outside the valid range of [1...{partitionCount}].");
+                    }
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+            }
 
             // Validate the volume size, setting the cluster default if necessary.
 

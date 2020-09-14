@@ -41,6 +41,11 @@ namespace Neon.Kube
     /// </summary>
     public class AwsHostingOptions
     {
+        /// <summary>
+        /// The maximum number of placement group partitions supported by AWS.
+        /// </summary>
+        internal const int MaxPlacementPartitions = 7;
+
         private const string            defaultInstanceType = "t3a.medium";
         private const AwsVolumeType     defaultVolumeType   = AwsVolumeType.Gp2;
         private const string            defaultVolumeSize   = "128 GiB";
@@ -89,19 +94,33 @@ namespace Neon.Kube
         public string Region => AvailabilityZone?.Substring(0, AvailabilityZone.Length - 1);
 
         /// <summary>
+        /// Specifies the number of master placement group partitions the cluster master node
+        /// instances will be deployed to.  This defaults to <b>-1</b> which means that the number 
+        /// of partitions will equal the number of master nodes.  AWS supports a maximum of 7
+        /// placement partitions.
+        /// </summary>
+        /// <remarks>
         /// <para>
-        /// Specifies the number of partition group partitions the cluster instances will be
-        /// deployed to.  This defaults to <b>-1</b> which means that the number of partitions
-        /// will equal the number of master nodes.  AWS supports a maximum of 7 partitions.
+        /// AWS provides three different types of <b>placement groups</b> to user help manage
+        /// where virtual machine instances are provisioned within an AWS availability zone
+        /// to customize fault tolerance due to AWS hardware failures.
         /// </para>
         /// <para>
         /// <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html">AWS Placement groups</a>
         /// </para>
         /// <para>
-        /// neonKUBE provisions using partition placement groups to try to ensure that the 
-        /// master nodes are provisioned in separate racks and also that the other nodes
-        /// are also widely distributed for hardware fault tolerance.  In general, the
-        /// number of partitions should be no less than the number of cluster master nodes.
+        /// neonKUBE provisions instances using two <b>partition placement groups</b>, one for
+        /// the cluster master nodes and the other for the workers.  The idea is that master
+        /// nodes should be deployed on separate hardware for fault tolerance because if the
+        /// majority of master nodes go offline, the entire cluster will be dramatically impacted.
+        /// In general, the number of <see cref="MasterPlacementPartitions"/> partitions should
+        /// equal the number of master nodes.
+        /// </para>
+        /// <para>
+        /// Worker nodes are distributed across <see cref="WorkerPlacementPartitions"/> partitions
+        /// in a separate placement group.  The number of worker partitions defaults to 1, potentially
+        /// limiting the resilience to AWS hardware failures while making it more likely that AWS
+        /// will be able to actually satisfy the conditions to provision the cluster node instances.
         /// </para>
         /// <para>
         /// Unfortunately, AWS may not have enough distinct hardware available to satisfy 
@@ -109,11 +128,52 @@ namespace Neon.Kube
         /// zone first and if that doesn't work try reducing the number of partitions which
         /// can be as low as 1 partition.  
         /// </para>
-        /// </summary>
-        [JsonProperty(PropertyName = "PlacementPartitions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "placementPartitions", ApplyNamingConventions = false)]
+        /// </remarks>
+        [JsonProperty(PropertyName = "MasterPlacementPartitions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "masterPlacementPartitions", ApplyNamingConventions = false)]
         [DefaultValue(-1)]
-        public int PlacementPartitions { get; set; } = -1;
+        public int MasterPlacementPartitions { get; set; } = -1;
+
+        /// <summary>
+        /// Specifies the number of worker placement group partitions the cluster worker node
+        /// instances will be deployed to.  This defaults to <b>1</b> trading off resilience
+        /// to hardware failures against increasing the chance that AWS will actually be able
+        /// to provision the cluster nodes.  AWS supports a maximum of 7 placement partitions.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// AWS provides three different types of <b>placement groups</b> to user help manage
+        /// where virtual machine instances are provisioned within an AWS availability zone
+        /// to customize fault tolerance due to AWS hardware failures.
+        /// </para>
+        /// <para>
+        /// <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html">AWS Placement groups</a>
+        /// </para>
+        /// <para>
+        /// neonKUBE provisions instances using two <b>partition placement groups</b>, one for
+        /// the cluster master nodes and the other for the workers.  The idea is that master
+        /// nodes should be deployed on separate hardware for fault tolerance because if the
+        /// majority of master nodes go offline, the entire cluster will be dramatically impacted.
+        /// In general, the number of <see cref="MasterPlacementPartitions"/> partitions should
+        /// equal the number of master nodes.
+        /// </para>
+        /// <para>
+        /// Worker nodes are distributed across <see cref="WorkerPlacementPartitions"/> partitions
+        /// in a separate placement group.  The number of worker partitions defaults to 1, potentially
+        /// limiting the resilience to AWS hardware failures while making it more likely that AWS
+        /// will be able to actually satisfy the conditions to provision the cluster node instances.
+        /// </para>
+        /// <para>
+        /// Unfortunately, AWS may not have enough distinct hardware available to satisfy 
+        /// your requirements.  In this case, we recommend that you try another availability
+        /// zone first and if that doesn't work try reducing the number of partitions which
+        /// can be as low as 1 partition.  
+        /// </para>
+        /// </remarks>
+        [JsonProperty(PropertyName = "WorkerPlacementPartitions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "workerPlacementPartitions", ApplyNamingConventions = false)]
+        [DefaultValue(1)]
+        public int WorkerPlacementPartitions { get; set; } = 1;
 
         /// <summary>
         /// AWS resource group where all cluster components are to be provisioned.  This defaults
@@ -226,22 +286,25 @@ namespace Neon.Kube
                 }
             }
 
-            // Verify [PlacementPartitions]
+            // Verify [MasterPlacementPartitions]
 
-            if (PlacementPartitions < 0)
+            if (MasterPlacementPartitions < 0)
             {
-                PlacementPartitions = Math.Min(7, clusterDefinition.Masters.Count());
+                MasterPlacementPartitions = Math.Min(MaxPlacementPartitions, clusterDefinition.Masters.Count());
             }
             else
             {
-                if (PlacementPartitions == 0)
+                if (MasterPlacementPartitions < 1 || MaxPlacementPartitions < MasterPlacementPartitions)
                 {
-                    throw new ClusterDefinitionException($"AWS hosting [{nameof(PlacementPartitions)}={PlacementPartitions}] cannot be [0].");
+                    throw new ClusterDefinitionException($"AWS hosting [{nameof(MasterPlacementPartitions)}={MasterPlacementPartitions}] cannot be in the range [1...{MaxPlacementPartitions}]");
                 }
-                else if (PlacementPartitions > 7)
-                {
-                    throw new ClusterDefinitionException($"AWS hosting [{nameof(PlacementPartitions)}={PlacementPartitions}] cannot be greaterh than [7].");
-                }
+            }
+
+            // Verify [MasterPlacementPartitions]
+
+            if (WorkerPlacementPartitions < 1 || MaxPlacementPartitions < WorkerPlacementPartitions)
+            {
+                throw new ClusterDefinitionException($"AWS hosting [{nameof(WorkerPlacementPartitions)}={WorkerPlacementPartitions}] cannot be in the range [1...{MaxPlacementPartitions}]");
             }
 
             // Verify [DefaultInstanceType]
