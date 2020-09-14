@@ -2402,7 +2402,7 @@ retry:
                         Protocol              = IngressProtocol.Tcp,
                         ExternalPort          = NetworkPorts.KubernetesApi,
                         NodePort              = NetworkPorts.KubernetesApi,
-                        Target                = IngressRuleTarget.Cluster,
+                        Target                = IngressRuleTarget.Neon,
                         AddressRules          = networkOptions.ManagementAddressRules,
                         IdleTcpReset          = true,
                         TcpIdleTimeoutMinutes = 5
@@ -2659,7 +2659,7 @@ retry:
 
                 switch (ingressRule.Target)
                 {
-                    case IngressRuleTarget.Cluster:
+                    case IngressRuleTarget.Neon:
 
                         targetNodes = targetMasterNodes;
                         break;
@@ -2751,7 +2751,7 @@ retry:
 
                 switch (ingressRule.Target)
                 {
-                    case IngressRuleTarget.Cluster:
+                    case IngressRuleTarget.Neon:
                     case IngressRuleTarget.User:
 
                         targetGroup = nameToTargetGroup[GetTargetGroupName(ingressRule.Target, ingressRule.Protocol, ingressRule.ExternalPort)];
