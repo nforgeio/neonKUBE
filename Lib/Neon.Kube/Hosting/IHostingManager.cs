@@ -177,7 +177,7 @@ namespace Neon.Kube
         (string Address, int Port) GetSshEndpoint(string nodeName);
 
         /// <summary>
-        /// Identifies the data disk for a node.  This returns the data disk's device 
+        /// Identifies the data disk device for a node.  This returns the data disk's device 
         /// name when an unitialized data disk exists or "PRIMARY" when the  OS disk
         /// will be used for data.
         /// </summary>
@@ -187,6 +187,6 @@ namespace Neon.Kube
         /// This will not work after the node's data disk has been initialized.
         /// </note>
         /// </remarks>
-        string GetDataDisk(SshProxy<NodeDefinition> node);
+        string GetDataDevice(SshProxy<NodeDefinition> node);
     }
 }

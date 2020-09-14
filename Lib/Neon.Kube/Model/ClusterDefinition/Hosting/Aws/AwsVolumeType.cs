@@ -60,7 +60,7 @@ namespace Neon.Kube
         /// the expected throughput performance 99% of the time and has enough I/O credits* to support a full-volume scan at the burst 
         /// rate. To maximize the performance of st1, we recommend using EBS-optimized EC2 instances.
         /// </remarks>
-        Sc1,
+        St1,
 
         /// <summary>
         /// <b>HDD:</b> The lowest cost storage option.
@@ -73,7 +73,7 @@ namespace Neon.Kube
         /// performance 99% of the time and has enough I/O credits* to support a full-volume scan at the burst rate. To maximize the
         /// performance of sc1, we recommend using EBS-optimized EC2 instances. 
         /// </remarks>
-        Sc2,
+        Sc1,
 
         /// <summary>
         /// <b>SSD:</b> This is the default EBS volume type and is suitable for a wide range of workloads.

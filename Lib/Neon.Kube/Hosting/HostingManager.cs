@@ -132,7 +132,7 @@ namespace Neon.Kube
         public abstract (string Address, int Port) GetSshEndpoint(string nodeName);
 
         /// <inheritdoc/>
-        public abstract string GetDataDisk(SshProxy<NodeDefinition> node);
+        public abstract string GetDataDevice(SshProxy<NodeDefinition> node);
 
         /// <summary>
         /// Used by cloud and potentially other hosting manager implementations to verify the

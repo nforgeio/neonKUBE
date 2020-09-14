@@ -52,6 +52,7 @@ using Amazon.Runtime;
 
 using Ec2Instance    = Amazon.EC2.Model.Instance;
 using Ec2Tag         = Amazon.EC2.Model.Tag;
+using Ec2VolumeType  = Amazon.EC2.VolumeType;
 using ElbAction      = Amazon.ElasticLoadBalancingV2.Model.Action;
 using ElbTag         = Amazon.ElasticLoadBalancingV2.Model.Tag;
 using ElbTargetGroup = Amazon.ElasticLoadBalancingV2.Model.TargetGroup;
@@ -612,6 +613,27 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Converts an <see cref="AwsVolumeType"/> into an <see cref="Ec2VolumeType"/>.
+        /// </summary>
+        /// <param name="volumeType">The input type.</param>
+        /// <returns>The corresponding <see cref="Ec2VolumeType"/>.</returns>
+        private static Ec2VolumeType ToEc2VolumeType(AwsVolumeType volumeType)
+        {
+            switch (volumeType)
+            {
+                case AwsVolumeType.Gp2: return Ec2VolumeType.Gp2;
+                case AwsVolumeType.Io1: return Ec2VolumeType.Io1;
+                case AwsVolumeType.Io2: return Ec2VolumeType.Io2;
+                case AwsVolumeType.Sc1: return Ec2VolumeType.Sc1;
+                case AwsVolumeType.St1: return Ec2VolumeType.St1;
+
+                default:
+
+                    throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
         /// Constructs a name suitable for a load balancer or load balancer related resource
         /// by combining the cluster name with the resource name.
         /// </summary>
@@ -1003,7 +1025,7 @@ namespace Neon.Kube
             controller.AddGlobalStep("placement groups", ConfigurePlacementGroupAsync);
             controller.AddGlobalStep("external ssh ports", AssignExternalSshPorts, quiet: true);
             controller.AddGlobalStep("network", ConfigureNetworkAsync);
-            controller.AddNodeStep("node instances", CreateInstanceAsync);
+            controller.AddNodeStep("node instances", CreateNodeInstanceAsync);
             controller.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
 
             if (!controller.Run(leaveNodesConnected: false))
@@ -1062,7 +1084,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string GetDataDisk(SshProxy<NodeDefinition> node)
+        public override string GetDataDevice(SshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
@@ -1640,7 +1662,7 @@ retry:
                 node.Metadata.Labels.ComputeRam       = (int)instanceTypeInfo.MemoryInfo.SizeInMiB;
 
                 node.Metadata.Labels.StorageSize      = $"{AwsHelper.GetDiskSizeGiB(node.Metadata.Aws.VolumeType, ByteUnits.Parse(node.Metadata.Aws.VolumeSize))} GiB";
-                node.Metadata.Labels.StorageHDD       = node.Metadata.Aws.VolumeType == AwsVolumeType.Sc1 || node.Metadata.Aws.VolumeType == AwsVolumeType.Sc2;
+                node.Metadata.Labels.StorageHDD       = node.Metadata.Aws.VolumeType == AwsVolumeType.St1 || node.Metadata.Aws.VolumeType == AwsVolumeType.Sc1;
                 node.Metadata.Labels.StorageEphemeral = false;
                 node.Metadata.Labels.StorageLocal     = false;
                 node.Metadata.Labels.StorageRedundant = true;
@@ -2143,21 +2165,22 @@ retry:
         /// <param name="node">The target node.</param>
         /// <param name="stepDelay">The step delay.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task CreateInstanceAsync(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private async Task CreateNodeInstanceAsync(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             // Create the instance if it doesn't already exist.
 
-            var instance     = nodeNameToAwsInstance[node.Name];
-            var instanceName = instance.InstanceName;
+            var awsInstance     = nodeNameToAwsInstance[node.Name];
+            var awsInstanceName = awsInstance.InstanceName;
+            var awsNodeOptions  = node.Metadata.Aws;
 
-            if (instance.Instance == null)
+            if (awsInstance.Instance == null)
             {
                 node.Status = "create instance";
 
                 // Determine the placement group (1-based) partition number for the node.
 
                 var placementGroupName = (string)null;
-                var partitionNumber    = -1;
+                var partitionNumber = -1;
 
                 if (node.Metadata.IsMaster)
                 {
@@ -2256,23 +2279,36 @@ retry:
                 var runResponse = await ec2Client.RunInstancesAsync(
                     new RunInstancesRequest()
                     {
-                        ImageId           = ami,
-                        InstanceType      = InstanceType.FindValue(node.Metadata.Aws.InstanceType),
-                        MinCount          = 1,
-                        MaxCount          = 1,
-                        SubnetId          = subnet.SubnetId,
-                        PrivateIpAddress  = node.Address.ToString(),
-                        SecurityGroupIds  = new List<string>() { sgAllowAll.GroupId },
-                        Placement         = new Placement()
+                        ImageId          = ami,
+                        InstanceType     = InstanceType.FindValue(awsNodeOptions.InstanceType),
+                        MinCount         = 1,
+                        MaxCount         = 1,
+                        SubnetId         = subnet.SubnetId,
+                        PrivateIpAddress = node.Address.ToString(),
+                        SecurityGroupIds = new List<string>() { sgAllowAll.GroupId },
+                        Placement        = new Placement()
                         {
                             AvailabilityZone = awsOptions.AvailabilityZone,
                             GroupName        = placementGroupName,
                             PartitionNumber  = partitionNumber
                         },
-                        TagSpecifications = GetTagSpecifications(instanceName, ResourceType.Instance, new KeyValuePair<string, string>(neonNodeNameTag, node.Name))
+                        BlockDeviceMappings = new List<BlockDeviceMapping>()
+                        {
+                            new BlockDeviceMapping()
+                            {
+                                DeviceName = "/dev/sdb",
+                                Ebs = new EbsBlockDevice()
+                                {
+                                    VolumeType          = ToEc2VolumeType(awsNodeOptions.VolumeType),
+                                    VolumeSize          = (int)(ByteUnits.Parse(awsNodeOptions.VolumeSize) / ByteUnits.GibiBytes),
+                                    DeleteOnTermination = true
+                                }
+                            }
+                        },
+                        TagSpecifications = GetTagSpecifications(awsInstanceName, ResourceType.Instance, new KeyValuePair<string, string>(neonNodeNameTag, node.Name))
                     });
 
-                instance.Instance = runResponse.Reservation.Instances.Single();
+                awsInstance.Instance = runResponse.Reservation.Instances.Single();
 
                 // Wait for the instance to indicate that it's running.
 
@@ -2292,7 +2328,7 @@ retry:
                         var statusResponse = await ec2Client.DescribeInstanceStatusAsync(
                             new DescribeInstanceStatusRequest()
                             {
-                                InstanceIds = new List<string>() { instance.InstanceId }
+                                InstanceIds = new List<string>() { awsInstance.InstanceId }
                             });
 
                         var status = statusResponse.InstanceStatuses.SingleOrDefault();
@@ -2306,7 +2342,7 @@ retry:
 
                         if (invalidStates.Contains(state))
                         {
-                            throw new KubeException($"Cluster instance [id={instance.InstanceId}] is in an unexpected state [{status.InstanceState.Name}].");
+                            throw new KubeException($"Cluster instance [id={awsInstance.InstanceId}] is in an unexpected state [{status.InstanceState.Name}].");
                         }
 
                         return state == InstanceStatusCodes.Running;
