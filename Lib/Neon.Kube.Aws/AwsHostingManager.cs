@@ -2297,7 +2297,7 @@ retry:
                             new BlockDeviceMapping()
                             {
                                 DeviceName = "/dev/sdb",
-                                Ebs = new EbsBlockDevice()
+                                Ebs        = new EbsBlockDevice()
                                 {
                                     VolumeType          = ToEc2VolumeType(awsNodeOptions.VolumeType),
                                     VolumeSize          = (int)(ByteUnits.Parse(awsNodeOptions.VolumeSize) / ByteUnits.GibiBytes),
