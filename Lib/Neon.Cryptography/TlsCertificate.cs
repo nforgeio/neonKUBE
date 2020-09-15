@@ -39,10 +39,6 @@ using YamlDotNet.Serialization;
 using Neon.Common;
 using Neon.IO;
 
-// $todo(jefflill):
-//
-// Look into using [SecureString] for the [KeyPem] property.
-
 namespace Neon.Cryptography
 {
     /// <summary>
@@ -1190,7 +1186,7 @@ subjectAltName         = @alt_names
                 // $todo(jefflill):
                 //
                 // Hacking this using the [CertUtil] and [OpenSSL] tools until we completely port
-                // to using X509Certificate.  The main thing we need to do to accomplish this is
+                // to using X509Certificate2.  The main thing we need to do to accomplish this is
                 // to be able to parse the subject/subject alt names.  See the comment at the top
                 // of this file.
 
