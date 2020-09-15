@@ -1390,7 +1390,7 @@ namespace Neon.Kube
 
             loadBalancer = loadBalancer.Update()
                 .WithoutLoadBalancingRule("dummy")
-                .WithTags(GetTags(new ResourceTag(neonNodeNameTag, node.Name)))
+                .WithTags(GetTags())
                 .Apply();
         }
 
