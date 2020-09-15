@@ -56,6 +56,7 @@ using Ec2VolumeType  = Amazon.EC2.VolumeType;
 using ElbAction      = Amazon.ElasticLoadBalancingV2.Model.Action;
 using ElbTag         = Amazon.ElasticLoadBalancingV2.Model.Tag;
 using ElbTargetGroup = Amazon.ElasticLoadBalancingV2.Model.TargetGroup;
+using System.Xml;
 
 namespace Neon.Kube
 {
@@ -506,10 +507,16 @@ namespace Neon.Kube
         private const string neonNodeNameTagKey = neonTagKeyPrefix + "node.name";
 
         /// <summary>
-        /// Used to tag instances resources with the external SSH port to be used to 
+        /// Used to tag VM instances resources with the external SSH port to be used to 
         /// establish an SSH connection to the instance.
         /// </summary>
         private const string neonNodeSshTagKey = neonTagKeyPrefix + "node.ssh-port";
+
+        /// <summary>
+        /// Used to tag VPC instances with a boolean indicating whether external
+        /// SSH access to the cluster is currently enabled or disabled.
+        /// </summary>
+        private const string neonVpcSshEnabledTagKey = neonTagKeyPrefix + "vpc.ssh-enabled";
 
         /// <summary>
         /// The default deny everything network ACL rule number.
@@ -517,19 +524,19 @@ namespace Neon.Kube
         private const int aclDenyAllRuleNumber = 32767;
 
         /// <summary>
+        /// The first NSG rule priority to use for temporary SSH rules.
+        /// </summary>
+        private const int firstSshRuleNumber = 1000;
+
+        /// <summary>
         /// The first NSG rule priority to use for ingress rules.
         /// </summary>
-        private const int firstIngressRuleNumber = 1000;
+        private const int firstIngressRuleNumber = 2000;
 
         /// <summary>
         /// The first NSG rule priority to use for egress rules.
         /// </summary>
-        private const int firstEgressRuleNumber = 1000;
-
-        /// <summary>
-        /// The first NSG rule priority to use for temporary SSH rules.
-        /// </summary>
-        private const int firstSshRuleNumber = 2000;
+        private const int firstEgressRuleNumber = 2000;
 
         /// <summary>
         /// Returns the list of supported Ubuntu images from the AWS Marketplace.
@@ -733,7 +740,7 @@ namespace Neon.Kube
         private string                              masterPlacementGroupName;
         private string                              workerPlacementGroupName;
 
-        // These are the AWS resources.
+        // These reference the AWS resources.
 
         private string                              ami;
         private Group                               resourceGroup;
@@ -742,7 +749,6 @@ namespace Neon.Kube
         private DhcpOptions                         dhcpOptions;
         private SecurityGroup                       sgAllowAll;
         private Subnet                              subnet;
-        private NetworkAcl                          defaultNetworkAcl;
         private NetworkAcl                          networkAcl1;
         private NetworkAcl                          networkAcl2;
         private InternetGateway                     gateway;
@@ -1086,6 +1092,8 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override (string Address, int Port) GetSshEndpoint(string nodeName)
         {
+            ConnectAwsAsync().Wait();
+
             if (!nodeNameToAwsInstance.TryGetValue(nodeName, out var awsInstance))
             {
                 throw new KubeException($"Node [{nodeName}] does not exist.");
@@ -1114,14 +1122,21 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Establishes the necessary client connections to AWS and validates the credentials,
+        /// <para>
+        /// Establishes the necessary client connection to AWS and validates the credentials,
         /// when a connection has not been established yet.
+        /// </para>
+        /// <note>
+        /// The current state of the deployed resources will always be loaded by this method,
+        /// even if an connection has already been established.
+        /// </note>
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ConnectAwsAsync()
         {
             if (isConnected)
             {
+                await GetResourcesAsync();
                 return;
             }
 
@@ -1228,11 +1243,6 @@ namespace Neon.Kube
                     vpc = vpcItem;
                     break;
                 }
-            }
-
-            if (vpc != null)
-            {
-                defaultNetworkAcl = await GetVpcNetworkAclAsync(vpc);
             }
 
             // DHCP options
@@ -1350,11 +1360,11 @@ namespace Neon.Kube
 
                     // Retrieve the external SSH port for the instance from the instance tag.
 
-                    var sshExternalPortTag = instance.Tags.SingleOrDefault(tag => tag.Key == neonNodeSshTagKey)?.Value;
+                    var sshPortString = instance.Tags.SingleOrDefault(tag => tag.Key == neonNodeSshTagKey)?.Value;
 
-                    if (!string.IsNullOrEmpty(sshExternalPortTag) && int.TryParse(sshExternalPortTag, out var sshExternalPort) && NetHelper.IsValidPort(sshExternalPort))
+                    if (!string.IsNullOrEmpty(sshPortString) && int.TryParse(sshPortString, out var sshPort) && NetHelper.IsValidPort(sshPort))
                     {
-                        awsInstance.ExternalSshPort = sshExternalPort;
+                        awsInstance.ExternalSshPort = sshPort;
                     }
                 }
             }
@@ -1958,7 +1968,7 @@ retry:
             // Clear the VPC's default network ACL by deleting all inbound and outbound 
             // rules except for the default DENY rule for both directions.
 
-            defaultNetworkAcl = await GetVpcNetworkAclAsync(vpc);
+            var defaultNetworkAcl = await GetVpcNetworkAclAsync(vpc);
 
             foreach (var entry in defaultNetworkAcl.Entries.Where(entry => entry.RuleNumber != aclDenyAllRuleNumber))
             {
@@ -2414,6 +2424,50 @@ retry:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task UpdateNetworkAsync(NetworkOperations operations)
         {
+            // We're going to use the boolean VPC tag named [neonVpcSshEnabledTagKey]
+            // to persist the current external SSH access status for the cluster.
+            //
+            // Update the tag for state changes.
+
+            var externalSshEnabledTag = vpc.Tags.SingleOrDefault(tag => tag.Key == neonVpcSshEnabledTagKey);
+
+            if (externalSshEnabledTag == null)
+            {
+                externalSshEnabledTag = new Ec2Tag()
+                {
+                    Key   = neonVpcSshEnabledTagKey,
+                    Value = "false"
+                };
+
+                vpc.Tags.Add(externalSshEnabledTag);
+            }
+
+            var externalSshEnabled = externalSshEnabledTag.Value == "true";
+            var updateVpcTags      = false;
+
+            if ((operations & NetworkOperations.EnableSsh) != 0 && !externalSshEnabled)
+            {
+                externalSshEnabledTag.Value = "true";
+                updateVpcTags               = true;
+            }
+            else if ((operations & NetworkOperations.DisableSsh) != 0 && externalSshEnabled)
+            {
+                externalSshEnabledTag.Value = "false";
+                updateVpcTags               = true;
+            }
+
+            if (updateVpcTags)
+            {
+                await ec2Client.CreateTagsAsync(
+                    new CreateTagsRequest()
+                    {
+                        Resources = new List<string>() { vpc.VpcId },
+                        Tags = vpc.Tags
+                    });
+            }
+
+            // Perform the network operations.
+
             if ((operations & NetworkOperations.UpdateIngressEgressRules) != 0)
             {
                 await UpdateIngressEgressRulesAsync();
@@ -2513,6 +2567,66 @@ retry:
                     });
             }
 
+            // Add the external SSH rules source address rules.
+
+            var sshRuleNumber = firstSshRuleNumber;
+
+            if (networkOptions.ManagementAddressRules.Count == 0)
+            {
+                // There are no management source address constraints so we're going
+                // default to allowing traffic from all sources.
+
+                await ec2Client.CreateNetworkAclEntryAsync(
+                    new CreateNetworkAclEntryRequest()
+                    {
+                        NetworkAclId = updateAcl.NetworkAclId,
+                        RuleNumber   = sshRuleNumber++,
+                        Protocol     = ToNetworkAclEntryProtocol(IngressProtocol.Tcp),
+                        Egress       = false,
+                        CidrBlock    = "0.0.0.0/0",
+                        PortRange    = new PortRange() { From = NetworkPorts.SSH, To = NetworkPorts.SSH },
+                        RuleAction   = RuleAction.Allow
+                    });
+            }
+            else
+            {
+                // We have some management source address constraints, so we'll 
+                // create a new network ACL entry for each constraint.
+
+                foreach (var addressRule in networkOptions.ManagementAddressRules)
+                {
+                    var sourceCidr = (string)null;
+
+                    if (addressRule.IsAny)
+                    {
+                        sourceCidr = "0.0.0.0/0";
+                    }
+                    else
+                    {
+                        sourceCidr = addressRule.AddressOrSubnet;
+
+                        if (!sourceCidr.Contains('/'))
+                        {
+                            // Convert a single IP address into a one address CIDR.
+
+                            sourceCidr += "/32";
+                        }
+                    }
+
+                    await ec2Client.CreateNetworkAclEntryAsync(
+                        new CreateNetworkAclEntryRequest()
+                        {
+                            NetworkAclId = updateAcl.NetworkAclId,
+                            RuleNumber   = sshRuleNumber++,
+                            Protocol     = ToNetworkAclEntryProtocol(IngressProtocol.Tcp),
+                            Egress       = false,
+                            PortRange    = new PortRange() { From = NetworkPorts.SSH, To = NetworkPorts.SSH },
+                            CidrBlock    = sourceCidr,
+                            RuleAction   = addressRule.Action == AddressRuleAction.Allow ? RuleAction.Allow : RuleAction.Deny
+                        });
+                }
+            }
+
             // Add any network ACLs related to ingress rules from the cluster definition.
 
             var ingressRuleNumber = firstIngressRuleNumber;
@@ -2538,7 +2652,7 @@ retry:
                 else
                 {
                     // The ingress rule has source address constraints, so we'll 
-                    // create a new network ACL entry for each address constraint.
+                    // create a new network ACL entry for each constraint.
 
                     foreach (var addressRule in ingressRule.AddressRules)
                     {
