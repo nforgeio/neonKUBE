@@ -717,20 +717,6 @@ namespace Neon.Kube
         private AmazonEC2Client                     ec2Client;
         private AmazonElasticLoadBalancingV2Client  elbClient;
         private AmazonResourceGroupsClient          rgClient;
-        private string                              ami;
-        private Group                               resourceGroup;
-        private Address                             elasticIp;
-        private Vpc                                 vpc;
-        private DhcpOptions                         dhcpOptions;
-        private SecurityGroup                       sgAllowAll;
-        private Subnet                              subnet;
-        private NetworkAcl                          defaultNetworkAcl;
-        private NetworkAcl                          networkAcl1;
-        private NetworkAcl                          networkAcl2;
-        private InternetGateway                     gateway;
-        private LoadBalancer                        loadBalancer;
-        private PlacementGroup                      masterPlacementGroup;
-        private PlacementGroup                      workerPlacementGroup;
 
         // These are the names we'll use for cluster AWS resources.
 
@@ -746,6 +732,23 @@ namespace Neon.Kube
         private string                              elbName;
         private string                              masterPlacementGroupName;
         private string                              workerPlacementGroupName;
+
+        // These are the AWS resources.
+
+        private string                              ami;
+        private Group                               resourceGroup;
+        private Address                             elasticIp;
+        private Vpc                                 vpc;
+        private DhcpOptions                         dhcpOptions;
+        private SecurityGroup                       sgAllowAll;
+        private Subnet                              subnet;
+        private NetworkAcl                          defaultNetworkAcl;
+        private NetworkAcl                          networkAcl1;
+        private NetworkAcl                          networkAcl2;
+        private InternetGateway                     gateway;
+        private LoadBalancer                        loadBalancer;
+        private PlacementGroup                      masterPlacementGroup;
+        private PlacementGroup                      workerPlacementGroup;
 
         /// <summary>
         /// Table mapping a ELB target group name to the group.
