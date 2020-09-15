@@ -3,8 +3,8 @@
 # Declare variables to be passed into your templates.
 Component: "yugabytedb"
 Image:
-  repository: "yugabytedb/yugabyte"
-  tag: 2.2.2.0-b15
+  repository: "nkubedev/yugabyte"
+  tag: 2.2.0.0-b80
   pullPolicy: IfNotPresent
 
 storage:

@@ -3,8 +3,8 @@
 # and development.
 
 image:
-  repository: nkubedev/cortex
-  tag: latest
+  repository: quay.io/cortexproject/cortex
+  tag: v1.3.0
   pullPolicy: IfNotPresent
 
 serviceAccount:

@@ -390,13 +390,6 @@ spec:
       {{- end }}
 
       volumes:
-        {{ if not $root.Values.storage.ephemeral }}
-        {{- range $index := until (int ($storageInfo.count)) }}
-        - name: datadir{{ $index }}
-          hostPath:
-            path: /mnt/disks/ssd{{ $index }}
-        {{- end }}
-        {{- end }}
         {{- if $root.Values.tls.enabled }}
         - name: {{ .label }}-yugabyte-tls-cert
           secret:
