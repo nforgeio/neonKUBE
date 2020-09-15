@@ -46,7 +46,21 @@ using Neon.IO;
 namespace Neon.Cryptography
 {
     /// <summary>
+    /// <para>
     /// Holds the public and private parts of a TLS certificate.
+    /// </para>
+    /// <note>
+    /// <para>
+    /// This class is a bit of a hack and relies on the presence of the <b>openssl</b>
+    /// command line tool for Linux, OS/X,... and the <b>certutil</b> tool for Windows.
+    /// This means that you'll need to take care to ensure <b>openssl</b> is present in
+    /// your Docker images, etc.
+    /// </para>
+    /// <para>
+    /// This class is deprecated.  We recommend that you use the .NET Core 3+ 
+    /// <c>X509Certificate2</c> or .NETFramework class instead.
+    /// </para>
+    /// </note>
     /// </summary>
     /// <remarks>
     /// <para>
@@ -59,6 +73,7 @@ namespace Neon.Cryptography
     /// authority after the certificate and before the private key.
     /// </note>
     /// </remarks>
+    [Obsolete("[TlsCertificate] is fragile and deprecated.  Try to use [X509Certificate2] instead.")]
     public class TlsCertificate
     {
         //---------------------------------------------------------------------
