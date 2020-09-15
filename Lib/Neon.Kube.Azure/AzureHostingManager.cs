@@ -800,7 +800,6 @@ namespace Neon.Kube
         /// Creates the tags for a resource including cluster details, any custom
         /// user resource tags, as well as any optional tags passed.
         /// </summary>
-        /// <typeparam name="T">Specifies the desired AWS tag type.</typeparam>
         /// <param name="tags">Any optional tags.</param>
         /// <returns>The dictionary.</returns>
         private Dictionary<string, string> GetTags(params ResourceTag[] tags)

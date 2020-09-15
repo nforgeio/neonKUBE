@@ -2315,7 +2315,7 @@ retry:
                                 }
                             }
                         },
-                        TagSpecifications = GetTagSpecifications(awsInstanceName, ResourceType.Instance, new KeyValuePair<string, string>(neonNodeNameTag, node.Name))
+                        TagSpecifications = GetTagSpecifications(awsInstanceName, ResourceType.Instance, new ResourceTag(neonNodeNameTag, node.Name))
                     });
 
                 awsInstance.Instance = runResponse.Reservation.Instances.Single();
