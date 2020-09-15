@@ -943,14 +943,15 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates the tags for a resource including the resource name, cluster details,
-        /// as well as optional tags.
+        /// Creates the tags for a resource including the resource name, 
+        /// additional cluster details, any custom user resource tags, as well as any 
+        /// optional tags passed.
         /// </summary>
         /// <typeparam name="T">Specifies the desired AWS tag type.</typeparam>
         /// <param name="name">The resource name.</param>
-        /// <param name="tags">The optional tags.</param>
-        /// <returns>The <see cref="TagSpecification"/> list with a single element.</returns>
-        private List<T> GetTags<T>(string name, params KeyValuePair<string, string>[] tags)
+        /// <param name="tags">Any optional tags.</param>
+        /// <returns>The tag list.</returns>
+        private List<T> GetTags<T>(string name, params ResourceTag[] tags)
         {
             var tagList = new List<T>();
 
@@ -958,9 +959,17 @@ namespace Neon.Kube
             tagList.Add(new Tag<T>(neonClusterTag, clusterName).ToAws());
             tagList.Add(new Tag<T>(neonEnvironmentTag, clusterEnvironment).ToAws());
 
+            if (cluster.Definition.ResourceTags != null)
+            {
+                foreach (var tag in cluster.Definition.ResourceTags)
+                {
+                    tagList.Add(new Tag<T>(tag.Name, tag.Value).ToAws());
+                }
+            }
+
             foreach (var tag in tags)
             {
-                tagList.Add(new Tag<T>(tag.Key, tag.Value).ToAws());
+                tagList.Add(new Tag<T>(tag.Name, tag.Value).ToAws());
             }
 
             return tagList;
@@ -968,13 +977,14 @@ namespace Neon.Kube
 
         /// <summary>
         /// Creates a tag specification for an EC2 resource including the resource name, 
-        /// additional cluster details as well as optional tags.
+        /// additional cluster details, any custom user resource tags, as well as any 
+        /// optional tags passed.
         /// </summary>
         /// <param name="name">The resource name.</param>
         /// <param name="resourceType">The fully qualified resource type.</param>
-        /// <param name="tags">The optional tags.</param>
+        /// <param name="tags">Any optional tags.</param>
         /// <returns>The <see cref="TagSpecification"/> list with a single element.</returns>
-        private List<TagSpecification> GetTagSpecifications(string name, ResourceType resourceType, params KeyValuePair<string, string>[] tags)
+        private List<TagSpecification> GetTagSpecifications(string name, ResourceType resourceType, params ResourceTag[] tags)
         {
             return new List<TagSpecification>()
             {

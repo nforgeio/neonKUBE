@@ -397,6 +397,12 @@ namespace Neon.Kube
         private const string neonNodeNameTag = neonTagPrefix + "node.name";
 
         /// <summary>
+        /// Used to tag instances resources with the external SSH port to be used to 
+        /// establish an SSH connection to the instance.
+        /// </summary>
+        private const string neonNodeExternalSshTag = neonTagPrefix + "node.ssh-port";
+
+        /// <summary>
         /// Returns the list of supported Ubuntu images from the Azure Marketplace.
         /// </summary>
         private static IReadOnlyList<AzureUbuntuImage> ubuntuImages;
@@ -790,6 +796,28 @@ namespace Neon.Kube
             }
         }
 
+        /// <summary>
+        /// Creates the tags for a resource including cluster details, any custom
+        /// user resource tags, as well as any optional tags passed.
+        /// </summary>
+        /// <typeparam name="T">Specifies the desired AWS tag type.</typeparam>
+        /// <param name="tags">Any optional tags.</param>
+        /// <returns>The dictionary.</returns>
+        private Dictionary<string, string> GetTags(params ResourceTag[] tags)
+        {
+            var tagDictionary = new Dictionary<string, string>();
+
+            tagDictionary[neonClusterTag]     = clusterName;
+            tagDictionary[neonEnvironmentTag] = NeonHelper.EnumToString(cluster.Definition.Environment);
+
+            foreach (var tag in tags)
+            {
+                tagDictionary[tag.Name] = tag.Value;
+            }
+
+            return tagDictionary;
+        }
+
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
@@ -823,9 +851,9 @@ namespace Neon.Kube
             var operation = $"Provisioning [{cluster.Definition.Name}] on Azure [{region}/{resourceGroup}]";
             var controller = new SetupController<NodeDefinition>(operation, cluster.Nodes)
             {
-                ShowStatus = this.ShowStatus,
+                ShowStatus     = this.ShowStatus,
                 ShowNodeStatus = true,
-                MaxParallel = int.MaxValue       // There's no reason to constrain this
+                MaxParallel    = int.MaxValue       // There's no reason to constrain this
             };
 
             controller.AddGlobalStep("Azure connect", () => ConnectAzure());
@@ -864,7 +892,7 @@ namespace Neon.Kube
                             break;
                         }
 
-                        azureNode.Vm = vm;
+                        azureNode.Vm  = vm;
                         azureNode.Nic = vm.GetPrimaryNetworkInterface();
                     }
                 },
@@ -1192,6 +1220,7 @@ namespace Neon.Kube
             azure.ResourceGroups
                 .Define(resourceGroup)
                 .WithRegion(region)
+                .WithTags(GetTags())
                 .Create();
         }
 
@@ -1231,6 +1260,7 @@ namespace Neon.Kube
                         .WithExistingResourceGroup(resourceGroup)
                         .WithUpdateDomainCount(azureOptions.UpdateDomains)
                         .WithFaultDomainCount(azureOptions.FaultDomains)
+                        .WithTags(GetTags())
                         .Create();
                 }
                 else
@@ -1242,6 +1272,7 @@ namespace Neon.Kube
                         .WithNewProximityPlacementGroup(proximityPlacementGroupName, ProximityPlacementGroupType.Standard)
                         .WithUpdateDomainCount(azureOptions.UpdateDomains)
                         .WithFaultDomainCount(azureOptions.FaultDomains)
+                        .WithTags(GetTags())
                         .Create();
                 }
 
@@ -1266,6 +1297,7 @@ namespace Neon.Kube
                     .Define(subnetNsgName)
                     .WithRegion(region)
                     .WithExistingResourceGroup(resourceGroup)
+                    .WithTags(GetTags())
                     .Create();
             }
         }
@@ -1295,7 +1327,9 @@ namespace Neon.Kube
                 }
             }
 
-            vnet = vnetCreator.Create();
+            vnet = vnetCreator
+                .WithTags(GetTags())
+                .Create();
         }
 
         /// <summary>
@@ -1310,6 +1344,7 @@ namespace Neon.Kube
                     .WithStaticIP()
                     .WithLeafDomainLabel(azureOptions.DomainLabel)
                     .WithSku(PublicIPSkuType.Standard)
+                    .WithTags(GetTags())
                     .Create();
 
             clusterAddress = IPAddress.Parse(publicAddress.IPAddress);
@@ -1350,10 +1385,12 @@ namespace Neon.Kube
                 .DefineBackend(loadbalancerIngressBackendName)
                     .Attach()
                 .WithSku(LoadBalancerSkuType.Standard)
+                .WithTags(GetTags())
                 .Create();
 
             loadBalancer = loadBalancer.Update()
                 .WithoutLoadBalancingRule("dummy")
+                .WithTags(GetTags(new ResourceTag(neonNodeNameTag, node.Name)))
                 .Apply();
         }
 
@@ -1382,6 +1419,7 @@ namespace Neon.Kube
                 .WithExistingPrimaryNetwork(vnet)
                 .WithSubnet(subnetName)
                 .WithPrimaryPrivateIPAddressStatic(azureNode.Address)
+                .WithTags(GetTags())
                 .Create();
 
             node.Status = "create: virtual machine";
@@ -1454,6 +1492,7 @@ namespace Neon.Kube
                 .WithSize(node.Metadata.Azure.VmSize)
                 .WithExistingAvailabilitySet(nameToAvailabilitySet[azureNode.AvailabilitySetName])
                 .WithTag(neonNodeNameTag, azureNode.Metadata.Name)
+                .WithTags(GetTags(new ResourceTag(neonNodeNameTag, node.Name)))
                 .Create();
         }
 

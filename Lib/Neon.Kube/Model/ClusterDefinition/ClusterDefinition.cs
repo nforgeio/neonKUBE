@@ -235,6 +235,18 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
+        /// Optionally specifies custom tags that will be attached to cluster resources in cloud
+        /// hosting environments.  These tags are intended to help you manage your cloud resources
+        /// as well as help originize you cost reporting.
+        /// </para>
+        /// <note>
+        /// Currently, this is only supported for clusters deployed to AWS, Azure or Google Cloud.
+        /// </note>
+        /// </summary>
+        public List<ResourceTag> ResourceTags { get; set; } = null;
+
+        /// <summary>
+        /// <para>
         /// Specifies cluster debugging options.
         /// </para>
         /// <note>
