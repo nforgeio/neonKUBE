@@ -47,11 +47,11 @@ namespace Neon.Kube
         /// <summary>
         /// Constructs a tag with a name and optional value.
         /// </summary>
-        /// <param name="name">The tag name.</param>
+        /// <param name="key">The tag key.</param>
         /// <param name="value">The optional tag value.  Note that empty value strings will be converted to <c>null</c>.</param>
-        public ResourceTag(string name, string value = null)
+        public ResourceTag(string key, string value = null)
         {
-            this.Name = name;
+            this.Key = key;
 
             if (!string.IsNullOrEmpty(Value))
             {
@@ -64,9 +64,9 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the tag name.
+        /// Returns the tag key.
         /// </summary>
-        public string Name { get; private set; }
+        public string Key { get; private set; }
 
         /// <summary>
         /// Returns the tag value or <c>null</c>.

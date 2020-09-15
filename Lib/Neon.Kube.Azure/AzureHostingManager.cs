@@ -243,6 +243,13 @@ namespace Neon.Kube
             /// The Azure availability set hosting this node.
             /// </summary>
             public string AvailabilitySetName { get; set; }
+
+            /// <summary>
+            /// The external SSH port assigned to the VM.  This port is
+            /// allocated from the range of external SSH ports configured for
+            /// the cluster and is persisted as tag for each Azure VM.
+            /// </summary>
+            public int ExternalSshPort { get; set; }
         }
 
         /// <summary>
@@ -379,28 +386,28 @@ namespace Neon.Kube
         /// <summary>
         /// The (namespace) prefix used for neonKUBE related Azure resource tags.
         /// </summary>
-        private const string neonTagPrefix = "neon:";
+        private const string neonTagKeyPrefix = "neon:";
 
         /// <summary>
         /// Used to tag resources with the cluster name.
         /// </summary>
-        private const string neonClusterTag = neonTagPrefix + "cluster";
+        private const string neonClusterTagKey = neonTagKeyPrefix + "cluster";
 
         /// <summary>
         /// Used to tag resources with the cluster environment.
         /// </summary>
-        private const string neonEnvironmentTag = neonTagPrefix + "environment";
+        private const string neonEnvironmentTagKey = neonTagKeyPrefix + "environment";
 
         /// <summary>
         /// Used to tag VM resources with the cluster node name.
         /// </summary>
-        private const string neonNodeNameTag = neonTagPrefix + "node.name";
+        private const string neonNodeNameTagKey = neonTagKeyPrefix + "node.name";
 
         /// <summary>
         /// Used to tag instances resources with the external SSH port to be used to 
         /// establish an SSH connection to the instance.
         /// </summary>
-        private const string neonNodeExternalSshTag = neonTagPrefix + "node.ssh-port";
+        private const string neonNodeExternalSshTag = neonTagKeyPrefix + "node.ssh-port";
 
         /// <summary>
         /// Returns the list of supported Ubuntu images from the Azure Marketplace.
@@ -806,12 +813,12 @@ namespace Neon.Kube
         {
             var tagDictionary = new Dictionary<string, string>();
 
-            tagDictionary[neonClusterTag]     = clusterName;
-            tagDictionary[neonEnvironmentTag] = NeonHelper.EnumToString(cluster.Definition.Environment);
+            tagDictionary[neonClusterTagKey]     = clusterName;
+            tagDictionary[neonEnvironmentTagKey] = NeonHelper.EnumToString(cluster.Definition.Environment);
 
             foreach (var tag in tags)
             {
-                tagDictionary[tag.Name] = tag.Value;
+                tagDictionary[tag.Key] = tag.Value;
             }
 
             return tagDictionary;
@@ -862,6 +869,7 @@ namespace Neon.Kube
             controller.AddGlobalStep("network security groups", () => CreateNetworkSecurityGroups());
             controller.AddGlobalStep("virtual network", () => CreateVirtualNetwork());
             controller.AddGlobalStep("public address", () => CreatePublicAddress());
+            controller.AddGlobalStep("external ssh ports", AssignExternalSshPorts, quiet: true);
             controller.AddGlobalStep("load balancer", () => CreateLoadBalancer());
             controller.AddGlobalStep("listing virtual machines",
                 () =>
@@ -872,7 +880,7 @@ namespace Neon.Kube
 
                     foreach (var vm in azure.VirtualMachines.ListByResourceGroup(resourceGroup))
                     {
-                        if (!vm.Tags.TryGetValue(neonNodeNameTag, out var nodeName))
+                        if (!vm.Tags.TryGetValue(neonNodeNameTagKey, out var nodeName))
                         {
                             break;  // Not a cluster VM
                         }
@@ -1350,6 +1358,58 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Assigns external SSH ports to Azure VM records that don't already have one.  Note
+        /// that we're not actually going to write the VM tags here; we'll do that when we
+        /// actually create any new VMs.
+        /// </summary>
+        private void AssignExternalSshPorts()
+        {
+            // Load any existing cluster VMs.
+
+            var existingVms = azure.VirtualMachines.ListByResourceGroup(resourceGroup);
+
+            // Create a table with the currently allocated external SSH ports.
+
+            var allocatedPorts = new HashSet<int>();
+
+            foreach (var vm in existingVms)
+            {
+                var sshPortTag = vm.Tags.SingleOrDefault(tag => tag.Key == neonClusterTagKey);
+                var sshPort    = 0;
+
+                if (sshPortTag.Key == null)
+                {
+                    // The VM doesn't have a SSH port tag.
+
+
+                }
+
+                allocatedPorts.Add(instance.ExternalSshPort);
+            }
+
+            // Create a list of unallocated external SSH ports.
+
+            var unallocatedPorts = new List<int>();
+
+            for (int port = networkOptions.FirstExternalSshPort; port <= networkOptions.ReservedIngressEndPort; port++)
+            {
+                if (!allocatedPorts.Contains(port))
+                {
+                    unallocatedPorts.Add(port);
+                }
+            }
+
+            // Assign unallocated external SSH ports to nodes that don't already have one.
+
+            var nextUnallocatedPortIndex = 0;
+
+            foreach (var awsInstance in SortedMasterThenWorkerNodes.Where(awsInstance => awsInstance.ExternalSshPort == 0))
+            {
+                awsInstance.ExternalSshPort = unallocatedPorts[nextUnallocatedPortIndex++];
+            }
+        }
+
+        /// <summary>
         /// Create the cluster's external load balancer.
         /// </summary>
         private void CreateLoadBalancer()
@@ -1490,8 +1550,8 @@ namespace Neon.Kube
                 .WithNewDataDisk((int)(ByteUnits.Parse(node.Metadata.Azure.DiskSize) / ByteUnits.GibiBytes))
                 .WithSize(node.Metadata.Azure.VmSize)
                 .WithExistingAvailabilitySet(nameToAvailabilitySet[azureNode.AvailabilitySetName])
-                .WithTag(neonNodeNameTag, azureNode.Metadata.Name)
-                .WithTags(GetTags(new ResourceTag(neonNodeNameTag, node.Name)))
+                .WithTag(neonNodeNameTagKey, azureNode.Metadata.Name)
+                .WithTags(GetTags(new ResourceTag(neonNodeNameTagKey, node.Name)))
                 .Create();
         }
 

@@ -483,33 +483,33 @@ namespace Neon.Kube
         /// <summary>
         /// AWS generic name tag.
         /// </summary>
-        private const string nameTag = "Name";
+        private const string nameTagKey = "Name";
 
         /// <summary>
         /// The (namespace) prefix used for neonKUBE related Azure resource tags.
         /// </summary>
-        private const string neonTagPrefix = "neon:";
+        private const string neonTagKeyPrefix = "neon:";
 
         /// <summary>
         /// Used to tag resources with the cluster name.
         /// </summary>
-        private const string neonClusterTag = neonTagPrefix + "cluster";
+        private const string neonClusterTagKey = neonTagKeyPrefix + "cluster";
 
         /// <summary>
         /// Used to tag resources with the cluster environment.
         /// </summary>
-        private const string neonEnvironmentTag = neonTagPrefix + "environment";
+        private const string neonEnvironmentTagKey = neonTagKeyPrefix + "environment";
 
         /// <summary>
         /// Used to tag instances resources with the cluster node name.
         /// </summary>
-        private const string neonNodeNameTag = neonTagPrefix + "node.name";
+        private const string neonNodeNameTagKey = neonTagKeyPrefix + "node.name";
 
         /// <summary>
         /// Used to tag instances resources with the external SSH port to be used to 
         /// establish an SSH connection to the instance.
         /// </summary>
-        private const string neonNodeExternalSshTag = neonTagPrefix + "node.ssh-port";
+        private const string neonNodeSshTagKey = neonTagKeyPrefix + "node.ssh-port";
 
         /// <summary>
         /// The default deny everything network ACL rule number.
@@ -955,21 +955,21 @@ namespace Neon.Kube
         {
             var tagList = new List<T>();
 
-            tagList.Add(new Tag<T>(nameTag, name).ToAws());
-            tagList.Add(new Tag<T>(neonClusterTag, clusterName).ToAws());
-            tagList.Add(new Tag<T>(neonEnvironmentTag, clusterEnvironment).ToAws());
+            tagList.Add(new Tag<T>(nameTagKey, name).ToAws());
+            tagList.Add(new Tag<T>(neonClusterTagKey, clusterName).ToAws());
+            tagList.Add(new Tag<T>(neonEnvironmentTagKey, clusterEnvironment).ToAws());
 
             if (cluster.Definition.ResourceTags != null)
             {
                 foreach (var tag in cluster.Definition.ResourceTags)
                 {
-                    tagList.Add(new Tag<T>(tag.Name, tag.Value).ToAws());
+                    tagList.Add(new Tag<T>(tag.Key, tag.Value).ToAws());
                 }
             }
 
             foreach (var tag in tags)
             {
-                tagList.Add(new Tag<T>(tag.Name, tag.Value).ToAws());
+                tagList.Add(new Tag<T>(tag.Key, tag.Value).ToAws());
             }
 
             return tagList;
@@ -1205,8 +1205,8 @@ namespace Neon.Kube
 
             foreach (var addressItem in addressResponse.Addresses)
             {
-                if (addressItem.Tags.Any(tag => tag.Key == nameTag && tag.Value == elasticIpName) &&
-                    addressItem.Tags.Any(tag => tag.Key == neonClusterTag && tag.Value == clusterName))
+                if (addressItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == elasticIpName) &&
+                    addressItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                 {
                     elasticIp = addressItem;
                     break;
@@ -1219,8 +1219,8 @@ namespace Neon.Kube
 
             await foreach (var vpcItem in vpcPaginator.Vpcs)
             {
-                if (vpcItem.Tags.Any(tag => tag.Key == nameTag && tag.Value == vpcName) &&
-                    vpcItem.Tags.Any(tag => tag.Key == neonClusterTag && tag.Value == clusterName))
+                if (vpcItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == vpcName) &&
+                    vpcItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                 {
                     vpc = vpcItem;
                     break;
@@ -1238,8 +1238,8 @@ namespace Neon.Kube
 
             await foreach (var dhcpItem in dhcpPaginator.DhcpOptions)
             {
-                if (dhcpItem.Tags.Any(tag => tag.Key == nameTag && tag.Value == dhcpOptionName) &&
-                    dhcpItem.Tags.Any(tag => tag.Key == neonClusterTag && tag.Value == clusterName))
+                if (dhcpItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == dhcpOptionName) &&
+                    dhcpItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                 {
                     dhcpOptions = dhcpItem;
                     break;
@@ -1252,8 +1252,8 @@ namespace Neon.Kube
 
             await foreach (var securityGroupItem in securityGroupPagenator.SecurityGroups)
             {
-                if (securityGroupItem.Tags.Any(tag => tag.Key == nameTag && tag.Value == sgAllowAllName) &&
-                    securityGroupItem.Tags.Any(tag => tag.Key == neonClusterTag && tag.Value == clusterName))
+                if (securityGroupItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == sgAllowAllName) &&
+                    securityGroupItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                 {
                     sgAllowAll = securityGroupItem;
                     break;
@@ -1266,8 +1266,8 @@ namespace Neon.Kube
 
             await foreach (var subnetItem in subnetPaginator.Subnets)
             {
-                if (subnetItem.Tags.Any(tag => tag.Key == nameTag && tag.Value == subnetName) &&
-                    subnetItem.Tags.Any(tag => tag.Key == neonClusterTag && tag.Value == clusterName))
+                if (subnetItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == subnetName) &&
+                    subnetItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                 {
                     subnet = subnetItem;
                     break;
@@ -1287,8 +1287,8 @@ namespace Neon.Kube
 
             await foreach (var gatewayItem in gatewayPaginator.InternetGateways)
             {
-                if (gatewayItem.Tags.Any(tag => tag.Key == nameTag && tag.Value == gatewayName) &&
-                    gatewayItem.Tags.Any(tag => tag.Key == neonClusterTag && tag.Value == clusterName))
+                if (gatewayItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == gatewayName) &&
+                    gatewayItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                 {
                     gateway = gatewayItem;
                     break;
@@ -1336,8 +1336,8 @@ namespace Neon.Kube
                 foreach (var instance in reservation.Instances
                     .Where(instance => instance.State.Name.Value != InstanceStateName.Terminated))
                 {
-                    var name        = instance.Tags.SingleOrDefault(tag => tag.Key == nameTag)?.Value;
-                    var cluster     = instance.Tags.SingleOrDefault(tag => tag.Key == neonClusterTag)?.Value;
+                    var name        = instance.Tags.SingleOrDefault(tag => tag.Key == nameTagKey)?.Value;
+                    var cluster     = instance.Tags.SingleOrDefault(tag => tag.Key == neonClusterTagKey)?.Value;
                     var awsInstance = (AwsInstance)null;
 
                     if (name != null && cluster == clusterName && instanceNameToAwsInstance.TryGetValue(name, out awsInstance))
@@ -1347,7 +1347,7 @@ namespace Neon.Kube
 
                     // Retrieve the external SSH port for the instance from the instance tag.
 
-                    var sshExternalPortTag = instance.Tags.SingleOrDefault(tag => tag.Key == neonNodeExternalSshTag)?.Value;
+                    var sshExternalPortTag = instance.Tags.SingleOrDefault(tag => tag.Key == neonNodeSshTagKey)?.Value;
 
                     if (!string.IsNullOrEmpty(sshExternalPortTag) && int.TryParse(sshExternalPortTag, out var sshExternalPort) && NetHelper.IsValidPort(sshExternalPort))
                     {
@@ -1392,7 +1392,7 @@ retry:
                     // This must be the default ACL assigned to the subnet.  We'll rename
                     // this to be [networkAcl1] if it's not already assigned a name. 
 
-                    var aclName = networkAclItem.Tags.FirstOrDefault(tag => tag.Key == nameTag)?.Value;
+                    var aclName = networkAclItem.Tags.FirstOrDefault(tag => tag.Key == nameTagKey)?.Value;
 
                     if (aclName != networkAclName1 && aclName != networkAclName2)
                     {
@@ -1409,15 +1409,15 @@ retry:
                     }
                 }
 
-                if (networkAclItem.Tags.Any(tag => tag.Key == neonClusterTag && tag.Value == clusterName))
+                if (networkAclItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                 {
-                    if (networkAclItem.Tags.Any(tag => tag.Key == neonClusterTag && tag.Value == clusterName))
+                    if (networkAclItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                     {
-                        if (networkAclItem.Tags.Any(tag => tag.Key == nameTag && tag.Value == networkAclName1))
+                        if (networkAclItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == networkAclName1))
                         {
                             networkAcl1 = networkAclItem;
                         }
-                        else if (networkAclItem.Tags.Any(tag => tag.Key == nameTag && tag.Value == networkAclName2))
+                        else if (networkAclItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == networkAclName2))
                         {
                             networkAcl2 = networkAclItem;
                         }
@@ -1790,11 +1790,11 @@ retry:
                         Description = $"Identifies the resources for the {clusterName} neonKUBE cluster",
                         Tags        = new Dictionary<string, string>()
                         {
-                            {  neonClusterTag, clusterName }
+                            {  neonClusterTagKey, clusterName }
                         },
                         ResourceQuery = new ResourceQuery()
                         {
-                            Query = $"{{\"ResourceTypeFilters\":[\"AWS::AllSupported\"],\"TagFilters\":[{{\"Key\":\"{neonClusterTag}\",\"Values\":[\"{clusterName}\"]}}]}}",
+                            Query = $"{{\"ResourceTypeFilters\":[\"AWS::AllSupported\"],\"TagFilters\":[{{\"Key\":\"{neonClusterTagKey}\",\"Values\":[\"{clusterName}\"]}}]}}",
                             Type  = QueryType.TAG_FILTERS_1_0
                         }
                     });
@@ -1883,8 +1883,8 @@ retry:
 
                 foreach (var addr in addressResponse.Addresses)
                 {
-                    if (addr.Tags.Any(tag => tag.Key == nameTag && tag.Value == elasticIpName) &&
-                        addr.Tags.Any(tag => tag.Key == neonClusterTag && tag.Value == clusterName))
+                    if (addr.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == elasticIpName) &&
+                        addr.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
                     {
                         elasticIp = addr;
                         break;
@@ -1894,7 +1894,7 @@ retry:
         }
 
         /// <summary>
-        /// Assigns external SSH ports to AWS instance records that don't already have them.  Note
+        /// Assigns external SSH ports to AWS instance records that don't already have one.  Note
         /// that we're not actually going to write the instance tags here; we'll do that when we
         /// actually create any new instances.
         /// </summary>
@@ -2315,7 +2315,7 @@ retry:
                                 }
                             }
                         },
-                        TagSpecifications = GetTagSpecifications(awsInstanceName, ResourceType.Instance, new ResourceTag(neonNodeNameTag, node.Name))
+                        TagSpecifications = GetTagSpecifications(awsInstanceName, ResourceType.Instance, new ResourceTag(neonNodeNameTagKey, node.Name))
                     });
 
                 awsInstance.Instance = runResponse.Reservation.Instances.Single();
