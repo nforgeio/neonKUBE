@@ -390,9 +390,9 @@ namespace Neon.Kube
         // Define the logging related labels.
 
         /// <summary>
-        /// Reserved label name for <see cref="Elasticsearch"/>.
+        /// Reserved label name for <see cref="Logs"/>.
         /// </summary>
-        public const string LabelElasticsearch = ClusterDefinition.ReservedLabelPrefix + "monitor.elasticsearch";
+        public const string LabelLogs = ClusterDefinition.ReservedLabelPrefix + "monitor.logs";
 
         /// <summary>
         /// Reserved label name for <see cref="Metrics"/>.
@@ -400,14 +400,14 @@ namespace Neon.Kube
         public const string LabelMetrics = ClusterDefinition.ReservedLabelPrefix + "monitor.metrics";
 
         /// <summary>
-        /// <b>io.neonkube.monitor.elasticsearch</b> [<c>bool</c>]: Indicates that Elasticsearch 
+        /// <b>io.neonkube.monitor.logs</b> [<c>bool</c>]: Indicates that Elasticsearch 
         /// will be deployed to this node if <see cref="ElasticsearchOptions.Enabled"/> is <c>true</c>.  
         /// This defaults to <c>false</c>.
         /// </summary>
-        [JsonProperty(PropertyName = "Elasticsearch", Required = Required.Default)]
-        [YamlMember(Alias = "elasticsearch", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Logs", Required = Required.Default)]
+        [YamlMember(Alias = "logs", ApplyNamingConventions = false)]
         [DefaultValue(false)]
-        public bool Elasticsearch { get; set; } = false;
+        public bool Logs { get; set; } = false;
 
         /// <summary>
         /// <b>io.neonkube.monitor.metrics</b> [<c>bool</c>]: Indicates that Metrics 
@@ -486,9 +486,9 @@ namespace Neon.Kube
 
                 list.Add(new KeyValuePair<string, object>(LabelIstio,                       NeonHelper.ToBoolString(Istio)));
 
-                list.Add(new KeyValuePair<string, object>(LabelElasticsearch,               NeonHelper.ToBoolString(Elasticsearch)));
+                list.Add(new KeyValuePair<string, object>(LabelLogs,                        NeonHelper.ToBoolString(Logs)));
 
-                list.Add(new KeyValuePair<string, object>(LabelMetrics,                        NeonHelper.ToBoolString(Metrics)));
+                list.Add(new KeyValuePair<string, object>(LabelMetrics,                     NeonHelper.ToBoolString(Metrics)));
 
                 return list;
             }

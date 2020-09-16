@@ -160,9 +160,9 @@ schedulerName: ""
 
 imagePullSecrets: []
 nodeSelector:
-  neonkube.io/monitor.elasticsearch: "true"
+  neonkube.io/monitor.logs: "true"
 tolerations:
-  - key: "neonkube.io/elasticsearch"
+  - key: "neonkube.io/logs"
     operator: "Exists"
     effect: "NoSchedule"
   - key: "node.kubernetes.io/disk-pressure"
