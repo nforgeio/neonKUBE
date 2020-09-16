@@ -47,7 +47,7 @@ cortexConfig:
     lifecycler:
       # The address to advertise for this ingester. Will be autodiscovered by
       # looking up address on eth0 or en0; can be specified if this fails.
-      address: 127.0.0.1
+      address: 0.0.0.0
 
       # We want to start immediately and flush on shutdown.
       join_after: 0
