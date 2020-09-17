@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Builds the cluster-manager images and pushes them to Docker Hub.
+# Builds the neon-cluster-manager images and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -41,7 +41,7 @@ function Build
 		[switch]$latest = $false
 	)
 
-	$registry = GetRegistry "cluster-manager"
+	$registry = GetRegistry "neon-cluster-manager"
 	$date     = UtcDate
 	$branch   = GitBranch
 	$tag      = "$branch-$version"

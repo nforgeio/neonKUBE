@@ -1,5 +1,5 @@
 ﻿//------------------------------------------------------------------------------
-// FILE:         ClusterManager.cs
+// FILE:         NeonClusterManager.cs
 // CONTRIBUTOR:  Marcus Bowyer
 // COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 
@@ -28,9 +28,9 @@ using YamlDotNet.RepresentationModel;
 using k8s;
 using k8s.Models;
 
-namespace ClusterManager
+namespace NeonClusterManager
 {
-    public partial class ClusterManager : NeonService
+    public partial class NeonClusterManager : NeonService
     {
         private static TimeSpan logPurgerInterval;
 
@@ -39,7 +39,7 @@ namespace ClusterManager
         /// </summary>
         /// <param name="serviceMap">The service map.</param>
         /// <param name="name">The service name.</param>
-        public ClusterManager(ServiceMap serviceMap, string name)
+        public NeonClusterManager(ServiceMap serviceMap, string name)
             : base(serviceMap, name, ThisAssembly.Git.Branch, ThisAssembly.Git.Commit, ThisAssembly.Git.IsDirty)
         {
         }

@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Marcus Bowyer
 # COPYRIGHT:    Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds the Neon [cluster-manager] image.
+# Builds the Neon [neon-cluster-manager] image.
 #
 # Usage: powershell -file build.ps1 REGISTRY VERSION TAG
 
@@ -15,10 +15,10 @@ param
 
 "   "
 "======================================="
-"* cluster-manager:" + $tag
+"* neon-cluster-manager:" + $tag
 "======================================="
 
-$appname      = "cluster-manager"
+$appname      = "neon-cluster-manager"
 $organization = DockerOrg
 $branch       = GitBranch
 

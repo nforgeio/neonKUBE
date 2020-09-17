@@ -13,7 +13,7 @@ using Neon.Service;
 using k8s;
 using k8s.Models;
 
-namespace ClusterManager
+namespace NeonClusterManager
 {
     /// <summary>
     /// The Neon cluster initialization operator.
@@ -26,7 +26,7 @@ namespace ClusterManager
         /// <param name="args">The command line arguments.</param>
         public static void Main(string[] args)
         {
-            new ClusterManager(NeonServiceMap.Production, NeonServices.ClusterManager).RunAsync().Wait();
+            new NeonClusterManager(NeonServiceMap.Production, NeonServices.NeonClusterManager).RunAsync().Wait();
         }
     }
 }
