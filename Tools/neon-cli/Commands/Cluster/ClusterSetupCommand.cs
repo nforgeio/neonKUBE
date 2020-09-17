@@ -908,7 +908,7 @@ safe-apt-get update
                     node.SudoCommand(CommandBundle.FromScript(
 @"#!/bin/bash
 
-echo KUBELET_EXTRA_ARGS=--volume-plugin-dir=/var/lib/kubelet/volume-plugins --network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d > /etc/default/kubelet
+echo KUBELET_EXTRA_ARGS=--logging-format=json --volume-plugin-dir=/var/lib/kubelet/volume-plugins --network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d > /etc/default/kubelet
 systemctl daemon-reload
 service kubelet restart
 "));
@@ -998,12 +998,17 @@ kind: ClusterConfiguration
 clusterName: {cluster.Name}
 kubernetesVersion: ""v{KubeVersions.KubernetesVersion}""
 apiServer:
+  logging-format: ""json""
   certSANs:
 {sbCertSANs}
 controlPlaneEndpoint: ""{controlPlaneEndpoint}""
 networking:
   podSubnet: ""{cluster.Definition.Network.PodSubnet}""
   serviceSubnet: ""{cluster.Definition.Network.ServiceSubnet}""
+controllerManager:
+  logging-format: ""json""
+scheduler:
+  logging-format: ""json""
 ";
                             firstMaster.UploadText("/tmp/cluster.yaml", clusterConfig);
 
@@ -1934,6 +1939,11 @@ spec:
       logAsJson: true
       defaultNodeSelector: 
         neonkube.io/istio: true
+      tracer:
+        zipkin:
+          address: neon-logging-jaeger-collector.monitoring.svc.cluster.local:9411
+    pilot:
+      traceSampling: 100
     meshConfig:
       accessLogFile: ""/dev/stdout""
       accessLogFormat: '{{   ""authority"": ""%REQ(:AUTHORITY)%"",   ""mode"": ""%PROTOCOL%"",   ""upstream_service_time"": ""%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%"",   ""upstream_local_address"": ""%UPSTREAM_LOCAL_ADDRESS%"",   ""duration"": ""%DURATION%"",   ""request_duration"": ""%REQUEST_DURATION%"",   ""response_duration"": ""%RESPONSE_DURATION%"",   ""response_tx_duration"": ""%RESPONSE_TX_DURATION%"",   ""downstream_local_address"": ""%DOWNSTREAM_LOCAL_ADDRESS%"",   ""upstream_transport_failure_reason"": ""%UPSTREAM_TRANSPORT_FAILURE_REASON%"",   ""route_name"": ""%ROUTE_NAME%"",   ""response_code"": ""%RESPONSE_CODE%"",   ""response_code_details"": ""%RESPONSE_CODE_DETAILS%"",   ""user_agent"": ""%REQ(USER-AGENT)%"",   ""response_flags"": ""%RESPONSE_FLAGS%"",   ""start_time"": ""%START_TIME(%s.%6f)%"",   ""method"": ""%REQ(:METHOD)%"",   ""host"": ""%REQ(:Host)%"",   ""referer"": ""%REQ(:Referer)%"",   ""request_id"": ""%REQ(X-REQUEST-ID)%"",   ""forwarded_host"": ""%REQ(X-FORWARDED-HOST)%"",   ""forwarded_proto"": ""%REQ(X-FORWARDED-PROTO)%"",   ""upstream_host"": ""%UPSTREAM_HOST%"",   ""downstream_local_uri_san"": ""%DOWNSTREAM_LOCAL_URI_SAN%"",   ""downstream_peer_uri_san"": ""%DOWNSTREAM_PEER_URI_SAN%"",   ""downstream_local_subject"": ""%DOWNSTREAM_LOCAL_SUBJECT%"",   ""downstream_peer_subject"": ""%DOWNSTREAM_PEER_SUBJECT%"",   ""downstream_peer_issuer"": ""%DOWNSTREAM_PEER_ISSUER%"",   ""downstream_tls_session_id"": ""%DOWNSTREAM_TLS_SESSION_ID%"",   ""downstream_tls_cipher"": ""%DOWNSTREAM_TLS_CIPHER%"",   ""downstream_tls_version"": ""%DOWNSTREAM_TLS_VERSION%"",   ""downstream_peer_serial"": ""%DOWNSTREAM_PEER_SERIAL%"",   ""downstream_peer_cert"": ""%DOWNSTREAM_PEER_CERT%"",   ""client_ip"": ""%REQ(X-FORWARDED-FOR)%"",   ""requested_server_name"": ""%REQUESTED_SERVER_NAME%"",   ""bytes_received"": ""%BYTES_RECEIVED%"",   ""bytes_sent"": ""%BYTES_SENT%"",   ""upstream_cluster"": ""%UPSTREAM_CLUSTER%"",   ""downstream_remote_address"": ""%DOWNSTREAM_REMOTE_ADDRESS%"",   ""path"": ""%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%"" }}'
@@ -2158,6 +2168,14 @@ istioctl install -f istio-cni.yaml
                     () =>
                     {
                         InstallKibana(firstMaster).Wait();
+                    });
+
+                // Setup Jaeger.
+
+                firstMaster.InvokeIdempotentAction("setup/cluster-deploy-jaeger",
+                    () =>
+                    {
+                        InstallJaeger(firstMaster).Wait();
                     });
             }
 
@@ -2578,7 +2596,7 @@ rm -rf {chartName}*
                 () =>
                 {
                     var i = 0;
-                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Elasticsearch))
+                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Logs))
                     {
                         var volume = new V1PersistentVolume()
                         {
@@ -2640,12 +2658,12 @@ rm -rf {chartName}*
                     var monitorOptions = cluster.Definition.Monitor;
                     var values         = new List<KeyValuePair<string, object>>();
 
-                    values.Add(new KeyValuePair<string, object>("replicas", cluster.Nodes.Where(n => n.Metadata.Labels.Elasticsearch).Count()));
+                    values.Add(new KeyValuePair<string, object>("replicas", cluster.Nodes.Where(n => n.Metadata.Labels.Logs).Count()));
                     values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.resources.requests.storage", monitorOptions.Elasticsearch.DiskSize));
                     values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
                     values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
 
-                    if (cluster.Nodes.Where(n => n.Metadata.Labels.Elasticsearch).Count() == 1)
+                    if (cluster.Nodes.Where(n => n.Metadata.Labels.Logs).Count() == 1)
                     {
                         values.Add(new KeyValuePair<string, object>("minimumMasterNodes", 1));
                     }
@@ -2669,7 +2687,7 @@ rm -rf {chartName}*
                         }
                     }
 
-                    InstallHelmChartAsync(master, "elasticsearch", @namespace: "monitoring", timeout: 1200, values: values, wait: false).Wait();
+                    InstallHelmChartAsync(master, "elasticsearch", releaseName: "neon-logs-elasticsearch", @namespace: "monitoring", timeout: 1200, values: values, wait: false).Wait();
 
                     // wait for Elasticsearch cluster to be running before proceeding.
                     while ((k8sClient.ListNamespacedPodAsync("monitoring", labelSelector: "app=elasticsearch-master")).Result.Items.Where(p => p.Status.Phase == "Running").Count() != cluster.Definition.Nodes.Where(l => l.Labels.Metrics == true).Count())
@@ -2698,7 +2716,7 @@ rm -rf {chartName}*
                 i++;
             }
 
-            await InstallHelmChartAsync(master, "fluent-bit", @namespace: "monitoring", timeout: 300, values: values);
+            await InstallHelmChartAsync(master, "fluent-bit", releaseName: "neon-log-host", @namespace: "monitoring", timeout: 300, values: values);
         }
 
         /// <summary>
@@ -2714,7 +2732,7 @@ rm -rf {chartName}*
             values.Add(new KeyValuePair<string, object>($"autoscaling.maxReplicas", (Math.Max(1, cluster.Definition.Workers.Count()))));
 
 
-            await InstallHelmChartAsync(master, "fluentd", @namespace: "monitoring", timeout: 300, values: values);
+            await InstallHelmChartAsync(master, "fluentd", releaseName: "neon-log-collector", @namespace: "monitoring", timeout: 300, values: values);
         }
 
         /// <summary>
@@ -2725,7 +2743,18 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: kibana";
 
-            await InstallHelmChartAsync(master, "kibana", @namespace: "monitoring", timeout: 900);
+            await InstallHelmChartAsync(master, "kibana", releaseName: "neon-logs-kibana", @namespace: "monitoring", timeout: 900);
+        }
+
+        /// <summary>
+        /// Installs Kibana
+        /// </summary>
+        /// <param name="master">The master node.</param>
+        private async Task InstallJaeger(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: jaeger";
+
+            await InstallHelmChartAsync(master, "jaeger", releaseName: "neon-logs-jaeger", @namespace: "monitoring", timeout: 900);
         }
 
         /// <summary>
@@ -2758,7 +2787,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: cluster-manager";
 
-            await InstallHelmChartAsync(master, "cluster-manager", @namespace: "monitoring", timeout: 300);
+            await InstallHelmChartAsync(master, "cluster-manager", releaseName: "neon-cluster-manager", @namespace: "monitoring", timeout: 300);
         }
 
         /// <summary>
