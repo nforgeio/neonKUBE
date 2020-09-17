@@ -3,7 +3,7 @@ home: https://github.com/elastic/helm-charts
 maintainers:
 - email: helm-charts@elastic.co
   name: Elastic
-name: elasticsearch
+name: neon-logs-elasticsearch
 version: 7.2.0
 appVersion: 7.2.0
 sources:

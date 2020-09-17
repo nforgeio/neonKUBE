@@ -2,7 +2,7 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: {{ template "uname" . }}
+  name: {{ .Chart.Name }}
   labels:
     heritage: {{ .Release.Service | quote }}
     release: {{ .Release.Name | quote }}
@@ -31,7 +31,7 @@ spec:
 kind: Service
 apiVersion: v1
 metadata:
-  name: {{ template "uname" . }}-headless
+  name: {{ .Chart.Name }}-headless
   labels:
     heritage: {{ .Release.Service | quote }}
     release: {{ .Release.Name | quote }}
