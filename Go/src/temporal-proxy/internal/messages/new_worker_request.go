@@ -18,7 +18,7 @@
 package messages
 
 import (
-	worker "go.temporal.io/temporal/worker"
+	worker "go.temporal.io/sdk/worker"
 
 	internal "temporal-proxy/internal"
 )

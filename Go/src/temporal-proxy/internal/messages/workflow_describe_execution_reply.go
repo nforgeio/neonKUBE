@@ -18,7 +18,7 @@
 package messages
 
 import (
-	"go.temporal.io/temporal-proto/workflowservice"
+	go.temporal.io/api/workflowservice"
 
 	internal "temporal-proxy/internal"
 )

@@ -22,8 +22,8 @@ import (
 	"strings"
 	internal "temporal-proxy/internal"
 
-	"go.temporal.io/temporal-proto/namespace"
-	"go.temporal.io/temporal-proto/workflowservice"
+	go.temporal.io/api/namespace"
+	go.temporal.io/api/workflowservice"
 )
 
 type (

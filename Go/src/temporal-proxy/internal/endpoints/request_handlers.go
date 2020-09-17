@@ -26,13 +26,13 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
-	"go.temporal.io/temporal-proto/namespace"
-	"go.temporal.io/temporal-proto/workflowservice"
-	"go.temporal.io/temporal/activity"
-	"go.temporal.io/temporal/client"
-	"go.temporal.io/temporal/encoded"
-	"go.temporal.io/temporal/worker"
-	"go.temporal.io/temporal/workflow"
+	"go.temporal.io/api/namespace"
+	"go.temporal.io/api/workflowservice"
+	"go.temporal.io/sdk/activity"
+	"go.temporal.io/sdk/client"
+	"go.temporal.io/sdk/converter"
+	"go.temporal.io/sdk/worker"
+	"go.temporal.io/sdk/workflow"
 	"go.uber.org/zap"
 
 	"temporal-proxy/internal"
@@ -551,8 +551,8 @@ func handleWorkflowRegisterRequest(requestCtx context.Context, request *messages
 		workflowInvokeRequest.SetWorkflowID(&workflowInfo.WorkflowExecution.ID)
 		workflowInvokeRequest.SetRunID(&workflowInfo.WorkflowExecution.RunID)
 		workflowInvokeRequest.SetWorkflowType(&workflowInfo.WorkflowType.Name)
-		workflowInvokeRequest.SetTaskList(&workflowInfo.TaskListName)
-		workflowInvokeRequest.SetExecutionStartToCloseTimeout(time.Duration(int64(workflowInfo.WorkflowExecutionTimeoutSeconds) * int64(time.Second)))
+		workflowInvokeRequest.SetTaskList(&workflowInfo.TaskQueueName)
+		workflowInvokeRequest.SetExecutionStartToCloseTimeout(time.Duration(int64(workflowInfo.WorkflowExecutionTimeout) * int64(time.Second)))
 
 		// set ReplayStatus
 		setReplayStatus(ctx, workflowInvokeRequest)
@@ -784,7 +784,7 @@ func handleWorkflowSignalWithStartRequest(requestCtx context.Context, request *m
 	defer cancel()
 
 	// signalwithstart the specified workflow
-	workflowExecution, err := clientHelper.SignalWithStartWorkflow(
+	execution, err := clientHelper.SignalWithStartWorkflow(
 		ctx,
 		workflowID,
 		*request.GetNamespace(),
@@ -799,7 +799,7 @@ func handleWorkflowSignalWithStartRequest(requestCtx context.Context, request *m
 		return reply
 	}
 
-	reply.Build(nil, workflowExecution)
+	reply.Build(nil, execution)
 
 	return reply
 }
@@ -868,7 +868,7 @@ func handleWorkflowMutableRequest(requestCtx context.Context, request *messages.
 	}
 
 	// MutableSideEffect/SideEffect calls
-	var value encoded.Value
+	var value converter.EncodedValue
 	if mutableID := request.GetMutableID(); mutableID != nil {
 		value = workflow.MutableSideEffect(
 			ctx,
@@ -1277,10 +1277,6 @@ func handleWorkflowSleepRequest(requestCtx context.Context, request *messages.Wo
 	var result interface{}
 	future := workflow.NewTimer(ctx, request.GetDuration())
 
-	// Send ACK: Commented out because its no longer needed.
-	// op := sendFutureACK(contextID, requestID, clientID)
-	// <-op.GetChannel()
-
 	// wait for the future to be unblocked
 	err := future.Get(ctx, &result)
 	if err != nil {
@@ -1331,10 +1327,6 @@ func handleWorkflowExecuteChildRequest(requestCtx context.Context, request *mess
 	ctx = workflow.WithScheduleToStartTimeout(ctx, request.GetScheduleToStartTimeout())
 	ctx, cancel := workflow.WithCancel(ctx)
 	childFuture := workflow.ExecuteChildWorkflow(ctx, workflowName, request.GetArgs())
-
-	// Send ACK: Commented out because its no longer needed.
-	// op := sendFutureACK(contextID, requestID, clientID)
-	// <-op.GetChannel()
 
 	// create the new ChildContext
 	// add the ChildWorkflowFuture and the cancel func to the

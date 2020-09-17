@@ -23,7 +23,7 @@ import (
 
 	internal "temporal-proxy/internal"
 
-	tasklist "go.temporal.io/temporal-proto/tasklist"
+	tasklist go.temporal.io/api/tasklist"
 )
 
 type (

@@ -20,7 +20,7 @@ package messages
 import (
 	internal "temporal-proxy/internal"
 
-	"go.temporal.io/temporal/client"
+	"go.temporal.io/sdk/client"
 )
 
 type (
