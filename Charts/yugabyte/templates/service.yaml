@@ -5,7 +5,7 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: yugabyte-tls-client-cert
+  name: {{ $root.Release.Name }}-yugabyte-tls-client-cert
   namespace: "{{ $root.Release.Namespace }}"
   labels:
     heritage: {{ $root.Values.helm2Legacy | ternary "Tiller" ($root.Release.Service | quote) }}
@@ -30,7 +30,7 @@ data:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: {{ $service.label }}-yugabyte-tls-cert
+  name: {{ $root.Release.Name }}-{{ $service.label }}-yugabyte-tls-cert
   namespace: "{{ $root.Release.Namespace }}"
   labels:
     app: "{{ $service.label }}"
@@ -57,7 +57,7 @@ data:
 apiVersion: v1
 kind: Service
 metadata:
-  name: "{{ .name }}"
+  name: "{{ $root.Release.Name }}-{{ .name }}"
   labels:
     app: "{{ .label }}"
     heritage: {{ $root.Values.helm2Legacy | ternary "Tiller" ($root.Release.Service | quote) }}
@@ -82,7 +82,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: "{{ $endpoint.name }}"
+  name: "{{ $root.Release.Name }}-{{ $endpoint.name }}"
   annotations:
 {{ toYaml $endpoint.annotations | indent 4 }}
   labels:
@@ -115,7 +115,7 @@ spec:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: "{{ .label }}"
+  name: "{{ $root.Release.Name }}-{{ .label }}"
   namespace: "{{ $root.Release.Namespace }}"
   labels:
     app: "{{ .label }}"
@@ -124,7 +124,7 @@ metadata:
     chart: "{{ $root.Chart.Name }}"
     component: "{{ $root.Values.Component }}"
 spec:
-  serviceName: "{{ .name }}"
+  serviceName: "{{ $root.Release.Name }}-{{ .name }}"
   podManagementPolicy: {{ $root.Values.PodManagementPolicy }}
   {{ if eq .name "yb-masters" }}
   replicas: {{ $root.Values.replicas.master }}
