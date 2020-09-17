@@ -2003,83 +2003,83 @@ EOF
 istioctl install -f istio-cni.yaml
 ";
 
-//            var istioScript1 =
-//$@"#!/bin/bash
+            //            var istioScript1 =
+            //$@"#!/bin/bash
 
-//# Enable sidecar injection.
+            //# Enable sidecar injection.
 
-//kubectl label namespace default istio-injection=enabled
+            //kubectl label namespace default istio-injection=enabled
 
-//# Create istio-system namespace:
+            //# Create istio-system namespace:
 
-//kubectl create namespace istio-system
+            //kubectl create namespace istio-system
 
-//# Download and extract the Istio binaries:
+            //# Download and extract the Istio binaries:
 
-//cd /tmp
-//curl {Program.CurlOptions} {kubeSetupInfo.IstioLinuxUri} > istio.tar.gz
-//tar xvf /tmp/istio.tar.gz
-//mv istio-{kubeSetupInfo.Versions.Istio} istio
-//cd istio
+            //cd /tmp
+            //curl {Program.CurlOptions} {kubeSetupInfo.IstioLinuxUri} > istio.tar.gz
+            //tar xvf /tmp/istio.tar.gz
+            //mv istio-{kubeSetupInfo.Versions.Istio} istio
+            //cd istio
 
-//# Copy the tools:
+            //# Copy the tools:
 
-//chmod 330 bin/*
-//cp bin/* /usr/local/bin
+            //chmod 330 bin/*
+            //cp bin/* /usr/local/bin
 
-//# Install Istio's CRDs:
+            //# Install Istio's CRDs:
 
-//helm template install/kubernetes/helm/istio-init --name istio-init --set certmanager.enabled=true --namespace istio-system | kubectl apply -f -
+            //helm template install/kubernetes/helm/istio-init --name istio-init --set certmanager.enabled=true --namespace istio-system | kubectl apply -f -
 
-//# Verify that all 28 Istio CRDs were committed to the Kubernetes api-server
+            //# Verify that all 28 Istio CRDs were committed to the Kubernetes api-server
 
-//until [ `kubectl get crds | grep 'istio.io\|certmanager.k8s.io' | wc -l` == ""28"" ]; do
-//    sleep 1
-//done
+            //until [ `kubectl get crds | grep 'istio.io\|certmanager.k8s.io' | wc -l` == ""28"" ]; do
+            //    sleep 1
+            //done
 
-//# Install Istio:
+            //# Install Istio:
 
-//helm template install/kubernetes/helm/istio \
-//    --name istio \
-//    --namespace istio-system \
-//    --set global.defaultNodeSelector.""neonkube\.io/istio""=true \
-//    --set istio_cni.enabled=true \
-//    --set global.proxy.accessLogFile=/dev/stdout \
-//    --set kiali.enabled=false \
-//    --set tracing.enabled=true \
-//    --set grafana.enabled=false \
-//    --set prometheus.enabled=false \
-//    --set certmanager.enabled=true \
-//    --set certmanager.email=mailbox@donotuseexample.com \
-//	--set gateways.istio-egressgateway.enabled=true \
-//";
-//            if (cluster.Definition.Network.Ingress.Count > 0)
-//            {
-//                istioScript1 +=
-//$@" \
-//    --set gateways.istio-ingressgateway.sds.enabled=true \
-//    --set gateways.istio-ingressgateway.type=NodePort \
-//";
-//                for (var i = 0; i < cluster.Definition.Network.Ingress.Count; i++)
-//                {
-//                    istioScript1 +=
-//$@" \
-//    --set gateways.istio-ingressgateway.ports[{i}].targetPort={cluster.Definition.Network.Ingress[i].TargetPort} \
-//    --set gateways.istio-ingressgateway.ports[{i}].port={cluster.Definition.Network.Ingress[i].Port} \
-//    --set gateways.istio-ingressgateway.ports[{i}].name={cluster.Definition.Network.Ingress[i].Name} \
-//    --set gateways.istio-ingressgateway.ports[{i}].nodePort={cluster.Definition.Network.Ingress[i].NodePort} \
-//";
-//                }
-//            }
+            //helm template install/kubernetes/helm/istio \
+            //    --name istio \
+            //    --namespace istio-system \
+            //    --set global.defaultNodeSelector.""neonkube\.io/istio""=true \
+            //    --set istio_cni.enabled=true \
+            //    --set global.proxy.accessLogFile=/dev/stdout \
+            //    --set kiali.enabled=false \
+            //    --set tracing.enabled=true \
+            //    --set grafana.enabled=false \
+            //    --set prometheus.enabled=false \
+            //    --set certmanager.enabled=true \
+            //    --set certmanager.email=mailbox@donotuseexample.com \
+            //	--set gateways.istio-egressgateway.enabled=true \
+            //";
+            //            if (cluster.Definition.Network.Ingress.Count > 0)
+            //            {
+            //                istioScript1 +=
+            //$@" \
+            //    --set gateways.istio-ingressgateway.sds.enabled=true \
+            //    --set gateways.istio-ingressgateway.type=NodePort \
+            //";
+            //                for (var i = 0; i < cluster.Definition.Network.Ingress.Count; i++)
+            //                {
+            //                    istioScript1 +=
+            //$@" \
+            //    --set gateways.istio-ingressgateway.ports[{i}].targetPort={cluster.Definition.Network.Ingress[i].TargetPort} \
+            //    --set gateways.istio-ingressgateway.ports[{i}].port={cluster.Definition.Network.Ingress[i].Port} \
+            //    --set gateways.istio-ingressgateway.ports[{i}].name={cluster.Definition.Network.Ingress[i].Name} \
+            //    --set gateways.istio-ingressgateway.ports[{i}].nodePort={cluster.Definition.Network.Ingress[i].NodePort} \
+            //";
+            //                }
+            //            }
 
-//            istioScript1 +=
-//$@" \
-//    | kubectl apply -f -
+            //            istioScript1 +=
+            //$@" \
+            //    | kubectl apply -f -
 
-//until [ `kubectl get pods --namespace istio-system --field-selector=status.phase!=Succeeded,status.phase!=Running | wc -l` == ""0"" ]; do
-//    sleep 1
-//done
-//";
+            //until [ `kubectl get pods --namespace istio-system --field-selector=status.phase!=Succeeded,status.phase!=Running | wc -l` == ""0"" ]; do
+            //    sleep 1
+            //done
+            //";
             master.SudoCommand(CommandBundle.FromScript(istioScript0));
         }
 
@@ -2138,7 +2138,7 @@ istioctl install -f istio-cni.yaml
 
             // Install Elasticsearch.
 
-            if (cluster.Definition.Monitor.Elasticsearch.Enabled)
+            if (cluster.Definition.Monitor.Logs.Enabled)
             {
                 firstMaster.InvokeIdempotentAction("setup/cluster-deploy-elasticsearch",
                 () =>
@@ -2423,12 +2423,12 @@ rm -rf {chartName}*
         }
 
         /// <summary>
-        /// Installs an Prometheus cluster to the monitoring namespace.
+        /// Installs an Metrics cluster to the monitoring namespace.
         /// </summary>
         /// <param name="master">The master node.</param>
         private void InstallNeonMetrics(SshProxy<NodeDefinition> master)
         {
-            master.Status = "deploy: neon-metrics-prometheus";
+            master.Status = "deploy: neon-metrics";
 
             var cortexValues = new List<KeyValuePair<string, object>>();
 
@@ -2454,15 +2454,15 @@ rm -rf {chartName}*
                 () =>
                 {
 
-                    switch (cluster.Definition.Monitor.Prometheus.Storage)
+                    switch (cluster.Definition.Monitor.Metrics.Storage)
                     {
-                        case PrometheusStorageOptions.Ephemeral:
+                        case MetricsStorageOptions.Ephemeral:
                             break;
-                        case PrometheusStorageOptions.Filesystem:
+                        case MetricsStorageOptions.Filesystem:
                             // create folders
                             break;
-                        case PrometheusStorageOptions.Yugabyte:
-                            InstallPrometheusYugabyte(master);
+                        case MetricsStorageOptions.Yugabyte:
+                            InstallMetricsYugabyte(master);
                             break;
                         default:
                             break;
@@ -2489,14 +2489,14 @@ rm -rf {chartName}*
         /// Installs a Yugabyte cluster for metrics storage.
         /// </summary>
         /// <param name="master"></param>
-        private void InstallPrometheusYugabyte(SshProxy<NodeDefinition> master)
+        private void InstallMetricsYugabyte(SshProxy<NodeDefinition> master)
         {
-            master.InvokeIdempotentAction("deploy/prometheus-persistence-yugabyte",
+            master.InvokeIdempotentAction("deploy/metrics-persistence-yugabyte",
                 () =>
                 {
-                    master.Status = "deploy: prometheus storage (yugabyte)";
+                    master.Status = "deploy: metrics storage (yugabyte)";
 
-                    master.InvokeIdempotentAction("setup/prometheus-yugabyte-volumes",
+                    master.InvokeIdempotentAction("setup/metrics-yugabyte-volumes",
                         () =>
                         {
                             var i = 0;
@@ -2518,7 +2518,7 @@ rm -rf {chartName}*
                                     {
                                         Capacity = new Dictionary<string, ResourceQuantity>()
                                         {
-                                            { "storage", cluster.Definition.Monitor.Prometheus.DiskSize }
+                                            { "storage", cluster.Definition.Monitor.Metrics.DiskSize }
                                         },
                                         AccessModes = new List<string>() { "ReadWriteOnce" },
                                         PersistentVolumeReclaimPolicy = "Retain",
@@ -2564,7 +2564,7 @@ rm -rf {chartName}*
                             }
                         });
 
-                    master.InvokeIdempotentAction("setup/prometheus-yugabyte",
+                    master.InvokeIdempotentAction("setup/metrics-yugabyte",
                         () =>
                         {
                             var values = new List<KeyValuePair<string, object>>();
@@ -2614,7 +2614,7 @@ rm -rf {chartName}*
                             {
                                 Capacity = new Dictionary<string, ResourceQuantity>()
                                 {
-                                    { "storage", new ResourceQuantity(cluster.Definition.Monitor.Elasticsearch.DiskSize) }
+                                    { "storage", new ResourceQuantity(cluster.Definition.Monitor.Logs.DiskSize) }
                                 },
                                 AccessModes = new List<string>() { "ReadWriteOnce" },
                                 PersistentVolumeReclaimPolicy = "Retain",
@@ -2659,7 +2659,7 @@ rm -rf {chartName}*
                     var values         = new List<KeyValuePair<string, object>>();
 
                     values.Add(new KeyValuePair<string, object>("replicas", cluster.Nodes.Where(n => n.Metadata.Labels.Logs).Count()));
-                    values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.resources.requests.storage", monitorOptions.Elasticsearch.DiskSize));
+                    values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.resources.requests.storage", monitorOptions.Logs.DiskSize));
                     values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
                     values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
 
@@ -2668,19 +2668,19 @@ rm -rf {chartName}*
                         values.Add(new KeyValuePair<string, object>("minimumMasterNodes", 1));
                     }
 
-                    if (monitorOptions.Elasticsearch.Resources != null)
+                    if (monitorOptions.Logs.Resources != null)
                     {
-                        if (monitorOptions.Elasticsearch.Resources.Limits != null)
+                        if (monitorOptions.Logs.Resources.Limits != null)
                         {
-                            foreach (var r in monitorOptions.Elasticsearch.Resources.Limits)
+                            foreach (var r in monitorOptions.Logs.Resources.Limits)
                             {
                                 values.Add(new KeyValuePair<string, object>($"resources.limits.{r.Key}", r.Value.ToString()));
                             }
                         }
 
-                        if (monitorOptions.Elasticsearch.Resources.Requests != null)
+                        if (monitorOptions.Logs.Resources.Requests != null)
                         {
-                            foreach (var r in monitorOptions.Elasticsearch.Resources.Requests)
+                            foreach (var r in monitorOptions.Logs.Resources.Requests)
                             {
                                 values.Add(new KeyValuePair<string, object>($"resources.requests.{r.Key}", r.Value.ToString()));
                             }
