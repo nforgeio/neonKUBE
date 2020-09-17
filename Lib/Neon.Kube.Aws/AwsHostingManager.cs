@@ -1062,7 +1062,7 @@ namespace Neon.Kube
             controller.AddGlobalStep("network", ConfigureNetworkAsync);
             controller.AddGlobalStep("ssh key", ImportKeyPairAsync);
             controller.AddNodeStep("node instances", CreateNodeInstanceAsync);
-            controller.AddNodeStep("node ssh config", ConfigureNodeSshAsync);
+            controller.AddNodeStep("node ssh config", ConfigureNodeSsh);
             controller.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
 
             if (!controller.Run(leaveNodesConnected: false))
@@ -2460,8 +2460,7 @@ retry:
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <param name="stepDelay">The step delay.</param>
-        /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ConfigureNodeSshAsync(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void ConfigureNodeSsh(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             // AWS requires SSH key based authenticated for newly created instances.
 

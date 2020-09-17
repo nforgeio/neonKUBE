@@ -32,7 +32,7 @@ PrivilegesRequired=admin
 
 ; Common files
 Source: {#GetEnv("NF_CACHE")}\windows\kubectl\{#GetEnv("NF_KUBE_VERSION")}\kubectl.exe; DestDir: {app}; Flags: recursesubdirs replacesameversion
-Source: {#GetEnv("NF_ROOT")}\External\ssh-keygen.exe; DestDir: {app}; Flags: replacesameversion
+Source: {#GetEnv("NF_ROOT")}\External\SSH\*.*; DestDir: {app}\SSH; Flags: recursesubdirs replacesameversion
 Source: {#GetEnv("NF_CACHE")}\windows\powershell\*.*; DestDir: {app}\powershell; Flags: recursesubdirs replacesameversion
 
 ; neon-cli & WinDesktop

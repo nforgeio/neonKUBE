@@ -2022,18 +2022,20 @@ exit 0
 
             // Look for the installed version first.
 
-            var path1 = Path.Combine(Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER"), "ssh-keygen.exe");
+            var desktopProgramFolder = Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER");
+            var path1                = desktopProgramFolder != null ? Path.Combine(Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER"), "SSH", "ssh-keygen.exe") : null;
 
-            if (File.Exists(path1))
+            if (path1 != null && File.Exists(path1))
             {
                 return Path.GetFullPath(path1);
             }
 
             // Fall back to the executable from our Git repo.
 
-            var path2 = Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "ssh-keygen.exe");
+            var repoFolder = Environment.GetEnvironmentVariable("NF_ROOT");
+            var path2      = repoFolder != null ? Path.Combine(repoFolder, "External", "SSH", "ssh-keygen.exe") : null;
 
-            if (File.Exists(path2))
+            if (path2 != null && File.Exists(path2))
             {
                 return Path.GetFullPath(path2);
             }
@@ -2063,7 +2065,7 @@ exit 0
                     {
                         "-t", "rsa",
                         "-b", "2048",
-                        "-N", "",
+                        "-N", "''",
                         "-C", $"{userName}@{clusterName}",
                         "-f", Path.Combine(tempFolder.Path, "key")
                     });

@@ -8,3 +8,4 @@ So I obtained this [ssh-keygen.exe] from Git at:
 	C:\Program Files\Git\usr\bin\ssh-keygen.exe
 
 This version can generate keys without a passphrase.  We may need to update this from time to time.
+Note that I also copied just enough of the DLLs such that [ssh-keygen] can actually generate keys.
