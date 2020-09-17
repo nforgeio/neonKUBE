@@ -139,7 +139,7 @@ schema:
 elasticsearch: {}
 
 ingester:
-  enabled: true
+  enabled: false
   podSecurityContext: {}
   securityContext: {}
   annotations: {}
