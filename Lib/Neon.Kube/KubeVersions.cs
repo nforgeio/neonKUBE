@@ -35,27 +35,27 @@ namespace Neon.Kube
         /// <summary>
         /// The version of Kubernetes to be installed.
         /// </summary>
-        public const string KubernetesVersion = "1.18.6";
+        public const string KubernetesVersion = "1.19.2";
 
         /// <summary>
         /// The version of the Kubernetes dashboard to be installed.
         /// </summary>
-        public const string KubernetesDashboardVersion = "2.0.0-rc2";
+        public const string KubernetesDashboardVersion = "2.0.4";
 
         /// <summary>
         /// The package version for Kubernetes admin service.
         /// </summary>
-        public const string KubeAdminPackageVersion = "1.18.6-00";
+        public const string KubeAdminPackageVersion = "1.19.2-00";
 
         /// <summary>
         /// The package version for the Kubernetes cli.
         /// </summary>
-        public const string KubeCtlPackageVersion = "1.18.6-00";
+        public const string KubeCtlPackageVersion = "1.19.2-00";
 
         /// <summary>
         /// The package version for the Kubelet service.
         /// </summary>
-        public const string KubeletPackageVersion = "1.18.6-00";
+        public const string KubeletPackageVersion = "1.19.2-00";
 
         /// <summary>
         /// The version of Docker to be installed.
@@ -65,16 +65,16 @@ namespace Neon.Kube
         /// <summary>
         /// The version of Calico to install.
         /// </summary>
-        public const string CalicoVersion = "3.14";
+        public const string CalicoVersion = "3.16.1";
 
         /// <summary>
         /// The version of Istio to install.
         /// </summary>
-        public const string IstioVersion = "1.6.4";
+        public const string IstioVersion = "1.7.1";
 
         /// <summary>
         /// The version of Helm to be installed.
         /// </summary>
-        public const string HelmVersion = "3.2.4";
+        public const string HelmVersion = "3.3.1";
     }
 }
