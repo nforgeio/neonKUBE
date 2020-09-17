@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ElasticsearchOptions.cs
+// FILE:	    LogOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -44,7 +44,7 @@ namespace Neon.Kube
     /// Specifies the options for configuring the cluster integrated Elasticsearch 
     /// metrics stack: <a href="https://Elastic.co/">https://Elastic.co/</a>
     /// </summary>
-    public class ElasticsearchOptions
+    public class LogOptions
     {
         /// <summary>
         /// Indicates whether Elasticsearch metrics are to be enabled for the cluster.  
@@ -94,23 +94,23 @@ namespace Neon.Kube
 
             if (LogRetentionDays < 1)
             {
-                throw new ClusterDefinitionException($"[{nameof(ElasticsearchOptions)}.{nameof(LogRetentionDays)}={LogRetentionDays}] is valid.  This must be at least one day.");
+                throw new ClusterDefinitionException($"[{nameof(LogOptions)}.{nameof(LogRetentionDays)}={LogRetentionDays}] is valid.  This must be at least one day.");
             }
 
-            if (!clusterDefinition.Nodes.Any(n => n.Labels.Elasticsearch))
+            if (!clusterDefinition.Nodes.Any(n => n.Labels.Logs))
             {
                 if (clusterDefinition.Kubernetes.AllowPodsOnMasters.GetValueOrDefault())
                 {
                     foreach (var n in clusterDefinition.Nodes)
                     {
-                        n.Labels.Elasticsearch = true;
+                        n.Labels.Logs = true;
                     }
                 }
                 else
                 {
                     foreach (var w in clusterDefinition.Nodes.Where(n => n.IsWorker))
                     {
-                        w.Labels.Elasticsearch = true;
+                        w.Labels.Logs = true;
                     }
                 }
             }

@@ -59,7 +59,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Elasticsearch", Required = Required.Default)]
         [YamlMember(Alias = "elasticsearch", ApplyNamingConventions = false)]
         [DefaultValue(true)]
-        public ElasticsearchOptions Elasticsearch { get; set; } = new ElasticsearchOptions();
+        public LogOptions Logs { get; set; } = new LogOptions();
 
         /// <summary>
         /// Prometheus options
@@ -67,7 +67,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "Prometheus", Required = Required.Default)]
         [YamlMember(Alias = "prometheus", ApplyNamingConventions = false)]
         [DefaultValue(true)]
-        public PrometheusOptions Prometheus { get; set; } = new PrometheusOptions();
+        public MetricsOptions Metrics { get; set; } = new MetricsOptions();
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -82,11 +82,11 @@ namespace Neon.Kube
                 return;
             }
 
-            Elasticsearch = Elasticsearch ?? new ElasticsearchOptions();
-            Prometheus    = Prometheus ?? new PrometheusOptions();
+            Logs          = Logs ?? new LogOptions();
+            Metrics       = Metrics ?? new MetricsOptions();
 
-            Elasticsearch.Validate(clusterDefinition);
-            Prometheus.Validate(clusterDefinition);
+            Logs.Validate(clusterDefinition);
+            Metrics.Validate(clusterDefinition);
         }
     }
 }

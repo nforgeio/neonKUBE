@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PrometheusStorageOptions.cs
+// FILE:	    MetricsStorageOptions.cs
 // CONTRIBUTOR: Marcus Bowyer
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -39,7 +39,7 @@ namespace Neon.Kube
     /// <summary>
     /// Enumerates the possible Prometheus storage options.
     /// </summary>
-    public enum PrometheusStorageOptions
+    public enum MetricsStorageOptions
     {
         /// <summary>
         /// Ephemeral (default).

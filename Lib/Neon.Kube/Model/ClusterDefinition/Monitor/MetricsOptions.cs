@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PrometheusOptions.cs
+// FILE:	    MetricsOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -44,7 +44,7 @@ namespace Neon.Kube
     /// Specifies the options for configuring the cluster integrated Prometheus 
     /// metrics stack: <a href="https://prometheus.io/">https://prometheus.io/</a>
     /// </summary>
-    public class PrometheusOptions
+    public class MetricsOptions
     {
         /// <summary>
         /// Indicates whether Prometheus metrics are to be enabled for the cluster.  
@@ -60,8 +60,8 @@ namespace Neon.Kube
         /// </summary>
         [JsonProperty(PropertyName = "Storage", Required = Required.Default)]
         [YamlMember(Alias = "storage", ApplyNamingConventions = false)]
-        [DefaultValue(PrometheusStorageOptions.Ephemeral)]
-        public PrometheusStorageOptions Storage { get; set; } = PrometheusStorageOptions.Ephemeral;
+        [DefaultValue(MetricsStorageOptions.Ephemeral)]
+        public MetricsStorageOptions Storage { get; set; } = MetricsStorageOptions.Ephemeral;
 
         /// <summary>
         /// Specifies the amount of disk space to allocate to metrics storage.
@@ -84,9 +84,9 @@ namespace Neon.Kube
                 return;
             }
 
-            if (Storage != PrometheusStorageOptions.Ephemeral && DiskSize == null)
+            if (Storage != MetricsStorageOptions.Ephemeral && DiskSize == null)
             {
-                throw new ClusterDefinitionException($"[{nameof(PrometheusOptions)}.{nameof(DiskSize)}={DiskSize}] is not set. You must specify a disk size, or use the Ephemeral storage option.");
+                throw new ClusterDefinitionException($"[{nameof(MetricsOptions)}.{nameof(DiskSize)}={DiskSize}] is not set. You must specify a disk size, or use the Ephemeral storage option.");
             }
 
             if (!clusterDefinition.Nodes.Any(n => n.Labels.Metrics))
@@ -102,7 +102,7 @@ namespace Neon.Kube
                 {
                     foreach (var w in clusterDefinition.Nodes.Where(n => n.IsWorker))
                     {
-                        w.Labels.Elasticsearch = true;
+                        w.Labels.Metrics = true;
                     }
                 }
             }
