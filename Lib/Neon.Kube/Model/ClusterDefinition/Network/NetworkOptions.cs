@@ -92,8 +92,8 @@ namespace Neon.Kube
 
         /// <summary>
         /// Specifies the subnet for entire host network for on-premise environments like
-        /// <see cref="HostingEnvironments.Machine"/>, <see cref="HostingEnvironments.HyperVLocal"/> and
-        /// <see cref="HostingEnvironments.XenServer"/>.  This is required for those environments.
+        /// <see cref="HostingEnvironment.Machine"/>, <see cref="HostingEnvironment.HyperVLocal"/> and
+        /// <see cref="HostingEnvironment.XenServer"/>.  This is required for those environments.
         /// </summary>
         [JsonProperty(PropertyName = "PremiseSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "premiseSubnet", ApplyNamingConventions = false)]
@@ -105,7 +105,7 @@ namespace Neon.Kube
         /// The subnet where the cluster nodes reside.
         /// </para>
         /// <note>
-        /// This property must be configured for the on-premise providers (<see cref="HostingEnvironments.Machine"/>, 
+        /// This property must be configured for the on-premise providers (<see cref="HostingEnvironment.Machine"/>, 
         /// <b>HyperV</b>, and <b>XenServer</b>,...).  This defaults to <b>10.100.0.0/16</b> for cloud deployments 
         /// but can be customized as required.
         /// </note>
@@ -117,7 +117,7 @@ namespace Neon.Kube
         /// </note>
         /// <note>
         /// <para>
-        /// For cloud deployments, nodes will be assigned reasolable IP addresses by default.  You may assigned specific
+        /// For cloud deployments, nodes will be assigned reasonable IP addresses by default.  You may assigned specific
         /// IP addresses to nodes within the to nodes if necessary, with a couple reservations:
         /// </para>
         /// <list type="bullet">
@@ -135,6 +135,10 @@ namespace Neon.Kube
         ///     cloud subnet.
         ///     </item>
         /// </list>
+        /// </note>
+        /// <note>
+        /// For cloud deployments, <see cref="NodeSubnet"/> may not be larger than a <b>/16</b> (64K addresses) or
+        /// smaller than a <b>/28</b> (16 addresses).
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "NodeSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -209,12 +213,24 @@ namespace Neon.Kube
 
         /// <summary>
         /// <para>
+        /// Optionally specifies the default cluster load balancer health check settings
+        /// for the <see cref="IngressRules"/>.  This defaults to reasonable values and
+        /// can be overriden for specific rules.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "IngressHealthCheck", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ingressHealthCheck", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public HealthCheckOptions IngressHealthCheck { get; set; } = null;
+
+        /// <summary>
+        /// <para>
         /// Optionally specifies whitelisted and/or blacklisted external addresses for
         /// outbound traffic.  This defaults to allowing outbound traffic to anywhere 
         /// when the property is <c>null</c> or empty.
         /// </para>
         /// <note>
-        /// Address rules are processed in order, from first to last so you may consider
+        /// Address rules are processed in order from first to last, so you may consider
         /// putting your blacklist rules before your whitelist rules.
         /// </note>
         /// <note>
@@ -229,18 +245,19 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Optionally specifies whitelisted and/or blacklisted external addresses for
-        /// node management via SSH NAT rules.  This defaults to allowing inbound traffic 
+        /// node management via SSH NAT rules as well as cluster management via the 
+        /// Kubernetes API via port 6443.  This defaults to allowing inbound traffic 
         /// from anywhere when the property is <c>null</c> or empty.
         /// </para>
         /// <note>
-        /// Address rules are processed in order, from first to last so you may consider
+        /// Address rules are processed in order from first to last, so you may consider
         /// putting your blacklist rules before your whitelist rules.
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "SshAddressRules", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "sshAddressRules", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "ManagementAddressRules", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "managementAddressRules", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public List<AddressRule> SshAddressRules { get; set; } = new List<AddressRule>();
+        public List<AddressRule> ManagementAddressRules { get; set; } = new List<AddressRule>();
 
         /// <summary>
         /// <para>
@@ -294,7 +311,7 @@ namespace Neon.Kube
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public int FirstSshManagementPort => ReservedIngressStartPort + additionalReservedPorts;
+        public int FirstExternalSshPort => ReservedIngressStartPort + additionalReservedPorts;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -347,13 +364,23 @@ namespace Neon.Kube
                 if (string.IsNullOrEmpty(NodeSubnet))
                 {
                     nodeSubnet = NetworkCidr.Parse(defaultCloudNodeSubnet);
-                    NodeSubnet  = defaultCloudNodeSubnet;
+                    NodeSubnet = defaultCloudNodeSubnet;
                 }
                 else
                 {
                     if (!NetworkCidr.TryParse(NodeSubnet, out nodeSubnet))
                     {
                         throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodeSubnet)}={NodeSubnet}] is not a valid IPv4 subnet.");
+                    }
+
+                    if (nodeSubnet.PrefixLength > 16)
+                    {
+                        throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodeSubnet)}={NodeSubnet}] cannot be larger than [/16] (64K addresses).");
+                    }
+
+                    if (nodeSubnet.PrefixLength > 28)
+                    {
+                        throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodeSubnet)}={NodeSubnet}] cannot be smaller than [/28] (16 addresses).");
                     }
                 }
             }
@@ -465,12 +492,40 @@ namespace Neon.Kube
 
             // Verify [SshAddressRules].
 
-            SshAddressRules = SshAddressRules ?? new List<AddressRule>();
+            ManagementAddressRules = ManagementAddressRules ?? new List<AddressRule>();
 
-            foreach (var rule in SshAddressRules)
+            foreach (var rule in ManagementAddressRules)
             {
-                rule.Validate(clusterDefinition, nameof(SshAddressRules));
+                rule.Validate(clusterDefinition, nameof(ManagementAddressRules));
             }
+
+            // Verify that the [ReservedIngressStartPort...ReservedIngressEndPort] range doesn't 
+            // include common reserved ports.
+
+            var reservedPorts = new int[]
+                {
+                    NetworkPorts.HTTP,
+                    NetworkPorts.HTTPS,
+                    NetworkPorts.KubernetesApi
+                };
+
+            foreach (int reservedPort in reservedPorts)
+            {
+                if (ReservedIngressStartPort <= reservedPort && reservedPort <= ReservedIngressEndPort)
+                {
+                    throw new ClusterDefinitionException($"The reserved ingress port range of [{ReservedIngressStartPort}...{ReservedIngressEndPort}] cannot include the common reserved port [{reservedPort}].");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Determines whether a port is within the external SSH network port range.
+        /// </summary>
+        /// <param name="port">The port being tested.</param>
+        /// <returns><c>true</c> for external SSH ports.</returns>
+        internal bool IsExternalSshPort(int port)
+        {
+            return FirstExternalSshPort <= port && port <= ReservedIngressEndPort;
         }
 
         /// <summary>
@@ -509,6 +564,8 @@ namespace Neon.Kube
             {
                 throw new ClusterDefinitionException($"[{nameof(ReservedIngressStartPort)}]-[{nameof(ReservedIngressEndPort)}] range is not large enough to support [{clusterDefinition.Nodes.Count()}] cluster nodes in addition to [{additionalReservedPorts}] additional reserved ports.");
             }
+
+            IngressHealthCheck?.Validate(clusterDefinition, nameof(NetworkOptions));
         }
     }
 }

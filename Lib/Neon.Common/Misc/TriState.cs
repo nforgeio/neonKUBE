@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AddressRuleAction.cs
+// FILE:	    TriState.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -16,44 +16,31 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
-using YamlDotNet.Serialization;
-
-using Neon.Common;
-using Neon.Net;
-
-namespace Neon.Kube
+namespace Neon.Common
 {
     /// <summary>
-    /// Enumerates the possible actions for an <see cref="AddressRule"/>.
+    /// Used to specify a tristate boolean with values: <b>true</b>, <b>false</b>, and <b>default</b>.
     /// </summary>
-    public enum AddressRuleAction
+    public enum TriState
     {
         /// <summary>
-        /// Allow network traffic to or from the IP address or subnet.
+        /// Specifies the default behavior.
         /// </summary>
-        [EnumMember(Value = "allow")]
-        Allow,
+        [EnumMember(Value = "default")]
+        Default = 0,
 
         /// <summary>
-        /// Block network traffic to or from the IP address or subnet.
+        /// Specifies <c>false</c>.
         /// </summary>
-        [EnumMember(Value = "deny")]
-        Deny
+        [EnumMember(Value = "false")]
+        False,
+
+        /// <summary>
+        /// Specifies <c>true</c>.
+        /// </summary>
+        [EnumMember(Value = "true")]
+        True
     }
 }

@@ -61,12 +61,12 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Identifies the cloud or other hosting platform.  This defaults to <see cref="HostingEnvironments.Machine"/>.
+        /// Identifies the cloud or other hosting platform.  This defaults to <see cref="HostingEnvironment.Machine"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Environment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "environment", ApplyNamingConventions = false)]
-        [DefaultValue(HostingEnvironments.Machine)]
-        public HostingEnvironments Environment { get; set; } = HostingEnvironments.Machine;
+        [DefaultValue(HostingEnvironment.Machine)]
+        public HostingEnvironment Environment { get; set; } = HostingEnvironment.Machine;
 
         /// <summary>
         /// Specifies the Amazon Web Services hosting settings.
@@ -154,16 +154,16 @@ namespace Neon.Kube
             {
                 switch (Environment)
                 {
-                    case HostingEnvironments.HyperV:
-                    case HostingEnvironments.HyperVLocal:
-                    case HostingEnvironments.Machine:
-                    case HostingEnvironments.XenServer:
+                    case HostingEnvironment.HyperV:
+                    case HostingEnvironment.HyperVLocal:
+                    case HostingEnvironment.Machine:
+                    case HostingEnvironment.XenServer:
 
                         return false;
 
-                    case HostingEnvironments.Aws:
-                    case HostingEnvironments.Azure:
-                    case HostingEnvironments.Google:
+                    case HostingEnvironment.Aws:
+                    case HostingEnvironment.Azure:
+                    case HostingEnvironment.Google:
 
                         return true;
 
@@ -196,16 +196,16 @@ namespace Neon.Kube
             {
                 switch (Environment)
                 {
-                    case HostingEnvironments.HyperV:
-                    case HostingEnvironments.XenServer:
+                    case HostingEnvironment.HyperV:
+                    case HostingEnvironment.XenServer:
 
                         return true;
 
-                    case HostingEnvironments.Aws:
-                    case HostingEnvironments.Azure:
-                    case HostingEnvironments.Google:
-                    case HostingEnvironments.HyperVLocal:
-                    case HostingEnvironments.Machine:
+                    case HostingEnvironment.Aws:
+                    case HostingEnvironment.Azure:
+                    case HostingEnvironment.Google:
+                    case HostingEnvironment.HyperVLocal:
+                    case HostingEnvironment.Machine:
 
                         return false;
 
@@ -229,7 +229,7 @@ namespace Neon.Kube
 
             switch (Environment)
             {
-                case HostingEnvironments.Aws:
+                case HostingEnvironment.Aws:
 
                     if (Aws == null)
                     {
@@ -242,7 +242,7 @@ namespace Neon.Kube
                     Cloud.Validate(clusterDefinition);
                     break;
 
-                case HostingEnvironments.Azure:
+                case HostingEnvironment.Azure:
 
                     if (Azure == null)
                     {
@@ -255,7 +255,7 @@ namespace Neon.Kube
                     Cloud.Validate(clusterDefinition);
                     break;
 
-                case HostingEnvironments.Google:
+                case HostingEnvironment.Google:
 
                     if (Google == null)
                     {
@@ -268,7 +268,7 @@ namespace Neon.Kube
                     Cloud.Validate(clusterDefinition);
                     break;
 
-                case HostingEnvironments.HyperV:
+                case HostingEnvironment.HyperV:
 
                     HyperV = HyperV ?? new HyperVHostingOptions();
                     HyperV.Validate(clusterDefinition);
@@ -280,7 +280,7 @@ namespace Neon.Kube
                     Vm.Validate(clusterDefinition);
                     break;
 
-                case HostingEnvironments.HyperVLocal:
+                case HostingEnvironment.HyperVLocal:
 
                     HyperVDev = HyperVDev ?? new LocalHyperVHostingOptions();
                     HyperVDev.Validate(clusterDefinition);
@@ -289,13 +289,13 @@ namespace Neon.Kube
                     Vm.Validate(clusterDefinition);
                     break;
 
-                case HostingEnvironments.Machine:
+                case HostingEnvironment.Machine:
 
                     Machine = Machine ?? new MachineHostingOptions();
                     Machine.Validate(clusterDefinition);
                     break;
 
-                case HostingEnvironments.XenServer:
+                case HostingEnvironment.XenServer:
 
                     XenServer = XenServer ?? new XenServerHostingOptions();
                     XenServer.Validate(clusterDefinition);

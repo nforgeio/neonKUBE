@@ -52,7 +52,7 @@ ENV TINI_VERSION v0.18.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /sbin/tini
 
 RUN apt-get update -y \
-    && apt-get install libcurl4 ca-certificates wget -y \
+    && apt-get install -yq libcurl4 ca-certificates wget -y \
     && chmod 700 /*.sh \
     && chmod +x /sbin/tini
 

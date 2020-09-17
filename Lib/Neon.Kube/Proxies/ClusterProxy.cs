@@ -155,7 +155,23 @@ namespace Neon.Kube
             this.nodeProxyCreator  = nodeProxyCreator;
             this.appendLog         = appendToLog;
 
-            CreateNodes();
+            // Initialize the cluster nodes.
+
+            var nodes = new List<SshProxy<NodeDefinition>>();
+
+            foreach (var nodeDefinition in Definition.SortedNodes)
+            {
+                var node = nodeProxyCreator(nodeDefinition.Name, IPAddress.Parse(nodeDefinition.Address ?? "0.0.0.0"), appendLog);
+
+                node.Cluster           = this;
+                node.DefaultRunOptions = defaultRunOptions;
+                node.Metadata          = nodeDefinition;
+                nodes.Add(node);
+            }
+
+            this.Nodes       = nodes;
+            this.FirstMaster = Nodes.Where(n => n.Metadata.IsMaster).OrderBy(n => n.Name).First();
+
         }
 
         /// <summary>
@@ -233,29 +249,6 @@ namespace Neon.Kube
         public IEnumerable<SshProxy<NodeDefinition>> Workers
         {
             get { return Nodes.Where(n => n.Metadata.IsWorker).OrderBy(n => n.Name); }
-        }
-
-        /// <summary>
-        /// Initializes or reinitializes the <see cref="Nodes"/> list.  This is called during
-        /// construction and also in rare situations where the node proxies need to be 
-        /// recreated (e.g. after configuring node static IP addresses).
-        /// </summary>
-        public void CreateNodes()
-        {
-            var nodes = new List<SshProxy<NodeDefinition>>();
-
-            foreach (var nodeDefinition in Definition.SortedNodes)
-            {
-                var node = nodeProxyCreator(nodeDefinition.Name, IPAddress.Parse(nodeDefinition.Address ?? "0.0.0.0"), appendLog);
-
-                node.Cluster           = this;
-                node.DefaultRunOptions = defaultRunOptions;
-                node.Metadata          = nodeDefinition;
-                nodes.Add(node);
-            }
-
-            this.Nodes       = nodes;
-            this.FirstMaster = Nodes.Where(n => n.Metadata.IsMaster).OrderBy(n => n.Name).First();
         }
 
         /// <summary>

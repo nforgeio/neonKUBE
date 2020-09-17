@@ -88,17 +88,17 @@ namespace Neon.Kube
 
             switch (clusterDefinition.Hosting.Environment)
             {
-                case HostingEnvironments.Aws:
-                case HostingEnvironments.Azure:
-                case HostingEnvironments.Google:
+                case HostingEnvironment.Aws:
+                case HostingEnvironment.Azure:
+                case HostingEnvironment.Google:
 
                     // Node templates are provided by virtual machine images in the cloud.
 
                     linuxTemplateUri = null;
                     break;
 
-                case HostingEnvironments.HyperV:
-                case HostingEnvironments.HyperVLocal:
+                case HostingEnvironment.HyperV:
+                case HostingEnvironment.HyperVLocal:
 
                     if (!string.IsNullOrEmpty(clusterDefinition.LinuxTemplateUri))
                     {
@@ -110,11 +110,11 @@ namespace Neon.Kube
                     }
                     break;
 
-                case HostingEnvironments.Machine:
+                case HostingEnvironment.Machine:
 
                     break;
 
-                case HostingEnvironments.XenServer:
+                case HostingEnvironment.XenServer:
 
                     if (!string.IsNullOrEmpty(clusterDefinition.LinuxTemplateUri))
                     {
@@ -151,7 +151,7 @@ namespace Neon.Kube
                     
                 KubeCtlWindowsUri  = $"https://storage.googleapis.com/kubernetes-release/release/v{KubeVersions.KubernetesVersion}/bin/windows/amd64/kubectl.exe",
 
-                DockerPackageUri   = $"https://s3-us-west-2.amazonaws.com/neonforge/kube/{KubeVersions.DockerVersion}-ubuntu-bionic-stable-amd64.deb",
+                DockerPackageUri   = $"https://neonkube.s3-us-west-2.amazonaws.com/docker/{KubeVersions.DockerVersion}-ubuntu-focal-stable_amd64.deb",
 
                 HelmLinuxUri       = $"https://get.helm.sh/helm-v{KubeVersions.HelmVersion}-linux-amd64.tar.gz",
                 HelmOsxUri         = $"https://get.helm.sh/helm-v{KubeVersions.HelmVersion}-darwin-amd64.tar.gz",

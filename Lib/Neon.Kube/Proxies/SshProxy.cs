@@ -88,9 +88,8 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Static members
 
-        private static Dictionary<string, object> connectLocks = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
-
-        private static Regex idempotentRegex = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
+        private static Dictionary<string, object>   connectLocks    = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
+        private static Regex                        idempotentRegex = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
 
         /// <summary>
         /// Returns the object to be used to when establishing connections to

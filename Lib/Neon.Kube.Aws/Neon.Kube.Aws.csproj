@@ -59,4 +59,11 @@
     <None Include="..\..\LICENSE" Pack="True" PackagePath="" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.Core" Version="3.5.1.10" />
+    <PackageReference Include="AWSSDK.EC2" Version="3.5.4.4" />
+    <PackageReference Include="AWSSDK.ElasticLoadBalancingV2" Version="3.5.1.3" />
+    <PackageReference Include="AWSSDK.ResourceGroups" Version="3.5.0.12" />
+  </ItemGroup>
+
 </Project>

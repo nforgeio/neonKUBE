@@ -51,7 +51,7 @@ namespace Neon.Kube
     /// Manages cluster provisioning on the local workstation using Microsoft Hyper-V virtual machines.
     /// This is typically used for development and test purposes.
     /// </summary>
-    [HostingProvider(HostingEnvironments.HyperVLocal)]
+    [HostingProvider(HostingEnvironment.HyperVLocal)]
     public class HyperVLocalHostingManager : HostingManager
     {
         //---------------------------------------------------------------------
@@ -114,9 +114,18 @@ namespace Neon.Kube
         private string                          secureSshPassword;
 
         /// <summary>
-        /// Constructor.
+        /// Creates an instance that is only capable of validating the hosting
+        /// related options in the cluster definition.
         /// </summary>
-        /// <param name="cluster">The cluster being managed.</param>
+        public HyperVLocalHostingManager()
+        {
+        }
+
+        /// <summary>
+        /// Creates an instance that is capable of provisioning a cluster on the local machine using Hyper-V.
+        /// </summary>
+        /// <param name="cluster">The cluster being managed.
+        /// </param>
         /// <param name="setupInfo">Specifies the cluster setup information.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
@@ -151,12 +160,14 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
         }
 
         /// <inheritdoc/>
-        public override bool Provision(bool force, string secureSshPassword, string orgSshPassword = null)
+        public override async Task<bool> ProvisionAsync(bool force, string secureSshPassword, string orgSshPassword = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
+            Covenant.Assert(cluster != null, $"[{nameof(HyperVLocalHostingManager)}] was created with the wrong constructor.");
 
             this.secureSshPassword = secureSshPassword;
 
@@ -202,16 +213,16 @@ namespace Neon.Kube
             };
 
             controller.AddGlobalStep("prepare hyper-v", () => PrepareHyperV());
-            controller.AddStep("create virtual machines", (node, stepDelay) => ProvisionVM(node));
+            controller.AddNodeStep("create virtual machines", (node, stepDelay) => ProvisionVM(node));
             controller.AddGlobalStep(string.Empty, () => Finish(), quiet: true);
 
             if (!controller.Run())
             {
                 Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
-                return false;
+                return await Task.FromResult(false);
             }
 
-            return true;
+            return await Task.FromResult(true);
         }
 
         /// <inheritdoc/>
@@ -225,7 +236,7 @@ namespace Neon.Kube
 
 
         /// <inheritdoc/>
-        public override string GetDataDisk(SshProxy<NodeDefinition> node)
+        public override string GetDataDevice(SshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 
@@ -442,7 +453,7 @@ namespace Neon.Kube
 
             using (var hyperv = new HyperVClient())
             {
-                // We're going to create the [cluster] external switch if there
+                // We're going to create an external Hyper-V switch if there
                 // isn't already an external switch.
 
                 controller.SetOperationStatus("Scanning network adapters");
@@ -504,26 +515,16 @@ namespace Neon.Kube
         /// <param name="node">The target node.</param>
         private void ProvisionVM(SshProxy<NodeDefinition> node)
         {
-            // $todo(jefflill):
-            //
-            // This code currently assumes that the VM will use DHCP to obtain
-            // its initial network configuration so the code can SSH into the
-            // node to configure a static IP.
-            //
-            // It appears that it is possible to inject an IP address, but
-            // I wasn't able to get this to work (perhaps Windows Server is
-            // required).  Here's a link discussing this:
-            //
-            //  http://www.itprotoday.com/virtualization/modify-ip-configuration-vm-hyper-v-host
-            //
-            // An alternative technique might be to update [/etc/network/interfaces]
-            // remotely via PowerShell as described here:
-            //
-            //  https://www.altaro.com/hyper-v/transfer-files-linux-hyper-v-guest/
-
             using (var hyperv = new HyperVClient())
             {
                 var vmName = GetVmName(node.Metadata);
+
+                // $hack(jefflill): Update console at 2 sec intervals to mitigate annoying flicker
+
+                var updateInterval = TimeSpan.FromSeconds(2);
+                var stopwatch      = new Stopwatch();
+
+                stopwatch.Start();
 
                 // Copy the VHDX template file to the virtual machine's
                 // virtual hard drive file.
@@ -533,13 +534,6 @@ namespace Neon.Kube
                 var drivePath             = Path.Combine(vmDriveFolder, $"{vmName}.vhdx");
 
                 node.Status = $"create: disk";
-
-                // $hack(jefflill): Update console at 2 sec intervals to mitigate annoying flicker
-
-                var updateInterval = TimeSpan.FromSeconds(2);
-                var stopwatch      = new Stopwatch();
-
-                stopwatch.Start();
 
                 using (var input = new FileStream(driveTemplatePath, FileMode.Open, FileAccess.Read))
                 {
@@ -607,15 +601,7 @@ namespace Neon.Kube
                     }
                 }
 
-                // Stop and delete the virtual machine if one already exists.
-
-                if (hyperv.VmExists(vmName))
-                {
-                    hyperv.StopVm(vmName);
-                    hyperv.RemoveVm(vmName);
-                }
-
-                // Create the virtual machine if it doesn't already exist.
+                // Create the virtual machine.
 
                 var processors  = node.Metadata.Vm.GetProcessors(cluster.Definition);
                 var memoryBytes = node.Metadata.Vm.GetMemory(cluster.Definition);
@@ -631,45 +617,49 @@ namespace Neon.Kube
                     switchName:     switchName);
 
                 // Create a temporary ISO with the [neon-node-prep.sh] script, mount it
-                // to the VM and then boot the VM for the first time so that it will
-                // pick up its network configuration.
+                // to the VM and then boot the VM for the first time.  The script on the
+                // ISO will be executed automatically by the [neon-node-prep] service
+                // preinstalled on the VM image and the script will configure the secure 
+                // SSH password and then the network.
+                //
+                // This ensures that SSH is not exposed to the network before the secure
+                // password has been set.
 
                 var tempIso = (TempFile)null;
 
                 try
                 {
-                    using (var nodeProxy = cluster.GetNode(node.Name))
+                    // Create a temporary ISO with the prep script and mount it
+                    // to the node VM.
+
+                    node.Status = $"mount: neon-node-prep iso";
+                    tempIso     = KubeHelper.CreateNodePrepIso(node.Cluster.Definition, node.Metadata, secureSshPassword);
+                    hyperv.InsertVmDvd(vmName, tempIso.Path);
+
+                    // Start the VM for the first time with the mounted ISO.  The network
+                    // configuration will happen automatically by the time we can connect.
+
+                    node.Status = $"start: virtual machine (first boot)";
+                    hyperv.StartVm(vmName);
+
+                    // Update the node credentials to use the secure password and then wait for the node to boot.
+
+                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, secureSshPassword));
+
+                    node.Status = $"connecting...";
+                    node.WaitForBoot();
+
+                    // Extend the primary partition and file system to fill 
+                    // the virtual drive.  Note that we're not going to do
+                    // this if the specified drive size is less than or equal
+                    // to the node template's drive size (because that
+                    // would fail).
+
+                    if (diskBytes > KubeConst.NodeTemplateDiskSize)
                     {
-                        // Create a temporary ISO with the prep script and mount it
-                        // to the node VM.
-
-                        node.Status = $"mount: neon-node-prep iso";
-                        tempIso     = KubeHelper.CreateNodePrepIso(node.Cluster.Definition, node.Metadata, secureSshPassword);
-
-                        hyperv.InsertVmDvd(vmName, tempIso.Path);
-
-                        // Start the VM for the first time with the mounted ISO.  The network
-                        // configuration will happen automatically by the time we can connect.
-
-                        node.Status = $"start: virtual machine (first boot)";
-
-                        hyperv.StartVm(vmName);
-                        node.Status = $"connecting...";
-                        nodeProxy.WaitForBoot();
-
-                        // Extend the primary partition and file system to fill 
-                        // the virtual drive.  Note that we're not going to do
-                        // this if the specified drive size is less than or equal
-                        // to the node template's drive size (because that
-                        // would fail).
-
-                        if (diskBytes > KubeConst.NodeTemplateDiskSize)
-                        {
-                            node.Status = $"resize: primary drive";
-
-                            nodeProxy.SudoCommand("growpart /dev/sda 2");
-                            nodeProxy.SudoCommand("resize2fs /dev/sda2");
-                        }
+                        node.Status = $"resize: primary drive";
+                        node.SudoCommand("growpart /dev/sda 2");
+                        node.SudoCommand("resize2fs /dev/sda2");
                     }
                 }
                 finally
@@ -686,11 +676,6 @@ namespace Neon.Kube
         /// </summary>
         private void Finish()
         {
-            // Recreate the node proxies because we disposed them above.
-            // We need to do this so subsequent prepare steps will be
-            // able to connect to the nodes via the correct addresses.
-
-            cluster.CreateNodes();
         }
     }
 }

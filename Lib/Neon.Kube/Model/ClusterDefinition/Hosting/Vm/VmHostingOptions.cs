@@ -136,8 +136,8 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// The prefix to be prepended to virtual machine provisioned to hypervisors for the
-        /// <see cref="HostingEnvironments.HyperV"/>, <see cref="HostingEnvironments.HyperVLocal"/>,
-        /// and <see cref="HostingEnvironments.XenServer"/> environments.
+        /// <see cref="HostingEnvironment.HyperV"/>, <see cref="HostingEnvironment.HyperVLocal"/>,
+        /// and <see cref="HostingEnvironment.XenServer"/> environments.
         /// </para>
         /// <para>
         /// When this is <c>null</c> (the default), the cluster name followed by a dash will 

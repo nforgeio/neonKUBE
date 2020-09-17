@@ -46,7 +46,18 @@ namespace Neon.Kube
     public interface IHostingManagerFactory
     {
         /// <summary>
-        /// Returns the <see cref="HostingManager"/> implementation for a specific environment.
+        /// Returns the <see cref="HostingManager"/> for an environment that can be used 
+        /// for validating the hosting related options.
+        /// </summary>
+        /// <param name="environment">The target hosting environment.</param>
+        /// <returns>
+        /// The <see cref="HostingManager"/> or <c>null</c> if no hosting manager
+        /// could be located for the specified cluster environment.
+        /// </returns>
+        HostingManager GetManager(HostingEnvironment environment);
+
+        /// <summary>
+        /// Returns the <see cref="HostingManager"/> for provisioning a specific environment.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
         /// <param name="setupInfo">Specifies the cluster setup information.</param>
@@ -71,6 +82,6 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="environment">The target hosting environment.</param>
         /// <returns><c>true</c> for cloud environments.</returns>
-        bool IsCloudEnvironment(HostingEnvironments environment);
+        bool IsCloudEnvironment(HostingEnvironment environment);
     }
 }

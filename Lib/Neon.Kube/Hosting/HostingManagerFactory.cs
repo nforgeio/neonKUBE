@@ -82,6 +82,14 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
+        public HostingManager GetManager(HostingEnvironment environment)
+        {
+            CheckInitialized();
+
+            return Loader.GetManager(environment);
+        }
+
+        /// <inheritdoc/>
         public HostingManager GetManager(ClusterProxy cluster, KubeSetupInfo setupInfo, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null, nameof(cluster));
@@ -93,7 +101,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public bool IsCloudEnvironment(HostingEnvironments environment)
+        public bool IsCloudEnvironment(HostingEnvironment environment)
         {
             CheckInitialized();
 
@@ -101,7 +109,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Ensures that that a cluster definition is valid.
+        /// Ensures that that a cluster definition has valid hosting options.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         public void Validate(ClusterDefinition clusterDefinition)
@@ -110,8 +118,7 @@ namespace Neon.Kube
 
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
-            var cluster = new ClusterProxy(clusterDefinition);
-            var manager = GetManager(cluster, new KubeSetupInfo());
+            var manager = GetManager(clusterDefinition.Hosting.Environment);
 
             if (manager == null)
             {

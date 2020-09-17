@@ -5,10 +5,12 @@ VisualStudioVersion = 16.0.28606.126
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doc", "Doc", "{2CFE7466-98C4-490A-9519-4702DF7A4E15}"
 	ProjectSection(SolutionItems) = preProject
+		Doc\AWS Notes.docx = Doc\AWS Notes.docx
 		Doc\Azure Notes.docx = Doc\Azure Notes.docx
 		Doc\CADENCE.md = Doc\CADENCE.md
 		Doc\CODEDOC.md = Doc\CODEDOC.md
 		Doc\DEVELOPER.md = Doc\DEVELOPER.md
+		Lib\Neon.Kube.HyperVLocal\HyperVLocalHostingManager.cs = Lib\Neon.Kube.HyperVLocal\HyperVLocalHostingManager.cs
 		Doc\SUDO and WinSCP.docx = Doc\SUDO and WinSCP.docx
 		Doc\TEST-VERSION.md = Doc\TEST-VERSION.md
 	EndProjectSection

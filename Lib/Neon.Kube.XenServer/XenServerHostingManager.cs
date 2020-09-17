@@ -22,6 +22,7 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 using YamlDotNet.Serialization;
@@ -37,7 +38,7 @@ namespace Neon.Kube
     /// <summary>
     /// Manages cluster provisioning on the XenServer hypervisor.
     /// </summary>
-    [HostingProvider(HostingEnvironments.XenServer)]
+    [HostingProvider(HostingEnvironment.XenServer)]
     public partial class XenServerHostingManager : HostingManager
     {
         //---------------------------------------------------------------------
@@ -90,7 +91,15 @@ namespace Neon.Kube
         private string                      secureSshPassword;
 
         /// <summary>
-        /// Constructor.
+        /// Creates an instance that is only capable of validating the hosting
+        /// related options in the cluster definition.
+        /// </summary>
+        public XenServerHostingManager()
+        {
+        }
+
+        /// <summary>
+        /// Creates an instance that is capable of provisioning a cluster on XenServer/XCP-ng servers.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
         /// <param name="setupInfo">Specifies the cluster setup information.</param>
@@ -140,24 +149,15 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override void Validate(ClusterDefinition clusterDefinition)
         {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
         }
 
         /// <inheritdoc/>
-        public override bool Provision(bool force, string secureSshPassword, string orgSshPassword = null)
+        public override async Task<bool> ProvisionAsync(bool force, string secureSshPassword, string orgSshPassword = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
 
             this.secureSshPassword = secureSshPassword;
-
-            // $todo(jefflill):
-            //
-            // I'm not implementing [force] here.  I'm not entirely sure
-            // that this makes sense for production clusters.
-            //
-            // Perhaps it would make more sense to replace this with a
-            // [neon cluster remove] command.
-            //
-            //      https://github.com/nforgeio/neonKUBE/issues/156
 
             if (IsProvisionNOP)
             {
@@ -223,24 +223,24 @@ namespace Neon.Kube
 
             controller = new SetupController<XenClient>($"Provisioning [{cluster.Definition.Name}] cluster", sshProxies)
             {
-                ShowStatus = this.ShowStatus,
+                ShowStatus  = this.ShowStatus,
                 MaxParallel = this.MaxParallel
             };
              
             controller.AddWaitUntilOnlineStep();
 
-            controller.AddStep("verify readiness", (node, stepDelay) => VerifyReady(node));
-            controller.AddStep("virtual machine template", (node, stepDelay) => CheckVmTemplate(node));
-            controller.AddStep("create virtual machines", (node, stepDelay) => ProvisionVirtualMachines(node));
+            controller.AddNodeStep("verify readiness", (node, stepDelay) => VerifyReady(node));
+            controller.AddNodeStep("virtual machine template", (node, stepDelay) => CheckVmTemplate(node));
+            controller.AddNodeStep("create virtual machines", (node, stepDelay) => ProvisionVirtualMachines(node));
             controller.AddGlobalStep(string.Empty, () => Finish(), quiet: true);
 
             if (!controller.Run())
             {
                 Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
-                return false;
+                return await Task.FromResult(false);
             }
 
-            return true;
+            return await Task.FromResult(true);
         }
 
         /// <summary>
@@ -382,49 +382,54 @@ namespace Neon.Kube
                     primaryStorageRepository:   cluster.Definition.Hosting.XenServer.StorageRepository);;
 
                 // Create a temporary ISO with the [neon-node-prep.sh] script, mount it
-                // to the VM and then boot the VM for the first time so that it will
-                // pick up its network configuration.
+                // to the VM and then boot the VM for the first time.  The script on the
+                // ISO will be executed automatically by the [neon-node-prep] service
+                // preinstalled on the VM image and the script will configure the secure 
+                // SSH password and then the network.
+                //
+                // This ensures that SSH is not exposed to the network before the secure
+                // password has been set.
 
                 var tempIso    = (TempFile)null;
                 var xenTempIso = (XenTempIso)null;
 
                 try
                 {
-                    using (var nodeProxy = cluster.GetNode(node.Name))
+                    // Create a temporary ISO with the prep script and insert it
+                    // into the node VM.
+
+                    node.Status = $"mount: neon-node-prep iso";
+
+                    tempIso    = KubeHelper.CreateNodePrepIso(node.Cluster.Definition, node.Metadata, secureSshPassword);
+                    xenTempIso = xenHost.CreateTempIso(tempIso.Path);
+
+                    xenHost.Invoke($"vm-cd-eject", $"uuid={vm.Uuid}");
+                    xenHost.Invoke($"vm-cd-insert", $"uuid={vm.Uuid}", $"cd-name={xenTempIso.CdName}");
+
+                    // Start the VM for the first time with the mounted ISO.  The network
+                    // configuration will happen automatically by the time we can connect.
+
+                    node.Status = $"start: virtual machine (first boot)";
+                    xenHost.Machine.Start(vm);
+
+                    // Update the node credentials to use the secure password and then wait for the node to boot.
+
+                    node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, secureSshPassword));
+
+                    node.Status = $"connecting...";
+                    node.WaitForBoot();
+
+                    // Extend the primary partition and file system to fill 
+                    // the virtual drive.  Note that we're not going to do
+                    // this if the specified drive size is less than or equal
+                    // to the node template's drive size (because that
+                    // would fail).
+
+                    if (diskBytes > KubeConst.NodeTemplateDiskSize)
                     {
-                        // Create a temporary ISO with the prep script and insert it
-                        // into the node VM.
-
-                        node.Status = $"mount: neon-node-prep iso";
-
-                        tempIso    = KubeHelper.CreateNodePrepIso(node.Cluster.Definition, node.Metadata, secureSshPassword);
-                        xenTempIso = xenHost.CreateTempIso(tempIso.Path);
-
-                        xenHost.Invoke($"vm-cd-eject", $"uuid={vm.Uuid}");
-                        xenHost.Invoke($"vm-cd-insert", $"uuid={vm.Uuid}", $"cd-name={xenTempIso.CdName}");
-
-                        // Start the VM for the first time with the mounted ISO.  The network
-                        // configuration will happen automatically by the time we can connect.
-
-                        node.Status = $"start: virtual machine (first boot)";
-
-                        xenHost.Machine.Start(vm);
-                        node.Status = $"connecting...";
-                        nodeProxy.WaitForBoot();
-
-                        // Extend the primary partition and file system to fill 
-                        // the virtual drive.  Note that we're not going to do
-                        // this if the specified drive size is less than or equal
-                        // to the node template's drive size (because that
-                        // would fail).
-
-                        if (diskBytes > KubeConst.NodeTemplateDiskSize)
-                        {
-                            node.Status = $"resize: primary drive";
-
-                            nodeProxy.SudoCommand("growpart /dev/xvda 2");
-                            nodeProxy.SudoCommand("resize2fs /dev/xvda2");
-                        }
+                        node.Status = $"resize: primary drive";
+                        node.SudoCommand("growpart /dev/xvda 2");
+                        node.SudoCommand("resize2fs /dev/xvda2");
                     }
                 }
                 finally
@@ -447,11 +452,6 @@ namespace Neon.Kube
         /// </summary>
         private void Finish()
         {
-            // Recreate the node proxies because we disposed them above.
-            // We need to do this so subsequent prepare steps will be
-            // able to connect to the nodes via the correct addresses.
-
-            cluster.CreateNodes();
         }
 
         /// <inheritdoc/>
@@ -461,7 +461,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string GetDataDisk(SshProxy<NodeDefinition> node)
+        public override string GetDataDevice(SshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 

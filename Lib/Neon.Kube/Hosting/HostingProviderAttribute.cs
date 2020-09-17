@@ -32,7 +32,7 @@ namespace Neon.Kube
         /// Constructor.
         /// </summary>
         /// <param name="environment">Specifies the target hosting environment.</param>
-        public HostingProviderAttribute(HostingEnvironments environment)
+        public HostingProviderAttribute(HostingEnvironment environment)
         {
             this.Environment = environment;
         }
@@ -40,6 +40,6 @@ namespace Neon.Kube
         /// <summary>
         /// Returns the target hosting environment supported by the tagged <see cref="IHostingManager"/>.
         /// </summary>
-        public HostingEnvironments Environment { get; private set; }
+        public HostingEnvironment Environment { get; private set; }
     }
 }

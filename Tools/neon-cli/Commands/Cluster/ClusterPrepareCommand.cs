@@ -157,52 +157,6 @@ Server Requirements:
 
             clusterDefinition.Provisioner = $"neon-cli:{Program.Version}";  // Identify this tool/version as the cluster provisioner
 
-            // It's not a great idea to use a static password when provisioning VMs
-            // in public clouds or on-premise hypervisors because it might be possible
-            // for somebody to use this fact the SSH into nodes while the cluster is 
-            // being setup and before we set the secure password at the end.
-            //
-            // For cloud environments we're always going to generate a secure random
-            // password and we're going to append an extra 4-character string to
-            // ensure that the password meets Azure requirements:
-            //
-            // The supplied password must be between 6-72 characters long and must 
-            // satisfy at least 3 of password complexity requirements from the following: 
-            //
-            //      1. Contains an uppercase character
-            //      2. Contains a lowercase character
-            //      3. Contains a numeric digit
-            //      4. Contains a special character
-            //      5. Control characters are not allowed
-            //
-            // This is also an issue for non-cloud hosting environments such as
-            // Hyper-V, XenServer, and bare metal.  For these environments,
-            // we're going to generate a random secure password.
-            //
-            // We're going to use the cloud API to configure this secure password
-            // when creating the VMs.  For on-premise hypervisor environments such
-            // as Hyper-V and XenServer, we're going use the [neon-node-prep]
-            // service to mount a virtual DVD that will change the password before
-            // configuring the network on first boot.
-            //
-            // For bare metal, we're going to change to a secure password unless
-            // [SecurityOptions.RetainNodePassword=true].
-
-            var orgSshPassword = Program.MachinePassword;
-
-            if (!clusterDefinition.Security.KeepNodePassword)
-            {
-                Program.MachinePassword = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
-
-                if (clusterDefinition.Hosting.IsCloudProvider)
-                {
-                    // Append a string that guarantees that the generated password meets
-                    // cloud minimum requirements.
-
-                    Program.MachinePassword += ".Aa0";
-                }
-            }
-
             // NOTE: Cluster prepare starts new log files.
 
             cluster = new ClusterProxy(clusterDefinition, Program.CreateNodeProxy<NodeDefinition>, appendToLog: false, defaultRunOptions: RunOptions.LogOutput | RunOptions.FaultOnError);
@@ -238,7 +192,7 @@ Server Requirements:
                 // environments because we're assuming that the cluster will run in its own
                 // private network so there'll ne no possibility of conflicts.
 
-                if (cluster.Definition.Hosting.Environment != HostingEnvironments.Machine && 
+                if (cluster.Definition.Hosting.Environment != HostingEnvironment.Machine && 
                     !cluster.Definition.Hosting.IsCloudProvider)
                 {
                     Console.WriteLine();
@@ -344,14 +298,48 @@ Server Requirements:
                     {
                         ClusterDefinition = clusterDefinition,
                         SshUsername       = KubeConst.SysAdminUsername,
-                        SshPassword       = Program.MachinePassword,
                         SetupDetails      = new KubeSetupDetails() { SetupPending = true }
                     };
 
                     contextExtension.Save();
                 }
 
-                if (!hostingManager.Provision(force, contextExtension.SshPassword, orgSshPassword))
+                // We're going to generate a secure random password and we're going to append
+                // an extra 4-character string to ensure that the password meets Azure (and probably
+                // other cloud) minimum requirements:
+                //
+                // The supplied password must be between 6-72 characters long and must 
+                // satisfy at least 3 of password complexity requirements from the following: 
+                //
+                //      1. Contains an uppercase character
+                //      2. Contains a lowercase character
+                //      3. Contains a numeric digit
+                //      4. Contains a special character
+                //      5. Control characters are not allowed
+                //
+                // We're going to use the cloud API to configure this secure password
+                // when creating the VMs.  For on-premise hypervisor environments such
+                // as Hyper-V and XenServer, we're going use the [neon-node-prep]
+                // service to mount a virtual DVD that will change the password before
+                // configuring the network on first boot.
+                //
+                // For bare metal, we're going to leave the password along and just use
+                // whatever the user specified when the nodes were built out.
+
+                var orgSshPassword = Program.MachinePassword;
+
+                if (hostingManager.GenerateSecurePassword && string.IsNullOrEmpty(contextExtension.SshPassword))
+                {
+                    contextExtension.SshPassword = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
+
+                    // Append a string that guarantees that the generated password meets
+                    // cloud minimum requirements.
+
+                    contextExtension.SshPassword += ".Aa0";
+                    contextExtension.Save();
+                }
+
+                if (!hostingManager.ProvisionAsync(force, contextExtension.SshPassword, orgSshPassword).Result)
                 {
                     Program.Exit(1);
                 }
@@ -421,9 +409,9 @@ Server Requirements:
 
                 controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
                 hostingManager.AddPostProvisionSteps(controller);
-                controller.AddStep("verify OS", CommonSteps.VerifyOS);
+                controller.AddNodeStep("verify OS", CommonSteps.VerifyOS);
 
-                controller.AddStep("prepare", 
+                controller.AddNodeStep("prepare", 
                     (node, stepDelay) =>
                     {
                         Thread.Sleep(stepDelay);
