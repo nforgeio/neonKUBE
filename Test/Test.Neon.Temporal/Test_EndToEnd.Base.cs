@@ -267,13 +267,13 @@ namespace TestTemporal
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public async Task Base_DescribeTaskList()
+        public async Task Base_DescribeTaslQueue()
         {
             await SyncContext.ClearAsync;
 
             // Verify some information about decision tasks.
 
-            var description = await client.DescribeTaskListAsync(TemporalTestHelper.TaskList, TaskListType.Decision);
+            var description = await client.DescribeQueueListAsync(TemporalTestHelper.TaskQueue, TaskQueueType.Decision);
 
             Assert.NotNull(description);
 
@@ -288,7 +288,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IBaseWorkflow : IWorkflow
         {
             [WorkflowMethod]
@@ -334,7 +334,7 @@ namespace TestTemporal
             Assert.Empty(description.PendingActivities);
             Assert.Empty(description.PendingChildren);
 
-            Assert.Equal(TemporalTestHelper.TaskList, description.Configuration.TaskList);
+            Assert.Equal(TemporalTestHelper.TaskQueue, description.Configuration.TaskQueue);
 
             // Ensure that the status properties are reasonable.
 

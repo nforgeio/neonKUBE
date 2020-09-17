@@ -46,7 +46,7 @@ namespace Neon.Temporal
         /// <param name="activityInterface">Optionally specifies the activity interface definition.</param>
         /// /// <param name="method">Optionally specifies the target workflow method.</param>
         /// <returns>The normalized options.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if a valid task list is not specified.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if a valid task queue is not specified.</exception>
         internal static ActivityOptions Normalize(TemporalClient client, ActivityOptions options, Type activityInterface = null, MethodInfo method = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
@@ -79,16 +79,16 @@ namespace Neon.Temporal
                 }
             }
 
-            if (string.IsNullOrEmpty(options.TaskList))
+            if (string.IsNullOrEmpty(options.TaskQueue))
             {
-                if (!string.IsNullOrEmpty(methodAttribute?.TaskList))
+                if (!string.IsNullOrEmpty(methodAttribute?.TaskQueue))
                 {
-                    options.TaskList = methodAttribute.TaskList;
+                    options.TaskQueue = methodAttribute.TaskQueue;
                 }
 
-                if (string.IsNullOrEmpty(options.TaskList) && !string.IsNullOrEmpty(interfaceAttribute?.TaskList))
+                if (string.IsNullOrEmpty(options.TaskQueue) && !string.IsNullOrEmpty(interfaceAttribute?.TaskQueue))
                 {
-                    options.TaskList = interfaceAttribute.TaskList;
+                    options.TaskQueue = interfaceAttribute.TaskQueue;
                 }
             }
 
@@ -138,12 +138,12 @@ namespace Neon.Temporal
         // Instance members
 
         /// <summary>
-        /// Optionally specifies the target Temporal task list.  This defaults to the task list
-        /// specified by <see cref="ActivityMethodAttribute.TaskList"/>,
-        /// <see cref="ActivityInterfaceAttribute.TaskList"/>, or the parent workflow's
-        /// task list, in that order of precedence.
+        /// Optionally specifies the target Temporal task queue.  This defaults to the task queue
+        /// specified by <see cref="ActivityMethodAttribute.TaskQueue"/>,
+        /// <see cref="ActivityInterfaceAttribute.TaskQueue"/>, or the parent workflow's
+        /// task queue, in that order of precedence.
         /// </summary>
-        public string TaskList { get; set; } = null;
+        public string TaskQueue { get; set; } = null;
 
         /// <summary>
         /// Optionally specifies the target Temporal namespace.  This defaults to the domain
@@ -219,7 +219,7 @@ namespace Neon.Temporal
                 ScheduleToCloseTimeout = this.ScheduleToCloseTimeout,
                 ScheduleToStartTimeout = this.ScheduleToStartTimeout,
                 StartToCloseTimeout    = this.StartToCloseTimeout,
-                TaskList               = this.TaskList,
+                TaskQueue              = this.TaskQueue,
                 WaitForCancellation    = this.WaitForCancellation
             };
         }

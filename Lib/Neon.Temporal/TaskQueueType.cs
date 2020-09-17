@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TaskListKind.cs
+// FILE:	    TaskQueueType.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
+using Newtonsoft.Json;
+
 using Neon.Common;
 using Neon.Temporal;
 using Neon.Temporal.Internal;
@@ -27,22 +29,20 @@ using Neon.Temporal.Internal;
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Enumerates the different kinds of task lists.
+    /// Used to distinguish between decision (AKA workflow) and activity task lists.
     /// </summary>
-    public enum TaskListKind
+    public enum TaskQueueType
     {
-        // WARNING: These values must match those defined by [InternalTaskListKind].
+        /// <summary>
+        /// Identifies decision (AKA workflow) task lists.
+        /// </summary>
+        [EnumMember(Value = "Decision")]
+        Decision,
 
         /// <summary>
-        /// Normal.
+        /// Identifies activity task lists.
         /// </summary>
-        [EnumMember(Value = "NORMAL")]
-        Normal = 0,
-
-        /// <summary>
-        /// Sticky.
-        /// </summary>
-        [EnumMember(Value = "STICKY")]
-        Sticky = 1
+        [EnumMember(Value = "Activity")]
+        Activity
     }
 }

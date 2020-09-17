@@ -68,7 +68,7 @@ namespace Neon.Temporal
         /// <param name="args">Optional arguments for the new execution.</param>
         /// <param name="workflow">Optional workflow for the new execution.</param>
         /// <param name="namespace">Optional namespace for the new execution.</param>
-        /// <param name="taskList">Optional task list for the new execution.</param>
+        /// <param name="taskQueue">Optional task queue for the new execution.</param>
         /// <param name="startToCloseTimeout">Optional execution to start timeout for the new execution.</param>
         /// <param name="scheduleToCloseTimeout">Optional schedule to close timeout for the new execution.</param>
         /// <param name="scheduleToStartTimeout">Optional schedule to start timeout for the new execution.</param>
@@ -78,7 +78,7 @@ namespace Neon.Temporal
             byte[]          args                   = null,
             string          workflow               = null,
             string          @namespace             = null,
-            string          taskList               = null,
+            string          taskQueue               = null,
             TimeSpan        startToCloseTimeout    = default,
             TimeSpan        scheduleToCloseTimeout = default,
             TimeSpan        scheduleToStartTimeout = default,
@@ -90,7 +90,7 @@ namespace Neon.Temporal
             this.Args                   = args;
             this.Workflow               = workflow;
             this.Namespace              = @namespace;
-            this.TaskList               = taskList;
+            this.TaskQueue               = taskQueue;
             this.StartToCloseTimeout    = startToCloseTimeout;
             this.ScheduleToStartTimeout = scheduleToStartTimeout;
             this.ScheduleToCloseTimeout = scheduleToCloseTimeout;
@@ -111,7 +111,7 @@ namespace Neon.Temporal
             {
                 this.Workflow               = options.Workflow;
                 this.Namespace              = options.Namespace;
-                this.TaskList               = options.TaskList;
+                this.TaskQueue               = options.TaskQueue;
                 this.StartToCloseTimeout    = options.ExecutionStartToCloseTimeout;
                 this.ScheduleToStartTimeout = options.ScheduleToStartTimeout;
                 this.ScheduleToCloseTimeout = options.ScheduleToCloseTimeout;
@@ -136,9 +136,9 @@ namespace Neon.Temporal
         public string Namespace { get; private set; }
 
         /// <summary>
-        /// Optionally specifies the new task list for the next workflow execution.
+        /// Optionally specifies the new task queue for the next workflow execution.
         /// </summary>
-        public string TaskList { get; private set; }
+        public string TaskQueue { get; private set; }
 
         /// <summary>
         /// Optionally specifies the new timeout for the next workflow execution.

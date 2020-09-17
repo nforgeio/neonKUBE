@@ -26,7 +26,7 @@ using Neon.Temporal;
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Describes the status of a poller (AKA worker) listening to a task list.
+    /// Describes the status of a poller (AKA worker) listening to a task queue.
     /// </summary>
     public class PollerInfo
     {

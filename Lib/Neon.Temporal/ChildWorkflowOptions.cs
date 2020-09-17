@@ -44,7 +44,7 @@ namespace Neon.Temporal
         /// <param name="workflowInterface">Optionally specifies the workflow interface definition.</param>
         /// /// <param name="method">Optionally specifies the target workflow method.</param>
         /// <returns>The normalized options.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if a valid task list is not specified.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if a valid task queue is not specified.</exception>
         public static ChildWorkflowOptions Normalize(TemporalClient client, ChildWorkflowOptions options, Type workflowInterface = null, MethodInfo method = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
@@ -86,21 +86,21 @@ namespace Neon.Temporal
                 }
             }
 
-            if (string.IsNullOrEmpty(options.TaskList))
+            if (string.IsNullOrEmpty(options.TaskQueue))
             {
-                if (!string.IsNullOrEmpty(methodAttribute?.TaskList))
+                if (!string.IsNullOrEmpty(methodAttribute?.TaskQueue))
                 {
-                    options.TaskList = methodAttribute.TaskList;
+                    options.TaskQueue = methodAttribute.TaskQueue;
                 }
 
-                if (string.IsNullOrEmpty(options.TaskList) && !string.IsNullOrEmpty(interfaceAttribute?.TaskList))
+                if (string.IsNullOrEmpty(options.TaskQueue) && !string.IsNullOrEmpty(interfaceAttribute?.TaskQueue))
                 {
-                    options.TaskList = interfaceAttribute.TaskList;
+                    options.TaskQueue = interfaceAttribute.TaskQueue;
                 }
 
-                if (string.IsNullOrEmpty(options.TaskList))
+                if (string.IsNullOrEmpty(options.TaskQueue))
                 {
-                    options.TaskList = client.Settings.DefaultTaskList;
+                    options.TaskQueue = client.Settings.DefaultTaskQueue;
                 }
             }
 
@@ -185,12 +185,12 @@ namespace Neon.Temporal
         public string WorkflowId { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies the Temporal task list where the child workflow will be
-        /// scheduled.  This defaults to the namespace specified by <see cref="WorkflowMethodAttribute.TaskList"/>
-        /// or <see cref="WorkflowInterfaceAttribute.TaskList"/>, or the parent workflow's
+        /// Optionally specifies the Temporal task queue where the child workflow will be
+        /// scheduled.  This defaults to the namespace specified by <see cref="WorkflowMethodAttribute.TaskQueue"/>
+        /// or <see cref="WorkflowInterfaceAttribute.TaskQueue"/>, or the parent workflow's
         /// domain, in that order of precedence.
         /// </summary>
-        public string TaskList { get; set; } = null;
+        public string TaskQueue { get; set; } = null;
 
         /// <summary>
         /// Specifies the maximum time the child workflow may execute from start
@@ -311,7 +311,7 @@ namespace Neon.Temporal
                 StartToCloseTimeout    = this.StartToCloseTimeout,
                 RetryOptions           = this.RetryOptions,
                 ScheduleToStartTimeout = this.ScheduleToStartTimeout,
-                TaskList               = this.TaskList,
+                TaskQueue              = this.TaskQueue,
                 DecisionTaskTimeout    = this.DecisionTaskTimeout,
                 WaitUntilFinished      = this.WaitUntilFinished,
                 WorkflowId             = this.WorkflowId,
@@ -333,7 +333,7 @@ namespace Neon.Temporal
                 RetryOptions           = this.RetryOptions,
                 StartToCloseTimeout    = this.StartToCloseTimeout,
                 ScheduleToStartTimeout = this.ScheduleToStartTimeout,
-                TaskList               = this.TaskList,
+                TaskQueue              = this.TaskQueue,
                 DecisionTaskTimeout    = this.DecisionTaskTimeout,
                 WorkflowId             = this.WorkflowId,
                 WorkflowIdReusePolicy  = this.WorkflowIdReusePolicy

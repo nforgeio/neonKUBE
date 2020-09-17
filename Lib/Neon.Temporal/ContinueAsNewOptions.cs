@@ -64,9 +64,9 @@ namespace Neon.Temporal
         public string Workflow { get; set; }
 
         /// <summary>
-        /// Optionally overrides the current workflow's task list when restarting.
+        /// Optionally overrides the current workflow's task queue when restarting.
         /// </summary>
-        public string TaskList { get; set; }
+        public string TaskQueue { get; set; }
 
         /// <summary>
         /// Optionally overrides the current workflow's namespace when restarting.

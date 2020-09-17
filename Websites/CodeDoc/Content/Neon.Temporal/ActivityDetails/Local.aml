@@ -20,7 +20,7 @@
         </para>
         <code source="%NF_SNIPPETS%\Temporal\Snippets.Temporal.HelloWorld\LocalActivity.cs" region="code" language="c#" tabSize="4"/>
         <para>
-          First, notice that we didn't specify a task list in the <codeInline>[ActivityInterface]</codeInline>
+          First, notice that we didn't specify a task queue in the <codeInline>[ActivityInterface]</codeInline>
           attribute this time.   This is no necessary for local activities because these always run on on the
           same machine as the workflow.  Next, notice that we're using 
           <codeEntityReference qualifyHint="false" autoUpgrade="true">M:Neon.Temporal.Workflow.NewActivityStub``1(Neon.Temporal.ActivityOptions)</codeEntityReference>

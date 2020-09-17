@@ -179,7 +179,7 @@
               next.  This can be increased to a maximum of 60 seconds via configuration.
             </para>
           </definition>
-          <definedTerm>Domains and Task Lists</definedTerm>
+          <definedTerm>Domains and Task Queues</definedTerm>
           <definition>
             <para>
               Cadence is a multi-tenant service and uses domains to isolate each tenant from any others.  A domain
@@ -235,7 +235,7 @@
               Author your workflows and activities as a deployable process.  This is typically just a
               .NET Console application that runs on its own or perhaps as a Docker image in a Kubernetes
               cluster.  These workers will register their workflow and activity implementations with Cadence
-              under a task list (<legacyBold>Acme-PROD</legacyBold> in this case) to isolate these registrations
+              under a task queue (<legacyBold>Acme-PROD</legacyBold> in this case) to isolate these registrations
               from other cluster users.
             </para>
             <para>
@@ -261,7 +261,7 @@
           <listItem>
             <para>
               Let's say the application needs to send an email.  The application will need to connect
-              to the Cadence cluster with the <legacyBold>Acme-PROD</legacyBold> task list and invoke
+              to the Cadence cluster with the <legacyBold>Acme-PROD</legacyBold> task queue and invoke
               the <legacyBold>Send()</legacyBold> workflow, passing the target address, subject, message,
               and such.
             </para>

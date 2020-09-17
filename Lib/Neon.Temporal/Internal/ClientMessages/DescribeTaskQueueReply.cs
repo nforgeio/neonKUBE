@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DescribeTaskListReply.cs
+// FILE:	    DescribeTaskQueueReply.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -25,32 +25,32 @@ using Neon.Temporal;
 namespace Neon.Temporal.Internal
 {
     /// <summary>
-    /// <b>proxy --> client:</b> Answers a <see cref="DescribeTaskListRequest"/>.
+    /// <b>proxy --> client:</b> Answers a <see cref="DescribeTaskQueueRequest"/>.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.DescribeTaskListReply)]
-    internal class DescribeTaskListReply : ProxyReply
+    [InternalProxyMessage(InternalMessageTypes.DescribeTaskQueueReply)]
+    internal class DescribeTaskQueueReply : ProxyReply
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public DescribeTaskListReply()
+        public DescribeTaskQueueReply()
         {
-            Type = InternalMessageTypes.DescribeTaskListReply;
+            Type = InternalMessageTypes.DescribeTaskQueueReply;
         }
 
         /// <summary>
-        /// The task list details.
+        /// The task queue details.
         /// </summary>
-        public TaskListDescription Result
+        public TaskQueueDescription Result
         {
-            get => GetJsonProperty<TaskListDescription>(PropertyNames.Result);
-            set => SetJsonProperty<TaskListDescription>(PropertyNames.Result, value);
+            get => GetJsonProperty<TaskQueueDescription>(PropertyNames.Result);
+            set => SetJsonProperty<TaskQueueDescription>(PropertyNames.Result, value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new DescribeTaskListReply();
+            var clone = new DescribeTaskQueueReply();
 
             CopyTo(clone);
 
@@ -62,11 +62,11 @@ namespace Neon.Temporal.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (DescribeTaskListReply)target;
+            var typedTarget = (DescribeTaskQueueReply)target;
 
             typedTarget.Result = this.Result;
 
-            // $todo(jefflill): We're currenty ignoring [TaskListStatus].
+            // $todo(jefflill): We're currenty ignoring [TaskQueueStatus].
         }
     }
 }

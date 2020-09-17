@@ -32,7 +32,7 @@
         <para>
           The <codeEntityReference qualifyHint="false">T:Neon.Temporal.WorkflowInterfaceAttribute</codeEntityReference> is optional
           but can be used to specify workflow related options.  In this example, we're indicating that the workflow will be registered
-          with Temporal in the <legacyBold>my-tasks</legacyBold> task list (we'll be discussing task lists in depth later).  All workflow 
+          with Temporal in the <legacyBold>my-tasks</legacyBold> task queue (we'll be discussing task queues in depth later).  All workflow 
           implementations must inherit <codeEntityReference qualifyHint="false">T:Neon.Temporal.WorkflowBase</codeEntityReference>
           and also implement the workflow interface you defined.
         </para>
@@ -62,7 +62,7 @@
           <listItem>
             <para>
               Starts the workflow worker.  This informs Temporal that you've finished registering workflow and activity implementations
-              and your workflow service is ready to be assigned tasks by Temporal within the <legacyBold>my-tasks</legacyBold> task list.
+              and your workflow service is ready to be assigned tasks by Temporal within the <legacyBold>my-tasks</legacyBold> task queue.
             </para>
           </listItem>
           <listItem>

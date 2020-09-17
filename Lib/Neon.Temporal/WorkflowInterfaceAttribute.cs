@@ -28,7 +28,7 @@ using Neon.Temporal.Internal;
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Used to tag workflow interfaces and optionally specify the task list
+    /// Used to tag workflow interfaces and optionally specify the task queue
     /// identifying the workers hosting this workflow.  <see cref="TemporalClient"/>
     /// for more information on how task lists work.
     /// </summary>
@@ -36,7 +36,7 @@ namespace Neon.Temporal
     public class WorkflowInterfaceAttribute : Attribute
     {
         private string      @namespace;
-        private string      taskList;
+        private string      taskQueue;
 
         /// <summary>
         /// Constructor.
@@ -66,22 +66,22 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Optionally specifies the Temporal task list identifying the workers
+        /// Optionally specifies the Temporal task queue identifying the workers
         /// hosting this workflow.
         /// </summary>
-        public string TaskList
+        public string TaskQueue
         {
-            get => taskList;
+            get => taskQueue;
 
             set
             {
                 if (string.IsNullOrEmpty(value))
                 {
-                    taskList = null;
+                    taskQueue = null;
                 }
                 else
                 {
-                    taskList = value;
+                    taskQueue = value;
                 }
             }
         }

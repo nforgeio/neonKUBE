@@ -42,14 +42,14 @@ namespace Neon.Temporal
 
         /// <summary>
         /// <para>
-        /// Optionally specifies the Temporal task list for the worker.  This defaults to
-        /// <see cref="TemporalSettings.DefaultTaskList"/>.
+        /// Optionally specifies the Temporal task queue for the worker.  This defaults to
+        /// <see cref="TemporalSettings.DefaultTaskQueue"/>.
         /// </para>
         /// <note>
         /// You must ensure that this is not <c>null</c> or empty.
         /// </note>
         /// </summary>
-        public string TaskList { get; set; }
+        public string TaskQueue { get; set; }
 
         /// <summary>
         /// Optionally sets set the maximum concurrent activity executions this worker can have.
@@ -100,7 +100,7 @@ namespace Neon.Temporal
         /// <summary>
         /// <para>
         /// Optionally sets the rate limiting on number of activities that can be executed per second.
-        /// This is managed by the server and controls activities per second for your entire task list
+        /// This is managed by the server and controls activities per second for your entire task queue
         /// whereas WorkerActivityTasksPerSecond controls activities only per worker.
         /// </para>
         /// <note>
@@ -112,7 +112,7 @@ namespace Neon.Temporal
         /// The zero value of this uses the default value. This defaults to <b>100,000</b>.
         /// </para>
         /// </summary>
-        public double TaskListActivitiesPerSecond { get; set; } = 100000;
+        public double TaskQueueActivitiesPerSecond { get; set; } = 100000;
 
         /// <summary>
         /// Optionally sets the maximum concurrent decision task executions this worker can have.

@@ -254,20 +254,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Snippets", "Snippets", "{CB
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Snippets.Cadence.HelloWorld", "Snippets\Cadence\Snippets.Cadence.HelloWorld\Snippets.Cadence.HelloWorld.csproj", "{6B21D400-2F16-4A68-A672-2100E571854D}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{F08FAE2A-80B0-43D5-9A1B-14F31D2FAEE3}"
-	ProjectSection(SolutionItems) = preProject
-		Go\test\config.yaml = Go\test\config.yaml
-		Go\test\wf-args\factory.go = Go\test\wf-args\factory.go
-		Go\test\wf-args\go.mod = Go\test\wf-args\go.mod
-		Go\test\wf-args\go.sum = Go\test\wf-args\go.sum
-		Go\test\wf-args\main.go = Go\test\wf-args\main.go
-		Go\test\wf-args\noargs.go = Go\test\wf-args\noargs.go
-		Go\test\wf-args\onearg.go = Go\test\wf-args\onearg.go
-		Go\test\wf-args\sample_helper.go = Go\test\wf-args\sample_helper.go
-		Go\test\wf-args\twoArgs.go = Go\test\wf-args\twoArgs.go
-		Go\test\wf-args\util.go = Go\test\wf-args\util.go
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{DCE108FB-01CD-4768-A37D-229E354905D9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "cadence", "cadence", "{B755BCE3-2296-4DC6-95DF-621B3EE31FE3}"
@@ -1544,7 +1530,6 @@ Global
 		{F19FF67A-660D-4B3F-8590-01DE5F14744D} = {5641C82B-E8E5-49AD-8DEE-E574D0D77460}
 		{430BF9EA-698E-401E-B7AC-AABE7353B8AD} = {B6E81450-BC31-43E7-BC9E-83C12654BC07}
 		{6B21D400-2F16-4A68-A672-2100E571854D} = {CB2EDD47-A608-4284-96E3-08E9DC52EFEF}
-		{F08FAE2A-80B0-43D5-9A1B-14F31D2FAEE3} = {EAA2C7EE-0B01-4B2B-80FA-7BF3D03552BA}
 		{DCE108FB-01CD-4768-A37D-229E354905D9} = {F91BE5A3-9CBD-409B-AE86-D6FD8C09F02D}
 		{B755BCE3-2296-4DC6-95DF-621B3EE31FE3} = {DCE108FB-01CD-4768-A37D-229E354905D9}
 		{166FC5A4-9105-4E94-B1EB-567F869850A1} = {DCE108FB-01CD-4768-A37D-229E354905D9}

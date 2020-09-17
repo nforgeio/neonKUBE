@@ -82,7 +82,7 @@ namespace Neon.Temporal
         /// <param name="contextId">The workflow's context ID.</param>
         /// <param name="workflowTypeName">The workflow type name.</param>
         /// <param name="namespace">The hosting namespace.</param>
-        /// <param name="taskList">The hosting task list.</param>
+        /// <param name="taskQueue">The hosting task queue.</param>
         /// <param name="workflowId">The workflow ID.</param>
         /// <param name="runId">The current workflow run ID.</param>
         /// <param name="isReplaying">Indicates whether the workflow is currently replaying from histor.</param>
@@ -93,7 +93,7 @@ namespace Neon.Temporal
             long                contextId, 
             string              workflowTypeName, 
             string              @namespace, 
-            string              taskList,
+            string              taskQueue,
             string              workflowId, 
             string              runId, 
             bool                isReplaying, 
@@ -102,7 +102,7 @@ namespace Neon.Temporal
             Covenant.Requires<ArgumentNullException>(worker != null, nameof(worker));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowTypeName), nameof(workflowTypeName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(@namespace), nameof(@namespace));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskList), nameof(taskList));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(taskQueue), nameof(taskQueue));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(workflowId), nameof(workflowId));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(runId), nameof(runId));
 
@@ -140,7 +140,7 @@ namespace Neon.Temporal
             {
                 WorkflowType = workflowTypeName,
                 Namespace    = @namespace,
-                TaskList     = taskList,
+                TaskQueue    = taskQueue,
                 WorkflowId   = workflowId,
                 RunId        = runId,
 
@@ -436,7 +436,7 @@ namespace Neon.Temporal
                 args:       TemporalHelper.ArgsToBytes(Client.DataConverter, args),
                 workflow:   WorkflowInfo.WorkflowType,
                 @namespace: WorkflowInfo.Namespace,
-                taskList:   WorkflowInfo.TaskList);
+                taskQueue:  WorkflowInfo.TaskQueue);
         }
 
         /// <summary>
@@ -471,7 +471,7 @@ namespace Neon.Temporal
             throw new ContinueAsNewException(
                 args:                       TemporalHelper.ArgsToBytes(Client.DataConverter, args),
                 @namespace:                 options.Namespace ?? WorkflowInfo.Namespace,
-                taskList:                   options.TaskList ?? WorkflowInfo.TaskList,
+                taskQueue:                  options.TaskQueue ?? WorkflowInfo.TaskQueue,
                 workflow:                   options.Workflow ?? WorkflowInfo.WorkflowType,
                 startToCloseTimeout:        options.ExecutionStartToCloseTimeout,
                 scheduleToCloseTimeout:     options.ScheduleToCloseTimeout,
