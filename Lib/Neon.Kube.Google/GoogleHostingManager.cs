@@ -75,7 +75,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates an instance that is capable of provisioning the cluster.
+        /// Creates an instance that is capable of provisioning a cluster on Google Cloud.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
         /// <param name="setupInfo">Specifies the cluster setup information.</param>
@@ -110,10 +110,11 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override bool Provision(bool force, string secureSshPassword, string orgSshPassword = null)
+        public override async Task<bool> ProvisionAsync(bool force, string secureSshPassword, string orgSshPassword = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
 
+            await Task.CompletedTask;
             throw new NotImplementedException("$todo(jefflill): Implement this.");
         }
 
@@ -121,21 +122,27 @@ namespace Neon.Kube
         public override bool CanManageRouter => true;
 
         /// <inheritdoc/>
-        public override void UpdatePublicIngress()
+        public override async Task UpdateInternetRoutingAsync()
         {
             // $todo(jefflil): Implement this
+
+            await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
-        public override void EnablePublicSsh()
+        public override async Task EnableInternetSshAsync()
         {
             // $todo(jefflil): Implement this
+
+            await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
-        public override void DisablePublicSsh()
+        public override async Task DisableInternetSshAsync()
         {
             // $todo(jefflil): Implement this
+
+            await Task.CompletedTask;
         }
 
         /// <inheritdoc/>
@@ -145,7 +152,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string GetDataDisk(SshProxy<NodeDefinition> node)
+        public override string GetDataDevice(SshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 

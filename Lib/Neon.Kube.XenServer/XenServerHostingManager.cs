@@ -22,6 +22,7 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 using YamlDotNet.Serialization;
@@ -98,7 +99,7 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates an instance that is capable of provisioning the cluster.
+        /// Creates an instance that is capable of provisioning a cluster on XenServer/XCP-ng servers.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
         /// <param name="setupInfo">Specifies the cluster setup information.</param>
@@ -152,7 +153,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override bool Provision(bool force, string secureSshPassword, string orgSshPassword = null)
+        public override async Task<bool> ProvisionAsync(bool force, string secureSshPassword, string orgSshPassword = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
 
@@ -228,18 +229,18 @@ namespace Neon.Kube
              
             controller.AddWaitUntilOnlineStep();
 
-            controller.AddStep("verify readiness", (node, stepDelay) => VerifyReady(node));
-            controller.AddStep("virtual machine template", (node, stepDelay) => CheckVmTemplate(node));
-            controller.AddStep("create virtual machines", (node, stepDelay) => ProvisionVirtualMachines(node));
+            controller.AddNodeStep("verify readiness", (node, stepDelay) => VerifyReady(node));
+            controller.AddNodeStep("virtual machine template", (node, stepDelay) => CheckVmTemplate(node));
+            controller.AddNodeStep("create virtual machines", (node, stepDelay) => ProvisionVirtualMachines(node));
             controller.AddGlobalStep(string.Empty, () => Finish(), quiet: true);
 
             if (!controller.Run())
             {
                 Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
-                return false;
+                return await Task.FromResult(false);
             }
 
-            return true;
+            return await Task.FromResult(true);
         }
 
         /// <summary>
@@ -460,7 +461,7 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override string GetDataDisk(SshProxy<NodeDefinition> node)
+        public override string GetDataDevice(SshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 

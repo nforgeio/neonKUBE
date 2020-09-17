@@ -77,6 +77,26 @@ namespace Neon.Kube
         public int NodePort { get; set; }
 
         /// <summary>
+        /// Identifies which group of cluster nodes will receive the network traffic
+        /// from this rule.  This defaults to <see cref="IngressRuleTarget.User"/>.
+        /// </summary>
+        [JsonIgnore]
+        [YamlIgnore]
+        internal IngressRuleTarget Target { get; set; } = IngressRuleTarget.User;
+
+        /// <summary>
+        /// <para>
+        /// Optionally specifies the default cluster load balancer health check settings
+        /// for the rule.  This overrides the default <see cref="NetworkOptions.IngressHealthCheck"/>
+        /// settings.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "IngressHealthCheck", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ingressHealthCheck", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public HealthCheckOptions IngressHealthCheck { get; set; } = null;
+
+        /// <summary>
         /// <para>
         /// Optionally specifies whitelisted and/or blacklisted external addresses for
         /// inbound traffic.  This defaults to allowing inbound traffic from anywhere 
@@ -176,6 +196,8 @@ namespace Neon.Kube
             {
                 throw new ClusterDefinitionException($"[{nameof(IngressRule)}.{nameof(TcpIdleTimeoutMinutes)}={TcpIdleTimeoutMinutes}] must be greater than 0.");
             }
+
+            IngressHealthCheck?.Validate(clusterDefinition, $"[{nameof(NetworkOptions)}.{nameof(NetworkOptions.IngressRules)}] ingress rule [{Name}].");
         }
     }
 }

@@ -35,7 +35,6 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
-using System.Xml;
 
 namespace Neon.Kube
 {
@@ -45,27 +44,59 @@ namespace Neon.Kube
     public class CloudOptions
     {
         /// <summary>
+        /// <para>
         /// Specifies that cloud resources created for the cluster have their names prefixed
-        /// by the cluster name.  This defaults to <c>false</c>.
+        /// by the cluster name.  This is a tri-state value that may be <see cref="TriState.Default"/>,
+        /// <see cref="TriState.True"/> or <see cref="TriState.False"/>.  <c>Default</c> indicates that
+        /// cloud hosting manager will decide whether it makes sense to prefix resource names by default 
+        /// (see the remarks for details), otherwise you can explicitly control this by specifying
+        /// <c>True</c> or <c>False</c>.
+        /// </para>
+        /// <para>
+        /// This defaults to <c>null</c>.
+        /// </para>
         /// </summary>
         /// <remarks>
         /// <para>
-        /// neonKUBE cluster resources are deployed to a cluster specific resource group
-        /// by default.  This means that there's generally no reason to prefix the cluster
-        /// resource names because they are already scoped to the cluster's resource group.
+        /// When this property is <c>null</c> (the default), the hosting manager for the target
+        /// cloud decides whether or not to prefix resource names with the cluster name.
         /// </para>
-        /// <para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><b>AWS</b></term>
+        ///     <description>
+        ///     Resource names are <b>always</b> prefixed for AWS deployments.  This makes sense because
+        ///     AWS resource names are globally scoped and also because load balancer names are
+        ///     required to be unique within an AWS account and region.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>Azure</b></term>
+        ///     <description>
+        ///     Resource names are not prefixed by default.  neonKUBE clusters deployed to Azure
+        ///     are always created in a resource group and Azure scopes resource names to the group.
+        ///     This means that the prefix really isn't necessary. 
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>Google Cloud</b></term>
+        ///     <description>
+        ///     $todo(jefflill): Update this once we've implemented the Google hosting manager.
+        ///     </description>
+        /// </item>
+        /// </list>
+        /// <note>
         /// It is possible though to deploy a cluster into an existing resource group, along
-        /// with other already existing resources (perhaps another neonKUBE cluster).  You'll need to
-        /// take care in this situation to avoid resource name conflicts.  To handle this,
+        /// with other already existing resources (perhaps another neonKUBE cluster).  You'll 
+        /// need to take care in this situation to avoid resource name conflicts.  To handle this,
         /// set this property to <c>true</c> such that every cluster resource created will 
         /// include the cluster name in the resource name prefix.
-        /// </para>
+        /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "PrefixResourceNames", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "prefixResourceNames", ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public bool PrefixResourceNames { get; set; } = false;
+        [DefaultValue(TriState.Default)]
+        public TriState PrefixResourceNames { get; set; } = TriState.Default;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are

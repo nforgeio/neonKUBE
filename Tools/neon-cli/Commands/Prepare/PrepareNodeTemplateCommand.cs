@@ -369,7 +369,7 @@ cat <<EOF > {KubeHostFolders.Bin}/neon-node-prep.sh
 #          prevents the service from doing anything during subsequent node 
 #          reboots.
 #
-#       7. The service just exists if the DVD and/or script file are 
+#       7. The service just exits if the DVD and/or script file are 
 #          not present.  This shouldn't happen in production but is useful
 #          for script debugging.
 

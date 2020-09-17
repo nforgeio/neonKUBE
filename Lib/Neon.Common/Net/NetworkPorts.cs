@@ -278,6 +278,11 @@ namespace Neon.Net
         /// </summary>
         public const int Temporal = 7233;
 
+        /// <summary>
+        /// Kubernetes API port.
+        /// </summary>
+        public const int KubernetesApi = 6443;
+
         private static Dictionary<string, int> wellKnownMap;
 
         private struct Map
@@ -347,7 +352,8 @@ namespace Neon.Net
                 new Map("RabbitMQAdmin", RabbitMQAdmin),
                 new Map("aptcacherng", AppCacherNg),
                 new Map("cadence", Cadence),
-                new Map("temporal", Temporal)
+                new Map("temporal", Temporal),
+                new Map("kubernetes-api", KubernetesApi)
             };
 
         wellKnownMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);

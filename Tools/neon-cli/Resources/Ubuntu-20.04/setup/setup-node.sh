@@ -198,9 +198,9 @@ cat <<EOF > /etc/systemd/user.conf.d/50-neonkube.conf
 # See systemd-user.conf(5) for details
 
 [Manager]
-DefaultLimitNOFILE=infinity
-DefaultLimitNPROC=infinity
-DefaultLimitMEMLOCK=infinity
+DefaultLimitNOFILE = infinity
+DefaultLimitNPROC = infinity
+DefaultLimitMEMLOCK = infinity
 EOF
 
 chmod 664 /etc/systemd/user.conf.d/50-neonkube.conf
@@ -228,22 +228,21 @@ cat <<EOF > /etc/sysctl.conf
 # Uncomment the next two lines to enable Spoof protection (reverse-path filter)
 # Turn on Source Address Verification in all interfaces to
 # prevent some spoofing attacks
-#net.ipv4.conf.default.rp_filter=1
-#net.ipv4.conf.all.rp_filter=1
+#net.ipv4.conf.default.rp_filter = 1
+#net.ipv4.conf.all.rp_filter = 1
 
 # Uncomment the next line to enable TCP/IP SYN cookies
 # See http://lwn.net/Articles/277146/
 # Note: This may impact IPv6 TCP sessions too
-#net.ipv4.tcp_syncookies=1
+#net.ipv4.tcp_syncookies = 1
 
 # Uncomment the next line to enable packet forwarding for IPv4
-#net.ipv4.ip_forward=1
+#net.ipv4.ip_forward = 1
 
 # Uncomment the next line to enable packet forwarding for IPv6
 #  Enabling this option disables Stateless Address Autoconfiguration
 #  based on Router Advertisements for this host
-#net.ipv6.conf.all.forwarding=1
-
+#net.ipv6.conf.all.forwarding = 1
 
 ###################################################################
 # Additional settings - these settings can improve the network
@@ -277,7 +276,7 @@ cat <<EOF > /etc/sysctl.conf
 # Debian kernels have this set to 0 (disable the key)
 # See https://www.kernel.org/doc/Documentation/sysrq.txt
 # for what other values do
-#kernel.sysrq=1
+#kernel.sysrq = 1
 
 ###################################################################
 # Protected links
@@ -285,8 +284,8 @@ cat <<EOF > /etc/sysctl.conf
 # Protects against creating or following links under certain conditions
 # Debian kernels have both set to 1 (restricted) 
 # See https://www.kernel.org/doc/Documentation/sysctl/fs.txt
-#fs.protected_hardlinks=0
-#fs.protected_symlinks=0
+#fs.protected_hardlinks = 0
+#fs.protected_symlinks = 0
 
 ###################################################################
 # TWEAK: neonKUBE settings:
@@ -295,8 +294,42 @@ cat <<EOF > /etc/sysctl.conf
 # entire system.  This looks like it defaults to [398327] for
 # Ubuntu 20.04 so we're going to pin this value to enforce
 # consistency across Linux updates, etc.
+fs.file-max = 398327
 
-fs.file-max=398327
+# We'll allow processes to open the same number of file handles.
+fs.nr_open = 398327
+
+###################################################################
+# Boost the number of RAM pages a process can map as well as increasing 
+# the number of available source ephemeral TCP ports, pending connection
+# backlog, packet receive queue size.
+
+# Disable swap
+vm.swappiness = 0
+
+# Allow processes to lock up to 64GB worth of 4K pages into RAM.
+vm.max_map_count = 16777216
+
+# Set the network packet receive queue.
+net.core.netdev_max_backlog = 2000
+
+# Specify the range of TCP ports that can be used by client sockets.
+net.ipv4.ip_local_port_range = 9000 65535
+
+# Set the pending TCP connection backlog.
+net.core.somaxconn = 25000
+net.ipv4.tcp_max_syn_backlog = 25000
+
+###################################################################
+# Set the IPv4 and IPv6 packet TTL to 255 to try to ensure that packets
+# will still make it to the destination in the face of perhaps a lot
+# of hops added by clouds and Kubernetes (on both sides of the link).
+
+net.ipv4.ip_default_ttl = 255
+net.ipv6.conf.all.hop_limit = 255
+
+# Kubernetes requires packet forwarding.
+net.ipv4.ip_forward = 1
 
 ###################################################################
 # TWEAK: Setting overrides recommended for custom Google Cloud images
@@ -358,40 +391,19 @@ net.ipv4.tcp_rfc1337 = 1
 kernel.randomize_va_space = 2
 
 # Provide protection from ToCToU races
-fs.protected_hardlinks=1
+fs.protected_hardlinks = 1
 
 # Provide protection from ToCToU races
-fs.protected_symlinks=1
+fs.protected_symlinks = 1
 
 # Make locating kernel addresses more difficult
-kernel.kptr_restrict=1
+kernel.kptr_restrict = 1
 
 # Set ptrace protections
-kernel.yama.ptrace_scope=1
+kernel.yama.ptrace_scope = 1
 
 # Set perf only available to root
-kernel.perf_event_paranoid=2
-EOF
-
-#------------------------------------------------------------------------------
-# Edit [/etc/sysctl.conf] to boost the number of RAM pages a process can map
-# as well as increasing the number of available source ephemeral TCP ports,
-# pending connection backlog, packet receive queue size.
-
-cat <<EOF >> /etc/sysctl.conf
-
-# Allow processes to lock up to 64GB worth of 4K pages into RAM.
-vm.max_map_count = 16777216
-
-# Set the network packet receive queue.
-net.core.netdev_max_backlog = 2000
-
-# Specify the range of TCP ports that can be used by client sockets.
-net.ipv4.ip_local_port_range = 9000 65535
-
-# Set the pending TCP connection backlog.
-net.core.somaxconn = 25000
-net.ipv4.tcp_max_syn_backlog = 25000
+kernel.perf_event_paranoid = 2
 EOF
 
 #------------------------------------------------------------------------------
@@ -402,7 +414,7 @@ EOF
 cat <<EOF > /etc/modprobe.d/nf_conntrack.conf
 # Explicitly set the maximum number of TCP connections that iptables can track.
 # Note that this number is multiplied by 8 to obtain the connection count.
-options nf_conntrack hashsize=125000
+options nf_conntrack hashsize = 125000
 EOF
 
 #------------------------------------------------------------------------------

@@ -135,19 +135,6 @@ EOF
 chmod a+x /usr/local/bin/sbash
 
 #------------------------------------------------------------------------------
-# Kubernetes requires packet forwarding.
-
-echo 1 > /proc/sys/net/ipv4/ip_forward
-
-cat <<EOF >> /etc/sysctl.conf
-
-###################################################################
-# Kubernetes requires packet forwarding.
-
-net.ipv4.ip_forward=1
-EOF
-
-#------------------------------------------------------------------------------
 # Install some required packages.
 
 safe-apt-get update -yq
@@ -157,7 +144,7 @@ safe-apt-get install -yq --allow-downgrades unzip
 # I've seen some situations after a reboot where the machine complains about
 # running out of entropy.  Apparently, modern CPUs have an instruction that
 # returns cryptographically random data, but these CPUs weren't available
-# until 2015 so our old HP SL 365 G10 XenServer machines won't support this.
+# until 2015 so our old HP SL 385 G10 XenServer machines won't support this.
 #
 # An reasonable alternative is [haveged]:
 #   

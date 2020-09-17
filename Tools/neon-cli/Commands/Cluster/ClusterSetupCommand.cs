@@ -283,8 +283,8 @@ OPTIONS:
 
                     controller.AddGlobalStep("download binaries", () => WorkstationBinaries());
                     controller.AddWaitUntilOnlineStep("connect");
-                    controller.AddStep("ssh certificate", GenerateClientSshCert, node => node == cluster.FirstMaster);
-                    controller.AddStep("verify OS", CommonSteps.VerifyOS);
+                    controller.AddNodeStep("ssh certificate", GenerateClientSshCert, node => node == cluster.FirstMaster);
+                    controller.AddNodeStep("verify OS", CommonSteps.VerifyOS);
 
                     // Write the operation begin marker to all cluster node logs.
 
@@ -296,7 +296,7 @@ OPTIONS:
 
                     var configureFirstMasterStepLabel = cluster.Definition.Masters.Count() > 1 ? "setup first master" : "setup master";
 
-                    controller.AddStep(configureFirstMasterStepLabel,
+                    controller.AddNodeStep(configureFirstMasterStepLabel,
                         (node, stepDelay) =>
                         {
                             SetupCommon(hostingManager, node, stepDelay);
@@ -310,7 +310,7 @@ OPTIONS:
 
                     if (cluster.Definition.Nodes.Count() > 1)
                     {
-                        controller.AddStep("setup other nodes",
+                        controller.AddNodeStep("setup other nodes",
                             (node, stepDelay) =>
                             {
                                 SetupCommon(hostingManager, node, stepDelay);
@@ -325,7 +325,7 @@ OPTIONS:
                     // Kubernetes configuration.
 
                     controller.AddGlobalStep("etc high-availability", SetupEtcHaProxy);
-                    controller.AddStep("setup kubernetes", SetupKubernetes);
+                    controller.AddNodeStep("setup kubernetes", SetupKubernetes);
                     controller.AddGlobalStep("setup cluster", SetupCluster);
 
                     controller.AddGlobalStep("taint nodes", TaintNodes);
@@ -337,14 +337,14 @@ OPTIONS:
                     //-----------------------------------------------------------------
                     // Verify the cluster.
 
-                    controller.AddStep("check masters",
+                    controller.AddNodeStep("check masters",
                         (node, stepDelay) =>
                         {
                             ClusterDiagnostics.CheckMaster(node, cluster.Definition);
                         },
                         node => node.Metadata.IsMaster);
 
-                    controller.AddStep("check workers",
+                    controller.AddNodeStep("check workers",
                         (node, stepDelay) =>
                         {
                             ClusterDiagnostics.CheckWorker(node, cluster.Definition);
@@ -363,7 +363,7 @@ OPTIONS:
                     // manually login with the original credentials to diagnose
                     // setup issues.
 
-                    controller.AddStep("ssh secured", ConfigureSsh);
+                    controller.AddNodeStep("ssh secured", ConfigureSsh);
 
                     // Start setup.
 
@@ -669,17 +669,6 @@ OPTIONS:
                     }
 
                     node.SudoCommand(CommandBundle.FromScript(sbVolumesScript));
-
-                    node.Status = "setup: configure /etc/sysctl";
-
-                    var helmInstallScript =
-$@"#!/bin/bash
-sed -ir 's/.*vm.max_map_count.*/vm.max_map_count = 3000000/g' /etc/sysctl.conf
-sed -ir 's/.*fs.file-max.*/fs.file-max = 3000000/g' /etc/sysctl.conf
-echo ""fs.nr_open = 3000000"" >> /etc/sysctl.conf
-echo ""vm.swappiness = 1"" >> /etc/sysctl.conf
-";
-                    node.SudoCommand(CommandBundle.FromScript(helmInstallScript));
                 });
         }
 

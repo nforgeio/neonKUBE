@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AzureStorageTypes.cs
+// FILE:	    AzureStorageType.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -44,7 +44,7 @@ namespace Neon.Kube
     /// <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/windows/disks-types">https://docs.microsoft.com/en-us/azure/virtual-machines/windows/disks-types</a>
     /// </para>
     /// </summary>
-    public enum AzureStorageTypes
+    public enum AzureStorageType
     {
         /// <summary>
         /// Indicates that the default Azure storage type will be provisioned.

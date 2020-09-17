@@ -1620,6 +1620,13 @@ $@"# This script is called by the [neon-node-prep] service when the prep
 mountFolder=${{1}}
 
 #------------------------------------------------------------------------------
+# Sleep for a bit in an attempt to ensure that the system is actually ready.
+#
+#       https://github.com/nforgeio/neonKUBE/issues/980
+
+sleep 10
+
+#------------------------------------------------------------------------------
 # Disable the [apt-timer] and [apt-daily] services.  We're doing this 
 # for two reasons:
 #
@@ -1629,9 +1636,11 @@ mountFolder=${{1}}
 #
 #   2. Automatic updates for production and even test clusters is
 #      just not a great idea.  You just don't want a random update
-#      applied in the middle of the night that might cause trouble.
+#      applied in the middle of the night which might cause trouble.
 #
-# We're going to implement our cluster updating machanism.
+#      We're going to implement our own cluster updating machanism
+#      that will be smart enough to update the nodes such that the
+#      impact on cluster workloads will be limited.
 
 systemctl stop apt-daily.timer
 systemctl mask apt-daily.timer
@@ -1663,7 +1672,7 @@ rm /etc/netplan/*
 
 cat <<EOF > /etc/netplan/static.yaml
 # Static network configuration initialized during first boot by the 
-# [neon-node-prep] service from a virtual floppy inserted during
+# [neon-node-prep] service from a virtual ISO inserted during
 # cluster prepare.
 
 network:
@@ -1680,14 +1689,19 @@ EOF
 
 echo ""Restart network""
 
-netplan apply
+while true; do
 
-if [ ! $? ] ; then
-    echo ""ERROR: Network restart failed.""
-    exit 1
+    netplan apply
+    if [ ! $? ] ; then
+        echo ""ERROR: Network restart failed.""
+        sleep 1
+    else
+        break
 fi
 
-echo ""Done""
+done
+
+echo ""Node is prepared.""
 exit 0
 ";
             nodePrepScript = nodePrepScript.Replace("\r\n", "\n");  // Linux line endings

@@ -45,7 +45,7 @@ using Couchbase.IO;
 namespace Neon.Kube
 {
     /// <summary>
-    /// Manages cluster provisioning directly on bare metal or virtual machines.
+    /// Manages cluster provisioning directly on manually provisioned machines or virtual machines.
     /// </summary>
     [HostingProvider(HostingEnvironment.Machine)]
     public partial class MachineHostingManager : HostingManager
@@ -81,7 +81,8 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Creates an instance that is capable of provisioning the cluster.
+        /// Creates an instance that is capable of provisioning a cluster on manually provisioned
+        /// servers or virtual machines.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
         /// <param name="setupInfo">Specifies the cluster setup information.</param>
@@ -126,7 +127,7 @@ namespace Neon.Kube
         public override bool GenerateSecurePassword => true;
 
         /// <inheritdoc/>
-        public override bool Provision(bool force, string secureSshPassword, string orgSshPassword = null)
+        public override async Task<bool> ProvisionAsync(bool force, string secureSshPassword, string orgSshPassword = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword));
@@ -142,24 +143,24 @@ namespace Neon.Kube
                 MaxParallel = this.MaxParallel
             };
 
-            controller.AddStep("connect nodes", (node, stepDelay) => Connect(node));
-            controller.AddStep("verify OS", (node, stepDelay) => KubeHelper.VerifyNodeOs(node));
-            controller.AddStep("configure nodes", (node, stepDelay) => Congfigure(node));
+            controller.AddNodeStep("connect nodes", (node, stepDelay) => Connect(node));
+            controller.AddNodeStep("verify OS", (node, stepDelay) => KubeHelper.VerifyNodeOs(node));
+            controller.AddNodeStep("configure nodes", (node, stepDelay) => Congfigure(node));
 
             if (secureSshPassword != orgSshPassword)
             {
-                controller.AddStep("secure node passwords", (node, stepDelay) => SetSecurePassword(node));
+                controller.AddNodeStep("secure node passwords", (node, stepDelay) => SetSecurePassword(node));
             }
 
-            controller.AddStep("detect node labels", (node, stepDelay) => DetectLabels(node));
+            controller.AddNodeStep("detect node labels", (node, stepDelay) => DetectLabels(node));
 
             if (!controller.Run())
             {
                 Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
-                return false;
+                return await Task.FromResult(false);
             }
 
-            return true;
+            return await Task.FromResult(true);
         }
 
         /// <inheritdoc/>
@@ -347,7 +348,7 @@ echo '{KubeConst.SysAdminUsername}:{secureSshPassword}' | chpasswd
         }
 
         /// <inheritdoc/>
-        public override string GetDataDisk(SshProxy<NodeDefinition> node)
+        public override string GetDataDevice(SshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 

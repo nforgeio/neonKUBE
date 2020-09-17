@@ -339,7 +339,7 @@ Server Requirements:
                     contextExtension.Save();
                 }
 
-                if (!hostingManager.Provision(force, contextExtension.SshPassword, orgSshPassword))
+                if (!hostingManager.ProvisionAsync(force, contextExtension.SshPassword, orgSshPassword).Result)
                 {
                     Program.Exit(1);
                 }
@@ -409,9 +409,9 @@ Server Requirements:
 
                 controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
                 hostingManager.AddPostProvisionSteps(controller);
-                controller.AddStep("verify OS", CommonSteps.VerifyOS);
+                controller.AddNodeStep("verify OS", CommonSteps.VerifyOS);
 
-                controller.AddStep("prepare", 
+                controller.AddNodeStep("prepare", 
                     (node, stepDelay) =>
                     {
                         Thread.Sleep(stepDelay);

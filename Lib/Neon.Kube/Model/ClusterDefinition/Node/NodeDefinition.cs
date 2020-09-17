@@ -34,7 +34,6 @@ using YamlDotNet.Serialization;
 
 using Neon.Common;
 using Neon.Net;
-using System.Xml;
 
 namespace Neon.Kube
 {
@@ -109,14 +108,6 @@ namespace Neon.Kube
         [YamlMember(Alias = "address", ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string Address { get; set; } = null;
-
-        /// <summary>
-        /// <b>INTERNAL USE ONLY:</b> Holds the IP endpoint that can be used to connect to
-        /// the node via SSH from outside the cluster, particularily for cloud deployments.
-        /// This references the cluster's public IP address and an allocated load balancer
-        /// NAT port that routes to the node.
-        /// </summary>
-        public IPEndPoint PublicSshEndpoint { get; set; }
 
         /// <summary>
         /// Indicates that the node will act as a master node (defaults to <c>false</c>).
@@ -205,6 +196,14 @@ namespace Neon.Kube
         public AzureNodeOptions Azure { get; set; }
 
         /// <summary>
+        /// AWS provisioning options for this node, or <c>null</c> to use reasonable defaults.
+        /// </summary>
+        [JsonProperty(PropertyName = "Aws")]
+        [YamlMember(Alias = "aws", ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public AwsNodeOptions Aws { get; set; }
+
+        /// <summary>
         /// <b>HACK:</b> This used by <see cref="SetupController{T}"/> to introduce a delay for this
         /// node when executing the next setup step.
         /// </summary>
@@ -280,7 +279,8 @@ namespace Neon.Kube
             {
                 case HostingEnvironment.Aws:
 
-                    // $todo(jefflill: Implement this
+                    Aws = Aws ?? new AwsNodeOptions();
+                    Aws.Validate(clusterDefinition, this.Name);
                     break;
 
                 case HostingEnvironment.Azure:
@@ -296,7 +296,7 @@ namespace Neon.Kube
 
                 case HostingEnvironment.Machine:
 
-                    // No machine options to check at this point in time.
+                    // No machine options to check at this time.
                     break;
 
                 case HostingEnvironment.HyperV:

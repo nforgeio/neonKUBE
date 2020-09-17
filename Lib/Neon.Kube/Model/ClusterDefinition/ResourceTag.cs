@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IngressProtocol.cs
+// FILE:	    ResourceTag.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -22,8 +22,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Runtime.Serialization;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -35,43 +34,43 @@ using Newtonsoft.Json.Serialization;
 using YamlDotNet.Serialization;
 
 using Neon.Common;
-using Neon.IO;
 using Neon.Net;
 
 namespace Neon.Kube
 {
     /// <summary>
-    /// <para>
-    /// Enumerates the network protocols supported by neonKUBE for ingress traffic.
-    /// </para>
-    /// <note>
-    /// Kubernetes/Istio does not currently support protocols like UCP or ICMP.
-    /// </note>
+    /// Describes a tag that can be attached to resources for clusters deployed to 
+    /// a cloud.
     /// </summary>
-    public enum IngressProtocol
+    public class ResourceTag
     {
         /// <summary>
-        /// HTTP
+        /// Constructs a tag with a name and optional value.
         /// </summary>
-        [EnumMember(Value = "http")]
-        Http,
+        /// <param name="key">The tag key.</param>
+        /// <param name="value">The optional tag value.  Note that empty value strings will be converted to <c>null</c>.</param>
+        public ResourceTag(string key, string value = null)
+        {
+            this.Key = key;
+
+            if (!string.IsNullOrEmpty(Value))
+            {
+                this.Value = value;
+            }
+            else
+            {
+                this.Value = null;
+            }
+        }
 
         /// <summary>
-        /// HTTPS
+        /// Returns the tag key.
         /// </summary>
-        [EnumMember(Value = "https")]
-        Https,
+        public string Key { get; private set; }
 
         /// <summary>
-        /// TCP
+        /// Returns the tag value or <c>null</c>.
         /// </summary>
-        [EnumMember(Value = "tcp")]
-        Tcp,
-
-        /// <summary>
-        /// UDP
-        /// </summary>
-        [EnumMember(Value = "udp")]
-        Udp
+        public string Value { get; private set; }
     }
 }

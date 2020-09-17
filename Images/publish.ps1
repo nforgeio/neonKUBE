@@ -137,6 +137,7 @@ if ($other)
     Publish "$image_root\\cadence-dev"
     Publish "$image_root\\couchbase-dev"
     Publish "$image_root\\test"
+    Publish "$image_root\\aws-cli"
 }
 
 if ($services)

@@ -417,7 +417,7 @@ systemctl restart rsyslog.service
             //      https://github.com/nforgeio/neonKUBE/issues/963
 
             node.Status = "setup: disk";
-            node.SudoCommand("setup-disk.sh", hostingManager.GetDataDisk(node));
+            node.SudoCommand("setup-disk.sh", hostingManager.GetDataDevice(node));
 
             // Clear any DHCP leases to be super sure that cloned node
             // VMs will obtain fresh IP addresses.
