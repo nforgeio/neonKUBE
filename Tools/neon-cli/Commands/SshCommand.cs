@@ -97,7 +97,7 @@ ARGUMENTS:
             // The host's SSH key fingerprint looks something like the example below.  We
             // need to extract the MD5 HEX part to generate a PuTTY compatible fingerprint.
             //
-            //      2048 MD5:cb:2f:f1:68:4b:aa:b3:8a:72:4d:53:f6:9f:5f:6a:fa root@manage-0 (RSA)
+            //      2048 MD5:cb:2f:f1:68:4b:aa:b3:8a:72:4d:53:f6:9f:5f:6a:fa sysadmin@manage-0 (RSA)
 
             const string    md5Pattern     = "MD5:";
             string          md5Fingerprint = contextExtensions.SshKey.FingerprintMd5;

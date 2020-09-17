@@ -259,7 +259,7 @@ echo '{KubeConst.SysAdminUsername}:{secureSshPassword}' | chpasswd
 
             if (response.ExitCode != 0)
             {
-                throw new KubeException($"*** ERROR: Unable to set a strong password [exitcode={response.ExitCode}].");
+                throw new KubeException($"*** ERROR: Unable to set the strong SSH password [exitcode={response.ExitCode}].");
             }
 
             // Update the node credentials and then reconnect. 

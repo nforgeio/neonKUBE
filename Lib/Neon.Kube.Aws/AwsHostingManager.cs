@@ -56,7 +56,6 @@ using Ec2VolumeType  = Amazon.EC2.VolumeType;
 using ElbAction      = Amazon.ElasticLoadBalancingV2.Model.Action;
 using ElbTag         = Amazon.ElasticLoadBalancingV2.Model.Tag;
 using ElbTargetGroup = Amazon.ElasticLoadBalancingV2.Model.TargetGroup;
-using System.Xml;
 
 namespace Neon.Kube
 {
@@ -722,6 +721,7 @@ namespace Neon.Kube
         private Region                              awsRegion;
         private RegionEndpoint                      regionEndpoint;
         private SshKey                              sshKey;
+        private string                              secureSshPassword;
         private AmazonEC2Client                     ec2Client;
         private AmazonElasticLoadBalancingV2Client  elbClient;
         private AmazonResourceGroupsClient          rgClient;
@@ -1039,7 +1039,9 @@ namespace Neon.Kube
             // the SSH key when the instances are provisioned and then upload and enable 
             // the SSH password ourselves.
 
-            sshKey = contextExtension.SshKey;
+            this.secureSshPassword = secureSshPassword;
+            this.sshKey            = contextExtension.SshKey;
+
             Covenant.Assert(sshKey != null);
 
             var operation  = $"Provisioning [{cluster.Definition.Name}] on AWS [{region}/{resourceGroupName}]";
@@ -1060,6 +1062,7 @@ namespace Neon.Kube
             controller.AddGlobalStep("network", ConfigureNetworkAsync);
             controller.AddGlobalStep("ssh key", ImportKeyPairAsync);
             controller.AddNodeStep("node instances", CreateNodeInstanceAsync);
+            controller.AddNodeStep("node ssh config", ConfigureNodeSshAsync);
             controller.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
 
             if (!controller.Run(leaveNodesConnected: false))
@@ -2183,7 +2186,7 @@ retry:
 
                 // The public key should look something like this:
                 //
-                //      ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCkKpqEDKLPKH13D...ZNP root@my-cluster
+                //      ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCkKpqEDKLPKH13D...ZNP sysadmin@my-cluster
                 //
                 // We need to extract the base64 part from the middle so we can pass it
                 // to AWS when we import the key.  Note that the comment after the base64
@@ -2449,6 +2452,66 @@ retry:
                     timeout: TimeSpan.FromDays(1),
                     pollTime: TimeSpan.FromSeconds(5));
             }
+        }
+
+        /// <summary>
+        /// Configures the node to authenticate the [sysadmin] user with the secure SSH password 
+        /// as well as the public key.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        /// <param name="stepDelay">The step delay.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task ConfigureNodeSshAsync(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        {
+            // AWS requires SSH key based authenticated for newly created instances.
+
+            node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUsername, sshKey.PrivatePEM));
+            node.WaitForBoot();
+
+            // Set the secure [sysadmin] password.
+
+            node.Status = "secure ssh password";
+
+            var passwordScript =
+$@"
+echo '{KubeConst.SysAdminUsername}:{secureSshPassword}' | chpasswd
+";
+            var response = node.SudoCommand(CommandBundle.FromScript(passwordScript));
+
+            if (response.ExitCode != 0)
+            {
+                throw new KubeException($"*** ERROR: Unable to set the strong SSH password [exitcode={response.ExitCode}].");
+            }
+
+            // We need to reconfure the OpenSSH server to enable PAM (password)
+            // authentication.  We're simply going to append a new setting to
+            // the OpenSSH config file and restart the server.  Note that the
+            // config file will be replaced with the full cluster settings later
+            // on during cluster setup, so this won't result in a mess.
+
+            node.Status = "config openssh";
+
+            var sshConfigScript =
+@"
+echo """" >> /etc/ssh/sshd_config
+echo ""UsePAM yes"" >> /etc/ssh/sshd_config
+systemctl restart sshd
+";
+            response = node.SudoCommand(CommandBundle.FromScript(sshConfigScript));
+
+            if (response.ExitCode != 0)
+            {
+                throw new KubeException($"*** ERROR: Unable to reconfigure OpenSSH [exitcode={response.ExitCode}].");
+            }
+
+            // Disconnect and then reconnect the node using password authentication to 
+            // verify that it works.
+
+            node.Status = "reconnect with password";
+
+            node.Disconnect();
+            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, secureSshPassword));
+            node.Connect();
         }
 
         /// <summary>

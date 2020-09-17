@@ -100,7 +100,7 @@ Configures a neonKUBE as described in the cluster definition file.
 
 USAGE: 
 
-    neon cluster setup [OPTIONS] root@CLUSTER-NAME  
+    neon cluster setup [OPTIONS] sysadmin@CLUSTER-NAME  
 
 OPTIONS:
 
@@ -151,7 +151,7 @@ OPTIONS:
         {
             if (commandLine.Arguments.Length < 1)
             {
-                Console.Error.WriteLine("*** ERROR: [root@CLUSTER-NAME] argument is required.");
+                Console.Error.WriteLine("*** ERROR: [sysadmin@CLUSTER-NAME] argument is required.");
                 Program.Exit(1);
             }
 
