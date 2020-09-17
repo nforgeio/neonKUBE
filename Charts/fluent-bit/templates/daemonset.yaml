@@ -35,7 +35,6 @@ spec:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/config.yaml") . | sha256sum }}
         fluentbit.io/exclude: 'true'
-        traffic.sidecar.istio.io/excludeOutboundPorts: '443'
 {{- if .Values.podAnnotations }}
 {{ toYaml .Values.podAnnotations | indent 8 }}
 {{- end }}
