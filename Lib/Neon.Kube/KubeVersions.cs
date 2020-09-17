@@ -65,7 +65,7 @@ namespace Neon.Kube
         /// <summary>
         /// The version of Calico to install.
         /// </summary>
-        public const string CalicoVersion = "3.16.1";
+        public const string CalicoVersion = "3.16";
 
         /// <summary>
         /// The version of Istio to install.

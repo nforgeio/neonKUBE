@@ -1126,7 +1126,7 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(setupInfo != null, nameof(setupInfo));
 
             var hostPlatform      = KubeHelper.HostPlatform;
-            var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", KubeVersions.KubeletPackageVersion);
+            var cachedKubeCtlPath = KubeHelper.GetCachedComponentPath(hostPlatform, "kubectl", KubeVersions.KubernetesVersion);
             var targetPath        = Path.Combine(KubeHelper.ProgramFolder);
 
             switch (hostPlatform)

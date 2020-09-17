@@ -1354,47 +1354,9 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     firstMaster.InvokeIdempotentAction("setup/cluster-deploy-istio",
                         () =>
                         {
-                            InstallIstio(firstMaster);
+                           InstallIstio(firstMaster);
                         });
 
-                    // Install the Helm/Tiller service.  This will install the latest stable version.
-
-//                    firstMaster.InvokeIdempotentAction("setup/cluster-deploy-helm",
-//                        () =>
-//                        {
-//                            firstMaster.Status = "deploy: helm/tiller";
-
-//                            firstMaster.KubectlApply(
-//@"
-//apiVersion: v1
-//kind: ServiceAccount
-//metadata:
-//  name: tiller
-//  namespace: kube-system
-//---
-//apiVersion: rbac.authorization.k8s.io/v1
-//kind: ClusterRoleBinding
-//metadata:
-//  name: tiller
-//roleRef:
-//  apiGroup: rbac.authorization.k8s.io
-//  kind: ClusterRole
-//  name: cluster-admin
-//subjects:
-//- kind: ServiceAccount
-//  name: tiller
-//  namespace: kube-system
-//");
-
-//                            // $hack(marcus.bowyer)
-//                            // helm init doesn't work on k8s 1.16.0 yet.
-//                            var script =
-//$@"#!/bin/bash
-
-//helm init --service-account tiller --output yaml | sed 's@apiVersion: extensions/v1beta1@apiVersion: apps/v1@' | sed 's@  replicas: 1@  replicas: 1\n  selector: {{""matchLabels"": {{""app"": ""helm"", ""name"": ""tiller""}}}}@' | kubectl apply -f -
-//";
-//                            firstMaster.SudoCommand(CommandBundle.FromScript(script));
-//                        });
 
                     // Create the cluster's [root-user]:
 
@@ -1874,8 +1836,8 @@ tar -xzf ""istioctl-{KubeVersions.IstioVersion}-linux-amd64.tar.gz""
 cd ""$HOME"" || exit
 mkdir -p "".istioctl/bin""
 mv ""${{tmp}}/istioctl"" "".istioctl/bin/istioctl""
-chmod + x "".istioctl/bin/istioctl""
-rm - r ""${{tmp}}""
+chmod +x "".istioctl/bin/istioctl""
+rm -r ""${{tmp}}""
 
 export PATH=$PATH:$HOME/.istioctl/bin
 
@@ -1891,7 +1853,7 @@ metadata:
   name: istiocontrolplane
 spec:
   hub: docker.io/istio
-  tag: 1.6.4
+  tag: {KubeVersions.IstioVersion}
   meshConfig:
     rootNamespace: istio-system
   components:
@@ -1961,8 +1923,6 @@ spec:
     istiocoredns:
       enabled: true
       coreDNSImage: coredns/coredns
-      coreDNSTag: 1.6.2
-      coreDNSPluginImage: istio/coredns-plugin:0.2-istio-1.1
     kiali:
       enabled: true
       replicaCount: 1
@@ -1993,83 +1953,6 @@ EOF
 istioctl install -f istio-cni.yaml
 ";
 
-            //            var istioScript1 =
-            //$@"#!/bin/bash
-
-            //# Enable sidecar injection.
-
-            //kubectl label namespace default istio-injection=enabled
-
-            //# Create istio-system namespace:
-
-            //kubectl create namespace istio-system
-
-            //# Download and extract the Istio binaries:
-
-            //cd /tmp
-            //curl {Program.CurlOptions} {kubeSetupInfo.IstioLinuxUri} > istio.tar.gz
-            //tar xvf /tmp/istio.tar.gz
-            //mv istio-{kubeSetupInfo.Versions.Istio} istio
-            //cd istio
-
-            //# Copy the tools:
-
-            //chmod 330 bin/*
-            //cp bin/* /usr/local/bin
-
-            //# Install Istio's CRDs:
-
-            //helm template install/kubernetes/helm/istio-init --name istio-init --set certmanager.enabled=true --namespace istio-system | kubectl apply -f -
-
-            //# Verify that all 28 Istio CRDs were committed to the Kubernetes api-server
-
-            //until [ `kubectl get crds | grep 'istio.io\|certmanager.k8s.io' | wc -l` == ""28"" ]; do
-            //    sleep 1
-            //done
-
-            //# Install Istio:
-
-            //helm template install/kubernetes/helm/istio \
-            //    --name istio \
-            //    --namespace istio-system \
-            //    --set global.defaultNodeSelector.""neonkube\.io/istio""=true \
-            //    --set istio_cni.enabled=true \
-            //    --set global.proxy.accessLogFile=/dev/stdout \
-            //    --set kiali.enabled=false \
-            //    --set tracing.enabled=true \
-            //    --set grafana.enabled=false \
-            //    --set prometheus.enabled=false \
-            //    --set certmanager.enabled=true \
-            //    --set certmanager.email=mailbox@donotuseexample.com \
-            //	--set gateways.istio-egressgateway.enabled=true \
-            //";
-            //            if (cluster.Definition.Network.Ingress.Count > 0)
-            //            {
-            //                istioScript1 +=
-            //$@" \
-            //    --set gateways.istio-ingressgateway.sds.enabled=true \
-            //    --set gateways.istio-ingressgateway.type=NodePort \
-            //";
-            //                for (var i = 0; i < cluster.Definition.Network.Ingress.Count; i++)
-            //                {
-            //                    istioScript1 +=
-            //$@" \
-            //    --set gateways.istio-ingressgateway.ports[{i}].targetPort={cluster.Definition.Network.Ingress[i].TargetPort} \
-            //    --set gateways.istio-ingressgateway.ports[{i}].port={cluster.Definition.Network.Ingress[i].Port} \
-            //    --set gateways.istio-ingressgateway.ports[{i}].name={cluster.Definition.Network.Ingress[i].Name} \
-            //    --set gateways.istio-ingressgateway.ports[{i}].nodePort={cluster.Definition.Network.Ingress[i].NodePort} \
-            //";
-            //                }
-            //            }
-
-            //            istioScript1 +=
-            //$@" \
-            //    | kubectl apply -f -
-
-            //until [ `kubectl get pods --namespace istio-system --field-selector=status.phase!=Succeeded,status.phase!=Running | wc -l` == ""0"" ]; do
-            //    sleep 1
-            //done
-            //";
             master.SudoCommand(CommandBundle.FromScript(istioScript0));
         }
 
@@ -2404,7 +2287,10 @@ rm -rf {chartName}*
                     var taints = new List<string>();
                     foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Metrics))
                     {
-                        taints = taints.Union(n.Taints).ToList();
+                        if (n.Taints?.Count() > 0)
+                        {
+                            taints = taints.Union(n.Taints).ToList();
+                        }
                     }
 
                     int i = 0;
@@ -2444,7 +2330,10 @@ rm -rf {chartName}*
                     var taints = new List<string>();
                     foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Metrics))
                     {
-                        taints = taints.Union(n.Taints).ToList();
+                        if (n.Taints?.Count() > 0)
+                        {
+                            taints = taints.Union(n.Taints).ToList();
+                        }
                     }
 
                     int i = 0;
@@ -2489,7 +2378,10 @@ rm -rf {chartName}*
                     var taints = new List<string>();
                     foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Metrics))
                     {
-                        taints = taints.Union(n.Taints).ToList();
+                        if (n.Taints?.Count() > 0)
+                        {
+                            taints = taints.Union(n.Taints).ToList();
+                        }
                     }
 
                     int i = 0;
@@ -2517,7 +2409,10 @@ rm -rf {chartName}*
                     var taints = new List<string>();
                     foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Metrics))
                     {
-                        taints = taints.Union(n.Taints).ToList();
+                        if (n.Taints?.Count() > 0)
+                        {
+                            taints = taints.Union(n.Taints).ToList();
+                        }
                     }
 
                     int i = 0;
@@ -2625,7 +2520,10 @@ rm -rf {chartName}*
                             var taints = new List<string>();
                             foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Metrics))
                             {
-                                taints = taints.Union(n.Taints).ToList();
+                                if (n.Taints?.Count() > 0)
+                                {
+                                    taints = taints.Union(n.Taints).ToList();
+                                }
                             }
 
                             int i = 0;
@@ -2748,7 +2646,10 @@ rm -rf {chartName}*
                     var taints = new List<string>();
                     foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Logs))
                     {
-                        taints = taints.Union(n.Taints).ToList();
+                        if (n.Taints?.Count() > 0)
+                        {
+                            taints = taints.Union(n.Taints).ToList();
+                        }
                     }
 
                     int i = 0;
@@ -2806,7 +2707,10 @@ rm -rf {chartName}*
             var taints = new List<string>();
             foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Logs))
             {
-                taints = taints.Union(n.Taints).ToList();
+                if (n.Taints?.Count() > 0)
+                {
+                    taints = taints.Union(n.Taints).ToList();
+                }
             }
 
             int i = 0;
@@ -2833,7 +2737,10 @@ rm -rf {chartName}*
             var taints = new List<string>();
             foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Logs))
             {
-                taints = taints.Union(n.Taints).ToList();
+                if (n.Taints?.Count() > 0)
+                {
+                    taints = taints.Union(n.Taints).ToList();
+                }
             }
 
             int i = 0;
@@ -2860,7 +2767,10 @@ rm -rf {chartName}*
             var taints = new List<string>();
             foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Logs))
             {
-                taints = taints.Union(n.Taints).ToList();
+                if (n.Taints?.Count() > 0)
+                {
+                    taints = taints.Union(n.Taints).ToList();
+                }
             }
 
             int i = 0;
