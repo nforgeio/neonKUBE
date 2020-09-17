@@ -47,6 +47,7 @@ using Neon.Time;
 
 using k8s;
 using k8s.Models;
+using ICSharpCode.SharpZipLib.Tar;
 
 namespace NeonCli
 {
@@ -2411,6 +2412,20 @@ rm -rf {chartName}*
 
                     values.Add(new KeyValuePair<string, object>($"volumeClaimTemplate.resources.requests.storage", "1Gi"));
 
+                    var taints = new List<string>();
+                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Metrics))
+                    {
+                        taints = taints.Union(n.Taints).ToList();
+                    }
+
+                    int i = 0;
+                    foreach (var t in taints)
+                    {
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", "NoSchedule"));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                    }
+
                     InstallHelmChartAsync(master, "etcd-cluster", releaseName: "neon-metrics-etcd", @namespace: "monitoring", values: values).Wait();
                 });
 
@@ -2436,6 +2451,20 @@ rm -rf {chartName}*
                 () =>
                 {
                     var values = new List<KeyValuePair<string, object>>();
+
+                    var taints = new List<string>();
+                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Metrics))
+                    {
+                        taints = taints.Union(n.Taints).ToList();
+                    }
+
+                    int i = 0;
+                    foreach (var t in taints)
+                    {
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", "NoSchedule"));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                    }
 
                     InstallHelmChartAsync(master, "prometheus-operator", releaseName: "neon-metrics-prometheus-operator", @namespace: "monitoring", values: values, timeout: 1200, wait: true).Wait();
                 });
@@ -2468,6 +2497,20 @@ rm -rf {chartName}*
                             break;
                     }
 
+                    var taints = new List<string>();
+                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Metrics))
+                    {
+                        taints = taints.Union(n.Taints).ToList();
+                    }
+
+                    int i = 0;
+                    foreach (var t in taints)
+                    {
+                        cortexValues.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Split("=")[0]}"));
+                        cortexValues.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", "NoSchedule"));
+                        cortexValues.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                    }
+
                     InstallHelmChartAsync(master, "cortex", releaseName: "neon-metrics-cortex", @namespace: "monitoring", values: cortexValues, timeout: 1200, wait: true).Wait();
                 });
 
@@ -2480,7 +2523,23 @@ rm -rf {chartName}*
             master.InvokeIdempotentAction("deploy/grafana",
                 () =>
                 {
-                    InstallHelmChartAsync(master, "grafana", releaseName: "neon-metrics-grafana", @namespace: "monitoring").Wait();
+                    var values = new List<KeyValuePair<string, object>>();
+
+                    var taints = new List<string>();
+                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Metrics))
+                    {
+                        taints = taints.Union(n.Taints).ToList();
+                    }
+
+                    int i = 0;
+                    foreach (var t in taints)
+                    {
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", "NoSchedule"));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                    }
+
+                    InstallHelmChartAsync(master, "grafana", releaseName: "neon-metrics-grafana", @namespace: "monitoring", values: values).Wait();
                 });
 
         }
@@ -2574,9 +2633,19 @@ rm -rf {chartName}*
                             values.Add(new KeyValuePair<string, object>($"partition.master", cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()));
                             values.Add(new KeyValuePair<string, object>($"partition.tserver", cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()));
 
-                            values.Add(new KeyValuePair<string, object>($"tolerations[0].key", "neonkube.io/metrics"));
-                            values.Add(new KeyValuePair<string, object>($"tolerations[0].effect", "NoSchedule"));
-                            values.Add(new KeyValuePair<string, object>($"tolerations[0].operator", "Exists"));
+                            var taints = new List<string>();
+                            foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Metrics))
+                            {
+                                taints = taints.Union(n.Taints).ToList();
+                            }
+
+                            int i = 0;
+                            foreach (var t in taints)
+                            {
+                                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Split("=")[0]}"));
+                                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", "NoSchedule"));
+                                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                            }
 
                             // We're not waiting because I was seeing this behaviour: https://github.com/helm/helm/issues/8674
                             InstallHelmChartAsync(master, "yugabyte", releaseName: "neon-metrics-db", @namespace: "monitoring", values: values, wait: false).Wait();
@@ -2687,6 +2756,20 @@ rm -rf {chartName}*
                         }
                     }
 
+                    var taints = new List<string>();
+                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Logs))
+                    {
+                        taints = taints.Union(n.Taints).ToList();
+                    }
+
+                    int i = 0;
+                    foreach (var t in taints)
+                    {
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", "NoSchedule"));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                    }
+
                     InstallHelmChartAsync(master, "elasticsearch", releaseName: "neon-logs-elasticsearch", @namespace: "monitoring", timeout: 1200, values: values, wait: false).Wait();
 
                     // wait for Elasticsearch cluster to be running before proceeding.
@@ -2731,6 +2814,19 @@ rm -rf {chartName}*
             values.Add(new KeyValuePair<string, object>($"autoscaling.minReplicas", (Math.Max(1, cluster.Definition.Workers.Count() % 6))));
             values.Add(new KeyValuePair<string, object>($"autoscaling.maxReplicas", (Math.Max(1, cluster.Definition.Workers.Count()))));
 
+            var taints = new List<string>();
+            foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Logs))
+            {
+                taints = taints.Union(n.Taints).ToList();
+            }
+
+            int i = 0;
+            foreach (var t in taints)
+            {
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Split("=")[0]}"));
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", "NoSchedule"));
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+            }
 
             await InstallHelmChartAsync(master, "fluentd", releaseName: "neon-log-collector", @namespace: "monitoring", timeout: 300, values: values);
         }
@@ -2743,7 +2839,23 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: kibana";
 
-            await InstallHelmChartAsync(master, "kibana", releaseName: "neon-logs-kibana", @namespace: "monitoring", timeout: 900);
+            var values = new List<KeyValuePair<string, object>>();
+
+            var taints = new List<string>();
+            foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Logs))
+            {
+                taints = taints.Union(n.Taints).ToList();
+            }
+
+            int i = 0;
+            foreach (var t in taints)
+            {
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Split("=")[0]}"));
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", "NoSchedule"));
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+            }
+
+            await InstallHelmChartAsync(master, "kibana", releaseName: "neon-logs-kibana", @namespace: "monitoring", timeout: 900, values: values);
         }
 
         /// <summary>
@@ -2754,7 +2866,23 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: jaeger";
 
-            await InstallHelmChartAsync(master, "jaeger", releaseName: "neon-logs-jaeger", @namespace: "monitoring", timeout: 900);
+            var values = new List<KeyValuePair<string, object>>();
+
+            var taints = new List<string>();
+            foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Logs))
+            {
+                taints = taints.Union(n.Taints).ToList();
+            }
+
+            int i = 0;
+            foreach (var t in taints)
+            {
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Split("=")[0]}"));
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", "NoSchedule"));
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+            }
+
+            await InstallHelmChartAsync(master, "jaeger", releaseName: "neon-logs-jaeger", @namespace: "monitoring", timeout: 900, values: values);
         }
 
         /// <summary>
