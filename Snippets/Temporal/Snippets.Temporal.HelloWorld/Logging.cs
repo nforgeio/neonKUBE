@@ -10,7 +10,7 @@
     using Neon.Diagnostics;
     using Neon.Temporal;
 
-    [ActivityInterface(TaskList = "my-tasks")]
+    [ActivityInterface(TaskQueue = "my-tasks")]
     public interface IEmailActivity : IActivity
     {
         [ActivityMethod(Name = "get-email-list")]
@@ -79,7 +79,7 @@
         }
     }
 
-    [WorkflowInterface(TaskList = "my-tasks")]
+    [WorkflowInterface(TaskQueue = "my-tasks")]
     public interface IEmailWorkflow : IWorkflow
     {
         [WorkflowMethod]

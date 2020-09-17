@@ -9,7 +9,7 @@ using Neon.Temporal;
 namespace HelloWorld_BasicActivity_1
 {
     #region code
-    [ActivityInterface(TaskList = "my-tasks")]
+    [ActivityInterface(TaskQueue = "my-tasks")]
     public interface ISendHelloActivity : IActivity
     {
         Task SendHelloAsync(string email, string name);

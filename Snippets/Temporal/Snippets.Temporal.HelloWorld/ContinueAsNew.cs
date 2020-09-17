@@ -18,7 +18,7 @@ namespace HelloWorld_ContinueAsNew_1
         public DateTime?    LastMarketingPingUtc { get; set; }
     }
 
-    [ActivityInterface(TaskList = "my-tasks")]
+    [ActivityInterface(TaskQueue = "my-tasks")]
     public interface ICustomerActivities : IActivity
     {
         [ActivityMethod(Name = "get-customer-info")]
@@ -64,7 +64,7 @@ namespace HelloWorld_ContinueAsNew_1
         }
     }
 
-    [WorkflowInterface(TaskList = "my-tasks")]
+    [WorkflowInterface(TaskQueue = "my-tasks")]
     public interface IEngagementWorkflow : IWorkflow
     {
         [WorkflowMethod]
@@ -115,7 +115,7 @@ namespace HelloWorld_ContinueAsNew_2
         public DateTime?    LastMarketingPingUtc { get; set; }
     }
 
-    [ActivityInterface(TaskList = "my-tasks")]
+    [ActivityInterface(TaskQueue = "my-tasks")]
     public interface ICustomerActivities : IActivity
     {
         [ActivityMethod(Name = "get-customer-info")]
@@ -161,7 +161,7 @@ namespace HelloWorld_ContinueAsNew_2
         }
     }
 
-    [WorkflowInterface(TaskList = "my-tasks")]
+    [WorkflowInterface(TaskQueue = "my-tasks")]
     public interface IEngagementWorkflow : IWorkflow
     {
         [WorkflowMethod]

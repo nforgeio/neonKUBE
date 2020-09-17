@@ -9,7 +9,7 @@ using Neon.Temporal;
 namespace HelloWorld_ChildWorkflow
 {
     #region code
-    [ActivityInterface(TaskList = "my-tasks")]
+    [ActivityInterface(TaskQueue = "my-tasks")]
     public interface IEmailActivity : IActivity
     {
         [ActivityMethod(Name = "get-email-list")]
@@ -50,7 +50,7 @@ namespace HelloWorld_ChildWorkflow
         }
     }
 
-    [WorkflowInterface(TaskList = "my-tasks")]
+    [WorkflowInterface(TaskQueue = "my-tasks")]
     public interface IEmailWorkflow : IWorkflow
     {
         [WorkflowMethod]
@@ -72,7 +72,7 @@ namespace HelloWorld_ChildWorkflow
         }
     }
 
-    [WorkflowInterface(TaskList = "my-tasks")]
+    [WorkflowInterface(TaskQueue = "my-tasks")]
     public interface IParentWorkfow : IWorkflow
     {
         [WorkflowMethod]

@@ -36,7 +36,7 @@ namespace TemporalService
     /// <item>
     ///     <term><b>TEMPORAL_TASKQUEUE</b>/term>
     ///     <description>
-    ///     <i>required</i>: Specifies the Temporal task list for the registered workflows.
+    ///     <i>required</i>: Specifies the Temporal task queue for the registered workflows.
     ///     </description>
     /// </item>
     /// <item>

@@ -192,7 +192,7 @@
               next.  This can be increased to a maximum of 60 seconds via configuration.
             </para>
           </definition>
-          <definedTerm>Namespaces and Task Lists</definedTerm>
+          <definedTerm>Namespaces and Task Queues</definedTerm>
           <definition>
             <para>
               Temporal is a multi-tenant service and uses namespaces to isolate each tenant from any others.  A namespace

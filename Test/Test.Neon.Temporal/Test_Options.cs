@@ -50,7 +50,7 @@ namespace TestTemporal
         //
         // We're going to establish three client connections in addition to default client connection
         // established by the TemporalFixture.  Two of these connections will be setup to default to
-        // the "test1-taskqueue" and "test2-namespace" task lists and "test2-taskqueue" and "test2-namespace"
+        // the "test1-taskqueue" and "test2-namespace" task queues and "test2-taskqueue" and "test2-namespace"
         // namespaces.  The third client will not be assigned a default task queue and the namespace
         // we'll be left as the default.
         //

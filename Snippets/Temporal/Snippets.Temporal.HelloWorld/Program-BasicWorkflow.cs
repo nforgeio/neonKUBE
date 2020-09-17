@@ -7,7 +7,7 @@ using Neon.Temporal;
 
 namespace HelloWorld
 {
-    [WorkflowInterface(TaskList = "my-tasks")]
+    [WorkflowInterface(TaskQueue = "my-tasks")]
     public interface IHelloWorkflow : IWorkflow
     {
         [WorkflowMethod]
