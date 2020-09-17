@@ -294,10 +294,10 @@ cat <<EOF > /etc/sysctl.conf
 # entire system.  This looks like it defaults to [398327] for
 # Ubuntu 20.04 so we're going to pin this value to enforce
 # consistency across Linux updates, etc.
-fs.file-max = 398327
+fs.file-max = 1048576
 
 # We'll allow processes to open the same number of file handles.
-fs.nr_open = 398327
+fs.nr_open = 1048576
 
 ###################################################################
 # Boost the number of RAM pages a process can map as well as increasing 
