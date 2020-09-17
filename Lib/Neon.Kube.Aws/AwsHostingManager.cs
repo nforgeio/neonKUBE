@@ -1336,13 +1336,28 @@ namespace Neon.Kube
 
             // SSH keypair
 
-            var keyPairsResponse = await ec2Client.DescribeKeyPairsAsync(
-                new DescribeKeyPairsRequest()
-                {
-                    KeyNames = new List<string>() { keyPairName }
-                });
+            try
+            {
+                var keyPairsResponse = await ec2Client.DescribeKeyPairsAsync(
+                    new DescribeKeyPairsRequest()
+                    {
+                        KeyNames = new List<string>() { keyPairName }
+                    });
 
-            keyPairId = keyPairsResponse.KeyPairs.SingleOrDefault(keyPair => keyPair.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))?.KeyPairId;
+                keyPairId = keyPairsResponse.KeyPairs.SingleOrDefault(keyPair => keyPair.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))?.KeyPairId;
+            }
+            catch (AmazonServiceException e)
+            {
+                // AWS throw an exception when the named key pair doesn't exist.  We'll
+                // consider this to be normal and set [keyPairId=null].
+
+                if (e.ErrorCode != "InvalidKeyPair.NotFound")
+                {
+                    throw;
+                }
+
+                keyPairId = null;
+            }
 
             // Placement groups
 
@@ -2182,36 +2197,13 @@ retry:
         {
             if (keyPairId == null)
             {
-                Covenant.Assert(!string.IsNullOrEmpty(sshKey.PublicPUB));
-
-                // The public key should look something like this:
-                //
-                //      ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCkKpqEDKLPKH13D...ZNP sysadmin@my-cluster
-                //
-                // We need to extract the base64 part from the middle so we can pass it
-                // to AWS when we import the key.  Note that the comment after the base64
-                // part is optional.
-
-                var firstSpacePos = sshKey.PublicPUB.IndexOf(' ');
-                var lastSpacePos  = sshKey.PublicPUB.LastIndexOf(' ');
-                var keyMaterial   = (string)null;
-
-                Covenant.Assert(firstSpacePos != -1);
-
-                if (lastSpacePos != -1)
-                {
-                    keyMaterial = sshKey.PublicPUB.Substring(firstSpacePos, lastSpacePos - firstSpacePos).Trim();
-                }
-                else 
-                {
-                    keyMaterial = sshKey.PublicPUB.Substring(firstSpacePos).Trim();
-                }
+                Covenant.Assert(!string.IsNullOrEmpty(sshKey.PublicSSH2));
 
                 var keyPairResponse = await ec2Client.ImportKeyPairAsync(
                     new ImportKeyPairRequest()
                     {
                         KeyName           = keyPairName,
-                        PublicKeyMaterial = keyMaterial,
+                        PublicKeyMaterial = Convert.ToBase64String(Encoding.UTF8.GetBytes(sshKey.PublicPUB)),
                         TagSpecifications = GetTagSpecifications(keyPairName, ResourceType.KeyPair)
                     });
 

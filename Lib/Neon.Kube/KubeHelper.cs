@@ -2058,6 +2058,7 @@ exit 0
 
             using (var tempFolder = new TempFolder(TempFolder))
             {
+                //-------------------------------------------------------------
                 // Generate and load the public and private keys.
 
                 var result = NeonHelper.ExecuteCapture(sshKeyGenPath,
@@ -2075,9 +2076,62 @@ exit 0
                     throw new KubeException("Cannot generate SSH key:\r\n\r\n" + result.AllText);
                 }
 
-                var publicPart  = NeonHelper.ToLinuxLineEndings(File.ReadAllText(Path.Combine(tempFolder.Path, "key.pub")));
-                var privatePart = NeonHelper.ToLinuxLineEndings(File.ReadAllText(Path.Combine(tempFolder.Path, "key")));
+                var publicPUB  = File.ReadAllText(Path.Combine(tempFolder.Path, "key.pub"));
+                var privatePEM = File.ReadAllText(Path.Combine(tempFolder.Path, "key"));
 
+                //-------------------------------------------------------------
+                // We also need the public key in PEM format.
+
+                result = NeonHelper.ExecuteCapture(sshKeyGenPath,
+                    new object[]
+                    {
+                        "-f", Path.Combine(tempFolder.Path, "key.pub"),
+                        "-e",
+                        "-m", "pem",
+                    });
+
+                if (result.ExitCode != 0)
+                {
+                    throw new KubeException("Cannot convert SSH public key to PEM:\r\n\r\n" + result.AllText);
+                }
+
+                var publicPEM = result.OutputText;
+
+                //-------------------------------------------------------------
+                // Also convert the public key to SSH2 (RFC 4716).
+
+                result = NeonHelper.ExecuteCapture(sshKeyGenPath,
+                    new object[]
+                    {
+                        "-f", Path.Combine(tempFolder.Path, "key.pub"),
+                        "-e",
+                    });
+
+                if (result.ExitCode != 0)
+                {
+                    throw new KubeException("Cannot convert SSH public key to SSH2:\r\n\r\n" + result.AllText);
+                }
+
+                var publicSSH2 = result.OutputText;
+
+                // Strip out the comment header line if one was added during the conversion.
+
+                var sbPublicSSH2 = new StringBuilder();
+
+                using (var reader = new StringReader(publicSSH2))
+                {
+                    foreach (var line in reader.Lines())
+                    {
+                        if (!line.StartsWith("Comment: "))
+                        {
+                            sbPublicSSH2.AppendLine(line);
+                        }
+                    }
+                }
+
+                publicSSH2 = sbPublicSSH2.ToString();
+
+                //-------------------------------------------------------------
                 // We need to obtain the MD5 fingerprint from the public key.
 
                 result = NeonHelper.ExecuteCapture(sshKeyGenPath,
@@ -2085,7 +2139,7 @@ exit 0
                     {
                         "-l",
                         "-f", Path.Combine(tempFolder.Path, "key.pub"),
-                        "-E", "md5"
+                        "-E", "md5",
                     });
 
                 if (result.ExitCode != 0)
@@ -2095,7 +2149,8 @@ exit 0
 
                 var fingerprintMd5 = result.OutputText.Trim();
 
-                // ...as well as the SHA256 fingerprint.
+                //-------------------------------------------------------------
+                // We also need the SHA256 fingerprint.
 
                 result = NeonHelper.ExecuteCapture(sshKeyGenPath,
                     new object[]
@@ -2112,12 +2167,15 @@ exit 0
 
                 var fingerprintSha2565 = result.OutputText.Trim();
 
+                //-------------------------------------------------------------
                 // Return the key information.
 
                 return new SshKey()
                 {
-                    PublicPUB         = publicPart,
-                    PrivatePEM        = privatePart,
+                    PublicPUB         = publicPUB,
+                    PublicPEM         = publicPEM,
+                    PublicSSH2        = publicSSH2,
+                    PrivatePEM        = privatePEM,
                     FingerprintMd5    = fingerprintMd5,
                     FingerprintSha256 = fingerprintSha2565
                 };

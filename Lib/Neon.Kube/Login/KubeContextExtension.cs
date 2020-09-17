@@ -60,7 +60,11 @@ namespace Neon.Kube
                 return null;
             }
 
-            return NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(path), strict: true);
+            var contextExtension = NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(path), strict: true);
+
+            contextExtension.path = path;
+
+            return contextExtension;
         }
 
         //---------------------------------------------------------------------
