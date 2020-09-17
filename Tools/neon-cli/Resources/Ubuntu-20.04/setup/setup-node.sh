@@ -291,7 +291,7 @@ cat <<EOF > /etc/sysctl.conf
 # TWEAK: neonKUBE settings:
 
 # Explicitly set the maximum number of file descriptors for the
-# entire system.  This looks like it defaults to [398327] for
+# entire system.  This looks like it defaults to [1048576] for
 # Ubuntu 20.04 so we're going to pin this value to enforce
 # consistency across Linux updates, etc.
 fs.file-max = 1048576
