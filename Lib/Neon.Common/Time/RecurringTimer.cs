@@ -52,7 +52,7 @@ namespace Neon.Time
     /// to wait for the timer to fire.
     /// </para>
     /// <para>
-    /// The <see cref="Reset()"/> and <see cref="Reset(DateTime)"/> methods may be used to explictly
+    /// The <see cref="Reset()"/> and <see cref="Reset(DateTime)"/> methods may be used to explicitly
     /// reset the timer to fire at the next scheduled time.  This may be useful for ensuring that
     /// short duration timers are properly reset after an operation that may take longer to
     /// complete than the timer interval.

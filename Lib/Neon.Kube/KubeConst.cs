@@ -176,7 +176,7 @@ namespace Neon.Kube
         /// The default host machine container user ID.
         /// </para>
         /// <note>
-        /// This explictly set to the first valid normal Linux user ID to
+        /// This explicitly set to the first valid normal Linux user ID to
         /// be compatible with as many Docker images as possible.
         /// </note>
         /// </summary>
@@ -192,7 +192,7 @@ namespace Neon.Kube
         /// The default host machine container group ID.
         /// </para>
         /// <note>
-        /// This explictly set to the first valid normal Linux user ID to
+        /// This explicitly set to the first valid normal Linux user ID to
         /// be compatible with as many Docker images as possible.
         /// </note>
         /// </summary>

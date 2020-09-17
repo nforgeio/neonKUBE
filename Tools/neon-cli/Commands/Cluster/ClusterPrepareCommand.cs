@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -85,7 +86,6 @@ Server Requirements:
         private HostingManager  hostingManager;
         private string          clusterDefPath;
         private string          packageCaches;
-        private bool            force;
 
         /// <inheritdoc/>
         public override string[] Words
@@ -149,7 +149,6 @@ Server Requirements:
             }
 
             clusterDefPath = commandLine.Arguments[0];
-            force          = commandLine.GetFlag("--force");
 
             ClusterDefinition.ValidateFile(clusterDefPath, strict: true);
 
@@ -190,7 +189,7 @@ Server Requirements:
                 // environment because we're expecting the bare machines to be already running 
                 // with the assigned addresses and we're also not going to do this for cloud
                 // environments because we're assuming that the cluster will run in its own
-                // private network so there'll ne no possibility of conflicts.
+                // private network so there'll be no possibility of conflicts.
 
                 if (cluster.Definition.Hosting.Environment != HostingEnvironment.Machine && 
                     !cluster.Definition.Hosting.IsCloudProvider)
@@ -339,7 +338,69 @@ Server Requirements:
                     contextExtension.Save();
                 }
 
-                if (!hostingManager.ProvisionAsync(force, contextExtension.SshPassword, orgSshPassword).Result)
+                // We're also going to generate the server's SSH key here and pass that to the hosting
+                // manager's provisioner.  We need to do this up front because some hosting environments
+                // like AWS don't allow SSH password authentication by default, so we'll need the SSH key
+                // to initialize the nodes after they've been provisioned for those environments.
+
+                if (contextExtension.SshKey == null)
+                {
+                    // Generate a 2048 bit SSH key pair.
+
+                    contextExtension.SshKey = KubeHelper.GenerateSshKey(cluster.Name, "root");
+
+                    // We're going to use WinSCP (if it's installed) to convert the OpenSSH PEM formatted key
+                    // to the PPK format PuTTY/WinSCP requires.
+
+                    if (NeonHelper.IsWindows)
+                    {
+                        var pemKeyPath = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("d"));
+                        var ppkKeyPath = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("d"));
+
+                        try
+                        {
+                            File.WriteAllText(pemKeyPath, contextExtension.SshKey.PrivatePEM);
+
+                            ExecuteResponse result;
+
+                            try
+                            {
+                                result = NeonHelper.ExecuteCapture("winscp.com", $@"/keygen ""{pemKeyPath}"" /comment=""{cluster.Definition.Name} Key"" /output=""{ppkKeyPath}""");
+                            }
+                            catch (Win32Exception)
+                            {
+                                return; // Tolerate when WinSCP isn't installed.
+                            }
+
+                            if (result.ExitCode != 0)
+                            {
+                                Console.WriteLine(result.OutputText);
+                                Console.Error.WriteLine(result.ErrorText);
+                                Program.Exit(result.ExitCode);
+                            }
+
+                            contextExtension.SshKey.PrivatePPK = NeonHelper.ToLinuxLineEndings(File.ReadAllText(ppkKeyPath));
+
+                            // Persist the SSH key.
+
+                            contextExtension.Save();
+                        }
+                        finally
+                        {
+                            if (File.Exists(pemKeyPath))
+                            {
+                                File.Delete(pemKeyPath);
+                            }
+
+                            if (File.Exists(ppkKeyPath))
+                            {
+                                File.Delete(ppkKeyPath);
+                            }
+                        }
+                    }
+                }
+
+                if (!hostingManager.ProvisionAsync(contextExtension, contextExtension.SshPassword, orgSshPassword).Result)
                 {
                     Program.Exit(1);
                 }
@@ -409,9 +470,13 @@ Server Requirements:
 
                 controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
                 hostingManager.AddPostProvisionSteps(controller);
-                controller.AddNodeStep("verify OS", CommonSteps.VerifyOS);
-
-                controller.AddNodeStep("prepare", 
+                controller.AddNodeStep("node OS verify", CommonSteps.VerifyOS);
+                controller.AddNodeStep("node ssh keys", 
+                    (node, stepDelay) =>
+                    {
+                        CommonSteps.ConfigureSshKey(node, contextExtension.SshKey);
+                    });
+                controller.AddNodeStep("node prepare", 
                     (node, stepDelay) =>
                     {
                         Thread.Sleep(stepDelay);

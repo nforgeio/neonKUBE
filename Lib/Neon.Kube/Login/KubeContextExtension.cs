@@ -157,38 +157,13 @@ namespace Neon.Kube
         public string KubernetesDashboardCertificate { get; set; }
 
         /// <summary>
-        /// The SSH RSA private key fingerprint used to secure the cluster nodes.  This is a
-        /// MD5 hash encoded as hex bytes separated by colons.
-        /// </summary>
-        [JsonProperty(PropertyName = "SshNodeFingerprint")]
-        [YamlMember(Alias = "sshNodeFingerprint", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public string SshNodeFingerprint { get; set; }
-
-        /// <summary>
-        /// The SSH RSA private key used to secure the cluster nodes.
-        /// </summary>
-        [JsonProperty(PropertyName = "SshNodePrivateKey")]
-        [YamlMember(Alias = "sshNodePrivateKey", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public string SshNodePrivateKey { get; set; }
-
-        /// <summary>
-        /// The SSH RSA private key used to secure the cluster nodes.
-        /// </summary>
-        [JsonProperty(PropertyName = "SshNodePublicKey")]
-        [YamlMember(Alias = "sshNodePublicKey", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
-        [DefaultValue(false)]
-        public string SshNodePublicKey { get; set; }
-
-        /// <summary>
         /// The public and private parts of the SSH client key used to
         /// authenticate an SSH session with a cluster node.
         /// </summary>
         [JsonProperty(PropertyName = "SshClientKey", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "sshClientKey", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public SshClientKey SshClientKey { get; set; }
+        public SshKey SshKey { get; set; }
 
         /// <summary>
         /// Sets the file path where the extension will be persisted.

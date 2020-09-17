@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SshClientKey.cs
+// FILE:	    SshKey.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -68,7 +68,7 @@ namespace Neon.Kube
     /// enable an additional level of encryption at rest.
     /// </para>
     /// </remarks>
-    public class SshClientKey
+    public class SshKey
     {
         /// <summary>
         /// The RSA public key to deployed on the server for authenticating SSH clients.
@@ -87,6 +87,22 @@ namespace Neon.Kube
         [YamlMember(Alias = "privatePEM", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
         [DefaultValue(null)]
         public string PrivatePEM { get; set; }
+
+        /// <summary>
+        /// SHA256 fingerprint of the public key formatted as base64.
+        /// </summary>
+        [JsonProperty(PropertyName = "Fingerprint-SHA256", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "fingerprint-SHA256", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string FingerprintSha256 { get; set; }
+
+        /// <summary>
+        /// MD5 fingerprint of the public key formatted as colon separated HEX bytes.
+        /// </summary>
+        [JsonProperty(PropertyName = "Fingerprint-MD5", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "fingerprint-MD5", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string FingerprintMd5 { get; set; }
 
         /// <summary>
         /// The private key formatted as <b>PuTTY Private Key (PPK)</b>.

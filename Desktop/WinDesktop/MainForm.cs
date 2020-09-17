@@ -1142,7 +1142,7 @@ namespace WinDesktop
         /// </remarks>
         private void OnCmdCommand(object sender, EventArgs args)
         {
-            var neonProgramFolder = Environment.GetEnvironmentVariable("NEONKUBE_PROGRAM_FOLDER");
+            var neonProgramFolder = Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER");
             var orgPATH           = Environment.GetEnvironmentVariable("PATH");
 
             try

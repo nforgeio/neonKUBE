@@ -721,6 +721,7 @@ namespace Neon.Kube
         private string                              resourceGroupName;
         private Region                              awsRegion;
         private RegionEndpoint                      regionEndpoint;
+        private SshKey                              sshKey;
         private AmazonEC2Client                     ec2Client;
         private AmazonElasticLoadBalancingV2Client  elbClient;
         private AmazonResourceGroupsClient          rgClient;
@@ -737,6 +738,7 @@ namespace Neon.Kube
         private string                              gatewayName;
         private string                              loadBalancerName;
         private string                              elbName;
+        private string                              keyPairName;
         private string                              masterPlacementGroupName;
         private string                              workerPlacementGroupName;
 
@@ -753,6 +755,7 @@ namespace Neon.Kube
         private NetworkAcl                          networkAcl2;
         private InternetGateway                     gateway;
         private LoadBalancer                        loadBalancer;
+        private string                              keyPairId;
         private PlacementGroup                      masterPlacementGroup;
         private PlacementGroup                      workerPlacementGroup;
 
@@ -830,6 +833,7 @@ namespace Neon.Kube
             gatewayName              = GetResourceName("internet-gateway");
             loadBalancerName         = GetResourceName("load-balancer");
             elbName                  = GetLoadBalancerName(clusterName, "elb");
+            keyPairName              = GetResourceName("ssh-keys");
             masterPlacementGroupName = GetResourceName("master-placement");
             workerPlacementGroupName = GetResourceName("worker-placement");
 
@@ -1024,9 +1028,19 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task<bool> ProvisionAsync(bool force, string secureSshPassword, string orgSshPassword = null)
+        public override async Task<bool> ProvisionAsync(KubeContextExtension contextExtension, string secureSshPassword, string orgSshPassword = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
+            Covenant.Requires<ArgumentNullException>(contextExtension != null, nameof(contextExtension));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword), nameof(secureSshPassword));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
+            Covenant.Assert(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
+
+            // AWS doesn't initialize a password for new instance so we need to specifiy
+            // the SSH key when the instances are provisioned and then upload and enable 
+            // the SSH password ourselves.
+
+            sshKey = contextExtension.SshKey;
+            Covenant.Assert(sshKey != null);
 
             var operation  = $"Provisioning [{cluster.Definition.Name}] on AWS [{region}/{resourceGroupName}]";
             var controller = new SetupController<NodeDefinition>(operation, cluster.Nodes)
@@ -1044,6 +1058,7 @@ namespace Neon.Kube
             controller.AddGlobalStep("placement groups", ConfigurePlacementGroupAsync);
             controller.AddGlobalStep("external ssh ports", AssignExternalSshPorts, quiet: true);
             controller.AddGlobalStep("network", ConfigureNetworkAsync);
+            controller.AddGlobalStep("ssh key", ImportKeyPairAsync);
             controller.AddNodeStep("node instances", CreateNodeInstanceAsync);
             controller.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
 
@@ -1315,6 +1330,16 @@ namespace Neon.Kube
             // Load balancer target groups.
 
             await LoadElbTargetGroupsAsync();
+
+            // SSH keypair
+
+            var keyPairsResponse = await ec2Client.DescribeKeyPairsAsync(
+                new DescribeKeyPairsRequest()
+                {
+                    KeyNames = new List<string>() { keyPairName }
+                });
+
+            keyPairId = keyPairsResponse.KeyPairs.SingleOrDefault(keyPair => keyPair.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))?.KeyPairId;
 
             // Placement groups
 
@@ -2147,6 +2172,51 @@ retry:
         }
 
         /// <summary>
+        /// Imports the SSH key pair we'll use for the node security.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task ImportKeyPairAsync()
+        {
+            if (keyPairId == null)
+            {
+                Covenant.Assert(!string.IsNullOrEmpty(sshKey.PublicPUB));
+
+                // The public key should look something like this:
+                //
+                //      ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCkKpqEDKLPKH13D...ZNP root@my-cluster
+                //
+                // We need to extract the base64 part from the middle so we can pass it
+                // to AWS when we import the key.  Note that the comment after the base64
+                // part is optional.
+
+                var firstSpacePos = sshKey.PublicPUB.IndexOf(' ');
+                var lastSpacePos  = sshKey.PublicPUB.LastIndexOf(' ');
+                var keyMaterial   = (string)null;
+
+                Covenant.Assert(firstSpacePos != -1);
+
+                if (lastSpacePos != -1)
+                {
+                    keyMaterial = sshKey.PublicPUB.Substring(firstSpacePos, lastSpacePos - firstSpacePos).Trim();
+                }
+                else 
+                {
+                    keyMaterial = sshKey.PublicPUB.Substring(firstSpacePos).Trim();
+                }
+
+                var keyPairResponse = await ec2Client.ImportKeyPairAsync(
+                    new ImportKeyPairRequest()
+                    {
+                        KeyName           = keyPairName,
+                        PublicKeyMaterial = keyMaterial,
+                        TagSpecifications = GetTagSpecifications(keyPairName, ResourceType.KeyPair)
+                    });
+
+                keyPairId = keyPairResponse.KeyPairId;
+            }
+        }
+
+        /// <summary>
         /// Configures the load balancer.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -2299,6 +2369,11 @@ retry:
                 Covenant.Assert(!string.IsNullOrEmpty(placementGroupName));
                 Covenant.Assert(partitionNumber > 0);
 
+                // Note that AWS does not support starting new instances with a specific
+                // SSH password; they use a SSH key instead.  So we need to have AWS install
+                // the key when it provisions the VM and then we'll configure the password
+                // in a follow up step.
+
                 var runResponse = await ec2Client.RunInstancesAsync(
                     new RunInstancesRequest()
                     {
@@ -2306,6 +2381,7 @@ retry:
                         InstanceType     = InstanceType.FindValue(awsNodeOptions.InstanceType),
                         MinCount         = 1,
                         MaxCount         = 1,
+                        KeyName          = keyPairName,
                         SubnetId         = subnet.SubnetId,
                         PrivateIpAddress = node.Address.ToString(),
                         SecurityGroupIds = new List<string>() { sgAllowAll.GroupId },

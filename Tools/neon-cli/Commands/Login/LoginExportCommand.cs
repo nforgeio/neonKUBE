@@ -53,7 +53,7 @@ ARGUMENTS:
 REMARKS:
 
     The output includes the Kubernetes context information along
-    with additional neonKUBE extensions.  This is intended to be
+    with additional neonKUBE context extensions.  This is intended to be
     used for distributing a context to other cluster operators
     who will use the [neon login import] command to add the context
     to their workstation.

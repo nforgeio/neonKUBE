@@ -46,7 +46,7 @@ Name: "{group}\neonDESKTOP"; Filename: "{app}\neon\neonDESKTOP.exe"
 
 [Registry]
 Root: HKCU; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "neonDESKTOP"; ValueData: "{app}\neon\neonDESKTOPexe"; Flags: uninsdeletevalue
-Root: HKCU; Subkey: "Environment"; ValueType: string; ValueName: "NEONKUBE_PROGRAM_FOLDER"; ValueData: "{app}"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Environment"; ValueType: string; ValueName: "NEONDESKTOP_PROGRAM_FOLDER"; ValueData: "{app}"; Flags: uninsdeletevalue
 
 [Run]
 Filename: "{app}\neon\neonDESKTOP.exe"; Description: "neonDESKTOP"; Flags: postinstall nowait
