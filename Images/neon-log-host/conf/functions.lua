@@ -1,4 +1,14 @@
-﻿function dedot(tag, timestamp, record)
+﻿function filter(tag, timestamp, record)
+    if record["kubernetes"] == nil then
+        return 0, 0, 0
+    end
+    if record["kubernetes"]["namespace_name"] == "monitoring" and record["kubernetes"]["container_name"] == "istio-proxy" then
+        return -1, 0, 0
+    end
+    return 0, 0, 0
+end
+
+function dedot(tag, timestamp, record)
     if record["kubernetes"] == nil then
         return 0, 0, 0
     end
