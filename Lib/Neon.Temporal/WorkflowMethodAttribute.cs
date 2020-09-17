@@ -37,7 +37,7 @@ namespace Neon.Temporal
         private int  	    startToCloseTimeoutSeconds;
         private int         decisionTaskTimeoutSeconds;
         private int         scheduleToStartTimeoutSeconds;
-        private string      taskList;
+        private string      taskQueue;
         private string      @namespace;
         private string      workflowId;
 
@@ -149,21 +149,21 @@ namespace Neon.Temporal
         }
 
         /// <summary>
-        /// Optionally specifies the target Temporal task list.
+        /// Optionally specifies the target Temporal task queue.
         /// </summary>
-        public string TaskList
+        public string TaskQueue
         {
-            get => taskList;
+            get => taskQueue;
 
             set
             {
                 if (string.IsNullOrEmpty(value))
                 {
-                    taskList = null;
+                    taskQueue = null;
                 }
                 else
                 {
-                    taskList = value;
+                    taskQueue = value;
                 }
             }
         }

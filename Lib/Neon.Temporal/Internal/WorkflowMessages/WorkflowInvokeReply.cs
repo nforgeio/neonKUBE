@@ -119,13 +119,13 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// Optionally overrides the current workflow's task list for the restarted
+        /// Optionally overrides the current workflow's task queue for the restarted
         /// workflow when this value is not <c>null</c>.
         /// </summary>
-        public string ContinueAsNewTaskList
+        public string ContinueAsNewTaskQueue
         {
-            get => GetStringProperty(PropertyNames.ContinueAsNewTaskList);
-            set => SetStringProperty(PropertyNames.ContinueAsNewTaskList, value);
+            get => GetStringProperty(PropertyNames.ContinueAsNewTaskQueue);
+            set => SetStringProperty(PropertyNames.ContinueAsNewTaskQueue, value);
         }
 
         /// <summary>
@@ -171,8 +171,8 @@ namespace Neon.Temporal.Internal
             typedTarget.ContinueAsNew                             = this.ContinueAsNew;
             typedTarget.ContinueAsNewArgs                         = this.ContinueAsNewArgs;
             typedTarget.ContinueAsNewExecutionStartToCloseTimeout = this.ContinueAsNewExecutionStartToCloseTimeout;
-            typedTarget.ContinueAsNewTaskList                     = this.ContinueAsNewTaskList;
-            typedTarget.ContinueAsNewNamespace                       = this.ContinueAsNewNamespace;
+            typedTarget.ContinueAsNewTaskQueue                    = this.ContinueAsNewTaskQueue;
+            typedTarget.ContinueAsNewNamespace                    = this.ContinueAsNewNamespace;
             typedTarget.ContinueAsNewWorkflow                     = this.ContinueAsNewWorkflow;
             typedTarget.ContinueAsNewScheduleToCloseTimeout       = this.ContinueAsNewScheduleToCloseTimeout;
             typedTarget.ContinueAsNewScheduleToStartTimeout       = this.ContinueAsNewScheduleToStartTimeout;

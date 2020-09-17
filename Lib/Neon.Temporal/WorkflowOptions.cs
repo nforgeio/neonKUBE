@@ -47,7 +47,7 @@ namespace Neon.Temporal
         /// <param name="workflowInterface">Optionally specifies the workflow interface definition.</param>
         /// /// <param name="method">Optionally specifies the target workflow method.</param>
         /// <returns>The normalized options.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if a valid task list is not specified.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if a valid task queue is not specified.</exception>
         internal static WorkflowOptions Normalize(TemporalClient client, WorkflowOptions options, Type workflowInterface = null, MethodInfo method = null)
         {
             Covenant.Requires<ArgumentNullException>(client != null, nameof(client));
@@ -99,26 +99,26 @@ namespace Neon.Temporal
                 }
             }
 
-            if (string.IsNullOrEmpty(options.TaskList))
+            if (string.IsNullOrEmpty(options.TaskQueue))
             {
-                if (!string.IsNullOrEmpty(methodAttribute?.TaskList))
+                if (!string.IsNullOrEmpty(methodAttribute?.TaskQueue))
                 {
-                    options.TaskList = methodAttribute.TaskList;
+                    options.TaskQueue = methodAttribute.TaskQueue;
                 }
 
-                if (string.IsNullOrEmpty(options.TaskList) && !string.IsNullOrEmpty(interfaceAttribute?.TaskList))
+                if (string.IsNullOrEmpty(options.TaskQueue) && !string.IsNullOrEmpty(interfaceAttribute?.TaskQueue))
                 {
-                    options.TaskList = interfaceAttribute.TaskList;
+                    options.TaskQueue = interfaceAttribute.TaskQueue;
                 }
 
-                if (string.IsNullOrEmpty(options.TaskList))
+                if (string.IsNullOrEmpty(options.TaskQueue))
                 {
-                    options.TaskList = client.Settings.DefaultTaskList;
+                    options.TaskQueue = client.Settings.DefaultTaskQueue;
                 }
 
-                if (string.IsNullOrEmpty(options.TaskList))
+                if (string.IsNullOrEmpty(options.TaskQueue))
                 {
-                    throw new ArgumentNullException(nameof(options), "You must specify a valid task list explicitly via [WorkflowOptions] or using an [WorkflowInterface] or [WorkflowMethod] attribute on the target workflow interface or method.");
+                    throw new ArgumentNullException(nameof(options), "You must specify a valid task queue explicitly via [WorkflowOptions] or using an [WorkflowInterface] or [WorkflowMethod] attribute on the target workflow interface or method.");
                 }
             }
 
@@ -208,13 +208,13 @@ namespace Neon.Temporal
         public string Namespace { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies the target Temporal task list.  This defaults to the task list
-        /// specified by <see cref="WorkflowMethodAttribute.TaskList"/> or
-        /// <see cref="WorkflowInterfaceAttribute.TaskList"/>or 
+        /// Optionally specifies the target Temporal task queue.  This defaults to the task queue
+        /// specified by <see cref="WorkflowMethodAttribute.TaskQueue"/> or
+        /// <see cref="WorkflowInterfaceAttribute.TaskQueue"/>or 
         /// to the client's <see cref="TemporalSettings"/>, in that 
         /// order of precedence.
         /// </summary>
-        public string TaskList { get; set; } = null;
+        public string TaskQueue { get; set; } = null;
 
         /// <summary>
         /// Optionally specifies the default maximum time a workflow can wait between being scheduled
@@ -342,7 +342,7 @@ namespace Neon.Temporal
             return new WorkflowOptions()
             {
                  Namespace             = this.Namespace,
-                TaskList               = this.TaskList,
+                TaskQueue              = this.TaskQueue,
                 CronSchedule           = this.CronSchedule,
                 ScheduleToStartTimeout = this.ScheduleToStartTimeout,
                 StartToCloseTimeout    = this.StartToCloseTimeout,

@@ -210,7 +210,7 @@ namespace TestTemporal
                 message.Args = new byte[] { 0, 1, 2, 3, 4 };
                 message.Options = new ActivityOptions()
                 {
-                    TaskList               = "my-tasklist",
+                    TaskQueue              = "my-taskqueue",
                     ScheduleToCloseTimeout = TimeSpan.FromSeconds(1),
                     ScheduleToStartTimeout = TimeSpan.FromSeconds(2),
                     StartToCloseTimeout    = TimeSpan.FromSeconds(3),
@@ -224,7 +224,7 @@ namespace TestTemporal
                 Assert.Equal("my-activity", message.Activity);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
-                Assert.Equal("my-tasklist", message.Options.TaskList);
+                Assert.Equal("my-taskqueue", message.Options.TaskQueue);
                 Assert.Equal(TimeSpan.FromSeconds(1), message.Options.ScheduleToCloseTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(2), message.Options.ScheduleToStartTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(3), message.Options.StartToCloseTimeout);
@@ -244,7 +244,7 @@ namespace TestTemporal
                 Assert.Equal("my-activity", message.Activity);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
-                Assert.Equal("my-tasklist", message.Options.TaskList);
+                Assert.Equal("my-taskqueue", message.Options.TaskQueue);
                 Assert.Equal(TimeSpan.FromSeconds(1), message.Options.ScheduleToCloseTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(2), message.Options.ScheduleToStartTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(3), message.Options.StartToCloseTimeout);
@@ -262,7 +262,7 @@ namespace TestTemporal
                 Assert.Equal("my-activity", message.Activity);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
-                Assert.Equal("my-tasklist", message.Options.TaskList);
+                Assert.Equal("my-taskqueue", message.Options.TaskQueue);
                 Assert.Equal(TimeSpan.FromSeconds(1), message.Options.ScheduleToCloseTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(2), message.Options.ScheduleToStartTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(3), message.Options.StartToCloseTimeout);
@@ -280,7 +280,7 @@ namespace TestTemporal
                 Assert.Equal("my-activity", message.Activity);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
-                Assert.Equal("my-tasklist", message.Options.TaskList);
+                Assert.Equal("my-taskqueue", message.Options.TaskQueue);
                 Assert.Equal(TimeSpan.FromSeconds(1), message.Options.ScheduleToCloseTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(2), message.Options.ScheduleToStartTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(3), message.Options.StartToCloseTimeout);
@@ -1332,7 +1332,7 @@ namespace TestTemporal
             Assert.Equal(expected.HeartbeatTimeout , actual.HeartbeatTimeout);
             Assert.Equal(expected.ScheduledTime, actual.ScheduledTime);
             Assert.Equal(expected.StartedTime , actual.StartedTime);
-            Assert.Equal(expected.TaskList , actual.TaskList);
+            Assert.Equal(expected.TaskQueue , actual.TaskQueue);
             Assert.Equal(expected.TaskToken , actual.TaskToken);
             Assert.Equal(expected.WorkflowNamespace , actual.WorkflowNamespace);
             Assert.Equal(expected.WorkflowExecution.WorkflowId , actual.WorkflowExecution.WorkflowId);
@@ -1382,7 +1382,7 @@ namespace TestTemporal
                     HeartbeatTimeout  = TimeSpan.FromSeconds(5),
                     ScheduledTime     = new DateTime(2020, 5, 24, 1, 49, 0),
                     StartedTime       = new DateTime(2020, 5, 24, 1, 50, 0),
-                    TaskList          = "my-tasklist",
+                    TaskQueue          = "my-taskqueue",
                     TaskToken         = Convert.ToBase64String(new byte[] { 0, 1, 2, 3, 4 }),
                     WorkflowNamespace = "my-namespace",
                     WorkflowExecution = new WorkflowExecution("777", "888"),
@@ -1607,7 +1607,7 @@ namespace TestTemporal
                 message.Args       = new byte[] { 0, 1, 2, 3, 4 };
                 message.Options    = new ActivityOptions()
                 {
-                    TaskList               = "my-tasklist",
+                    TaskQueue              = "my-taskqueue",
                     ScheduleToCloseTimeout = TimeSpan.FromSeconds(1),
                     ScheduleToStartTimeout = TimeSpan.FromSeconds(2),
                     StartToCloseTimeout    = TimeSpan.FromSeconds(3),
@@ -1622,7 +1622,7 @@ namespace TestTemporal
                 Assert.Equal("my-activity", message.Activity);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
-                Assert.Equal("my-tasklist", message.Options.TaskList);
+                Assert.Equal("my-taskqueue", message.Options.TaskQueue);
                 Assert.Equal(TimeSpan.FromSeconds(1), message.Options.ScheduleToCloseTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(2), message.Options.ScheduleToStartTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(3), message.Options.StartToCloseTimeout);
@@ -1643,7 +1643,7 @@ namespace TestTemporal
                 Assert.Equal("my-activity", message.Activity);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
-                Assert.Equal("my-tasklist", message.Options.TaskList);
+                Assert.Equal("my-taskqueue", message.Options.TaskQueue);
                 Assert.Equal(TimeSpan.FromSeconds(1), message.Options.ScheduleToCloseTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(2), message.Options.ScheduleToStartTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(3), message.Options.StartToCloseTimeout);
@@ -1662,7 +1662,7 @@ namespace TestTemporal
                 Assert.Equal("my-activity", message.Activity);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
-                Assert.Equal("my-tasklist", message.Options.TaskList);
+                Assert.Equal("my-taskqueue", message.Options.TaskQueue);
                 Assert.Equal(TimeSpan.FromSeconds(1), message.Options.ScheduleToCloseTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(2), message.Options.ScheduleToStartTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(3), message.Options.StartToCloseTimeout);
@@ -1681,7 +1681,7 @@ namespace TestTemporal
                 Assert.Equal("my-activity", message.Activity);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, message.Args);
                 Assert.NotNull(message.Options);
-                Assert.Equal("my-tasklist", message.Options.TaskList);
+                Assert.Equal("my-taskqueue", message.Options.TaskQueue);
                 Assert.Equal(TimeSpan.FromSeconds(1), message.Options.ScheduleToCloseTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(2), message.Options.ScheduleToStartTimeout);
                 Assert.Equal(TimeSpan.FromSeconds(3), message.Options.StartToCloseTimeout);

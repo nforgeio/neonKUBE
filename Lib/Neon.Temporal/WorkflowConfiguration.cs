@@ -31,14 +31,14 @@ namespace Neon.Temporal
     public class WorkflowConfiguration
     {
         /// <summary>
-        /// Identifies the task list where the workflow was scheduled.
+        /// Identifies the task queue where the workflow was scheduled.
         /// </summary>
-        public string TaskList { get; set; }
+        public string TaskQueue { get; set; }
 
         /// <summary>
-        /// Identifies the type of a task list.
+        /// Identifies the type of a task queue.
         /// </summary>
-        public TaskListType TaskListKind { get; set; }
+        public TaskQueueType TaskQueueKind { get; set; }
 
         /// <summary>
         /// Maximum time the entire workflow may take to complete end-to-end.

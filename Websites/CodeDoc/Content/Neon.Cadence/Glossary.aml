@@ -114,7 +114,7 @@
           <row>
             <entry>
               <para>
-                <legacyBold>TaskList</legacyBold>
+                <legacyBold>TaskQueue</legacyBold>
               </para>
             </entry>
             <entry>
@@ -124,10 +124,10 @@
                 application that registers the workflows and activities it implements
                 with the Cadence cluster.  You'll need to specify the domain where the
                 workflows and activities will be hosted by Cadence and also a
-                <legacyBold>task list</legacyBold> string.
+                <legacyBold>task queue</legacyBold> string.
               </para>
               <para>
-                Cadence uses the task list you specify to identify all instances of
+                Cadence uses the task queue you specify to identify all instances of
                 a workflow service running such that work can be distributed to across
                 these services.
               </para>
@@ -136,7 +136,7 @@
                   All instances of your workflow should implement <legacyBold>exact same workflows and activities</legacyBold>
                   because Cadence doesn't track exactly which workflows and activities are exposed
                   by each worker instance.  Cadence assumes that all service instances
-                  registered with same task list can execute any of the registered workflows
+                  registered with same task queue can execute any of the registered workflows
                   and activities.
                 </para>
                 <para>

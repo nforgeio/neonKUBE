@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    TaskListDescription.cs
+// FILE:	    TaskQueueDescription.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -26,9 +26,9 @@ using Neon.Temporal.Internal;
 namespace Neon.Temporal
 {
     /// <summary>
-    /// Describes the current status of a Temporal task list.
+    /// Describes the current status of a Temporal task queue.
     /// </summary>
-    public class TaskListDescription
+    public class TaskQueueDescription
     {
         /// <summary>
         /// Lists the pollers (AKA workers) that have communicated with the Temporal cluster over

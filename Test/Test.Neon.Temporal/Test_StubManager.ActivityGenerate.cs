@@ -45,7 +45,7 @@ namespace TestTemporal
     {
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityEntryVoidNoArgs : IActivity
         {
             [ActivityMethod]
@@ -70,7 +70,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityEntryVoidWithArgs : IActivity
         {
             [ActivityMethod]
@@ -103,7 +103,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityEntryResultWithArgs : IActivity
         {
             [ActivityMethod]
@@ -128,7 +128,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityMultiMethods : IActivity
         {
             [ActivityMethod]

@@ -63,7 +63,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityNotRegistered : IActivity
         {
             [ActivityMethod]
@@ -82,7 +82,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowCallsUnregisteredActivity : IWorkflow
         {
             [WorkflowMethod]

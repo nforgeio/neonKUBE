@@ -115,7 +115,7 @@ namespace Neon.Temporal
         /// Creates an untyped stub that can be used to start a single workflow execution.
         /// </summary>
         /// <param name="workflowTypeName">Specifies the workflow type name.</param>
-        /// <param name="options">Specifies the workflow options (including the <see cref="WorkflowOptions.TaskList"/>).</param>
+        /// <param name="options">Specifies the workflow options (including the <see cref="WorkflowOptions.TaskQueue"/>).</param>
         /// <returns>The <see cref="WorkflowStub"/>.</returns>
         /// <remarks>
         /// <para>
@@ -153,9 +153,9 @@ namespace Neon.Temporal
 
             options = WorkflowOptions.Normalize(this, options);
 
-            if (string.IsNullOrEmpty(options.TaskList))
+            if (string.IsNullOrEmpty(options.TaskQueue))
             {
-                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.TaskList)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.DefaultTaskList)}].");
+                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.TaskQueue)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.DefaultTaskQueue)}].");
             }
 
             if (string.IsNullOrEmpty(options.Namespace))
@@ -385,9 +385,9 @@ namespace Neon.Temporal
 
             options = WorkflowOptions.Normalize(this, options);
 
-            if (string.IsNullOrEmpty(options.TaskList))
+            if (string.IsNullOrEmpty(options.TaskQueue))
             {
-                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.TaskList)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.DefaultTaskList)}].");
+                throw new ArgumentNullException($"The workflow [{nameof(WorkflowOptions)}.{nameof(WorkflowOptions.TaskQueue)}] must be specified when the client doesn't set [{nameof(TemporalSettings)}.{nameof(TemporalSettings.DefaultTaskQueue)}].");
             }
 
             if (string.IsNullOrEmpty(options.Namespace))

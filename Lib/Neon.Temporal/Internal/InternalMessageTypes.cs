@@ -202,14 +202,14 @@ namespace Neon.Temporal.Internal
         NamespaceListReply = 30,
 
         /// <summary>
-        /// <b>client --> proxy:</b> Sent to obtain details for a task list.
+        /// <b>client --> proxy:</b> Sent to obtain details for a task queue.
         /// </summary>
-        DescribeTaskListRequest = 31,
+        DescribeTaskQueueRequest = 31,
 
         /// <summary>
-        /// <b>proxy --> client:</b> Sent in response to a <see cref="DescribeTaskListRequest"/> message.
+        /// <b>proxy --> client:</b> Sent in response to a <see cref="DescribeTaskQueueRequest"/> message.
         /// </summary>
-        DescribeTaskListReply = 32,
+        DescribeTaskQueueReply = 32,
 
         //---------------------------------------------------------------------
         // Workflow messages

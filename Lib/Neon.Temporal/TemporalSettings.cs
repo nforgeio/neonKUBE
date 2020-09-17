@@ -189,33 +189,33 @@ namespace Neon.Temporal
         private bool createNamespace = false;
 
         /// <summary>
-        /// Specifies the default Temporal task list for this client.  This is optional and defaults to <c>null</c>.
+        /// Specifies the default Temporal task queue for this client.  This is optional and defaults to <c>null</c>.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Specifying a default task list can be convienent for many scenarios, especially for those where
-        /// the application workflows and activities are restricted to a single task list.
+        /// Specifying a default task queue can be convienent for many scenarios, especially for those where
+        /// the application workflows and activities are restricted to a single task queue.
         /// </para>
         /// <para>
-        /// The default task list can be overridden for workflow interfaces via <see cref="WorkflowInterfaceAttribute.TaskList"/>
-        /// or for specific interface methods via <see cref="WorkflowMethodAttribute.TaskList"/>.
+        /// The default task queue can be overridden for workflow interfaces via <see cref="WorkflowInterfaceAttribute.TaskQueue"/>
+        /// or for specific interface methods via <see cref="WorkflowMethodAttribute.TaskQueue"/>.
         /// </para>
         /// </remarks>
-        [JsonProperty(PropertyName = "DefaultTaskList", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [YamlMember(Alias = "defaultTaskList", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "DefaultTaskQueue", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "defaultTaskQueue", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public string DefaultTaskList
+        public string DefaultTaskQueue
         {
-            get => defaultTaskList;
+            get => defaultTaskQueue;
 
             set
             {
                 EnsureReadWrite();
-                defaultTaskList = value;
+                defaultTaskQueue = value;
             }
         }
 
-        private string defaultTaskList = null;
+        private string defaultTaskQueue = null;
 
         /// <summary>
         /// Optionally specifies the maximum time the client should wait for synchronous 
@@ -1076,7 +1076,7 @@ namespace Neon.Temporal
                 DebugIgnoreHeartbeats                 = this.DebugIgnoreHeartbeats,
                 DebugIgnoreTimeouts                   = this.DebugIgnoreTimeouts,
                 DebugPrelaunched                      = this.DebugPrelaunched,
-                DefaultTaskList                       = this.DefaultTaskList,
+                DefaultTaskQueue                      = this.DefaultTaskQueue,
                 Namespace                             = this.Namespace,
                 HeartbeatIntervalSeconds              = this.HeartbeatIntervalSeconds,
                 HeartbeatTimeoutSeconds               = this.HeartbeatTimeoutSeconds,
