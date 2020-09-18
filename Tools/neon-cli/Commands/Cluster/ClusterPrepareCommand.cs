@@ -359,7 +359,7 @@ Server Requirements:
 
                         try
                         {
-                            File.WriteAllText(pemKeyPath, contextExtension.SshKey.PrivatePEM);
+                            File.WriteAllText(pemKeyPath, contextExtension.SshKey.PrivateOpenSSH);
 
                             ExecuteResponse result;
 
@@ -474,7 +474,7 @@ Server Requirements:
                 controller.AddNodeStep("node ssh keys", 
                     (node, stepDelay) =>
                     {
-                        CommonSteps.ConfigureSshKey(node, contextExtension.SshKey);
+                        CommonSteps.ConfigureSshKey(node, contextExtension);
                     });
                 controller.AddNodeStep("node prepare", 
                     (node, stepDelay) =>

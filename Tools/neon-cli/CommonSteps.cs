@@ -284,16 +284,16 @@ TCPKeepAlive yes
         }
 
         /// <summary>
-        /// Configures a node's host SSH key during node provisioning.
+        /// Configures a node's host public SSH key during node provisioning.
         /// </summary>
         /// <param name="node">The target node.</param>
-        /// <param name="sshKey">The SSH key information.</param>
-        public static void ConfigureSshKey(SshProxy<NodeDefinition> node, SshKey sshKey)
+        /// <param name="contextExtension">The context extension for the login.</param>
+        public static void ConfigureSshKey(SshProxy<NodeDefinition> node, KubeContextExtension contextExtension)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
-            Covenant.Requires<ArgumentNullException>(sshKey != null, nameof(sshKey));
+            Covenant.Requires<ArgumentNullException>(contextExtension != null, nameof(contextExtension));
 
-            // Configure the SSH credentials on all cluster nodes.
+            // Configure the SSH credentials on the node.
 
             node.InvokeIdempotentAction("setup/ssh",
                 () =>
@@ -317,13 +317,13 @@ chmod go-w ~/
 mkdir -p $HOME/.ssh
 chmod 700 $HOME/.ssh
 touch $HOME/.ssh/authorized_keys
-cat ssh-key.pub > $HOME/.ssh/authorized_keys
+cat ssh-key.ssh2 > $HOME/.ssh/authorized_keys
 chmod 600 $HOME/.ssh/authorized_keys
 ";
                     bundle = new CommandBundle("./addkeys.sh");
 
                     bundle.AddFile("addkeys.sh", addKeyScript, isExecutable: true);
-                    bundle.AddFile("ssh-key.pub", sshKey.PublicPUB);
+                    bundle.AddFile("ssh_host_rsa_key", contextExtension.SshKey.PublicSSH2);
 
                     // NOTE: I'm explicitly not running the bundle as [sudo] because the OpenSSH
                     //       server is very picky about the permissions on the user's [$HOME]
@@ -342,6 +342,7 @@ chmod 600 $HOME/.ssh/authorized_keys
 # Copy the server key.
 
 cp ssh_host_rsa_key /etc/ssh/ssh_host_rsa_key
+cp ssh_host_rsa_key.pub /etc/ssh/ssh_host_rsa_key.pub
 
 # Disable all host keys except for RSA.
 
@@ -356,9 +357,23 @@ systemctl restart sshd
                     bundle = new CommandBundle("./config.sh");
 
                     bundle.AddFile("config.sh", configScript, isExecutable: true);
-                    bundle.AddFile("ssh_host_rsa_key", sshKey.PrivatePEM);
+                    bundle.AddFile("ssh_host_rsa_key", contextExtension.SshKey.PrivatePEM);
+                    bundle.AddFile("ssh_host_rsa_key.pub", contextExtension.SshKey.PublicPUB);
                     node.SudoCommand(bundle);
                 });
+
+            // Verify that we can login with both the secure password as well as the 
+            // SSH private key.
+
+            node.Status = "ssh: verify private key auth";
+            node.Disconnect();
+            node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUsername, contextExtension.SshKey.PrivatePEM));
+            node.Connect();
+
+            node.Status = "ssh: verify password auth";
+            node.Disconnect();
+            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, contextExtension.SshPassword));
+            node.Connect();
         }
 
         /// <summary>

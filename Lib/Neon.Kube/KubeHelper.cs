@@ -2076,8 +2076,8 @@ exit 0
                     throw new KubeException("Cannot generate SSH key:\r\n\r\n" + result.AllText);
                 }
 
-                var publicPUB  = File.ReadAllText(Path.Combine(tempFolder.Path, "key.pub"));
-                var privatePEM = File.ReadAllText(Path.Combine(tempFolder.Path, "key"));
+                var publicPUB      = File.ReadAllText(Path.Combine(tempFolder.Path, "key.pub"));
+                var privateOpenSSH = File.ReadAllText(Path.Combine(tempFolder.Path, "key"));
 
                 //-------------------------------------------------------------
                 // We also need the public key in PEM format.
@@ -2095,7 +2095,7 @@ exit 0
                     throw new KubeException("Cannot convert SSH public key to PEM:\r\n\r\n" + result.AllText);
                 }
 
-                var publicPEM = result.OutputText;
+                var publicOpenSSH = result.OutputText;
 
                 //-------------------------------------------------------------
                 // Also convert the public key to SSH2 (RFC 4716).
@@ -2130,6 +2130,28 @@ exit 0
                 }
 
                 publicSSH2 = sbPublicSSH2.ToString();
+
+                //-------------------------------------------------------------
+                // We need the private key as PEM
+
+                File.Copy(Path.Combine(tempFolder.Path, "key"), Path.Combine(tempFolder.Path, "key.pem"));
+
+                result = NeonHelper.ExecuteCapture(sshKeyGenPath,
+                    new object[]
+                    {
+                        "-f", Path.Combine(tempFolder.Path, "key.pem"),
+                        "-p",
+                        "-P", "''",
+                        "-N", "''",
+                        "-m", "pem",
+                    });
+
+                if (result.ExitCode != 0)
+                {
+                    throw new KubeException("Cannot convert SSH private key to PEM:\r\n\r\n" + result.AllText);
+                }
+
+                var privatePEM = File.ReadAllText(Path.Combine(tempFolder.Path, "key.pem"));
 
                 //-------------------------------------------------------------
                 // We need to obtain the MD5 fingerprint from the public key.
@@ -2173,8 +2195,9 @@ exit 0
                 return new SshKey()
                 {
                     PublicPUB         = publicPUB,
-                    PublicPEM         = publicPEM,
+                    PublicOpenSSH     = publicOpenSSH,
                     PublicSSH2        = publicSSH2,
+                    PrivateOpenSSH    = privateOpenSSH,
                     PrivatePEM        = privatePEM,
                     FingerprintMd5    = fingerprintMd5,
                     FingerprintSha256 = fingerprintSha2565
