@@ -338,11 +338,10 @@ chmod 600 $HOME/.ssh/authorized_keys
                     // except for RSA.
 
                     var configScript =
-@"
-# Copy the server key.
+$@"
+# Install public SSH key for the [sysadmin] user.
 
-cp ssh_host_rsa_key /etc/ssh/ssh_host_rsa_key
-cp ssh_host_rsa_key.pub /etc/ssh/ssh_host_rsa_key.pub
+cp ssh_host_rsa_key.pub /home/{KubeConst.SysAdminUsername}/.ssh/authorized_keys
 
 # Disable all host keys except for RSA.
 
@@ -357,23 +356,22 @@ systemctl restart sshd
                     bundle = new CommandBundle("./config.sh");
 
                     bundle.AddFile("config.sh", configScript, isExecutable: true);
-                    bundle.AddFile("ssh_host_rsa_key", contextExtension.SshKey.PrivatePEM);
                     bundle.AddFile("ssh_host_rsa_key.pub", contextExtension.SshKey.PublicPUB);
                     node.SudoCommand(bundle);
                 });
 
-            // Verify that we can login with both the secure password as well as the 
-            // SSH private key.
+            // Verify that we can login with the new SSH private key and also verify that
+            // the password still works.
 
             node.Status = "ssh: verify private key auth";
             node.Disconnect();
             node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUsername, contextExtension.SshKey.PrivatePEM));
-            node.Connect();
+            node.WaitForBoot();
 
             node.Status = "ssh: verify password auth";
             node.Disconnect();
             node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, contextExtension.SshPassword));
-            node.Connect();
+            node.WaitForBoot();
         }
 
         /// <summary>
