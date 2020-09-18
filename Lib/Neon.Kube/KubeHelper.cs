@@ -68,7 +68,7 @@ namespace Neon.Kube
         private static string               cachedRunFolder;
         private static string               cachedLogFolder;
         private static string               cachedTempFolder;
-        private static string               cachedClustersFolder;
+        private static string               cachedLoginsFolder;
         private static string               cachedPasswordsFolder;
         private static string               cachedCacheFolder;
         private static string               cachedDesktopFolder;
@@ -107,7 +107,7 @@ namespace Neon.Kube
             cachedRunFolder          = null;
             cachedLogFolder          = null;
             cachedTempFolder         = null;
-            cachedClustersFolder     = null;
+            cachedLoginsFolder     = null;
             cachedPasswordsFolder    = null;
             cachedCacheFolder        = null;
             cachedDesktopFolder      = null;
@@ -628,33 +628,33 @@ namespace Neon.Kube
         public static string KubeConfigPath => Path.Combine(KubeHelper.GetKubeUserFolder(), "config");
 
         /// <summary>
-        /// Returns the path the folder containing cluster related files (including kube context 
-        /// extension), creating the folder if it doesn't already exist.
+        /// Returns the path the folder containing cluster login files, creating the folder 
+        /// if it doesn't already exist.
         /// </summary>
         /// <returns>The folder path.</returns>
         /// <remarks>
         /// <para>
         /// This folder will exist on developer/operator workstations that have used the <b>neon-cli</b>
         /// to deploy and manage clusters.  Each known cluster will have a JSON file named
-        /// <b><i>NAME</i>.context.json</b> holding the serialized <see cref="KubeContextExtension"/> 
+        /// <b><i>NAME</i>.context.json</b> holding the serialized <see cref="ClusterLogin"/> 
         /// information for the cluster, where <i>NAME</i> maps to a cluster configuration name
         /// within the <c>kubeconfig</c> file.
         /// </para>
         /// </remarks>
-        public static string ClustersFolder
+        public static string LoginsFolder
         {
             get
             {
-                if (cachedClustersFolder != null)
+                if (cachedLoginsFolder != null)
                 {
-                    return cachedClustersFolder;
+                    return cachedLoginsFolder;
                 }
 
-                var path = Path.Combine(GetNeonKubeUserFolder(), "clusters");
+                var path = Path.Combine(GetNeonKubeUserFolder(), "logins");
 
                 Directory.CreateDirectory(path);
 
-                return cachedClustersFolder = path;
+                return cachedLoginsFolder = path;
             }
         }
 
@@ -785,12 +785,12 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path to the kubecontext extension file path for a specific context
+        /// Returns the path to the cluster login file path for a specific context
         /// by raw name.
         /// </summary>
         /// <param name="contextName">The kubecontext name.</param>
         /// <returns>The file path.</returns>
-        public static string GetContextExtensionPath(KubeContextName contextName)
+        public static string GetClusterLoginPath(KubeContextName contextName)
         {
             Covenant.Requires<ArgumentNullException>(contextName != null, nameof(contextName));
 
@@ -800,26 +800,26 @@ namespace Neon.Kube
 
             var rawName = (string)contextName;
 
-            return Path.Combine(ClustersFolder, $"{rawName.Replace("/", "~")}.context.yaml");
+            return Path.Combine(LoginsFolder, $"{rawName.Replace("/", "~")}.login.yaml");
         }
 
         /// <summary>
-        /// Returns the kubecontext extension for the structured configuration name.
+        /// Returns the cluster login for the structured configuration name.
         /// </summary>
         /// <param name="name">The structured context name.</param>
-        /// <returns>The <see cref="KubeContextExtension"/> or <c>null</c>.</returns>
-        public static KubeContextExtension GetContextExtension(KubeContextName name)
+        /// <returns>The <see cref="ClusterLogin"/> or <c>null</c>.</returns>
+        public static ClusterLogin GetClusterLogin(KubeContextName name)
         {
             Covenant.Requires<ArgumentNullException>(name != null, nameof(name));
 
-            var path = GetContextExtensionPath(name);
+            var path = GetClusterLoginPath(name);
 
             if (!File.Exists(path))
             {
                 return null;
             }
 
-            var extension = NeonHelper.YamlDeserialize<KubeContextExtension>(ReadFileTextWithRetry(path));
+            var extension = NeonHelper.YamlDeserialize<ClusterLogin>(ReadFileTextWithRetry(path));
 
             extension.SetPath(path);
             extension.ClusterDefinition?.Validate();
@@ -2048,8 +2048,8 @@ exit 0
         /// </summary>
         /// <param name="clusterName">The cluster name.</param>
         /// <param name="userName">Optionally specifies the user name (defaults to <b>root</b>).</param>
-        /// <returns>A <see cref="SshKey"/> holding the public and private parts of the key.</returns>
-        public static SshKey GenerateSshKey(string clusterName, string userName = "root")
+        /// <returns>A <see cref="KubeSshKey"/> holding the public and private parts of the key.</returns>
+        public static KubeSshKey GenerateSshKey(string clusterName, string userName = "root")
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName), nameof(clusterName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(userName), nameof(userName));
@@ -2192,7 +2192,7 @@ exit 0
                 //-------------------------------------------------------------
                 // Return the key information.
 
-                return new SshKey()
+                return new KubeSshKey()
                 {
                     PublicPUB         = publicPUB,
                     PublicOpenSSH     = publicOpenSSH,

@@ -53,10 +53,9 @@ ARGUMENTS:
 REMARKS:
 
     The output includes the Kubernetes context information along
-    with additional neonKUBE context extensions.  This is intended to be
-    used for distributing a context to other cluster operators
-    who will use the [neon login import] command to add the context
-    to their workstation.
+    with additional neonKUBE cluster login information.  This is 
+    intended to be used for distributing a login to other cluster 
+    login to their workstation.
 ";
 
         /// <inheritdoc/>
@@ -123,11 +122,11 @@ REMARKS:
                 Program.Exit(1);
             }
 
-            var login = new KubeLogin()
+            var login = new ClusterLoginExport()
             {
                 Cluster    = cluster,
                 Context    = context,
-                Extensions = KubeHelper.GetContextExtension(contextName),
+                Extensions = KubeHelper.GetClusterLogin(contextName),
                 User       = user
             };
 

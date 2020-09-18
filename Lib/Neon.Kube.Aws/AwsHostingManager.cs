@@ -720,7 +720,7 @@ namespace Neon.Kube
         private string                              resourceGroupName;
         private Region                              awsRegion;
         private RegionEndpoint                      regionEndpoint;
-        private SshKey                              sshKey;
+        private KubeSshKey                          sshKey;
         private string                              secureSshPassword;
         private AmazonEC2Client                     ec2Client;
         private AmazonElasticLoadBalancingV2Client  elbClient;
@@ -1028,9 +1028,9 @@ namespace Neon.Kube
         }
 
         /// <inheritdoc/>
-        public override async Task<bool> ProvisionAsync(KubeContextExtension contextExtension, string secureSshPassword, string orgSshPassword = null)
+        public override async Task<bool> ProvisionAsync(ClusterLogin clusterLogin, string secureSshPassword, string orgSshPassword = null)
         {
-            Covenant.Requires<ArgumentNullException>(contextExtension != null, nameof(contextExtension));
+            Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword), nameof(secureSshPassword));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
             Covenant.Assert(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
@@ -1040,7 +1040,7 @@ namespace Neon.Kube
             // the SSH password ourselves.
 
             this.secureSshPassword = secureSshPassword;
-            this.sshKey            = contextExtension.SshKey;
+            this.sshKey            = clusterLogin.SshKey;
 
             Covenant.Assert(sshKey != null);
 

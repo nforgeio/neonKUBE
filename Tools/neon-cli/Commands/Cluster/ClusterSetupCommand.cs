@@ -120,7 +120,7 @@ OPTIONS:
         private readonly TimeSpan   joinRetryDelay    = TimeSpan.FromSeconds(5);
 
         private KubeConfigContext       kubeContext;
-        private KubeContextExtension    contextExtension;
+        private ClusterLogin            clusterLogin;
         private ClusterProxy            cluster;
         private HostingManager          hostingManager;
         private KubeSetupInfo           kubeSetupInfo;
@@ -160,15 +160,15 @@ OPTIONS:
             var contextName = KubeContextName.Parse(commandLine.Arguments[0]);
             var kubeCluster = KubeHelper.Config.GetCluster(contextName.Cluster);
 
-            contextExtension = KubeHelper.GetContextExtension(contextName);
+            clusterLogin = KubeHelper.GetClusterLogin(contextName);
 
-            if (contextExtension == null)
+            if (clusterLogin == null)
             {
                 Console.Error.WriteLine($"*** ERROR: Be sure to prepare the cluster first via [neon cluster prepare...].");
                 Program.Exit(1);
             }
 
-            if (string.IsNullOrEmpty(contextExtension.SshPassword))
+            if (string.IsNullOrEmpty(clusterLogin.SshPassword))
             {
                 Console.Error.WriteLine($"*** ERROR: No cluster node SSH password found.");
                 Program.Exit(1);
@@ -181,7 +181,7 @@ OPTIONS:
 
             using (httpClient = new HttpClient(handler, disposeHandler: true))
             {
-                if (kubeCluster != null && !contextExtension.SetupDetails.SetupPending)
+                if (kubeCluster != null && !clusterLogin.SetupDetails.SetupPending)
                 {
                     if (commandLine.GetOption("--force") == null && !Program.PromptYesNo($"One or more logins reference [{kubeCluster.Name}].  Do you wish to delete these?"))
                     {
@@ -218,15 +218,15 @@ OPTIONS:
 
                 kubeContext = new KubeConfigContext(contextName);
 
-                if (contextExtension.SetupDetails?.SetupInfo != null)
+                if (clusterLogin.SetupDetails?.SetupInfo != null)
                 {
-                    kubeSetupInfo = contextExtension.SetupDetails.SetupInfo;
+                    kubeSetupInfo = clusterLogin.SetupDetails.SetupInfo;
                 }
                 else
                 {
                     using (var client = new HeadendClient())
                     {
-                        kubeSetupInfo = client.GetSetupInfoAsync(contextExtension.ClusterDefinition).Result;
+                        kubeSetupInfo = client.GetSetupInfoAsync(clusterLogin.ClusterDefinition).Result;
                     }
                 }
 
@@ -245,7 +245,7 @@ OPTIONS:
 
                 // Update the cluster node SSH credentials to use the secure password.
 
-                var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, contextExtension.SshPassword);
+                var sshCredentials = SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, clusterLogin.SshPassword);
 
                 foreach (var node in cluster.Nodes)
                 {
@@ -363,8 +363,8 @@ OPTIONS:
 
                     // Indicate that setup is complete.
 
-                    contextExtension.SetupDetails.SetupPending = false;
-                    contextExtension.Save();
+                    clusterLogin.SetupDetails.SetupPending = false;
+                    clusterLogin.Save();
 
                     // Write the operation end marker to all cluster node logs.
 
@@ -1000,14 +1000,14 @@ networking:
 
                             if (pEnd == -1)
                             {
-                                contextExtension.SetupDetails.ClusterJoinCommand = Regex.Replace(output.Substring(pStart).Trim(), @"\t|\n|\r|\\", "");
+                                clusterLogin.SetupDetails.ClusterJoinCommand = Regex.Replace(output.Substring(pStart).Trim(), @"\t|\n|\r|\\", "");
                             }
                             else
                             {
-                                contextExtension.SetupDetails.ClusterJoinCommand = Regex.Replace(output.Substring(pStart, pEnd - pStart).Trim(), @"\t|\n|\r|\\", "");
+                                clusterLogin.SetupDetails.ClusterJoinCommand = Regex.Replace(output.Substring(pStart, pEnd - pStart).Trim(), @"\t|\n|\r|\\", "");
                             }
 
-                            contextExtension.Save();
+                            clusterLogin.Save();
                         });
 
                     firstMaster.Status = "done";
@@ -1037,12 +1037,12 @@ networking:
                     // the remaining masters and may also be needed for other purposes
                     // (if we haven't already downloaded these).
 
-                    if (contextExtension.SetupDetails.MasterFiles != null)
+                    if (clusterLogin.SetupDetails.MasterFiles != null)
                     {
-                        contextExtension.SetupDetails.MasterFiles = new Dictionary<string, KubeFileDetails>();
+                        clusterLogin.SetupDetails.MasterFiles = new Dictionary<string, KubeFileDetails>();
                     }
 
-                    if (contextExtension.SetupDetails.MasterFiles.Count == 0)
+                    if (clusterLogin.SetupDetails.MasterFiles.Count == 0)
                     {
                         // I'm hardcoding the permissions and owner here.  It would be nice to
                         // scrape this from the source files in the future but this was not
@@ -1065,13 +1065,13 @@ networking:
                         {
                             var text = firstMaster.DownloadText(file.Path);
 
-                            contextExtension.SetupDetails.MasterFiles[file.Path] = new KubeFileDetails(text, permissions: file.Permissions, owner: file.Owner);
+                            clusterLogin.SetupDetails.MasterFiles[file.Path] = new KubeFileDetails(text, permissions: file.Permissions, owner: file.Owner);
                         }
                     }
 
                     // Persist the cluster join command and downloaded master files.
 
-                    contextExtension.Save();
+                    clusterLogin.Save();
 
                     firstMaster.Status = "joined";
 
@@ -1094,7 +1094,7 @@ networking:
 
                                     master.Status = "upload: master files";
 
-                                    foreach (var file in contextExtension.SetupDetails.MasterFiles)
+                                    foreach (var file in clusterLogin.SetupDetails.MasterFiles)
                                     {
                                         master.UploadText(file.Key, file.Value.Text, permissions: file.Value.Permissions, owner: file.Value.Owner);
                                     }
@@ -1110,7 +1110,7 @@ networking:
 
                                                 for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
                                                 {
-                                                    var response = master.SudoCommand(contextExtension.SetupDetails.ClusterJoinCommand + " --control-plane", RunOptions.Defaults & ~RunOptions.FaultOnError);
+                                                    var response = master.SudoCommand(clusterLogin.SetupDetails.ClusterJoinCommand + " --control-plane", RunOptions.Defaults & ~RunOptions.FaultOnError);
 
                                                     if (response.Success)
                                                     {
@@ -1196,7 +1196,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
 
                                         for (int attempt = 0; attempt < maxJoinAttempts; attempt++)
                                         {
-                                            var response = worker.SudoCommand(contextExtension.SetupDetails.ClusterJoinCommand, RunOptions.Defaults & ~RunOptions.FaultOnError);
+                                            var response = worker.SudoCommand(clusterLogin.SetupDetails.ClusterJoinCommand, RunOptions.Defaults & ~RunOptions.FaultOnError);
 
                                             if (response.Success)
                                             {
@@ -1235,7 +1235,7 @@ sed -i 's/.*--enable-admission-plugins=.*/    - --enable-admission-plugins=Names
                     // This is hard coding the kubeconfig to point to the first master.
                     // Issue https://github.com/nforgeio/neonKUBE/issues/888 will fix this by adding a proxy to neon-desktop
                     // and load balancing requests across the k8s api servers.
-                    var configText = contextExtension.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text;
+                    var configText = clusterLogin.SetupDetails.MasterFiles["/etc/kubernetes/admin.conf"].Text;
                     configText = configText.Replace("kubernetes-masters", $"{cluster.Definition.Masters.FirstOrDefault().Address}");
 
                     if (!File.Exists(kubeConfigPath))
@@ -1420,7 +1420,7 @@ subjects:
                     firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kubernetes-dashboard",
                         () =>
                         {
-                            if (contextExtension.DashboardCertificate != null)
+                            if (clusterLogin.DashboardCertificate != null)
                             {
                                 firstMaster.Status = "generate: dashboard certificate";
 
@@ -1448,8 +1448,8 @@ subjects:
                                     validDays: (int)(utc10Years - utcNow).TotalDays,
                                     issuedBy:  "kubernetes-dashboard");
 
-                                contextExtension.DashboardCertificate = certificate.CombinedPem;
-                                contextExtension.Save();
+                                clusterLogin.DashboardCertificate = certificate.CombinedPem;
+                                clusterLogin.Save();
                             }
 
                             // Deploy the dashboard.  Note that we need to insert the base-64
@@ -1756,7 +1756,7 @@ spec:
           emptyDir: {{}}
 ";
 
-                            var dashboardCert = TlsCertificate.Parse(contextExtension.DashboardCertificate);
+                            var dashboardCert = TlsCertificate.Parse(clusterLogin.DashboardCertificate);
                             var variables     = new Dictionary<string, string>();
 
                             variables.Add("CERTIFICATE", Convert.ToBase64String(Encoding.UTF8.GetBytes(dashboardCert.CertPemNormalized)));

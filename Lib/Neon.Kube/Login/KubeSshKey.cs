@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    SshKey.cs
+// FILE:	    KubeSshKey.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -68,7 +68,7 @@ namespace Neon.Kube
     /// enable an additional level of encryption at rest.
     /// </para>
     /// </remarks>
-    public class SshKey
+    public class KubeSshKey
     {
         /// <summary>
         /// The RSA public key to deployed on the server for authenticating SSH clients.

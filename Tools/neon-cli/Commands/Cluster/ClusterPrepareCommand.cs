@@ -282,25 +282,25 @@ Server Requirements:
                     Program.VerifyAdminPrivileges($"Provisioning to [{cluster.Definition.Hosting.Environment}] requires elevated administrator privileges.");
                 }
 
-                // Load the cluster context extension information if it exists and if it indicates
-                // that setup is still pending, we'll use that information (especially the generated
+                // Load the cluster login information if it exists and if it indicates that
+                // setup is still pending, we'll use that information (especially the generated
                 // secure SSH password).
                 //
                 // Otherwise, we'll write (or overwrite) the context file with a fresh context.
 
-                var contextExtensionPath = KubeHelper.GetContextExtensionPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
-                var contextExtension     = KubeContextExtension.Load(contextExtensionPath);
+                var clusterLoginPath = KubeHelper.GetClusterLoginPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
+                var clusterLogin     = ClusterLogin.Load(clusterLoginPath);
 
-                if (contextExtension == null || !contextExtension.SetupDetails.SetupPending)
+                if (clusterLogin == null || !clusterLogin.SetupDetails.SetupPending)
                 {
-                    contextExtension = new KubeContextExtension(contextExtensionPath)
+                    clusterLogin = new ClusterLogin(clusterLoginPath)
                     {
                         ClusterDefinition = clusterDefinition,
                         SshUsername       = KubeConst.SysAdminUsername,
                         SetupDetails      = new KubeSetupDetails() { SetupPending = true }
                     };
 
-                    contextExtension.Save();
+                    clusterLogin.Save();
                 }
 
                 // We're going to generate a secure random password and we're going to append
@@ -327,15 +327,15 @@ Server Requirements:
 
                 var orgSshPassword = Program.MachinePassword;
 
-                if (hostingManager.GenerateSecurePassword && string.IsNullOrEmpty(contextExtension.SshPassword))
+                if (hostingManager.GenerateSecurePassword && string.IsNullOrEmpty(clusterLogin.SshPassword))
                 {
-                    contextExtension.SshPassword = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
+                    clusterLogin.SshPassword = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
 
                     // Append a string that guarantees that the generated password meets
                     // cloud minimum requirements.
 
-                    contextExtension.SshPassword += ".Aa0";
-                    contextExtension.Save();
+                    clusterLogin.SshPassword += ".Aa0";
+                    clusterLogin.Save();
                 }
 
                 // We're also going to generate the server's SSH key here and pass that to the hosting
@@ -343,11 +343,11 @@ Server Requirements:
                 // like AWS don't allow SSH password authentication by default, so we'll need the SSH key
                 // to initialize the nodes after they've been provisioned for those environments.
 
-                if (contextExtension.SshKey == null)
+                if (clusterLogin.SshKey == null)
                 {
                     // Generate a 2048 bit SSH key pair.
 
-                    contextExtension.SshKey = KubeHelper.GenerateSshKey(cluster.Name, "root");
+                    clusterLogin.SshKey = KubeHelper.GenerateSshKey(cluster.Name, "root");
 
                     // We're going to use WinSCP (if it's installed) to convert the OpenSSH PEM formatted key
                     // to the PPK format PuTTY/WinSCP requires.
@@ -359,7 +359,7 @@ Server Requirements:
 
                         try
                         {
-                            File.WriteAllText(pemKeyPath, contextExtension.SshKey.PrivateOpenSSH);
+                            File.WriteAllText(pemKeyPath, clusterLogin.SshKey.PrivateOpenSSH);
 
                             ExecuteResponse result;
 
@@ -379,11 +379,11 @@ Server Requirements:
                                 Program.Exit(result.ExitCode);
                             }
 
-                            contextExtension.SshKey.PrivatePPK = NeonHelper.ToLinuxLineEndings(File.ReadAllText(ppkKeyPath));
+                            clusterLogin.SshKey.PrivatePPK = NeonHelper.ToLinuxLineEndings(File.ReadAllText(ppkKeyPath));
 
                             // Persist the SSH key.
 
-                            contextExtension.Save();
+                            clusterLogin.Save();
                         }
                         finally
                         {
@@ -400,7 +400,7 @@ Server Requirements:
                     }
                 }
 
-                if (!hostingManager.ProvisionAsync(contextExtension, contextExtension.SshPassword, orgSshPassword).Result)
+                if (!hostingManager.ProvisionAsync(clusterLogin, clusterLogin.SshPassword, orgSshPassword).Result)
                 {
                     Program.Exit(1);
                 }
@@ -474,7 +474,7 @@ Server Requirements:
                 controller.AddNodeStep("node ssh keys", 
                     (node, stepDelay) =>
                     {
-                        CommonSteps.ConfigureSshKey(node, contextExtension);
+                        CommonSteps.ConfigureSshKey(node, clusterLogin);
                     });
                 controller.AddNodeStep("node prepare", 
                     (node, stepDelay) =>

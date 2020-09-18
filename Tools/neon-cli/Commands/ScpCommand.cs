@@ -72,8 +72,8 @@ ARGUMENTS:
                 Program.Exit(0);
             }
 
-            var cluster    = Program.GetCluster();
-            var contextExtensions = KubeHelper.CurrentContext.Extension;
+            var cluster      = Program.GetCluster();
+            var clusterLogin = KubeHelper.CurrentContext.Extension;
 
             NodeDefinition node;
 
@@ -101,7 +101,7 @@ ARGUMENTS:
             //      2048 MD5:cb:2f:f1:68:4b:aa:b3:8a:72:4d:53:f6:9f:5f:6a:fa sysadmin@manage-0 (RSA)
 
             const string    md5Pattern     = "MD5:";
-            string          md5Finderprint = contextExtensions.SshKey.FingerprintMd5;
+            string          md5Finderprint = clusterLogin.SshKey.FingerprintMd5;
             string          fingerprint;
             int             bitCount;
             string          md5;
@@ -147,7 +147,7 @@ ARGUMENTS:
                 Program.Exit(1);
             }
 
-            Process.Start(Program.WinScpPath, $@"scp://{contextExtensions.SshUsername}:{contextExtensions.SshPassword}@{node.Address}:22 /hostkey=""{fingerprint}"" /newinstance /rawsettings Shell=""sudo%20-s"" compression=1");
+            Process.Start(Program.WinScpPath, $@"scp://{clusterLogin.SshUsername}:{clusterLogin.SshPassword}@{node.Address}:22 /hostkey=""{fingerprint}"" /newinstance /rawsettings Shell=""sudo%20-s"" compression=1");
         }
     }
 }

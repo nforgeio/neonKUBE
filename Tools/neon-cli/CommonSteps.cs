@@ -287,11 +287,11 @@ TCPKeepAlive yes
         /// Configures a node's host public SSH key during node provisioning.
         /// </summary>
         /// <param name="node">The target node.</param>
-        /// <param name="contextExtension">The context extension for the login.</param>
-        public static void ConfigureSshKey(SshProxy<NodeDefinition> node, KubeContextExtension contextExtension)
+        /// <param name="clusterLogin">The cluster login.</param>
+        public static void ConfigureSshKey(SshProxy<NodeDefinition> node, ClusterLogin clusterLogin)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
-            Covenant.Requires<ArgumentNullException>(contextExtension != null, nameof(contextExtension));
+            Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
 
             // Configure the SSH credentials on the node.
 
@@ -300,7 +300,7 @@ TCPKeepAlive yes
                 {
                     CommandBundle bundle;
 
-                    // Here's some information explaining what how I'm doing this:
+                    // Here's some information explaining what how this works:
                     //
                     //      https://help.ubuntu.com/community/SSH/OpenSSH/Configuring
                     //      https://help.ubuntu.com/community/SSH/OpenSSH/Keys
@@ -323,7 +323,7 @@ chmod 600 $HOME/.ssh/authorized_keys
                     bundle = new CommandBundle("./addkeys.sh");
 
                     bundle.AddFile("addkeys.sh", addKeyScript, isExecutable: true);
-                    bundle.AddFile("ssh_host_rsa_key", contextExtension.SshKey.PublicSSH2);
+                    bundle.AddFile("ssh_host_rsa_key", clusterLogin.SshKey.PublicSSH2);
 
                     // NOTE: I'm explicitly not running the bundle as [sudo] because the OpenSSH
                     //       server is very picky about the permissions on the user's [$HOME]
@@ -356,7 +356,7 @@ systemctl restart sshd
                     bundle = new CommandBundle("./config.sh");
 
                     bundle.AddFile("config.sh", configScript, isExecutable: true);
-                    bundle.AddFile("ssh_host_rsa_key.pub", contextExtension.SshKey.PublicPUB);
+                    bundle.AddFile("ssh_host_rsa_key.pub", clusterLogin.SshKey.PublicPUB);
                     node.SudoCommand(bundle);
                 });
 
@@ -365,12 +365,12 @@ systemctl restart sshd
 
             node.Status = "ssh: verify private key auth";
             node.Disconnect();
-            node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUsername, contextExtension.SshKey.PrivatePEM));
+            node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUsername, clusterLogin.SshKey.PrivatePEM));
             node.WaitForBoot();
 
             node.Status = "ssh: verify password auth";
             node.Disconnect();
-            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, contextExtension.SshPassword));
+            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, clusterLogin.SshPassword));
             node.WaitForBoot();
         }
 

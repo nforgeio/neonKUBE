@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeLogin.cs
+// FILE:	    ClusterLoginExport.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 
@@ -29,12 +29,12 @@ namespace Neon.Kube
     /// login.  This includes the Kubernetes cluster, login, and neonKUBE
     /// extensions.
     /// </summary>
-    public class KubeLogin
+    public class ClusterLoginExport
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public KubeLogin()
+        public ClusterLoginExport()
         {
         }
 
@@ -53,11 +53,11 @@ namespace Neon.Kube
         public KubeConfigContext Context { get; set; }
 
         /// <summary>
-        /// The context extension information.  This may be <c>null</c>.
+        /// The cluster login information.  This may be <c>null</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Extensions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "extensions", ApplyNamingConventions = false)]
-        public KubeContextExtension Extensions { get; set; }
+        public ClusterLogin Extensions { get; set; }
 
         /// <summary>
         /// The Kubernetes user.

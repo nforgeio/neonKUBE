@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    KubeContextExtension.cs
+// FILE:	    ClusterLogin.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -40,31 +40,31 @@ namespace Neon.Kube
     /// <summary>
     /// Holds extended cluster information such as the cluster definition and
     /// node SSH credentials.  These records are persisted as files to the 
-    /// <b>$HOME/.neonkube/clusters</b> folder in YAML files named like
-    /// <b><i>USER</i>@<i>NAME</i>.context.yaml</b>.
+    /// <b>$HOME/.neonkube/logins</b> folder in YAML files named like
+    /// <b><i>USER</i>@<i>NAME</i>.login.yaml</b>.
     /// </summary>
-    public class KubeContextExtension
+    public class ClusterLogin
     {
         //---------------------------------------------------------------------
         // Static members
 
         /// <summary>
-        /// Reads a <see cref="KubeContextExtension"/> from a file if it exists.
+        /// Reads a <see cref="ClusterLogin"/> from a file if it exists.
         /// </summary>
-        /// <param name="path">Path the the context extension file.</param>
-        /// <returns>The <see cref="KubeContextExtension"/> if the file exists or <c>null</c>.</returns>
-        public static KubeContextExtension Load(string path)
+        /// <param name="path">Path the the cluster login file.</param>
+        /// <returns>The <see cref="ClusterLogin"/> if the file exists or <c>null</c>.</returns>
+        public static ClusterLogin Load(string path)
         {
             if (!File.Exists(path))
             {
                 return null;
             }
 
-            var contextExtension = NeonHelper.YamlDeserialize<KubeContextExtension>(File.ReadAllText(path), strict: true);
+            var clusterLogin = NeonHelper.YamlDeserialize<ClusterLogin>(File.ReadAllText(path), strict: true);
 
-            contextExtension.path = path;
+            clusterLogin.path = path;
 
-            return contextExtension;
+            return clusterLogin;
         }
 
         //---------------------------------------------------------------------
@@ -76,7 +76,7 @@ namespace Neon.Kube
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public KubeContextExtension()
+        public ClusterLogin()
         {
         }
 
@@ -84,7 +84,7 @@ namespace Neon.Kube
         /// Parameterized constructor.
         /// </summary>
         /// <param name="path">Optionally specifies the path to the extension file.</param>
-        public KubeContextExtension(string path)
+        public ClusterLogin(string path)
         {
             this.path = path;
         }
@@ -167,7 +167,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "SshClientKey", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [YamlMember(Alias = "sshClientKey", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public SshKey SshKey { get; set; }
+        public KubeSshKey SshKey { get; set; }
 
         /// <summary>
         /// Sets the file path where the extension will be persisted.

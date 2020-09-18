@@ -730,12 +730,12 @@ You can disable the use of this encrypted folder by specifying
         /// Uses WinSCP to convert an OpenSSH PEM formatted key to the PPK format
         /// required by PuTTY/WinSCP.  This works only on Windows.
         /// </summary>
-        /// <param name="kubeLogin">The related cluster login information.</param>
+        /// <param name="kubeLogin">The cluster login.</param>
         /// <param name="pemKey">The OpenSSH PEM key.</param>
         /// <returns>The converted PPPK key.</returns>
         /// <exception cref="NotImplementedException">Thrown when not running on Windows.</exception>
         /// <exception cref="Win32Exception">Thrown if WinSCP could not be executed.</exception>
-        public static string ConvertPUBtoPPK(KubeContextExtension kubeLogin, string pemKey)
+        public static string ConvertPUBtoPPK(ClusterLogin kubeLogin, string pemKey)
         {
             if (!NeonHelper.IsWindows)
             {

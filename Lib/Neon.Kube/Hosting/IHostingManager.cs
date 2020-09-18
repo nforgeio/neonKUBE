@@ -72,8 +72,8 @@ namespace Neon.Kube
         /// Creates and initializes the cluster resources such as the virtual machines,
         /// networks, load balancers, network security groups, public IP addresses etc.
         /// </summary>
-        /// <param name="contextExtension">
-        /// The Kubernetes context extension for the cluster being provisioned.
+        /// <param name="clusterLogin">
+        /// The login for the cluster being provisioned.
         /// This is required.
         /// </param>
         /// <param name="secureSshPassword">
@@ -96,7 +96,7 @@ namespace Neon.Kube
         /// equivalent to calling <see cref="EnableInternetSshAsync"/>.
         /// </para>
         /// </remarks>
-        Task<bool> ProvisionAsync(KubeContextExtension contextExtension, string secureSshPassword, string orgSshPassword = null);
+        Task<bool> ProvisionAsync(ClusterLogin clusterLogin, string secureSshPassword, string orgSshPassword = null);
 
         /// <summary>
         /// Adds any necessary post-provisioning steps to a setup controller.
