@@ -116,6 +116,14 @@ namespace Neon.Kube
         public KubeSetupDetails SetupDetails { get; set; } = new KubeSetupDetails();
 
         /// <summary>
+        /// The custom certificate generated for the Kubernetes dashboard PEM.
+        /// </summary>
+        [JsonProperty(PropertyName = "DashboardCertificate")]
+        [YamlMember(Alias = "dashboardCertificate", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
+        [DefaultValue(null)]
+        public string DashboardCertificate { get; set; }
+
+        /// <summary>
         /// The SSH root username.
         /// </summary>
         [JsonProperty(PropertyName = "SshUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -151,14 +159,6 @@ namespace Neon.Kube
                 }
             }
         }
-
-        /// <summary>
-        /// The custom certificate generated for the Kubernetes dashboard PEM.
-        /// </summary>
-        [JsonProperty(PropertyName = "KubernetesDashboardCertificate")]
-        [YamlMember(Alias = "kubernetesDashboardCertificate", ScalarStyle = ScalarStyle.Literal, ApplyNamingConventions = false)]
-        [DefaultValue(null)]
-        public string KubernetesDashboardCertificate { get; set; }
 
         /// <summary>
         /// The public and private parts of the SSH client key used to

@@ -1420,7 +1420,7 @@ subjects:
                     firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kubernetes-dashboard",
                         () =>
                         {
-                            if (contextExtension.KubernetesDashboardCertificate != null)
+                            if (contextExtension.DashboardCertificate != null)
                             {
                                 firstMaster.Status = "generate: dashboard certificate";
 
@@ -1448,7 +1448,7 @@ subjects:
                                     validDays: (int)(utc10Years - utcNow).TotalDays,
                                     issuedBy:  "kubernetes-dashboard");
 
-                                contextExtension.KubernetesDashboardCertificate = certificate.CombinedPem;
+                                contextExtension.DashboardCertificate = certificate.CombinedPem;
                                 contextExtension.Save();
                             }
 
@@ -1756,7 +1756,7 @@ spec:
           emptyDir: {{}}
 ";
 
-                            var dashboardCert = TlsCertificate.Parse(contextExtension.KubernetesDashboardCertificate);
+                            var dashboardCert = TlsCertificate.Parse(contextExtension.DashboardCertificate);
                             var variables     = new Dictionary<string, string>();
 
                             variables.Add("CERTIFICATE", Convert.ToBase64String(Encoding.UTF8.GetBytes(dashboardCert.CertPemNormalized)));
