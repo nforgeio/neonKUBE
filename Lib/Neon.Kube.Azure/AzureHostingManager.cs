@@ -922,7 +922,7 @@ namespace Neon.Kube
                 },
                 quiet: true);
             controller.AddNodeStep("virtual machines", CreateVm);
-            controller.AddGlobalStep("ingress/security rules", () => UpdateNetwork(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
+            controller.AddGlobalStep("internet routing", () => UpdateNetwork(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
             controller.AddNodeStep("configure nodes", Configure);
 
             if (!controller.Run(leaveNodesConnected: false))

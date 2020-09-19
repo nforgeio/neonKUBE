@@ -737,6 +737,7 @@ namespace Neon.Kube
         private string                              networkAclName1;
         private string                              networkAclName2;
         private string                              gatewayName;
+        private string                              routeTableName;
         private string                              loadBalancerName;
         private string                              elbName;
         private string                              keyPairName;
@@ -755,6 +756,7 @@ namespace Neon.Kube
         private NetworkAcl                          networkAcl1;
         private NetworkAcl                          networkAcl2;
         private InternetGateway                     gateway;
+        private RouteTable                          routeTable;
         private LoadBalancer                        loadBalancer;
         private string                              keyPairId;
         private PlacementGroup                      masterPlacementGroup;
@@ -833,6 +835,7 @@ namespace Neon.Kube
             networkAclName1          = GetResourceName("network-acl-1");
             networkAclName2          = GetResourceName("network-acl-2");
             gatewayName              = GetResourceName("internet-gateway");
+            routeTableName           = GetResourceName("route-table");
             loadBalancerName         = GetResourceName("load-balancer");
             elbName                  = GetLoadBalancerName(clusterName, "elb");
             keyPairName              = GetResourceName("ssh-keys");
@@ -1064,9 +1067,10 @@ namespace Neon.Kube
             controller.AddGlobalStep("network", ConfigureNetworkAsync);
             controller.AddGlobalStep("ssh key", ImportKeyPairAsync);
             controller.AddNodeStep("node instances", CreateNodeInstanceAsync);
-            controller.AddGlobalStep("ingress/security rules", async () => await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
-            controller.AddNodeStep("node ssh config", ConfigureNodeSsh);
             controller.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
+            controller.AddGlobalStep("internet routing", async () => await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
+            //controller.AddGlobalStep("nic tags", ConfigureNicTags);   // <-- This doesn't work yet
+            controller.AddNodeStep("node ssh config", ConfigureNodeSsh);
 
             if (!controller.Run(leaveNodesConnected: false))
             {
@@ -1340,6 +1344,10 @@ namespace Neon.Kube
                 }
             }
 
+            // Route Table
+
+            routeTable = await GetRouteTableAsync();
+
             // Load Balancer
 
             loadBalancer = await GetLoadBalancerAsync();
@@ -1568,6 +1576,26 @@ retry:
                 if (loadBalancerItem.LoadBalancerName == elbName)
                 {
                     return loadBalancerItem;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Attempts to load the cluster route table.
+        /// </summary>
+        /// <returns>The route table or <c>null</c>.</returns>
+        private async Task<RouteTable> GetRouteTableAsync()
+        {
+            var routeTablePagenator = ec2Client.Paginators.DescribeRouteTables(new DescribeRouteTablesRequest());
+
+            await foreach (var routeTableItem in routeTablePagenator.RouteTables)
+            {
+                if (routeTableItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == routeTableName) &&
+                    routeTableItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                {
+                    return routeTableItem;
                 }
             }
 
@@ -2114,13 +2142,13 @@ retry:
                     await ec2Client.AuthorizeSecurityGroupIngressAsync(
                         new AuthorizeSecurityGroupIngressRequest()
                         {
-                            GroupId = sgAllowAll.GroupId,
+                            GroupId       = sgAllowAll.GroupId,
                             IpPermissions = new List<IpPermission>
                             {
                                 new IpPermission()
                                 {
                                     IpProtocol = "-1",      // All protocols
-                                    FromPort   = 1,
+                                    FromPort   = 0,
                                     ToPort     = ushort.MaxValue,
                                     Ipv4Ranges = new List<IpRange>()
                                     {
@@ -2178,7 +2206,7 @@ retry:
                 networkAcl2 = networkAclResponse.NetworkAcl;
             }
 
-            // Create the Internet gateway and attach it to the VPC if it's
+            // Create the Internet Gateway and attach it to the VPC if it's
             // not already attached.
 
             if (gateway == null)
@@ -2201,6 +2229,47 @@ retry:
                         InternetGatewayId = gateway.InternetGatewayId
                     });
             }
+
+            // We also need create a route table with an entry that routes traffic
+            // to the Internet Gateway and then associate the route table with the
+            // subnet.
+
+            if (routeTable == null)
+            {
+                var routeTableResponse = await ec2Client.CreateRouteTableAsync(
+                    new CreateRouteTableRequest()
+                    {
+                        VpcId             = vpc.VpcId,
+                        TagSpecifications = GetTagSpecifications(routeTableName, ResourceType.RouteTable)
+                    });
+
+                routeTable = routeTableResponse.RouteTable;
+            }
+
+            if (routeTable.Routes.Count == 1)
+            {
+                var routeEntryResponse = await ec2Client.CreateRouteAsync(
+                    new CreateRouteRequest()
+                    {
+                        RouteTableId         = routeTable.RouteTableId,
+                        GatewayId            = gateway.InternetGatewayId,
+                        DestinationCidrBlock = "0.0.0.0/0"
+                    });
+
+                routeTable = await GetRouteTableAsync();
+            }
+
+            if (!routeTable.Associations.Any(association => association.SubnetId == subnet.SubnetId))
+            {
+                await ec2Client.AssociateRouteTableAsync(
+                    new AssociateRouteTableRequest()
+                    {
+                        RouteTableId = routeTable.RouteTableId,
+                        SubnetId     = subnet.SubnetId,
+                    });
+            }
+
+            routeTable = await GetRouteTableAsync();
         }
 
         /// <summary>
@@ -2420,7 +2489,7 @@ retry:
 
                 // Wait for the instance to indicate that it's running.
 
-                node.Status = "starting...";
+                node.Status = "connecting...";
 
                 var invalidStates = new HashSet<int>
                 {
@@ -2470,6 +2539,8 @@ retry:
         {
             // AWS requires SSH key based authenticated for newly created instances.
 
+            node.Status = "starting...";
+
             node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUsername, sshKey.PrivatePEM));
             node.WaitForBoot();
 
@@ -2517,6 +2588,39 @@ systemctl restart sshd
             node.Disconnect();
             node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, secureSshPassword));
             node.Connect();
+        }
+
+        /// <summary>
+        /// Sets the tags for the subnet's network interfaces.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task ConfigureNicTags()
+        {
+            // $todo(jefflill):
+            //
+            // I haven't been able to figure out how to tag NICs.  The problem is discovering
+            // a NIC's ARN so we can use it to update the tags.  I think we can live without
+            // this but it would be nice to solve this sometime.
+
+            //var nicPagenator = await ec2Client.DescribeNetworkInterfacesAsync(new DescribeNetworkInterfacesRequest());
+            //var nicArns      = new List<string>();
+
+            //foreach (var nic in nicPagenator.NetworkInterfaces)
+            //{
+            //    if (nic.SubnetId == subnet.SubnetId)
+            //    {
+            //        nicArns.Add(nic.NetworkInterfaceId);    // <-- This is not the NIC ARN
+            //    }
+            //}
+
+            //await elbClient.AddTagsAsync(
+            //    new AddTagsRequest()
+            //    {
+            //        ResourceArns = nicArns,
+            //        Tags         = GetTags<ElbTag>(GetResourceName("nic"))
+            //    });
+
+            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -2868,7 +2972,7 @@ systemctl restart sshd
                             RuleNumber   = egressRuleNumber++,
                             Protocol     = "-1",      // "-1" means any protocol
                             Egress       = true,
-                            PortRange    = new PortRange() { From = 1, To = ushort.MaxValue },
+                            PortRange    = new PortRange() { From = 0, To = ushort.MaxValue },
                             CidrBlock    = destinationCidr,
                             RuleAction   = egressAddressRule.Action == AddressRuleAction.Allow ? RuleAction.Allow : RuleAction.Deny
                         });
@@ -2885,7 +2989,7 @@ systemctl restart sshd
                         RuleNumber   = firstIngressRuleNumber,
                         Protocol     = "-1",      // "-1" means ANY protocol
                         Egress       = true,
-                        PortRange    = new PortRange() { From = 1, To = ushort.MaxValue },
+                        PortRange    = new PortRange() { From = 0, To = ushort.MaxValue },
                         CidrBlock    = "0.0.0.0/0",
                         RuleAction   = RuleAction.Allow
                     });
@@ -2942,13 +3046,13 @@ systemctl restart sshd
                             HealthCheckProtocol        = ProtocolEnum.TCP,
                             HealthCheckIntervalSeconds = healthCheck.IntervalSeconds,
                             HealthyThresholdCount      = healthCheck.ThresholdCount,
-                            UnhealthyThresholdCount    = healthCheck.ThresholdCount
+                            UnhealthyThresholdCount    = healthCheck.ThresholdCount,
                         });
 
                     targetGroup = targetGroupResponse.TargetGroups.Single();
                     nameToTargetGroup.Add(targetGroupName, targetGroup);
 
-                    // Add tags as well.
+                    // Add target group tags.
 
                     await elbClient.AddTagsAsync(
                         new AddTagsRequest()
@@ -2958,7 +3062,7 @@ systemctl restart sshd
                         });
                 }
 
-                // We're going to reregister the targets every time in case nodes
+                // We're going to re-register the targets every time in case nodes
                 // have been added or removed from the cluster or the set of nodes
                 // marked for ingress has changed.
 
@@ -3023,6 +3127,15 @@ systemctl restart sshd
                     targetGroup = targetGroupResponse.TargetGroups.Single();
                     nameToTargetGroup.Add(targetGroupName, targetGroup);
                 }
+
+                // Add target group tags.
+
+                await elbClient.AddTagsAsync(
+                    new AddTagsRequest()
+                    {
+                        ResourceArns = new List<string>() { targetGroup.TargetGroupArn },
+                        Tags         = GetTags<ElbTag>(GetResourceName(targetGroupName))
+                    });
 
                 // Register the target node.
 
