@@ -150,7 +150,7 @@ ingester:
   cmdlineParams: {}
   replicaCount: 1
   autoscaling:
-    enabled: true
+    enabled: false
     minReplicas: 1
     maxReplicas: 10
     # targetCPUUtilizationPercentage: 80
@@ -168,7 +168,7 @@ ingester:
     #   cpu: 500m
     #   memory: 512Mi
   serviceAccount:
-    create: true
+    create: false
     name:
   nodeSelector: {}
   tolerations: []
@@ -181,7 +181,7 @@ ingester:
   extraConfigmapMounts: []
 
   serviceMonitor:
-    enabled: true
+    enabled: false
     additionalLabels: {}
 
 agent:
