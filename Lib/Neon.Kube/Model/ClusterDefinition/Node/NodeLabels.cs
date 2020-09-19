@@ -401,7 +401,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <b>io.neonkube.monitor.logs</b> [<c>bool</c>]: Indicates that Elasticsearch 
-        /// will be deployed to this node if <see cref="ElasticsearchOptions.Enabled"/> is <c>true</c>.  
+        /// will be deployed to this node if <see cref="LogOptions.Enabled"/> is <c>true</c>.  
         /// This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Logs", Required = Required.Default)]
@@ -411,7 +411,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// <b>io.neonkube.monitor.metrics</b> [<c>bool</c>]: Indicates that Metrics 
-        /// will be deployed to this node if <see cref="PrometheusOptions.Enabled"/> is <c>true</c>.  
+        /// will be deployed to this node if <see cref="MetricsOptions.Enabled"/> is <c>true</c>.  
         /// This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Metrics", Required = Required.Default)]
