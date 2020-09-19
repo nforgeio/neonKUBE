@@ -69,7 +69,7 @@ namespace Neon.Kube
         [JsonProperty(PropertyName = "DiskSize", Required = Required.Default)]
         [YamlMember(Alias = "diskSize", ApplyNamingConventions = false)]
         [DefaultValue(null)]
-        public ResourceQuantity DiskSize { get; set; } = null;
+        public string DiskSize { get; set; } = null;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are

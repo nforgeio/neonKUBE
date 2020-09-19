@@ -2460,7 +2460,7 @@ rm -rf {chartName}*
                                     {
                                         Capacity = new Dictionary<string, ResourceQuantity>()
                                         {
-                                            { "storage", cluster.Definition.Monitor.Metrics.DiskSize }
+                                            { "storage", new ResourceQuantity(cluster.Definition.Monitor.Metrics.DiskSize) }
                                         },
                                         AccessModes = new List<string>() { "ReadWriteOnce" },
                                         PersistentVolumeReclaimPolicy = "Retain",
