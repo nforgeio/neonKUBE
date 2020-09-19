@@ -56,16 +56,16 @@ namespace Neon.Kube
         /// <summary>
         /// Elasticsearch options.
         /// </summary>
-        [JsonProperty(PropertyName = "Elasticsearch", Required = Required.Default)]
-        [YamlMember(Alias = "elasticsearch", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Logs", Required = Required.Default)]
+        [YamlMember(Alias = "logs", ApplyNamingConventions = false)]
         [DefaultValue(true)]
         public LogOptions Logs { get; set; } = new LogOptions();
 
         /// <summary>
         /// Prometheus options
         /// </summary>
-        [JsonProperty(PropertyName = "Prometheus", Required = Required.Default)]
-        [YamlMember(Alias = "prometheus", ApplyNamingConventions = false)]
+        [JsonProperty(PropertyName = "Metrics", Required = Required.Default)]
+        [YamlMember(Alias = "metrics", ApplyNamingConventions = false)]
         [DefaultValue(true)]
         public MetricsOptions Metrics { get; set; } = new MetricsOptions();
 
@@ -82,8 +82,8 @@ namespace Neon.Kube
                 return;
             }
 
-            Logs          = Logs ?? new LogOptions();
-            Metrics       = Metrics ?? new MetricsOptions();
+            Logs    = Logs ?? new LogOptions();
+            Metrics = Metrics ?? new MetricsOptions();
 
             Logs.Validate(clusterDefinition);
             Metrics.Validate(clusterDefinition);
