@@ -10,7 +10,7 @@ using Neon.Temporal;
 namespace Snippets_SimpleSignalWorkflow
 {
     #region code
-    [WorkflowInterface(TaskList = "my-tasks")]
+    [WorkflowInterface(TaskQueue = "my-tasks")]
     public interface IOrderWorkflow : IWorkflow
     {
         [WorkflowMethod]

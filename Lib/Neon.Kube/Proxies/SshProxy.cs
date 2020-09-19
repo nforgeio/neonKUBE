@@ -1488,24 +1488,38 @@ rm {KubeHostFolders.Home(Username)}/askpass
             sshClient.RunCommand($"mkdir -p {folderPath} && chmod 700 {folderPath}");
 
             //-----------------------------------------------------------------
-            // Disable SUDO password prompts.
+            // Disable SUDO password prompts if this hasn't already been done for
+            // this host.  Note that you must be logged in using username/password 
+            // authentication for this to work.
+            //
+            // NOTE: neonKUBE cloud based images will already have SUDO prompting disabled
+            //       as will VM based images for Hyper-V and XenServer and we initialize
+            //       the VM images using password authentication, so this will work for
+            //       creating the images as well.
 
-            // We need to obtain the SSH password used to establish the current connection.  This means
-            // that TLS based credentials won't work for the first connection to a host.  We're going
-            // use reflection to get at the password itself.
+            var response = sshClient.RunCommand("sudo -n true");
 
-            var authMethod = credentials.AuthenticationMethod as PasswordAuthenticationMethod;
-
-            if (authMethod == null)
+            if (response.ExitStatus != 0)
             {
-                throw new SshProxyException("You must use password credentials the first time you connect to a particular host machine.");
+                // SUDO password prompting is not disabled yet.
+                //
+                // We need to obtain the SSH password used to establish the current connection.  This means
+                // that SSH public key based credentials won't work for the first connection to a host.  We're 
+                // going use reflection to get the password from SSH.NET.
+
+                var authMethod = credentials.AuthenticationMethod as PasswordAuthenticationMethod;
+
+                if (authMethod == null)
+                {
+                    throw new SshProxyException("You must use password credentials the first time you connect to a particular host machine.");
+                }
+
+                var passwordProperty = authMethod.GetType().GetProperty("Password", BindingFlags.Instance | BindingFlags.NonPublic);
+                var passwordBytes    = (byte[])passwordProperty.GetValue(authMethod);
+                var sshPassword      = Encoding.UTF8.GetString(passwordBytes);
+
+                DisableSudoPrompt(sshPassword);
             }
-
-            var passwordProperty = authMethod.GetType().GetProperty("Password", BindingFlags.Instance | BindingFlags.NonPublic);
-            var passwordBytes    = (byte[])passwordProperty.GetValue(authMethod);
-            var sshPassword      = Encoding.UTF8.GetString(passwordBytes);
-
-            DisableSudoPrompt(sshPassword);
         }
 
         /// <summary>

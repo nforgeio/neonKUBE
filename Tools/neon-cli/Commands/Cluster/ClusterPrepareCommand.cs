@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -85,7 +86,6 @@ Server Requirements:
         private HostingManager  hostingManager;
         private string          clusterDefPath;
         private string          packageCaches;
-        private bool            force;
 
         /// <inheritdoc/>
         public override string[] Words
@@ -149,7 +149,6 @@ Server Requirements:
             }
 
             clusterDefPath = commandLine.Arguments[0];
-            force          = commandLine.GetFlag("--force");
 
             ClusterDefinition.ValidateFile(clusterDefPath, strict: true);
 
@@ -190,7 +189,7 @@ Server Requirements:
                 // environment because we're expecting the bare machines to be already running 
                 // with the assigned addresses and we're also not going to do this for cloud
                 // environments because we're assuming that the cluster will run in its own
-                // private network so there'll ne no possibility of conflicts.
+                // private network so there'll be no possibility of conflicts.
 
                 if (cluster.Definition.Hosting.Environment != HostingEnvironment.Machine && 
                     !cluster.Definition.Hosting.IsCloudProvider)
@@ -283,25 +282,25 @@ Server Requirements:
                     Program.VerifyAdminPrivileges($"Provisioning to [{cluster.Definition.Hosting.Environment}] requires elevated administrator privileges.");
                 }
 
-                // Load the cluster context extension information if it exists and if it indicates
-                // that setup is still pending, we'll use that information (especially the generated
+                // Load the cluster login information if it exists and if it indicates that
+                // setup is still pending, we'll use that information (especially the generated
                 // secure SSH password).
                 //
                 // Otherwise, we'll write (or overwrite) the context file with a fresh context.
 
-                var contextExtensionPath = KubeHelper.GetContextExtensionPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
-                var contextExtension     = KubeContextExtension.Load(contextExtensionPath);
+                var clusterLoginPath = KubeHelper.GetClusterLoginPath((KubeContextName)$"{KubeConst.RootUser}@{clusterDefinition.Name}");
+                var clusterLogin     = ClusterLogin.Load(clusterLoginPath);
 
-                if (contextExtension == null || !contextExtension.SetupDetails.SetupPending)
+                if (clusterLogin == null || !clusterLogin.SetupDetails.SetupPending)
                 {
-                    contextExtension = new KubeContextExtension(contextExtensionPath)
+                    clusterLogin = new ClusterLogin(clusterLoginPath)
                     {
                         ClusterDefinition = clusterDefinition,
                         SshUsername       = KubeConst.SysAdminUsername,
                         SetupDetails      = new KubeSetupDetails() { SetupPending = true }
                     };
 
-                    contextExtension.Save();
+                    clusterLogin.Save();
                 }
 
                 // We're going to generate a secure random password and we're going to append
@@ -328,18 +327,80 @@ Server Requirements:
 
                 var orgSshPassword = Program.MachinePassword;
 
-                if (hostingManager.GenerateSecurePassword && string.IsNullOrEmpty(contextExtension.SshPassword))
+                if (hostingManager.GenerateSecurePassword && string.IsNullOrEmpty(clusterLogin.SshPassword))
                 {
-                    contextExtension.SshPassword = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
+                    clusterLogin.SshPassword = NeonHelper.GetCryptoRandomPassword(clusterDefinition.Security.PasswordLength);
 
                     // Append a string that guarantees that the generated password meets
                     // cloud minimum requirements.
 
-                    contextExtension.SshPassword += ".Aa0";
-                    contextExtension.Save();
+                    clusterLogin.SshPassword += ".Aa0";
+                    clusterLogin.Save();
                 }
 
-                if (!hostingManager.ProvisionAsync(force, contextExtension.SshPassword, orgSshPassword).Result)
+                // We're also going to generate the server's SSH key here and pass that to the hosting
+                // manager's provisioner.  We need to do this up front because some hosting environments
+                // like AWS don't allow SSH password authentication by default, so we'll need the SSH key
+                // to initialize the nodes after they've been provisioned for those environments.
+
+                if (clusterLogin.SshKey == null)
+                {
+                    // Generate a 2048 bit SSH key pair.
+
+                    clusterLogin.SshKey = KubeHelper.GenerateSshKey(cluster.Name, "root");
+
+                    // We're going to use WinSCP (if it's installed) to convert the OpenSSH PEM formatted key
+                    // to the PPK format PuTTY/WinSCP requires.
+
+                    if (NeonHelper.IsWindows)
+                    {
+                        var pemKeyPath = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("d"));
+                        var ppkKeyPath = Path.Combine(KubeHelper.TempFolder, Guid.NewGuid().ToString("d"));
+
+                        try
+                        {
+                            File.WriteAllText(pemKeyPath, clusterLogin.SshKey.PrivateOpenSSH);
+
+                            ExecuteResponse result;
+
+                            try
+                            {
+                                result = NeonHelper.ExecuteCapture("winscp.com", $@"/keygen ""{pemKeyPath}"" /comment=""{cluster.Definition.Name} Key"" /output=""{ppkKeyPath}""");
+                            }
+                            catch (Win32Exception)
+                            {
+                                return; // Tolerate when WinSCP isn't installed.
+                            }
+
+                            if (result.ExitCode != 0)
+                            {
+                                Console.WriteLine(result.OutputText);
+                                Console.Error.WriteLine(result.ErrorText);
+                                Program.Exit(result.ExitCode);
+                            }
+
+                            clusterLogin.SshKey.PrivatePPK = NeonHelper.ToLinuxLineEndings(File.ReadAllText(ppkKeyPath));
+
+                            // Persist the SSH key.
+
+                            clusterLogin.Save();
+                        }
+                        finally
+                        {
+                            if (File.Exists(pemKeyPath))
+                            {
+                                File.Delete(pemKeyPath);
+                            }
+
+                            if (File.Exists(ppkKeyPath))
+                            {
+                                File.Delete(ppkKeyPath);
+                            }
+                        }
+                    }
+                }
+
+                if (!hostingManager.ProvisionAsync(clusterLogin, clusterLogin.SshPassword, orgSshPassword).Result)
                 {
                     Program.Exit(1);
                 }
@@ -409,9 +470,13 @@ Server Requirements:
 
                 controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
                 hostingManager.AddPostProvisionSteps(controller);
-                controller.AddNodeStep("verify OS", CommonSteps.VerifyOS);
-
-                controller.AddNodeStep("prepare", 
+                controller.AddNodeStep("node OS verify", CommonSteps.VerifyOS);
+                controller.AddNodeStep("node ssh keys", 
+                    (node, stepDelay) =>
+                    {
+                        CommonSteps.ConfigureSshKey(node, clusterLogin);
+                    });
+                controller.AddNodeStep("node prepare", 
                     (node, stepDelay) =>
                     {
                         Thread.Sleep(stepDelay);

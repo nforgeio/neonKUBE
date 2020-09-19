@@ -41,8 +41,8 @@ namespace Neon.Kube
     /// </summary>
     public class KubeConfigContext
     {
-        private bool                    extensionsLoaded;
-        private KubeContextExtension    cachedExtensions;
+        private bool            loginsLoadedLoaded;
+        private ClusterLogin    cachedLogins;
 
         /// <summary>
         /// Default constructor.
@@ -79,51 +79,51 @@ namespace Neon.Kube
         public KubeConfigContextProperties Properties { get; set; }
 
         /// <summary>
-        /// The context extension information for the context.
+        /// The cluster login information for the context.
         /// </summary>
         [JsonIgnore]
         [YamlIgnore]
-        public KubeContextExtension Extension
+        public ClusterLogin Extension
         {
             get
             {
-                if (cachedExtensions != null)
+                if (cachedLogins != null)
                 {
-                    return cachedExtensions;
+                    return cachedLogins;
                 }
 
-                if (extensionsLoaded)
+                if (loginsLoadedLoaded)
                 {
                     return null;
                 }
 
-                var extensionsPath = KubeHelper.GetContextExtensionPath((KubeContextName)Name);
+                var loginPath = KubeHelper.GetClusterLoginPath((KubeContextName)Name);
 
-                if (File.Exists(extensionsPath))
+                if (File.Exists(loginPath))
                 {
-                    cachedExtensions = NeonHelper.YamlDeserialize<KubeContextExtension>(KubeHelper.ReadFileTextWithRetry(extensionsPath));
+                    cachedLogins = NeonHelper.YamlDeserialize<ClusterLogin>(KubeHelper.ReadFileTextWithRetry(loginPath));
 
                     // Validate the extension's cluster definition.
 
-                    cachedExtensions.ClusterDefinition?.Validate();
+                    cachedLogins.ClusterDefinition?.Validate();
 
                     // We need to fixup some references.
 
-                    foreach (var nodeDefinition in cachedExtensions.ClusterDefinition.NodeDefinitions.Values)
+                    foreach (var nodeDefinition in cachedLogins.ClusterDefinition.NodeDefinitions.Values)
                     {
                         nodeDefinition.Labels.Node = nodeDefinition;
                     }
                 }
 
-                extensionsLoaded = true;
+                loginsLoadedLoaded = true;
 
-                return cachedExtensions;
+                return cachedLogins;
             }
 
             set
             {
-                extensionsLoaded = true;
-                cachedExtensions = value;
+                loginsLoadedLoaded = true;
+                cachedLogins       = value;
             }
         }
     }

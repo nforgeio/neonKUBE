@@ -37,16 +37,17 @@ using Microsoft.Win32;
 using Couchbase;
 using Newtonsoft.Json;
 
+using k8s;
+using k8s.Models;
+
 using Neon.Common;
 using Neon.Data;
 using Neon.Diagnostics;
+using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Windows;
 using Neon.Cryptography;
-using k8s;
-using k8s.Models;
-using Neon.IO;
 
 namespace Neon.Kube
 {
@@ -66,7 +67,8 @@ namespace Neon.Kube
         private static string               cachedKubeUserFolder;
         private static string               cachedRunFolder;
         private static string               cachedLogFolder;
-        private static string               cachedClustersFolder;
+        private static string               cachedTempFolder;
+        private static string               cachedLoginsFolder;
         private static string               cachedPasswordsFolder;
         private static string               cachedCacheFolder;
         private static string               cachedDesktopFolder;
@@ -104,7 +106,8 @@ namespace Neon.Kube
             cachedKubeUserFolder     = null;
             cachedRunFolder          = null;
             cachedLogFolder          = null;
-            cachedClustersFolder     = null;
+            cachedTempFolder         = null;
+            cachedLoginsFolder     = null;
             cachedPasswordsFolder    = null;
             cachedCacheFolder        = null;
             cachedDesktopFolder      = null;
@@ -594,38 +597,64 @@ namespace Neon.Kube
         }
 
         /// <summary>
+        /// Returns the path the neonFORGE temporary folder, creating the folder if it doesn't already exist.
+        /// </summary>
+        /// <returns>The folder path.</returns>
+        /// <remarks>
+        /// This folder will exist on developer/operator workstations that have used the <b>neon-cli</b>
+        /// to deploy and manage clusters.  The client will use this to store temporary files that may
+        /// include sensitive information because these folders are encrypted on disk.
+        /// </remarks>
+        public static string TempFolder
+        {
+            get
+            {
+                if (cachedTempFolder != null)
+                {
+                    return cachedTempFolder;
+                }
+
+                var path = Path.Combine(GetNeonKubeUserFolder(), "temp");
+
+                Directory.CreateDirectory(path);
+
+                return cachedTempFolder = path;
+            }
+        }
+
+        /// <summary>
         /// Returns the path to the Kubernetes configuration file.
         /// </summary>
         public static string KubeConfigPath => Path.Combine(KubeHelper.GetKubeUserFolder(), "config");
 
         /// <summary>
-        /// Returns the path the folder containing cluster related files (including kube context 
-        /// extension), creating the folder if it doesn't already exist.
+        /// Returns the path the folder containing cluster login files, creating the folder 
+        /// if it doesn't already exist.
         /// </summary>
         /// <returns>The folder path.</returns>
         /// <remarks>
         /// <para>
         /// This folder will exist on developer/operator workstations that have used the <b>neon-cli</b>
         /// to deploy and manage clusters.  Each known cluster will have a JSON file named
-        /// <b><i>NAME</i>.context.json</b> holding the serialized <see cref="KubeContextExtension"/> 
+        /// <b><i>NAME</i>.context.json</b> holding the serialized <see cref="ClusterLogin"/> 
         /// information for the cluster, where <i>NAME</i> maps to a cluster configuration name
         /// within the <c>kubeconfig</c> file.
         /// </para>
         /// </remarks>
-        public static string ClustersFolder
+        public static string LoginsFolder
         {
             get
             {
-                if (cachedClustersFolder != null)
+                if (cachedLoginsFolder != null)
                 {
-                    return cachedClustersFolder;
+                    return cachedLoginsFolder;
                 }
 
-                var path = Path.Combine(GetNeonKubeUserFolder(), "clusters");
+                var path = Path.Combine(GetNeonKubeUserFolder(), "logins");
 
                 Directory.CreateDirectory(path);
 
-                return cachedClustersFolder = path;
+                return cachedLoginsFolder = path;
             }
         }
 
@@ -756,12 +785,12 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Returns the path to the kubecontext extension file path for a specific context
+        /// Returns the path to the cluster login file path for a specific context
         /// by raw name.
         /// </summary>
         /// <param name="contextName">The kubecontext name.</param>
         /// <returns>The file path.</returns>
-        public static string GetContextExtensionPath(KubeContextName contextName)
+        public static string GetClusterLoginPath(KubeContextName contextName)
         {
             Covenant.Requires<ArgumentNullException>(contextName != null, nameof(contextName));
 
@@ -771,52 +800,31 @@ namespace Neon.Kube
 
             var rawName = (string)contextName;
 
-            return Path.Combine(ClustersFolder, $"{rawName.Replace("/", "~")}.context.yaml");
+            return Path.Combine(LoginsFolder, $"{rawName.Replace("/", "~")}.login.yaml");
         }
 
         /// <summary>
-        /// Returns the kubecontext extension for the structured configuration name.
+        /// Returns the cluster login for the structured configuration name.
         /// </summary>
         /// <param name="name">The structured context name.</param>
-        /// <returns>The <see cref="KubeContextExtension"/> or <c>null</c>.</returns>
-        public static KubeContextExtension GetContextExtension(KubeContextName name)
+        /// <returns>The <see cref="ClusterLogin"/> or <c>null</c>.</returns>
+        public static ClusterLogin GetClusterLogin(KubeContextName name)
         {
             Covenant.Requires<ArgumentNullException>(name != null, nameof(name));
 
-            var path = GetContextExtensionPath(name);
+            var path = GetClusterLoginPath(name);
 
             if (!File.Exists(path))
             {
                 return null;
             }
 
-            var extension = NeonHelper.YamlDeserialize<KubeContextExtension>(ReadFileTextWithRetry(path));
+            var extension = NeonHelper.YamlDeserialize<ClusterLogin>(ReadFileTextWithRetry(path));
 
             extension.SetPath(path);
             extension.ClusterDefinition?.Validate();
 
             return extension;
-        }
-
-        /// <summary>
-        /// Returns the path the neonFORGE temporary folder, creating the folder if it doesn't already exist.
-        /// </summary>
-        /// <returns>The folder path.</returns>
-        /// <remarks>
-        /// This folder will exist on developer/operator workstations that have used the <b>neon-cli</b>
-        /// to deploy and manage clusters.  The client will use this to store temporary files that may
-        /// include sensitive information because these folders are encrypted on disk.
-        /// </remarks>
-        public static string TempFolder
-        {
-            get
-            {
-                var path = Path.Combine(GetNeonKubeUserFolder(), "temp");
-
-                Directory.CreateDirectory(path);
-
-                return path;
-            }
         }
 
         /// <summary>
@@ -848,7 +856,7 @@ namespace Neon.Kube
                     return cachedProgramFolder;
                 }
 
-                cachedProgramFolder = Environment.GetEnvironmentVariable("NEONKUBE_PROGRAM_FOLDER");
+                cachedProgramFolder = Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER");
 
                 if (cachedProgramFolder == null)
                 {
@@ -874,7 +882,7 @@ namespace Neon.Kube
 
         /// <summary>
         /// Returns the path to the Powershell Core executable to be used.
-        /// This will first examine the <b>NEONKUBE_PROGRAM_FOLDER</b> environment
+        /// This will first examine the <b>NEONDESKTOP_PROGRAM_FOLDER</b> environment
         /// variable to see if the installed version of Powershell Core should
         /// be used, otherwise it will simply return <b>pwsh.exe</b> so that
         /// the <b>PATH</b> will be searched.
@@ -1531,7 +1539,7 @@ public class ISOFile
             // Use the version of Powershell installed along with the neon-cli, if present,
             // otherwise just launch Powershell from the PATH.
 
-            var neonKubeProgramFolder = Environment.GetEnvironmentVariable("NEONKUBE_PROGRAM_FOLDER");
+            var neonKubeProgramFolder = Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER");
             var powershellPath        = "powershell";
 
             if (neonKubeProgramFolder != null)
@@ -1996,6 +2004,208 @@ exit 0
         }
 
         /// <summary>
+        /// Returns the path to the <b>ssh-keygen.exe</b> tool to be used for creating
+        /// and managing SSH keys.
+        /// </summary>
+        /// <returns>The fully qualified path to the executable.</returns>
+        /// <exception cref="FileNotFoundException">Thrown if the executable could not be found.</exception>
+        private static string GetSshKeyGenPath()
+        {
+            // The version of [ssh-keygen.exe] included with later versions of Windows doesn't
+            // work for us because it cannot create a key without a passphrase when called from
+            // a script or other process.
+            //
+            // We're going to use a version of this tool deployed with the Git tools for Windows.
+            // This will be installed with neonDESKTOP and is also available as part of the
+            // neonKUBE Git repo as a fall back for Neon developers that haven't installed 
+            // the desktop yet.
+
+            // Look for the installed version first.
+
+            var desktopProgramFolder = Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER");
+            var path1                = desktopProgramFolder != null ? Path.Combine(Environment.GetEnvironmentVariable("NEONDESKTOP_PROGRAM_FOLDER"), "SSH", "ssh-keygen.exe") : null;
+
+            if (path1 != null && File.Exists(path1))
+            {
+                return Path.GetFullPath(path1);
+            }
+
+            // Fall back to the executable from our Git repo.
+
+            var repoFolder = Environment.GetEnvironmentVariable("NF_ROOT");
+            var path2      = repoFolder != null ? Path.Combine(repoFolder, "External", "SSH", "ssh-keygen.exe") : null;
+
+            if (path2 != null && File.Exists(path2))
+            {
+                return Path.GetFullPath(path2);
+            }
+
+            throw new FileNotFoundException($"Cannot locate [ssh-keygen.exe] at [{path1}] or [{path2}].");
+        }
+
+        /// <summary>
+        /// Creates a SSH key for a neonKUBE cluster.
+        /// </summary>
+        /// <param name="clusterName">The cluster name.</param>
+        /// <param name="userName">Optionally specifies the user name (defaults to <b>root</b>).</param>
+        /// <returns>A <see cref="KubeSshKey"/> holding the public and private parts of the key.</returns>
+        public static KubeSshKey GenerateSshKey(string clusterName, string userName = "root")
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName), nameof(clusterName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(userName), nameof(userName));
+
+            var sshKeyGenPath = GetSshKeyGenPath();
+
+            using (var tempFolder = new TempFolder(TempFolder))
+            {
+                //-------------------------------------------------------------
+                // Generate and load the public and private keys.
+
+                var result = NeonHelper.ExecuteCapture(sshKeyGenPath,
+                    new object[]
+                    {
+                        "-t", "rsa",
+                        "-b", "2048",
+                        "-N", "''",
+                        "-C", $"{userName}@{clusterName}",
+                        "-f", Path.Combine(tempFolder.Path, "key")
+                    });
+
+                if (result.ExitCode != 0)
+                {
+                    throw new KubeException("Cannot generate SSH key:\r\n\r\n" + result.AllText);
+                }
+
+                var publicPUB      = File.ReadAllText(Path.Combine(tempFolder.Path, "key.pub"));
+                var privateOpenSSH = File.ReadAllText(Path.Combine(tempFolder.Path, "key"));
+
+                //-------------------------------------------------------------
+                // We also need the public key in PEM format.
+
+                result = NeonHelper.ExecuteCapture(sshKeyGenPath,
+                    new object[]
+                    {
+                        "-f", Path.Combine(tempFolder.Path, "key.pub"),
+                        "-e",
+                        "-m", "pem",
+                    });
+
+                if (result.ExitCode != 0)
+                {
+                    throw new KubeException("Cannot convert SSH public key to PEM:\r\n\r\n" + result.AllText);
+                }
+
+                var publicOpenSSH = result.OutputText;
+
+                //-------------------------------------------------------------
+                // Also convert the public key to SSH2 (RFC 4716).
+
+                result = NeonHelper.ExecuteCapture(sshKeyGenPath,
+                    new object[]
+                    {
+                        "-f", Path.Combine(tempFolder.Path, "key.pub"),
+                        "-e",
+                    });
+
+                if (result.ExitCode != 0)
+                {
+                    throw new KubeException("Cannot convert SSH public key to SSH2:\r\n\r\n" + result.AllText);
+                }
+
+                var publicSSH2 = result.OutputText;
+
+                // Strip out the comment header line if one was added during the conversion.
+
+                var sbPublicSSH2 = new StringBuilder();
+
+                using (var reader = new StringReader(publicSSH2))
+                {
+                    foreach (var line in reader.Lines())
+                    {
+                        if (!line.StartsWith("Comment: "))
+                        {
+                            sbPublicSSH2.AppendLine(line);
+                        }
+                    }
+                }
+
+                publicSSH2 = sbPublicSSH2.ToString();
+
+                //-------------------------------------------------------------
+                // We need the private key as PEM
+
+                File.Copy(Path.Combine(tempFolder.Path, "key"), Path.Combine(tempFolder.Path, "key.pem"));
+
+                result = NeonHelper.ExecuteCapture(sshKeyGenPath,
+                    new object[]
+                    {
+                        "-f", Path.Combine(tempFolder.Path, "key.pem"),
+                        "-p",
+                        "-P", "''",
+                        "-N", "''",
+                        "-m", "pem",
+                    });
+
+                if (result.ExitCode != 0)
+                {
+                    throw new KubeException("Cannot convert SSH private key to PEM:\r\n\r\n" + result.AllText);
+                }
+
+                var privatePEM = File.ReadAllText(Path.Combine(tempFolder.Path, "key.pem"));
+
+                //-------------------------------------------------------------
+                // We need to obtain the MD5 fingerprint from the public key.
+
+                result = NeonHelper.ExecuteCapture(sshKeyGenPath,
+                    new object[]
+                    {
+                        "-l",
+                        "-f", Path.Combine(tempFolder.Path, "key.pub"),
+                        "-E", "md5",
+                    });
+
+                if (result.ExitCode != 0)
+                {
+                    throw new KubeException("Cannot generate SSH public key MD5 fingerprint:\r\n\r\n" + result.AllText);
+                }
+
+                var fingerprintMd5 = result.OutputText.Trim();
+
+                //-------------------------------------------------------------
+                // We also need the SHA256 fingerprint.
+
+                result = NeonHelper.ExecuteCapture(sshKeyGenPath,
+                    new object[]
+                    {
+                        "-l",
+                        "-f", Path.Combine(tempFolder.Path, "key.pub"),
+                        "-E", "sha256"
+                    });
+
+                if (result.ExitCode != 0)
+                {
+                    throw new KubeException("Cannot generate SSH public key SHA256 fingerprint:\r\n\r\n" + result.AllText);
+                }
+
+                var fingerprintSha2565 = result.OutputText.Trim();
+
+                //-------------------------------------------------------------
+                // Return the key information.
+
+                return new KubeSshKey()
+                {
+                    PublicPUB         = publicPUB,
+                    PublicOpenSSH     = publicOpenSSH,
+                    PublicSSH2        = publicSSH2,
+                    PrivateOpenSSH    = privateOpenSSH,
+                    PrivatePEM        = privatePEM,
+                    FingerprintMd5    = fingerprintMd5,
+                    FingerprintSha256 = fingerprintSha2565
+                };
+            }
+        }
+
+        /// <summary>
         /// Performs low-level initialization of a cluster node.  This is applied one time to
         /// Hyper-V and XenServer/XCP-ng node templates when they are created and at cluster
         /// creation time for cloud and bare metal based clusters.  The node must already
@@ -2219,7 +2429,7 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
         /// cluster.  This faults the nodeproxy on faliure.
         /// </summary>
         /// <param name="node">The target node.</param>
-        internal static void VerifyNodeOs(SshProxy<NodeDefinition> node)
+        internal static void VerifyNodeOperatingSystem(SshProxy<NodeDefinition> node)
         {
             Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
 

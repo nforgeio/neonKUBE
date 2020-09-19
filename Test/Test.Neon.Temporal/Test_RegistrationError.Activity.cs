@@ -44,7 +44,7 @@ namespace TestTemporal
     {
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityDuplicateBlankEntrypoint : IActivity
         {
             [ActivityMethod]
@@ -83,7 +83,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityDuplicateEntrypoint : IActivity
         {
             [ActivityMethod(Name = "same")]
@@ -121,7 +121,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityNoEntrypoint : IActivity
         {
         }
@@ -145,14 +145,14 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityMultiInterface1 : IActivity
         {
             [ActivityMethod]
             Task Run1Async();
         }
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IActivityMultiInterface2 : IActivity
         {
             [ActivityMethod]

@@ -127,10 +127,12 @@ namespace Neon.Kube
         public override bool GenerateSecurePassword => true;
 
         /// <inheritdoc/>
-        public override async Task<bool> ProvisionAsync(bool force, string secureSshPassword, string orgSshPassword = null)
+        public override async Task<bool> ProvisionAsync(ClusterLogin clusterLogin, string secureSshPassword, string orgSshPassword = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword));
+            Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secureSshPassword), nameof(secureSshPassword));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
+            Covenant.Assert(cluster != null, $"[{nameof(MachineHostingManager)}] was created with the wrong constructor.");
 
             this.secureSshPassword = secureSshPassword;
             this.orgSshPassword    = orgSshPassword;
@@ -144,7 +146,7 @@ namespace Neon.Kube
             };
 
             controller.AddNodeStep("connect nodes", (node, stepDelay) => Connect(node));
-            controller.AddNodeStep("verify OS", (node, stepDelay) => KubeHelper.VerifyNodeOs(node));
+            controller.AddNodeStep("verify OS", (node, stepDelay) => KubeHelper.VerifyNodeOperatingSystem(node));
             controller.AddNodeStep("configure nodes", (node, stepDelay) => Congfigure(node));
 
             if (secureSshPassword != orgSshPassword)
@@ -257,7 +259,7 @@ echo '{KubeConst.SysAdminUsername}:{secureSshPassword}' | chpasswd
 
             if (response.ExitCode != 0)
             {
-                throw new KubeException($"*** ERROR: Unable to set a strong password [exitcode={response.ExitCode}].");
+                throw new KubeException($"*** ERROR: Unable to set the strong SSH password [exitcode={response.ExitCode}].");
             }
 
             // Update the node credentials and then reconnect. 

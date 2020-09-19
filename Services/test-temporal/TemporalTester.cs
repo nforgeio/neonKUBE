@@ -44,12 +44,12 @@ namespace TemporalService
             var settings   = new TemporalSettings();
             var hostPort   = GetEnvironmentVariable("TEMPORAL_HOSTPORT");
             var @namespace = GetEnvironmentVariable("TEMPORAL_NAMESPACE");
-            var taskList   = GetEnvironmentVariable("TEMPORAL_TASKLIST");
+            var taskQueue  = GetEnvironmentVariable("TEMPORAL_TASKQUEUE");
             var error      = false;
 
             Log.LogInfo(() => $"TEMPORAL_HOSTPORT:  {hostPort}");
             Log.LogInfo(() => $"TEMPORAL_NAMESPACE: {@namespace}");
-            Log.LogInfo(() => $"TEMPORAL_TASKLIST:  {taskList}");
+            Log.LogInfo(() => $"TEMPORAL_TASKQUEUE: {taskQueue}");
 
             if (string.IsNullOrEmpty(hostPort))
             {
@@ -65,10 +65,10 @@ namespace TemporalService
                 Log.LogError("The [TEMPORAL_NAMESPACE] environment variable is required.");
             }
 
-            if (string.IsNullOrEmpty(taskList))
+            if (string.IsNullOrEmpty(taskQueue))
             {
                 error = true;
-                Log.LogError("The [TEMPORAL_TASKLIST] environment variable is required.");
+                Log.LogError("The [TEMPORAL_TASKQUEUE] environment variable is required.");
             }
 
             if (error)

@@ -104,7 +104,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface ISyncSignal : IWorkflow
         {
             [WorkflowMethod]
@@ -154,7 +154,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface ISyncChildSignal : IWorkflow
         {
             [WorkflowMethod]
@@ -406,7 +406,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IQueuedSignal : IWorkflow
         {
             [WorkflowMethod(Name = "run-void")]
@@ -535,7 +535,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IDelayActivity : IActivity
         {
             [ActivityMethod]
@@ -551,7 +551,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface ISignalWithActivity : IWorkflow
         {
             [WorkflowMethod(Name = "run")]
@@ -633,7 +633,7 @@ namespace TestTemporal
 
         //---------------------------------------------------------------------
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface ISignalBlastDelayActivity : IActivity
         {
             [ActivityMethod]
@@ -649,7 +649,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface ISignalBlastProcessor : IWorkflow
         {
             [WorkflowMethod(Name = "run")]

@@ -25,7 +25,7 @@ namespace HelloWorld_LocalActivity
         }
     }
 
-    [WorkflowInterface(TaskList = "my-tasks")]
+    [WorkflowInterface(TaskQueue = "my-tasks")]
     public interface IMyWorkflow : IWorkflow
     {
         [WorkflowMethod]

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DescribeTaskListRequest.cs
+// FILE:	    DescribeTaskQueueRequest.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2005-2020 by neonFORGE, LLC.  All rights reserved.
 //
@@ -27,22 +27,22 @@ namespace Neon.Temporal.Internal
     /// <summary>
     /// <b>client --> proxy:</b> Requests a list of the Temporal namespaces.
     /// </summary>
-    [InternalProxyMessage(InternalMessageTypes.DescribeTaskListRequest)]
-    internal class DescribeTaskListRequest : ProxyRequest
+    [InternalProxyMessage(InternalMessageTypes.DescribeTaskQueueRequest)]
+    internal class DescribeTaskQueueRequest : ProxyRequest
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public DescribeTaskListRequest()
+        public DescribeTaskQueueRequest()
         {
-            Type = InternalMessageTypes.DescribeTaskListRequest;
+            Type = InternalMessageTypes.DescribeTaskQueueRequest;
         }
 
         /// <inheritdoc/>
-        public override InternalMessageTypes ReplyType => InternalMessageTypes.DescribeTaskListReply;
+        public override InternalMessageTypes ReplyType => InternalMessageTypes.DescribeTaskQueueReply;
 
         /// <summary>
-        /// Identifies the task list.
+        /// Identifies the task queue.
         /// </summary>
         public string Name
         {
@@ -60,18 +60,18 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// Identifies the type of task list being requested: decision (AKA workflow or activity).
+        /// Identifies the type of task queue being requested: decision (AKA workflow or activity).
         /// </summary>
-        public TaskListType TaskListType
+        public TaskQueueType TaskQueueType
         {
-            get => GetEnumProperty<TaskListType>(PropertyNames.TaskListType);
-            set => SetEnumProperty<TaskListType>(PropertyNames.TaskListType, value);
+            get => GetEnumProperty<TaskQueueType>(PropertyNames.TaskQueueType);
+            set => SetEnumProperty<TaskQueueType>(PropertyNames.TaskQueueType, value);
         }
 
         /// <inheritdoc/>
         internal override ProxyMessage Clone()
         {
-            var clone = new DescribeTaskListRequest();
+            var clone = new DescribeTaskQueueRequest();
 
             CopyTo(clone);
 
@@ -83,10 +83,10 @@ namespace Neon.Temporal.Internal
         {
             base.CopyTo(target);
 
-            var typedTarget = (DescribeTaskListRequest)target;
+            var typedTarget = (DescribeTaskQueueRequest)target;
 
-            typedTarget.Name         = this.Name;
-            typedTarget.TaskListType = this.TaskListType;
+            typedTarget.Name          = this.Name;
+            typedTarget.TaskQueueType = this.TaskQueueType;
         }
     }
 }

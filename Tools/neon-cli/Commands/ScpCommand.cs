@@ -72,8 +72,8 @@ ARGUMENTS:
                 Program.Exit(0);
             }
 
-            var cluster    = Program.GetCluster();
-            var extensions = KubeHelper.CurrentContext.Extension;
+            var cluster      = Program.GetCluster();
+            var clusterLogin = KubeHelper.CurrentContext.Extension;
 
             NodeDefinition node;
 
@@ -98,42 +98,43 @@ ARGUMENTS:
             // We need to extract extract the bitcount and MD5 hash to generate a
             // WinSCP compatible host key fingerprint.
             //
-            //      2048 MD5:cb:2f:f1:68:4b:aa:b3:8a:72:4d:53:f6:9f:5f:6a:fa root@manage-0 (RSA)
+            //      2048 MD5:cb:2f:f1:68:4b:aa:b3:8a:72:4d:53:f6:9f:5f:6a:fa sysadmin@manage-0 (RSA)
 
-            const string    md5Pattern = "MD5:";
+            const string    md5Pattern     = "MD5:";
+            string          md5Finderprint = clusterLogin.SshKey.FingerprintMd5;
             string          fingerprint;
             int             bitCount;
             string          md5;
             int             startPos;
             int             endPos;
 
-            endPos = extensions.SshNodeFingerprint.IndexOf(' ');
+            endPos = md5Finderprint.IndexOf(' ');
 
-            if (!int.TryParse(extensions.SshNodeFingerprint.Substring(0, endPos), out bitCount) || bitCount <= 0)
+            if (!int.TryParse(md5Finderprint.Substring(0, endPos), out bitCount) || bitCount <= 0)
             {
-                Console.Error.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{extensions.SshNodeFingerprint}].");
+                Console.Error.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{md5Finderprint}].");
                 Program.Exit(1);
             }
 
-            startPos = extensions.SshNodeFingerprint.IndexOf(md5Pattern);
+            startPos = md5Finderprint.IndexOf(md5Pattern);
 
             if (startPos == -1)
             {
-                Console.Error.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{extensions.SshNodeFingerprint}].");
+                Console.Error.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{md5Finderprint}].");
                 Program.Exit(1);
             }
 
             startPos += md5Pattern.Length;
 
-            endPos = extensions.SshNodeFingerprint.IndexOf(' ', startPos);
+            endPos = md5Finderprint.IndexOf(' ', startPos);
 
             if (endPos == -1)
             {
-                md5 = extensions.SshNodeFingerprint.Substring(startPos).Trim();
+                md5 = md5Finderprint.Substring(startPos).Trim();
             }
             else
             {
-                md5 = extensions.SshNodeFingerprint.Substring(startPos, endPos - startPos).Trim();
+                md5 = md5Finderprint.Substring(startPos, endPos - startPos).Trim();
             }
 
             fingerprint = $"ssh-rsa {bitCount} {md5}";
@@ -146,7 +147,7 @@ ARGUMENTS:
                 Program.Exit(1);
             }
 
-            Process.Start(Program.WinScpPath, $@"scp://{extensions.SshUsername}:{extensions.SshPassword}@{node.Address}:22 /hostkey=""{fingerprint}"" /newinstance /rawsettings Shell=""sudo%20-s"" compression=1");
+            Process.Start(Program.WinScpPath, $@"scp://{clusterLogin.SshUsername}:{clusterLogin.SshPassword}@{node.Address}:22 /hostkey=""{fingerprint}"" /newinstance /rawsettings Shell=""sudo%20-s"" compression=1");
         }
     }
 }

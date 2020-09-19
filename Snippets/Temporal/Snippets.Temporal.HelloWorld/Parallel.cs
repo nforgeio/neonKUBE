@@ -9,21 +9,21 @@ using Neon.Temporal;
 namespace HelloWorld_Parallel
 {
     #region code
-    [ActivityInterface(TaskList = "my-tasks")]
+    [ActivityInterface(TaskQueue = "my-tasks")]
     public interface IMyActivity : IActivity
     {
         [ActivityMethod(Name = "run-activity")]
         Task RunActivityAsync();
     }
 
-    [WorkflowInterface(TaskList = "my-tasks")]
+    [WorkflowInterface(TaskQueue = "my-tasks")]
     public interface IChildWorkflow : IWorkflow
     {
         [ActivityMethod(Name = "run")]
         Task<List<string>> RunAsync(string name);
     }
 
-    [WorkflowInterface(TaskList = "my-tasks")]
+    [WorkflowInterface(TaskQueue = "my-tasks")]
     public interface IParallelWorkflow : IWorkflow
     {
         [WorkflowMethod]

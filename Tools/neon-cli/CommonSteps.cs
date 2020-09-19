@@ -43,7 +43,7 @@ namespace NeonCli
         /// <param name="stepDelay">Ignored.</param>
         public static void VerifyOS(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
-            KubeHelper.VerifyNodeOs(node);
+            KubeHelper.VerifyNodeOperatingSystem(node);
         }
 
         /// <summary>
@@ -281,6 +281,97 @@ TCPKeepAlive yes
             // Upload the new environment to the server.
 
             node.UploadText("/etc/environment", sb, tabStop: 4);
+        }
+
+        /// <summary>
+        /// Configures a node's host public SSH key during node provisioning.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        /// <param name="clusterLogin">The cluster login.</param>
+        public static void ConfigureSshKey(SshProxy<NodeDefinition> node, ClusterLogin clusterLogin)
+        {
+            Covenant.Requires<ArgumentNullException>(node != null, nameof(node));
+            Covenant.Requires<ArgumentNullException>(clusterLogin != null, nameof(clusterLogin));
+
+            // Configure the SSH credentials on the node.
+
+            node.InvokeIdempotentAction("setup/ssh",
+                () =>
+                {
+                    CommandBundle bundle;
+
+                    // Here's some information explaining what how this works:
+                    //
+                    //      https://help.ubuntu.com/community/SSH/OpenSSH/Configuring
+                    //      https://help.ubuntu.com/community/SSH/OpenSSH/Keys
+
+                    node.Status = "setup: client SSH key";
+
+                    // Enable the public key by appending it to [$HOME/.ssh/authorized_keys],
+                    // creating the file if necessary.  Note that we're allowing only a single
+                    // authorized key.
+
+                    var addKeyScript =
+$@"
+chmod go-w ~/
+mkdir -p $HOME/.ssh
+chmod 700 $HOME/.ssh
+touch $HOME/.ssh/authorized_keys
+cat ssh-key.ssh2 > $HOME/.ssh/authorized_keys
+chmod 600 $HOME/.ssh/authorized_keys
+";
+                    bundle = new CommandBundle("./addkeys.sh");
+
+                    bundle.AddFile("addkeys.sh", addKeyScript, isExecutable: true);
+                    bundle.AddFile("ssh_host_rsa_key", clusterLogin.SshKey.PublicSSH2);
+
+                    // NOTE: I'm explicitly not running the bundle as [sudo] because the OpenSSH
+                    //       server is very picky about the permissions on the user's [$HOME]
+                    //       and [$HOME/.ssl] folder and contents.  This took me a couple 
+                    //       hours to figure out.
+
+                    node.RunCommand(bundle);
+
+                    // These steps are required for both password and public key authentication.
+
+                    // Upload the server key and edit the [sshd] config to disable all host keys 
+                    // except for RSA.
+
+                    var configScript =
+$@"
+# Install public SSH key for the [sysadmin] user.
+
+cp ssh_host_rsa_key.pub /home/{KubeConst.SysAdminUsername}/.ssh/authorized_keys
+
+# Disable all host keys except for RSA.
+
+sed -i 's!^\HostKey /etc/ssh/ssh_host_dsa_key$!#HostKey /etc/ssh/ssh_host_dsa_key!g' /etc/ssh/sshd_config
+sed -i 's!^\HostKey /etc/ssh/ssh_host_ecdsa_key$!#HostKey /etc/ssh/ssh_host_ecdsa_key!g' /etc/ssh/sshd_config
+sed -i 's!^\HostKey /etc/ssh/ssh_host_ed25519_key$!#HostKey /etc/ssh/ssh_host_ed25519_key!g' /etc/ssh/sshd_config
+
+# Restart SSHD to pick up the changes.
+
+systemctl restart sshd
+";
+                    bundle = new CommandBundle("./config.sh");
+
+                    bundle.AddFile("config.sh", configScript, isExecutable: true);
+                    bundle.AddFile("ssh_host_rsa_key.pub", clusterLogin.SshKey.PublicPUB);
+                    node.SudoCommand(bundle);
+                });
+
+            // Verify that we can login with the new SSH private key and also verify that
+            // the password still works.
+
+            node.Status = "ssh: verify private key auth";
+            node.Disconnect();
+            node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUsername, clusterLogin.SshKey.PrivatePEM));
+            node.WaitForBoot();
+
+            node.Status = "ssh: verify password auth";
+            node.Disconnect();
+            node.UpdateCredentials(SshCredentials.FromUserPassword(KubeConst.SysAdminUsername, clusterLogin.SshPassword));
+            node.WaitForBoot();
         }
 
         /// <summary>

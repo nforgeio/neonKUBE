@@ -19,7 +19,7 @@
         public string MailServer { get; set; }
     }
 
-    [ActivityInterface(TaskList = "my-tasks")]
+    [ActivityInterface(TaskQueue = "my-tasks")]
     public interface IEmailActivity : IActivity
     {
         [ActivityMethod(Name = "send-message")]
@@ -52,7 +52,7 @@
         }
     }
 
-    [WorkflowInterface(TaskList = "my-tasks")]
+    [WorkflowInterface(TaskQueue = "my-tasks")]
     public interface IEmailWorkflow : IWorkflow
     {
         [WorkflowMethod]
@@ -86,7 +86,7 @@
                 // Create a worker and register the workflow and activity 
                 // implementations to let Temporal know we're open for business.
 
-                var worker = await client.NewWorkerAsync(new WorkerOptions() { TaskList = "my-tasks" });
+                var worker = await client.NewWorkerAsync(new WorkerOptions() { TaskQueue = "my-tasks" });
 
                 await worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly());
                 await worker.StartAsync();

@@ -62,9 +62,9 @@ namespace Neon.Temporal
         public string ActivityTypeName { get; set; }
 
         /// <summary>
-        /// The activity task list.
+        /// The activity task queue.
         /// </summary>
-        public string TaskList { get; set; }
+        public string TaskQueue { get; set; }
 
         /// <summary>
         /// The maximum time between heartbeats.  <see cref="TimeSpan.Zero"/> 

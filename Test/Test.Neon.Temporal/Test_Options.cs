@@ -50,8 +50,8 @@ namespace TestTemporal
         //
         // We're going to establish three client connections in addition to default client connection
         // established by the TemporalFixture.  Two of these connections will be setup to default to
-        // the "test1-tasklist" and "test2-namespace" task lists and "test2-tasklist" and "test2-namespace"
-        // namespaces.  The third client will not be assigned a default task list and the namespace
+        // the "test1-taskqueue" and "test2-namespace" task queues and "test2-taskqueue" and "test2-namespace"
+        // namespaces.  The third client will not be assigned a default task queue and the namespace
         // we'll be left as the default.
         //
         // We'll start workers for the two new namespaces and tasks lists which will implement very
@@ -111,7 +111,7 @@ namespace TestTemporal
             test1Settings = new TemporalSettings()
             {
                 Namespace                             = "test1-namespace",
-                DefaultTaskList                       = "test1-tasklist",
+                DefaultTaskQueue                      = "test1-taskqueue",
                 ProxyLogLevel                         = TemporalTestHelper.ProxyLogLevel,
                 CreateNamespace                       = true,
                 Debug                                 = TemporalTestHelper.Debug,
@@ -134,7 +134,7 @@ namespace TestTemporal
             test2Settings = new TemporalSettings()
             {
                 Namespace                             = "test2-namespace",
-                DefaultTaskList                       = "test2-tasklist",
+                DefaultTaskQueue                      = "test2-taskqueue",
                 ProxyLogLevel                         = TemporalTestHelper.ProxyLogLevel,
                 CreateNamespace                       = true,
                 Debug                                 = TemporalTestHelper.Debug,
@@ -156,7 +156,7 @@ namespace TestTemporal
 
             test3Settings = new TemporalSettings()
             {
-                DefaultTaskList                       = null,
+                DefaultTaskQueue                      = null,
                 ProxyLogLevel                         = TemporalTestHelper.ProxyLogLevel,
                 CreateNamespace                       = true,
                 Debug                                 = TemporalTestHelper.Debug,
@@ -255,7 +255,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(Namespace = "test2-namespace", TaskList = "test2-tasklist")]
+        [WorkflowInterface(Namespace = "test2-namespace", TaskQueue = "test2-taskqueue")]
         public interface IWorkflowWithInterfaceAttributes : IWorkflow
         {
             [WorkflowMethod]
@@ -273,12 +273,12 @@ namespace TestTemporal
 
         // NOTE: These properties will be overriden by the method attribute below.
 
-        [WorkflowInterface(Namespace = "test2-namespace", TaskList = "test2-tasklist")]
+        [WorkflowInterface(Namespace = "test2-namespace", TaskQueue = "test2-taskqueue")]
         public interface IWorkflowWithMethodAttributes : IWorkflow
         {
             [WorkflowMethod(
-                Namespace                        = "test1-namespace", 
-                TaskList                      = "test1-tasklist",
+                Namespace                     = "test1-namespace", 
+                TaskQueue                     = "test1-taskqueue",
                 DecisionTaskTimeoutSeconds    = 55,
                 ScheduleToStartTimeoutSeconds = 56,
                 StartToCloseTimeoutSeconds    = 57,
@@ -295,7 +295,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(Namespace = TemporalFixture.Namespace, TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(Namespace = TemporalFixture.Namespace, TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IOptionsTester : IWorkflow
         {
             [WorkflowMethod(Name = "ExecuteChildWithNoAttributes")]
@@ -396,7 +396,7 @@ namespace TestTemporal
             }
         }
 
-        [ActivityInterface(Namespace = "test2-namespace", TaskList = "test2-tasklist")]
+        [ActivityInterface(Namespace = "test2-namespace", TaskQueue = "test2-taskqueue")]
         public interface IActivityWithInterfaceAttributes : IActivity
         {
             [ActivityMethod]
@@ -412,12 +412,12 @@ namespace TestTemporal
             }
         }
 
-        [ActivityInterface(Namespace = "test2-namespace", TaskList = "test2-tasklist")]
+        [ActivityInterface(Namespace = "test2-namespace", TaskQueue = "test2-taskqueue")]
         public interface IActivityWithMethodAttributes : IActivity
         {
             [ActivityMethod(
-                Namespace                        = "test1-namespace",
-                TaskList                      = "test1-tasklist",
+                Namespace                     = "test1-namespace",
+                TaskQueue                     = "test1-taskqueue",
                 HeartbeatTimeoutSeconds       = 30,
                 ScheduleToCloseTimeoutSeconds = 29,
                 ScheduleToStartTimeoutSeconds = 28,
@@ -556,9 +556,9 @@ namespace TestTemporal
         /// to verify option correctness.
         /// </param>
         /// <param name="parentNamespace">Optionally specifies the Namespace for the parent workflow.</param>
-        /// <param name="parentTaskList">Optionally specifies the task list for the parent workflow.</param>
+        /// <param name="parentTaskQueue">Optionally specifies the task queue for the parent workflow.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ExecuteChildWorkflowWithNoAttributesAsync(TemporalClient client, Action<ChildWorkflowOptions> optionsChecker, string parentNamespace = null, string parentTaskList = null)
+        private async Task ExecuteChildWorkflowWithNoAttributesAsync(TemporalClient client, Action<ChildWorkflowOptions> optionsChecker, string parentNamespace = null, string parentTaskQueue = null)
         {
             EventHandler<ChildWorkflowOptions> hook =
                 (object sender, ChildWorkflowOptions options) =>
@@ -572,8 +572,8 @@ namespace TestTemporal
             {
                 var options = new WorkflowOptions()
                 {
-                    Namespace   = parentNamespace,
-                    TaskList = parentTaskList
+                    Namespace = parentNamespace,
+                    TaskQueue = parentTaskQueue
                 };
 
                 var stub = client.NewWorkflowStub<IOptionsTester>(options);
@@ -670,9 +670,9 @@ namespace TestTemporal
         /// to verify option correctness.
         /// </param>
         /// <param name="parentNamespace">Optionally specifies the Namespace for the parent workflow.</param>
-        /// <param name="parentTaskList">Optionally specifies the task list for the parent workflow.</param>
+        /// <param name="parentTaskQueue">Optionally specifies the task queue for the parent workflow.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task ExecuteActivityWithNoAttributesAsync(TemporalClient client, Action<ActivityOptions> optionsChecker, string parentNamespace = null, string parentTaskList = null)
+        private async Task ExecuteActivityWithNoAttributesAsync(TemporalClient client, Action<ActivityOptions> optionsChecker, string parentNamespace = null, string parentTaskQueue = null)
         {
             EventHandler<ActivityOptions> hook =
                 (object sender, ActivityOptions options) =>
@@ -686,8 +686,8 @@ namespace TestTemporal
             {
                 var options = new WorkflowOptions()
                 {
-                    Namespace   = parentNamespace,
-                    TaskList = parentTaskList
+                    Namespace = parentNamespace,
+                    TaskQueue = parentTaskQueue
                 };
 
                 var stub = client.NewWorkflowStub<IOptionsTester>(options);
@@ -785,7 +785,7 @@ namespace TestTemporal
                 options =>
                 {
                     Assert.Equal(test1Settings.Namespace, options.Namespace);
-                    Assert.Equal(test1Settings.DefaultTaskList, options.TaskList);
+                    Assert.Equal(test1Settings.DefaultTaskQueue, options.TaskQueue);
                     Assert.Equal(test1Settings.WorkflowDecisionTaskTimeout, options.DecisionTaskTimeout);
                     Assert.Equal(test1Settings.WorkflowStartToCloseTimeout, options.StartToCloseTimeout);
                     Assert.Equal(test1Settings.WorkflowScheduleToStartTimeout, options.ScheduleToStartTimeout);
@@ -798,7 +798,7 @@ namespace TestTemporal
                 options =>
                 {
                     Assert.Equal(test2Settings.Namespace, options.Namespace);
-                    Assert.Equal(test2Settings.DefaultTaskList, options.TaskList);
+                    Assert.Equal(test2Settings.DefaultTaskQueue, options.TaskQueue);
                     Assert.Equal(test2Settings.WorkflowDecisionTaskTimeout, options.DecisionTaskTimeout);
                     Assert.Equal(test2Settings.WorkflowStartToCloseTimeout, options.StartToCloseTimeout);
                     Assert.Equal(test2Settings.WorkflowScheduleToStartTimeout, options.ScheduleToStartTimeout);
@@ -816,7 +816,7 @@ namespace TestTemporal
                 options =>
                 {
                     Assert.Equal("test2-namespace", options.Namespace);
-                    Assert.Equal("test2-tasklist", options.TaskList);
+                    Assert.Equal("test2-taskqueue", options.TaskQueue);
                 });
         }
 
@@ -830,7 +830,7 @@ namespace TestTemporal
                 options =>
                 {
                     Assert.Equal("test1-namespace", options.Namespace);
-                    Assert.Equal("test1-tasklist", options.TaskList);
+                    Assert.Equal("test1-taskqueue", options.TaskQueue);
                     Assert.Equal(55, options.DecisionTaskTimeout.TotalSeconds);
                     Assert.Equal(56, options.ScheduleToStartTimeout.TotalSeconds);
                     Assert.Equal(57, options.StartToCloseTimeout.TotalSeconds);
@@ -846,8 +846,8 @@ namespace TestTemporal
 
             var workflowOptions = new WorkflowOptions()
             {
-                Namespace                 = "test1-namespace",
-                TaskList               = "test1-tasklist",
+                Namespace              = "test1-namespace",
+                TaskQueue              = "test1-taskqueue",
                 DecisionTaskTimeout    = TimeSpan.FromSeconds(40),
                 ScheduleToStartTimeout = TimeSpan.FromSeconds(41),
                 StartToCloseTimeout    = TimeSpan.FromSeconds(42),
@@ -858,7 +858,7 @@ namespace TestTemporal
                 options =>
                 {
                     Assert.Equal("test1-namespace", options.Namespace);
-                    Assert.Equal("test1-tasklist", options.TaskList);
+                    Assert.Equal("test1-taskqueue", options.TaskQueue);
                     Assert.Equal(40, options.DecisionTaskTimeout.TotalSeconds);
                     Assert.Equal(41, options.ScheduleToStartTimeout.TotalSeconds);
                     Assert.Equal(42, options.StartToCloseTimeout.TotalSeconds);
@@ -869,17 +869,17 @@ namespace TestTemporal
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public async Task Workflow_OtherNamespaceTaskList()
+        public async Task Workflow_OtherNamespaceTaskQueue()
         {
             // Verify that we can call a workflow whose worker is running in
-            // a different Namespace and task list from the defaults set for
+            // a different Namespace and task queue from the defaults set for
             // the client.
 
             await ExecuteWorkflowWithInterfaceAttributesAsync(test1Client,
                 options =>
                 {
                     Assert.Equal("test2-namespace", options.Namespace);
-                    Assert.Equal("test2-tasklist", options.TaskList);
+                    Assert.Equal("test2-taskqueue", options.TaskQueue);
                 });
         }
 
@@ -897,7 +897,7 @@ namespace TestTemporal
                 options =>
                 {
                     Assert.Equal(test1Settings.Namespace, options.Namespace);
-                    Assert.Equal(test1Settings.DefaultTaskList, options.TaskList);
+                    Assert.Equal(test1Settings.DefaultTaskQueue, options.TaskQueue);
                     Assert.Equal(test1Settings.WorkflowDecisionTaskTimeout, options.DecisionTaskTimeout);
                     Assert.Equal(test1Settings.WorkflowStartToCloseTimeout, options.StartToCloseTimeout);
                     Assert.Equal(test1Settings.WorkflowScheduleToStartTimeout, options.ScheduleToStartTimeout);
@@ -910,7 +910,7 @@ namespace TestTemporal
                 options =>
                 {
                     Assert.Equal(test2Settings.Namespace, options.Namespace);
-                    Assert.Equal(test2Settings.DefaultTaskList, options.TaskList);
+                    Assert.Equal(test2Settings.DefaultTaskQueue, options.TaskQueue);
                     Assert.Equal(test2Settings.WorkflowDecisionTaskTimeout, options.DecisionTaskTimeout);
                     Assert.Equal(test2Settings.WorkflowStartToCloseTimeout, options.StartToCloseTimeout);
                     Assert.Equal(test2Settings.WorkflowScheduleToStartTimeout, options.ScheduleToStartTimeout);
@@ -923,16 +923,16 @@ namespace TestTemporal
         public async Task ChildWorkflow_UseParentSettings()
         {
             // Verify that child workflows will default to the parent workflow's
-            // Namespace and task list.
+            // Namespace and task queue.
 
             await ExecuteChildWorkflowWithNoAttributesAsync(fixtureClient,
                 options =>
                 {
                     Assert.Equal("test2-namespace", options.Namespace);
-                    Assert.Equal("test2-tasklist", options.TaskList);
+                    Assert.Equal("test2-taskqueue", options.TaskQueue);
                 },
                 parentNamespace:   "test2-namespace",
-                parentTaskList: "test2-tasklist");
+                parentTaskQueue: "test2-taskqueue");
         }
 
         [Fact]
@@ -945,7 +945,7 @@ namespace TestTemporal
                 options =>
                 {
                     Assert.Equal("test2-namespace", options.Namespace);
-                    Assert.Equal("test2-tasklist", options.TaskList);
+                    Assert.Equal("test2-taskqueue", options.TaskQueue);
                 });
         }
 
@@ -959,7 +959,7 @@ namespace TestTemporal
                 options =>
                 {
                     Assert.Equal("test1-namespace", options.Namespace);
-                    Assert.Equal("test1-tasklist", options.TaskList);
+                    Assert.Equal("test1-taskqueue", options.TaskQueue);
                     Assert.Equal(55, options.DecisionTaskTimeout.TotalSeconds);
                     Assert.Equal(56, options.ScheduleToStartTimeout.TotalSeconds);
                     Assert.Equal(57, options.StartToCloseTimeout.TotalSeconds);
@@ -975,8 +975,8 @@ namespace TestTemporal
 
             var workflowOptions = new WorkflowOptions()
             {
-                Namespace                 = "test1-namespace",
-                TaskList               = "test1-tasklist",
+                Namespace              = "test1-namespace",
+                TaskQueue              = "test1-taskqueue",
                 DecisionTaskTimeout    = TimeSpan.FromSeconds(40),
                 ScheduleToStartTimeout = TimeSpan.FromSeconds(41),
                 StartToCloseTimeout    = TimeSpan.FromSeconds(42),
@@ -987,7 +987,7 @@ namespace TestTemporal
                 options =>
                 {
                     Assert.Equal("test1-namespace", options.Namespace);
-                    Assert.Equal("test1-tasklist", options.TaskList);
+                    Assert.Equal("test1-taskqueue", options.TaskQueue);
                     Assert.Equal(40, options.DecisionTaskTimeout.TotalSeconds);
                     Assert.Equal(41, options.ScheduleToStartTimeout.TotalSeconds);
                     Assert.Equal(42, options.StartToCloseTimeout.TotalSeconds);
@@ -1010,7 +1010,7 @@ namespace TestTemporal
                 options =>
                 {
                     Assert.Equal(test1Settings.Namespace, options.Namespace);
-                    Assert.Equal(test1Settings.DefaultTaskList, options.TaskList);
+                    Assert.Equal(test1Settings.DefaultTaskQueue, options.TaskQueue);
                     Assert.Equal(test1Settings.ActivityScheduleToCloseTimeout, options.ScheduleToCloseTimeout);
                     Assert.Equal(test1Settings.ActivityStartToCloseTimeout, options.StartToCloseTimeout);
                     Assert.Equal(test1Settings.ActivityScheduleToStartTimeout, options.ScheduleToStartTimeout);
@@ -1022,7 +1022,7 @@ namespace TestTemporal
                 options =>
                 {
                     Assert.Equal(test2Settings.Namespace, options.Namespace);
-                    Assert.Equal(test2Settings.DefaultTaskList, options.TaskList);
+                    Assert.Equal(test2Settings.DefaultTaskQueue, options.TaskQueue);
                     Assert.Equal(test2Settings.ActivityScheduleToCloseTimeout, options.ScheduleToCloseTimeout);
                     Assert.Equal(test2Settings.ActivityStartToCloseTimeout, options.StartToCloseTimeout);
                     Assert.Equal(test2Settings.ActivityScheduleToStartTimeout, options.ScheduleToStartTimeout);
@@ -1034,16 +1034,16 @@ namespace TestTemporal
         public async Task Activity_UseParentSettings()
         {
             // Verify that activities will default to the parent workflow's
-            // Namespace and task list.
+            // Namespace and task queue.
 
             await ExecuteActivityWithNoAttributesAsync(fixtureClient,
                 options =>
                 {
                     Assert.Equal("test2-namespace", options.Namespace);
-                    Assert.Equal("test2-tasklist", options.TaskList);
+                    Assert.Equal("test2-taskqueue", options.TaskQueue);
                 },
                 parentNamespace: "test2-namespace",
-                parentTaskList: "test2-tasklist");
+                parentTaskQueue: "test2-taskqueue");
         }
 
         [Fact]
@@ -1056,7 +1056,7 @@ namespace TestTemporal
                 options =>
                 {
                     Assert.Equal("test2-namespace", options.Namespace);
-                    Assert.Equal("test2-tasklist", options.TaskList);
+                    Assert.Equal("test2-taskqueue", options.TaskQueue);
                 });
         }
 
@@ -1070,7 +1070,7 @@ namespace TestTemporal
                 options =>
                 {
                     Assert.Equal("test1-namespace", options.Namespace);
-                    Assert.Equal("test1-tasklist", options.TaskList);
+                    Assert.Equal("test1-taskqueue", options.TaskQueue);
                     Assert.Equal(30, options.HeartbeatTimeout.TotalSeconds);
                     Assert.Equal(29, options.ScheduleToCloseTimeout.TotalSeconds);
                     Assert.Equal(28, options.ScheduleToStartTimeout.TotalSeconds);
@@ -1086,8 +1086,8 @@ namespace TestTemporal
 
             var activityOptions = new ActivityOptions()
             {
-                Namespace                 = "test1-namespace",
-                TaskList               = "test1-tasklist",
+                Namespace              = "test1-namespace",
+                TaskQueue              = "test1-taskqueue",
                 HeartbeatTimeout       = TimeSpan.FromSeconds(25),
                 ScheduleToCloseTimeout = TimeSpan.FromSeconds(24),
                 ScheduleToStartTimeout = TimeSpan.FromSeconds(23),
@@ -1098,7 +1098,7 @@ namespace TestTemporal
                 options =>
                 {
                     Assert.Equal("test1-namespace", options.Namespace);
-                    Assert.Equal("test1-tasklist", options.TaskList);
+                    Assert.Equal("test1-taskqueue", options.TaskQueue);
                     Assert.Equal(25, options.HeartbeatTimeout.TotalSeconds);
                     Assert.Equal(24, options.ScheduleToCloseTimeout.TotalSeconds);
                     Assert.Equal(23, options.ScheduleToStartTimeout.TotalSeconds);
@@ -1158,7 +1158,7 @@ namespace TestTemporal
             // Verify that a workflow can wait on an external workflow
             // running in a different namespace by execution.
 
-            var options = new WorkflowOptions() { TaskList = "test1-tasklist", Namespace = "test1-namespace" };
+            var options = new WorkflowOptions() { TaskQueue = "test1-taskqueue", Namespace = "test1-namespace" };
             var helloStub = test3Client.NewWorkflowFutureStub<IWorkflowExternalWait>("HelloAsync", options);
             var helloFuture = await helloStub.StartAsync<string>("JEFF");
 
@@ -1177,7 +1177,7 @@ namespace TestTemporal
             // Verify that a workflow can wait on an external workflow
             // running in a different namespace by both workflow IDs.
 
-            var options = new WorkflowOptions() { TaskList = "test1-tasklist", Namespace = "test1-namespace" };
+            var options = new WorkflowOptions() { TaskQueue = "test1-taskqueue", Namespace = "test1-namespace" };
             var helloStub = test3Client.NewWorkflowFutureStub<IWorkflowExternalWait>("HelloAsync", options);
             var helloFuture = await helloStub.StartAsync<string>("JEFF");
 
@@ -1196,7 +1196,7 @@ namespace TestTemporal
             // Verify that a workflow can wait on an external workflow
             // running in a different namespace by both workflow ID only.
 
-            var options = new WorkflowOptions() { TaskList = "test1-tasklist", Namespace = "test1-namespace" };
+            var options = new WorkflowOptions() { TaskQueue = "test1-taskqueue", Namespace = "test1-namespace" };
             var helloStub = test3Client.NewWorkflowFutureStub<IWorkflowExternalWait>("HelloAsync", options);
             var helloFuture = await helloStub.StartAsync<string>("JEFF");
 

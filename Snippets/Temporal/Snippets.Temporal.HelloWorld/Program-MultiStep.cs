@@ -10,7 +10,7 @@ using Neon.Temporal;
 namespace HelloWorld_MultiStep
 {
     #region code
-    [ActivityInterface(TaskList = "my-tasks")]
+    [ActivityInterface(TaskQueue = "my-tasks")]
     public interface IEmailActivity : IActivity
     {
         [ActivityMethod(Name = "get-email-list")]
@@ -50,7 +50,7 @@ namespace HelloWorld_MultiStep
         }
     }
 
-    [WorkflowInterface(TaskList = "my-tasks")]
+    [WorkflowInterface(TaskQueue = "my-tasks")]
     public interface IEmailWorkflow : IWorkflow
     {
         [WorkflowMethod]
@@ -90,7 +90,7 @@ namespace HelloWorld_MultiStep
                 // Create a worker and register the workflow and activity 
                 // implementations to let Temporal know we're open for business.
 
-                var worker = await client.NewWorkerAsync(new WorkerOptions() { TaskList = "my-tasks" });
+                var worker = await client.NewWorkerAsync(new WorkerOptions() { TaskQueue = "my-tasks" });
 
                 await worker.RegisterAssemblyAsync(Assembly.GetExecutingAssembly());
                 await worker.StartAsync();

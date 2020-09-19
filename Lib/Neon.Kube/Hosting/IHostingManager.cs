@@ -72,10 +72,9 @@ namespace Neon.Kube
         /// Creates and initializes the cluster resources such as the virtual machines,
         /// networks, load balancers, network security groups, public IP addresses etc.
         /// </summary>
-        /// <param name="force">
-        /// Indicates that any existing resources (such as virtual machines) 
-        /// are to be replaced or overwritten during privisioning.  The actual interpretation
-        /// of this parameter is specific to each hosting manager implementation.
+        /// <param name="clusterLogin">
+        /// The login for the cluster being provisioned.
+        /// This is required.
         /// </param>
         /// <param name="secureSshPassword">
         /// The secure SSH password to be set for all node VMs. This is required.
@@ -97,7 +96,7 @@ namespace Neon.Kube
         /// equivalent to calling <see cref="EnableInternetSshAsync"/>.
         /// </para>
         /// </remarks>
-        Task<bool> ProvisionAsync(bool force, string secureSshPassword, string orgSshPassword = null);
+        Task<bool> ProvisionAsync(ClusterLogin clusterLogin, string secureSshPassword, string orgSshPassword = null);
 
         /// <summary>
         /// Adds any necessary post-provisioning steps to a setup controller.

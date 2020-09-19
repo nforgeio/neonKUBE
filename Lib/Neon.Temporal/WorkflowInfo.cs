@@ -52,9 +52,9 @@ namespace Neon.Temporal
         public string WorkflowType { get; set; }
 
         /// <summary>
-        /// Returns the workflow task list.
+        /// Returns the workflow task queue.
         /// </summary>
-        public string TaskList { get; set; }
+        public string TaskQueue { get; set; }
 
 #if TODO
         // $toodo(jefflill): These properties aren't supported yet.

@@ -96,12 +96,12 @@ namespace Neon.Temporal.Internal
         }
 
         /// <summary>
-        /// The task list where the workflow is executing.
+        /// The task queue where the workflow is executing.
         /// </summary>
-        public string TaskList
+        public string TaskQueue
         {
-            get => GetStringProperty(PropertyNames.TaskList);
-            set => SetStringProperty(PropertyNames.TaskList, value);
+            get => GetStringProperty(PropertyNames.TaskQueue);
+            set => SetStringProperty(PropertyNames.TaskQueue, value);
         }
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace Neon.Temporal.Internal
             typedTarget.WorkflowId                   = this.WorkflowId;
             typedTarget.RunId                        = this.RunId;
             typedTarget.WorkflowType                 = this.WorkflowType;
-            typedTarget.TaskList                     = this.TaskList;
+            typedTarget.TaskQueue                    = this.TaskQueue;
             typedTarget.ExecutionStartToCloseTimeout = this.ExecutionStartToCloseTimeout;
             typedTarget.ReplayStatus                 = this.ReplayStatus;
         }

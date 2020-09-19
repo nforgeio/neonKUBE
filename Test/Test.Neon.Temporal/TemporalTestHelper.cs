@@ -99,15 +99,15 @@ namespace TestTemporal
         public const bool DebugDisableHeartbeats = false;
 
         /// <summary>
-        /// The Temporal task list to be used for test workers.
+        /// The Temporal task queue to be used for test workers.
         /// </summary>
-        public const string TaskList = "tests";
+        public const string TaskQueue = "tests";
 
         /// <summary>
-        /// The Temporal task list to be use for interop testing against the
+        /// The Temporal task queue to be use for interop testing against the
         /// <b>twf-args.exe</b> worker written in GOLANG.
         /// </summary>
-        public const string TaskList_TwfArgs = "twf-args";
+        public const string TaskQueue_TwfArgs = "twf-args";
 
         /// <summary>
         /// Identifies the test clients.

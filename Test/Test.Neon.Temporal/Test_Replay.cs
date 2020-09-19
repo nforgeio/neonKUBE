@@ -130,7 +130,7 @@ namespace TestTemporal
             LocalActivity
         }
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowReplayHello : IWorkflow
         {
             [WorkflowMethod]
@@ -146,7 +146,7 @@ namespace TestTemporal
             }
         }
 
-        [ActivityInterface(TaskList = TemporalTestHelper.TaskList)]
+        [ActivityInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IReplayActivity : IActivity
         {
             [ActivityMethod]
@@ -163,7 +163,7 @@ namespace TestTemporal
             }
         }
 
-        [WorkflowInterface(TaskList = TemporalTestHelper.TaskList)]
+        [WorkflowInterface(TaskQueue = TemporalTestHelper.TaskQueue)]
         public interface IWorkflowReplay : IWorkflow
         {
             [WorkflowMethod]

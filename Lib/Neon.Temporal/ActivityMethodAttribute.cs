@@ -34,7 +34,7 @@ namespace Neon.Temporal
     public class ActivityMethodAttribute : Attribute
     {
         private string      name;
-        private string      taskList;
+        private string      taskQueue;
         private string      @namespace;
         private int         heartbeatTimeoutSeconds;
         private int         scheduleToCloseTimeoutSeconds;
@@ -138,7 +138,7 @@ namespace Neon.Temporal
         /// <summary>
         /// <para>
         /// Optionally specifies the maximum time the activity may remain 
-        /// in the task list before being assigned to a worker.
+        /// in the task queue before being assigned to a worker.
         /// </para>
         /// </summary>
         public int ScheduleToStartTimeoutSeconds
@@ -162,22 +162,22 @@ namespace Neon.Temporal
 
         /// <summary>
         /// <para>
-        /// Optionally specifies the target task list.
+        /// Optionally specifies the target task queue.
         /// </para>
         /// </summary>
-        public string TaskList
+        public string TaskQueue
         {
-            get => taskList;
+            get => taskQueue;
 
             set
             {
                 if (string.IsNullOrEmpty(value))
                 {
-                    taskList = null;
+                    taskQueue = null;
                 }
                 else
                 {
-                    taskList = value;
+                    taskQueue = value;
                 }
             }
         }

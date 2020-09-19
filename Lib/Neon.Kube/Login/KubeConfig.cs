@@ -70,19 +70,19 @@ namespace Neon.Kube
 
                 config.Validate();
 
-                // Load any related neonKUBE context extension information.
+                // Load any related neonKUBE cluster logins.
 
                 foreach (var context in config.Contexts)
                 {
-                    var extensionPath = Path.Combine(KubeHelper.ClustersFolder, $"{context.Name}.context.yaml");
+                    var extensionPath = Path.Combine(KubeHelper.LoginsFolder, $"{context.Name}.login.yaml");
 
                     if (File.Exists(extensionPath))
                     {
-                        context.Extension = NeonHelper.YamlDeserialize<KubeContextExtension>(KubeHelper.ReadFileTextWithRetry(extensionPath));
+                        context.Extension = NeonHelper.YamlDeserialize<ClusterLogin>(KubeHelper.ReadFileTextWithRetry(extensionPath));
                     }
                     else
                     {
-                        context.Extension = new KubeContextExtension();
+                        context.Extension = new ClusterLogin();
                     }
                 }
                 
@@ -357,7 +357,7 @@ namespace Neon.Kube
 
                 // We need to remove the extension file too (if one exists).
 
-                var extensionPath = Path.Combine(KubeHelper.ClustersFolder, $"{context.Name}.context.yaml");
+                var extensionPath = Path.Combine(KubeHelper.LoginsFolder, $"{context.Name}.login.yaml");
 
                 try
                 {
@@ -442,21 +442,21 @@ namespace Neon.Kube
 
                 File.WriteAllText(configPath, NeonHelper.YamlSerialize(this));
 
-                // Persist any context extensions.
+                // Persist any cluster logins.
 
                 foreach (var context in Contexts.Where(c => c.Extension != null))
                 {
-                    var extensionPath = Path.Combine(KubeHelper.ClustersFolder, $"{context.Name}.context.yaml");
+                    var extensionPath = Path.Combine(KubeHelper.LoginsFolder, $"{context.Name}.login.yaml");
 
                     File.WriteAllText(extensionPath, NeonHelper.YamlSerialize(context.Extension));
                 }
 
-                // Delete any existing context extension files that don't have a corresponding
+                // Delete any existing cluster login files that don't have a corresponding
                 // context in the kubeconfig.
 
-                var fileExtension = ".context.yaml";
+                var fileExtension = ".login.yaml";
 
-                foreach (var extensionPath in Directory.GetFiles(KubeHelper.ClustersFolder, $"*{fileExtension}"))
+                foreach (var extensionPath in Directory.GetFiles(KubeHelper.LoginsFolder, $"*{fileExtension}"))
                 {
                     var fileName    = Path.GetFileName(extensionPath);
                     var contextName = fileName.Substring(0, fileName.Length - fileExtension.Length);

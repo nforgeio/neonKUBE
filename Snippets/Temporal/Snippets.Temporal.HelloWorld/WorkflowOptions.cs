@@ -7,7 +7,7 @@ using Neon.Temporal;
 
 namespace HelloWorld_WorkflowOptions
 {
-    [WorkflowInterface(TaskList = "my-tasks")]
+    [WorkflowInterface(TaskQueue = "my-tasks")]
     public interface IHelloWorkflow : IWorkflow
     {
         [WorkflowMethod]
@@ -40,7 +40,7 @@ namespace HelloWorld_WorkflowOptions
                 // Create a worker and register the workflow and activity 
                 // implementations to let Temporal know we're open for business.
 
-                var worker = await client.NewWorkerAsync(new WorkerOptions() { TaskList = "my-tasks" });
+                var worker = await client.NewWorkerAsync(new WorkerOptions() { TaskQueue = "my-tasks" });
 
                 await worker.RegisterWorkflowAsync<HelloWorkflow>();
                 await worker.StartAsync();

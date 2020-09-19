@@ -83,7 +83,7 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            var newLogin        = NeonHelper.YamlDeserialize<KubeLogin>(File.ReadAllText(commandLine.Arguments.First()));
+            var newLogin        = NeonHelper.YamlDeserialize<ClusterLoginExport>(File.ReadAllText(commandLine.Arguments.First()));
             var existingContext = KubeHelper.Config.GetContext(newLogin.Context.Name);
 
             // $todo(jefflill():

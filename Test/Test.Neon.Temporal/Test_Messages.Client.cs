@@ -1169,13 +1169,13 @@ namespace TestTemporal
                 message.RequestId = 555;
                 message.Options = new WorkerOptions() 
                 { 
-                    TaskList = "my-tasks",
+                    TaskQueue = "my-tasks",
                     MaxConcurrentActivityExecutionSize = 1234 
                 };
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-tasks", message.Options.TaskList);
+                Assert.Equal("my-tasks", message.Options.TaskQueue);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
 
                 stream.SetLength(0);
@@ -1186,7 +1186,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-tasks", message.Options.TaskList);
+                Assert.Equal("my-tasks", message.Options.TaskQueue);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
 
                 // Clone()
@@ -1195,7 +1195,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-tasks", message.Options.TaskList);
+                Assert.Equal("my-tasks", message.Options.TaskQueue);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
@@ -1204,7 +1204,7 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-tasks", message.Options.TaskList);
+                Assert.Equal("my-tasks", message.Options.TaskQueue);
                 Assert.Equal(1234, message.Options.MaxConcurrentActivityExecutionSize);
             }
         }
@@ -2236,15 +2236,15 @@ namespace TestTemporal
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public void Test_DescribeTaskListRequest()
+        public void Test_DescribeTaskQueueRequest()
         {
-            DescribeTaskListRequest message;
+            DescribeTaskQueueRequest message;
 
             using (var stream = new MemoryStream())
             {
-                message = new DescribeTaskListRequest();
+                message = new DescribeTaskQueueRequest();
 
-                Assert.Equal(InternalMessageTypes.DescribeTaskListReply, message.ReplyType);
+                Assert.Equal(InternalMessageTypes.DescribeTaskQueueReply, message.ReplyType);
 
                 // Empty message.
 
@@ -2252,44 +2252,44 @@ namespace TestTemporal
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DescribeTaskListRequest>(stream);
+                message = ProxyMessage.Deserialize<DescribeTaskQueueRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
                 Assert.Null(message.Name);
-                Assert.Equal(default, message.TaskListType);
+                Assert.Equal(default, message.TaskQueueType);
 
                 // Round-trip
 
-                message.ClientId     = 444;
-                message.RequestId    = 555;
-                message.Name         = "my-tasklist";
-                message.TaskListType = TaskListType.Activity;
+                message.ClientId      = 444;
+                message.RequestId     = 555;
+                message.Name          = "my-taskqueue";
+                message.TaskQueueType = TaskQueueType.Activity;
 
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-tasklist", message.Name);
-                Assert.Equal(TaskListType.Activity, message.TaskListType);
+                Assert.Equal("my-taskqueue", message.Name);
+                Assert.Equal(TaskQueueType.Activity, message.TaskQueueType);
 
                 stream.SetLength(0);
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DescribeTaskListRequest>(stream);
+                message = ProxyMessage.Deserialize<DescribeTaskQueueRequest>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-tasklist", message.Name);
-                Assert.Equal(TaskListType.Activity, message.TaskListType);
+                Assert.Equal("my-taskqueue", message.Name);
+                Assert.Equal(TaskQueueType.Activity, message.TaskQueueType);
 
                 // Clone()
 
-                message = (DescribeTaskListRequest)message.Clone();
+                message = (DescribeTaskQueueRequest)message.Clone();
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-tasklist", message.Name);
-                Assert.Equal(TaskListType.Activity, message.TaskListType);
+                Assert.Equal("my-taskqueue", message.Name);
+                Assert.Equal(TaskQueueType.Activity, message.TaskQueueType);
 
                 // Echo the message via the associated [temporal-proxy] and verify.
 
@@ -2297,20 +2297,20 @@ namespace TestTemporal
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
-                Assert.Equal("my-tasklist", message.Name);
-                Assert.Equal(TaskListType.Activity, message.TaskListType);
+                Assert.Equal("my-taskqueue", message.Name);
+                Assert.Equal(TaskQueueType.Activity, message.TaskQueueType);
             }
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonTemporal)]
-        public void Test_DescribeTaskListReply()
+        public void Test_DescribeTaskQueue()
         {
-            DescribeTaskListReply message;
+            DescribeTaskQueueReply message;
 
             using (var stream = new MemoryStream())
             {
-                message = new DescribeTaskListReply();
+                message = new DescribeTaskQueueReply();
 
                 // Empty message.
 
@@ -2318,7 +2318,7 @@ namespace TestTemporal
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DescribeTaskListReply>(stream);
+                message = ProxyMessage.Deserialize<DescribeTaskQueueReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(0, message.ClientId);
                 Assert.Equal(0, message.RequestId);
@@ -2332,7 +2332,7 @@ namespace TestTemporal
                 message.ClientId  = 444;
                 message.RequestId = 555;
                 message.Result =
-                    new TaskListDescription()
+                    new TaskQueueDescription()
                     {
                         Pollers = new List<PollerInfo>()
                         {
@@ -2357,7 +2357,7 @@ namespace TestTemporal
                 stream.Write(message.SerializeAsBytes());
                 stream.Seek(0, SeekOrigin.Begin);
 
-                message = ProxyMessage.Deserialize<DescribeTaskListReply>(stream);
+                message = ProxyMessage.Deserialize<DescribeTaskQueueReply>(stream);
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);
@@ -2369,7 +2369,7 @@ namespace TestTemporal
 
                 // Clone()
 
-                message = (DescribeTaskListReply)message.Clone();
+                message = (DescribeTaskQueueReply)message.Clone();
                 Assert.NotNull(message);
                 Assert.Equal(444, message.ClientId);
                 Assert.Equal(555, message.RequestId);

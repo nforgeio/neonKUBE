@@ -15,6 +15,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Ignore deprecated [TlsCertificate] warnings.
+
+#pragma warning disable CS0618
+
 using System;
 using System.Collections.Generic;
 using System.IO;
