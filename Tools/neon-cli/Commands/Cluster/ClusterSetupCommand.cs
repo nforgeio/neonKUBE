@@ -898,7 +898,7 @@ safe-apt-get update
                     node.SudoCommand(CommandBundle.FromScript(
 @"#!/bin/bash
 
-echo KUBELET_EXTRA_ARGS=--logging-format=json --volume-plugin-dir=/var/lib/kubelet/volume-plugins --network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d > /etc/default/kubelet
+echo KUBELET_EXTRA_ARGS=--network-plugin=cni --cni-bin-dir=/opt/cni/bin --cni-conf-dir=/etc/cni/net.d > /etc/default/kubelet
 systemctl daemon-reload
 service kubelet restart
 "));
@@ -983,12 +983,16 @@ rm -rf linux-amd64
 
                             var clusterConfig =
 $@"
-apiVersion: kubeadm.k8s.io/v1beta1
+apiVersion: kubeadm.k8s.io/v1beta2
 kind: ClusterConfiguration
 clusterName: {cluster.Name}
 kubernetesVersion: ""v{KubeVersions.KubernetesVersion}""
 apiServer:
-  logging-format: ""json""
+  extraArgs:
+    logging-format: json
+    default-not-ready-toleration-seconds: ""30"" # default 300
+    default-unreachable-toleration-seconds: ""30"" #default  300
+    allow-privileged: ""true""
   certSANs:
 {sbCertSANs}
 controlPlaneEndpoint: ""{controlPlaneEndpoint}""
@@ -996,9 +1000,21 @@ networking:
   podSubnet: ""{cluster.Definition.Network.PodSubnet}""
   serviceSubnet: ""{cluster.Definition.Network.ServiceSubnet}""
 controllerManager:
-  logging-format: ""json""
+  extraArgs:
+    logging-format: json
+    node-monitor-grace-period: 15s #default 40s
+    node-monitor-period: 5s #default 5s
+    pod-eviction-timeout: 30s #default 5m0s
 scheduler:
-  logging-format: ""json""
+  extraArgs:
+    logging-format: json
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+logging:
+  format: json
+nodeStatusReportFrequency: 4s
+volumePluginDir: /var/lib/kubelet/volume-plugins
 ";
                             firstMaster.UploadText("/tmp/cluster.yaml", clusterConfig);
 
@@ -1884,8 +1900,6 @@ spec:
       namespace: kube-system
   values:
     global:
-      istiod:
-        enabled: true
       logging:
         level: ""default:info""
       logAsJson: true
@@ -2751,11 +2765,11 @@ rm -rf {chartName}*
                 values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
             }
 
-            await InstallHelmChartAsync(master, "kibana", releaseName: "neon-logs-kibana", @namespace: "monitoring", timeout: 900, values: values);
+            await InstallHelmChartAsync(master, "kibana", releaseName: "neon-logs-kibana", @namespace: "monitoring", timeout: 900, values: values, wait: false);
         }
 
         /// <summary>
-        /// Installs Kibana
+        /// Installs Jaeger
         /// </summary>
         /// <param name="master">The master node.</param>
         private async Task InstallJaeger(SshProxy<NodeDefinition> master)
@@ -2781,7 +2795,7 @@ rm -rf {chartName}*
                 values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
             }
 
-            await InstallHelmChartAsync(master, "jaeger", releaseName: "neon-logs-jaeger", @namespace: "monitoring", timeout: 900, values: values);
+            await InstallHelmChartAsync(master, "jaeger", releaseName: "neon-logs-jaeger", @namespace: "monitoring", timeout: 900, values: values, wait: false);
         }
 
         /// <summary>
@@ -2814,7 +2828,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: cluster-manager";
 
-            await InstallHelmChartAsync(master, "cluster-manager", releaseName: "neon-cluster-manager", @namespace: "monitoring", timeout: 300);
+            await InstallHelmChartAsync(master, "neon-cluster-manager", releaseName: "neon-cluster-manager", @namespace: "monitoring", timeout: 300);
         }
 
         /// <summary>
