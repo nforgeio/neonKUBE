@@ -305,7 +305,7 @@ namespace Neon.Kube
             /// <summary>
             /// Update the cluster's ingress/egress rules.
             /// </summary>
-            UpdateIngressEgressRules = 0x0001,
+            InternetRouting = 0x0001,
 
             /// <summary>
             /// Enable external SSH to the cluster nodes.
@@ -717,6 +717,7 @@ namespace Neon.Kube
         private NetworkOptions                      networkOptions;
         private BasicAWSCredentials                 awsCredentials;
         private string                              region;
+        private string                              availabilityZone;
         private string                              resourceGroupName;
         private Region                              awsRegion;
         private RegionEndpoint                      regionEndpoint;
@@ -813,6 +814,7 @@ namespace Neon.Kube
             this.awsOptions         = hostingOptions.Aws;
             this.networkOptions     = cluster.Definition.Network;
             this.region             = awsOptions.Region;
+            this.availabilityZone   = awsOptions.AvailabilityZone;
             this.resourceGroupName  = awsOptions.ResourceGroup;
 
             // We're always going to prefix AWS resource names with the cluster name because
@@ -1044,7 +1046,7 @@ namespace Neon.Kube
 
             Covenant.Assert(sshKey != null);
 
-            var operation  = $"Provisioning [{cluster.Definition.Name}] on AWS [{region}/{resourceGroupName}]";
+            var operation  = $"Provisioning [{cluster.Definition.Name}] on AWS [{availabilityZone}/{resourceGroupName}]";
             var controller = new SetupController<NodeDefinition>(operation, cluster.Nodes)
             {
                 ShowStatus     = this.ShowStatus,
@@ -1062,6 +1064,7 @@ namespace Neon.Kube
             controller.AddGlobalStep("network", ConfigureNetworkAsync);
             controller.AddGlobalStep("ssh key", ImportKeyPairAsync);
             controller.AddNodeStep("node instances", CreateNodeInstanceAsync);
+            controller.AddGlobalStep("ingress/security rules", async () => await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
             controller.AddNodeStep("node ssh config", ConfigureNodeSsh);
             controller.AddGlobalStep("load balancer", ConfigureLoadBalancerAsync);
 
@@ -1080,17 +1083,28 @@ namespace Neon.Kube
         /// <inheritdoc/>
         public override async Task UpdateInternetRoutingAsync()
         {
-            var operations = NetworkOperations.UpdateIngressEgressRules;
-            
-            // $todo(jefflill): IMPLEMENT THIS!
+            var operations = NetworkOperations.InternetRouting;
 
-            //if (loadBalancer.InboundNatRules.Values.Any(rule => rule.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
-            //{
-            //    // It looks like SSH NAT rules are enabled so we'll update
-            //    // those as well.
+            // We need to update the SSH rules too if it looks like SSH is
+            // currently enabled.  We'll tell by inspecting the subnet's
+            // network ACL, looking for the entry allowing SSH traffic
+            // from the reserved port range.
 
-            //    operations |= NetworkOperations.AddPublicSshRules;
-            //}
+            var subnetAcl = (NetworkAcl)null;
+
+            if (networkAcl1.Associations.Any(association => association.SubnetId == subnet.SubnetId))
+            {
+                subnetAcl = networkAcl1;
+            }
+            else if (networkAcl2.Associations.Any(association => association.SubnetId == subnet.SubnetId))
+            {
+                subnetAcl = networkAcl2;
+            }
+
+            if (subnetAcl.Entries.Any(entry => entry.RuleNumber == firstSshRuleNumber))
+            {
+                operations |= NetworkOperations.EnableSsh;
+            }
 
             await UpdateNetworkAsync(operations);
         }
@@ -1969,7 +1983,7 @@ retry:
 
             var unallocatedPorts = new List<int>();
 
-            for (int port = networkOptions.FirstExternalSshPort; port <= networkOptions.ReservedIngressEndPort; port++)
+            for (int port = networkOptions.FirstExternalSshPort; port <= networkOptions.LastExternalSshPort; port++)
             {
                 if (!allocatedPorts.Contains(port))
                 {
@@ -2071,12 +2085,12 @@ retry:
                     new CreateSecurityGroupRequest()
                     {
                         GroupName         = sgAllowAllName,
-                        Description       = "Allow all traffic in both directions",
+                        Description       = "Allow all traffic",
                         VpcId             = vpc.VpcId,
                         TagSpecifications = GetTagSpecifications(sgAllowAllName, ResourceType.SecurityGroup)
                     });
 
-                var securityGroupId = securityGroupResponse.GroupId;
+                var securityGroupId        = securityGroupResponse.GroupId;
                 var securityGroupPagenator = ec2Client.Paginators.DescribeSecurityGroups(new DescribeSecurityGroupsRequest());
 
                 await foreach (var securityGroupItem in securityGroupPagenator.SecurityGroups)
@@ -2244,7 +2258,7 @@ retry:
 
             // Configure the ingress/egress listeners and target groups.
 
-            await UpdateNetworkAsync(NetworkOperations.UpdateIngressEgressRules | NetworkOperations.EnableSsh);
+            await UpdateNetworkAsync(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh);
         }
 
         /// <summary>
@@ -2365,9 +2379,9 @@ retry:
                 Covenant.Assert(partitionNumber > 0);
 
                 // Note that AWS does not support starting new instances with a specific
-                // SSH password; they use a SSH key instead.  So we need to have AWS install
+                // SSH password; they use an SSH key instead.  So we need to have AWS install
                 // the key when it provisions the VM and then we'll configure the password
-                // in a follow up step.
+                // afterwards.
 
                 var runResponse = await ec2Client.RunInstancesAsync(
                     new RunInstancesRequest()
@@ -2598,7 +2612,7 @@ systemctl restart sshd
 
             // Perform the network operations.
 
-            if ((operations & NetworkOperations.UpdateIngressEgressRules) != 0)
+            if ((operations & NetworkOperations.InternetRouting) != 0)
             {
                 await UpdateIngressEgressRulesAsync();
             }
@@ -2714,7 +2728,7 @@ systemctl restart sshd
                         Protocol     = ToNetworkAclEntryProtocol(IngressProtocol.Tcp),
                         Egress       = false,
                         CidrBlock    = "0.0.0.0/0",
-                        PortRange    = new PortRange() { From = NetworkPorts.SSH, To = NetworkPorts.SSH },
+                        PortRange    = new PortRange() { From = networkOptions.FirstExternalSshPort, To = networkOptions.LastExternalSshPort },
                         RuleAction   = RuleAction.Allow
                     });
             }

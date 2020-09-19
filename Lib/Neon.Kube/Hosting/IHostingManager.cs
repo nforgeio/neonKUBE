@@ -135,7 +135,7 @@ namespace Neon.Kube
         /// <para>
         /// Each node will be assigned a public port that has a NAT rule directing SSH
         /// traffic to that specific node.  These ports will be in the range of
-        /// <see cref="NetworkOptions.ReservedIngressStartPort"/> to <see cref="NetworkOptions.ReservedIngressEndPort"/>.
+        /// <see cref="NetworkOptions.FirstExternalSshPort"/> to <see cref="NetworkOptions.LastExternalSshPort"/>.
         /// <see cref="GetSshEndpoint(string)"/> will return the external endpoint
         /// for nodes when external SSH is enabled. 
         /// </para>

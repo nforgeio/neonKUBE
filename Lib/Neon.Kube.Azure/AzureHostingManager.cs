@@ -262,19 +262,17 @@ namespace Neon.Kube
             /// <summary>
             /// Update the cluster's ingress/egress rules.
             /// </summary>
-            UpdateIngressEgressRules = 0x0001,
+            InternetRouting = 0x0001,
 
             /// <summary>
-            /// Add public SSH NAT rules for every node in the cluster.
-            /// These are used by neonKUBE related tools for provisioning, 
-            /// setting up, and managing clusters.
+            /// Enable external SSH to the cluster nodes.
             /// </summary>
-            AddSshRules = 0x0002,
+            EnableSsh = 0x0002,
 
             /// <summary>
-            /// Remove all SSH NAT rules.
+            /// Disable external SSH to the cluster nodes.
             /// </summary>
-            RemoveSshRules = 0x0004,
+            DisableSsh = 0x0004,
         }
 
         /// <summary>
@@ -924,7 +922,7 @@ namespace Neon.Kube
                 },
                 quiet: true);
             controller.AddNodeStep("virtual machines", CreateVm);
-            controller.AddGlobalStep("ingress/security rules", () => UpdateNetwork(NetworkOperations.UpdateIngressEgressRules | NetworkOperations.AddSshRules));
+            controller.AddGlobalStep("ingress/security rules", () => UpdateNetwork(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
             controller.AddNodeStep("configure nodes", Configure);
 
             if (!controller.Run(leaveNodesConnected: false))
@@ -944,14 +942,14 @@ namespace Neon.Kube
         {
             ConnectAzure();
 
-            var operations = NetworkOperations.UpdateIngressEgressRules;
+            var operations = NetworkOperations.InternetRouting;
 
             if (loadBalancer.InboundNatRules.Values.Any(rule => rule.Name.StartsWith(ingressRulePrefix, StringComparison.InvariantCultureIgnoreCase)))
             {
                 // It looks like SSH NAT rules are enabled so we'll update
                 // those as well.
 
-                operations |= NetworkOperations.AddSshRules;
+                operations |= NetworkOperations.EnableSsh;
             }
 
             UpdateNetwork(operations);
@@ -962,7 +960,7 @@ namespace Neon.Kube
         public override async Task EnableInternetSshAsync()
         {
             ConnectAzure();
-            UpdateNetwork(NetworkOperations.AddSshRules);
+            UpdateNetwork(NetworkOperations.EnableSsh);
             await Task.CompletedTask;
         }
 
@@ -970,7 +968,7 @@ namespace Neon.Kube
         public override async Task DisableInternetSshAsync()
         {
             ConnectAzure();
-            UpdateNetwork(NetworkOperations.RemoveSshRules);
+            UpdateNetwork(NetworkOperations.DisableSsh);
             await Task.CompletedTask;
         }
 
@@ -1579,17 +1577,17 @@ namespace Neon.Kube
         /// <param name="operations">Flags that control how the load balancer and related security rules are updated.</param>
         private void UpdateNetwork(NetworkOperations operations)
         {
-            if ((operations & NetworkOperations.UpdateIngressEgressRules) != 0)
+            if ((operations & NetworkOperations.InternetRouting) != 0)
             {
                 UpdateIngressEgressRules();
             }
 
-            if ((operations & NetworkOperations.AddSshRules) != 0)
+            if ((operations & NetworkOperations.EnableSsh) != 0)
             {
                 AddSshRules();
             }
 
-            if ((operations & NetworkOperations.RemoveSshRules) != 0)
+            if ((operations & NetworkOperations.DisableSsh) != 0)
             {
                 RemoveSshRules();
             }
