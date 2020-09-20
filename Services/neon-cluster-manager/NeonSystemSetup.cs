@@ -79,16 +79,18 @@ namespace NeonClusterManager
             Log.LogInfo("[neon-system-db] Configuring for Grafana.");
             var connString = "Host=neon-system-db-citus-postgresql.neon-system;Username=postgres;Password=0987654321;Database=postgres";
 
-            var conn = new NpgsqlConnection(connString);
+            var grafanaInitialized = true;
+
+            await using var conn = new NpgsqlConnection(connString);
             await conn.OpenAsync();
 
-            var grafanaInitialized = true;
             await using (var cmd = new NpgsqlCommand("SELECT DATNAME FROM pg_catalog.pg_database WHERE DATNAME = 'grafana'", conn))
             await using (var reader = await cmd.ExecuteReaderAsync())
             {
-                await conn.CloseAsync();
+                await reader.ReadAsync();
                 if (!reader.HasRows)
                 {
+                    await conn.CloseAsync();
                     Log.LogInfo("[neon-system-db] Creating database 'grafana'.");
                     grafanaInitialized = false;
                     await using (var createCmd = new NpgsqlCommand("CREATE DATABASE grafana", conn))
@@ -104,9 +106,10 @@ namespace NeonClusterManager
             await using (var cmd = new NpgsqlCommand("SELECT 'exists' FROM pg_roles WHERE rolname='grafana'", conn))
             await using (var reader = await cmd.ExecuteReaderAsync())
             {
-                await conn.CloseAsync();
+                await reader.ReadAsync();
                 if (!reader.HasRows)
                 {
+                    await conn.CloseAsync();
                     Log.LogInfo("[neon-system-db] Creating user 'grafana'.");
                     grafanaInitialized = false;
                     await using (var createCmd = new NpgsqlCommand("CREATE ROLE grafana WITH LOGIN", conn))
