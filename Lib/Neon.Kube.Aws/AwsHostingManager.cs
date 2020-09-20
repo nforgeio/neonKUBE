@@ -102,7 +102,7 @@ namespace Neon.Kube
         // NOTE: Only TCP connections are supported at this time because Istio
         //       doesn't support UDP, ICMP, etc. at this time.
         //
-        // Thye default VPC network ACL will be used to manage network security
+        // The default VPC network ACL will be used to manage network security
         // and will include ingress rules constructed from [NetworkOptions.IngressRules],
         // any temporary SSH related rules as well as egress rules constructed from
         // [NetworkOptions.EgressAddressRules].
@@ -684,6 +684,14 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName), nameof(clusterName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(resourceName), nameof(resourceName));
+
+            // $hack(jefflill):
+            //
+            // AWS doesn't tolerate target group names with periods and dashes so
+            // convert both of these to dashes.  This is a bit fragile because it
+            // assumes that users will never name two different clusters such that
+            // the only difference is due to a period or underscore in place of a
+            // dash.
 
             clusterName = clusterName.Replace('.', '-');
             clusterName = clusterName.Replace('_', '-');
@@ -1343,10 +1351,10 @@ namespace Neon.Kube
                     break;
                 }
             }
-
             // Route Table
 
             routeTable = await GetRouteTableAsync();
+
 
             // Load Balancer
 
@@ -2030,8 +2038,8 @@ retry:
         }
 
         /// <summary>
-        /// Creates the cluster networking components including the VPC, subnet, internet gateway
-        /// and network ACLs.
+        /// Configures the cluster networking components including the VPC, subnet, internet gateway
+        /// security group and network ACLs.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ConfigureNetworkAsync()
@@ -2102,6 +2110,29 @@ retry:
                     {
                         VpcId         = vpc.VpcId,
                         DhcpOptionsId = dhcpOptions.DhcpOptionsId
+                    });
+            }
+
+            // Create the Internet gateway and attach it to VPC.
+
+            if (gateway == null)
+            {
+                var internetGatewayResponse = await ec2Client.CreateInternetGatewayAsync(
+                    new CreateInternetGatewayRequest()
+                    {
+                        TagSpecifications = GetTagSpecifications(gatewayName, ResourceType.InternetGateway)
+                    });
+
+                gateway = internetGatewayResponse.InternetGateway;
+            }
+
+            if (!gateway.Attachments.Any(attachment => attachment.VpcId == vpc.VpcId))
+            {
+                await ec2Client.AttachInternetGatewayAsync(
+                    new AttachInternetGatewayRequest()
+                    {
+                        InternetGatewayId = gateway.InternetGatewayId,
+                        VpcId             = vpc.VpcId
                     });
             }
 
@@ -2205,7 +2236,7 @@ retry:
 
                 networkAcl2 = networkAclResponse.NetworkAcl;
             }
-
+            
             // Create the Internet Gateway and attach it to the VPC if it's
             // not already attached.
 
@@ -2307,19 +2338,12 @@ retry:
                 await elbClient.CreateLoadBalancerAsync(
                     new CreateLoadBalancerRequest()
                     {
-                        Name           = elbName,
-                        Type           = LoadBalancerTypeEnum.Network,
-                        Scheme         = LoadBalancerSchemeEnum.InternetFacing,
-                        IpAddressType  = IpAddressType.Ipv4,
-                        SubnetMappings = new List<SubnetMapping>()
-                        {
-                            new SubnetMapping()
-                            {
-                                AllocationId = elasticIp.AllocationId,
-                                SubnetId     = subnet.SubnetId
-                            }
-                        },
-                        Tags = GetTags<ElbTag>("load-balancer"),
+                        Name          = elbName,
+                        Type          = LoadBalancerTypeEnum.Network,
+                        Scheme        = LoadBalancerSchemeEnum.InternetFacing,
+                        Subnets       = new List<string>() { subnet.SubnetId },
+                        IpAddressType = IpAddressType.Ipv4,
+                        Tags          = GetTags<ElbTag>("load-balancer"),
                     });
 
                 loadBalancer = await GetLoadBalancerAsync();
@@ -2489,7 +2513,7 @@ retry:
 
                 // Wait for the instance to indicate that it's running.
 
-                node.Status = "connecting...";
+                node.Status = "starting...";
 
                 var invalidStates = new HashSet<int>
                 {
@@ -2539,7 +2563,7 @@ retry:
         {
             // AWS requires SSH key based authenticated for newly created instances.
 
-            node.Status = "starting...";
+            node.Status = "initializing...";
 
             node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUsername, sshKey.PrivatePEM));
             node.WaitForBoot();
@@ -2627,12 +2651,26 @@ systemctl restart sshd
         /// Constructs a target group name by appending the protocol, port and target group type 
         /// to the base name passed.
         /// </summary>
+        /// <param name="clusterName">The cluster name.</param>
         /// <param name="ingressTarget">The neonKUBE target group type.</param>
         /// <param name="protocol">The ingress protocol.</param>
         /// <param name="port">The ingress port.</param>
         /// <returns>The fully qualified target group name.</returns>
-        private string GetTargetGroupName(IngressRuleTarget ingressTarget, IngressProtocol protocol, int port)
+        private string GetTargetGroupName(string clusterName, IngressRuleTarget ingressTarget, IngressProtocol protocol, int port)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName), nameof(clusterName));
+
+            // $hack(jefflill):
+            //
+            // AWS doesn't tolerate target group names with periods and dashes so
+            // convert both of these to dashes.  This is a bit fragile because it
+            // assumes that users will never name two different clusters such that
+            // the only difference is due to a period or underscore in place of a
+            // dash.
+
+            clusterName = clusterName.Replace('.', '-');
+            clusterName = clusterName.Replace('_', '-');
+
             if (protocol == IngressProtocol.Http || protocol == IngressProtocol.Https)
             {
                 // We don't actually support HTTP/HTTPS at the load balancer.
@@ -2647,7 +2685,7 @@ systemctl restart sshd
 
             // Note that we need to replace any periods added by [GetResourceName()] with dashes.
 
-            return $"{typeString}-{protocolString}-{port}";
+            return $"{clusterName}-{typeString}-{protocolString}-{port}";
         }
 
         /// <summary>
@@ -3029,7 +3067,7 @@ systemctl restart sshd
 
             foreach (var ingressRule in ingressRules)
             {
-                var targetGroupName = GetTargetGroupName(ingressRule.Target, ingressRule.Protocol, ingressRule.ExternalPort);
+                var targetGroupName = GetTargetGroupName(clusterName, ingressRule.Target, ingressRule.Protocol, ingressRule.ExternalPort);
                 var healthCheck     = ingressRule.IngressHealthCheck ?? defaultHealthCheck;
 
                 if (!nameToTargetGroup.TryGetValue(targetGroupName, out var targetGroup))
@@ -3105,7 +3143,7 @@ systemctl restart sshd
             {
                 Covenant.Assert(awsInstance.ExternalSshPort != 0, $"Node [{awsInstance.Name}] does not have an external SSH port assignment.");
 
-                var targetGroupName = GetTargetGroupName(IngressRuleTarget.Ssh, IngressProtocol.Tcp, awsInstance.ExternalSshPort);
+                var targetGroupName = GetTargetGroupName(clusterName, IngressRuleTarget.Ssh, IngressProtocol.Tcp, awsInstance.ExternalSshPort);
 
                 if (!nameToTargetGroup.TryGetValue(targetGroupName, out var targetGroup))
                 {
@@ -3174,7 +3212,7 @@ systemctl restart sshd
                     case IngressRuleTarget.Neon:
                     case IngressRuleTarget.User:
 
-                        targetGroup = nameToTargetGroup[GetTargetGroupName(ingressRule.Target, ingressRule.Protocol, ingressRule.ExternalPort)];
+                        targetGroup = nameToTargetGroup[GetTargetGroupName(clusterName, ingressRule.Target, ingressRule.Protocol, ingressRule.ExternalPort)];
                         break;
 
                     case IngressRuleTarget.Ssh:
@@ -3242,7 +3280,7 @@ systemctl restart sshd
 
             foreach (var awsInstance in nodeNameToAwsInstance.Values)
             {
-                var targetGroupName = GetTargetGroupName(IngressRuleTarget.Ssh, IngressProtocol.Tcp, awsInstance.ExternalSshPort);
+                var targetGroupName = GetTargetGroupName(clusterName, IngressRuleTarget.Ssh, IngressProtocol.Tcp, awsInstance.ExternalSshPort);
                 var targetGroup     = nameToTargetGroup[targetGroupName];
 
                 await elbClient.CreateListenerAsync(
