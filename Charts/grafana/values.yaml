@@ -174,7 +174,8 @@ tolerations: []
 affinity: {}
 
 extraInitContainers: []
-   
+
+
 ## Enable an Specify container in extraContainers. This is meant to allow adding an authentication proxy to a grafana pod
 extraContainers: |
 # - name: proxy
@@ -200,8 +201,8 @@ extraContainerVolumes: []
 ##
 persistence:
   type: pvc
-  enabled: true
-  storageClassName: cstor-csi-stripe
+  enabled: false
+  storageClassName: ""
   accessModes:
     - ReadWriteOnce
   size: 2Gi
@@ -437,6 +438,11 @@ dashboardsConfigMaps: {}
 ## ref: http://docs.grafana.org/installation/configuration/
 ##
 grafana.ini:
+  database:
+    type: postgres
+    host: neon-system-db-citus-postgresql.neon-system
+    name: grafana
+    user: grafana
   paths:
     data: /var/lib/grafana/data
     logs: /var/log/grafana
