@@ -293,7 +293,8 @@ alertmanager:
     ## Define which Nodes the Pods are scheduled on.
     ## ref: https://kubernetes.io/docs/user-guide/node-selection/
     ##
-    nodeSelector: {}
+    nodeSelector: 
+      neonkube.io/monitor.metrics: "true"
 
     ## Define resources requests and limits for single Pods.
     ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
@@ -954,7 +955,8 @@ prometheusOperator:
       priorityClassName: ""
       podAnnotations:
         sidecar.istio.io/inject: "false"
-      nodeSelector: {}
+      nodeSelector: 
+        neonkube.io/monitor.metrics: "true"
 
 
   ## Service account for Alertmanager to use.
@@ -1076,7 +1078,8 @@ prometheusOperator:
   ## Define which Nodes the Pods are scheduled on.
   ## ref: https://kubernetes.io/docs/user-guide/node-selection/
   ##
-  nodeSelector: {}
+  nodeSelector:
+    neonkube.io/monitor.metrics: "true"
 
   ## Tolerations for use with node taints
   ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
@@ -1322,7 +1325,8 @@ prometheus:
     ## Define which Nodes the Pods are scheduled on.
     ## ref: https://kubernetes.io/docs/user-guide/node-selection/
     ##
-    nodeSelector: {}
+    nodeSelector: 
+      neonkube.io/monitor.metrics: "true"
 
     ## Secrets is a list of Secrets in the same namespace as the Prometheus object, which shall be mounted into the Prometheus Pods.
     ## The Secrets are mounted into /etc/prometheus/secrets/. Secrets changes after initial creation of a Prometheus object are not

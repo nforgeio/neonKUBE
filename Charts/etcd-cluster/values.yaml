@@ -65,7 +65,8 @@ memoryMode: false
 ## Node labels and tolerations for pod assignment
 ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
 ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#taints-and-tolerations-beta-feature
-nodeSelector: {}
+nodeSelector: 
+  neonkube.io/monitor.metrics: "true"
 tolerations:
   - effect: NoSchedule
     key: neonkube.io/metrics
