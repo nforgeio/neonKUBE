@@ -35,7 +35,7 @@ spec:
       {{- end }}
       {{- if .Values.nodeSelector }}
       nodeSelector:
-      {{ toYaml .Values.nodeSelector | indent 8 }}
+      {{ toYaml .Values.nodeSelector | nindent 8 }}
       {{- end }}
       initContainers:
       - name: chmod-er
@@ -58,7 +58,7 @@ spec:
           chown -R postgres:postgres /home/postgres
           mkdir -p /var/lib/postgresql/data
           chmod 777 /var/lib/postgresql/data
-          find /var/lib/postgresql/data -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs chown -R 999:999
+          find /var/lib/postgresql/data -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs chown -fR 999:999
           chmod 0600 /var/lib/postgresql/data/pgdata/server.crt
           chmod 0600 /var/lib/postgresql/data/pgdata/server.key
         securityContext:

@@ -8,7 +8,10 @@ readiness:
   enabled: true
 maxConnections: 100
 
-tolerations: []
+tolerations: 
+- key: "node-role.kubernetes.io/master"
+  operator: "Exists"
+  effect: "NoSchedule"
 
 ## Citus Worker
 worker:
