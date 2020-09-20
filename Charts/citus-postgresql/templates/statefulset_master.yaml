@@ -42,7 +42,7 @@ spec:
         image: busybox:latest
         command:
         - /bin/sh
-        - -cx
+        - -c
         - |
           mkdir -p /home/postgres
           cp -f /k8s/secrets/.pgpass /home/postgres
@@ -58,9 +58,9 @@ spec:
           chown -R postgres:postgres /home/postgres
           mkdir -p /var/lib/postgresql/data
           chmod 777 /var/lib/postgresql/data
-          find /var/lib/postgresql/data -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs chown -fR 999:999
-          chmod 0600 /var/lib/postgresql/data/pgdata/server.crt
-          chmod 0600 /var/lib/postgresql/data/pgdata/server.key
+          find /var/lib/postgresql/data -mindepth 1 -maxdepth 1 -not -name ".snapshot" -not -name "lost+found" | xargs chown -fR 999:999 || :
+          chmod -f 0600 /var/lib/postgresql/data/pgdata/server.crt || :
+          chmod -f 0600 /var/lib/postgresql/data/pgdata/server.key || :
         securityContext:
           runAsUser: 0
         volumeMounts:
