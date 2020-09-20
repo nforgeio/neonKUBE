@@ -85,7 +85,7 @@ cortexConfig:
     delete_store:
       store: boltdb
     cassandra:
-      addresses: yb-tservers # configure yugabyte addresses here.
+      addresses: neon-metrics-db-yb-tservers # configure yugabyte addresses here.
       keyspace: cortex   # configure desired keyspace here.
       timeout: 15s
       connect_timeout: 15s
