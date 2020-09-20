@@ -9,7 +9,7 @@ rbac:
 
 serviceAccount:
   create: true
-  name:
+  name: openebs-maya-operator
 
 release:
   # "openebs.io/version" label for control plane components
