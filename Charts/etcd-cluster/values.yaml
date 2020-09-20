@@ -49,10 +49,7 @@ persistence:
 
 volumeClaimTemplate:
   accessModes: [ "ReadWriteOnce" ]
-  storageClassName: "local-storage"
-  selector:
-    matchLabels:
-      neonMetrics: etcd
+  storageClassName: "openebs-hostpath"
   resources:
     requests:
       storage: 1Gi

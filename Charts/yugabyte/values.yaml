@@ -12,17 +12,11 @@ storage:
   master:
     count: 1
     size: 1Gi
-    storageClass: local-storage
-    selector:
-      matchLabels:
-        neonMetrics: yb-master
+    storageClass: openebs-hostpath
   tserver:
     count: 1
     size: 1Gi
-    storageClass: local-storage
-    selector:
-      matchLabels:
-        neonMetrics: yb-tserver
+    storageClass: openebs-hostpath
 
 
 resource:

@@ -73,10 +73,7 @@ networkHost: "0.0.0.0"
 
 volumeClaimTemplate:
   accessModes: [ "ReadWriteOnce" ]
-  storageClassName: "local-storage"
-  selector:
-    matchLabels:
-      elasticsearch: default
+  storageClassName: "openebs-hostpath"
   resources:
     requests:
       storage: 512Mi
