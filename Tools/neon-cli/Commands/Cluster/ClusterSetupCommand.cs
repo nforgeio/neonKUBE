@@ -1750,6 +1750,22 @@ spec:
                         });
 
                 });
+
+            // Setup openebs.
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-openebs",
+                () =>
+                {
+                    InstallOpenEBS(firstMaster).Wait();
+                });
+
+            // Setup cluster-manager.
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-cluster-manager",
+                () =>
+                {
+                    InstallClusterManager(firstMaster).Wait();
+                });
         }
 
         /// <summary>
@@ -2050,16 +2066,6 @@ istioctl install -f istio-cni.yaml
                         InstallJaeger(firstMaster).Wait();
                     });
             }
-
-            
-
-            // Setup cluster-manager.
-
-            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-cluster-manager",
-                () =>
-                {
-                    InstallClusterManager(firstMaster).Wait();
-                });
         }
 
         /// <summary>
@@ -2177,6 +2183,42 @@ rm -rf {chartName}*
             master.Status = "deploy: cluster-setup";
 
             await InstallHelmChartAsync(master, "cluster-setup");
+        }
+
+        /// <summary>
+        /// Installs OpenEBS
+        /// </summary>
+        /// <param name="master">The master node.</param>
+        private async Task InstallOpenEBS(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: openebs";
+
+            await k8sClient.CreateNamespaceAsync(new V1Namespace()
+            {
+                Metadata = new V1ObjectMeta()
+                {
+                    Name = "openebs",
+                    Labels = new Dictionary<string, string>()
+                    {
+                        { "istio-injection", "enabled" }
+                    }
+                }
+            });
+
+            var values = new List<KeyValuePair<string, object>>();
+
+            if (cluster.Definition.Workers.Count() >= 3)
+            {
+                var replicas = Math.Max(2, cluster.Definition.Workers.Count() / 3);
+                values.Add(new KeyValuePair<string, object>($"apiserver.replicas", replicas));
+                values.Add(new KeyValuePair<string, object>($"provisioner.replicas", replicas));
+                values.Add(new KeyValuePair<string, object>($"localprovisioner.replicas", replicas));
+                values.Add(new KeyValuePair<string, object>($"snapshotOperator.replicas", replicas));
+                values.Add(new KeyValuePair<string, object>($"ndmOperator.replicas", replicas));
+                values.Add(new KeyValuePair<string, object>($"webhook.replicas", replicas));
+            }
+
+            await InstallHelmChartAsync(master, "openebs", releaseName: "neon-storage", values: values, @namespace: "openebs", wait: true, timeout: 900);
         }
 
         /// <summary>
@@ -2813,7 +2855,7 @@ rm -rf {chartName}*
         {
             master.Status = "deploy: cluster-manager";
 
-            await InstallHelmChartAsync(master, "neon-cluster-manager", releaseName: "neon-cluster-manager", @namespace: "monitoring", timeout: 300);
+            await InstallHelmChartAsync(master, "neon-cluster-manager", releaseName: "neon-cluster-manager", @namespace: "neon-system", timeout: 300);
         }
 
         /// <summary>
