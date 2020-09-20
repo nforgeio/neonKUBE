@@ -1317,7 +1317,12 @@ namespace Neon.Kube
 
                         if (Version.Parse(KubeVersions.HelmVersion) > currentVersion)
                         {
-                            // We need to copy the latest version.
+                            // We need to copy and overwrite with the latest version.
+
+                            if (File.Exists(targetPath))
+                            {
+                                File.Delete(targetPath);
+                            }
 
                             File.Copy(cachedHelmPath, targetPath);
                         }
