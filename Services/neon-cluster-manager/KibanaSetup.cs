@@ -33,8 +33,18 @@ namespace NeonClusterManager
         /// Handles purging of old <b>logstash</b> and <b>metricbeat</b> Elasticsearch indexes.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public void KibanaSetup()
+        public async Task KibanaSetupAsync()
         {
+            Log.LogInfo("Waiting for Kibana to be ready.");
+
+            await NeonHelper.WaitForAsync(
+                    async () => 
+                    (
+                        await k8s.ListNamespacedDeploymentAsync("monitoring")).Items.Any(s => s.Metadata.Name == "neon-logs-kibana" && s.Status.AvailableReplicas > 1
+                    ), 
+                    TimeSpan.FromSeconds(3600)
+                );
+
             Log.LogInfo("Setting up Kibana index patterns.");
             using (var jsonClient = new JsonClient())
             {
@@ -103,6 +113,7 @@ namespace NeonClusterManager
                     }).Wait();
             }
             Log.LogInfo("Kibana index patterns configured.");
+            await Task.CompletedTask;
         }
     }
 }
