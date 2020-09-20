@@ -2,7 +2,7 @@ nameOverride: ""
 fullnameOverride: ""
 
 image:
-  repo: docker.io/kiali-operator
+  repo: kiali/kiali-operator
   tag: v1.18.1
   pullPolicy: Always
   pullSecrets: []
