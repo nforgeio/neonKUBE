@@ -387,6 +387,24 @@ namespace Neon.Kube
         public bool Istio { get; set; } = false;
 
         //---------------------------------------------------------------------
+        // Define the neon-system related labels.
+
+        /// <summary>
+        /// Reserved label name for <see cref="LabelNeonSystemDb"/>.
+        /// </summary>
+        public const string LabelNeonSystemDb = ClusterDefinition.ReservedLabelPrefix + "neon-system.db";
+
+        /// <summary>
+        /// <b>io.neonkube.neon-system.db</b> [<c>bool</c>]: Indicates that the neon-system 
+        /// Citus/Postgresql database will be deployed to this node.  
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "NeonSystemDb", Required = Required.Default)]
+        [YamlMember(Alias = "neonSystemDb", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool NeonSystemDb { get; set; } = false;
+
+        //---------------------------------------------------------------------
         // Define the logging related labels.
 
         /// <summary>
