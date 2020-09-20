@@ -534,7 +534,7 @@ namespace Neon.Cadence
         /// <summary>
         /// Returns a copy of the current instance.
         /// </summary>
-        /// <returns>Thye cloned <see cref="CadenceSettings"/>.</returns>
+        /// <returns>The cloned <see cref="CadenceSettings"/>.</returns>
         public CadenceSettings Clone()
         {
             return new CadenceSettings()
