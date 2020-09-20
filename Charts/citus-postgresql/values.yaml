@@ -8,6 +8,8 @@ readiness:
   enabled: true
 maxConnections: 100
 
+tolerations: []
+
 ## Citus Worker
 worker:
   replicaCount: 3
@@ -22,10 +24,6 @@ worker:
   #  requests:
   #    cpu: 250m
   #    memory: 1Gi
-  tolerations:
-  - key: "node-role.kubernetes.io/master"
-    operator: "Exists"
-    effect: "NoSchedule"
   persistence:
     size: 5Gi
     storageClassName: openebs-hostpath
@@ -41,10 +39,6 @@ master:
   #  requests:
   #    cpu: 500m
   #    memory: 1Gi
-  tolerations:
-  - key: "node-role.kubernetes.io/master"
-    operator: "Exists"
-    effect: "NoSchedule"
   persistence:
     size: 5Gi
     storageClassName: openebs-hostpath
@@ -69,10 +63,6 @@ manager:
   namespace: "default"
   shortUrl: "True"
   minimumWorkers: "2"
-  tolerations:
-  - key: "node-role.kubernetes.io/master"
-    operator: "Exists"
-    effect: "NoSchedule"
   serviceAccount:
     create: true
     name: citus-manager-sa

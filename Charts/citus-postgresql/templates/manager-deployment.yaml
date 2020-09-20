@@ -23,7 +23,7 @@ spec:
       - name: {{ .Values.imagePullSecrets }}
       {{- end }}
       serviceAccountName: {{ .Values.manager.serviceAccount.name }}
-      {{- with .Values.manager.tolerations }}
+      {{- with .Values.tolerations }}
       tolerations:
       {{ toYaml . | nindent 6 }}
       {{- end }}

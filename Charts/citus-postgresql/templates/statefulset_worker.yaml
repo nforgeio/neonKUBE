@@ -33,7 +33,7 @@ spec:
       imagePullSecrets:
         - name: {{ .Values.imagePullSecrets }}
       {{- end }}
-      {{- with .Values.worker.tolerations }}
+      {{- with .Values.tolerations }}
       tolerations:
       {{ toYaml . | nindent 6 }}
       {{- end }}
