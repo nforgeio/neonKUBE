@@ -1,99 +1,66 @@
-#
-# addon kiali
-#
-kiali:
-  enabled: true # Note that if using the demo or demo-auth yaml when installing via Helm, this default will be `true`.
-  replicaCount: 1
-  hub: docker.io/kiali
-  tag: v1.1.0
-  contextPath: /kiali # The root context path to access the Kiali UI.
-  nodeSelector: {}
+nameOverride: ""
+fullnameOverride: ""
 
-  # Specify the pod anti-affinity that allows you to constrain which nodes
-  # your pod is eligible to be scheduled based on labels on pods that are
-  # already running on the node rather than based on labels on nodes.
-  # There are currently two types of anti-affinity:
-  #    "requiredDuringSchedulingIgnoredDuringExecution"
-  #    "preferredDuringSchedulingIgnoredDuringExecution"
-  # which denote “hard” vs. “soft” requirements, you can define your values
-  # in "podAntiAffinityLabelSelector" and "podAntiAffinityTermLabelSelector"
-  # correspondingly.
-  # For example:
-  # podAntiAffinityLabelSelector:
-  # - key: security
-  #   operator: In
-  #   values: S1,S2
-  #   topologyKey: "kubernetes.io/hostname"
-  # This pod anti-affinity rule says that the pod requires not to be scheduled
-  # onto a node if that node is already running a pod with label having key
-  # “security” and value “S1”.
-  podAntiAffinityLabelSelector: []
-  podAntiAffinityTermLabelSelector: []
+image:
+  repo: docker.io/kiali-operator
+  tag: v1.18.1
+  pullPolicy: Always
+  pullSecrets: []
 
-  ingress:
-    enabled: false
-    ## Used to create an Ingress record.
-    hosts:
-      - kiali.local
-    annotations:
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-    tls:
-    # Secrets must be manually created in the namespace.
-    # - secretName: kiali-tls
-    #   hosts:
-    #     - kiali.local
+# Deployment options for the operator pod.
+nodeSelector: 
+  neonkube.io/istio: "true"
+podAnnotations: {}
+env: []
+tolerations: []
+resources: {}
+affinity: {}
+replicaCount: 1
+priorityClassName: ""
 
-  dashboard:
-    secretName: kiali # You must create a secret with this name - one is not provided out-of-box.
-    usernameKey: username # This is the key name within the secret whose value is the actual username.
-    passphraseKey: passphrase # This is the key name within the secret whose value is the actual passphrase.
-    viewOnlyMode: false # Bind the service account to a role with only read access
-    grafanaURL:  # If you have Grafana installed and it is accessible to client browsers, then set this to its external URL. Kiali will redirect users to this URL when Grafana metrics are to be shown.
-    jaegerURL:  # If you have Jaeger installed and it is accessible to client browsers, then set this property to its external URL. Kiali will redirect users to this URL when Jaeger tracing is to be shown.
+# metrics.enabled: set to true if you want Prometheus to collect metrics from the operator
+metrics:
+  enabled: true
 
-  # Optional: prometheus may be deployed in a different namespace
-  prometheusNamespace: monitoring
+# debug.enabled: when true the full ansible logs are dumped after each reconciliation run
+# debug.verbosity: defines the amount of details the operator will log (higher numbers are more noisy)
+debug:
+  enabled: false
+  verbosity: "1"
 
-  # When true, a secret will be created with a default username and password. Useful for demos.
-  createDemoSecret: false
+# Defines where the operator will look for Kial CR resources. "" means "all namespaces".
+watchNamespace: ""
 
-  security:
-    enabled: false
-    cert_file: /kiali-cert/cert-chain.pem
-    private_key_file: /kiali-cert/key.pem
-    
-# Global and common settings for installing Istio.
+# Set to true if you want the operator to be able to create cluster roles. This is necessary
+# if you want to support Kiali CRs with spec.deployment.accessible_namespaces of '**'.
+# Note that this will be overriden to "true" if cr.create is true and cr.spec.deployment.accessible_namespaces is ['**'].
+clusterRoleCreator: true
 
-# This file is configured for a small scale production cluster.
-# Use user-values-medium or custom settings to tune up the CPU and scalling.
-# Additional values overrides can be used.
+# Set to true if you want to allow the operator to only be able to install Kiali in view-only-mode.
+# The purpose for this setting is to allow you to restrict the permissions given to the operator itself.
+onlyViewOnlyMode: false
 
-# Each individual component will use values from this file, with defaults and 'advanced' settings included in
-# its own chart's values.yaml.
+# For what a Kiali CR spec can look like, see:
+# https://github.com/kiali/kiali-operator/blob/master/deploy/kiali/kiali_cr.yaml
+cr:
+  create: true
+  name: kiali
+  # If you elect to create a Kiali CR (--set cr.create=true)
+  # and the operator is watching all namespaces (--set watchNamespace="")
+  # then this is the namespace where the CR will be created (the default will be the operator namespace).
+  namespace: ""
 
-# TODO: trim this file to commonly used settings, leave 'advanced' in the individual values.yaml (they can
-# still be overridden by users, but won't show in basic documentation.
-
-# This doesn't match istio defaults, which are more geared towards tests and bookinfo.
-
-global:
-  # Used to locate istio-pilot.
-  # Default is to install pilot in a dedicated namespace, istio-pilot11. You can use multiple namespaces, but
-  # for each 'profile' you need to match the control plane namespace and the value of istioNamespace
-  # It is assumed that istio-system is running either 1.0 or an upgraded version of 1.1, but only security components are
-  # used (citadel generating the secrets).
-  istioNamespace: istio-system
-  configNamespace: istio-system
-
-  # Telemetry namespace, including tracing.
-  telemetryNamespace: istio-system
-
-  prometheusNamespace: monitoring
-  prometheusServiceName: prometheus-operated
-  policyNamespace: istio-system
-  
-  arch:
-    amd64: 2
-    s390x: 2
-    ppc64le: 2
+  spec:
+    istio_namespace: istio-system
+    deployment:
+      accessible_namespaces:
+      - '**'
+    external_services:
+      grafana:
+        enabled: true
+      istio:
+        enabled: true
+      prometheus:
+        enabled: true
+      tracing:
+        enabled: true
