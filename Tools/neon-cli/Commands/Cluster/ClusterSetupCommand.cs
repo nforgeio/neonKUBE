@@ -632,28 +632,6 @@ OPTIONS:
 
                     node.Status = "configure: node basics";
                     node.SudoCommand("setup-node.sh");
-
-                    // Create the container user and group.
-
-                    // $todo(jefflill):
-                    //
-                    // This is a bit of a hack to enable local Persistent Volumes for
-                    // pet-type pods.  We're going to precreate 100 folders and give
-                    // the [container] user full ownership of them.  We need to do this
-                    // because Kubernetes is unable to create these dynamically yet.
-
-                    node.Status = "create: local persistent volume folders";
-
-                    var sbVolumesScript = new StringBuilder();
-
-                    for (int i = 0; i < 100; i++)
-                    {
-                        sbVolumesScript.AppendLineLinux($"mkdir -p {KubeConst.LocalVolumePath}/{i}");
-                        sbVolumesScript.AppendLineLinux($"chown {KubeConst.ContainerUsername}:{KubeConst.ContainerGroup} {KubeConst.LocalVolumePath}/{i}");
-                        sbVolumesScript.AppendLineLinux($"chmod 770 {KubeConst.LocalVolumePath}/{i}");
-                    }
-
-                    node.SudoCommand(CommandBundle.FromScript(sbVolumesScript));
                 });
         }
 
@@ -1759,7 +1737,15 @@ spec:
                     InstallOpenEBS(firstMaster).Wait();
                 });
 
-            // Setup cluster-manager.
+            // Setup neon-system-db.
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-neon-system-db",
+                () =>
+                {
+                    InstallSystemDb(firstMaster).Wait();
+                });
+
+            // Setup neon-cluster-manager.
 
             firstMaster.InvokeIdempotentAction("setup/cluster-deploy-cluster-manager",
                 () =>
@@ -1938,23 +1924,6 @@ spec:
     istiocoredns:
       enabled: true
       coreDNSImage: coredns/coredns
-    kiali:
-      enabled: true
-      replicaCount: 1
-      hub: quay.io/kiali
-      tag: v1.9
-      contextPath: /kiali
-      nodeSelector: {{}}
-      podAntiAffinityLabelSelector: []
-      podAntiAffinityTermLabelSelector: []
-      dashboard:
-        secretName: kiali
-        usernameKey: username
-        passphraseKey: passphrase
-        viewOnlyMode: false
-        grafanaURL: http://grafana.monitoring
-      prometheusNamespace: monitoring
-      createDemoSecret: false
     cni:
       excludeNamespaces:
        - istio-system
@@ -2253,67 +2222,6 @@ rm -rf {chartName}*
 
             master.Status = "setup: neon-metrics-etcd-volumes";
 
-            master.InvokeIdempotentAction("setup/neon-metrics-etcd-volumes",
-                () =>
-                {
-                    var i = 0;
-                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Metrics))
-                    {
-                        var volume = new V1PersistentVolume()
-                        {
-                            ApiVersion = "v1",
-                            Kind = "PersistentVolume",
-                            Metadata = new V1ObjectMeta()
-                            {
-                                Name = $"neon-metrics-etcd-data-{i}",
-                                Labels = new Dictionary<string, string>()
-                                {
-                                    ["neonMetrics"] = "etcd"
-                                }
-                            },
-                            Spec = new V1PersistentVolumeSpec()
-                            {
-                                Capacity = new Dictionary<string, ResourceQuantity>()
-                                {
-                                    { "storage", new ResourceQuantity("1Gi") }
-                                },
-                                AccessModes = new List<string>() { "ReadWriteOnce" },
-                                PersistentVolumeReclaimPolicy = "Retain",
-                                StorageClassName = "local-storage",
-                                Local = new V1LocalVolumeSource()
-                                {
-                                    Path = $"{KubeConst.LocalVolumePath}/98"
-                                },
-                                NodeAffinity = new V1VolumeNodeAffinity()
-                                {
-                                    Required = new V1NodeSelector()
-                                    {
-                                        NodeSelectorTerms = new List<V1NodeSelectorTerm>()
-                            {
-                                new V1NodeSelectorTerm()
-                                {
-                                    MatchExpressions = new List<V1NodeSelectorRequirement>()
-                                    {
-                                        new V1NodeSelectorRequirement()
-                                        {
-                                            Key = "kubernetes.io/hostname",
-                                            OperatorProperty = "In",
-                                            Values = new List<string>() { $"{n.Name}" }
-                                        }
-                                    }
-                                }
-                            }
-                                    }
-                                }
-                            },
-                        };
-
-                        k8sClient.CreatePersistentVolumeAsync(volume).Wait();
-                        i++;
-                    }
-                });
-            
-
             master.Status = "deploy: neon-metrics-etcd-cluster";
 
             master.InvokeIdempotentAction("deploy/neon-metrics-etcd-cluster",
@@ -2480,74 +2388,6 @@ rm -rf {chartName}*
                 {
                     master.Status = "deploy: metrics storage (yugabyte)";
 
-                    master.InvokeIdempotentAction("setup/metrics-yugabyte-volumes",
-                        () =>
-                        {
-                            var i = 0;
-                            foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Metrics))
-                            {
-                                var volume = new V1PersistentVolume()
-                                {
-                                    ApiVersion = "v1",
-                                    Kind = "PersistentVolume",
-                                    Metadata = new V1ObjectMeta()
-                                    {
-                                        Name = $"neon-metrics-db-master-data-{i}",
-                                        Labels = new Dictionary<string, string>()
-                                        {
-                                            ["neonMetrics"] = "yb-master"
-                                        }
-                                    },
-                                    Spec = new V1PersistentVolumeSpec()
-                                    {
-                                        Capacity = new Dictionary<string, ResourceQuantity>()
-                                        {
-                                            { "storage", new ResourceQuantity(cluster.Definition.Monitor.Metrics.DiskSize) }
-                                        },
-                                        AccessModes = new List<string>() { "ReadWriteOnce" },
-                                        PersistentVolumeReclaimPolicy = "Retain",
-                                        StorageClassName = "local-storage",
-                                        Local = new V1LocalVolumeSource()
-                                        {
-                                            Path = $"{KubeConst.LocalVolumePath}/96"
-                                        },
-                                        NodeAffinity = new V1VolumeNodeAffinity()
-                                        {
-                                            Required = new V1NodeSelector()
-                                            {
-                                                NodeSelectorTerms = new List<V1NodeSelectorTerm>()
-                                                {
-                                                    new V1NodeSelectorTerm()
-                                                    {
-                                                        MatchExpressions = new List<V1NodeSelectorRequirement>()
-                                                        {
-                                                            new V1NodeSelectorRequirement()
-                                                            {
-                                                                Key = "kubernetes.io/hostname",
-                                                                OperatorProperty = "In",
-                                                                Values = new List<string>() { $"{n.Name}" }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    },
-                                };
-
-                                k8sClient.CreatePersistentVolumeAsync(volume).Wait();
-
-                                // tserver volume
-                                volume.Metadata.Name = $"neon-metrics-db-tserver-data-{i}";
-                                volume.Metadata.Labels["neonMetrics"] = $"yb-tserver";
-                                volume.Spec.Local.Path = $"{KubeConst.LocalVolumePath}/95";
-
-                                k8sClient.CreatePersistentVolumeAsync(volume).Wait();
-
-                                i++;
-                            }
-                        });
-
                     master.InvokeIdempotentAction("setup/metrics-yugabyte",
                         () =>
                         {
@@ -2588,66 +2428,6 @@ rm -rf {chartName}*
         private void InstallElasticSearch(SshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: elasticsearch";
-
-            master.InvokeIdempotentAction("setup/elasticsearch-volumes",
-                () =>
-                {
-                    var i = 0;
-                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Logs))
-                    {
-                        var volume = new V1PersistentVolume()
-                        {
-                            ApiVersion = "v1",
-                            Kind = "PersistentVolume",
-                            Metadata = new V1ObjectMeta()
-                            {
-                                Name = $"elasticsearch-data-{i}",
-                                Labels = new Dictionary<string, string>()
-                                {
-                                    ["elasticsearch"] = "default"
-                                }
-                            },
-                            Spec = new V1PersistentVolumeSpec()
-                            {
-                                Capacity = new Dictionary<string, ResourceQuantity>()
-                                {
-                                    { "storage", new ResourceQuantity(cluster.Definition.Monitor.Logs.DiskSize) }
-                                },
-                                AccessModes = new List<string>() { "ReadWriteOnce" },
-                                PersistentVolumeReclaimPolicy = "Retain",
-                                StorageClassName = "local-storage",
-                                Local = new V1LocalVolumeSource()
-                                {
-                                    Path = $"{KubeConst.LocalVolumePath}/99"
-                                },
-                                NodeAffinity = new V1VolumeNodeAffinity()
-                                {
-                                    Required = new V1NodeSelector()
-                                    {
-                                        NodeSelectorTerms = new List<V1NodeSelectorTerm>()
-                                {
-                                    new V1NodeSelectorTerm()
-                                    {
-                                        MatchExpressions = new List<V1NodeSelectorRequirement>()
-                                        {
-                                            new V1NodeSelectorRequirement()
-                                            {
-                                                Key = "kubernetes.io/hostname",
-                                                OperatorProperty = "In",
-                                                Values = new List<string>() { $"{n.Name}" }
-                                            }
-                                        }
-                                    }
-                                }
-                                    }
-                                }
-                            },
-                        };
-
-                        k8sClient.CreatePersistentVolumeAsync(volume).Wait();
-                        i++;
-                    }
-                });
 
             master.InvokeIdempotentAction("deploy/elasticsearch",
                 () =>
@@ -2826,36 +2606,44 @@ rm -rf {chartName}*
         }
 
         /// <summary>
-        /// Installs metricbeat
-        /// </summary>
-        /// <param name="master">The master node.</param>
-        private async Task InstallMetricbeat(SshProxy<NodeDefinition> master)
-        {
-            master.Status = "deploy: metricbeat";
-
-            var values = new List<KeyValuePair<string, object>>();
-            var i = 0;
-
-            foreach (var taint in (await k8sClient.ListNodeAsync()).Items.Where(i => i.Spec.Taints != null).SelectMany(i => i.Spec.Taints))
-            {
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", taint.Key));
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", taint.Effect));
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
-                i++;
-            }
-
-            await InstallHelmChartAsync(master, "metricbeat", @namespace: "monitoring", timeout: 300, values: values);
-        }
-
-        /// <summary>
-        /// Installs metricbeat
+        /// Installs the Neon Cluster Manager.
         /// </summary>
         /// <param name="master">The master node.</param>
         private async Task InstallClusterManager(SshProxy<NodeDefinition> master)
         {
-            master.Status = "deploy: cluster-manager";
+            master.Status = "deploy: neon-cluster-manager";
 
             await InstallHelmChartAsync(master, "neon-cluster-manager", releaseName: "neon-cluster-manager", @namespace: "neon-system", timeout: 300);
+        }
+
+        /// <summary>
+        /// Installs a Citus-postgres database used by neon-system services.
+        /// </summary>
+        /// <param name="master">The master node.</param>
+        private async Task InstallSystemDb(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: neon-system-db";
+
+            var values = new List<KeyValuePair<string, object>>();
+
+            var taints = new List<string>();
+            foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Metrics))
+            {
+                if (n.Taints?.Count() > 0)
+                {
+                    taints = taints.Union(n.Taints).ToList();
+                }
+            }
+
+            int i = 0;
+            foreach (var t in taints)
+            {
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Split("=")[0]}"));
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", "NoSchedule"));
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+            }
+
+            await InstallHelmChartAsync(master, "citus-postgresql", releaseName: "neon-system-db", @namespace: "neon-system", values: values, timeout: 300);
         }
 
         /// <summary>
