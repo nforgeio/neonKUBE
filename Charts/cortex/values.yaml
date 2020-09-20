@@ -67,8 +67,8 @@ cortexConfig:
   schema:
     configs:
     - from: 2019-07-29
-      store: yugabyte
-      object_store: yugabyte
+      store: cassandra
+      object_store: cassandra
       schema: v10
       index:
         prefix: index_
@@ -84,7 +84,7 @@ cortexConfig:
       directory: /tmp/cortex/chunks
     delete_store:
       store: boltdb
-    yugabyte:
+    cassandra:
       addresses: yb-tservers # configure yugabyte addresses here.
       keyspace: cortex   # configure desired keyspace here.
       timeout: 15s
