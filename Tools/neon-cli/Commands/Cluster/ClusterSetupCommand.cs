@@ -2360,7 +2360,7 @@ rm -rf {chartName}*
                         i++;
                     }
 
-                    InstallHelmChartAsync(master, "grafana", releaseName: "neon-metrics-grafana", @namespace: "monitoring", values: values).Wait();
+                    InstallHelmChartAsync(master, "grafana", releaseName: "neon-metrics-grafana", @namespace: "monitoring", values: values, wait: false).Wait();
                 });
 
         }
@@ -2385,6 +2385,15 @@ rm -rf {chartName}*
 
                             values.Add(new KeyValuePair<string, object>($"partition.master", cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()));
                             values.Add(new KeyValuePair<string, object>($"partition.tserver", cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()));
+
+                            Regex re = new Regex(@"(\d+)([a-zA-Z]+)");
+                            Match result = re.Match(cluster.Definition.Monitor.Logs.DiskSize);
+
+                            var ybDiskSize = decimal.Parse(result.Groups[1].Value);
+                            var ybDiskUnit = result.Groups[2].Value;
+
+                            values.Add(new KeyValuePair<string, object>($"storage.master.size", $"{Math.Round(ybDiskSize / 3, 2)}{ybDiskUnit}"));
+                            values.Add(new KeyValuePair<string, object>($"storage.tserver.size", $"{Math.Round(2 * (ybDiskSize / 3), 2)}{ybDiskUnit}"));
 
                             int i = 0;
                             foreach (var t in GetTaintsAsync(NodeLabels.LabelMetrics, "true").Result)
