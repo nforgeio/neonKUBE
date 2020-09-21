@@ -745,7 +745,6 @@ namespace Neon.Kube
         private string                              networkAclName1;
         private string                              networkAclName2;
         private string                              gatewayName;
-        private string                              routeTableName;
         private string                              loadBalancerName;
         private string                              elbName;
         private string                              keyPairName;
@@ -758,13 +757,13 @@ namespace Neon.Kube
         private Group                               resourceGroup;
         private Address                             elasticIp;
         private Vpc                                 vpc;
+        private RouteTable                          mainRouteTable;
         private DhcpOptions                         dhcpOptions;
         private SecurityGroup                       sgAllowAll;
         private Subnet                              subnet;
         private NetworkAcl                          networkAcl1;
         private NetworkAcl                          networkAcl2;
         private InternetGateway                     gateway;
-        private RouteTable                          routeTable;
         private LoadBalancer                        loadBalancer;
         private string                              keyPairId;
         private PlacementGroup                      masterPlacementGroup;
@@ -843,7 +842,6 @@ namespace Neon.Kube
             networkAclName1          = GetResourceName("network-acl-1");
             networkAclName2          = GetResourceName("network-acl-2");
             gatewayName              = GetResourceName("internet-gateway");
-            routeTableName           = GetResourceName("route-table");
             loadBalancerName         = GetResourceName("load-balancer");
             elbName                  = GetLoadBalancerName(clusterName, "elb");
             keyPairName              = GetResourceName("ssh-keys");
@@ -1263,17 +1261,7 @@ namespace Neon.Kube
 
             // Elastic IP
 
-            var addressResponse = await ec2Client.DescribeAddressesAsync();
-
-            foreach (var addressItem in addressResponse.Addresses)
-            {
-                if (addressItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == elasticIpName) &&
-                    addressItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
-                {
-                    elasticIp = addressItem;
-                    break;
-                }
-            }
+            elasticIp = await GetElasticIpAsync();
 
             // VPC and it's default network ACL.
 
@@ -1338,23 +1326,13 @@ namespace Neon.Kube
 
             await IdentifyNetworkAclsAsync();
 
-            // Gateway
+            // Internet Gateway
 
-            var gatewayPaginator = ec2Client.Paginators.DescribeInternetGateways(new DescribeInternetGatewaysRequest());
+            gateway = await GetInternetGatewayAsync();
 
-            await foreach (var gatewayItem in gatewayPaginator.InternetGateways)
-            {
-                if (gatewayItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == gatewayName) &&
-                    gatewayItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
-                {
-                    gateway = gatewayItem;
-                    break;
-                }
-            }
             // Route Table
 
-            routeTable = await GetRouteTableAsync();
-
+            mainRouteTable = await GetMainRouteTableAsync();
 
             // Load Balancer
 
@@ -1591,19 +1569,46 @@ retry:
         }
 
         /// <summary>
-        /// Attempts to load the cluster route table.
+        /// Returns the VPC's main route table.
         /// </summary>
-        /// <returns>The route table or <c>null</c>.</returns>
-        private async Task<RouteTable> GetRouteTableAsync()
+        /// <returns>The main route table or <c>null</c>.</returns>
+        private async Task<RouteTable> GetMainRouteTableAsync()
         {
+            if (vpc == null)
+            {
+                // The route table belongs to the VPC so there'll be no table
+                // before the VPC exists.
+
+                return null;
+            }
+
             var routeTablePagenator = ec2Client.Paginators.DescribeRouteTables(new DescribeRouteTablesRequest());
 
             await foreach (var routeTableItem in routeTablePagenator.RouteTables)
             {
-                if (routeTableItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == routeTableName) &&
-                    routeTableItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                if (routeTableItem.VpcId == vpc.VpcId && routeTableItem.Associations.Any(association => association.Main))
                 {
                     return routeTableItem;
+                }
+            }
+
+            throw new AssertException("Cannot locate VPC main route table.");
+        }
+
+        /// <summary>
+        /// Returns the internet gateway.
+        /// </summary>
+        /// <returns>The internet gateway or <c>null</c>.</returns>
+        private async Task<InternetGateway> GetInternetGatewayAsync()
+        {
+            var gatewayPaginator = ec2Client.Paginators.DescribeInternetGateways(new DescribeInternetGatewaysRequest());
+
+            await foreach (var gatewayItem in gatewayPaginator.InternetGateways)
+            {
+                if (gatewayItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == gatewayName) &&
+                    gatewayItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                {
+                    return gatewayItem;
                 }
             }
 
@@ -1965,6 +1970,26 @@ retry:
         }
 
         /// <summary>
+        /// Returns the cluster's elastic IP address.
+        /// </summary>
+        /// <returns>The elastic IP address or <c>null</c> if it doesn't exist.</returns>
+        private async Task<Address> GetElasticIpAsync()
+        {
+            var addressResponse = await ec2Client.DescribeAddressesAsync();
+
+            foreach (var addressItem in addressResponse.Addresses)
+            {
+                if (addressItem.Tags.Any(tag => tag.Key == nameTagKey && tag.Value == elasticIpName) &&
+                    addressItem.Tags.Any(tag => tag.Key == neonClusterTagKey && tag.Value == clusterName))
+                {
+                    return addressItem;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Creates the elastic IP address for the cluster if it doesn't already exist.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -1972,7 +1997,11 @@ retry:
         {
             if (elasticIp == null)
             {
-                var allocateResponse = await ec2Client.AllocateAddressAsync();
+                var allocateResponse = await ec2Client.AllocateAddressAsync(
+                    new AllocateAddressRequest()
+                    {
+                        Domain = DomainType.Vpc
+                    });
                 
                 var addressId = allocateResponse.AllocationId;
 
@@ -2113,7 +2142,7 @@ retry:
                     });
             }
 
-            // Create the Internet gateway and attach it to VPC.
+            // Create the internet gateway and attach it to VPC.
 
             if (gateway == null)
             {
@@ -2134,6 +2163,8 @@ retry:
                         InternetGatewayId = gateway.InternetGatewayId,
                         VpcId             = vpc.VpcId
                     });
+
+                gateway = await GetInternetGatewayAsync();
             }
 
             // Create the ALLOW-ALL security group if it doesn't exist.
@@ -2236,8 +2267,8 @@ retry:
 
                 networkAcl2 = networkAclResponse.NetworkAcl;
             }
-            
-            // Create the Internet Gateway and attach it to the VPC if it's
+
+            // Create the internet gateway and attach it to the VPC if it's
             // not already attached.
 
             if (gateway == null)
@@ -2261,23 +2292,21 @@ retry:
                     });
             }
 
-            // We also need create a route table with an entry that routes traffic
-            // to the Internet Gateway and then associate the route table with the
-            // subnet.
+            // We need to update the VPC's main route table to include a route to 
+            // the internet gateway.
 
-            if (routeTable == null)
-            {
-                var routeTableResponse = await ec2Client.CreateRouteTableAsync(
-                    new CreateRouteTableRequest()
-                    {
-                        VpcId             = vpc.VpcId,
-                        TagSpecifications = GetTagSpecifications(routeTableName, ResourceType.RouteTable)
-                    });
+            await AddGatewayRouteAsync(mainRouteTable);
+        }
 
-                routeTable = routeTableResponse.RouteTable;
-            }
-
-            if (routeTable.Routes.Count == 1)
+        /// <summary>
+        /// Adds a route to the internet to the route table passed if the route doesn't
+        /// already exist.
+        /// </summary>
+        /// <param name="routeTable">The target route table.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private async Task AddGatewayRouteAsync(RouteTable routeTable)
+        {
+            if (!routeTable.Routes.Any(route => route.GatewayId == gateway.InternetGatewayId && route.DestinationCidrBlock == "0.0.0.0/0"))
             {
                 var routeEntryResponse = await ec2Client.CreateRouteAsync(
                     new CreateRouteRequest()
@@ -2287,20 +2316,10 @@ retry:
                         DestinationCidrBlock = "0.0.0.0/0"
                     });
 
-                routeTable = await GetRouteTableAsync();
-            }
+                // Reload the route table to pick up the change.
 
-            if (!routeTable.Associations.Any(association => association.SubnetId == subnet.SubnetId))
-            {
-                await ec2Client.AssociateRouteTableAsync(
-                    new AssociateRouteTableRequest()
-                    {
-                        RouteTableId = routeTable.RouteTableId,
-                        SubnetId     = subnet.SubnetId,
-                    });
+                mainRouteTable = await GetMainRouteTableAsync();
             }
-
-            routeTable = await GetRouteTableAsync();
         }
 
         /// <summary>
@@ -2338,12 +2357,15 @@ retry:
                 await elbClient.CreateLoadBalancerAsync(
                     new CreateLoadBalancerRequest()
                     {
-                        Name          = elbName,
-                        Type          = LoadBalancerTypeEnum.Network,
-                        Scheme        = LoadBalancerSchemeEnum.InternetFacing,
-                        Subnets       = new List<string>() { subnet.SubnetId },
-                        IpAddressType = IpAddressType.Ipv4,
-                        Tags          = GetTags<ElbTag>("load-balancer"),
+                        Name           = elbName,
+                        Type           = LoadBalancerTypeEnum.Network,
+                        Scheme         = LoadBalancerSchemeEnum.InternetFacing,
+                        SubnetMappings = new List<SubnetMapping>()
+                        {
+                            new SubnetMapping() { SubnetId = subnet.SubnetId, AllocationId = elasticIp.AllocationId }
+                        },
+                        IpAddressType  = IpAddressType.Ipv4,
+                        Tags           = GetTags<ElbTag>("load-balancer"),
                     });
 
                 loadBalancer = await GetLoadBalancerAsync();
