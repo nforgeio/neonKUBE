@@ -1236,7 +1236,7 @@ namespace Neon.Kube
 
             if (resourceGroup != null)
             {
-                // Ensure that the group was created for the cluster.
+                // Ensure that the group was created exclusively for the cluster.
                 //
                 // For AWS, we're going to require that the resource group be restricted
                 // to just cluster resources.  This is different from what we do for Azure
@@ -1250,13 +1250,7 @@ namespace Neon.Kube
                         Group = resourceGroupName
                     });
 
-                var groupQuery = groupQueryResponse.GroupQuery;
-
-                if (groupQuery.ResourceQuery.Type != QueryType.TAG_FILTERS_1_0 ||
-                    groupQuery.ResourceQuery.Query != $"{{\"ResourceTypeFilters\":[\"AWS::AllSupported\"],\"TagFilters\":[{{\"Key\":\"NEON:Cluster\",\"Values\":[\"{clusterName}\"]}}]}}")
-                {
-                    throw new KubeException($"]{resourceGroup}] resource was not created exclusively for the [{clusterName}] neonKUBE cluster.");
-                }
+                ValidateResourceGroupQuery(groupQueryResponse.GroupQuery);
             }
 
             // Elastic IP
@@ -1326,13 +1320,13 @@ namespace Neon.Kube
 
             await IdentifyNetworkAclsAsync();
 
-            // Internet Gateway
-
-            gateway = await GetInternetGatewayAsync();
-
             // Route Table
 
             mainRouteTable = await GetMainRouteTableAsync();
+
+            // Internet Gateway
+
+            gateway = await GetInternetGatewayAsync();
 
             // Load Balancer
 
@@ -1582,17 +1576,32 @@ retry:
                 return null;
             }
 
-            var routeTablePagenator = ec2Client.Paginators.DescribeRouteTables(new DescribeRouteTablesRequest());
+            // It looks like it can take some time for the VPC to provision its
+            // main route table.  We'll loop for a bit to wait for it.
 
-            await foreach (var routeTableItem in routeTablePagenator.RouteTables)
-            {
-                if (routeTableItem.VpcId == vpc.VpcId && routeTableItem.Associations.Any(association => association.Main))
+            var routeTable = (RouteTable)null;
+
+            await NeonHelper.WaitForAsync(
+                async () =>
                 {
-                    return routeTableItem;
-                }
-            }
+                    var routeTablePagenator = ec2Client.Paginators.DescribeRouteTables(new DescribeRouteTablesRequest());
 
-            throw new AssertException("Cannot locate VPC main route table.");
+                    await foreach (var routeTableItem in routeTablePagenator.RouteTables)
+                    {
+                        if (routeTableItem.VpcId == vpc.VpcId && routeTableItem.Associations.Any(association => association.Main))
+                        {
+                            routeTable = routeTableItem;
+                            return true;
+                        }
+                    }
+
+                    return false;
+                },
+                timeout:        TimeSpan.FromSeconds(60),
+                pollTime:       TimeSpan.FromSeconds(5),
+                timeoutMessage: "Timeout waiting for the main routing table to be created for the cluster VPC.");
+
+            return routeTable;
         }
 
         /// <summary>
@@ -1858,6 +1867,25 @@ retry:
         }
 
         /// <summary>
+        /// Returns the cluster's resource group query JSON.
+        /// </summary>
+        private string ResourceGroupQuery => $"{{\"ResourceTypeFilters\":[\"AWS::AllSupported\"],\"TagFilters\":[{{\"Key\":\"{neonClusterTagKey}\",\"Values\":[\"{clusterName}\"]}}]}}";
+
+        /// <summary>
+        /// Ensures that the resource group query was created exclusively for cluster.
+        /// </summary>
+        /// <param name="groupQuery">The resource group Query.</param>
+        /// <exception cref="KubeException">Thrown if the resource group is not valid.</exception>
+        private void ValidateResourceGroupQuery(GroupQuery groupQuery)
+        {
+            if (groupQuery.ResourceQuery.Type != QueryType.TAG_FILTERS_1_0 ||
+                groupQuery.ResourceQuery.Query != ResourceGroupQuery)
+            {
+                throw new KubeException($"Invalid resource group [{resourceGroupName}]: This resource group already exists for some other purpose or was edited after being created for a neonKUBE cluster.");
+            }
+        }
+
+        /// <summary>
         /// <para>
         /// Creates the resource group for the cluster if it doesn't already exist. The resource
         /// group query will look for resources tagged with:
@@ -1905,8 +1933,8 @@ retry:
                         },
                         ResourceQuery = new ResourceQuery()
                         {
-                            Query = $"{{\"ResourceTypeFilters\":[\"AWS::AllSupported\"],\"TagFilters\":[{{\"Key\":\"{neonClusterTagKey}\",\"Values\":[\"{clusterName}\"]}}]}}",
-                            Type  = QueryType.TAG_FILTERS_1_0
+                            Type  = QueryType.TAG_FILTERS_1_0,
+                            Query = ResourceGroupQuery
                         }
                     });
             }
@@ -1928,13 +1956,7 @@ retry:
                         Group = resourceGroupName
                     });
 
-                var groupQuery = groupQueryResponse.GroupQuery;
-
-                if (groupQuery.ResourceQuery.Type != QueryType.TAG_FILTERS_1_0 ||
-                    groupQuery.ResourceQuery.Query != $"{{\"ResourceTypeFilters\":[\"AWS::AllSupported\"],\"TagFilters\":[{{\"Key\":\"NEON:Cluster\",\"Values\":[\"{clusterName}\"]}}]}}")
-                {
-                    throw new KubeException($"{resourceGroupName} - neonKUBE cluster related resources");
-                }
+                ValidateResourceGroupQuery(groupQueryResponse.GroupQuery);
             }
         }
 
