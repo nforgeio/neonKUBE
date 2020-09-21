@@ -2594,7 +2594,7 @@ rm -rf {chartName}*
                 i++;
             }
 
-            await InstallHelmChartAsync(master, "citus-postgresql", releaseName: "neon-system-db", @namespace: "neon-system", values: values, timeout: 300);
+            await InstallHelmChartAsync(master, "citus-postgresql", releaseName: "neon-system-db", @namespace: "neon-system", values: values, timeout: 1200);
         }
 
         /// <summary>
