@@ -2286,9 +2286,17 @@ rm -rf {chartName}*
                     int i = 0;
                     foreach (var t in GetTaintsAsync(NodeLabels.LabelMetrics, "true").Result)
                     {
-                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
-                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
-                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                        values.Add(new KeyValuePair<string, object>($"alertmanagerSpec.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"alertmanagerSpec.tolerations[{i}].effect", t.Effect));
+                        values.Add(new KeyValuePair<string, object>($"alertmanagerSpec.tolerations[{i}].operator", "Exists"));
+
+                        values.Add(new KeyValuePair<string, object>($"prometheusOperator.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"prometheusOperator.tolerations[{i}].effect", t.Effect));
+                        values.Add(new KeyValuePair<string, object>($"prometheusOperator.tolerations[{i}].operator", "Exists"));
+                        
+                        values.Add(new KeyValuePair<string, object>($"prometheusSpec.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"prometheusSpec.tolerations[{i}].effect", t.Effect));
+                        values.Add(new KeyValuePair<string, object>($"prometheusSpec.tolerations[{i}].operator", "Exists"));
                         i++;
                     }
 
