@@ -21,6 +21,7 @@ spec:
       annotations:
         readiness.status.sidecar.istio.io/applicationPorts: ""
     spec:
+      serviceAccount: neon-cluster-manager
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

@@ -160,7 +160,8 @@ resources: {}
 ## Node labels for pod assignment
 ## ref: https://kubernetes.io/docs/user-guide/node-selection/
 #
-nodeSelector: {}
+nodeSelector:
+  neonkube.io/monitor.metrics: "true"
 
 ## Tolerations for pod assignment
 ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
@@ -173,7 +174,8 @@ tolerations: []
 affinity: {}
 
 extraInitContainers: []
-   
+
+
 ## Enable an Specify container in extraContainers. This is meant to allow adding an authentication proxy to a grafana pod
 extraContainers: |
 # - name: proxy
@@ -200,10 +202,10 @@ extraContainerVolumes: []
 persistence:
   type: pvc
   enabled: false
-  # storageClassName: default
+  storageClassName: ""
   accessModes:
     - ReadWriteOnce
-  size: 10Gi
+  size: 2Gi
   # annotations: {}
   finalizers:
     - kubernetes.io/pvc-protection
@@ -436,6 +438,11 @@ dashboardsConfigMaps: {}
 ## ref: http://docs.grafana.org/installation/configuration/
 ##
 grafana.ini:
+  database:
+    type: postgres
+    host: neon-system-db-citus-postgresql.neon-system
+    name: grafana
+    user: grafana
   paths:
     data: /var/lib/grafana/data
     logs: /var/log/grafana

@@ -205,6 +205,14 @@ namespace Neon.Kube
                 AllowPodsOnMasters = clusterDefinition.Workers.Count() == 0;
             }
 
+            if (!clusterDefinition.Nodes.Any(n => n.Labels.NeonSystemDb))
+            {
+                foreach (var m in clusterDefinition.Masters)
+                {
+                    m.Labels.NeonSystemDb = true;
+                }
+            }
+
             if (!clusterDefinition.Nodes.Any(n => n.Labels.Istio))
             {
                 if (AllowPodsOnMasters.GetValueOrDefault())

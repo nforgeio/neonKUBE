@@ -34,6 +34,8 @@ namespace NeonClusterManager
     {
         private static TimeSpan logPurgerInterval;
 
+        private static Kubernetes k8s;
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -87,7 +89,18 @@ namespace NeonClusterManager
         /// <returns>The tracking <see cref="Task"/>.</returns>
         public async Task SetupClusterAsync()
         {
-            KibanaSetup();
+            var isInCluster = KubernetesClientConfiguration.IsInCluster();
+
+            Log.LogInfo(isInCluster ? "Running in Kubernetes Cluster." : "Not running in Kubernetes Cluster.");
+
+            k8s = new Kubernetes(isInCluster ? KubernetesClientConfiguration.InClusterConfig() : KubernetesClientConfiguration.BuildDefaultConfig());
+
+            var tasks = new List<Task>();
+
+            tasks.Add(KibanaSetupAsync());
+            tasks.Add(NeonSystemSetup());
+
+            await NeonHelper.WaitAllAsync(tasks);
 
             await Task.CompletedTask;
         }

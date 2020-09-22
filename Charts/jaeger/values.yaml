@@ -170,7 +170,8 @@ ingester:
   serviceAccount:
     create: false
     name:
-  nodeSelector: {}
+  nodeSelector: 
+    neonkube.io/monitor.metrics: "true"
   tolerations: []
   affinity: {}
   podAnnotations: {}
@@ -221,7 +222,15 @@ agent:
     name:
   nodeSelector: {}
   tolerations: []
-  affinity: {}
+  affinity: 
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: neonkube.io/monitor.logs
+            operator: In
+            values:
+            - "true"
   podAnnotations: {}
   ## Additional pod labels
   ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
@@ -291,7 +300,15 @@ collector:
     name:
   nodeSelector: {}
   tolerations: []
-  affinity: {}
+  affinity: 
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: neonkube.io/monitor.logs
+            operator: In
+            values:
+            - "true"
   podAnnotations: {}
   ## Additional pod labels
   ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
@@ -392,7 +409,15 @@ query:
     name:
   nodeSelector: {}
   tolerations: []
-  affinity: {}
+  affinity: 
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: neonkube.io/monitor.logs
+            operator: In
+            values:
+            - "true"
   podAnnotations: {}
   ## Additional pod labels
   ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
@@ -444,7 +469,15 @@ spark:
     name:
   nodeSelector: {}
   tolerations: []
-  affinity: {}
+  affinity: 
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: neonkube.io/monitor.logs
+            operator: In
+            values:
+            - "true"
   extraSecretMounts: []
   extraConfigmapMounts: []
   ## Additional pod labels
@@ -480,7 +513,15 @@ esIndexCleaner:
     name:
   nodeSelector: {}
   tolerations: []
-  affinity: {}
+  affinity: 
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: neonkube.io/monitor.logs
+            operator: In
+            values:
+            - "true"
   extraSecretMounts: []
   extraConfigmapMounts: []
   podAnnotations: {}
@@ -532,7 +573,8 @@ hotrod:
   serviceAccount:
     create: true
     name:
-  nodeSelector: {}
+  nodeSelector:
+    neonkube.io/monitor.logs: "true"
   tolerations: []
   affinity: {}
   tracing:

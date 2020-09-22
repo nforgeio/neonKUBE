@@ -632,28 +632,6 @@ OPTIONS:
 
                     node.Status = "configure: node basics";
                     node.SudoCommand("setup-node.sh");
-
-                    // Create the container user and group.
-
-                    // $todo(jefflill):
-                    //
-                    // This is a bit of a hack to enable local Persistent Volumes for
-                    // pet-type pods.  We're going to precreate 100 folders and give
-                    // the [container] user full ownership of them.  We need to do this
-                    // because Kubernetes is unable to create these dynamically yet.
-
-                    node.Status = "create: local persistent volume folders";
-
-                    var sbVolumesScript = new StringBuilder();
-
-                    for (int i = 0; i < 100; i++)
-                    {
-                        sbVolumesScript.AppendLineLinux($"mkdir -p {KubeConst.LocalVolumePath}/{i}");
-                        sbVolumesScript.AppendLineLinux($"chown {KubeConst.ContainerUsername}:{KubeConst.ContainerGroup} {KubeConst.LocalVolumePath}/{i}");
-                        sbVolumesScript.AppendLineLinux($"chmod 770 {KubeConst.LocalVolumePath}/{i}");
-                    }
-
-                    node.SudoCommand(CommandBundle.FromScript(sbVolumesScript));
                 });
         }
 
@@ -1750,6 +1728,62 @@ spec:
                         });
 
                 });
+
+            // Setup openebs.
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-openebs",
+                () =>
+                {
+                    // hack until I can figure out what the difference is between their broken
+                    // helm chart and the yaml below.
+                    var script =
+$@"#!/bin/bash
+
+kubectl apply -f https://openebs.github.io/charts/openebs-operator.yaml
+";
+                    firstMaster.SudoCommand(CommandBundle.FromScript(script));
+                    //InstallOpenEBSAsync(firstMaster).Wait();
+                });
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-neon-system-namespace",
+                () =>
+                {
+                    k8sClient.CreateNamespace(new V1Namespace()
+                    {
+                        Metadata = new V1ObjectMeta()
+                        {
+                            Name = "neon-system",
+                            Labels = new Dictionary<string, string>()
+                            {
+                                { "istio-injection", "enabled" }
+                            }
+                        }
+                    });
+                });
+
+            // Setup neon-system-db.
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-neon-system-db",
+                () =>
+                {
+                    InstallSystemDbAsync(firstMaster).Wait();
+                });
+
+            // Setup neon-cluster-manager.
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-cluster-manager",
+                () =>
+                {
+                    InstallClusterManagerAsync(firstMaster).Wait();
+                });
+
+            // Setup Kiali.
+
+            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kiali",
+                () =>
+                {
+                    InstallKialiAsync(firstMaster).Wait();
+                });
         }
 
         /// <summary>
@@ -1922,23 +1956,6 @@ spec:
     istiocoredns:
       enabled: true
       coreDNSImage: coredns/coredns
-    kiali:
-      enabled: true
-      replicaCount: 1
-      hub: quay.io/kiali
-      tag: v1.9
-      contextPath: /kiali
-      nodeSelector: {{}}
-      podAntiAffinityLabelSelector: []
-      podAntiAffinityTermLabelSelector: []
-      dashboard:
-        secretName: kiali
-        usernameKey: username
-        passphraseKey: passphrase
-        viewOnlyMode: false
-        grafanaURL: http://grafana.monitoring
-      prometheusNamespace: monitoring
-      createDemoSecret: false
     cni:
       excludeNamespaces:
        - istio-system
@@ -1967,45 +1984,15 @@ istioctl install -f istio-cni.yaml
             firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kubernetes-setup",
                 () =>
                 {
-                    KubeSetup(firstMaster).Wait();
+                    KubeSetupAsync(firstMaster).Wait();
                 });
-
-            //// Setup Kubernetes.
-
-            //firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kubernetes-state-metrics",
-            //    () =>
-            //    {
-            //        InstallKubeStateMetrics(firstMaster).Wait();
-            //    });
-
-            // Install metrics persistence if required.
-
-            //if (cluster.Definition.Monitor.Prometheus.Persistence && cluster.Definition.Nodes.Any(n => n.Labels.Metrics == true))
-            //{
-            //    // Install an Etcd cluster to the monitoring namespace
-
-            //    firstMaster.InvokeIdempotentAction("setup/cluster-deploy-etcd",
-            //        () =>
-            //        {
-            //            InstallEtcd(firstMaster);
-            //        });
-
-            //    // Install an Metrics cluster to the monitoring namespace
-
-            //    firstMaster.InvokeIdempotentAction("setup/cluster-deploy-\",
-            //        () =>
-            //        {
-            //            InstallM3db(firstMaster);
-            //        });
-
-            //}
 
             //// Install an Prometheus cluster to the monitoring namespace
 
             firstMaster.InvokeIdempotentAction("setup/cluster-deploy-neon-metrics",
                 () =>
                 {
-                    InstallNeonMetrics(firstMaster);
+                    InstallNeonMetricsAsync(firstMaster).Wait();
                 });
 
             // Install Elasticsearch.
@@ -2015,7 +2002,7 @@ istioctl install -f istio-cni.yaml
                 firstMaster.InvokeIdempotentAction("setup/cluster-deploy-elasticsearch",
                 () =>
                 {
-                    InstallElasticSearch(firstMaster);
+                    InstallElasticSearchAsync(firstMaster).Wait();
                 });
 
                 // Setup Fluentd.
@@ -2023,7 +2010,7 @@ istioctl install -f istio-cni.yaml
                 firstMaster.InvokeIdempotentAction("setup/cluster-deploy-fluentd",
                     () =>
                     {
-                        InstallFluentd(firstMaster).Wait();
+                        InstallFluentdAsync(firstMaster).Wait();
                     });
 
                 // Setup Fluent-Bit.
@@ -2031,7 +2018,7 @@ istioctl install -f istio-cni.yaml
                 firstMaster.InvokeIdempotentAction("setup/cluster-deploy-fluent-bit",
                     () =>
                     {
-                        InstallFluentBit(firstMaster).Wait();
+                        InstallFluentBitAsync(firstMaster).Wait();
                     });
 
                 // Setup Kibana.
@@ -2039,7 +2026,7 @@ istioctl install -f istio-cni.yaml
                 firstMaster.InvokeIdempotentAction("setup/cluster-deploy-kibana",
                     () =>
                     {
-                        InstallKibana(firstMaster).Wait();
+                        InstallKibanaAsync(firstMaster).Wait();
                     });
 
                 // Setup Jaeger.
@@ -2047,19 +2034,9 @@ istioctl install -f istio-cni.yaml
                 firstMaster.InvokeIdempotentAction("setup/cluster-deploy-jaeger",
                     () =>
                     {
-                        InstallJaeger(firstMaster).Wait();
+                        InstallJaegerAsync(firstMaster).Wait();
                     });
             }
-
-            
-
-            // Setup cluster-manager.
-
-            firstMaster.InvokeIdempotentAction("setup/cluster-deploy-cluster-manager",
-                () =>
-                {
-                    InstallClusterManager(firstMaster).Wait();
-                });
         }
 
         /// <summary>
@@ -2172,7 +2149,7 @@ rm -rf {chartName}*
         /// Some initial kubernetes config.
         /// </summary>
         /// <param name="master">The master node.</param>
-        private async Task KubeSetup(SshProxy<NodeDefinition> master)
+        private async Task KubeSetupAsync(SshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: cluster-setup";
 
@@ -2180,10 +2157,50 @@ rm -rf {chartName}*
         }
 
         /// <summary>
+        /// Installs OpenEBS
+        /// </summary>
+        /// <param name="master">The master node.</param>
+        private async Task InstallOpenEBSAsync(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: openebs";
+
+            master.InvokeIdempotentAction("setup/openebs-namespace",
+                    () =>
+                    {
+                        k8sClient.CreateNamespace(new V1Namespace()
+                        {
+                            Metadata = new V1ObjectMeta()
+                            {
+                                Name = "openebs",
+                                Labels = new Dictionary<string, string>()
+                                {
+                                    { "istio-injection", "enabled" }
+                                }
+                            }
+                        });
+                    });
+
+            var values = new List<KeyValuePair<string, object>>();
+
+            if (cluster.Definition.Workers.Count() >= 3)
+            {
+                var replicas = Math.Max(2, cluster.Definition.Workers.Count() / 3);
+                values.Add(new KeyValuePair<string, object>($"apiserver.replicas", replicas));
+                values.Add(new KeyValuePair<string, object>($"provisioner.replicas", replicas));
+                values.Add(new KeyValuePair<string, object>($"localprovisioner.replicas", replicas));
+                values.Add(new KeyValuePair<string, object>($"snapshotOperator.replicas", replicas));
+                values.Add(new KeyValuePair<string, object>($"ndmOperator.replicas", 1));
+                values.Add(new KeyValuePair<string, object>($"webhook.replicas", replicas));
+            }
+
+            await InstallHelmChartAsync(master, "openebs", releaseName: "neon-storage", values: values, @namespace: "openebs", wait: true, timeout: 900);
+        }
+
+        /// <summary>
         /// Setup Kube state metrics.
         /// </summary>
         /// <param name="master">The master node.</param>
-        private async Task InstallKubeStateMetrics(SshProxy<NodeDefinition> master)
+        private async Task InstallKubeStateMetricsAsync(SshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: kube-state-metrics";
 
@@ -2194,84 +2211,30 @@ rm -rf {chartName}*
         /// Deploy Kiali
         /// </summary>
         /// <param name="master">The master node.</param>
-        private async Task InstallKiali(SshProxy<NodeDefinition> master)
+        private async Task InstallKialiAsync(SshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: kiali";
 
-            await InstallHelmChartAsync(master, "kiali", @namespace: "monitoring");
+            var values = new List<KeyValuePair<string, object>>();
+
+            int i = 0;
+            foreach (var t in await GetTaintsAsync(NodeLabels.LabelIstio, "true"))
+            {
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                i++;
+            }
+
+            await InstallHelmChartAsync(master, "kiali", @namespace: "istio-system", values: values, wait: false);
         }
 
         /// <summary>
         /// Installs an Etcd cluster to the monitoring namespace.
         /// </summary>
         /// <param name="master">The master node.</param>
-        private void InstallEtcd(SshProxy<NodeDefinition> master)
+        private async Task InstallEtcdAsync(SshProxy<NodeDefinition> master)
         {
-            master.Status = "deploy: etcd";
-
-            master.Status = "setup: neon-metrics-etcd-volumes";
-
-            master.InvokeIdempotentAction("setup/neon-metrics-etcd-volumes",
-                () =>
-                {
-                    var i = 0;
-                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Metrics))
-                    {
-                        var volume = new V1PersistentVolume()
-                        {
-                            ApiVersion = "v1",
-                            Kind = "PersistentVolume",
-                            Metadata = new V1ObjectMeta()
-                            {
-                                Name = $"neon-metrics-etcd-data-{i}",
-                                Labels = new Dictionary<string, string>()
-                                {
-                                    ["neonMetrics"] = "etcd"
-                                }
-                            },
-                            Spec = new V1PersistentVolumeSpec()
-                            {
-                                Capacity = new Dictionary<string, ResourceQuantity>()
-                                {
-                                    { "storage", new ResourceQuantity("1Gi") }
-                                },
-                                AccessModes = new List<string>() { "ReadWriteOnce" },
-                                PersistentVolumeReclaimPolicy = "Retain",
-                                StorageClassName = "local-storage",
-                                Local = new V1LocalVolumeSource()
-                                {
-                                    Path = $"{KubeConst.LocalVolumePath}/98"
-                                },
-                                NodeAffinity = new V1VolumeNodeAffinity()
-                                {
-                                    Required = new V1NodeSelector()
-                                    {
-                                        NodeSelectorTerms = new List<V1NodeSelectorTerm>()
-                            {
-                                new V1NodeSelectorTerm()
-                                {
-                                    MatchExpressions = new List<V1NodeSelectorRequirement>()
-                                    {
-                                        new V1NodeSelectorRequirement()
-                                        {
-                                            Key = "kubernetes.io/hostname",
-                                            OperatorProperty = "In",
-                                            Values = new List<string>() { $"{n.Name}" }
-                                        }
-                                    }
-                                }
-                            }
-                                    }
-                                }
-                            },
-                        };
-
-                        k8sClient.CreatePersistentVolumeAsync(volume).Wait();
-                        i++;
-                    }
-                });
-            
-
             master.Status = "deploy: neon-metrics-etcd-cluster";
 
             master.InvokeIdempotentAction("deploy/neon-metrics-etcd-cluster",
@@ -2283,21 +2246,13 @@ rm -rf {chartName}*
 
                     values.Add(new KeyValuePair<string, object>($"volumeClaimTemplate.resources.requests.storage", "1Gi"));
 
-                    var taints = new List<string>();
-                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Metrics))
-                    {
-                        if (n.Taints?.Count() > 0)
-                        {
-                            taints = taints.Union(n.Taints).ToList();
-                        }
-                    }
-
                     int i = 0;
-                    foreach (var t in taints)
+                    foreach (var t in GetTaintsAsync(NodeLabels.LabelMetrics, "true").Result)
                     {
-                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Split("=")[0]}"));
-                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", "NoSchedule"));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
                         values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                        i++;
                     }
 
                     InstallHelmChartAsync(master, "etcd-cluster", releaseName: "neon-metrics-etcd", @namespace: "monitoring", values: values).Wait();
@@ -2305,9 +2260,9 @@ rm -rf {chartName}*
 
             
             // wait for cluster to be running before proceeding
-            while ((k8sClient.ListNamespacedPodAsync("monitoring", labelSelector: "release=neon-metrics-etcd")).Result.Items.Where(p => p.Status.Phase == "Running").Count() != cluster.Definition.Nodes.Where(l => l.Labels.Metrics == true).Count())
+            while (((await k8sClient.ListNamespacedPodAsync("monitoring", labelSelector: "release=neon-metrics-etcd"))).Items.Where(p => p.Status.Phase == "Running").Count() != cluster.Definition.Nodes.Where(l => l.Labels.Metrics == true).Count())
             {
-                Thread.Sleep(1000);
+                await Task.Delay(1000);
             }
         }
 
@@ -2315,7 +2270,7 @@ rm -rf {chartName}*
         /// Installs an Metrics cluster to the monitoring namespace.
         /// </summary>
         /// <param name="master">The master node.</param>
-        private void InstallNeonMetrics(SshProxy<NodeDefinition> master)
+        private async Task InstallNeonMetricsAsync(SshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: neon-metrics";
 
@@ -2324,23 +2279,25 @@ rm -rf {chartName}*
             master.InvokeIdempotentAction("deploy/neon-metrics-prometheus-operator",
                 () =>
                 {
+                    master.Status = "deploy: neon-metrics-prometheus-operator";
+
                     var values = new List<KeyValuePair<string, object>>();
 
-                    var taints = new List<string>();
-                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Metrics))
-                    {
-                        if (n.Taints?.Count() > 0)
-                        {
-                            taints = taints.Union(n.Taints).ToList();
-                        }
-                    }
-
                     int i = 0;
-                    foreach (var t in taints)
+                    foreach (var t in GetTaintsAsync(NodeLabels.LabelMetrics, "true").Result)
                     {
-                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Split("=")[0]}"));
-                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", "NoSchedule"));
-                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                        values.Add(new KeyValuePair<string, object>($"alertmanagerSpec.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"alertmanagerSpec.tolerations[{i}].effect", t.Effect));
+                        values.Add(new KeyValuePair<string, object>($"alertmanagerSpec.tolerations[{i}].operator", "Exists"));
+
+                        values.Add(new KeyValuePair<string, object>($"prometheusOperator.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"prometheusOperator.tolerations[{i}].effect", t.Effect));
+                        values.Add(new KeyValuePair<string, object>($"prometheusOperator.tolerations[{i}].operator", "Exists"));
+                        
+                        values.Add(new KeyValuePair<string, object>($"prometheusSpec.tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"prometheusSpec.tolerations[{i}].effect", t.Effect));
+                        values.Add(new KeyValuePair<string, object>($"prometheusSpec.tolerations[{i}].operator", "Exists"));
+                        i++;
                     }
 
                     InstallHelmChartAsync(master, "prometheus-operator", releaseName: "neon-metrics-prometheus-operator", @namespace: "monitoring", values: values, timeout: 1200, wait: true).Wait();
@@ -2348,7 +2305,7 @@ rm -rf {chartName}*
 
             if (cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count() > 1)
             {
-                InstallEtcd(master);
+                await InstallEtcdAsync(master);
             }
             else
             {
@@ -2359,6 +2316,7 @@ rm -rf {chartName}*
             master.InvokeIdempotentAction("deploy/neon-metrics-cortex",
                 () =>
                 {
+                    master.Status = "deploy: neon-metrics-cortex";
 
                     switch (cluster.Definition.Monitor.Metrics.Storage)
                     {
@@ -2368,27 +2326,19 @@ rm -rf {chartName}*
                             // create folders
                             break;
                         case MetricsStorageOptions.Yugabyte:
-                            InstallMetricsYugabyte(master);
+                            InstallMetricsYugabyteAsync(master).Wait();
                             break;
                         default:
                             break;
                     }
 
-                    var taints = new List<string>();
-                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Metrics))
-                    {
-                        if (n.Taints?.Count() > 0)
-                        {
-                            taints = taints.Union(n.Taints).ToList();
-                        }
-                    }
-
                     int i = 0;
-                    foreach (var t in taints)
+                    foreach (var t in GetTaintsAsync(NodeLabels.LabelMetrics, "true").Result)
                     {
-                        cortexValues.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Split("=")[0]}"));
-                        cortexValues.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", "NoSchedule"));
+                        cortexValues.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                        cortexValues.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
                         cortexValues.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                        i++;
                     }
 
                     InstallHelmChartAsync(master, "cortex", releaseName: "neon-metrics-cortex", @namespace: "monitoring", values: cortexValues, timeout: 1200, wait: true).Wait();
@@ -2397,32 +2347,28 @@ rm -rf {chartName}*
             master.InvokeIdempotentAction("deploy/istio-prometheus",
                 () =>
                 {
+                    master.Status = "deploy: neon-metrics-istio";
+
                     InstallHelmChartAsync(master, "istio-prometheus", @namespace: "monitoring").Wait();
                 });
 
             master.InvokeIdempotentAction("deploy/grafana",
                 () =>
                 {
+                    master.Status = "deploy: neon-metrics-grafana";
+
                     var values = new List<KeyValuePair<string, object>>();
 
-                    var taints = new List<string>();
-                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Metrics))
-                    {
-                        if (n.Taints?.Count() > 0)
-                        {
-                            taints = taints.Union(n.Taints).ToList();
-                        }
-                    }
-
                     int i = 0;
-                    foreach (var t in taints)
+                    foreach (var t in GetTaintsAsync(NodeLabels.LabelMetrics, "true").Result)
                     {
-                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Split("=")[0]}"));
-                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", "NoSchedule"));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
                         values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                        i++;
                     }
 
-                    InstallHelmChartAsync(master, "grafana", releaseName: "neon-metrics-grafana", @namespace: "monitoring", values: values).Wait();
+                    InstallHelmChartAsync(master, "grafana", releaseName: "neon-metrics-grafana", @namespace: "monitoring", values: values, wait: false).Wait();
                 });
 
         }
@@ -2431,80 +2377,12 @@ rm -rf {chartName}*
         /// Installs a Yugabyte cluster for metrics storage.
         /// </summary>
         /// <param name="master"></param>
-        private void InstallMetricsYugabyte(SshProxy<NodeDefinition> master)
+        private async Task InstallMetricsYugabyteAsync(SshProxy<NodeDefinition> master)
         {
             master.InvokeIdempotentAction("deploy/metrics-persistence-yugabyte",
                 () =>
                 {
                     master.Status = "deploy: metrics storage (yugabyte)";
-
-                    master.InvokeIdempotentAction("setup/metrics-yugabyte-volumes",
-                        () =>
-                        {
-                            var i = 0;
-                            foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Metrics))
-                            {
-                                var volume = new V1PersistentVolume()
-                                {
-                                    ApiVersion = "v1",
-                                    Kind = "PersistentVolume",
-                                    Metadata = new V1ObjectMeta()
-                                    {
-                                        Name = $"neon-metrics-db-master-data-{i}",
-                                        Labels = new Dictionary<string, string>()
-                                        {
-                                            ["neonMetrics"] = "yb-master"
-                                        }
-                                    },
-                                    Spec = new V1PersistentVolumeSpec()
-                                    {
-                                        Capacity = new Dictionary<string, ResourceQuantity>()
-                                        {
-                                            { "storage", new ResourceQuantity(cluster.Definition.Monitor.Metrics.DiskSize) }
-                                        },
-                                        AccessModes = new List<string>() { "ReadWriteOnce" },
-                                        PersistentVolumeReclaimPolicy = "Retain",
-                                        StorageClassName = "local-storage",
-                                        Local = new V1LocalVolumeSource()
-                                        {
-                                            Path = $"{KubeConst.LocalVolumePath}/96"
-                                        },
-                                        NodeAffinity = new V1VolumeNodeAffinity()
-                                        {
-                                            Required = new V1NodeSelector()
-                                            {
-                                                NodeSelectorTerms = new List<V1NodeSelectorTerm>()
-                                                {
-                                                    new V1NodeSelectorTerm()
-                                                    {
-                                                        MatchExpressions = new List<V1NodeSelectorRequirement>()
-                                                        {
-                                                            new V1NodeSelectorRequirement()
-                                                            {
-                                                                Key = "kubernetes.io/hostname",
-                                                                OperatorProperty = "In",
-                                                                Values = new List<string>() { $"{n.Name}" }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    },
-                                };
-
-                                k8sClient.CreatePersistentVolumeAsync(volume).Wait();
-
-                                // tserver volume
-                                volume.Metadata.Name = $"neon-metrics-db-tserver-data-{i}";
-                                volume.Metadata.Labels["neonMetrics"] = $"yb-tserver";
-                                volume.Spec.Local.Path = $"{KubeConst.LocalVolumePath}/95";
-
-                                k8sClient.CreatePersistentVolumeAsync(volume).Wait();
-
-                                i++;
-                            }
-                        });
 
                     master.InvokeIdempotentAction("setup/metrics-yugabyte",
                         () =>
@@ -2516,96 +2394,39 @@ rm -rf {chartName}*
                             values.Add(new KeyValuePair<string, object>($"partition.master", cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()));
                             values.Add(new KeyValuePair<string, object>($"partition.tserver", cluster.Definition.Nodes.Where(n => n.Labels.Metrics).Count()));
 
-                            var taints = new List<string>();
-                            foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Metrics))
-                            {
-                                if (n.Taints?.Count() > 0)
-                                {
-                                    taints = taints.Union(n.Taints).ToList();
-                                }
-                            }
+                            Regex re = new Regex(@"(\d+)([a-zA-Z]+)");
+                            Match result = re.Match(cluster.Definition.Monitor.Logs.DiskSize);
+
+                            var ybDiskSize = decimal.Parse(result.Groups[1].Value);
+                            var ybDiskUnit = result.Groups[2].Value;
+
+                            values.Add(new KeyValuePair<string, object>($"storage.master.size", $"{Math.Round(ybDiskSize / 3, 2)}{ybDiskUnit}"));
+                            values.Add(new KeyValuePair<string, object>($"storage.tserver.size", $"{Math.Round(2 * (ybDiskSize / 3), 2)}{ybDiskUnit}"));
 
                             int i = 0;
-                            foreach (var t in taints)
+                            foreach (var t in GetTaintsAsync(NodeLabels.LabelMetrics, "true").Result)
                             {
-                                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Split("=")[0]}"));
-                                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", "NoSchedule"));
+                                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
                                 values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                                i++;
                             }
 
                             // We're not waiting because I was seeing this behaviour: https://github.com/helm/helm/issues/8674
                             InstallHelmChartAsync(master, "yugabyte", releaseName: "neon-metrics-db", @namespace: "monitoring", values: values, wait: false).Wait();
                         });
                 });
+
+            await Task.CompletedTask;
         }
 
         /// <summary>
         /// Installs Elasticsearch
         /// </summary>
         /// <param name="master">The master node.</param>
-        private void InstallElasticSearch(SshProxy<NodeDefinition> master)
+        private async Task InstallElasticSearchAsync(SshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: elasticsearch";
-
-            master.InvokeIdempotentAction("setup/elasticsearch-volumes",
-                () =>
-                {
-                    var i = 0;
-                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Logs))
-                    {
-                        var volume = new V1PersistentVolume()
-                        {
-                            ApiVersion = "v1",
-                            Kind = "PersistentVolume",
-                            Metadata = new V1ObjectMeta()
-                            {
-                                Name = $"elasticsearch-data-{i}",
-                                Labels = new Dictionary<string, string>()
-                                {
-                                    ["elasticsearch"] = "default"
-                                }
-                            },
-                            Spec = new V1PersistentVolumeSpec()
-                            {
-                                Capacity = new Dictionary<string, ResourceQuantity>()
-                                {
-                                    { "storage", new ResourceQuantity(cluster.Definition.Monitor.Logs.DiskSize) }
-                                },
-                                AccessModes = new List<string>() { "ReadWriteOnce" },
-                                PersistentVolumeReclaimPolicy = "Retain",
-                                StorageClassName = "local-storage",
-                                Local = new V1LocalVolumeSource()
-                                {
-                                    Path = $"{KubeConst.LocalVolumePath}/99"
-                                },
-                                NodeAffinity = new V1VolumeNodeAffinity()
-                                {
-                                    Required = new V1NodeSelector()
-                                    {
-                                        NodeSelectorTerms = new List<V1NodeSelectorTerm>()
-                                {
-                                    new V1NodeSelectorTerm()
-                                    {
-                                        MatchExpressions = new List<V1NodeSelectorRequirement>()
-                                        {
-                                            new V1NodeSelectorRequirement()
-                                            {
-                                                Key = "kubernetes.io/hostname",
-                                                OperatorProperty = "In",
-                                                Values = new List<string>() { $"{n.Name}" }
-                                            }
-                                        }
-                                    }
-                                }
-                                    }
-                                }
-                            },
-                        };
-
-                        k8sClient.CreatePersistentVolumeAsync(volume).Wait();
-                        i++;
-                    }
-                });
 
             master.InvokeIdempotentAction("deploy/elasticsearch",
                 () =>
@@ -2615,8 +2436,6 @@ rm -rf {chartName}*
 
                     values.Add(new KeyValuePair<string, object>("replicas", cluster.Nodes.Where(n => n.Metadata.Labels.Logs).Count()));
                     values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.resources.requests.storage", monitorOptions.Logs.DiskSize));
-                    values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
-                    values.Add(new KeyValuePair<string, object>("volumeClaimTemplate.storageClassName", KubeConst.LocalStorageClassName));
 
                     if (cluster.Nodes.Where(n => n.Metadata.Labels.Logs).Count() == 1)
                     {
@@ -2642,21 +2461,13 @@ rm -rf {chartName}*
                         }
                     }
 
-                    var taints = new List<string>();
-                    foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Logs))
-                    {
-                        if (n.Taints?.Count() > 0)
-                        {
-                            taints = taints.Union(n.Taints).ToList();
-                        }
-                    }
-
                     int i = 0;
-                    foreach (var t in taints)
+                    foreach (var t in GetTaintsAsync(NodeLabels.LabelLogs, "true").Result)
                     {
-                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Split("=")[0]}"));
-                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", "NoSchedule"));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                        values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
                         values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                        i++;
                     }
 
                     InstallHelmChartAsync(master, "elasticsearch", releaseName: "neon-logs-elasticsearch", @namespace: "monitoring", timeout: 1200, values: values, wait: false).Wait();
@@ -2666,14 +2477,16 @@ rm -rf {chartName}*
                     {
                         Thread.Sleep(1000);
                     }
-                });          
+                });
+
+            await Task.CompletedTask;
         }
 
         /// <summary>
         /// Installs FluentBit
         /// </summary>
         /// <param name="master">The master node.</param>
-        private async Task InstallFluentBit(SshProxy<NodeDefinition> master)
+        private async Task InstallFluentBitAsync(SshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: fluent-bit";            
 
@@ -2695,7 +2508,7 @@ rm -rf {chartName}*
         /// Installs fluentd
         /// </summary>
         /// <param name="master">The master node.</param>
-        private async Task InstallFluentd(SshProxy<NodeDefinition> master)
+        private async Task InstallFluentdAsync(SshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: fluentd";
 
@@ -2703,21 +2516,13 @@ rm -rf {chartName}*
             values.Add(new KeyValuePair<string, object>($"autoscaling.minReplicas", (Math.Max(1, cluster.Definition.Workers.Count() % 6))));
             values.Add(new KeyValuePair<string, object>($"autoscaling.maxReplicas", (Math.Max(1, cluster.Definition.Workers.Count()))));
 
-            var taints = new List<string>();
-            foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Logs))
-            {
-                if (n.Taints?.Count() > 0)
-                {
-                    taints = taints.Union(n.Taints).ToList();
-                }
-            }
-
             int i = 0;
-            foreach (var t in taints)
+            foreach (var t in await GetTaintsAsync(NodeLabels.LabelLogs, "true"))
             {
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Split("=")[0]}"));
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", "NoSchedule"));
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
                 values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                i++;
             }
 
             await InstallHelmChartAsync(master, "fluentd", releaseName: "neon-log-collector", @namespace: "monitoring", timeout: 300, values: values);
@@ -2727,27 +2532,19 @@ rm -rf {chartName}*
         /// Installs Kibana
         /// </summary>
         /// <param name="master">The master node.</param>
-        private async Task InstallKibana(SshProxy<NodeDefinition> master)
+        private async Task InstallKibanaAsync(SshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: kibana";
 
             var values = new List<KeyValuePair<string, object>>();
 
-            var taints = new List<string>();
-            foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Logs))
-            {
-                if (n.Taints?.Count() > 0)
-                {
-                    taints = taints.Union(n.Taints).ToList();
-                }
-            }
-
             int i = 0;
-            foreach (var t in taints)
+            foreach (var t in await GetTaintsAsync(NodeLabels.LabelLogs, "true"))
             {
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Split("=")[0]}"));
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", "NoSchedule"));
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
                 values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                i++;
             }
 
             await InstallHelmChartAsync(master, "kibana", releaseName: "neon-logs-kibana", @namespace: "monitoring", timeout: 900, values: values, wait: false);
@@ -2757,63 +2554,55 @@ rm -rf {chartName}*
         /// Installs Jaeger
         /// </summary>
         /// <param name="master">The master node.</param>
-        private async Task InstallJaeger(SshProxy<NodeDefinition> master)
+        private async Task InstallJaegerAsync(SshProxy<NodeDefinition> master)
         {
             master.Status = "deploy: jaeger";
 
             var values = new List<KeyValuePair<string, object>>();
 
-            var taints = new List<string>();
-            foreach (var n in cluster.Definition.Nodes.Where(n => n.Labels.Logs))
-            {
-                if (n.Taints?.Count() > 0)
-                {
-                    taints = taints.Union(n.Taints).ToList();
-                }
-            }
-
             int i = 0;
-            foreach (var t in taints)
+            foreach (var t in await GetTaintsAsync(NodeLabels.LabelLogs, "true"))
             {
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Split("=")[0]}"));
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", "NoSchedule"));
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
                 values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
+                i++;
             }
 
             await InstallHelmChartAsync(master, "jaeger", releaseName: "neon-logs-jaeger", @namespace: "monitoring", timeout: 900, values: values, wait: false);
         }
 
         /// <summary>
-        /// Installs metricbeat
+        /// Installs the Neon Cluster Manager.
         /// </summary>
         /// <param name="master">The master node.</param>
-        private async Task InstallMetricbeat(SshProxy<NodeDefinition> master)
+        private async Task InstallClusterManagerAsync(SshProxy<NodeDefinition> master)
         {
-            master.Status = "deploy: metricbeat";
+            master.Status = "deploy: neon-cluster-manager";
+
+            await InstallHelmChartAsync(master, "neon-cluster-manager", releaseName: "neon-cluster-manager", @namespace: "neon-system", timeout: 300);
+        }
+
+        /// <summary>
+        /// Installs a Citus-postgres database used by neon-system services.
+        /// </summary>
+        /// <param name="master">The master node.</param>
+        private async Task InstallSystemDbAsync(SshProxy<NodeDefinition> master)
+        {
+            master.Status = "deploy: neon-system-db";
 
             var values = new List<KeyValuePair<string, object>>();
-            var i = 0;
 
-            foreach (var taint in (await k8sClient.ListNodeAsync()).Items.Where(i => i.Spec.Taints != null).SelectMany(i => i.Spec.Taints))
+            int i = 0;
+            foreach (var t in await GetTaintsAsync(NodeLabels.LabelNeonSystemDb, "true"))
             {
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", taint.Key));
-                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", taint.Effect));
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].key", $"{t.Key.Split("=")[0]}"));
+                values.Add(new KeyValuePair<string, object>($"tolerations[{i}].effect", t.Effect));
                 values.Add(new KeyValuePair<string, object>($"tolerations[{i}].operator", "Exists"));
                 i++;
             }
 
-            await InstallHelmChartAsync(master, "metricbeat", @namespace: "monitoring", timeout: 300, values: values);
-        }
-
-        /// <summary>
-        /// Installs metricbeat
-        /// </summary>
-        /// <param name="master">The master node.</param>
-        private async Task InstallClusterManager(SshProxy<NodeDefinition> master)
-        {
-            master.Status = "deploy: cluster-manager";
-
-            await InstallHelmChartAsync(master, "neon-cluster-manager", releaseName: "neon-cluster-manager", @namespace: "monitoring", timeout: 300);
+            await InstallHelmChartAsync(master, "citus-postgresql", releaseName: "neon-system-db", @namespace: "neon-system", values: values, timeout: 1200);
         }
 
         /// <summary>
@@ -2881,6 +2670,7 @@ rm -rf {chartName}*
 
                             sbScript.AppendLine();
                             sbScript.AppendLineLinux($"kubectl label nodes --overwrite {node.Name} {sbArgs}");
+
                         }
 
                         master.SudoCommand(CommandBundle.FromScript(sbScript));
@@ -2945,6 +2735,33 @@ rm -rf {chartName}*
                         master.Status = string.Empty;
                     }
                 });
+        }
+
+        /// <summary>
+        /// Gets a list of taints that are currently applied to all nodes matching the given node label/value pair.
+        /// </summary>
+        /// <param name="labelKey"></param>
+        /// <param name="labelValue"></param>
+        /// <returns></returns>
+        private async Task<List<V1Taint>> GetTaintsAsync(string labelKey, string labelValue)
+        {
+            var taints = new List<V1Taint>();
+
+            foreach (var n in (await k8sClient.ListNodeAsync()).Items.Where(n => n.Metadata.Labels.Any(l => l.Key == labelKey && l.Value == labelValue)))
+            {
+                if (n.Spec.Taints?.Count() > 0)
+                {
+                    foreach (var t in n.Spec.Taints)
+                    {
+                        if (!taints.Any(x => x.Key == t.Key && x.Effect == t.Effect && x.Value == t.Value))
+                        {
+                            taints.Add(t);
+                        }
+                    }
+                }
+            }
+
+            return taints;
         }
     }
 }
