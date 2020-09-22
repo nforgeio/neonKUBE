@@ -543,6 +543,13 @@ namespace Neon.Kube
         private static IReadOnlyList<AwsUbuntuImage> ubuntuImages;
 
         /// <summary>
+        /// 
+        /// </summary>
+        private static readonly TimeSpan operationTimeout = TimeSpan.FromMinutes(5);
+
+        private static readonly TimeSpan operationPollInternal = TimeSpan.FromSeconds(5);
+
+        /// <summary>
         /// Static constructor.
         /// </summary>
         static AwsHostingManager()
@@ -757,7 +764,7 @@ namespace Neon.Kube
         private Group                               resourceGroup;
         private Address                             elasticIp;
         private Vpc                                 vpc;
-        private RouteTable                          mainRouteTable;
+        private RouteTable                          vpcRouteTable;
         private DhcpOptions                         dhcpOptions;
         private SecurityGroup                       sgAllowAll;
         private Subnet                              subnet;
@@ -1096,7 +1103,7 @@ namespace Neon.Kube
             var operations = NetworkOperations.InternetRouting;
 
             // We need to update the SSH rules too if it looks like SSH is
-            // currently enabled.  We'll tell by inspecting the subnet's
+            // currently enabled.  We'll tell by inspecting the subnet
             // network ACL, looking for the entry allowing SSH traffic
             // from the reserved port range.
 
@@ -1318,11 +1325,11 @@ namespace Neon.Kube
             // Note that subnets are created with a default network ACL assigned.  We'll identify this
             // as [networkAcl1].
 
-            await IdentifyNetworkAclsAsync();
+            await IdentifyPublicNetworkAclsAsync();
 
             // Route Table
 
-            mainRouteTable = await GetMainRouteTableAsync();
+            vpcRouteTable = await GetVpcRouteTableAsync();
 
             // Internet Gateway
 
@@ -1416,14 +1423,14 @@ namespace Neon.Kube
         }
 
         /// <summary>
-        /// Attempts to identify the two network ACLs we'll be using to secure the subnet.
+        /// Attempts to identify the two subnet network ACLs we'll be using to secure the subnet.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private async Task IdentifyNetworkAclsAsync()
+        private async Task IdentifyPublicNetworkAclsAsync()
         {
-            if (vpc == null)
+            if (vpc == null || subnet == null)
             {
-                // There can't be any network ACLs until the VPC exists.
+                // There can't be any network ACLs until the VPC and subnet exist.
 
                 return;
             }
@@ -1566,7 +1573,7 @@ retry:
         /// Returns the VPC's main route table.
         /// </summary>
         /// <returns>The main route table or <c>null</c>.</returns>
-        private async Task<RouteTable> GetMainRouteTableAsync()
+        private async Task<RouteTable> GetVpcRouteTableAsync()
         {
             if (vpc == null)
             {
@@ -1597,8 +1604,8 @@ retry:
 
                     return false;
                 },
-                timeout:        TimeSpan.FromSeconds(60),
-                pollTime:       TimeSpan.FromSeconds(5),
+                timeout:        operationTimeout,
+                pollInterval:   operationPollInternal,
                 timeoutMessage: "Timeout waiting for the main routing table to be created for the cluster VPC.");
 
             return routeTable;
@@ -2095,7 +2102,7 @@ retry:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ConfigureNetworkAsync()
         {
-            // Create the VPC.
+            // Create the VPC with the node subnet CIDR.
 
             if (vpc == null)
             {
@@ -2104,10 +2111,12 @@ retry:
                     {
                         CidrBlock         = networkOptions.NodeSubnet,
                         TagSpecifications = GetTagSpecifications(vpcName, ResourceType.Vpc)
-                    });
+                    });;
 
                 vpc = vpcResponse.Vpc;
             }
+
+            vpcRouteTable = await GetVpcRouteTableAsync();
 
             // Clear the VPC's default network ACL by deleting all inbound and outbound 
             // rules except for the default DENY rule for both directions.
@@ -2247,7 +2256,7 @@ retry:
                 }
             }
 
-            // Create the subnet and associate it with the VPC if the subnet doesn't already exist.
+            // Create the public and private subnets and associate them with the VPC.
 
             if (subnet == null)
             {
@@ -2264,7 +2273,7 @@ retry:
 
             // Identify/create the two network ACLs we'll use for securing the subnet.
 
-            await IdentifyNetworkAclsAsync();
+            await IdentifyPublicNetworkAclsAsync();
 
             if (networkAcl1 == null)
             {
@@ -2317,12 +2326,11 @@ retry:
             // We need to update the VPC's main route table to include a route to 
             // the internet gateway.
 
-            await AddGatewayRouteAsync(mainRouteTable);
+            await AddGatewayRouteAsync(vpcRouteTable);
         }
 
         /// <summary>
-        /// Adds a route to the internet to the route table passed if the route doesn't
-        /// already exist.
+        /// Adds a route to the internet gateway.
         /// </summary>
         /// <param name="routeTable">The target route table.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -2340,7 +2348,7 @@ retry:
 
                 // Reload the route table to pick up the change.
 
-                mainRouteTable = await GetMainRouteTableAsync();
+                vpcRouteTable = await GetVpcRouteTableAsync();
             }
         }
 
@@ -2372,7 +2380,7 @@ retry:
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private async Task ConfigureLoadBalancerAsync()
         {
-            // Create the load balancer if it doesn't already exist.
+            // Create the load balancer in the subnet.
 
             if (loadBalancer == null)
             {
@@ -2515,6 +2523,8 @@ retry:
                 Covenant.Assert(!string.IsNullOrEmpty(placementGroupName));
                 Covenant.Assert(partitionNumber > 0);
 
+                // Create the instances in the subnet.
+                //
                 // Note that AWS does not support starting new instances with a specific
                 // SSH password; they use an SSH key instead.  So we need to have AWS install
                 // the key when it provisions the VM and then we'll configure the password
@@ -2554,12 +2564,14 @@ retry:
                     });
 
                 awsInstance.Instance = runResponse.Reservation.Instances.Single();
+            }
 
-                // Wait for the instance to indicate that it's running.
+            // Wait for the instance to indicate that it's running.
 
-                node.Status = "starting...";
+            node.Status = "provisioning...";
 
-                var invalidStates = new HashSet<int>
+            var invalidStates = 
+                new HashSet<int>
                 {
                     InstanceStatusCodes.ShuttingDown,
                     InstanceStatusCodes.Stopped,
@@ -2567,34 +2579,49 @@ retry:
                     InstanceStatusCodes.Terminated
                 };
 
-                await NeonHelper.WaitForAsync(
-                    async () =>
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    var statusResponse = await ec2Client.DescribeInstanceStatusAsync(
+                        new DescribeInstanceStatusRequest()
+                        {
+                            InstanceIds = new List<string>() { awsInstance.InstanceId }
+                        });
+
+                    var status = statusResponse.InstanceStatuses.SingleOrDefault();
+
+                    if (status == null)
                     {
-                        var statusResponse = await ec2Client.DescribeInstanceStatusAsync(
-                            new DescribeInstanceStatusRequest()
-                            {
-                                InstanceIds = new List<string>() { awsInstance.InstanceId }
-                            });
+                        return false;       // The instance provisioning operation must still be pending.
+                    }
 
-                        var status = statusResponse.InstanceStatuses.SingleOrDefault();
+                    var state = status.InstanceState.Code & 0x00FF;        // Clear the internal AWS status code bits
 
-                        if (status == null)
-                        {
-                            return false;       // The instance provisioning operation must still be pending.
-                        }
+                    if (invalidStates.Contains(state))
+                    {
+                        throw new KubeException($"Cluster instance [id={awsInstance.InstanceId}] is in an unexpected state [{status.InstanceState.Name}].");
+                    }
 
-                        var state = status.InstanceState.Code & 0x00FF;        // Clear the internal AWS status code bits
+                    if (state == InstanceStatusCodes.Running)
+                    {
+                        node.Status = "starting...";
+                    }
+                    else
+                    {
+                        return false;
+                    }
 
-                        if (invalidStates.Contains(state))
-                        {
-                            throw new KubeException($"Cluster instance [id={awsInstance.InstanceId}] is in an unexpected state [{status.InstanceState.Name}].");
-                        }
+                    if (!status.SystemStatus.Status.Value.Equals("ok", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return false;
+                    }
 
-                        return state == InstanceStatusCodes.Running;
-                    },
-                    timeout: TimeSpan.FromDays(1),
-                    pollTime: TimeSpan.FromSeconds(5));
-            }
+                    node.Status = "ready";
+
+                    return true;
+                },
+                timeout:      operationTimeout,
+                pollInterval: operationPollInternal);
         }
 
         /// <summary>
@@ -2607,7 +2634,7 @@ retry:
         {
             // AWS requires SSH key based authenticated for newly created instances.
 
-            node.Status = "initializing...";
+            node.Status = "connecting...";
 
             node.UpdateCredentials(SshCredentials.FromPrivateKey(KubeConst.SysAdminUsername, sshKey.PrivatePEM));
             node.WaitForBoot();
@@ -2848,8 +2875,8 @@ systemctl restart sshd
             // Update the subnet network ACL.
 
             // Determine whether either of the two network ACLs are associated with
-            // the subnet.  If one is assigned, then we'll modify the other one and
-            // then associate that one with the subnet to complete the operation.
+            // the subnet.  If one is assigned, then we'll modify the other one
+            // and then associate that one with the subnet to complete the operation.
             //
             // The idea here is that we're going to alternate between assigning
             // the two ACLs so we can make a bunch of effective rule changes in

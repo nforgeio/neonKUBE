@@ -245,6 +245,16 @@ namespace Neon.Kube
         public const int CloudVNetEndReservedIPs = 1;
 
         /// <summary>
+        /// Default subnet for Kubernetes pods.
+        /// </summary>
+        public const string DefaultPodSubnet = "10.254.0.0/16";
+
+        /// <summary>
+        /// Default subnet for Kubernetes services.
+        /// </summary>
+        public const string DefaultServiceSubnet = "10.253.0.0/16";
+
+        /// <summary>
         /// The latest neonKUBE cluster version supported.
         /// </summary>
         public const string LatestClusterVersion = "0.1.0-alpha";
@@ -262,6 +272,6 @@ namespace Neon.Kube
         /// <summary>
         /// The minimum supported cluster node disk size in GiB.
         /// </summary>
-        public const int MinNodeDiskSizeGiB = 32;
+        public const int MinNodeDiskSizeGiB = 64;
     }
 }

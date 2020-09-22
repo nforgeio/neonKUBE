@@ -76,8 +76,8 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Implementation
 
-        private const string    defaultPodSubnet                = "10.254.0.0/16";
-        private const string    defaultServiceSubnet            = "10.253.0.0/16";
+        private const string    defaultPodSubnet                = KubeConst.DefaultPodSubnet;
+        private const string    defaultServiceSubnet            = KubeConst.DefaultServiceSubnet;
         private const string    defaultCloudNodeSubnet          = "10.100.0.0/16";
         private const int       defaultReservedIngressStartPort = 64000;
         private const int       defaultReservedIngressEndPort   = 64999;
