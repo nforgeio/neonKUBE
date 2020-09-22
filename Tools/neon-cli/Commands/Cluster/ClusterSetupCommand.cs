@@ -1810,8 +1810,8 @@ rm /tmp/calico.yaml
 
                             return true;
                         },
-                        timeout: TimeSpan.FromSeconds(120),
-                        pollTime: TimeSpan.FromSeconds(1));
+                        timeout:      TimeSpan.FromSeconds(120),
+                        pollInterval: TimeSpan.FromSeconds(1));
                 });
         }
 
