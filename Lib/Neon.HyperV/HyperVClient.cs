@@ -252,31 +252,7 @@ namespace Neon.HyperV
 
             // Resize the VHDX.
 
-            // $hack(jefflill):
-            //
-            // For some reason, the PowerShell [Resize-VHD] command does not like 
-            // hard disk file names formatted as we're doing (e.g. with embedded
-            // square brackets).  We're going to work around this by temporarily
-            // renaming the disk file while we're resizing it.
-
-            var tempDrivePath = Path.Combine(driveFolder, Guid.NewGuid().ToString("d") + ".vhdx");
-
-            File.Move(drivePath, tempDrivePath);
-
-            try
-            {
-                powershell.Execute($"{hyperVNamespace}Resize-VHD -Path \"{tempDrivePath}\" -SizeBytes {diskSize}");
-            }
-            catch (Exception e)
-            {
-                throw new HyperVException(e.Message, e);
-            }
-            finally
-            {
-                // Restore the drive to its original file name.
-
-                File.Move(tempDrivePath, drivePath);
-            }
+            powershell.Execute($"{hyperVNamespace}Resize-VHD -Path \"{drivePath}\" -SizeBytes {diskSize}");
 
             // Create the virtual machine.
 

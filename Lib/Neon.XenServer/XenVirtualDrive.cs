@@ -34,6 +34,16 @@ namespace Neon.XenServer
     public class XenVirtualDrive
     {
         /// <summary>
+        /// Optionally specifies the disk name.
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Optionally specifies the disk description.
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
         /// The drive size in bytes.
         /// </summary>
         public decimal Size { get; set; }

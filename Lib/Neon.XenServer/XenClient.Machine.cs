@@ -291,29 +291,53 @@ namespace Neon.XenServer
                 if (diskBytes > 0)
                 {
                     var disks = client.SafeInvokeItems("vm-disk-list", $"uuid={vmUuid}").Items;
-                    var vdi   = disks.FirstOrDefault(items => items.ContainsKey("Disk 0 VDI"));
+                    var vdi   = disks.FirstOrDefault(properties => properties.ContainsKey("Disk 0 VDI"));
 
                     if (vdi == null)
                     {
-                        throw new XenException($"Cannot locate disk for [{name}] virtual machine.");
+                        throw new XenException($"Cannot locate disk [0] for [{name}] virtual machine.");
                     }
 
                     var vdiUuid = vdi["uuid"];
 
                     client.SafeInvoke("vdi-resize", $"uuid={vdiUuid}", $"disk-size={diskBytes}");
+
+                    // Rename the disk to "OS disk".
+
+                    client.SafeInvoke("vdi-param-set", $"uuid={vdiUuid}", $"name-label=OS disk", $"name-description=Operating system");
                 }
 
                 // Configure any additional disks.
 
                 if (extraDrives != null && extraDrives.Count() > 0)
                 {
-                    var driveIndex = 1; // The boot device has index=0
-                    var extraSR    = client.Repository.Find(name: extraStorageRespository, mustExist: true);
+                    var diskIndex = 1; // The boot disk has index=0 so we'll skip that.
+                    var extraSR   = client.Repository.Find(name: extraStorageRespository, mustExist: true);
 
-                    foreach (var drive in extraDrives)
+                    foreach (var disk in extraDrives)
                     {
-                        client.SafeInvoke("vm-disk-add", $"uuid={vmUuid}", $"sr-uuid={extraSR.Uuid}", $"disk-size={drive.Size}", $"device={driveIndex}");
-                        driveIndex++;
+                        // Create the disk.
+
+                        client.SafeInvoke("vm-disk-add", $"uuid={vmUuid}", $"sr-uuid={extraSR.Uuid}", $"disk-size={disk.Size}", $"device={diskIndex}");
+
+                        // Set the disk's name and description.
+
+                        var disks = client.SafeInvokeItems("vm-disk-list", $"uuid={vmUuid}").Items;
+                        var vdi   = disks.FirstOrDefault(properties => properties.ContainsKey("name-label") && properties["name-label"] == "Created by xe");
+
+                        if (vdi == null)
+                        {
+                            throw new XenException($"Cannot locate the new node [{disk.Name}] disk.");
+                        }
+
+                        var vdiUuid = vdi["uuid"];
+
+                        var diskName        = disk.Name ?? "disk";
+                        var diskDescription = disk.Description ?? string.Empty;
+
+                        client.SafeInvoke("vdi-param-set", $"uuid={vdiUuid}", $"name-label={diskName}", $"name-description={diskDescription}");
+
+                        diskIndex++;
                     }
                 }
 

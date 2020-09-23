@@ -151,7 +151,7 @@ namespace Neon.Kube
         /// <summary>
         /// <para>
         /// Indicates whether this node should be configured to accept external network traffic
-        /// on node ports and route that into the cluster.
+        /// on node ports and route that into the cluster.  This defaults to <c>false</c>.
         /// </para>
         /// <note>
         /// If all nodes have <see cref="Ingress"/> set to <c>false</c> and the cluster defines
@@ -159,27 +159,34 @@ namespace Neon.Kube
         /// reasonable set of nodes to accept inbound traffic.
         /// </note>
         /// </summary>
+        [JsonProperty(PropertyName = "Ingress", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "ingress", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
         public bool Ingress { get; set; } = false;
 
         /// <summary>
         /// <para>
         /// Indicates that this node will provide a cStore block device for the cStorePool
         /// maintained by the cluster OpenEBS service that provides cloud optimized storage.
+        /// This defaults to <c>false</c>
         /// </para>
         /// <note>
-        /// If all nodes have <see cref="OpenEbs"/> set to <c>false</c> then most neonKUBE 
+        /// If all nodes have <see cref="OpenEBS"/> set to <c>false</c> then most neonKUBE 
         /// hosting managers will automatically choose the nodes that will host the cStore
         /// block devices by configuring up to three nodes to do this, favoring worker nodes
         /// over masters when possible.
         /// </note>
         /// <note>
         /// The <see cref="HostingEnvironment.Machine"/> hosting manager works a bit differently
-        /// from the others.  It requires that at least one node have <see cref="OpenEbs"/><c>=true</c>
+        /// from the others.  It requires that at least one node have <see cref="OpenEBS"/><c>=true</c>
         /// and that node must have an empty unpartitioned block device available to be provisoned
         /// as an cStore.
         /// </note>
         /// </summary>
-        public bool OpenEbs { get; set; } = false;
+        [JsonProperty(PropertyName = "OpenEBS", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [YamlMember(Alias = "openEBS", ApplyNamingConventions = false)]
+        [DefaultValue(false)]
+        public bool OpenEBS { get; set; } = false;
 
         /// <summary>
         /// Specifies the labels to be assigned to the cluster node.  These can describe

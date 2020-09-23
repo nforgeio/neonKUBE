@@ -248,7 +248,7 @@ namespace Neon.Kube
 
                         if (node.ListUnpartitionedDisks().Count() > 0)
                         {
-                            node.Metadata.OpenEbs = true;
+                            node.Metadata.OpenEBS = true;
 
                             Interlocked.Increment(ref openEbsNodeCount);
                         }

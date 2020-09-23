@@ -1051,7 +1051,7 @@ namespace Neon.Kube
                     // Provisioning cluster nodes on XenServer hosts.
 
                     sbDisplay.AppendLine();
-                    sbDisplay.AppendLine(" Xen Servers:");
+                    sbDisplay.AppendLine(" Hypervisor Hosts:");
 
                     foreach (var node in nodes.OrderBy(n => (n.Metadata as IXenClient).Name, StringComparer.InvariantCultureIgnoreCase))
                     {

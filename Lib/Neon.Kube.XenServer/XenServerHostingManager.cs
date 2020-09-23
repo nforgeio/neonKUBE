@@ -205,7 +205,7 @@ namespace Neon.Kube
 
                 if (string.IsNullOrEmpty(node.Labels.StorageSize))
                 {
-                    node.Labels.StorageSize = ByteUnits.ToGiB(node.Vm.GetDisk(cluster.Definition));
+                    node.Labels.StorageSize = ByteUnits.ToGiB(node.Vm.GetOsDisk(cluster.Definition));
                 }
             }
 
@@ -383,19 +383,32 @@ namespace Neon.Kube
 
             foreach (var node in GetHostedNodes(xenHost))
             {
-                var vmName      = GetVmName(node);
-                var processors  = node.Metadata.Vm.GetProcessors(cluster.Definition);
-                var memoryBytes = node.Metadata.Vm.GetMemory(cluster.Definition);
-                var diskBytes   = node.Metadata.Vm.GetDisk(cluster.Definition);
+                var vmName           = GetVmName(node);
+                var processors       = node.Metadata.Vm.GetProcessors(cluster.Definition);
+                var memoryBytes      = node.Metadata.Vm.GetMemory(cluster.Definition);
+                var osDiskBytes      = node.Metadata.Vm.GetOsDisk(cluster.Definition);
+                var openEbsDiskBytes = node.Metadata.Vm.GetOpenEbsDisk(cluster.Definition);
+                var extraDrives      = new List<XenVirtualDrive>();
+
+                if (node.Metadata.OpenEBS)
+                {
+                    extraDrives.Add(
+                        new XenVirtualDrive()
+                        {
+                            Name        = "OpenEBS",
+                            Description = "OpenEBS cStore pool",
+                            Size        = openEbsDiskBytes
+                        });
+                }
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "create: virtual machine");
 
                 var vm = xenHost.Machine.Create(vmName, GetXenTemplateName(),
                     processors:                 processors,
                     memoryBytes:                memoryBytes,
-                    diskBytes:                  diskBytes,
+                    diskBytes:                  osDiskBytes,
                     snapshot:                   cluster.Definition.Hosting.XenServer.Snapshot,
-                    extraDrives:                null,
+                    extraDrives:                extraDrives,
                     primaryStorageRepository:   cluster.Definition.Hosting.XenServer.StorageRepository);;
 
                 // Create a temporary ISO with the [neon-node-prep.sh] script, mount it
@@ -441,12 +454,18 @@ namespace Neon.Kube
                     // this if the specified drive size is less than or equal
                     // to the node template's drive size (because that
                     // would fail).
+                    //
+                    // Note that there should only be one partitioned disk at
+                    // this point: the OS disk.
 
-                    if (diskBytes > KubeConst.NodeTemplateDiskSize)
+                    var partitionedDisks = node.ListPartitionedDisks();
+                    var osDisk           = partitionedDisks.Single();
+
+                    if (osDiskBytes > KubeConst.NodeTemplateDiskSize)
                     {
-                        node.Status = $"resize: primary drive";
-                        node.SudoCommand("growpart /dev/xvda 2");
-                        node.SudoCommand("resize2fs /dev/xvda2");
+                        node.Status = $"resize: OS disk";
+                        node.SudoCommand($"growpart {osDisk} 2");
+                        node.SudoCommand($"resize2fs {osDisk}2");
                     }
                 }
                 finally

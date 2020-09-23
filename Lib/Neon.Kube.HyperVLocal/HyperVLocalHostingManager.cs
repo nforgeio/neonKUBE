@@ -297,9 +297,9 @@ namespace Neon.Kube
             // Determine where we're going to place the VM hard drive files and
             // ensure that the directory exists.
 
-            if (!string.IsNullOrEmpty(cluster.Definition.Hosting.Vm.DriveFolder))
+            if (!string.IsNullOrEmpty(cluster.Definition.Hosting.Vm.DiskLocation))
             {
-                vmDriveFolder = cluster.Definition.Hosting.Vm.DriveFolder;
+                vmDriveFolder = cluster.Definition.Hosting.Vm.DiskLocation;
             }
             else
             {
@@ -543,7 +543,7 @@ namespace Neon.Kube
 
                 var driveTemplateInfoPath = driveTemplatePath + ".info";
                 var driveTemplateInfo     = NeonHelper.JsonDeserialize<DriveTemplateInfo>(File.ReadAllText(driveTemplateInfoPath));
-                var drivePath             = Path.Combine(vmDriveFolder, $"{vmName}.vhdx");
+                var osDrivePath           = Path.Combine(vmDriveFolder, $"{vmName}.vhdx");
 
                 node.Status = $"create: disk";
 
@@ -551,7 +551,7 @@ namespace Neon.Kube
                 {
                     if (driveTemplateInfo.Compressed)
                     {
-                        using (var output = new FileStream(drivePath, FileMode.Create, FileAccess.ReadWrite))
+                        using (var output = new FileStream(osDrivePath, FileMode.Create, FileAccess.ReadWrite))
                         {
                             using (var decompressor = new GZipStream(input, CompressionMode.Decompress))
                             {
@@ -585,7 +585,7 @@ namespace Neon.Kube
                     }
                     else
                     {
-                        using (var output = new FileStream(drivePath, FileMode.Create, FileAccess.ReadWrite))
+                        using (var output = new FileStream(osDrivePath, FileMode.Create, FileAccess.ReadWrite))
                         {
                             var buffer = new byte[64 * 1024];
                             int cb;
@@ -615,18 +615,31 @@ namespace Neon.Kube
 
                 // Create the virtual machine.
 
-                var processors  = node.Metadata.Vm.GetProcessors(cluster.Definition);
-                var memoryBytes = node.Metadata.Vm.GetMemory(cluster.Definition);
-                var diskBytes   = node.Metadata.Vm.GetDisk(cluster.Definition);
+                var processors       = node.Metadata.Vm.GetProcessors(cluster.Definition);
+                var memoryBytes      = node.Metadata.Vm.GetMemory(cluster.Definition);
+                var osDiskBytes      = node.Metadata.Vm.GetOsDisk(cluster.Definition);
+                var openEbsDiskBytes = node.Metadata.Vm.GetOpenEbsDisk(cluster.Definition);
+                var extraDrives      = new List<VirtualDrive>();
+
+                if (node.Metadata.OpenEBS)
+                {
+                    extraDrives.Add(
+                        new VirtualDrive()
+                        {
+                            Path = Path.Combine(vmDriveFolder, $"{vmName}-openebs.vhdx"),
+                            Size = openEbsDiskBytes
+                        });
+                }
 
                 node.Status = $"create: virtual machine";
                 hyperv.AddVm(
                     vmName,
                     processorCount: processors,
-                    diskSize:       diskBytes.ToString(),
+                    diskSize:       osDiskBytes.ToString(),
                     memorySize:     memoryBytes.ToString(),
-                    drivePath:      drivePath,
-                    switchName:     switchName);
+                    drivePath:      osDrivePath,
+                    switchName:     switchName,
+                    extraDrives:    extraDrives);
 
                 // Create a temporary ISO with the [neon-node-prep.sh] script, mount it
                 // to the VM and then boot the VM for the first time.  The script on the
@@ -666,12 +679,18 @@ namespace Neon.Kube
                     // this if the specified drive size is less than or equal
                     // to the node template's drive size (because that
                     // would fail).
+                    //
+                    // Note that there should only be one partitioned disk at
+                    // this point: the OS disk.
 
-                    if (diskBytes > KubeConst.NodeTemplateDiskSize)
+                    var partitionedDisks = node.ListPartitionedDisks();
+                    var osDisk           = partitionedDisks.Single();
+
+                    if (osDiskBytes > KubeConst.NodeTemplateDiskSize)
                     {
-                        node.Status = $"resize: primary drive";
-                        node.SudoCommand("growpart /dev/sda 2");
-                        node.SudoCommand("resize2fs /dev/sda2");
+                        node.Status = $"resize: OS disk";
+                        node.SudoCommand($"growpart {osDisk} 2");
+                        node.SudoCommand($"resize2fs {osDisk}2");
                     }
                 }
                 finally

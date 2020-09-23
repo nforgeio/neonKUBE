@@ -2507,7 +2507,7 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
                 throw new NotSupportedException($"[{nameof(EnsureOpenEbsNodes)}()] is not supported for the [{nameof(HostingEnvironment.Machine)}] hosting manager.");
             }
 
-            if (clusterDefinition.Nodes.Any(node => node.OpenEbs))
+            if (clusterDefinition.Nodes.Any(node => node.OpenEBS))
             {
                 // The user has already selected the nodes.
 
@@ -2520,7 +2520,7 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
 
                 foreach (var worker in clusterDefinition.SortedWorkerNodes.Take(3))
                 {
-                    worker.OpenEbs = true;
+                    worker.OpenEBS = true;
                 }
             }
             else
@@ -2530,12 +2530,12 @@ usermod --uid {KubeConst.SysAdminUID} --gid {KubeConst.SysAdminGID} --groups roo
 
                 foreach (var node in clusterDefinition.Workers)
                 {
-                    node.OpenEbs = true;
+                    node.OpenEBS = true;
                 }
 
                 foreach (var node in clusterDefinition.SortedMasterNodes.Take(3 - clusterDefinition.Workers.Count()))
                 {
-                    node.OpenEbs = true;
+                    node.OpenEBS = true;
                 }
             }
         }
