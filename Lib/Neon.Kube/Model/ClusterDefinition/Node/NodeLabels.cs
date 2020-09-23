@@ -125,6 +125,11 @@ namespace Neon.Kube
         /// </summary>
         public const string LabelIngress = ClusterDefinition.ReservedLabelPrefix + "node.ingress";
 
+        /// <summary>
+        /// Reserved label name used to indicate that a node host an OpenEBS cStore block device.
+        /// </summary>
+        public const string LabelOpenEbs = ClusterDefinition.ReservedLabelPrefix + "node.openebs";
+
         //---------------------------------------------------------------------
         // Azure hosting related labels.
 
@@ -478,6 +483,7 @@ namespace Neon.Kube
                 list.Add(new KeyValuePair<string, object>(LabelAddress,                     Node.Address));
                 list.Add(new KeyValuePair<string, object>(LabelRole,                        Node.Role));
                 list.Add(new KeyValuePair<string, object>(LabelIngress,                     Node.Ingress));
+                list.Add(new KeyValuePair<string, object>(LabelOpenEbs,                     Node.OpenEbs));
 
                 if (Node.Azure != null)
                 {
@@ -569,6 +575,7 @@ namespace Neon.Kube
                     case LabelAddress:                      Node.Address = label.Value; break;
                     case LabelRole:                         Node.Role = label.Value; break;
                     case LabelIngress:                      ParseCheck(label, () => { Node.Ingress = NeonHelper.ParseBool(label.Value); }); break; 
+                    case LabelOpenEbs:                      ParseCheck(label, () => { Node.OpenEbs = NeonHelper.ParseBool(label.Value); }); break; 
 
                     case LabelAzureVmSize:
                     case LabelAzureStorageType:

@@ -1053,6 +1053,15 @@ namespace Neon.Kube
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(orgSshPassword), nameof(orgSshPassword));
             Covenant.Assert(cluster != null, $"[{nameof(AwsHostingManager)}] was created with the wrong constructor.");
 
+            // We need to ensure that the cluster has at least one ingress node.
+
+            KubeHelper.EnsureIngressNodes(cluster.Definition);
+
+            // We need to ensure that at least one node will host the OpenEBS
+            // cStore block device.
+
+            KubeHelper.EnsureOpenEbsNodes(cluster.Definition);
+
             // AWS doesn't initialize a password for new instance so we need to specifiy
             // the SSH key when the instances are provisioned and then upload and enable 
             // the SSH password ourselves.

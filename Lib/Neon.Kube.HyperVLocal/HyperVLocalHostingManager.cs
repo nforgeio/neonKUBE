@@ -180,6 +180,16 @@ namespace Neon.Kube
                 return true;
             }
 
+            // We'll call this to be consistent with the cloud hosting managers even though
+            // the upstream on-premise router currently needs to be configured manually.
+
+            KubeHelper.EnsureIngressNodes(cluster.Definition);
+
+            // We need to ensure that at least one node will host the OpenEBS
+            // cStore block device.
+
+            KubeHelper.EnsureOpenEbsNodes(cluster.Definition);
+
             // Update the node labels with the actual capabilities of the 
             // virtual machines being provisioned.
 

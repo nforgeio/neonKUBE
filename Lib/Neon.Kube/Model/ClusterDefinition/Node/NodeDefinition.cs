@@ -162,6 +162,25 @@ namespace Neon.Kube
         public bool Ingress { get; set; } = false;
 
         /// <summary>
+        /// <para>
+        /// Indicates that this node will provide a cStore block device for the cStorePool
+        /// maintained by the cluster OpenEBS service that provides cloud optimized storage.
+        /// </para>
+        /// <note>
+        /// If all nodes have <see cref="OpenEbs"/> set to <c>false</c> then most neonKUBE 
+        /// hosting manager will automatically select the nodes that will host the cStore
+        /// block devices.
+        /// </note>
+        /// <note>
+        /// The <see cref="HostingEnvironment.Machine"/> hosting manager works a bit differently
+        /// from the others.  It requires that at least one node have <see cref="OpenEbs"/><c>=true</c>
+        /// and that node must have an empty unpartitioned block device available to be provisoned
+        /// as an cStore.
+        /// </note>
+        /// </summary>
+        public bool OpenEbs { get; set; } = false;
+
+        /// <summary>
         /// Specifies the labels to be assigned to the cluster node.  These can provide
         /// detailed information such as the host CPU, RAM, storage, etc.  <see cref="NodeLabels"/>
         /// for more information.
