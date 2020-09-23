@@ -190,6 +190,9 @@ Server Requirements:
                 // with the assigned addresses and we're also not going to do this for cloud
                 // environments because we're assuming that the cluster will run in its own
                 // private network so there'll be no possibility of conflicts.
+                //
+                // We also won't do this for cloud deployments because those nodes will be
+                // running in an isolated private network.
 
                 if (cluster.Definition.Hosting.Environment != HostingEnvironment.Machine && 
                     !cluster.Definition.Hosting.IsCloudProvider)
@@ -217,7 +220,7 @@ Server Requirements:
                             using (var pinger = new Pinger())
                             {
                                 // We're going to try pinging up to [pingAttempts] times for each node
-                                // just in case the network it sketchy and we're losing reply packets.
+                                // just in case the network is sketchy and we're losing reply packets.
 
                                 for (int i = 0; i < pingAttempts; i++)
                                 {

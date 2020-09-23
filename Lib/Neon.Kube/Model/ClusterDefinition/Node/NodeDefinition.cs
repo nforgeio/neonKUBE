@@ -156,7 +156,7 @@ namespace Neon.Kube
         /// <note>
         /// If all nodes have <see cref="Ingress"/> set to <c>false</c> and the cluster defines
         /// one or more <see cref="NetworkOptions.IngressRules"/> then neonKUBE will choose a
-        /// reasonable set of nodes to accept ibound traffic.
+        /// reasonable set of nodes to accept inbound traffic.
         /// </note>
         /// </summary>
         public bool Ingress { get; set; } = false;
@@ -168,8 +168,9 @@ namespace Neon.Kube
         /// </para>
         /// <note>
         /// If all nodes have <see cref="OpenEbs"/> set to <c>false</c> then most neonKUBE 
-        /// hosting manager will automatically select the nodes that will host the cStore
-        /// block devices.
+        /// hosting managers will automatically choose the nodes that will host the cStore
+        /// block devices by configuring up to three nodes to do this, favoring worker nodes
+        /// over masters when possible.
         /// </note>
         /// <note>
         /// The <see cref="HostingEnvironment.Machine"/> hosting manager works a bit differently
@@ -181,8 +182,8 @@ namespace Neon.Kube
         public bool OpenEbs { get; set; } = false;
 
         /// <summary>
-        /// Specifies the labels to be assigned to the cluster node.  These can provide
-        /// detailed information such as the host CPU, RAM, storage, etc.  <see cref="NodeLabels"/>
+        /// Specifies the labels to be assigned to the cluster node.  These can describe
+        /// details such as the host CPU, RAM, storage, etc.  <see cref="NodeLabels"/>
         /// for more information.
         /// </summary>
         [JsonProperty(PropertyName = "Labels")]
