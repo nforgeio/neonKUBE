@@ -255,20 +255,28 @@ namespace Neon.Kube
                     {
                         var vmName   = GetVmName(node.Metadata);
                         var diskSize = node.Metadata.Vm.GetOpenEbsDisk(cluster.Definition);
+                        var diskPath = Path.Combine(vmDriveFolder, $"{vmName}-openebs.vhdx");
 
-                        node.Status = "openebs: stop VM";
-                        hyperv.StopVm(vmName);
+                        node.Status = "openebs: checking";
 
-                        node.Status = "openebs: add cstore disk";
-                        hyperv.AddVmDrive(vmName, 
-                            new VirtualDrive()
-                            {
-                                Path = Path.Combine(vmDriveFolder, $"{vmName}-openebs.vhdx"),
-                                Size = diskSize
-                            });
+                        if (hyperv.GetVmDrives(vmName).Count < 2)
+                        {
+                            // The disk doesn't already exist.
 
-                        node.Status = "openebs: restart VM";
-                        hyperv.StartVm(vmName);
+                            node.Status = "openebs: stop VM";
+                            hyperv.StopVm(vmName);
+
+                            node.Status = "openebs: add cstore disk";
+                            hyperv.AddVmDrive(vmName,
+                                new VirtualDrive()
+                                {
+                                    Path = diskPath,
+                                    Size = diskSize
+                                });
+
+                            node.Status = "openebs: restart VM";
+                            hyperv.StartVm(vmName);
+                        }
                     }
                 },
                 node => node.Metadata.OpenEBS);

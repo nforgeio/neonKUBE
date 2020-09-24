@@ -47,9 +47,9 @@ namespace Neon.Kube
         internal const int MaxPlacementPartitions = 7;
 
         private const string            defaultInstanceType      = "t3a.medium";
-        private const AwsVolumeType     defaultVolumeType        = AwsVolumeType.Gp2;
+        internal const AwsVolumeType    defaultVolumeType        = AwsVolumeType.Gp2;
         private const string            defaultVolumeSize        = "128 GiB";
-        private const AwsVolumeType     defaultOpenEBSVolumeType = defaultVolumeType;
+        internal const AwsVolumeType    defaultOpenEBSVolumeType = defaultVolumeType;
         private const string            defaultOpenEBSVolumeSize = "128 GiB";
 
         /// <summary>

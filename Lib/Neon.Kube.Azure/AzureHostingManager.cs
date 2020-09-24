@@ -620,11 +620,11 @@ namespace Neon.Kube
         private AzureCredentials                        azureCredentials;
         private NetworkOptions                          networkOptions;
         private string                                  region;
-        private string                                  resourceGroup;
         private IAzure                                  azure;
 
         // These names will be used to identify the cluster resources.
 
+        private string                                  resourceGroupName;
         private string                                  publicAddressName;
         private string                                  vnetName;
         private string                                  subnetName;
@@ -638,6 +638,7 @@ namespace Neon.Kube
 
         // These reference the Azure resources.
 
+        private bool                                    resourceGroupExists; 
         private IPublicIPAddress                        publicAddress;
         private IPAddress                               clusterAddress;
         private INetwork                                vnet;
@@ -680,7 +681,7 @@ namespace Neon.Kube
             this.networkOptions        = cluster.Definition.Network;
             this.nameToAvailabilitySet = new Dictionary<string, IAvailabilitySet>(StringComparer.InvariantCultureIgnoreCase);
             this.region                = azureOptions.Region;
-            this.resourceGroup         = azureOptions.ResourceGroup ?? $"neon-{clusterName}";
+            this.resourceGroupName         = azureOptions.ResourceGroup ?? $"neon-{clusterName}";
 
             switch (cloudOptions.PrefixResourceNames)
             {
@@ -904,7 +905,7 @@ namespace Neon.Kube
 
             // Initialize and run the [SetupController].
 
-            var operation = $"Provisioning [{cluster.Definition.Name}] on Azure [{region}/{resourceGroup}]";
+            var operation = $"Provisioning [{cluster.Definition.Name}] on Azure [{region}/{resourceGroupName}]";
             var controller = new SetupController<NodeDefinition>(operation, cluster.Nodes)
             {
                 ShowStatus     = this.ShowStatus,
@@ -928,7 +929,7 @@ namespace Neon.Kube
                     // Note that it's possible for VMs that are unrelated to the cluster
                     // to be in the resource group, so we'll have to ignore those.
 
-                    foreach (var vm in azure.VirtualMachines.ListByResourceGroup(resourceGroup))
+                    foreach (var vm in azure.VirtualMachines.ListByResourceGroup(resourceGroupName))
                     {
                         if (!vm.Tags.TryGetValue(neonNodeNameTagKey, out var nodeName))
                         {
@@ -964,7 +965,7 @@ namespace Neon.Kube
                 quiet: true);
             controller.AddNodeStep("virtual machines", CreateVm);
             controller.AddGlobalStep("internet routing", () => UpdateNetwork(NetworkOperations.InternetRouting | NetworkOperations.EnableSsh));
-            controller.AddNodeStep("configure nodes", Configure);
+            controller.AddNodeStep("configure nodes", ConfigureNode);
 
             if (!controller.Run(leaveNodesConnected: false))
             {
@@ -986,18 +987,24 @@ namespace Neon.Kube
             // At this point, the data disk should be partitioned, formatted, and mounted so
             // the OpenEBS disk will be easy to identify as the only unpartitioned disks.
 
-            setupController.AddNodeStep("OpenEBS cStore",
+            setupController.AddNodeStep("openebs",
                 (node, stepDelay) =>
                 {
-                    node.Status = "OpenEBS disk";
-
                     var azureNode          = nameToVm[node.Name];
                     var openEBSStorageType = ToAzureStorageType(azureNode.Metadata.Azure.OpenEBSStorageType);
 
-                    azureNode.Vm
-                        .Update()
-                        .WithNewDataDisk((int)(ByteUnits.Parse(node.Metadata.Azure.OpenEBSDiskSize) / ByteUnits.GibiBytes), openEBSDiskLun, CachingTypes.ReadOnly, openEBSStorageType)
-                        .Apply();
+                    node.Status = "openebs: checking";
+
+                    if (azureNode.Vm.DataDisks.Count < 1)   // Note that the OS disk doesn't count.
+                    {
+                        node.Status = "openebs: add cstore disk";
+
+                        azureNode.Vm
+                            .Update()
+                            .WithNewDataDisk((int)(ByteUnits.Parse(node.Metadata.Azure.OpenEBSDiskSize) / ByteUnits.GibiBytes), openEBSDiskLun, CachingTypes.ReadOnly, openEBSStorageType)
+                            .WithTags(GetTags())
+                            .Apply();
+                    }
                 },
                 node => node.Metadata.OpenEBS);
         }
@@ -1159,20 +1166,35 @@ namespace Neon.Kube
         /// </summary>
         private void GetResources()
         {
-            publicAddress = azure.PublicIPAddresses.ListByResourceGroup(resourceGroup).SingleOrDefault(address => address.Name == publicAddressName);
+            // The resource group.
+
+            if (!azure.ResourceGroups.List().Any(resourceGroupItem => resourceGroupItem.Name == resourceGroupName && resourceGroupItem.RegionName == region))
+            {
+                // The resource group doesn't exist so it's not possible for any other
+                // cluster resources to exist either.
+
+                resourceGroupExists = false;
+                return;
+            }
+
+            resourceGroupExists = true;
+
+            // Network stuff.
+
+            publicAddress = azure.PublicIPAddresses.ListByResourceGroup(resourceGroupName).SingleOrDefault(address => address.Name == publicAddressName);
 
             if (publicAddress != null)
             {
                 clusterAddress = IPAddress.Parse(publicAddress.IPAddress);
             }
 
-            vnet          = azure.Networks.ListByResourceGroup(resourceGroup).SingleOrDefault(vnet => vnet.Name == vnetName);
-            subnetNsg     = azure.NetworkSecurityGroups.ListByResourceGroup(resourceGroup).SingleOrDefault(nsg => nsg.Name == subnetNsgName);
-            loadBalancer  = azure.LoadBalancers.ListByResourceGroup(resourceGroup).SingleOrDefault(loadBalancer => loadBalancer.Name == loadbalancerName);
+            vnet         = azure.Networks.ListByResourceGroup(resourceGroupName).SingleOrDefault(vnet => vnet.Name == vnetName);
+            subnetNsg    = azure.NetworkSecurityGroups.ListByResourceGroup(resourceGroupName).SingleOrDefault(nsg => nsg.Name == subnetNsgName);
+            loadBalancer = azure.LoadBalancers.ListByResourceGroup(resourceGroupName).SingleOrDefault(loadBalancer => loadBalancer.Name == loadbalancerName);
 
             // Availability sets
 
-            var existingAvailabilitySets = azure.AvailabilitySets.ListByResourceGroup(resourceGroup)
+            var existingAvailabilitySets = azure.AvailabilitySets.ListByResourceGroup(resourceGroupName)
                 .Where(set => IsClusterResource(set));
 
             nameToAvailabilitySet.Clear();
@@ -1184,9 +1206,7 @@ namespace Neon.Kube
 
             // VM information
 
-            nameToVm.Clear();
-
-            var existingVms = azure.VirtualMachines.ListByResourceGroup(resourceGroup)
+            var existingVms = azure.VirtualMachines.ListByResourceGroup(resourceGroupName)
                 .Where(vm => IsClusterResource(vm));
 
             foreach (var vm in existingVms)
@@ -1213,11 +1233,7 @@ namespace Neon.Kube
                     throw new KubeException($"Corrupted VM: [{vm.Name}] is has invalid [{neonNodeSshPortTagKey}={sshPortString}] tag.");
                 }
 
-                nameToVm.Add(nodeName,
-                    new AzureVm(node, this)
-                    {
-                        ExternalSshPort = sshPort
-                    });
+                nameToVm[nodeName].ExternalSshPort = sshPort;
             }
         }
 
@@ -1333,13 +1349,15 @@ namespace Neon.Kube
         /// </summary>
         private void CreateResourceGroup()
         {
-            if (resourceGroup == null)
+            if (!resourceGroupExists)
             {
                 azure.ResourceGroups
-                    .Define(resourceGroup)
+                    .Define(resourceGroupName)
                     .WithRegion(region)
                     .WithTags(GetTags())
                     .Create();
+
+                resourceGroupExists = true;
             }
         }
 
@@ -1369,7 +1387,7 @@ namespace Neon.Kube
                     newSet = (IAvailabilitySet)azure.AvailabilitySets
                         .Define(azureNode.AvailabilitySetName)
                         .WithRegion(region)
-                        .WithExistingResourceGroup(resourceGroup)
+                        .WithExistingResourceGroup(resourceGroupName)
                         .WithUpdateDomainCount(azureOptions.UpdateDomains)
                         .WithFaultDomainCount(azureOptions.FaultDomains)
                         .WithTags(GetTags())
@@ -1380,7 +1398,7 @@ namespace Neon.Kube
                     newSet = (IAvailabilitySet)azure.AvailabilitySets
                         .Define(azureNode.AvailabilitySetName)
                         .WithRegion(region)
-                        .WithExistingResourceGroup(resourceGroup)
+                        .WithExistingResourceGroup(resourceGroupName)
                         .WithNewProximityPlacementGroup(proximityPlacementGroupName, ProximityPlacementGroupType.Standard)
                         .WithUpdateDomainCount(azureOptions.UpdateDomains)
                         .WithFaultDomainCount(azureOptions.FaultDomains)
@@ -1404,7 +1422,7 @@ namespace Neon.Kube
                 subnetNsg = azure.NetworkSecurityGroups
                     .Define(subnetNsgName)
                     .WithRegion(region)
-                    .WithExistingResourceGroup(resourceGroup)
+                    .WithExistingResourceGroup(resourceGroupName)
                     .WithTags(GetTags())
                     .Create();
             }
@@ -1420,7 +1438,7 @@ namespace Neon.Kube
                 var vnetCreator = azure.Networks
                     .Define(vnetName)
                     .WithRegion(region)
-                    .WithExistingResourceGroup(resourceGroup)
+                    .WithExistingResourceGroup(resourceGroupName)
                     .WithAddressSpace(networkOptions.NodeSubnet)
                     .DefineSubnet(subnetName)
                         .WithAddressPrefix(networkOptions.NodeSubnet)
@@ -1453,7 +1471,7 @@ namespace Neon.Kube
                 publicAddress = azure.PublicIPAddresses
                     .Define(publicAddressName)
                         .WithRegion(azureOptions.Region)
-                        .WithExistingResourceGroup(resourceGroup)
+                        .WithExistingResourceGroup(resourceGroupName)
                         .WithStaticIP()
                         .WithLeafDomainLabel(azureOptions.DomainLabel)
                         .WithSku(PublicIPSkuType.Standard)
@@ -1498,7 +1516,7 @@ namespace Neon.Kube
                 loadBalancer = azure.LoadBalancers
                     .Define(loadbalancerName)
                     .WithRegion(region)
-                    .WithExistingResourceGroup(resourceGroup)
+                    .WithExistingResourceGroup(resourceGroupName)
                     .DefineLoadBalancingRule("dummy")
                         .WithProtocol(TransportProtocol.Tcp)
                         .FromFrontend(loadbalancerFrontendName)
@@ -1545,11 +1563,11 @@ namespace Neon.Kube
             azureNode.Nic = azure.NetworkInterfaces
                 .Define(GetResourceName("nic", azureNode.Node.Name))
                 .WithRegion(azureOptions.Region)
-                .WithExistingResourceGroup(resourceGroup)
+                .WithExistingResourceGroup(resourceGroupName)
                 .WithExistingPrimaryNetwork(vnet)
                 .WithSubnet(subnetName)
                 .WithPrimaryPrivateIPAddressStatic(azureNode.Address)
-                .WithTags(GetTags(new ResourceTag(neonNodeSshPortTagKey, azureNode.ExternalSshPort.ToString())))
+                .WithTags(GetTags())
                 .Create();
 
             node.Status = "create: virtual machine";
@@ -1584,7 +1602,7 @@ namespace Neon.Kube
             azureNode.Vm = azure.VirtualMachines
                 .Define(azureNode.VmName)
                 .WithRegion(azureOptions.Region)
-                .WithExistingResourceGroup(resourceGroup)
+                .WithExistingResourceGroup(resourceGroupName)
                 .WithExistingPrimaryNetworkInterface(azureNode.Nic)
                 .WithSpecificLinuxImageVersion(imageRef)
                 .WithRootUsername(nodeUsername)
@@ -1593,7 +1611,7 @@ namespace Neon.Kube
                 .WithNewDataDisk((int)(ByteUnits.Parse(node.Metadata.Azure.DiskSize) / ByteUnits.GibiBytes), dataDiskLun, CachingTypes.ReadOnly, azureStorageType)
                 .WithSize(node.Metadata.Azure.VmSize)
                 .WithExistingAvailabilitySet(nameToAvailabilitySet[azureNode.AvailabilitySetName])
-                .WithTags(GetTags(new ResourceTag(neonNodeNameTagKey, node.Name)))
+                .WithTags(GetTags(new ResourceTag(neonNodeNameTagKey, node.Name), new ResourceTag(neonNodeSshPortTagKey, azureNode.ExternalSshPort.ToString())))
                 .Create();
         }
 
@@ -1602,7 +1620,7 @@ namespace Neon.Kube
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <param name="stepDelay">The step delay.</param>
-        private void Configure(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        private void ConfigureNode(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             node.WaitForBoot();
 

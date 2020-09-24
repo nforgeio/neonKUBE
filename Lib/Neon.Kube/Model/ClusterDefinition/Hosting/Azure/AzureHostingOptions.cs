@@ -41,11 +41,11 @@ namespace Neon.Kube
     /// </summary>
     public class AzureHostingOptions
     {
-        private const string            defaultVmSize             = "Standard_B2S";
-        private const AzureStorageType  defaultStorageType        = AzureStorageType.StandardSSD;
-        private const string            defaultDiskSize           = "128 GiB";
-        private const AzureStorageType  defaultOpenEBSStorageType = defaultStorageType;
-        private const string            defaultOpenEBSDiskSize    = "128 GiB";
+        private const string                defaultVmSize             = "Standard_B2S";
+        internal const AzureStorageType     defaultStorageType        = AzureStorageType.StandardSSD;
+        private const string                defaultDiskSize           = "128 GiB";
+        internal const AzureStorageType     defaultOpenEBSStorageType = defaultStorageType;
+        private const string                defaultOpenEBSDiskSize    = "128 GiB";
 
         /// <summary>
         /// Constructor.

@@ -437,6 +437,22 @@ namespace Neon.XenServer
 
                 client.SafeInvoke("vdi-param-set", $"uuid={vdiUuid}", $"name-label={diskName}", $"name-description={diskDescription}");
             }
+
+            /// <summary>
+            /// Returns the number of disks attached to a virtual machine.
+            /// </summary>
+            /// <param name="virtualMachine">The target virtual machine.</param>
+            /// <returns>The number of attached disks.</returns>
+            public int DiskCount(XenVirtualMachine virtualMachine)
+            {
+                Covenant.Requires<ArgumentNullException>(virtualMachine != null, nameof(virtualMachine));
+
+                var vmDisks = client.SafeInvokeItems("vm-disk-list", $"vm={virtualMachine.Uuid}").Items;
+
+                // Count only VDB (virtual block devices) so we don't double count any disks.
+
+                return vmDisks.Count(disk => disk.TryGetValue("userdevice", out var device));
+            }
         }
     }
 }

@@ -289,22 +289,28 @@ namespace Neon.Kube
 
                     lock (xenClient)
                     {
-                        var vm   = xenClient.Machine.List().Single(vm => vm.NameLabel == GetVmName(node));
-                        var disk = new XenVirtualDisk()
+                        var vm = xenClient.Machine.List().Single(vm => vm.NameLabel == GetVmName(node));
+
+                        if (xenClient.Machine.DiskCount(vm) < 2)
                         {
-                            Name        = "openebs",
-                            Size        = node.Metadata.Vm.GetOpenEbsDisk(cluster.Definition),
-                            Description = "OpenEBS cStore"
-                        };
+                            // We haven't created the oStore disk yet.
 
-                        node.Status = "openebs: stop VM";
-                        xenClient.Machine.Shutdown(vm);
+                            var disk = new XenVirtualDisk()
+                            {
+                                Name        = "openebs",
+                                Size        = node.Metadata.Vm.GetOpenEbsDisk(cluster.Definition),
+                                Description = "OpenEBS cStore"
+                            };
 
-                        node.Status = "openebs: add cstore disk";
-                        xenClient.Machine.AddDisk(vm, disk);
+                            node.Status = "openebs: stop VM";
+                            xenClient.Machine.Shutdown(vm);
 
-                        node.Status = "openebs: restart VM";
-                        xenClient.Machine.Start(vm);
+                            node.Status = "openebs: add cstore disk";
+                            xenClient.Machine.AddDisk(vm, disk);
+
+                            node.Status = "openebs: restart VM";
+                            xenClient.Machine.Start(vm);
+                        }
                     }
                 },
                 node => node.Metadata.OpenEBS);

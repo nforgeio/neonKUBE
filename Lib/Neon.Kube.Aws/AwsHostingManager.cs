@@ -1125,10 +1125,10 @@ namespace Neon.Kube
             // At this point, the data disk should be partitioned, formatted, and mounted so
             // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
 
-            setupController.AddNodeStep("OpenEBS cStore",
+            setupController.AddNodeStep("openebs",
                 async (node, stepDelay) =>
                 {
-                    node.Status = "OpenEBS disk";
+                    node.Status = "openebs: checking";
 
                     var volumeName        = $"{node.Name}-openebs";
                     var awsInstance       = nodeNameToAwsInstance[node.Name];
@@ -1152,6 +1152,8 @@ namespace Neon.Kube
 
                     if (volume == null)
                     {
+                        node.Status = "openebs: add cstore disk";
+
                         var volumeResponse = await ec2Client.CreateVolumeAsync(
                             new CreateVolumeRequest()
                             {
@@ -2709,15 +2711,6 @@ retry:
                 },
                 timeout:      operationTimeout,
                 pollInterval: operationPollInternal);
-
-            // Create and attach the OpenEBS cStore disk if required by this node.
-
-            if (node.Metadata.OpenEBS)
-            {
-                node.Status = "OpenEBS disk";
-
-                throw new NotImplementedException("$todo(jefflil)");
-            }
         }
 
         /// <summary>

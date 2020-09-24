@@ -150,13 +150,25 @@ namespace Neon.Kube
 
             var node = clusterDefinition.NodeDefinitions[nodeName];
 
+            // Set the cluster default storage types if necessary.
+
             if (VolumeType == AwsVolumeType.Default)
             {
                 VolumeType = clusterDefinition.Hosting.Aws.DefaultVolumeType;
 
                 if (VolumeType == AwsVolumeType.Default)
                 {
-                    VolumeType = AwsVolumeType.Gp2;
+                    VolumeType = AwsHostingOptions.defaultVolumeType;
+                }
+            }
+
+            if (OpenEBSVolumeType == AwsVolumeType.Default)
+            {
+                OpenEBSVolumeType = clusterDefinition.Hosting.Aws.DefaultOpenEBSVolumeType;
+
+                if (OpenEBSVolumeType == AwsVolumeType.Default)
+                {
+                    VolumeType = AwsHostingOptions.defaultOpenEBSVolumeType;
                 }
             }
 

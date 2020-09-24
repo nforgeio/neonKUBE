@@ -162,7 +162,7 @@ Server Requirements:
 
             if (KubeHelper.Config.GetContext(cluster.Definition.Name) != null)
             {
-                Console.Error.WriteLine($"*** ERROR: A context named [{cluster.Definition.Name}] already exists.");
+                Console.Error.WriteLine($"*** ERROR: A login named [{cluster.Definition.Name}] already exists.");
                 Program.Exit(1);
             }
 
@@ -473,7 +473,7 @@ Server Requirements:
 
                 setupController.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
                 setupController.AddNodeStep("node OS verify", CommonSteps.VerifyOS);
-                setupController.AddNodeStep("node ssh keys", 
+                setupController.AddNodeStep("node credentials", 
                     (node, stepDelay) =>
                     {
                         CommonSteps.ConfigureSshKey(node, clusterLogin);
@@ -514,6 +514,8 @@ Server Requirements:
             }
             finally
             {
+                hostingManager?.Dispose();
+
                 if (!failed)
                 {
                     KubeHelper.Desktop.EndOperationAsync($"Cluster [{cluster.Name}] has been prepared and is ready for setup.").Wait();

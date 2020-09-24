@@ -161,13 +161,25 @@ namespace Neon.Kube
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null, nameof(clusterDefinition));
 
+            // Set the cluster default storage types if necessary.
+
             if (StorageType == AzureStorageType.Default)
             {
                 StorageType = clusterDefinition.Hosting.Azure.DefaultStorageType;
 
                 if (StorageType == AzureStorageType.Default)
                 {
-                    StorageType = AzureStorageType.StandardSSD;
+                    StorageType = AzureHostingOptions.defaultStorageType;
+                }
+            }
+
+            if (OpenEBSStorageType == AzureStorageType.Default)
+            {
+                OpenEBSStorageType = clusterDefinition.Hosting.Azure.DefaultOpenEBSStorageType;
+
+                if (OpenEBSStorageType == AzureStorageType.Default)
+                {
+                    OpenEBSStorageType = AzureHostingOptions.defaultOpenEBSStorageType;
                 }
             }
 
