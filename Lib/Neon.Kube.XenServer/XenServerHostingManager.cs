@@ -82,13 +82,12 @@ namespace Neon.Kube
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy                cluster;
-        private KubeSetupInfo               setupInfo;
-        private string                      logFolder;
-        private List<XenClient>             xenHosts;
-        private SetupController<XenClient>  controller;
-        private int                         maxVmNameWidth;
-        private string                      secureSshPassword;
+        private ClusterProxy        cluster;
+        private KubeSetupInfo       setupInfo;
+        private string              logFolder;
+        private List<XenClient>     xenHosts;
+        private int                 maxVmNameWidth;
+        private string              secureSshPassword;
 
         /// <summary>
         /// Creates an instance that is only capable of validating the hosting
@@ -238,26 +237,47 @@ namespace Neon.Kube
             // speed up cluster setup.  This works because each XenServer
             // is essentially independent from the others.
 
-            controller = new SetupController<XenClient>($"Provisioning [{cluster.Definition.Name}] cluster", sshProxies)
+            var setupController = new SetupController<XenClient>($"Provisioning [{cluster.Definition.Name}] cluster", sshProxies)
             {
                 ShowStatus  = this.ShowStatus,
                 MaxParallel = this.MaxParallel
             };
              
-            controller.AddWaitUntilOnlineStep();
+            setupController.AddWaitUntilOnlineStep();
 
-            controller.AddNodeStep("verify readiness", (node, stepDelay) => VerifyReady(node));
-            controller.AddNodeStep("virtual machine template", (node, stepDelay) => CheckVmTemplate(node));
-            controller.AddNodeStep("create virtual machines", (node, stepDelay) => ProvisionVirtualMachines(node));
-            controller.AddGlobalStep(string.Empty, () => Finish(), quiet: true);
+            setupController.AddNodeStep("verify readiness", (node, stepDelay) => VerifyReady(node));
+            setupController.AddNodeStep("virtual machine template", (node, stepDelay) => CheckVmTemplate(node));
+            setupController.AddNodeStep("create virtual machines", (node, stepDelay) => ProvisionVM(node));
+            setupController.AddGlobalStep(string.Empty, () => Finish(), quiet: true);
 
-            if (!controller.Run())
+            if (!setupController.Run())
             {
                 Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
                 return await Task.FromResult(false);
             }
 
             return await Task.FromResult(true);
+        }
+
+        /// <inheritdoc/>
+        public override void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
+        {
+            // We need to add any required OpenEBS cStore disks after the node has been otherwise
+            // prepared.  We need to do this here because if we created the data and OpenEBS disks
+            // when the VM is initially created, the disk setup scripts executed during prepare
+            // won't be able to distinguish between the two disks.
+            //
+            // At this point, the data disk should be partitioned, formatted, and mounted so
+            // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
+
+            setupController.AddNodeStep("OpenEBS cStore",
+                (node, stepDelay) =>
+                {
+                    node.Status = "OpenEBS disk";
+
+                    throw new NotImplementedException();
+                },
+                node => node.Metadata.OpenEBS);
         }
 
         /// <summary>
@@ -371,7 +391,7 @@ namespace Neon.Kube
         /// Provision the virtual machines on the XenServer.
         /// </summary>
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
-        private void ProvisionVirtualMachines(SshProxy<XenClient> xenSshProxy)
+        private void ProvisionVM(SshProxy<XenClient> xenSshProxy)
         {
             var xenHost  = xenSshProxy.Metadata;
             var hostInfo = xenHost.GetHostInfo();
@@ -383,23 +403,10 @@ namespace Neon.Kube
 
             foreach (var node in GetHostedNodes(xenHost))
             {
-                var vmName           = GetVmName(node);
-                var processors       = node.Metadata.Vm.GetProcessors(cluster.Definition);
-                var memoryBytes      = node.Metadata.Vm.GetMemory(cluster.Definition);
-                var osDiskBytes      = node.Metadata.Vm.GetOsDisk(cluster.Definition);
-                var openEbsDiskBytes = node.Metadata.Vm.GetOpenEbsDisk(cluster.Definition);
-                var extraDrives      = new List<XenVirtualDrive>();
-
-                if (node.Metadata.OpenEBS)
-                {
-                    extraDrives.Add(
-                        new XenVirtualDrive()
-                        {
-                            Name        = "OpenEBS",
-                            Description = "OpenEBS cStore pool",
-                            Size        = openEbsDiskBytes
-                        });
-                }
+                var vmName      = GetVmName(node);
+                var processors  = node.Metadata.Vm.GetProcessors(cluster.Definition);
+                var memoryBytes = node.Metadata.Vm.GetMemory(cluster.Definition);
+                var osDiskBytes = node.Metadata.Vm.GetOsDisk(cluster.Definition);
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "create: virtual machine");
 
@@ -408,7 +415,6 @@ namespace Neon.Kube
                     memoryBytes:                memoryBytes,
                     diskBytes:                  osDiskBytes,
                     snapshot:                   cluster.Definition.Hosting.XenServer.Snapshot,
-                    extraDrives:                extraDrives,
                     primaryStorageRepository:   cluster.Definition.Hosting.XenServer.StorageRepository);;
 
                 // Create a temporary ISO with the [neon-node-prep.sh] script, mount it
@@ -455,7 +461,7 @@ namespace Neon.Kube
                     // to the node template's drive size (because that
                     // would fail).
                     //
-                    // Note that there should only be one partitioned disk at
+                    // Note that there should only be one unpartitioned disk at
                     // this point: the OS disk.
 
                     var partitionedDisks = node.ListPartitionedDisks();

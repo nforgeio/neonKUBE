@@ -107,7 +107,7 @@ namespace Neon.Kube
 
         private ClusterProxy                    cluster;
         private KubeSetupInfo                   setupInfo;
-        private SetupController<NodeDefinition> controller;
+        private SetupController<NodeDefinition> setupController;
         private string                          driveTemplatePath;
         private string                          vmDriveFolder;
         private string                          switchName;
@@ -218,23 +218,53 @@ namespace Neon.Kube
 
             // Perform the provisioning operations.
 
-            controller = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
+            setupController = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
             {
                 ShowStatus  = this.ShowStatus,
                 MaxParallel = 1     // We're only going to provision one VM at a time on a local Hyper-V instance.
             };
 
-            controller.AddGlobalStep("prepare hyper-v", () => PrepareHyperV());
-            controller.AddNodeStep("create virtual machines", (node, stepDelay) => ProvisionVM(node));
-            controller.AddGlobalStep(string.Empty, () => Finish(), quiet: true);
+            setupController.AddGlobalStep("prepare hyper-v", () => PrepareHyperV());
+            setupController.AddNodeStep("create virtual machines", (node, stepDelay) => ProvisionVM(node));
+            setupController.AddGlobalStep(string.Empty, () => Finish(), quiet: true);
 
-            if (!controller.Run())
+            if (!setupController.Run())
             {
                 Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
                 return await Task.FromResult(false);
             }
 
             return await Task.FromResult(true);
+        }
+
+        /// <inheritdoc/>
+        public override void AddPostPrepareSteps(SetupController<NodeDefinition> setupController)
+        {
+            // We need to add any required OpenEBS cStore disks after the node has been otherwise
+            // prepared.  We need to do this here because if we created the data and OpenEBS disks
+            // when the VM is initially created, the disk setup scripts executed during prepare
+            // won't be able to distinguish between the two disks.
+            //
+            // At this point, the data disk should be partitioned, formatted, and mounted so
+            // the OpenEBS disk will be easy to identify as the only unpartitioned disk.
+
+            setupController.AddNodeStep("OpenEBS cStore",
+                (node, stepDelay) =>
+                {
+                    node.Status = "OpenEBS disk";
+
+                    var vmName           = GetVmName(node.Metadata);
+                    var openEbsDiskBytes = node.Metadata.Vm.GetOpenEbsDisk(cluster.Definition);
+
+                    new VirtualDrive()
+                    {
+                        Path = Path.Combine(vmDriveFolder, $"{vmName}-openebs.vhdx"),
+                        Size = openEbsDiskBytes
+                    };
+
+                    throw new NotImplementedException();
+                },
+                node => node.Metadata.OpenEBS);
         }
 
         /// <inheritdoc/>
@@ -357,7 +387,7 @@ namespace Neon.Kube
 
             if (!driveTemplateIsCurrent)
             {
-                controller.SetOperationStatus($"Download Template VHDX: [{setupInfo.LinuxTemplateUri}]");
+                setupController.SetOperationStatus($"Download Template VHDX: [{setupInfo.LinuxTemplateUri}]");
 
                 Task.Run(
                     async () =>
@@ -410,11 +440,11 @@ namespace Neon.Kube
                                             {
                                                 var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
 
-                                                controller.SetOperationStatus($"Downloading VHDX: [{percentComplete}%] [{setupInfo.LinuxTemplateUri}]");
+                                                setupController.SetOperationStatus($"Downloading VHDX: [{percentComplete}%] [{setupInfo.LinuxTemplateUri}]");
                                             }
                                             else
                                             {
-                                                controller.SetOperationStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{setupInfo.LinuxTemplateUri}]");
+                                                setupController.SetOperationStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{setupInfo.LinuxTemplateUri}]");
                                             }
                                         }
                                     }
@@ -458,7 +488,7 @@ namespace Neon.Kube
 
                     }).Wait();
 
-                controller.SetOperationStatus();
+                setupController.SetOperationStatus();
             }
 
             // Handle any necessary Hyper-V initialization.
@@ -468,7 +498,7 @@ namespace Neon.Kube
                 // We're going to create an external Hyper-V switch if there
                 // isn't already an external switch.
 
-                controller.SetOperationStatus("Scanning network adapters");
+                setupController.SetOperationStatus("Scanning network adapters");
 
                 var switches       = hyperv.ListVmSwitches();
                 var externalSwitch = switches.FirstOrDefault(s => s.Type == VirtualSwitchType.External);
@@ -486,12 +516,12 @@ namespace Neon.Kube
                 // taking care to issue a warning if any machines already exist 
                 // and we're not doing [force] mode.
 
-                controller.SetOperationStatus("Scanning virtual machines");
+                setupController.SetOperationStatus("Scanning virtual machines");
 
                 var existingMachines = hyperv.ListVms();
                 var conflicts        = string.Empty;
 
-                controller.SetOperationStatus("Stopping virtual machines");
+                setupController.SetOperationStatus("Stopping virtual machines");
 
                 foreach (var machine in existingMachines)
                 {
@@ -517,7 +547,7 @@ namespace Neon.Kube
                     throw new HyperVException($"[{conflicts}] virtual machine(s) already exist.");
                 }
 
-                controller.SetOperationStatus();
+                setupController.SetOperationStatus();
             }
         }
 
@@ -618,18 +648,6 @@ namespace Neon.Kube
                 var processors       = node.Metadata.Vm.GetProcessors(cluster.Definition);
                 var memoryBytes      = node.Metadata.Vm.GetMemory(cluster.Definition);
                 var osDiskBytes      = node.Metadata.Vm.GetOsDisk(cluster.Definition);
-                var openEbsDiskBytes = node.Metadata.Vm.GetOpenEbsDisk(cluster.Definition);
-                var extraDrives      = new List<VirtualDrive>();
-
-                if (node.Metadata.OpenEBS)
-                {
-                    extraDrives.Add(
-                        new VirtualDrive()
-                        {
-                            Path = Path.Combine(vmDriveFolder, $"{vmName}-openebs.vhdx"),
-                            Size = openEbsDiskBytes
-                        });
-                }
 
                 node.Status = $"create: virtual machine";
                 hyperv.AddVm(
@@ -638,8 +656,7 @@ namespace Neon.Kube
                     diskSize:       osDiskBytes.ToString(),
                     memorySize:     memoryBytes.ToString(),
                     drivePath:      osDrivePath,
-                    switchName:     switchName,
-                    extraDrives:    extraDrives);
+                    switchName:     switchName);
 
                 // Create a temporary ISO with the [neon-node-prep.sh] script, mount it
                 // to the VM and then boot the VM for the first time.  The script on the
