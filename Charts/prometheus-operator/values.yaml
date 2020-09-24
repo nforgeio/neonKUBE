@@ -248,7 +248,7 @@ alertmanager:
 
     ## Define Log Format
     # Use logfmt (default) or json-formatted logging
-    logFormat: logfmt
+    logFormat: json
 
     ## Log level for Alertmanager to be configured with.
     ##
@@ -1028,7 +1028,7 @@ prometheusOperator:
 
   ## Define Log Format
   # Use logfmt (default) or json-formatted logging
-  # logFormat: logfmt
+  logFormat: json
 
   ## Decrease log verbosity to errors only
   # logLevel: error
@@ -1394,7 +1394,9 @@ prometheus:
     ## Namespaces to be selected for ServiceMonitor discovery.
     ## See https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#namespaceselector for usage
     ##
-    serviceMonitorNamespaceSelector: {}
+    serviceMonitorNamespaceSelector:
+      matchNames:
+      - monitoring
 
     ## How long to retain metrics
     ##
@@ -1422,7 +1424,7 @@ prometheus:
 
     ## Log format for Prometheus be configured in
     ##
-    logFormat: logfmt
+    logFormat: json
 
     ## Prefix used to register routes, overriding externalUrl route.
     ## Useful for proxies that rewrite URLs.
